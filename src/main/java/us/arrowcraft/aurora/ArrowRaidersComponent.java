@@ -597,6 +597,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         if (isInArrowRaidingTeam(player)) {
             String command = event.getMessage();
             if (command.startsWith("/ar") || command.startsWith("/stopweather")) return;
+            ChatUtil.sendError(player, "Command blocked.");
             event.setCancelled(true);
         }
     }
