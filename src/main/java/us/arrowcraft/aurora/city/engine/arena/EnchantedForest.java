@@ -10,6 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -171,30 +172,59 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         }
     }
 
-    private void trick(Player player) {
+    private void trick(final Player player) {
 
-        if (ChanceUtil.getChance(68)) {
-            PlayerInventory pInv = player.getInventory();
+        if (ChanceUtil.getChance(256)) {
+            final PlayerInventory pInv = player.getInventory();
             switch (ChanceUtil.getRandom(2)) {
                 case 1:
+                    Runnable r = null;
                     switch (pInv.getItemInHand().getTypeId()) {
                         case ItemID.DIAMOND_AXE:
-                            pInv.removeItem(new ItemStack(ItemID.DIAMOND_AXE));
                             pInv.addItem(new ItemStack(ItemID.DIAMOND, 2), new ItemStack(ItemID.STICK, 2));
                             ChatUtil.sendWarning(player, "The fairy breaks your axe.");
+                            r = new Runnable() {
+
+                                @Override
+                                public void run() {
+
+                                    player.getInventory().removeItem(new ItemStack(ItemID.DIAMOND_AXE));
+                                }
+                            };
                             break;
                         case ItemID.GOLD_AXE:
-                            pInv.removeItem(new ItemStack(ItemID.GOLD_AXE));
+                            r = new Runnable() {
+
+                                @Override
+                                public void run() {
+
+                                    player.getInventory().removeItem(new ItemStack(ItemID.GOLD_AXE));
+                                }
+                            };
                             pInv.addItem(new ItemStack(ItemID.GOLD_BAR, 2), new ItemStack(ItemID.STICK, 2));
                             ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                             break;
                         case ItemID.IRON_AXE:
-                            pInv.removeItem(new ItemStack(ItemID.IRON_AXE));
+                            r = new Runnable() {
+
+                                @Override
+                                public void run() {
+
+                                    player.getInventory().removeItem(new ItemStack(ItemID.IRON_AXE));
+                                }
+                            };
                             pInv.addItem(new ItemStack(ItemID.IRON_BAR, 2), new ItemStack(ItemID.STICK, 2));
                             ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                             break;
                         case ItemID.WOOD_AXE:
-                            pInv.removeItem(new ItemStack(ItemID.WOOD_AXE));
+                            r = new Runnable() {
+
+                                @Override
+                                public void run() {
+
+                                    player.getInventory().removeItem(new ItemStack(ItemID.WOOD_AXE));
+                                }
+                            };
                             pInv.addItem(new ItemStack(BlockID.WOOD, 2), new ItemStack(ItemID.STICK, 2));
                             ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                             break;
@@ -207,6 +237,9 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                     random.nextDouble() * 1,
                                     random.nextDouble() * 2.0 - 1.5)
                             );
+                    }
+                    if (r != null) {
+                        server.getScheduler().runTaskLater(inst, r, 1);
                     }
                     break;
                 case 2:
@@ -233,7 +266,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     // Give potion
                     ChatUtil.sendWarning(player, "You might need this friend ;)");
                     getWorld().dropItemNaturally(player.getLocation(), potion);
-                    for (int i = 1; i < ChanceUtil.getRandom(10); i++) {
+                    int waves = ChanceUtil.getRandom(10);
+                    for (int i = 1; i < waves; i++) {
                         server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
 
                             @Override
@@ -244,23 +278,59 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                 BlockVector min = getRegion().getMinimumPoint();
                                 BlockVector max = getRegion().getMaximumPoint();
 
+                                short sOut = 1000;
                                 com.sk89q.worldedit.Vector v;
-                                for (int i = 0; i < ChanceUtil.getRandom(275); i++) {
+                                for (int i = 0; i < ChanceUtil.getRandom(50); i++) {
+                                    sOut--;
+                                    if (sOut < 0) break;
                                     v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ());
-                                    v = v.add(0, 81, 0);
+                                    v = v.add(0, 83, 0);
                                     if (getRegion().contains(v.getBlockX(), v.getBlockY(), v.getBlockZ())) {
                                         Block b = getWorld().getBlockAt(v.getBlockX(), v.getBlockY(), v.getBlockZ());
                                         if (b.getTypeId() == BlockID.AIR
                                                 || EnvironmentUtil.isShrubBlock(b.getTypeId())) {
-                                            getWorld().spawnEntity(b.getLocation(), EntityType.SLIME);
+                                            Slime s = (Slime) getWorld().spawnEntity(b.getLocation(), EntityType.SLIME);
+                                            s.setSize(ChanceUtil.getRandom(8));
+                                            continue;
                                         }
                                     }
+                                    i--;
                                 }
 
                             }
-                        }, 20 * 30 * i);
+                        }, 20 * 7 * i);
                     }
-                    break;
+                    server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
+
+                        @Override
+                        public void run() {
+
+                            ChatUtil.sendNotice(getContainedPlayers(), "Release the god slime!");
+
+                            BlockVector min = getRegion().getMinimumPoint();
+                            BlockVector max = getRegion().getMaximumPoint();
+
+                            short sOut = 1000;
+                            com.sk89q.worldedit.Vector v;
+                            for (int i = 0; i < ChanceUtil.getRandom(1); i++) {
+                                sOut--;
+                                if (sOut < 0) break;
+                                v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ());
+                                v = v.add(0, 83, 0);
+                                if (getRegion().contains(v.getBlockX(), v.getBlockY(), v.getBlockZ())) {
+                                    Block b = getWorld().getBlockAt(v.getBlockX(), v.getBlockY(), v.getBlockZ());
+                                    if (b.getTypeId() == BlockID.AIR
+                                            || EnvironmentUtil.isShrubBlock(b.getTypeId())) {
+                                        Slime s = (Slime) getWorld().spawnEntity(b.getLocation(), EntityType.SLIME);
+                                        s.setSize(16);
+                                        continue;
+                                    }
+                                }
+                                i--;
+                            }
+
+                        }
+                    }, 20 * 7 * (waves + 1));
             }
         }
     }
