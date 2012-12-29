@@ -78,7 +78,7 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
 
     public class Commands {
 
-        @Command(aliases = {"dc"},
+        @Command(aliases = {"dropclear", "dc"},
                 usage = "[seconds] [world] or <world> [seconds]", desc = "Clear all drops",
                 min = 0, max = 2)
         @CommandPermissions({"aurora.dropclear"})

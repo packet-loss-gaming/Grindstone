@@ -590,15 +590,28 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
     }
 
+    private final String[] cmdWhiteList = new String[] {
+            "ar", "stopweather", "me", "say", "pm", "msg", "message", "whisper", "tell",
+            "reply", "r", "mute", "unmute", "debug", "dropclear", "dc", "auth"
+    };
+
     @EventHandler(ignoreCancelled = true)
     public void onCommandPreProcess(PlayerCommandPreprocessEvent event) {
 
         Player player = event.getPlayer();
         if (isInArrowRaidingTeam(player)) {
             String command = event.getMessage();
-            if (command.startsWith("/ar") || command.startsWith("/stopweather")) return;
-            ChatUtil.sendError(player, "Command blocked.");
-            event.setCancelled(true);
+            boolean allowed = false;
+            for (String cmd : cmdWhiteList) {
+                if (command.startsWith("/" + cmd)) {
+                    allowed = true;
+                    break;
+                }
+            }
+            if (!allowed) {
+                ChatUtil.sendError(player, "Command blocked.");
+                event.setCancelled(true);
+            }
         }
     }
 
