@@ -27,6 +27,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -370,6 +371,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             }
 
             teams.clear();
+            gameFlags.clear();
 
             restore();
 
@@ -498,9 +500,11 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                                     log.warning("No chunks could be loaded. (Bad archive?)");
                                 }
                             } else {
-                                log.info(String.format("Restored, %d missing chunks and %d other errors.",
-                                        restore.getMissingChunks().size(),
-                                        restore.getErrorChunks().size()));
+                                if (restore.getMissingChunks().size() > 0 || restore.getErrorChunks().size() > 0) {
+                                    log.info(String.format("Restored, %d missing chunks and %d other errors.",
+                                            restore.getMissingChunks().size(),
+                                            restore.getErrorChunks().size()));
+                                }
                                 if (chunkList.indexOf(chunk) == chunkList.size() - 1) {
                                     Bukkit.broadcastMessage(ChatColor.YELLOW + "Restored successfully.");
                                 }
@@ -832,6 +836,14 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockChangePreLog(BlockChangePreLogEvent event) {
+
+        World w = Bukkit.getWorld(config.worldName);
+        RegionManager manager = getWorldGuard().getRegionManager(w);
+        ProtectedRegion r = manager.getRegion(config.region);
+        if (LocationUtil.isInRegion(w, r, event.getLocation())) event.setCancelled(true);
+    }
 
     public class Commands {
 
@@ -942,7 +954,10 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         @CommandPermissions({"aurora.jr.reset"})
         public void endArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
 
+            gameFlags.clear();
+
             restore();
+
             gameHasStarted = false;
             allowAllRun = false;
             gameHasBeenInitialised = false;
