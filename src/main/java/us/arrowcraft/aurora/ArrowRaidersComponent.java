@@ -447,6 +447,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 }
             }
 
+            log.info("Snapshot '" + snap.getName() + "' loaded; now restoring Jungle Arena...");
             // Tell players restoration is beginning
             for (Player player : server.getOnlinePlayers()) {
 
@@ -465,7 +466,6 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
                         try {
                             chunkStore = snap.getChunkStore();
-                            log.info("Snapshot '" + snap.getName() + "' loaded; now restoring...");
                         } catch (DataException | IOException e) {
                             log.warning("Failed to load snapshot: " + e.getMessage());
                             return;
