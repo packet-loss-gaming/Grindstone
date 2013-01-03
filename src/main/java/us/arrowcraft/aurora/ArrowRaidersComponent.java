@@ -498,7 +498,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         ChunkStore chunkStore;
 
                         try {
-                            chunkStore = snap.getChunkStore();
+                            chunkStore = snap._getChunkStore();
                         } catch (DataException | IOException e) {
                             log.warning("Failed to load snapshot: " + e.getMessage());
                             return;
