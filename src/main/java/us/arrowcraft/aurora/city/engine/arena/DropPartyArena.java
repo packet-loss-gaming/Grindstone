@@ -4,7 +4,11 @@ import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
@@ -123,12 +127,8 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
                     if (dropped.size() > 10) break;
 
-                    Vector v = LocationUtil.pickLocation(
-                            min.getX(), max.getX(),
-                            min.getY(), max.getY(),
-                            min.getZ(), max.getZ());
-
-                    Location l = new Location(getWorld(), v.getX(), v.getY(), v.getZ());
+                    Vector v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ());
+                    Location l = new Location(getWorld(), v.getX(), v.getY(), v.getZ()).add(0, max.getBlockY(), 0);
                     if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
                     getWorld().dropItem(l, drop);
                     dropped.add(drop);

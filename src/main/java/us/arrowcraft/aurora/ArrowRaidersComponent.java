@@ -1,7 +1,11 @@
 package us.arrowcraft.aurora;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.PlayerUtil;
-import com.sk89q.minecraft.util.commands.*;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
@@ -28,18 +32,38 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
+import org.bukkit.Color;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.*;
-import org.bukkit.event.player.*;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -58,7 +82,12 @@ import us.arrowcraft.aurora.util.LocationUtil;
 import us.arrowcraft.aurora.util.player.PlayerState;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -428,8 +457,10 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
             // Discover chunks
             World w = Bukkit.getWorld("City");
+            Location battleLoc = new Location(w, config.x, config.y, config.z);
             ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
             final List<Chunk> chunkList = new ArrayList<>();
+            chunkList.add(battleLoc.getChunk());
 
             Vector min = rg.getMinimumPoint();
             Vector max = rg.getMaximumPoint();
@@ -441,9 +472,11 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             final int maxZ = max.getBlockZ();
             final int maxY = max.getBlockY();
 
+            Chunk c;
             for (int x = minX; x <= maxX; x += 16) {
                 for (int z = minZ; z <= maxZ; z += 16) {
-                    chunkList.add(w.getBlockAt(x, minY, z).getChunk());
+                    c = w.getBlockAt(x, minY, z).getChunk();
+                    if (!chunkList.contains(c)) chunkList.add(c);
                 }
             }
 
