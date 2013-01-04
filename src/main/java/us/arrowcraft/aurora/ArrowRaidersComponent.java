@@ -621,7 +621,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         @Setting("jungle-raid-start-Y")
         public int y = 37;
         @Setting("jungle-raid-start-Z")
-        public int z = -401;
+        public int z = -404;
         @Setting("jungle-raid-region")
         public String region = "carpe-diem-district-jungle-raid";
 

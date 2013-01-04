@@ -2,7 +2,12 @@ package us.arrowcraft.aurora.admin;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.GodComponent;
 import com.sk89q.commandbook.util.PlayerUtil;
-import com.sk89q.minecraft.util.commands.*;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.minecraft.util.commands.CommandPermissionsException;
+import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
@@ -30,7 +35,11 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -391,7 +400,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         //InventoryType.SlotType st = event.getSlotType();
         if (isAdmin((Player) event.getWhoClicked())
-                && (event.getCurrentItem().getTypeId() != 0 || event.getCursor().getTypeId() != 0)
+                && (event.getCurrentItem() != null && event.getCurrentItem().getTypeId() != 0
+                || event.getCursor() != null && event.getCursor().getTypeId() != 0)
                 && !(event.getInventory().getType().equals(InventoryType.PLAYER)
                 || event.getInventory().getType().equals(InventoryType.CREATIVE)
                 || event.getInventory().getType().equals(InventoryType.CRAFTING))) {
