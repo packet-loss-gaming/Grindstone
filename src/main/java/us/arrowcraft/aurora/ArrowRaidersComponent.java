@@ -32,6 +32,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -60,7 +61,6 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -68,6 +68,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.ApocalypseLocalSpawnEvent;
 import us.arrowcraft.aurora.events.EggDropEvent;
@@ -111,6 +112,8 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     private ConcurrentHashMap<String, Integer> teams = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, PlayerState> playerState = new ConcurrentHashMap<>();
     private Set<Character> gameFlags = new HashSet<>();
+    private static Economy economy = null;
+    private static final double BASE_AMT = 50.00;
 
     @InjectComponent
     AdminComponent adminComponent;
@@ -262,6 +265,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         config = configure(new LocalConfiguration());
 
+        setupEconomy();
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         registerCommands(Commands.class);
@@ -285,7 +289,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     private void saveInventories() {
 
         for (Player player : server.getOnlinePlayers()) {
-            restorePlayer(player);
+            restorePlayer(player, 0);
         }
     }
 
@@ -393,7 +397,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 try {
                     Player teamPlayer = Bukkit.getPlayerExact(name);
                     removeFromArrowRaidingTeam(teamPlayer);
-                    restorePlayer(teamPlayer);
+                    restorePlayer(teamPlayer, ChanceUtil.getRandom(10.00));
                 } catch (Exception e) {
                     teams.remove(name);
                 }
@@ -413,10 +417,16 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         }
     }
 
-    private void restorePlayer(Player teamPlayer) {
+    private void restorePlayer(Player teamPlayer, double multiplier) {
 
         // Restore Player
         if (playerState.containsKey(teamPlayer.getName())) {
+
+            if (multiplier > 0 && economy != null) {
+                economy.depositPlayer(teamPlayer.getName(), BASE_AMT * multiplier);
+                ChatUtil.sendNotice(teamPlayer, "You received: " + economy.format(BASE_AMT * multiplier)
+                        + ' ' + economy.currencyNamePlural() + '.');
+            }
 
             // Clear Player
             teamPlayer.getInventory().clear();
@@ -761,7 +771,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             @Override
             public void run() {
 
-                restorePlayer(p);
+                restorePlayer(p, 1);
             }
         }, 1);
     }
@@ -818,19 +828,13 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
     }
 
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-
-        if (!event.getPlayer().isDead()) restorePlayer(event.getPlayer());
-    }
-
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
 
         Player player = event.getPlayer();
 
         if (isInArrowRaidingTeam(event.getPlayer())) removeFromArrowRaidingTeam(event.getPlayer());
-        restorePlayer(player);
+        restorePlayer(player, 0);
     }
 
     @EventHandler
@@ -964,7 +968,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                     "Arrow Craft raiding team.");
 
             removeFromArrowRaidingTeam(targetPlayer);
-            restorePlayer(targetPlayer);
+            restorePlayer(targetPlayer, 0);
 
 
             for (Prayer prayer : prayerComponent.getInfluences(targetPlayer)) {
@@ -1084,5 +1088,16 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         }
 
         return (WorldGuardPlugin) plugin;
+    }
+
+    private boolean setupEconomy() {
+
+        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
+                .vault.economy.Economy.class);
+        if (economyProvider != null) {
+            economy = economyProvider.getProvider();
+        }
+
+        return (economy != null);
     }
 }
