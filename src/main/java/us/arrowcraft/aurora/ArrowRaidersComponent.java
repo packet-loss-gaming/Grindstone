@@ -49,6 +49,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Snowball;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -327,8 +328,8 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
             if (!isArrowRaidActive()) return;
 
-            // Apocalypse flag
-            if (gameFlags.contains('a')) {
+            // Distributor
+            if (gameFlags.contains('a') || gameFlags.contains('g')) {
 
                 World w = Bukkit.getWorld(config.worldName);
                 ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
@@ -343,13 +344,17 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
                     if (testLoc.getBlock().getTypeId() != BlockID.AIR) continue;
 
-                    TNTPrimed e = (TNTPrimed) w.spawnEntity(testLoc, EntityType.PRIMED_TNT);
-                    e.setVelocity(new org.bukkit.util.Vector(
-                            random.nextDouble() * 2.0 - 1.5,
-                            random.nextDouble() * 2 * -1,
-                            random.nextDouble() * 2.0 - 1.5));
-                    e.setFuseTicks(20 * 10);
-                    if (ChanceUtil.getChance(4)) e.setIsIncendiary(true);
+                    if (gameFlags.contains('a')) {
+                        TNTPrimed e = (TNTPrimed) w.spawnEntity(testLoc, EntityType.PRIMED_TNT);
+                        e.setVelocity(new org.bukkit.util.Vector(
+                                random.nextDouble() * 2.0 - 1.5,
+                                random.nextDouble() * 2 * -1,
+                                random.nextDouble() * 2.0 - 1.5));
+                        e.setFuseTicks(20 * 10);
+                        if (ChanceUtil.getChance(4)) e.setIsIncendiary(true);
+                    } else if (gameFlags.contains('g')) {
+                        testLoc.getWorld().dropItem(testLoc, new ItemStack(ItemID.SNOWBALL, ChanceUtil.getRandom(16)));
+                    }
                 }
             }
 
@@ -859,17 +864,32 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     }
 
     @EventHandler
-    public void onArrowLand(ProjectileHitEvent event) {
+    public void onProjectileLand(ProjectileHitEvent event) {
 
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (isInArrowRaidingTeam((Player) p.getShooter()) && gameFlags.contains('x')) {
+        if (isInArrowRaidingTeam((Player) p.getShooter())) {
+
+            int explosionSize = 2;
+
             World w = Bukkit.getWorld(config.worldName);
             RegionManager manager = getWorldGuard().getRegionManager(w);
             ProtectedRegion r = manager.getRegion(config.region);
             if (!LocationUtil.isInRegion(w, r, p.getLocation())) return;
-            if (gameFlags.contains('s')) p.getWorld().createExplosion(p.getLocation(), 4);
-            else p.getWorld().createExplosion(p.getLocation(), 2);
+
+            if (p instanceof Arrow) {
+                if (gameFlags.contains('x')) {
+                    if (gameFlags.contains('s')) explosionSize = 4;
+                } else return;
+            }
+            if (p instanceof Snowball) {
+                if (gameFlags.contains('g')) {
+                    if (gameFlags.contains('s')) explosionSize = 10;
+                    else explosionSize = 6;
+                } else return;
+            }
+
+            p.getWorld().createExplosion(p.getLocation(), explosionSize);
         }
     }
 
@@ -1002,7 +1022,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         @Command(aliases = {"start", "s"},
                 usage = "", desc = "Arrow Craft Raiders Management Commands",
-                flags = "sdajbtfmx", min = 0, max = 0)
+                flags = "sdajbtfmxg", min = 0, max = 0)
         @CommandPermissions({"aurora.jr.start"})
         public void startArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -1026,6 +1046,13 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         ChatUtil.sendWarning(players, "Highly Explosive Arrows");
                     } else {
                         ChatUtil.sendWarning(players, "Explosive Arrows");
+                    }
+                }
+                if (gameFlags.contains('g')) {
+                    if (gameFlags.contains('s')) {
+                        ChatUtil.sendWarning(players, "OP Grenades");
+                    } else {
+                        ChatUtil.sendWarning(players, "Grenades");
                     }
                 }
                 if (gameFlags.contains('d')) ChatUtil.sendWarning(players, "Death touch");
