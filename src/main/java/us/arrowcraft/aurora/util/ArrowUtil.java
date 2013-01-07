@@ -44,4 +44,19 @@ public class ArrowUtil {
         }
         return null;
     }
+
+    public static Vector getVelocity(Location startingLocation, Location endingLocation) {
+
+        double locY = startingLocation.getY() - 0.10000000149011612D;
+        double d0 = endingLocation.getX() - startingLocation.getX();
+        double d1 = endingLocation.getY() - 1.699999988079071D - locY;
+        double d2 = endingLocation.getZ() - startingLocation.getZ();
+        double d3 = Math.sqrt(d0 * d0 + d2 * d2);
+
+        if (d3 >= 1.0E-7D) {
+            float f4 = (float) d3 * 0.2F;
+            return new Vector(d0, d1 + (double) f4, d2);
+        }
+        return null;
+    }
 }

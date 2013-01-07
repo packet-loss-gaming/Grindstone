@@ -47,6 +47,7 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
@@ -353,7 +354,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         e.setFuseTicks(20 * 10);
                         if (ChanceUtil.getChance(4)) e.setIsIncendiary(true);
                     } else if (gameFlags.contains('g')) {
-                        testLoc.getWorld().dropItem(testLoc, new ItemStack(ItemID.SNOWBALL, ChanceUtil.getRandom(16)));
+                        testLoc.getWorld().dropItem(testLoc, new ItemStack(ItemID.SNOWBALL, ChanceUtil.getRandom(3)));
                     }
                 }
             }
@@ -821,10 +822,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     @EventHandler
     public void onTNTExplode(EntityExplodeEvent event) {
 
-        if (event.getEntity() == null || event.getEntityType() == null
-                || !event.getEntityType().equals(EntityType.PRIMED_TNT)) return;
-
-        Location l = event.getEntity().getLocation();
+        Location l = event.getLocation();
 
         World w = Bukkit.getWorld("City");
         ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
@@ -878,6 +876,19 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             if (!LocationUtil.isInRegion(w, r, p.getLocation())) return;
 
             if (p instanceof Arrow) {
+                if (gameFlags.contains('t')) {
+                    if (gameFlags.contains('s')) explosionSize = 4;
+                    for (Entity e : p.getNearbyEntities(16, 16, 16)) {
+                        if (e.equals(p.getShooter())) continue;
+                        if (e instanceof LivingEntity) {
+                            ((LivingEntity) e).damage(1, p);
+                            if (ChanceUtil.getChance(5)) {
+                                p.getShooter().setHealth(Math.min(p.getShooter().getHealth() + 1,
+                                        p.getShooter().getMaxHealth()));
+                            }
+                        }
+                    }
+                }
                 if (gameFlags.contains('x')) {
                     if (gameFlags.contains('s')) explosionSize = 4;
                 } else return;
@@ -999,8 +1010,23 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             }
 
             if (teams.size() < 2 && (isArrowRaidActive() || isArrowRaidInitialised())) {
+                for (String name : teams.keySet()) {
+                    try {
+                        Player teamPlayer = Bukkit.getPlayerExact(name);
+                        removeFromArrowRaidingTeam(teamPlayer);
+                        restorePlayer(teamPlayer, 0);
+                    } catch (Exception e) {
+                        teams.remove(name);
+                    }
+                }
+
+                teams.clear();
+                gameFlags.clear();
+
                 restore();
+
                 gameHasStarted = false;
+                allowAllRun = false;
                 gameHasBeenInitialised = false;
             }
         }
@@ -1011,6 +1037,17 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         @CommandPermissions({"aurora.jr.reset"})
         public void endArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
 
+            for (String name : teams.keySet()) {
+                try {
+                    Player teamPlayer = Bukkit.getPlayerExact(name);
+                    removeFromArrowRaidingTeam(teamPlayer);
+                    restorePlayer(teamPlayer, 0);
+                } catch (Exception e) {
+                    teams.remove(name);
+                }
+            }
+
+            teams.clear();
             gameFlags.clear();
 
             restore();
@@ -1022,7 +1059,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         @Command(aliases = {"start", "s"},
                 usage = "", desc = "Arrow Craft Raiders Management Commands",
-                flags = "sdajbtfmxg", min = 0, max = 0)
+                flags = "sdajbtmxg", min = 0, max = 0)
         @CommandPermissions({"aurora.jr.start"})
         public void startArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -1055,6 +1092,9 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         ChatUtil.sendWarning(players, "Grenades");
                     }
                 }
+                if (gameFlags.contains('t')) {
+                    ChatUtil.sendWarning(players, "Torment Arrows");
+                }
                 if (gameFlags.contains('d')) ChatUtil.sendWarning(players, "Death touch");
                 if (gameFlags.contains('a')) ChatUtil.sendWarning(players, "2012");
                 if (gameFlags.contains('j')) {
@@ -1066,8 +1106,6 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 }
                 if (gameFlags.contains('m')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No mining");
                 if (gameFlags.contains('b')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No block break");
-                if (gameFlags.contains('t')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No TNT");
-                if (gameFlags.contains('f')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No fire");
             }
 
 
