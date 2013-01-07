@@ -7,7 +7,12 @@ import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
 import org.bukkit.enchantments.Enchantment;
@@ -22,7 +27,11 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
@@ -32,7 +41,11 @@ import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.PrayerApplicationEvent;
 import us.arrowcraft.aurora.prayer.PrayerComponent;
 import us.arrowcraft.aurora.prayer.PrayerType;
-import us.arrowcraft.aurora.util.*;
+import us.arrowcraft.aurora.util.ChanceUtil;
+import us.arrowcraft.aurora.util.ChatUtil;
+import us.arrowcraft.aurora.util.EnvironmentUtil;
+import us.arrowcraft.aurora.util.ItemUtil;
+import us.arrowcraft.aurora.util.LocationUtil;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -250,28 +263,28 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
                     // Iron
                     pInventory.removeItem(new ItemStack(BlockID.IRON_BLOCK, ChanceUtil.getRandom(2)));
-                    pInventory.removeItem(new ItemStack(BlockID.IRON_ORE, ChanceUtil.getRandom(8)));
-                    pInventory.removeItem(new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(10)));
+                    pInventory.removeItem(new ItemStack(BlockID.IRON_ORE, ChanceUtil.getRandom(4)));
+                    pInventory.removeItem(new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(8)));
 
                     // Gold
                     pInventory.removeItem(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRandom(2)));
                     pInventory.removeItem(new ItemStack(BlockID.GOLD_ORE, ChanceUtil.getRandom(4)));
-                    pInventory.removeItem(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(12)));
+                    pInventory.removeItem(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(10)));
                     pInventory.removeItem(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(80)));
 
                     // Redstone
                     pInventory.removeItem(new ItemStack(BlockID.REDSTONE_ORE, ChanceUtil.getRandom(2)));
-                    pInventory.removeItem(new ItemStack(BlockID.GLOWING_REDSTONE_ORE, ChanceUtil.getRandom(8)));
+                    pInventory.removeItem(new ItemStack(BlockID.GLOWING_REDSTONE_ORE, ChanceUtil.getRandom(2)));
                     pInventory.removeItem(new ItemStack(ItemID.REDSTONE_DUST, ChanceUtil.getRandom(34)));
 
                     // Lap
                     pInventory.removeItem(new ItemStack(BlockID.LAPIS_LAZULI_BLOCK, ChanceUtil.getRandom(2)));
-                    pInventory.removeItem(new ItemStack(BlockID.LAPIS_LAZULI_ORE, ChanceUtil.getRandom(8)));
-                    pInventory.removeItem(new ItemStack(ItemID.INK_SACK, ChanceUtil.getRandom(80), (short) 4));
+                    pInventory.removeItem(new ItemStack(BlockID.LAPIS_LAZULI_ORE, ChanceUtil.getRandom(4)));
+                    pInventory.removeItem(new ItemStack(ItemID.INK_SACK, ChanceUtil.getRandom(34), (short) 4));
 
                     // Diamond
                     pInventory.removeItem(new ItemStack(BlockID.DIAMOND_BLOCK, ChanceUtil.getRandom(2)));
-                    pInventory.removeItem(new ItemStack(BlockID.DIAMOND_ORE, ChanceUtil.getRandom(8)));
+                    pInventory.removeItem(new ItemStack(BlockID.DIAMOND_ORE, ChanceUtil.getRandom(4)));
                     pInventory.removeItem(new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(16)));
 
                     // Emerald

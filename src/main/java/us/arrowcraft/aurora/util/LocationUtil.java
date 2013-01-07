@@ -102,7 +102,7 @@ public class LocationUtil {
         int free = 0;
 
         // Look for ground
-        while (block.getY() > 0 && BlockType.canPassThrough(block.getTypeId())) {
+        while (block.getY() > 0 && (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED)) {
             free++;
             block = block.getRelative(0, -1, 0);
         }
