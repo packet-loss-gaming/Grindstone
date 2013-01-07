@@ -178,7 +178,7 @@ public class LodestoneComponent extends BukkitComponent implements Listener {
                     if (signTeleportEvent.getDeactivationAfterUse()) {
 
                         // Schedule a new task so we don't set the new location to null
-                        server.getScheduler().scheduleAsyncDelayedTask(inst, new Runnable() {
+                        server.getScheduler().runTaskLater(inst, new Runnable() {
 
                             @Override
                             public void run() {

@@ -87,7 +87,7 @@ public class BankComponent extends BukkitComponent implements Listener {
 
         final BankState session = sessions.getSession(BankState.class, player);
         // Schedule a new task so we don't set the new location to null
-        server.getScheduler().scheduleAsyncDelayedTask(inst, new Runnable() {
+        server.getScheduler().runTaskLater(inst, new Runnable() {
 
             @Override
             public void run() {

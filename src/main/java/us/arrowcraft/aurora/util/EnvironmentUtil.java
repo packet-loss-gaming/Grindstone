@@ -186,7 +186,7 @@ public class EnvironmentUtil {
                 case BlockID.GOLD_ORE:
                     return new ItemStack(BlockID.GOLD_ORE);
                 case BlockID.LAPIS_LAZULI_ORE:
-                    return new ItemStack(ItemID.INK_SACK, ChanceUtil.getRangedRandom(4, 8), (short) 0, (byte) 4);
+                    return new ItemStack(ItemID.INK_SACK, ChanceUtil.getRangedRandom(4, 8), (short) 4);
                 case BlockID.REDSTONE_ORE:
                 case BlockID.GLOWING_REDSTONE_ORE:
                     return new ItemStack(ItemID.REDSTONE_DUST, ChanceUtil.getRangedRandom(4, 5));
