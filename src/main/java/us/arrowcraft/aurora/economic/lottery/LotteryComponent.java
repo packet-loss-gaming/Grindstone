@@ -59,9 +59,8 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
     private static double MIN_WINNING;
     private List<Player> recentList = new ArrayList<>();
     private LotteryTicketDatabase lotteryTicketDatabase;
+    private LotteryWinnerDatabase lotteryWinnerDatabase;
     private static Economy economy = null;
-
-    private String last = "";
 
     @Override
     public void enable() {
@@ -73,6 +72,8 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
         if (!lotteryDirectory.exists()) lotteryDirectory.mkdir();
         lotteryTicketDatabase = new CSVLotteryTicketDatabase(lotteryDirectory);
         lotteryTicketDatabase.load();
+        lotteryWinnerDatabase = new CSVLotteryWinnerDatabase(lotteryDirectory);
+        lotteryWinnerDatabase.load();
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -163,13 +164,19 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
             }
         }
 
-        @Command(aliases = {"last"},
+        @Command(aliases = {"recent", "last", "previous"},
                 usage = "", desc = "View the last lottery winner.",
                 flags = "", min = 0, max = 0)
         @CommandPermissions({"aurora.lottery.last"})
         public void lotteryLastCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            ChatUtil.sendNotice(sender, "The last lottery winner was: " + last + '.');
+            ChatUtil.sendNotice(sender, ChatColor.GRAY, "Lottery - Recent winners:");
+            List<String> winners = lotteryWinnerDatabase.getRecentWinner(5);
+            short number = 0;
+            for (String player : winners) {
+                number++;
+                ChatUtil.sendNotice(sender, ChatColor.GOLD + String.valueOf(number) + ". " + ChatColor.YELLOW + player);
+            }
         }
     }
 
@@ -317,7 +324,6 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
         String name = findNewMillionaire();
         if (name.equals("404 Not Found")) return;
 
-        last = name;
         double cash = Math.max(getWinnerCash(), MIN_WINNING);
 
         economy.depositPlayer(name, cash);
@@ -325,6 +331,8 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
                 ChatUtil.makeCountString(economy.format(cash),
                         " " + economy.currencyNamePlural() + " via the lottery!"));
 
+        lotteryWinnerDatabase.addWinner(name + ChatColor.GOLD + " - " + ChatColor.WHITE + economy.format(cash));
+        lotteryWinnerDatabase.save();
         lotteryTicketDatabase.clearTickets();
         lotteryTicketDatabase.save();
     }
