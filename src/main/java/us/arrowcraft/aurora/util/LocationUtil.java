@@ -65,29 +65,9 @@ public class LocationUtil {
         return matchLocationFromId(getLocationId(name));
     }
 
-    public static Location getGround(final Location location) {
-
-
-        Block testBlock = location.getBlock().getRelative(BlockFace.DOWN);
-        Block secondaryTestBlock = location.getBlock().getRelative(BlockFace.DOWN, 2);
-
-        if (testBlock.getTypeId() != BlockID.AIR && secondaryTestBlock.getTypeId() != BlockID.AIR) return location;
-        for (BlockFace blockFace : surroundingBlockFaces) {
-            if (testBlock.getRelative(blockFace).getTypeId() != 0) return location;
-        }
-        World w = location.getWorld();
-
-        for (int y = Math.min(location.getBlockY(), 255); y > 0; y--) {
-            if (w.getBlockAt(location.getBlockX(), y, location.getBlockZ()).getTypeId() != BlockID.AIR) {
-                return new Location(w, location.getX(), y + 1, location.getZ(), location.getYaw(), location.getPitch());
-            }
-        }
-        return null;
-    }
-
     public static void toGround(Player player) {
 
-        player.teleport(getGround(player.getLocation()));
+        player.teleport(findFreePosition(player.getLocation()));
     }
 
     public static Location findFreePosition(Location pos) {
@@ -102,7 +82,7 @@ public class LocationUtil {
         int free = 0;
 
         // Look for ground
-        while (block.getY() > 0 && (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED)) {
+        while (block.getY() > 1 && (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED)) {
             free++;
             block = block.getRelative(0, -1, 0);
         }
@@ -114,7 +94,12 @@ public class LocationUtil {
                 return null; // Not safe
             }
 
-            return block.getRelative(0, 1, 0).getLocation().add(new Vector(0.5, 0, 0.5));
+            Block tb = block.getRelative(0, 1, 0);
+            Location l = tb.getLocation();
+            l.add(new Vector(0.5, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0.5));
+            l.setPitch(pos.getPitch());
+            l.setYaw(pos.getYaw());
+            return l;
         }
 
         // Let's try going up
@@ -122,7 +107,7 @@ public class LocationUtil {
         free = 0;
         boolean foundGround = false;
 
-        while (block.getY() <= world.getMaxHeight() + 1) {
+        while (block.getY() + 1 < world.getMaxHeight()) {
             if (BlockType.canPassThrough(block.getTypeId())) {
                 free++;
             } else {
@@ -131,7 +116,12 @@ public class LocationUtil {
             }
 
             if (foundGround && free == 2) {
-                return block.getRelative(0, -1, 0).getLocation().add(new Vector(0.5, 0.5, 0.5));
+                Block tb = block.getRelative(0, -1, 0);
+                Location l = tb.getLocation();
+                l.add(new Vector(0.5, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0.5));
+                l.setPitch(pos.getPitch());
+                l.setYaw(pos.getYaw());
+                return l;
             }
 
             block = block.getRelative(0, 1, 0);

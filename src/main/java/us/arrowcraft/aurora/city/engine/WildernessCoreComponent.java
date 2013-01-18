@@ -22,7 +22,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import us.arrowcraft.aurora.admin.AdminComponent;
@@ -30,7 +34,6 @@ import us.arrowcraft.aurora.admin.AdminState;
 import us.arrowcraft.aurora.events.PlayerAdminModeChangeEvent;
 import us.arrowcraft.aurora.util.ChanceUtil;
 import us.arrowcraft.aurora.util.ChatUtil;
-import us.arrowcraft.aurora.util.LocationUtil;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -226,6 +229,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             addPool(new BaseBlock(block.getTypeId()), block.getLocation());
         }
 
+        /*
         if (isTree(block)) {
 
             Block treeBase = LocationUtil.getGround(block.getLocation()).getBlock();
@@ -235,6 +239,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 treeBase.setTypeIdAndData(block.getTypeId(), block.getData().getData(), true);
             }
         }
+        */
     }
 
     private boolean isTree(BlockState block) {

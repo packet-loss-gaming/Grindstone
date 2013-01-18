@@ -29,8 +29,6 @@ import us.arrowcraft.aurora.util.LocationUtil;
 import us.arrowcraft.aurora.util.player.PlayerState;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -47,7 +45,6 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
     private static Economy economy = null;
     private int increaseRate;
     private int decreaseRate;
-    private Set<Player> players = new HashSet<>();
     private final HashMap<String, PlayerState> playerState = new HashMap<>();
 
     public DynamicSandArena(World world, ProtectedRegion region, int increaseRate, int decreaseRate,
@@ -278,28 +275,20 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
 
     private void damageCheck(final Player player, final Player attacker, final int damage) {
 
-        if (players.contains(player)) return;
         if (attacker != null && !contains(attacker)) return;
 
         if (contains(player)) {
 
-            // Add the player
-            players.add(player);
-
-            final int orgDrop = damage * ChanceUtil.getRandom(10);
+            final int orgDrop = damage * ChanceUtil.getRandom(3);
             int drop = orgDrop;
-
-            if (drop > 25) drop = 25;
 
             if (!player.isDead()) {
                 PlayerInventory pInventory = player.getInventory();
                 int contained = ItemUtil.countItemsOfType(pInventory.getContents(), ItemID.GOLD_NUGGET);
 
-                if (contained > drop) {
-                    contained = drop;
-                }
+                if (contained > drop) contained = drop;
 
-                if (contained > 0 && player.getHealth() - damage > 0) {
+                if (contained > 0) {
                     pInventory.removeItem(new ItemStack(ItemID.GOLD_NUGGET, contained));
                     drop -= contained;
                 }
@@ -319,15 +308,6 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
                 player.getLocation().getWorld().dropItemNaturally(player.getLocation(),
                         new ItemStack(ItemID.GOLD_NUGGET));
             }
-
-            server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    players.remove(player);
-                }
-            }, 10);
         }
     }
 

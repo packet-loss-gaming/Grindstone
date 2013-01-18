@@ -3,12 +3,14 @@ import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import fr.neatmonster.nocheatplus.checks.CheckType;
-import fr.neatmonster.nocheatplus.hooks.NCPExemptionManager;
+import net.h31ix.anticheat.api.AnticheatAPI;
+import net.h31ix.anticheat.manage.CheckType;
+import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import us.arrowcraft.aurora.events.FallBlockerEvent;
 import us.arrowcraft.aurora.events.JungleFallBlockerEvent;
 import us.arrowcraft.aurora.events.PrayerApplicationEvent;
@@ -24,14 +26,14 @@ import java.util.logging.Logger;
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Anit-Cheat Compat", desc = "Compatibility layer for Anti-Cheat plugins.")
-@Depend(plugins = {"NoCheatPlus"})
+@Depend(plugins = {"AntiCheat"})
 public class AntiCheatCompatibilityComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private ConcurrentHashMap<Player, ConcurrentHashMap<CheckType, Long>> playerList = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, ConcurrentHashMap<CheckType, Long>> playerList = new ConcurrentHashMap<>();
 
     @Override
     public void enable() {
@@ -44,10 +46,12 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     @Override
     public void run() {
 
-        for (Map.Entry<Player, ConcurrentHashMap<CheckType, Long>> e : playerList.entrySet()) {
+        for (Map.Entry<String, ConcurrentHashMap<CheckType, Long>> e : playerList.entrySet()) {
+            Player player = Bukkit.getPlayerExact(e.getKey());
+            if (player == null) continue;
             for (Map.Entry<CheckType, Long> p : e.getValue().entrySet()) {
                 if (System.currentTimeMillis() - p.getValue() / TimeUnit.SECONDS.toMillis(1) > 1.75) {
-                    NCPExemptionManager.unexempt(e.getKey(), p.getKey());
+                    AnticheatAPI.unexemptPlayer(player, p.getKey());
                     e.getValue().remove(p.getKey());
                 }
             }
@@ -57,19 +61,32 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     public void bypass(Player player, CheckType[] checkTypes) {
 
         ConcurrentHashMap<CheckType, Long> hashMap;
-        if (playerList.containsKey(player)) hashMap = playerList.get(player);
+        if (playerList.containsKey(player.getName())) hashMap = playerList.get(player.getName());
         else hashMap = new ConcurrentHashMap<>();
 
         for (CheckType checkType : checkTypes) {
             hashMap.put(checkType, System.currentTimeMillis());
-            NCPExemptionManager.exemptPermanently(player, checkType);
+            AnticheatAPI.exemptPlayer(player, checkType);
+        }
+        playerList.put(player.getName(), hashMap);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+
+        Player player = event.getPlayer();
+        if (playerList.containsKey(player.getName())) {
+            for (Map.Entry<CheckType, Long> e : playerList.get(player.getName()).entrySet()) {
+                AnticheatAPI.unexemptPlayer(player, e.getKey());
+            }
+            playerList.remove(player.getName());
         }
     }
 
     @EventHandler
     public void onJungleFallBlocker(JungleFallBlockerEvent event) {
 
-        CheckType[] checkTypes = new CheckType[] {CheckType.MOVING_SURVIVALFLY, CheckType.MOVING_NOFALL};
+        CheckType[] checkTypes = new CheckType[] {CheckType.FLY, CheckType.NOFALL};
         bypass(event.getPlayer(), checkTypes);
     }
 
@@ -77,7 +94,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     public void onFallBlocker(FallBlockerEvent event) {
 
 
-        CheckType[] checkTypes = new CheckType[] {CheckType.MOVING_NOFALL};
+        CheckType[] checkTypes = new CheckType[] {CheckType.NOFALL};
         bypass(event.getPlayer(), checkTypes);
     }
 
@@ -90,9 +107,9 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
             case ROCKET:
             case SLAP:
             case DOOM:
-                checkTypes.add(CheckType.MOVING_SURVIVALFLY);
+                checkTypes.add(CheckType.FLY);
             case BUTTERFINGERS:
-                checkTypes.add(CheckType.INVENTORY_DROP);
+                checkTypes.add(CheckType.ITEM_SPAM);
                 break;
             default:
                 return;

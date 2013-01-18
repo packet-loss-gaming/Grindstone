@@ -20,19 +20,35 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import us.arrowcraft.aurora.SacrificeComponent;
 import us.arrowcraft.aurora.admin.AdminComponent;
-import us.arrowcraft.aurora.city.engine.arena.*;
+import us.arrowcraft.aurora.city.engine.arena.CommandTriggeredArena;
+import us.arrowcraft.aurora.city.engine.arena.CursedMine;
+import us.arrowcraft.aurora.city.engine.arena.DropPartyArena;
+import us.arrowcraft.aurora.city.engine.arena.DynamicSandArena;
+import us.arrowcraft.aurora.city.engine.arena.EnchantedForest;
+import us.arrowcraft.aurora.city.engine.arena.GenericArena;
+import us.arrowcraft.aurora.city.engine.arena.GoldRush;
+import us.arrowcraft.aurora.city.engine.arena.HotSpringArena;
+import us.arrowcraft.aurora.city.engine.arena.SnowSpleefArena;
+import us.arrowcraft.aurora.economic.ImpersonalComponent;
 import us.arrowcraft.aurora.jail.JailComponent;
 import us.arrowcraft.aurora.prayer.PrayerComponent;
 import us.arrowcraft.aurora.util.ChatUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Arena", desc = "Arena Control.")
-@Depend(components = {AdminComponent.class, JailComponent.class}, plugins = {"WorldEdit", "WorldGuard"})
+@Depend(components = {
+        AdminComponent.class, JailComponent.class, PrayerComponent.class, SacrificeComponent.class,
+        ImpersonalComponent.class
+}, plugins = {"WorldEdit", "WorldGuard"})
 public class ArenaComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
@@ -47,6 +63,8 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     private PrayerComponent prayerComponent;
     @InjectComponent
     private SacrificeComponent sacrificeComponent;
+    @InjectComponent
+    private ImpersonalComponent impersonalComponent;
 
     private final World world = Bukkit.getWorld("City");
     private LocalConfiguration config;
@@ -112,6 +130,10 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         protected Set<String> partyRooms = new HashSet<>(Arrays.asList(
                 "glacies-mare-district-party-room-drop-zone"
         ));
+        @Setting("gold-rushes")
+        protected Set<String> goldRushes = new HashSet<>(Arrays.asList(
+                "vineam-district-gold-rush"
+        ));
     }
 
     private class ArenaManager {
@@ -174,10 +196,34 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                 }
             }
 
+            // Add Party rooms
             for (String region : config.partyRooms) {
                 try {
                     ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
                     arenas.add(new DropPartyArena(world, pr, sacrificeComponent));
+                    log.info("Added region: " + pr.getId() + " to Arenas.");
+                } catch (Exception e) {
+                    log.warning("Failed to add arena: " + region + ".");
+                }
+            }
+
+            // Add Gold Rushes
+            for (String region : config.goldRushes) {
+                try {
+                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    ProtectedRegion lb = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
+                            + "-lobby");
+                    ProtectedRegion r1 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
+                            + "-room-one");
+                    ProtectedRegion r2 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
+                            + "-room-two");
+                    ProtectedRegion r3 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
+                            + "-room-three");
+                    ProtectedRegion d1 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
+                            + "-door-one");
+                    ProtectedRegion d2 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
+                            + "-door-two");
+                    arenas.add(new GoldRush(world, pr, lb, r1, r2, r3, d1, d2, adminComponent, impersonalComponent));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
@@ -208,6 +254,23 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                         continue;
                     }
                     arena.run();
+                    ChatUtil.sendNotice(sender, "Triggered arena: " + arena.getId() + ".");
+                }
+            }
+        }
+
+        @Command(aliases = {"startarena"},
+                usage = "[area name]", desc = "Run all command triggered arena",
+                flags = "", min = 0, max = 1)
+        @CommandPermissions("aurora.arena.trigger")
+        public void areaGoldTrigger(CommandContext args, CommandSender sender) throws CommandException {
+
+            for (GenericArena arena : arenas) {
+                if (arena instanceof GoldRush) {
+                    if (args.argsLength() > 0 && !args.getString(0).equalsIgnoreCase(arena.getId())) {
+                        continue;
+                    }
+                    ((GoldRush) arena).start();
                     ChatUtil.sendNotice(sender, "Triggered arena: " + arena.getId() + ".");
                 }
             }

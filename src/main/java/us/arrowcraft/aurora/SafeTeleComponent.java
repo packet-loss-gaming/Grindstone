@@ -2,10 +2,12 @@ package us.arrowcraft.aurora;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import us.arrowcraft.aurora.util.ChatUtil;
 import us.arrowcraft.aurora.util.LocationUtil;
 
 /**
@@ -24,9 +26,17 @@ public class SafeTeleComponent extends BukkitComponent implements Listener {
         inst.registerEvents(this);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent event) {
 
-        if (!event.getPlayer().isFlying()) event.setTo(LocationUtil.getGround(event.getTo()));
+        if (!event.getPlayer().isFlying()) {
+            Location loc = LocationUtil.findFreePosition(event.getTo());
+            if (loc == null) {
+                ChatUtil.sendError(event.getPlayer(), "That location is not safe!");
+                event.setCancelled(true);
+                return;
+            }
+            event.setTo(loc);
+        }
     }
 }

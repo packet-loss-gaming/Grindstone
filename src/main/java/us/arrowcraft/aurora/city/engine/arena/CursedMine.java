@@ -1,9 +1,12 @@
 package us.arrowcraft.aurora.city.engine.arena;
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.sk89q.worldedit.blocks.SkullBlock;
+import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -14,7 +17,6 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.Skull;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Blaze;
 import org.bukkit.entity.Item;
@@ -160,7 +162,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         this.worldGuard = (WorldGuardPlugin) plugin;
     }
 
-    private void addSkull(Player player) {
+    public void addSkull(Player player) {
 
         RegionManager manager = worldGuard.getRegionManager(getWorld());
         ProtectedRegion r = null;
@@ -168,29 +170,24 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         switch (ChanceUtil.getRandom(3)) {
             case 1:
                 r = manager.getRegion(getId() + "-deaths-east");
-                b = 4;
+                b = 12;
                 break;
             case 2:
                 r = manager.getRegion(getId() + "-deaths-north");
-                b = 3;
+                b = 8;
                 break;
             case 3:
                 r = manager.getRegion(getId() + "-deaths-west");
-                b = 0;
+                b = 4;
                 break;
         }
 
         if (r != null) {
             Vector v = LocationUtil.pickLocation(r.getMinimumPoint(), r.getMaximumPoint())
                     .add(0, r.getMinimumPoint().getY(), 0);
-            Block skullBlock = getWorld().getBlockAt(v.getBlockX(), v.getBlockY(), v.getBlockZ());
-
-            if (skullBlock.getChunk().isLoaded()) skullBlock.getChunk().load();
-
-            skullBlock.setTypeIdAndData(BlockID.HEAD, b, true);
-            Skull s = (Skull) skullBlock.getState();
-            s.setOwner(player.getName());
-            s.update(true);
+            BukkitWorld world = new BukkitWorld(getWorld());
+            EditSession skullEditor = new EditSession(world, 1);
+            skullEditor.rawSetBlock(v, new SkullBlock(3, b, player.getName()));
         }
     }
 
@@ -200,7 +197,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         BaseBlock b;
         for (Map.Entry<Player, ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long,
                 BaseBlock>>> e : map.entrySet()) {
-            min = ChanceUtil.getRangedRandom(6000, 60000);
+            min = ChanceUtil.getRangedRandom(9000, 60000);
             for (Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> se : e.getValue().entrySet()) {
                 if ((System.currentTimeMillis() - se.getValue().getKey()) > min) {
                     b = se.getValue().getValue();
@@ -303,7 +300,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         if (!inst.hasPermission(player, "aurora.prayer.intervention")) return false;
 
         for (int aItem : items) {
-            if (ItemUtil.countItemsOfType(itemStacks, aItem) > 0) return true;
+            if (player.getInventory().containsAtLeast(new ItemStack(aItem), 1)) return true;
         }
         return false;
     }
@@ -632,13 +629,13 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             if (daveHitList.contains(player)) daveHitList.remove(player);
             switch (ChanceUtil.getRandom(11)) {
                 case 1:
-                    event.setDeathMessage(player.getName() + " was killed by the Dave");
+                    event.setDeathMessage(player.getName() + " was killed by Dave");
                     break;
                 case 2:
                     event.setDeathMessage(player.getName() + " got on Dave's bad side");
                     break;
                 case 3:
-                    event.setDeathMessage(player.getName() + " was slain by a evil spirit");
+                    event.setDeathMessage(player.getName() + " was slain by an evil spirit");
                     break;
                 case 4:
                     event.setDeathMessage(player.getName() + " needs to stay away from the cursed mine");

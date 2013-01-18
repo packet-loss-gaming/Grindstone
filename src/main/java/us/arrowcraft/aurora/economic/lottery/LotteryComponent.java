@@ -1,6 +1,10 @@
 package us.arrowcraft.aurora.economic.lottery;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.minecraft.util.commands.*;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -56,6 +60,8 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
     private List<Player> recentList = new ArrayList<>();
     private LotteryTicketDatabase lotteryTicketDatabase;
     private static Economy economy = null;
+
+    private String last = "";
 
     @Override
     public void enable() {
@@ -127,7 +133,7 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
         }
 
         @Command(aliases = {"draw"},
-                usage = "", desc = "Trigger the Lottery draw.",
+                usage = "", desc = "Trigger the lottery draw.",
                 flags = "", min = 0, max = 0)
         @CommandPermissions({"aurora.lottery.draw"})
         public void lotteryDrawCmd(CommandContext args, CommandSender sender) throws CommandException {
@@ -137,7 +143,7 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
         }
 
         @Command(aliases = {"pot", "value"},
-                usage = "", desc = "",
+                usage = "", desc = "View the lottery pot size.",
                 flags = "b", min = 0, max = 0)
         @CommandPermissions({"aurora.lottery.pot"})
         public void lotteryPotCmd(CommandContext args, CommandSender sender) throws CommandException {
@@ -155,6 +161,15 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
                         + ChatUtil.makeCountString(economy.format(getWinnerCash()),
                         " " + economy.currencyNamePlural() + "."));
             }
+        }
+
+        @Command(aliases = {"last"},
+                usage = "", desc = "View the last lottery winner.",
+                flags = "", min = 0, max = 0)
+        @CommandPermissions({"aurora.lottery.last"})
+        public void lotteryLastCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            ChatUtil.sendNotice(sender, "The last lottery winner was: " + last + '.');
         }
     }
 
@@ -302,6 +317,7 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
         String name = findNewMillionaire();
         if (name.equals("404 Not Found")) return;
 
+        last = name;
         double cash = Math.max(getWinnerCash(), MIN_WINNING);
 
         economy.depositPlayer(name, cash);

@@ -74,7 +74,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.ApocalypseLocalSpawnEvent;
 import us.arrowcraft.aurora.events.EggDropEvent;
-import us.arrowcraft.aurora.events.FallBlockerEvent;
+import us.arrowcraft.aurora.events.JungleFallBlockerEvent;
 import us.arrowcraft.aurora.prayer.Prayer;
 import us.arrowcraft.aurora.prayer.PrayerComponent;
 import us.arrowcraft.aurora.prayer.PrayerType;
@@ -682,7 +682,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 case FALL:
                     if (LocationUtil.getBelowID(e.getLocation(), BlockID.LEAVES)
                             || (gameFlags.contains('s') && gameFlags.contains('j'))) {
-                        server.getPluginManager().callEvent(new FallBlockerEvent(player));
+                        server.getPluginManager().callEvent(new JungleFallBlockerEvent(player));
                         if (ChanceUtil.getChance(2) || gameFlags.contains('j')) {
                             player.setVelocity(new org.bukkit.util.Vector(
                                     random.nextDouble() * 2.0 - 1.5,
@@ -962,7 +962,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 }
 
             } else if (args.argsLength() == 2) {
-                targetPlayer = PlayerUtil.matchSinglePlayer(sender, args.getString(1));
+                targetPlayer = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
                 inst.checkPermission(sender, targetPlayer.getWorld(), "aurora.jr.other.join");
                 if (adminComponent.isAdmin(targetPlayer)) throw new CommandException("You must first leave" +
                         " admin mode.");
@@ -990,8 +990,8 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
             if (args.argsLength() == 0) {
                 inst.checkPermission(sender, "aurora.jr.self.leave");
-            } else if (args.argsLength() == 2) {
-                targetPlayer = PlayerUtil.matchSinglePlayer(sender, args.getString(1));
+            } else if (args.argsLength() == 1) {
+                targetPlayer = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
                 inst.checkPermission(sender, targetPlayer.getWorld(), "aurora.jr.other.leave");
             }
 
@@ -1031,9 +1031,8 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             }
         }
 
-        @Command(aliases = {"reset", "r"},
-                usage = "[Player]", desc = "Leave an Arrow Craft raid.",
-                min = 0, max = 1)
+        @Command(aliases = {"reset", "r"}, desc = "Reset an Arrow Craft raid.",
+                min = 0, max = 0)
         @CommandPermissions({"aurora.jr.reset"})
         public void endArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
 
