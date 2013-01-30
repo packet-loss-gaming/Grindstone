@@ -175,7 +175,7 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
             short number = 0;
             for (String player : winners) {
                 number++;
-                ChatUtil.sendNotice(sender, ChatColor.GOLD + String.valueOf(number) + ". " + ChatColor.YELLOW + player);
+                ChatUtil.sendNotice(sender, "  " + ChatColor.GOLD + number + ". " + ChatColor.YELLOW + player);
             }
         }
     }

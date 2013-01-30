@@ -1,6 +1,7 @@
 package us.arrowcraft.aurora.prayer.PrayerFX;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
+import us.arrowcraft.aurora.prayer.PrayerType;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -29,6 +30,8 @@ public abstract class AbstractPrayer {
         this.subFX = subFX;
         Collections.addAll(this.effects, effects);
     }
+
+    public abstract PrayerType getType();
 
     public void add(Player player) {
 

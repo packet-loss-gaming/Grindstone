@@ -24,11 +24,40 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.PrayerApplicationEvent;
-import us.arrowcraft.aurora.prayer.PrayerFX.*;
-import us.arrowcraft.aurora.prayer.PrayerFX.Throwable;
+import us.arrowcraft.aurora.prayer.PrayerFX.AbstractPrayer;
+import us.arrowcraft.aurora.prayer.PrayerFX.AbstractTriggeredPrayer;
+import us.arrowcraft.aurora.prayer.PrayerFX.AlonzoFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.AntifireFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.ArrowFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.BlindnessFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.ButterFingersFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.CannonFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.DeadlyDefenseFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.DoomFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.FireFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.FlashFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.GodFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.HealthFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.InventoryFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.InvisibilityFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.MushroomFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.NightVisionFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.PoisonFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.PowerFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.RacketFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.RocketFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.SlapFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.SmokeFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.SpeedFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.StarvationFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.TNTFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.ThrownFireballFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.WalkFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.ZombieFX;
 import us.arrowcraft.aurora.util.ChatUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -55,7 +84,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
     public boolean influencePlayer(Player player, Prayer... prayer) {
 
         for (Prayer aPrayer : prayer) {
-            if (isValidPrayer(aPrayer.getPrayerType())) {
+            if (isValidPrayer(aPrayer.getEffect().getType())) {
                 InfluenceState session = sessions.getSession(InfluenceState.class, player);
                 session.influence(aPrayer);
             } else return false;
@@ -68,7 +97,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         return sessions.getSession(InfluenceState.class, player).isInfluenced();
     }
 
-    public Prayer[] getInfluences(Player player) {
+    public List<Prayer> getInfluences(Player player) {
 
         return sessions.getSession(InfluenceState.class, player).getInfluences();
     }
@@ -199,7 +228,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 return null;
         }
 
-        return new Prayer(player, prayerType, prayerEffects, maxDuration, triggerClass);
+        return new Prayer(player, prayerEffects, maxDuration);
     }
 
     @Override
@@ -239,7 +268,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
             short count = 0;
             for (Prayer prayer : getInfluences(player)) {
-                if (prayer.getPrayerType().isUnholy()) {
+                if (prayer.getEffect().getType().isUnholy()) {
                     count++;
                 }
             }
@@ -260,11 +289,11 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
         if (!event.getAction().equals(Action.LEFT_CLICK_AIR)) return;
         for (Prayer prayer : getInfluences(player)) {
-            if (!integrityTest(player, prayer) || !(prayer.getEffect() instanceof Throwable)) continue;
+            if (!integrityTest(player, prayer) || !(prayer.getEffect() instanceof AbstractTriggeredPrayer)) continue;
 
             if (!prayer.getTriggerClass().equals(PlayerInteractEvent.class)) continue;
 
-            ((Throwable) prayer.getEffect()).trigger(player);
+            ((AbstractTriggeredPrayer) prayer.getEffect()).trigger(player);
         }
     }
 
@@ -315,9 +344,9 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 influencePlayer(player, prayer);
 
                 if (!args.hasFlag('s')) return;
-                if (prayer.getPrayerType().equals(PrayerType.GOD)) {
+                if (prayer.getEffect().getType().equals(PrayerType.GOD)) {
                     Bukkit.broadcastMessage(ChatColor.GOLD + "A god has taken the form of " + player.getName() + "!");
-                } else if (prayer.getPrayerType().equals(PrayerType.POWER)) {
+                } else if (prayer.getEffect().getType().equals(PrayerType.POWER)) {
                     Bukkit.broadcastMessage(ChatColor.GOLD + "The true power of " + player.getName() + " has been " +
                             "awakened!");
                 }
@@ -350,12 +379,12 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
             uninfluencePlayer(player, prayer);
             return false;
-        } else if ((prayer.getPrayerType().isUnholy() && !config.enableUnholy)
-                || (prayer.getPrayerType().isHoly() && !config.enableHoly)) {
+        } else if ((prayer.getEffect().getType().isUnholy() && !config.enableUnholy)
+                || (prayer.getEffect().getType().isHoly() && !config.enableHoly)) {
 
             uninfluencePlayer(player, prayer);
             return false;
-        } else if (prayer.getPrayerType().isUnholy()) {
+        } else if (prayer.getEffect().getType().isUnholy()) {
 
             adminComponent.standardizePlayer(player);
         }
@@ -409,12 +438,12 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
         public boolean isInfluenced() {
 
-            return getInfluences().length > 0;
+            return prayers.size() > 0;
         }
 
-        public final Prayer[] getInfluences() {
+        public List<Prayer> getInfluences() {
 
-            return prayers.toArray(new Prayer[prayers.size()]);
+            return Collections.unmodifiableList(prayers);
         }
 
         public void influence(Prayer prayer) {

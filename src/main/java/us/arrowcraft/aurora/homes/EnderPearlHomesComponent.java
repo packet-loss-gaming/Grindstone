@@ -53,23 +53,17 @@ public class EnderPearlHomesComponent extends BukkitComponent implements Listene
 
     public Location getBedLocation(Player player) {
 
+        Location bedLocation = null;
         if (homeDatabase.houseExist(player.getName())) {
-            Home home = homeDatabase.getHouse(player.getName());
-
-            Location bedLoc = home.getLocation();
-            Location betterLoc = LocationUtil.findFreePosition(bedLoc);
-
-            if (betterLoc != null && bedLoc != betterLoc) bedLoc = betterLoc;
-            return bedLoc;
+            bedLocation = LocationUtil.findFreePosition(homeDatabase.getHouse(player.getName()).getLocation());
         }
-        return null;
+        return bedLocation != null ? bedLocation : null;
     }
 
     public Location getRespawnLocation(Player player) {
 
         Location respawnLoc = player.getWorld().getSpawnLocation();
-        if (getBedLocation(player) != null) return getBedLocation(player);
-        return respawnLoc;
+        return getBedLocation(player) != null ? getBedLocation(player) : respawnLoc;
     }
 
     @EventHandler
@@ -155,7 +149,7 @@ public class EnderPearlHomesComponent extends BukkitComponent implements Listene
                 bedLoc.getBlockZ());
         if (homeDatabase.save()) {
             if (!overWritten) ChatUtil.sendNotice(player, "Your bed location has been set.");
-            else ChatUtil.sendNotice(player, "Your bed location has been changed.");
+            else ChatUtil.sendNotice(player, "Your bed location has been reset.");
         }
     }
 }

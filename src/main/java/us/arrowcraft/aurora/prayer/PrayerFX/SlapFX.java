@@ -2,6 +2,7 @@ package us.arrowcraft.aurora.prayer.PrayerFX;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+import us.arrowcraft.aurora.prayer.PrayerType;
 import us.arrowcraft.aurora.util.ChatUtil;
 
 import java.util.Random;
@@ -19,6 +20,12 @@ public class SlapFX extends AbstractPrayer {
     public SlapFX() {
 
         super(subFX);
+    }
+
+    @Override
+    public PrayerType getType() {
+
+        return PrayerType.SLAP;
     }
 
     @Override

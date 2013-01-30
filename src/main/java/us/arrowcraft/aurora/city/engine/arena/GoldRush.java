@@ -598,7 +598,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     @EventHandler(ignoreCancelled = true)
     public void onPrayerApplication(PrayerApplicationEvent event) {
 
-        if (event.getPrayerType().isHoly() && players.contains(event.getPlayer().getName())) {
+        if (event.getCause().getEffect().getType().isHoly() && players.contains(event.getPlayer().getName())) {
             event.setCancelled(true);
         }
     }

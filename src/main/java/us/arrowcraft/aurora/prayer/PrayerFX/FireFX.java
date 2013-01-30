@@ -1,11 +1,18 @@
 package us.arrowcraft.aurora.prayer.PrayerFX;
 import org.bukkit.entity.Player;
+import us.arrowcraft.aurora.prayer.PrayerType;
 import us.arrowcraft.aurora.util.ChatUtil;
 
 /**
  * Author: Turtle9598
  */
 public class FireFX extends AbstractPrayer {
+
+    @Override
+    public PrayerType getType() {
+
+        return PrayerType.FIRE;
+    }
 
     @Override
     public void add(Player player) {

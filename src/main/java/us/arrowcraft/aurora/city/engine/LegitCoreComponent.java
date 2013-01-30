@@ -18,13 +18,20 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerBedEnterEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.admin.AdminState;
-import us.arrowcraft.aurora.events.*;
+import us.arrowcraft.aurora.events.ApocalypseBedSpawnEvent;
+import us.arrowcraft.aurora.events.EggDropEvent;
+import us.arrowcraft.aurora.events.HomeTeleportEvent;
+import us.arrowcraft.aurora.events.PlayerAdminModeChangeEvent;
+import us.arrowcraft.aurora.events.PrayerApplicationEvent;
 import us.arrowcraft.aurora.homes.CSVHomeDatabase;
 import us.arrowcraft.aurora.homes.EnderPearlHomesComponent;
-import us.arrowcraft.aurora.homes.Home;
 import us.arrowcraft.aurora.homes.HomeDatabase;
 import us.arrowcraft.aurora.util.ChatUtil;
 import us.arrowcraft.aurora.util.LocationUtil;
@@ -77,23 +84,17 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     public Location getBedLocation(Player player) {
 
+        Location bedLocation = null;
         if (homeDatabase.houseExist(player.getName())) {
-            Home home = homeDatabase.getHouse(player.getName());
-
-            Location bedLoc = home.getLocation();
-            Location betterLoc = LocationUtil.findFreePosition(bedLoc);
-
-            if (betterLoc != null && bedLoc != betterLoc) bedLoc = betterLoc;
-            return bedLoc;
+            bedLocation = LocationUtil.findFreePosition(homeDatabase.getHouse(player.getName()).getLocation());
         }
-        return null;
+        return bedLocation != null ? bedLocation : null;
     }
 
     public Location getRespawnLocation(Player player) {
 
         Location respawnLoc = Bukkit.getWorld(config.legitWorld).getSpawnLocation();
-        if (getBedLocation(player) != null) return getBedLocation(player);
-        return respawnLoc;
+        return getBedLocation(player) != null ? getBedLocation(player) : respawnLoc;
     }
 
     private static class LocalConfiguration extends ConfigurationBase {
@@ -151,7 +152,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
         World world = event.getPlayer().getWorld();
 
-        if (world.getName().contains(config.legitWorld) && event.getPrayerType().isHoly()) {
+        if (world.getName().contains(config.legitWorld) && event.getCause().getEffect().getType().isHoly()) {
 
             event.setCancelled(true);
         }

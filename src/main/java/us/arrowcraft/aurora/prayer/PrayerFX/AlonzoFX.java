@@ -1,4 +1,6 @@
 package us.arrowcraft.aurora.prayer.PrayerFX;
+import us.arrowcraft.aurora.prayer.PrayerType;
+
 /**
  * Author: Turtle9598
  */
@@ -11,5 +13,11 @@ public class AlonzoFX extends AbstractPrayer {
     public AlonzoFX() {
 
         super(subFX);
+    }
+
+    @Override
+    public PrayerType getType() {
+
+        return PrayerType.ALONZO;
     }
 }

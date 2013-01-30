@@ -36,6 +36,7 @@ import us.arrowcraft.aurora.util.ChatUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -79,7 +80,14 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         inst.registerEvents(this);
         this.config = configure(new LocalConfiguration());
         this.arenaManager = new ArenaManager();
-        arenaManager.setupArenas();
+        server.getScheduler().runTaskLater(inst, new Runnable() {
+
+            @Override
+            public void run() {
+
+                arenaManager.setupArenas();
+            }
+        }, 1);
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20 * 4);
 
         registerCommands(Commands.class);
@@ -148,6 +156,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
+                    e.printStackTrace();
                 }
             }
 
@@ -160,6 +169,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
+                    e.printStackTrace();
                 }
             }
 
@@ -171,6 +181,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
+                    e.printStackTrace();
                 }
             }
 
@@ -182,6 +193,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
+                    e.printStackTrace();
                 }
             }
 
@@ -193,6 +205,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
+                    e.printStackTrace();
                 }
             }
 
@@ -235,7 +248,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     @Override
     public void run() {
 
-        for (GenericArena arena : arenas) {
+        for (GenericArena arena : Collections.unmodifiableList(arenas)) {
             if (!(arena instanceof CommandTriggeredArena)) arena.run();
         }
     }
@@ -254,23 +267,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                         continue;
                     }
                     arena.run();
-                    ChatUtil.sendNotice(sender, "Triggered arena: " + arena.getId() + ".");
-                }
-            }
-        }
-
-        @Command(aliases = {"startarena"},
-                usage = "[area name]", desc = "Run all command triggered arena",
-                flags = "", min = 0, max = 1)
-        @CommandPermissions("aurora.arena.trigger")
-        public void areaGoldTrigger(CommandContext args, CommandSender sender) throws CommandException {
-
-            for (GenericArena arena : arenas) {
-                if (arena instanceof GoldRush) {
-                    if (args.argsLength() > 0 && !args.getString(0).equalsIgnoreCase(arena.getId())) {
-                        continue;
-                    }
-                    ((GoldRush) arena).start();
                     ChatUtil.sendNotice(sender, "Triggered arena: " + arena.getId() + ".");
                 }
             }

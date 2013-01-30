@@ -4,7 +4,6 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 import us.arrowcraft.aurora.prayer.Prayer;
-import us.arrowcraft.aurora.prayer.PrayerType;
 
 /**
  * Author: Turtle9598
@@ -25,11 +24,6 @@ public class PrayerApplicationEvent extends PlayerEvent implements Cancellable {
     public Prayer getCause() {
 
         return prayer;
-    }
-
-    public PrayerType getPrayerType() {
-
-        return prayer.getPrayerType();
     }
 
     public HandlerList getHandlers() {

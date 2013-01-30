@@ -933,25 +933,30 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             if (!(sender instanceof Player)) sender.sendMessage("You must be a player to use this command.");
             Player targetPlayer = (Player) sender;
 
-            if (isArrowRaidActive()) {
-                throw new CommandException("You cannot add players while an Arrow Craft Raid game is active!");
-            } else if (isInArrowRaidingTeam(targetPlayer)) {
-                throw new CommandException("You are already in an Arrow Craft Raid.");
-            }
-
             if (args.argsLength() == 0) {
                 inst.checkPermission(sender, "aurora.jr.self.join");
-                if (adminComponent.isAdmin(targetPlayer)) throw new CommandException("You must first leave" +
-                        " admin mode.");
-                if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName)))
+                if (adminComponent.isAdmin(targetPlayer)) {
+                    throw new CommandException("You must first leave admin mode.");
+                } else if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName))) {
                     throw new CommandException("You cannot access this Arrow Craft Raid from that world.");
+                } else if (isArrowRaidActive()) {
+                    throw new CommandException("You cannot add players while an Arrow Craft Raid game is active!");
+                } else if (isInArrowRaidingTeam(targetPlayer)) {
+                    throw new CommandException("You are already in an Arrow Craft Raid.");
+                }
                 addToArrowRaidingTeam(targetPlayer, 0, args.getFlags());
             } else if (args.argsLength() == 1) {
                 inst.checkPermission(sender, "aurora.jr.self.join");
-                if (adminComponent.isAdmin(targetPlayer)) throw new CommandException("You must first leave" +
-                        " admin mode.");
-                if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName)))
+                if (adminComponent.isAdmin(targetPlayer)) {
+                    throw new CommandException("You must first leave admin mode.");
+                } else if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName))) {
                     throw new CommandException("You cannot access this Arrow Craft Raid from that world.");
+                } else if (isArrowRaidActive()) {
+                    throw new CommandException("You cannot add players while an Arrow Craft Raid game is active!");
+                } else if (isInArrowRaidingTeam(targetPlayer)) {
+                    throw new CommandException("You are already in an Arrow Craft Raid.");
+                }
+
                 try {
                     int integer = Integer.parseInt(args.getString(0));
 
@@ -964,10 +969,15 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             } else if (args.argsLength() == 2) {
                 targetPlayer = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
                 inst.checkPermission(sender, targetPlayer.getWorld(), "aurora.jr.other.join");
-                if (adminComponent.isAdmin(targetPlayer)) throw new CommandException("You must first leave" +
-                        " admin mode.");
-                if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName)))
-                    throw new CommandException("You cannot access this Arrow Craft Raid from that world.");
+                if (adminComponent.isAdmin(targetPlayer)) {
+                    throw new CommandException("That player must first leave admin mode.");
+                } else if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName))) {
+                    throw new CommandException("That player cannot access this Arrow Craft Raid from their world.");
+                } else if (isArrowRaidActive()) {
+                    throw new CommandException("You cannot add players while an Arrow Craft Raid game is active!");
+                } else if (isInArrowRaidingTeam(targetPlayer)) {
+                    throw new CommandException("That player is already in an Arrow Craft Raid.");
+                }
                 try {
                     int integer = Integer.parseInt(args.getString(1));
 
@@ -1003,8 +1013,8 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
 
             for (Prayer prayer : prayerComponent.getInfluences(targetPlayer)) {
-                if (prayer.getPrayerType().equals(PrayerType.BLINDNESS)
-                        || prayer.getPrayerType().equals(PrayerType.WALK)) {
+                if (prayer.getEffect().getType().equals(PrayerType.BLINDNESS)
+                        || prayer.getEffect().getType().equals(PrayerType.WALK)) {
                     prayerComponent.uninfluencePlayer(targetPlayer, prayer);
                 }
             }

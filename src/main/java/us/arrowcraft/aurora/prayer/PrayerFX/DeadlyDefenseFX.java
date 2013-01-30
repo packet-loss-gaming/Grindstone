@@ -1,5 +1,15 @@
 package us.arrowcraft.aurora.prayer.PrayerFX;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Blaze;
+import org.bukkit.entity.Creeper;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Slime;
+import org.bukkit.entity.Spider;
+import org.bukkit.entity.Witch;
+import org.bukkit.entity.Zombie;
+import us.arrowcraft.aurora.prayer.PrayerType;
 import us.arrowcraft.aurora.util.ArrowUtil;
 
 import java.util.Collection;
@@ -8,6 +18,12 @@ import java.util.Collection;
  * Author: Turtle9598
  */
 public class DeadlyDefenseFX extends AbstractPrayer {
+
+    @Override
+    public PrayerType getType() {
+
+        return PrayerType.DEADLYDEFENSE;
+    }
 
     @Override
     public void add(Player player) {

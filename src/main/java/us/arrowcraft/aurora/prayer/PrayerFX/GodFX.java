@@ -1,12 +1,14 @@
 package us.arrowcraft.aurora.prayer.PrayerFX;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import us.arrowcraft.aurora.prayer.PrayerType;
 
 /**
  * Author: Turtle9598
  */
-public class GodFX extends AbstractPrayer implements Throwable {
+public class GodFX extends AbstractTriggeredPrayer {
 
     private static final AbstractPrayer[] subFX = new AbstractPrayer[] {
             new ThrownFireballFX(), new InfiniteHungerFX(),
@@ -26,7 +28,13 @@ public class GodFX extends AbstractPrayer implements Throwable {
 
     public GodFX() {
 
-        super(subFX, effects);
+        super(PlayerInteractEvent.class, subFX, effects);
+    }
+
+    @Override
+    public PrayerType getType() {
+
+        return PrayerType.GOD;
     }
 
     @Override
@@ -43,8 +51,8 @@ public class GodFX extends AbstractPrayer implements Throwable {
     public void trigger(Player player) {
 
         for (AbstractPrayer aSubFX : subFX) {
-            if (aSubFX instanceof Throwable) {
-                ((Throwable) aSubFX).trigger(player);
+            if (aSubFX instanceof AbstractTriggeredPrayer) {
+                ((AbstractTriggeredPrayer) aSubFX).trigger(player);
             }
         }
     }

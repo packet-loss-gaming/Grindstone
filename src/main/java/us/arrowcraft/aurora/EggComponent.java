@@ -89,6 +89,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
     public void eggOn(Player player) {
 
         for (EggType eggType : EggType.values()) {
+            if (eggType == EggType.INVALID) continue;
             sessions.getSession(EggState.class, player).setEggDrop(eggType, true);
         }
     }
@@ -107,6 +108,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
     public void eggOff(Player player) {
 
         for (EggType eggType : EggType.values()) {
+            if (eggType == EggType.INVALID) continue;
             sessions.getSession(EggState.class, player).setEggDrop(eggType, false);
         }
     }

@@ -2,6 +2,7 @@ package us.arrowcraft.aurora.prayer.PrayerFX;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import us.arrowcraft.aurora.prayer.PrayerType;
 
 /**
  * Author: Turtle9598
@@ -26,6 +27,12 @@ public class PowerFX extends AbstractPrayer {
     public PowerFX() {
 
         super(subFX, effects);
+    }
+
+    @Override
+    public PrayerType getType() {
+
+        return PrayerType.POWER;
     }
 
     @Override

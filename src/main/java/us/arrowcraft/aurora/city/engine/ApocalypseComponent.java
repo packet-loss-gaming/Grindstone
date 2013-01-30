@@ -11,7 +11,12 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LightningStrike;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Skeleton;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -215,17 +220,19 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 // Lightning, Spawn, and Beds
                 for (int i = 0; i < (multiplier * applicablePlayers.size()); i++) {
 
-                    spawnAndArm(lightningStrikeLoc, config.attackMob, true);
-                    spawnAndArm(world.getSpawnLocation(), config.attackMob, true);
+                    spawnAndArm(LocationUtil.findFreePosition(lightningStrikeLoc), config.attackMob, true);
+                    spawnAndArm(LocationUtil.findFreePosition(world.getSpawnLocation()), config.attackMob, true);
 
                     if (ChanceUtil.getChance((multiplier / 2) * applicablePlayers.size())) {
                         for (Player player : applicablePlayers) {
 
                             if (inst.hasPermission(player, "aurora.apocalypse.bedsafe")) continue;
                             Location bedLocation = homesComponent.getBedLocation(player);
-                            ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(player, bedLocation);
+                            if (bedLocation == null) continue;
+                            ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(player,
+                                    LocationUtil.findFreePosition(bedLocation));
                             server.getPluginManager().callEvent(apocalypseEvent);
-                            if (!apocalypseEvent.isCancelled() && apocalypseEvent.getLocation() != null
+                            if (!apocalypseEvent.isCancelled()
                                     && apocalypseEvent.getLocation().getWorld().equals(world)) {
 
                                 spawnAndArm(apocalypseEvent.getLocation(), config.attackMob, true);
@@ -239,11 +246,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                     if (inst.hasPermission(player, "aurora.apocalypse.huntsafe") || ChanceUtil.getChance(2)) continue;
                     try {
                         Block playerBlock = player.getLocation().getBlock();
+                        Location ls;
 
                         if (playerBlock.getLightLevel() < 4) {
                             for (int i = 0; i < ChanceUtil.getRandom(7); i++) {
-                                ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player,
-                                        LocationUtil.findRandomLoc(playerBlock, 8, true));
+                                ls = LocationUtil.findFreePosition(LocationUtil.findRandomLoc(playerBlock, 8, true));
+                                ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, ls);
                                 server.getPluginManager().callEvent(apocalypseEvent);
 
                                 if (!apocalypseEvent.isCancelled()) {
@@ -251,13 +259,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                                 }
                             }
                         } else {
-
-                            ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player,
-                                    LocationUtil.findRandomLoc(playerBlock, 8, true));
+                            ls = LocationUtil.findFreePosition(LocationUtil.findRandomLoc(playerBlock, 8, true));
+                            ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, ls);
                             server.getPluginManager().callEvent(apocalypseEvent);
 
                             if (!apocalypseEvent.isCancelled()) {
-                                world.spawnEntity(apocalypseEvent.getLocation(), config.attackMob);
+                                spawn(apocalypseEvent.getLocation(), config.attackMob);
                             }
                         }
                     } catch (Exception e) {
@@ -275,8 +282,14 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     private void spawnAndArm(Location location, EntityType type, boolean allowItemPickup) {
 
-        Entity e = location.getWorld().spawnEntity(location, type);
+        Entity e = spawn(location, type);
+        if (e == null) return;
         arm(e, allowItemPickup);
+    }
+
+    private Entity spawn(Location location, EntityType type) {
+
+        return location != null ? location.getWorld().spawnEntity(location, type) : null;
     }
 
     private void arm(Entity e, boolean allowItemPickup) {

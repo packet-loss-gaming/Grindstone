@@ -86,7 +86,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     @EventHandler
     public void onJungleFallBlocker(JungleFallBlockerEvent event) {
 
-        CheckType[] checkTypes = new CheckType[] {CheckType.FLY, CheckType.NOFALL};
+        CheckType[] checkTypes = new CheckType[] {CheckType.FLY, CheckType.ZOMBE_FLY, CheckType.NOFALL};
         bypass(event.getPlayer(), checkTypes);
     }
 
@@ -102,12 +102,13 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     public void onPrayerApplication(PrayerApplicationEvent event) {
 
         List<CheckType> checkTypes = new ArrayList<>();
-        switch (event.getPrayerType()) {
+        switch (event.getCause().getEffect().getType()) {
             case ALONZO:
             case ROCKET:
             case SLAP:
             case DOOM:
                 checkTypes.add(CheckType.FLY);
+                checkTypes.add(CheckType.ZOMBE_FLY);
             case BUTTERFINGERS:
                 checkTypes.add(CheckType.ITEM_SPAM);
                 break;

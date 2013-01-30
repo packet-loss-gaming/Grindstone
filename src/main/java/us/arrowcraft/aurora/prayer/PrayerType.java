@@ -1,5 +1,31 @@
 package us.arrowcraft.aurora.prayer;
-import us.arrowcraft.aurora.prayer.PrayerFX.*;
+import us.arrowcraft.aurora.prayer.PrayerFX.AlonzoFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.AntifireFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.ArrowFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.BlindnessFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.ButterFingersFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.CannonFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.DeadlyDefenseFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.DoomFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.FireFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.FlashFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.GodFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.HealthFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.InventoryFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.InvisibilityFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.MushroomFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.NightVisionFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.PoisonFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.PowerFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.RacketFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.RocketFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.SlapFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.SpeedFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.StarvationFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.TNTFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.ThrownFireballFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.WalkFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.ZombieFX;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,6 +34,9 @@ import java.util.Map;
  * Author: Turtle9598
  */
 public enum PrayerType {
+
+    UNASSIGNED(0, null),
+
     FIRE(1000, FireFX.class),
     STARVATION(1001, StarvationFX.class),
     INVENTORY(1002, InventoryFX.class),

@@ -3,6 +3,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -14,6 +15,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -109,8 +111,14 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             @Override
             public void run() {
 
-                if (lastDropPulse != 0 && System.currentTimeMillis() - lastDropPulse < TimeUnit.SECONDS.toMillis(5)) {
+                if (lastDropPulse != 0 && System.currentTimeMillis() - lastDropPulse < TimeUnit.SECONDS.toMillis(3)) {
                     ChatUtil.sendNotice(getContainedPlayers(1), "Drop Party temporarily suspended for: Drop Clear.");
+                    for (Item item : getWorld().getEntitiesByClass(Item.class)) {
+                        if (getRegion().getParent().contains(BukkitUtil.toVector(item.getLocation()))) {
+                            drops.add(item.getItemStack());
+                            item.remove();
+                        }
+                    }
                     return;
                 }
 

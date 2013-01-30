@@ -1,6 +1,7 @@
 package us.arrowcraft.aurora.prayer.PrayerFX;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import us.arrowcraft.aurora.prayer.PrayerType;
 
 /**
  * Author: Turtle9598
@@ -15,5 +16,11 @@ public class DoomFX extends AbstractPrayer {
     public DoomFX() {
 
         super(subFX, effect);
+    }
+
+    @Override
+    public PrayerType getType() {
+
+        return PrayerType.DOOM;
     }
 }

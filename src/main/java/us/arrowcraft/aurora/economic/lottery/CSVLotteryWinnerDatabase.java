@@ -2,7 +2,6 @@ package us.arrowcraft.aurora.economic.lottery;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.sk89q.commandbook.CommandBook;
-import org.apache.commons.lang.Validate;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -188,8 +187,8 @@ public class CSVLotteryWinnerDatabase implements LotteryWinnerDatabase {
 
     private class Winner implements Comparable {
 
-        private String name;
-        private Long winTime;
+        private final String name;
+        private final Long winTime;
 
         public Winner(String name, Long winTime) {
 
@@ -210,8 +209,7 @@ public class CSVLotteryWinnerDatabase implements LotteryWinnerDatabase {
         @Override
         public int compareTo(Object o) {
 
-            Validate.notNull(o, "Invalid object passed for comparison");
-            Validate.isTrue(o instanceof Winner, "Invalid object passed for comparison");
+            if (o == null || !(o instanceof Winner)) return -1;
 
             Winner winner = (Winner) o;
             if (this.getTime().equals(winner.getTime())) return 0;

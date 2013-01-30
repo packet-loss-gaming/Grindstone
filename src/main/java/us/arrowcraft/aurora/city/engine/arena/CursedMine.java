@@ -608,7 +608,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         Player player = event.getPlayer();
 
-        if (event.getPrayerType().getValue() >= 2000 && LocationUtil.isInRegion(getWorld(), getRegion(), player)) {
+        if (event.getCause().getEffect().getType().isHoly() && contains(player)) {
             event.setCancelled(true);
         }
     }

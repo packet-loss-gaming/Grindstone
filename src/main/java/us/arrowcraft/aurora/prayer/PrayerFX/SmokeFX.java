@@ -2,12 +2,19 @@ package us.arrowcraft.aurora.prayer.PrayerFX;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import us.arrowcraft.aurora.prayer.PrayerType;
 import us.arrowcraft.aurora.util.EnvironmentUtil;
 
 /**
  * Author: Turtle9598
  */
 public class SmokeFX extends AbstractPrayer {
+
+    @Override
+    public PrayerType getType() {
+
+        return PrayerType.SMOKE;
+    }
 
     @Override
     public void add(Player player) {

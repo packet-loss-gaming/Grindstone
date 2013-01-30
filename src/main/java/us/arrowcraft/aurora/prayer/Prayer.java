@@ -1,39 +1,30 @@
 package us.arrowcraft.aurora.prayer;
 import org.bukkit.entity.Player;
 import us.arrowcraft.aurora.prayer.PrayerFX.AbstractPrayer;
+import us.arrowcraft.aurora.prayer.PrayerFX.AbstractTriggeredPrayer;
 
 /**
  * Author: Turtle9598
  */
-public class Prayer {
+public class Prayer implements Comparable {
 
     private final Player player;
-    private final PrayerType prayerType;
     private final AbstractPrayer abstractPrayer;
     private final long startTime;
     private long maxDuration;
-    private Class triggerClass;
 
 
-    public Prayer(Player player, PrayerType prayerType, AbstractPrayer abstractPrayer, long maxDuration,
-                  Class triggerClass) {
+    public Prayer(Player player, AbstractPrayer abstractPrayer, long maxDuration) {
 
         this.player = player;
-        this.prayerType = prayerType;
         this.abstractPrayer = abstractPrayer;
         this.startTime = System.currentTimeMillis();
         this.maxDuration = maxDuration;
-        this.triggerClass = triggerClass;
     }
 
     public Player getPlayer() {
 
         return player;
-    }
-
-    public PrayerType getPrayerType() {
-
-        return prayerType;
     }
 
     public AbstractPrayer getEffect() {
@@ -58,16 +49,22 @@ public class Prayer {
 
     public boolean hasTrigger() {
 
-        return triggerClass != null;
+        return abstractPrayer instanceof AbstractTriggeredPrayer;
     }
 
     public Class getTriggerClass() {
 
-        return triggerClass;
+        return hasTrigger() ? ((AbstractTriggeredPrayer) abstractPrayer).getTriggerClass() : null;
     }
 
-    public void setTriggerClass(Class triggerClass) {
+    @Override
+    public int compareTo(Object o) {
 
-        this.triggerClass = triggerClass;
+        if (o == null || !(o instanceof Prayer)) return 0;
+
+        Prayer prayer = (Prayer) o;
+        if (this.getEffect().getType().getValue() == prayer.getEffect().getType().getValue()) return 0;
+        if (this.getEffect().getType().getValue() > prayer.getEffect().getType().getValue()) return 1;
+        return -1;
     }
 }

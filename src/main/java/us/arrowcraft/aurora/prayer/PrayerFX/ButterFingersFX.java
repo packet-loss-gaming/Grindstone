@@ -4,11 +4,18 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
+import us.arrowcraft.aurora.prayer.PrayerType;
 
 /**
  * Author: Turtle9598
  */
 public class ButterFingersFX extends AbstractPrayer {
+
+    @Override
+    public PrayerType getType() {
+
+        return PrayerType.BUTTERFINGERS;
+    }
 
     @Override
     public void add(Player player) {

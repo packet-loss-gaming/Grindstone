@@ -34,8 +34,7 @@ public class LocationUtil {
         TeleportLocations[3] = new Location(Bukkit.getWorld("Destrio"), -285, 140, -664);
         TeleportLocations[4] = new Location(Bukkit.getWorld("Destrio"), -59, 98, -1698);
         for (int i = 0; i < TeleportLocations.length; i++) {
-            if (i == trueId)
-                return TeleportLocations[i];
+            if (i == trueId) return TeleportLocations[i];
         }
         return null;
     }
@@ -96,7 +95,8 @@ public class LocationUtil {
 
             Block tb = block.getRelative(0, 1, 0);
             Location l = tb.getLocation();
-            l.add(new Vector(0.5, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0.5));
+            l.add(new Vector(pos.getX() - pos.getBlockX(), BlockType.centralTopLimit(tb.getTypeId(), tb.getData()),
+                    pos.getZ() - pos.getBlockZ()));
             l.setPitch(pos.getPitch());
             l.setYaw(pos.getYaw());
             return l;
@@ -118,7 +118,8 @@ public class LocationUtil {
             if (foundGround && free == 2) {
                 Block tb = block.getRelative(0, -1, 0);
                 Location l = tb.getLocation();
-                l.add(new Vector(0.5, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0.5));
+                l.add(new Vector(pos.getX() - pos.getBlockX(), BlockType.centralTopLimit(tb.getTypeId(), tb.getData()),
+                        pos.getZ() - pos.getBlockZ()));
                 l.setPitch(pos.getPitch());
                 l.setYaw(pos.getYaw());
                 return l;
