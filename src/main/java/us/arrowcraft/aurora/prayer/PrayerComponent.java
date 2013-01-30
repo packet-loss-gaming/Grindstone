@@ -6,6 +6,7 @@ import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandUsageException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -275,6 +276,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
     private void refreshDisabled() {
 
         disabledPrayers.clear();
+        disabledPrayers.add(PrayerType.UNASSIGNED);
         for (String string : config.disabled) {
             try {
                 disabledPrayers.add(getPrayerByString(string));
@@ -334,15 +336,49 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
         @Command(aliases = {"pray", "pr"},
                 usage = "<player> <prayer>", desc = "Pray for something to happen to the player",
-                flags = "cs", min = 2, max = 2)
+                flags = "csl", min = 0, max = 2)
         public void prayerCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            String playerString = args.getString(0);
-            String prayerString = args.getString(1);
-            Player player = PlayerUtil.matchSinglePlayer(sender, playerString);
+            String playerString;
+            String prayerString;
+            Player player;
+
+            if (args.argsLength() < 2) {
+                if (args.hasFlag('l')) {
+                    int quantity = 0;
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(ChatColor.YELLOW + "Valid prayers: ");
+                    for (PrayerType prayer : PrayerType.values()) {
+                        if (disabledPrayers.contains(prayer)) continue;
+                        if (prayer.isHoly()) {
+                            if (!inst.hasPermission(sender, "aurora.pray.holy." + prayer.toString().toLowerCase())) {
+                                continue;
+                            }
+                        } else {
+                            if (!inst.hasPermission(sender, "aurora.pray.unholy." + prayer.toString().toLowerCase())) {
+                                continue;
+                            }
+                        }
+                        if (quantity > 0) sb.append(ChatColor.YELLOW + ", ");
+                        sb.append(prayer.isHoly() ? ChatColor.BLUE
+                                                  : ChatColor.RED).append(prayer.toString().toLowerCase());
+                        quantity++;
+                    }
+                    sb.append(ChatColor.YELLOW + ".");
+                    ChatUtil.sendNotice(sender, sb.toString());
+                    return;
+                } else {
+                    throw new CommandUsageException("Too few arguments.", "/pray [csl] <player> <prayer>");
+                }
+            } else {
+                playerString = args.getString(0);
+                prayerString = args.getString(1).toLowerCase();
+                player = PlayerUtil.matchSinglePlayer(sender, playerString);
+            }
 
             // Check for valid nameType
             try {
+
                 if (player.getName().equals(sender.getName())) {
                     adminComponent.standardizePlayer(player); // Remove Admin & Guild
                     uninfluencePlayer(player);                // Remove any other Prayers
