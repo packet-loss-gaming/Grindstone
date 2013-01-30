@@ -10,7 +10,11 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
@@ -30,6 +34,7 @@ import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import us.arrowcraft.aurora.exceptions.UnsupportedPrayerException;
 import us.arrowcraft.aurora.prayer.Prayer;
 import us.arrowcraft.aurora.prayer.PrayerComponent;
 import us.arrowcraft.aurora.prayer.PrayerType;
@@ -38,7 +43,13 @@ import us.arrowcraft.aurora.util.ChatUtil;
 import us.arrowcraft.aurora.util.EnvironmentUtil;
 import us.arrowcraft.aurora.util.LocationUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -725,10 +736,14 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 default:
                     prayerType = PrayerType.SMOKE;
             }
-            Prayer givenPrayer = prayer.constructPrayer(player, prayerType, TimeUnit.MINUTES.toMillis(60));
-            if (prayer.influencePlayer(player, givenPrayer)) {
-                ChatUtil.sendNotice(player, "You feel as though you have been blessed with "
-                        + prayerType.toString().toLowerCase() + ".");
+            try {
+                Prayer givenPrayer = prayer.constructPrayer(player, prayerType, TimeUnit.MINUTES.toMillis(60));
+                if (prayer.influencePlayer(player, givenPrayer)) {
+                    ChatUtil.sendNotice(player, "You feel as though you have been blessed with "
+                            + prayerType.toString().toLowerCase() + ".");
+                }
+            } catch (UnsupportedPrayerException e) {
+                e.printStackTrace();
             }
         }
     }

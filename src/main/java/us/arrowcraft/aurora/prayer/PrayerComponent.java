@@ -12,6 +12,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -24,6 +25,8 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.PrayerApplicationEvent;
+import us.arrowcraft.aurora.exceptions.InvalidPrayerException;
+import us.arrowcraft.aurora.exceptions.UnsupportedPrayerException;
 import us.arrowcraft.aurora.prayer.PrayerFX.AbstractPrayer;
 import us.arrowcraft.aurora.prayer.PrayerFX.AbstractTriggeredPrayer;
 import us.arrowcraft.aurora.prayer.PrayerFX.AlonzoFX;
@@ -57,8 +60,11 @@ import us.arrowcraft.aurora.prayer.PrayerFX.ZombieFX;
 import us.arrowcraft.aurora.util.ChatUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -79,12 +85,14 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
     private AdminComponent adminComponent;
 
     private LocalConfiguration config;
+    private List<PrayerType> disabledPrayers = new ArrayList<>();
 
     // Player Management
     public boolean influencePlayer(Player player, Prayer... prayer) {
 
+        List<PrayerType> disabled = Collections.unmodifiableList(disabledPrayers);
         for (Prayer aPrayer : prayer) {
-            if (isValidPrayer(aPrayer.getEffect().getType())) {
+            if (disabled.contains(aPrayer.getEffect().getType())) {
                 InfluenceState session = sessions.getSession(InfluenceState.class, player);
                 session.influence(aPrayer);
             } else return false;
@@ -114,30 +122,33 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         session.uninfluence(prayer);
     }
 
-    public PrayerType getPrayerByString(String prayer) {
+    public PrayerType getPrayerByString(String prayer) throws InvalidPrayerException {
 
         try {
             return PrayerType.valueOf(prayer.trim().toUpperCase());
         } catch (Exception e) {
-            return null;
+            throw new InvalidPrayerException();
         }
     }
 
-    public PrayerType getPrayerByInteger(int prayer) {
+    public PrayerType getPrayerByInteger(int prayer) throws InvalidPrayerException {
 
         try {
             return PrayerType.getId(prayer);
         } catch (Exception e) {
-            return null;
+            throw new InvalidPrayerException();
         }
     }
 
-    public Prayer constructPrayer(Player player, PrayerType prayerType, long maxDuration) {
+    public Prayer constructPrayer(Player player, PrayerType type, long maxDuration) throws UnsupportedPrayerException {
+
+        Validate.notNull(player);
+        Validate.notNull(type);
+        Validate.notNull(maxDuration);
 
         AbstractPrayer prayerEffects;
-        Class triggerClass = null;
 
-        switch (prayerType) {
+        switch (type) {
 
             case ALONZO:
                 prayerEffects = new AlonzoFX();
@@ -213,7 +224,6 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 break;
             case FIREBALL:
                 prayerEffects = new ThrownFireballFX();
-                triggerClass = PlayerInteractEvent.class;
                 break;
             case TNT:
                 prayerEffects = new TNTFX();
@@ -225,7 +235,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 prayerEffects = new ZombieFX();
                 break;
             default:
-                return null;
+                throw new UnsupportedPrayerException();
         }
 
         return new Prayer(player, prayerEffects, maxDuration);
@@ -235,6 +245,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
     public void enable() {
 
         config = configure(new LocalConfiguration());
+        refreshDisabled();
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         registerCommands(Commands.class);
@@ -246,6 +257,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
         super.reload();
         configure(config);
+        refreshDisabled();
     }
 
     private static class LocalConfiguration extends ConfigurationBase {
@@ -254,10 +266,22 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         public boolean enableUnholy = true;
         @Setting("enable-holy-nameType")
         public boolean enableHoly = true;
-        @Setting("enable-god-prayer")
-        public boolean enableGodPrayer = false;
-        @Setting("enable-mushroom-prayer")
-        public boolean enableMushroomPrayer = false;
+        @Setting("disabled-prayers")
+        public Set<String> disabled = new HashSet<>(Arrays.asList(
+                "god", "mushroom"
+        ));
+    }
+
+    private void refreshDisabled() {
+
+        disabledPrayers.clear();
+        for (String string : config.disabled) {
+            try {
+                disabledPrayers.add(getPrayerByString(string));
+            } catch (InvalidPrayerException ex) {
+                log.warning("The prayer: " + string + " is not valid.");
+            }
+        }
     }
 
     @EventHandler
@@ -318,7 +342,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
             Player player = PlayerUtil.matchSinglePlayer(sender, playerString);
 
             // Check for valid nameType
-            if (isValidPrayer(prayerString)) {
+            try {
                 if (player.getName().equals(sender.getName())) {
                     adminComponent.standardizePlayer(player); // Remove Admin & Guild
                     uninfluencePlayer(player);                // Remove any other Prayers
@@ -350,27 +374,10 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                     Bukkit.broadcastMessage(ChatColor.GOLD + "The true power of " + player.getName() + " has been " +
                             "awakened!");
                 }
-
-            } else {
+            } catch (InvalidPrayerException | UnsupportedPrayerException ex) {
                 throw new CommandException("That is not a valid prayer!");
             }
         }
-    }
-
-    private boolean isValidPrayer(PrayerType prayerType) {
-
-        return prayerType != null && !(!config.enableGodPrayer && prayerType.equals(PrayerType.GOD)
-                || !config.enableMushroomPrayer && prayerType.equals(PrayerType.MUSHROOM));
-    }
-
-    private boolean isValidPrayer(int prayerNumber) {
-
-        return isValidPrayer(getPrayerByInteger(prayerNumber));
-    }
-
-    private boolean isValidPrayer(String prayerString) {
-
-        return isValidPrayer(getPrayerByString(prayerString));
     }
 
     private boolean integrityTest(Player player, Prayer prayer) {

@@ -75,6 +75,7 @@ import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.ApocalypseLocalSpawnEvent;
 import us.arrowcraft.aurora.events.EggDropEvent;
 import us.arrowcraft.aurora.events.JungleFallBlockerEvent;
+import us.arrowcraft.aurora.exceptions.UnsupportedPrayerException;
 import us.arrowcraft.aurora.prayer.Prayer;
 import us.arrowcraft.aurora.prayer.PrayerComponent;
 import us.arrowcraft.aurora.prayer.PrayerType;
@@ -122,7 +123,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     @InjectComponent
     PrayerComponent prayerComponent;
 
-    private Prayer[] getPrayers(Player player) {
+    private Prayer[] getPrayers(Player player) throws UnsupportedPrayerException {
 
         return new Prayer[] {
                 prayerComponent.constructPrayer(player, PrayerType.BLINDNESS, TimeUnit.DAYS.toMillis(1)),

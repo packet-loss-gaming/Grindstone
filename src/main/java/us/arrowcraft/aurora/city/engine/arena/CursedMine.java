@@ -41,6 +41,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.PrayerApplicationEvent;
+import us.arrowcraft.aurora.exceptions.UnsupportedPrayerException;
 import us.arrowcraft.aurora.prayer.PrayerComponent;
 import us.arrowcraft.aurora.prayer.PrayerType;
 import us.arrowcraft.aurora.util.ChanceUtil;
@@ -348,113 +349,119 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     private void ghost(Player player) {
 
-        if (ChanceUtil.getChance(player.getLocation().getBlockY())) {
-            if (ChanceUtil.getChance(2)) {
-                switch (ChanceUtil.getRandom(4)) {
-                    case 1:
-                        ChatUtil.sendNotice(player, "Caspher the friendly ghost drops some bread.");
-                        player.getWorld().dropItemNaturally(player.getLocation(),
-                                new ItemStack(ItemID.BREAD, ChanceUtil.getRandom(16)));
-                        break;
-                    case 2:
-                        ChatUtil.sendNotice(player, "COOKIE gives you a cookie.");
-                        player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(ItemID.COOKIE));
-                        break;
-                    case 3:
-                        ChatUtil.sendNotice(player, "Caspher the friendly ghost appears.");
-                        player.getWorld().dropItemNaturally(player.getLocation(),
-                                new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(512)));
-                        player.getWorld().dropItemNaturally(player.getLocation(),
-                                new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(512)));
-                        player.getWorld().dropItemNaturally(player.getLocation(),
-                                new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(512)));
-                        break;
-                    case 4:
-                        ChatUtil.sendNotice(player, "John gives you a new jacket.");
-                        player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(ItemID.LEATHER_CHEST));
-                        break;
-                    default:
-                        break;
+        try {
+            if (ChanceUtil.getChance(player.getLocation().getBlockY())) {
+                if (ChanceUtil.getChance(2)) {
+                    switch (ChanceUtil.getRandom(4)) {
+                        case 1:
+                            ChatUtil.sendNotice(player, "Caspher the friendly ghost drops some bread.");
+                            player.getWorld().dropItemNaturally(player.getLocation(),
+                                    new ItemStack(ItemID.BREAD, ChanceUtil.getRandom(16)));
+                            break;
+                        case 2:
+                            ChatUtil.sendNotice(player, "COOKIE gives you a cookie.");
+                            player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(ItemID.COOKIE));
+                            break;
+                        case 3:
+                            ChatUtil.sendNotice(player, "Caspher the friendly ghost appears.");
+                            player.getWorld().dropItemNaturally(player.getLocation(),
+                                    new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(512)));
+                            player.getWorld().dropItemNaturally(player.getLocation(),
+                                    new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(512)));
+                            player.getWorld().dropItemNaturally(player.getLocation(),
+                                    new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(512)));
+                            break;
+                        case 4:
+                            ChatUtil.sendNotice(player, "John gives you a new jacket.");
+                            player.getWorld().dropItemNaturally(player.getLocation(),
+                                    new ItemStack(ItemID.LEATHER_CHEST));
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+
+                    if (hasAncientArmour(player) && ChanceUtil.getChance(2)) {
+                        ChatUtil.sendNotice(player, "Your armour blocks an incoming ghost attack.");
+                        return;
+                    }
+
+                    Location modifiedLoc = null;
+
+                    switch (ChanceUtil.getRandom(10)) {
+                        case 1:
+                            ChatUtil.sendWarning(player, "Dave decides to play racket ball...");
+                            ChatUtil.sendWarning(player, "Using you as the ball!");
+                            daveHitList.add(player);
+                            modifiedLoc = new Location(player.getWorld(), player.getLocation().getX(), 100,
+                                    player.getLocation().getZ());
+                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                    PrayerType.ROCKET, TimeUnit.MINUTES.toMillis(30)));
+                            break;
+                        case 2:
+                            ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
+                            daveHitList.add(player);
+                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                    PrayerType.SLAP, TimeUnit.MINUTES.toMillis(30)));
+                            break;
+                        case 3:
+                            ChatUtil.sendWarning(player, "George plays with fire, sadly too close to you.");
+                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                    PrayerType.FIRE, TimeUnit.MINUTES.toMillis(2)));
+                            break;
+                        case 4:
+                            ChatUtil.sendWarning(player, "Simon says pick up sticks.");
+                            for (int i = 0; i < player.getInventory().getContents().length; i++) {
+                                player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.STICK, 64));
+                            }
+                            break;
+                        case 5:
+                            ChatUtil.sendWarning(player, "Ben dumps out your backpack.");
+                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                    PrayerType.BUTTERFINGERS, TimeUnit.SECONDS.toMillis(10)));
+                            break;
+                        case 6:
+                            ChatUtil.sendWarning(player, "Merlin attacks with a mighty rage!");
+                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                    PrayerType.ALONZO, TimeUnit.SECONDS.toMillis(20)));
+                            break;
+                        case 7:
+                            ChatUtil.sendWarning(player, "Dave tells everyone that your mining!");
+                            Bukkit.broadcastMessage(ChatColor.GOLD + "The player: "
+                                    + player.getDisplayName() + " is mining in the cursed mine!!!");
+                            break;
+                        case 8:
+                            ChatUtil.sendWarning(player, "Dave likes your food.");
+                            daveHitList.add(player);
+                            prayerComponent.uninfluencePlayer(player);
+                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                    PrayerType.STARVATION, TimeUnit.MINUTES.toMillis(15)));
+                            break;
+                        case 9:
+                            ChatUtil.sendWarning(player, "1alonzo4 declares war on YOU!");
+                            for (int i = 0; i < ChanceUtil.getRandom(30); i++) {
+                                Blaze blaze = getWorld().spawn(player.getLocation(), Blaze.class);
+                                blaze.setTarget(player);
+                            }
+                            break;
+                        case 10:
+                            ChatUtil.sendWarning(player, "Hell hounds appear out of the floor!");
+                            for (int i = 0; i < ChanceUtil.getRandom(30); i++) {
+                                Wolf wolf = getWorld().spawn(player.getLocation(), Wolf.class);
+                                wolf.setAngry(true);
+                                wolf.setTarget(player);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+
+                    if (modifiedLoc != null) player.teleport(modifiedLoc,
+                            PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
                 }
-            } else {
-
-                if (hasAncientArmour(player) && ChanceUtil.getChance(2)) {
-                    ChatUtil.sendNotice(player, "Your armour blocks an incoming ghost attack.");
-                    return;
-                }
-
-                Location modifiedLoc = null;
-
-                switch (ChanceUtil.getRandom(10)) {
-                    case 1:
-                        ChatUtil.sendWarning(player, "Dave decides to play racket ball...");
-                        ChatUtil.sendWarning(player, "Using you as the ball!");
-                        daveHitList.add(player);
-                        modifiedLoc = new Location(player.getWorld(), player.getLocation().getX(), 100,
-                                player.getLocation().getZ());
-                        prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
-                                PrayerType.ROCKET, TimeUnit.MINUTES.toMillis(30)));
-                        break;
-                    case 2:
-                        ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
-                        daveHitList.add(player);
-                        prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player, PrayerType.SLAP,
-                                TimeUnit.MINUTES.toMillis(30)));
-                        break;
-                    case 3:
-                        ChatUtil.sendWarning(player, "George plays with fire, sadly too close to you.");
-                        prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player, PrayerType.FIRE,
-                                TimeUnit.MINUTES.toMillis(2)));
-                        break;
-                    case 4:
-                        ChatUtil.sendWarning(player, "Simon says pick up sticks.");
-                        for (int i = 0; i < player.getInventory().getContents().length; i++) {
-                            player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.STICK, 64));
-                        }
-                        break;
-                    case 5:
-                        ChatUtil.sendWarning(player, "Ben dumps out your backpack.");
-                        prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
-                                PrayerType.BUTTERFINGERS, TimeUnit.SECONDS.toMillis(10)));
-                        break;
-                    case 6:
-                        ChatUtil.sendWarning(player, "Merlin attacks with a mighty rage!");
-                        prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
-                                PrayerType.ALONZO, TimeUnit.SECONDS.toMillis(20)));
-                        break;
-                    case 7:
-                        ChatUtil.sendWarning(player, "Dave tells everyone that your mining!");
-                        Bukkit.broadcastMessage(ChatColor.GOLD + "The player: "
-                                + player.getDisplayName() + " is mining in the cursed mine!!!");
-                        break;
-                    case 8:
-                        ChatUtil.sendWarning(player, "Dave likes your food.");
-                        daveHitList.add(player);
-                        prayerComponent.uninfluencePlayer(player);
-                        prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
-                                PrayerType.STARVATION, TimeUnit.MINUTES.toMillis(15)));
-                        break;
-                    case 9:
-                        ChatUtil.sendWarning(player, "1alonzo4 declares war on YOU!");
-                        for (int i = 0; i < ChanceUtil.getRandom(30); i++) {
-                            Blaze blaze = getWorld().spawn(player.getLocation(), Blaze.class);
-                            blaze.setTarget(player);
-                        }
-                        break;
-                    case 10:
-                        ChatUtil.sendWarning(player, "Hell hounds appear out of the floor!");
-                        for (int i = 0; i < ChanceUtil.getRandom(30); i++) {
-                            Wolf wolf = getWorld().spawn(player.getLocation(), Wolf.class);
-                            wolf.setAngry(true);
-                            wolf.setTarget(player);
-                        }
-                        break;
-                    default:
-                        break;
-                }
-
-                if (modifiedLoc != null) player.teleport(modifiedLoc, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
             }
+        } catch (UnsupportedPrayerException ex) {
+            ex.printStackTrace();
         }
     }
 
