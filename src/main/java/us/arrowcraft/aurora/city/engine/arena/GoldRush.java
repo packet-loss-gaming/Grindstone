@@ -487,7 +487,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     }
 
-    private static final ItemStack cookedPork = new ItemStack(ItemID.COOKED_PORKCHOP, 16);
+    private static final ItemStack cookedPork = new ItemStack(ItemID.COOKED_PORKCHOP, 2);
 
     public boolean moveLobby() {
 
@@ -509,7 +509,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 aPlayer.setHealth(20);
                 aPlayer.setFoodLevel(20);
                 aPlayer.setSaturation(5F);
-                aPlayer.setSaturation(0F);
+                aPlayer.setExhaustion(0F);
                 aPlayer.getInventory().addItem(cookedPork);
 
                 // Add
@@ -522,6 +522,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         }
         if (!players.isEmpty()) {
             lootSplit = ChanceUtil.getRangedRandom(64 * 3, 64 * 9) / players.size();
+            if (ChanceUtil.getChance(100)) lootSplit *= 10;
             start(); // Start if someone was teleported
         }
         return true;
