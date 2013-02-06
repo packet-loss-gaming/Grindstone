@@ -83,8 +83,7 @@ public class FlightComponent extends BukkitComponent implements Listener {
             if (args.hasFlag('s')) {
                 try {
                     speed = Float.parseFloat(args.getFlag('s'));
-                    if (speed <= 1 && speed >= -1) wingPlayer(target, speed);
-                    else throw new CommandException("The number must be between -1 and 1.");
+                    if (speed > 1 || speed < -1) throw new CommandException("The number must be between -1 and 1.");
                 } catch (NumberFormatException e) {
                     throw new CommandException("The number must be between -1 and 1.");
                 }

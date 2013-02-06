@@ -60,12 +60,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     private ProtectedRegion lobby;
 
-    private ProtectedRegion roomOne;
-    private ProtectedRegion roomTwo;
-    private ProtectedRegion roomThree;
+    private ProtectedRegion roomOne, roomTwo, roomThree;
 
-    private ProtectedRegion doorOne;
-    private ProtectedRegion doorTwo;
+    private ProtectedRegion doorOne, doorTwo;
 
     // Block - Should be flipped
     private ConcurrentHashMap<Location, Boolean> leverBlocks = new ConcurrentHashMap<>();
