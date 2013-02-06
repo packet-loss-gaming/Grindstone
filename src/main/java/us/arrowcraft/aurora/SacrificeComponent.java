@@ -295,7 +295,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                                     config.sacrificialBlockId, config.sacrificialBlockData,   // New Block B
                                     BlockID.AIR, (byte) 0,                                    // Old Block H
                                     BlockID.FIRE, (byte) 0,                                   // New Block H
-                                    20, false);
+                                    20 * 4, false);
                             getPitfall().getPitfallEngine().createPitfallEffect(pitfallEvent);
                             if (pitfallEvent.isCancelled()) return;
                             sacrifice(player, item.getItemStack().clone());
