@@ -11,12 +11,14 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -26,6 +28,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.admin.AdminState;
 import us.arrowcraft.aurora.events.ApocalypseBedSpawnEvent;
@@ -100,8 +103,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         private EntityType getAttackMob() {
 
             try {
-                return ChanceUtil.getChance(100) ? EntityType.COW
-                                                 : EntityType.fromName(cityAttackMobString.toUpperCase());
+                return EntityType.fromName(cityAttackMobString.toUpperCase());
             } catch (Exception e) {
                 return null;
             }
@@ -153,9 +155,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         if (ent instanceof Skeleton && ((Skeleton) ent).getKiller() != null) {
             if (world.isThundering() && ChanceUtil.getChance(5)) {
-                event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8 * 4) * 2)));
+                event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8) * 2)));
             } else {
-                event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8 * 4))));
+                event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8))));
             }
         }
 
@@ -284,7 +286,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         Entity e = spawn(location, type);
         if (e == null) return;
-        arm(e, allowItemPickup);
+        if (e instanceof Zombie && ChanceUtil.getChance(16)) {
+            ((Zombie) e).setBaby(true);
+        }
+        // Disabled until there is a better way to do it
+        arm(e, false);
     }
 
     private Entity spawn(Location location, EntityType type) {
@@ -300,24 +306,30 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         ((LivingEntity) e).setCanPickupItems(allowItemPickup);
 
         if (ChanceUtil.getChance(config.armourChance)) {
-            if (ChanceUtil.getChance(100)) {
+            if (ChanceUtil.getChance(35)) {
                 equipment.setArmorContents(ItemUtil.diamondArmour);
             } else {
                 equipment.setArmorContents(ItemUtil.ironArmour);
             }
 
-            if (ChanceUtil.getChance(10)) equipment.setHelmet(null);
-            if (ChanceUtil.getChance(10)) equipment.setChestplate(null);
-            if (ChanceUtil.getChance(10)) equipment.setLeggings(null);
-            if (ChanceUtil.getChance(10)) equipment.setBoots(null);
+            if (ChanceUtil.getChance(4)) equipment.setHelmet(null);
+            if (ChanceUtil.getChance(4)) equipment.setChestplate(null);
+            if (ChanceUtil.getChance(4)) equipment.setLeggings(null);
+            if (ChanceUtil.getChance(4)) equipment.setBoots(null);
         }
 
         if (ChanceUtil.getChance(config.weaponChance)) {
-            if (ChanceUtil.getChance(100)) {
-                equipment.setItemInHand(new ItemStack(ItemID.DIAMOND_SWORD));
-            } else {
-                equipment.setItemInHand(new ItemStack(ItemID.IRON_SWORD));
-            }
+            ItemStack sword = new ItemStack(ItemID.IRON_SWORD);
+            if (ChanceUtil.getChance(35)) sword = new ItemStack(ItemID.DIAMOND_SWORD);
+            ItemMeta meta = sword.getItemMeta();
+            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_ALL, ChanceUtil.getRandom(5), false);
+            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, ChanceUtil.getRandom(5), false);
+            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_UNDEAD, ChanceUtil.getRandom(5), false);
+            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.FIRE_ASPECT, ChanceUtil.getRandom(2), false);
+            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.KNOCKBACK, ChanceUtil.getRandom(2), false);
+            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.LOOT_BONUS_MOBS, ChanceUtil.getRandom(3), false);
+            sword.setItemMeta(meta);
+            equipment.setItemInHand(sword);
         }
 
         if (allowItemPickup) {
@@ -327,11 +339,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             equipment.setLeggingsDropChance(1);
             equipment.setBootsDropChance(1);
         } else {
-            equipment.setItemInHandDropChance(.75F);
-            equipment.setHelmetDropChance(.75F);
-            equipment.setChestplateDropChance(.75F);
-            equipment.setLeggingsDropChance(.75F);
-            equipment.setBootsDropChance(.75F);
+            equipment.setItemInHandDropChance(.55F);
+            equipment.setHelmetDropChance(.55F);
+            equipment.setChestplateDropChance(.55F);
+            equipment.setLeggingsDropChance(.55F);
+            equipment.setBootsDropChance(.55F);
         }
     }
 }

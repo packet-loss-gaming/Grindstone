@@ -93,7 +93,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
         List<PrayerType> disabled = Collections.unmodifiableList(disabledPrayers);
         for (Prayer aPrayer : prayer) {
-            if (disabled.contains(aPrayer.getEffect().getType())) {
+            if (!disabled.contains(aPrayer.getEffect().getType())) {
                 InfluenceState session = sessions.getSession(InfluenceState.class, player);
                 session.influence(aPrayer);
             } else return false;
@@ -403,7 +403,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 Prayer prayer = constructPrayer(player, getPrayerByString(prayerString), TimeUnit.MINUTES.toMillis(30));
                 influencePlayer(player, prayer);
 
-                if (!args.hasFlag('s')) return;
+                if (args.hasFlag('s')) return;
                 if (prayer.getEffect().getType().equals(PrayerType.GOD)) {
                     Bukkit.broadcastMessage(ChatColor.GOLD + "A god has taken the form of " + player.getName() + "!");
                 } else if (prayer.getEffect().getType().equals(PrayerType.POWER)) {
