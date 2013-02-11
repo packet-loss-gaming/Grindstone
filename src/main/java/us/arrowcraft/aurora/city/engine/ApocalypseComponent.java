@@ -23,12 +23,16 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.util.Vector;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.admin.AdminState;
 import us.arrowcraft.aurora.events.ApocalypseBedSpawnEvent;
@@ -37,11 +41,14 @@ import us.arrowcraft.aurora.events.PlayerAdminModeChangeEvent;
 import us.arrowcraft.aurora.homes.EnderPearlHomesComponent;
 import us.arrowcraft.aurora.jail.JailComponent;
 import us.arrowcraft.aurora.util.ChanceUtil;
+import us.arrowcraft.aurora.util.ChatUtil;
+import us.arrowcraft.aurora.util.EnvironmentUtil;
 import us.arrowcraft.aurora.util.ItemUtil;
 import us.arrowcraft.aurora.util.LocationUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Logger;
 
 /**
@@ -119,6 +126,77 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 && !event.getSpawnReason().equals(CreatureSpawnEvent.SpawnReason.NATURAL)
                 && event.isCancelled())
             event.setCancelled(false);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityTarget(EntityTargetLivingEntityEvent event) {
+
+        Entity target = event.getTarget();
+        Entity targeter = event.getEntity();
+
+        if (!(target instanceof Player) || !targeter.isValid() || !targeter.getType().equals(config.attackMob)) return;
+
+        Player player = (Player) target;
+        if (player.getWorld().isThundering() && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(8)) {
+
+            targeter.setFireTicks(ChanceUtil.getRandom(20 * 60));
+        }
+    }
+
+
+    private Random random = new Random();
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
+
+        Entity target = event.getEntity();
+
+        if (!(target instanceof Player)) return;
+
+        Player player = (Player) target;
+        if (player.getWorld().isThundering() && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(7)) {
+
+            ChatUtil.sendNotice(player, "Your armour releases a burst of energy.");
+            player.setHealth(Math.min(player.getHealth() + 4, player.getMaxHealth()));
+            ChatUtil.sendNotice(player, "You are healed by an ancient force.");
+            List<Entity> entities = player.getNearbyEntities(8, 8, 8);
+            for (Entity e : entities) {
+                if (e.isValid() && e instanceof LivingEntity) {
+                    if (e instanceof Player) {
+                        ((Player) e).setHealth(Math.min(((Player) e).getHealth() + 4, ((Player) e).getMaxHealth()));
+                        ChatUtil.sendNotice((Player) e, "You are healed by an ancient force.");
+                    } else if (EnvironmentUtil.isHostileEntity(e)) {
+                        e.setVelocity(new Vector(
+                                random.nextDouble() * 1.7 - 1.5,
+                                random.nextDouble() * 4,
+                                random.nextDouble() * 1.7 - 1.5
+                        ));
+                        e.setFireTicks(ChanceUtil.getRandom(20 * 60));
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onXPPickUp(PlayerExpChangeEvent event) {
+
+        Player player = event.getPlayer();
+
+        if (ItemUtil.hasAncientArmour(player)) {
+            ItemStack[] armour = player.getInventory().getArmorContents();
+            ItemStack is = armour[ChanceUtil.getRandom(armour.length) - 1];
+            int exp = event.getAmount();
+            if (exp > is.getDurability()) {
+                exp -= is.getDurability();
+                is.setDurability((short) 0);
+            } else {
+                is.setDurability((short) (is.getDurability() - exp));
+                exp = 0;
+            }
+            player.getInventory().setArmorContents(armour);
+            event.setAmount(exp);
+        }
     }
 
     @EventHandler

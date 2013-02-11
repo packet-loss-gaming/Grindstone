@@ -149,17 +149,29 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 }
                 break;
             case NETHER_PORTAL:
-                if (event.getFrom().getWorld().getName().equals(config.cityWorld + "_nether")) {
-                    event.useTravelAgent(false);
-                    server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
+                if (event.getFrom().getWorld().getEnvironment().equals(World.Environment.NETHER)) {
+
+                    server.getScheduler().runTaskLater(inst, new Runnable() {
 
                         @Override
                         public void run() {
 
-                            player.teleport(player.getWorld().getSpawnLocation());
+                            World city = Bukkit.getWorld(config.cityWorld);
+                            player.teleport(city.getSpawnLocation());
                         }
                     }, 1);
+                } else {
+                    event.setCancelled(true);
                 }
+                ChatUtil.sendError(player, "The nether is currently broken please come back later.");
+                ChatUtil.sendNotice(player, "Should be fixed in a few hours, sorry.");
+
+                /*
+                if (event.getTo().getWorld().getName().equals(config.cityWorld)) {
+                    event.setTo(event.getTo().getWorld().getSpawnLocation());
+                    event.useTravelAgent(false);
+                }
+                */
                 break;
         }
     }

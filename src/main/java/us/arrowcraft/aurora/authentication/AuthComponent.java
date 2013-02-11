@@ -1,6 +1,10 @@
 package us.arrowcraft.aurora.authentication;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.minecraft.util.commands.*;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
@@ -18,7 +22,14 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import us.arrowcraft.aurora.util.ChatUtil;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -198,6 +209,8 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
                     // Establish the connection
                     URL url = new URL(config.websiteUrl + subAddress + "?page=" + i);
                     connection = (HttpURLConnection) url.openConnection();
+                    connection.setConnectTimeout(1500);
+                    connection.setReadTimeout(1500);
 
                     // Check response codes return if invalid
                     if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 300) return null;

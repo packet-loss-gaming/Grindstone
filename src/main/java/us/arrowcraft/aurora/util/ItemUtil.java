@@ -1,6 +1,8 @@
 package us.arrowcraft.aurora.util;
 import com.sk89q.worldedit.blocks.ItemID;
+import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -101,6 +103,19 @@ public class ItemUtil {
             }
         }
         return false;
+    }
+
+    public static boolean hasAncientArmour(Player player) {
+
+        if (!player.isValid()) return false;
+
+        boolean[] b = new boolean[] {false, false, false, false};
+        ItemStack[] armour = player.getInventory().getArmorContents();
+        for (int i = 0; i < 4; i++) {
+            b[i] = armour[i] != null && armour[i].hasItemMeta() && armour[i].getItemMeta().hasDisplayName()
+                    && armour[i].getItemMeta().getDisplayName().contains(ChatColor.GOLD + "Ancient");
+        }
+        return b[0] && b[1] && b[2] && b[3];
     }
 
     public static int fortuneMultiplier(ItemStack pickaxe) {

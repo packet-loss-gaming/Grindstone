@@ -106,7 +106,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         return sessions.getSession(InfluenceState.class, player).isInfluenced();
     }
 
-    public List<Prayer> getInfluences(Player player) {
+    public Prayer[] getInfluences(Player player) {
 
         return sessions.getSession(InfluenceState.class, player).getInfluences();
     }
@@ -484,9 +484,9 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
             return prayers.size() > 0;
         }
 
-        public List<Prayer> getInfluences() {
+        public Prayer[] getInfluences() {
 
-            return Collections.unmodifiableList(prayers);
+            return prayers.toArray(new Prayer[prayers.size()]);
         }
 
         public void influence(Prayer prayer) {

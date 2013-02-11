@@ -316,18 +316,6 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         return item.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS);
     }
 
-    private boolean hasAncientArmour(Player player) {
-
-        boolean[] b = new boolean[] {false, false, false, false};
-        ItemStack[] armour = player.getInventory().getArmorContents();
-        for (int i = 0; i < 4; i++) {
-            b[i] = armour[i] != null && armour[i].getItemMeta().hasDisplayName()
-                    && armour[i].getItemMeta().getDisplayName().contains(ChatColor.GOLD + "Ancient");
-        }
-
-        return b[0] && b[1] && b[2] && b[3];
-    }
-
     private void eatFood(Player player) {
 
         if (player.getSaturation() - 1 >= 0) {
@@ -381,7 +369,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     }
                 } else {
 
-                    if (hasAncientArmour(player) && ChanceUtil.getChance(2)) {
+                    if (ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(2)) {
                         ChatUtil.sendNotice(player, "Your armour blocks an incoming ghost attack.");
                         return;
                     }

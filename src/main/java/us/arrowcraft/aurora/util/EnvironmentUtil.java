@@ -6,9 +6,15 @@ import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * @author Turtle9598
@@ -105,9 +111,7 @@ public class EnvironmentUtil {
     public static boolean isOre(int block) {
 
         for (int ore : invaluableOres) {
-            if (ore == block) {
-                return true;
-            }
+            if (ore == block) return true;
         }
         return isValuableOre(block);
     }
@@ -219,7 +223,6 @@ public class EnvironmentUtil {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -240,7 +243,6 @@ public class EnvironmentUtil {
                 return true;
             }
         }
-
         return isContainer(block);
     }
 
@@ -260,7 +262,6 @@ public class EnvironmentUtil {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -280,7 +281,6 @@ public class EnvironmentUtil {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -292,11 +292,8 @@ public class EnvironmentUtil {
     public static boolean isFrozenBiome(Biome biome) {
 
         for (Biome aFrozenBiome : frozenBiomes) {
-            if (aFrozenBiome == biome) {
-                return true;
-            }
+            if (aFrozenBiome == biome) return true;
         }
-
         return false;
     }
 
@@ -309,8 +306,37 @@ public class EnvironmentUtil {
 
     public static void generateRadialEffect(Location[] locations, Effect effect) {
 
-        for (Location loc : locations) {
-            generateRadialEffect(loc, effect);
+        for (Location loc : locations) generateRadialEffect(loc, effect);
+    }
+
+    private static Set<EntityType> hostileEntities = new HashSet<>();
+
+    static {
+        hostileEntities.add(EntityType.ENDERMAN);
+        hostileEntities.add(EntityType.PIG_ZOMBIE);
+        hostileEntities.add(EntityType.ZOMBIE);
+        hostileEntities.add(EntityType.SKELETON);
+        hostileEntities.add(EntityType.CREEPER);
+        hostileEntities.add(EntityType.SILVERFISH);
+        hostileEntities.add(EntityType.SPIDER);
+        hostileEntities.add(EntityType.CAVE_SPIDER);
+        hostileEntities.add(EntityType.SLIME);
+        hostileEntities.add(EntityType.MAGMA_CUBE);
+        hostileEntities.add(EntityType.BLAZE);
+        hostileEntities.add(EntityType.WITCH);
+    }
+
+    public static boolean isHostileEntity(Entity e) {
+
+        return e != null && e.isValid() && e.getType() != null && hostileEntities.contains(e.getType());
+    }
+
+    public static Class[] hostileEntities() {
+
+        List<Class> clazz = new ArrayList<>();
+        for (EntityType type : hostileEntities) {
+            clazz.add(type.getEntityClass());
         }
+        return clazz.toArray(new Class[clazz.size()]);
     }
 }
