@@ -16,6 +16,7 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.milkbowl.vault.permission.Permission;
+import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Server;
@@ -41,6 +42,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import us.arrowcraft.aurora.NinjaComponent;
@@ -624,7 +626,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @Command(aliases = {"godarmour"},
                 usage = "<player>", desc = "Modify a player's permissions",
                 flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.lost.arm"})
+        @CommandPermissions({"aurora.lost.god.armour"})
         public void lostGodArmourCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
@@ -634,6 +636,22 @@ public class AdminComponent extends BukkitComponent implements Listener {
             armour[1] = new ItemStack(ItemID.DIAMOND_CHEST);
             armour[2] = new ItemStack(ItemID.DIAMOND_PANTS);
             armour[3] = new ItemStack(ItemID.DIAMOND_BOOTS);
+
+            ItemMeta meta = armour[0].getItemMeta();
+            meta.setDisplayName(ChatColor.BLUE + "God Helmet");
+            armour[0].setItemMeta(meta);
+
+            meta = armour[1].getItemMeta();
+            meta.setDisplayName(ChatColor.BLUE + "God Chestplate");
+            armour[1].setItemMeta(meta);
+
+            meta = armour[2].getItemMeta();
+            meta.setDisplayName(ChatColor.BLUE + "God Leggings");
+            armour[2].setItemMeta(meta);
+
+            meta = armour[3].getItemMeta();
+            meta.setDisplayName(ChatColor.BLUE + "God Boots");
+            armour[3].setItemMeta(meta);
 
             armour[0].addEnchantment(Enchantment.OXYGEN, 3);
             armour[0].addEnchantment(Enchantment.WATER_WORKER, 1);
@@ -656,7 +674,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @Command(aliases = {"godbow"},
                 usage = "<player>", desc = "Modify a player's permissions",
                 flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.lost.bow"})
+        @CommandPermissions({"aurora.lost.god.bow"})
         public void lostGodBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
@@ -666,7 +684,9 @@ public class AdminComponent extends BukkitComponent implements Listener {
             itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
             itemStack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
             itemStack.addEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
-
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            itemMeta.setDisplayName(ChatColor.RED + "God Bow");
+            itemStack.setItemMeta(itemMeta);
             player.getInventory().addItem(itemStack);
 
             // Tell Admin
@@ -677,7 +697,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @Command(aliases = {"godsword"},
                 usage = "<player>", desc = "Modify a player's permissions",
                 flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.lost.sword"})
+        @CommandPermissions({"aurora.lost.god.sword"})
         public void lostGodSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
@@ -689,12 +709,93 @@ public class AdminComponent extends BukkitComponent implements Listener {
             itemStack.addEnchantment(Enchantment.FIRE_ASPECT, 2);
             itemStack.addEnchantment(Enchantment.KNOCKBACK, 2);
             itemStack.addEnchantment(Enchantment.LOOT_BONUS_MOBS, 3);
-
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            itemMeta.setDisplayName(ChatColor.RED + "God Sword");
+            itemStack.setItemMeta(itemMeta);
             player.getInventory().addItem(itemStack);
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given a new god sword.");
+        }
+
+        @Command(aliases = {"godpickaxe", "godpick"},
+                usage = "<player>", desc = "Modify a player's permissions",
+                flags = "l", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.god.pickaxe"})
+        public void lostGodPickaxeCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            ItemStack itemStack = new ItemStack(ItemID.DIAMOND_PICKAXE);
+            if (args.hasFlag('l')) {
+                itemStack.addEnchantment(Enchantment.DIG_SPEED, 5);
+                itemStack.addEnchantment(Enchantment.DURABILITY, 3);
+                itemStack.addEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 3);
+                ItemMeta itemMeta = itemStack.getItemMeta();
+                itemMeta.setDisplayName(ChatColor.GREEN + "Legendary God Pickaxe");
+                itemStack.setItemMeta(itemMeta);
+            } else {
+                itemStack.addEnchantment(Enchantment.DIG_SPEED, 4);
+                itemStack.addEnchantment(Enchantment.SILK_TOUCH, 1);
+                ItemMeta itemMeta = itemStack.getItemMeta();
+                itemMeta.setDisplayName(ChatColor.GREEN + "God Pickaxe");
+                itemStack.setItemMeta(itemMeta);
+            }
+
+            player.getInventory().addItem(itemStack);
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new god pickaxe.");
+        }
+
+        @Command(aliases = {"ancientarmour"},
+                usage = "<player>", desc = "Modify a player's permissions",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.ancient.armour"})
+        public void lostAncientArmourCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            ItemStack[] armour = new ItemStack[4];
+            armour[0] = new ItemStack(ItemID.CHAINMAIL_HELMET);
+            armour[1] = new ItemStack(ItemID.CHAINMAIL_CHEST);
+            armour[2] = new ItemStack(ItemID.CHAINMAIL_PANTS);
+            armour[3] = new ItemStack(ItemID.CHAINMAIL_BOOTS);
+
+            ItemMeta meta = armour[0].getItemMeta();
+            meta.setDisplayName(ChatColor.GOLD + "Ancient Helmet");
+            armour[0].setItemMeta(meta);
+
+            meta = armour[1].getItemMeta();
+            meta.setDisplayName(ChatColor.GOLD + "Ancient Chestplate");
+            armour[1].setItemMeta(meta);
+
+            meta = armour[2].getItemMeta();
+            meta.setDisplayName(ChatColor.GOLD + "Ancient Leggings");
+            armour[2].setItemMeta(meta);
+
+            meta = armour[3].getItemMeta();
+            meta.setDisplayName(ChatColor.GOLD + "Ancient Boots");
+            armour[3].setItemMeta(meta);
+
+            armour[0].addEnchantment(Enchantment.OXYGEN, 3);
+            armour[0].addEnchantment(Enchantment.WATER_WORKER, 1);
+
+            armour[3].addEnchantment(Enchantment.PROTECTION_FALL, 4);
+
+            for (ItemStack itemStack : armour) {
+                itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+                itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
+                itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
+                itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
+                player.getInventory().addItem(itemStack);
+            }
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given new ancient armour.");
         }
     }
 }
