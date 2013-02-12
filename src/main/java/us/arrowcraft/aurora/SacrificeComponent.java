@@ -2,6 +2,10 @@ package us.arrowcraft.aurora;
 import com.petrifiednightmares.pitfall.Pitfall;
 import com.petrifiednightmares.pitfall.PitfallEvent;
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -57,7 +61,7 @@ import java.util.logging.Logger;
 @Depend(plugins = "Pitfall", components = PrayerComponent.class)
 public class SacrificeComponent extends BukkitComponent implements Listener, Runnable {
 
-    private final CommandBook inst = CommandBook.inst();
+    private static final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
@@ -73,6 +77,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+        registerCommands(Commands.class);
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20);
     }
 
@@ -157,7 +162,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 ItemID.EMERALD + ":0" + "#3",
                 BlockID.LIGHTSTONE + ":0" + "#7",
                 BlockID.TNT + ":0" + "#5",
-                BlockID.END_STONE + ":0" + "#2"));
+                BlockID.END_STONE + ":0" + "#2",
+                ItemID.NETHER_STAR + ":0" + "#81"));
         @Setting("sacrificial-block")
         private String sacrificialBlockString = BlockID.STONE_BRICK + ":3";
 
@@ -212,6 +218,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     private int calculateValue(ItemStack itemStack) {
+
+        if (itemStack == null || itemStack.getTypeId() == 0) return -1;
 
         int itemStackId = itemStack.getTypeId();
         int itemStackData = itemStack.getData().getData();
@@ -379,38 +387,45 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 } else {
                     if (!ChanceUtil.getChance(Math.max(1, 125 - modifier))) continue;
                 }
-                switch (ChanceUtil.getRandom(23)) {
+                switch (ChanceUtil.getRandom(25)) {
                     case 1:
                         itemStack = new ItemStack(ItemID.DIAMOND_SWORD);
-                        itemStack.addEnchantment(Enchantment.DAMAGE_ALL, 5);
-                        itemStack.addEnchantment(Enchantment.DAMAGE_ARTHROPODS, 5);
-                        itemStack.addEnchantment(Enchantment.DAMAGE_UNDEAD, 5);
-                        itemStack.addEnchantment(Enchantment.FIRE_ASPECT, 2);
-                        itemStack.addEnchantment(Enchantment.KNOCKBACK, 2);
-                        itemStack.addEnchantment(Enchantment.LOOT_BONUS_MOBS, 3);
-                        itemMeta = itemStack.getItemMeta();
-                        itemMeta.setDisplayName(ChatColor.RED + "God Sword");
+                        if (Util.getChance(sender, modifier, 1.2)) {
+                            itemStack.addEnchantment(Enchantment.DAMAGE_ALL, 5);
+                            itemStack.addEnchantment(Enchantment.DAMAGE_ARTHROPODS, 5);
+                            itemStack.addEnchantment(Enchantment.DAMAGE_UNDEAD, 5);
+                            itemStack.addEnchantment(Enchantment.FIRE_ASPECT, 2);
+                            itemStack.addEnchantment(Enchantment.KNOCKBACK, 2);
+                            itemStack.addEnchantment(Enchantment.LOOT_BONUS_MOBS, 3);
+                            itemMeta = itemStack.getItemMeta();
+                            itemMeta.setDisplayName(ChatColor.RED + "God Sword");
+                        }
                         break;
                     case 2:
                         itemStack = new ItemStack(ItemID.BOW);
-                        itemStack.addEnchantment(Enchantment.ARROW_DAMAGE, 5);
-                        itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
-                        itemStack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
-                        itemStack.addEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
-                        itemMeta = itemStack.getItemMeta();
-                        itemMeta.setDisplayName(ChatColor.RED + "God Bow");
+                        if (Util.getChance(sender, modifier, 1.2)) {
+                            itemStack.addEnchantment(Enchantment.ARROW_DAMAGE, 5);
+                            itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
+                            itemStack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
+                            itemStack.addEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
+                            itemMeta = itemStack.getItemMeta();
+                            itemMeta.setDisplayName(ChatColor.RED + "God Bow");
+                        } else {
+                            itemStack.addEnchantment(Enchantment.ARROW_DAMAGE, 2);
+                            itemStack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
+                            itemMeta = itemStack.getItemMeta();
+                            itemMeta.setDisplayName(ChatColor.RED + "Overseer's Bow");
+                        }
                         break;
                     case 3:
                         itemStack = new ItemStack(ItemID.DIAMOND_PICKAXE);
-                        if (ChanceUtil.getChance(Math.max(1, 200 - modifier))
-                                || ChanceUtil.getChance(Math.max(1, 100 - modifier))
-                                && inst.hasPermission(sender, "aurora.sacrifice.efficiency")) {
+                        if (Util.getChance(sender, modifier, 2)) {
                             itemStack.addEnchantment(Enchantment.DIG_SPEED, 5);
                             itemStack.addEnchantment(Enchantment.DURABILITY, 3);
                             itemStack.addEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 3);
                             itemMeta = itemStack.getItemMeta();
                             itemMeta.setDisplayName(ChatColor.GREEN + "Legendary God Pickaxe");
-                        } else {
+                        } else if (Util.getChance(sender, modifier, .37)) {
                             itemStack.addEnchantment(Enchantment.DIG_SPEED, 4);
                             itemStack.addEnchantment(Enchantment.SILK_TOUCH, 1);
                             itemMeta = itemStack.getItemMeta();
@@ -434,21 +449,25 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         break;
                     case 7:
                         itemStack = new ItemStack(ItemID.DIAMOND_CHEST);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                        itemMeta = itemStack.getItemMeta();
-                        itemMeta.setDisplayName(ChatColor.BLUE + "God Chestplate");
+                        if (Util.getChance(sender, modifier, .8)) {
+                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
+                            itemMeta = itemStack.getItemMeta();
+                            itemMeta.setDisplayName(ChatColor.BLUE + "God Chestplate");
+                        }
                         break;
                     case 8:
                         itemStack = new ItemStack(ItemID.DIAMOND_PANTS);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                        itemMeta = itemStack.getItemMeta();
-                        itemMeta.setDisplayName(ChatColor.BLUE + "God Leggings");
+                        if (Util.getChance(sender, modifier, .8)) {
+                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
+                            itemMeta = itemStack.getItemMeta();
+                            itemMeta.setDisplayName(ChatColor.BLUE + "God Leggings");
+                        }
                         break;
                     case 9:
                         itemStack = new ItemStack(ItemID.PAINTING, ChanceUtil.getRangedRandom(50, 64));
@@ -472,7 +491,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         itemStack = new ItemStack(ItemID.FERMENTED_SPIDER_EYE, ChanceUtil.getRangedRandom(20, 32));
                         break;
                     case 16:
-                        if (ChanceUtil.getChance(Math.max(1, 100 - modifier))) {
+                        if (Util.getChance(sender, modifier, 2.75)) {
                             itemStack = new ItemStack(ItemID.CHAINMAIL_BOOTS);
                             itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
                             itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
@@ -484,7 +503,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         }
                         break;
                     case 17:
-                        if (ChanceUtil.getChance(Math.max(1, 100 - modifier))) {
+                        if (Util.getChance(sender, modifier, 2.75)) {
                             itemStack = new ItemStack(ItemID.CHAINMAIL_PANTS);
                             itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
                             itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
@@ -495,7 +514,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         }
                         break;
                     case 18:
-                        if (ChanceUtil.getChance(Math.max(1, 100 - modifier))) {
+                        if (Util.getChance(sender, modifier, 2.75)) {
                             itemStack = new ItemStack(ItemID.CHAINMAIL_CHEST);
                             itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
                             itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
@@ -506,7 +525,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         }
                         break;
                     case 19:
-                        if (ChanceUtil.getChance(Math.max(1, 100 - modifier))) {
+                        if (Util.getChance(sender, modifier, 2.75)) {
                             itemStack = new ItemStack(ItemID.CHAINMAIL_HELMET);
                             itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
                             itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
@@ -519,34 +538,38 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         }
                         break;
                     case 20:
-                        itemStack = new ItemStack(ItemID.GOLD_APPLE, 1, (short) 1);
+                        itemStack = new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(4), (short) 1);
                         break;
                     case 21:
                         itemStack = new ItemStack(ItemID.DIAMOND_HELMET);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                        itemStack.addEnchantment(Enchantment.OXYGEN, 3);
-                        itemStack.addEnchantment(Enchantment.WATER_WORKER, 1);
-                        itemMeta = itemStack.getItemMeta();
-                        itemMeta.setDisplayName(ChatColor.BLUE + "God Helmet");
+                        if (Util.getChance(sender, modifier, .8)) {
+                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
+                            itemStack.addEnchantment(Enchantment.OXYGEN, 3);
+                            itemStack.addEnchantment(Enchantment.WATER_WORKER, 1);
+                            itemMeta = itemStack.getItemMeta();
+                            itemMeta.setDisplayName(ChatColor.BLUE + "God Helmet");
+                        }
                         break;
                     case 22:
                         itemStack = new ItemStack(ItemID.DIAMOND_BOOTS);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                        itemStack.addEnchantment(Enchantment.PROTECTION_FALL, 4);
-                        itemMeta = itemStack.getItemMeta();
-                        itemMeta.setDisplayName(ChatColor.BLUE + "God Boots");
+                        if (Util.getChance(sender, modifier, .8)) {
+                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
+                            itemStack.addEnchantment(Enchantment.PROTECTION_FALL, 4);
+                            itemMeta = itemStack.getItemMeta();
+                            itemMeta.setDisplayName(ChatColor.BLUE + "God Boots");
+                        }
                         break;
                     case 23:
                         itemStack = new ItemStack(Material.POTION);
                         PotionMeta pMeta = (PotionMeta) itemStack.getItemMeta();
 
-                        if (ChanceUtil.getChance(Math.max(1, 500 - modifier))) {
+                        if (Util.getChance(sender, modifier, 5)) {
                             pMeta.addCustomEffect(
                                     new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 5), false);
                             pMeta.addCustomEffect(
@@ -564,7 +587,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                             divineLore.add("You can almost smell the ultimate power");
                             divineLore.add("in this potion.");
                             pMeta.setLore(divineLore);
-                        } else if (ChanceUtil.getChance(Math.max(1, 200 - modifier))) {
+                        } else if (Util.getChance(sender, modifier, 2)) {
                             pMeta.addCustomEffect(
                                     new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 45, 5), false);
                             pMeta.addCustomEffect(
@@ -602,10 +625,18 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         }
                         itemMeta = pMeta;
                         break;
+                    case 24:
+                        itemStack = new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(3));
+                        break;
+                    case 25:
+                        itemStack = new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(3));
+                        break;
                 }
 
                 if (itemMeta != null) {
-                    if (itemMeta instanceof Repairable) ((Repairable) itemMeta).setRepairCost(400);
+                    if (itemMeta instanceof Repairable && itemMeta.hasEnchants()) {
+                        ((Repairable) itemMeta).setRepairCost(400);
+                    }
                     itemStack.setItemMeta(itemMeta);
                 }
                 if (itemStack != null) loot.add(itemStack);
@@ -647,8 +678,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         itemStack = new ItemStack(ItemID.FEATHER);
                         break;
                     case 10:
-                        if (inst.hasPermission(sender, "aurora.sacrifice.efficiency") && ChanceUtil.getChance(70)
-                                || ChanceUtil.getChance(95)) {
+                        if (Util.getChance(sender, modifier, .2)) {
                             itemStack = new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(64));
                         }
                         break;
@@ -668,12 +698,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         itemStack = new ItemStack(ItemID.FLINT);
                         break;
                     case 16:
-                        if (ChanceUtil.getChance(80)) {
+                        if (Util.getChance(sender, modifier, .8)) {
                             itemStack = new ItemStack(ItemID.CLAY_BALL, ChanceUtil.getRandom(8));
                         }
                         break;
                     case 17:
-                        if (ChanceUtil.getChance(90)) {
+                        if (Util.getChance(sender, modifier, .9)) {
                             itemStack = new ItemStack(ItemID.BOW);
                             itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
                         }
@@ -682,7 +712,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         itemStack = new ItemStack(ItemID.RED_APPLE, ChanceUtil.getRandom(6));
                         break;
                     case 19:
-                        if (ChanceUtil.getChance(80)) {
+                        if (Util.getChance(sender, modifier, .8)) {
                             itemStack = new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(8));
                         }
                         break;
@@ -745,6 +775,39 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             } catch (UnsupportedPrayerException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public class Commands {
+
+        @Command(aliases = {"sacrifice"}, desc = "Permissions Commands")
+        @NestedCommand({SacrificeCommands.class})
+        public void sacrificeCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+    }
+
+    public class SacrificeCommands {
+
+        @Command(aliases = {"value"}, desc = "Value an item", flags = "", min = 0, max = 0)
+        public void userGroupSetCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+
+            int value = calculateValue(((Player) sender).getInventory().getItemInHand());
+            if (value == -1) throw new CommandException("You can't sacrifice that!");
+            ChatUtil.sendNotice(sender, "That item has a value of: " + value + " in the sacrificial pit.");
+        }
+    }
+
+    private static class Util {
+
+        public static boolean getChance(CommandSender sender, int modifier, double rarityL) {
+
+            boolean hasEfficiency = inst.hasPermission(sender, "aurora.sacrifice.efficiency");
+            int baseChance = (int) (hasEfficiency ? rarityL * 100 : rarityL * 200);
+
+            return ChanceUtil.getChance(Math.max(1, baseChance - modifier));
         }
     }
 }

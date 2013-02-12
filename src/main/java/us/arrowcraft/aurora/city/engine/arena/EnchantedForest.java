@@ -5,7 +5,11 @@ import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
@@ -29,9 +33,18 @@ import org.bukkit.util.Vector;
 import us.arrowcraft.aurora.SacrificeComponent;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.EggHatchEvent;
-import us.arrowcraft.aurora.util.*;
+import us.arrowcraft.aurora.util.ChanceUtil;
+import us.arrowcraft.aurora.util.ChatUtil;
+import us.arrowcraft.aurora.util.EnvironmentUtil;
+import us.arrowcraft.aurora.util.ItemUtil;
+import us.arrowcraft.aurora.util.LocationUtil;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -152,7 +165,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     private List<ItemStack> getRandomDropSet(CommandSender player) {
 
         ItemStack sacrifice;
-        if (ChanceUtil.getChance(1000)) {
+        if (ChanceUtil.getChance(59)) {
             sacrifice = new ItemStack(BlockID.DIAMOND_BLOCK, 64);
         } else {
             sacrifice = new ItemStack(ItemID.SPAWN_EGG, 8);
@@ -349,13 +362,11 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                 && itemInHand != null) {
 
             if (block.getTypeId() == BlockID.LOG) {
-                if (ChanceUtil.getChance(4)) {
-                    short c = 0;
-                    for (ItemStack aItemStack : getRandomDropSet(player)) {
-                        if (c >= 3) break;
-                        getWorld().dropItemNaturally(block.getLocation(), aItemStack);
-                        c++;
-                    }
+                short c = 0;
+                for (ItemStack aItemStack : getRandomDropSet(player)) {
+                    if (c >= 3) break;
+                    getWorld().dropItemNaturally(block.getLocation(), aItemStack);
+                    c++;
                 }
 
                 event.setExpToDrop(ChanceUtil.getRandom(4));
@@ -382,7 +393,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             map.put(block.getLocation(), new AbstractMap.SimpleEntry<>(System.currentTimeMillis(),
                     new BaseBlock(block.getTypeId(), block.getData())));
 
-            if (!ChanceUtil.getChance(25)) return;
+            if (!ChanceUtil.getChance(14)) return;
             getWorld().dropItemNaturally(block.getLocation(), getRandomDropSet(server.getConsoleSender()).get(0));
         }
     }
