@@ -6,6 +6,7 @@ import us.arrowcraft.aurora.prayer.PrayerFX.BlindnessFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.ButterFingersFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.CannonFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.DeadlyDefenseFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.DiggyDiggyFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.DoomFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.FireFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.FlashFX;
@@ -65,7 +66,8 @@ public enum PrayerType {
     NIGHTVISION(2006, NightVisionFX.class),
     FLASH(2007, FlashFX.class),
     INVISIBILITY(2008, InvisibilityFX.class),
-    DEADLYDEFENSE(2009, DeadlyDefenseFX.class);
+    DEADLYDEFENSE(2009, DeadlyDefenseFX.class),
+    DIGGYDIGGY(2010, DiggyDiggyFX.class);
 
     private final int id;
     private final Class FXClass;

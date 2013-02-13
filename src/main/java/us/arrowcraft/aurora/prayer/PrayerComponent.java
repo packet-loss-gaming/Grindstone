@@ -37,6 +37,7 @@ import us.arrowcraft.aurora.prayer.PrayerFX.BlindnessFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.ButterFingersFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.CannonFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.DeadlyDefenseFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.DiggyDiggyFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.DoomFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.FireFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.FlashFX;
@@ -171,6 +172,9 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 break;
             case DEADLYDEFENSE:
                 prayerEffects = new DeadlyDefenseFX();
+                break;
+            case DIGGYDIGGY:
+                prayerEffects = new DiggyDiggyFX();
                 break;
             case DOOM:
                 prayerEffects = new DoomFX();

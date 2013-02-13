@@ -738,12 +738,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             pInventory.addItem(aItemStack);
         }
 
-        if (ChanceUtil.getChance(5) && calculateValue(item) >= 60 && !prayer.isInfluenced(player)) {
+        if (ChanceUtil.getChance(5) && calculateValue(item) >= 200) {
 
             PrayerType prayerType;
             switch (ChanceUtil.getRandom(7)) {
                 case 1:
-                    prayerType = PrayerType.FLASH;
+                    prayerType = PrayerType.DIGGYDIGGY;
                     break;
                 case 2:
                     prayerType = PrayerType.HEALTH;
