@@ -1,6 +1,7 @@
 package us.arrowcraft.aurora.util;
 
 import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.minecraft.util.commands.CommandException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -17,8 +18,10 @@ public class ChatUtil {
 
     public static void sendNotice(String playerName, String notice) {
 
-        Player player = PlayerUtil.matchPlayerExactly(playerName);
-        if (player != null) player.sendMessage(ChatColor.YELLOW + notice);
+        try {
+            Player player = PlayerUtil.matchPlayerExactly(null, playerName);
+            player.sendMessage(ChatColor.YELLOW + notice);
+        } catch (CommandException ignored) {}
     }
 
     public static void sendNotice(CommandSender[] senders, String notice) {
