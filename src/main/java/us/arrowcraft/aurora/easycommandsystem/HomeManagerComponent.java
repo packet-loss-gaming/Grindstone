@@ -1,6 +1,22 @@
 package us.arrowcraft.aurora.easycommandsystem;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.minecraft.util.commands.*;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.minecraft.util.commands.NestedCommand;
+import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
+import com.sk89q.worldedit.bukkit.selections.Polygonal2DSelection;
+import com.sk89q.worldedit.bukkit.selections.Selection;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
+import com.sk89q.worldguard.protection.databases.RegionDBUtil;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
+import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -23,15 +39,30 @@ public class HomeManagerComponent extends BukkitComponent {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    private WorldEditPlugin WE;
+    private WorldGuardPlugin WG;
+
     @Override
     public void enable() {
 
         registerCommands(Commands.class);
+        setUpWorldEdit();
+        setUpWorldGauard();
+    }
+
+    private void setUpWorldEdit() {
+
+
+    }
+
+    private void setUpWorldGauard() {
+
+
     }
 
     public class Commands {
 
-        @Command(aliases = {"home", "he"}, desc = "Home Manager")
+        @Command(aliases = {"home"}, desc = "Home Manager")
         @NestedCommand({NestedCommands.class})
         public void homeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -47,9 +78,17 @@ public class HomeManagerComponent extends BukkitComponent {
 
             if (sender instanceof Player) {
                 Player player = (Player) sender;
-                String playerToAdd = args.getString(0);
 
-                Bukkit.dispatchCommand(sender, "rg addmember " + getHome(player) + " " + playerToAdd);
+                RegionManager manager = WG.getRegionManager(player.getWorld());
+                ProtectedRegion region = manager.getRegionExact(getHome(player));
+                if (region == null) throw new CommandException("You do not have a home in this world!");
+                RegionDBUtil.addToDomain(region.getMembers(), args.getPaddedSlice(1, 0), 0);
+                try {
+                    manager.save();
+                } catch (ProtectionDatabaseException e) {
+                    ChatUtil.sendError(sender, "Failed to add player to your home.");
+                }
+                ChatUtil.sendNotice(player, "Home successfully updated!");
             } else {
                 throw new CommandException("You must be a player to use this command.");
             }
@@ -57,14 +96,22 @@ public class HomeManagerComponent extends BukkitComponent {
 
         @Command(aliases = {"removeplayer"}, usage = "<player>", desc = "Remove a player from your home",
                 min = 1, max = 1)
-        @CommandPermissions({"aurora.home.self.add"})
+        @CommandPermissions({"aurora.home.self.remove"})
         public void removeMemberToHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (sender instanceof Player) {
                 Player player = (Player) sender;
-                String playerToRemove = args.getString(0);
 
-                Bukkit.dispatchCommand(sender, "rg removemember " + getHome(player) + " " + playerToRemove);
+                RegionManager manager = WG.getRegionManager(player.getWorld());
+                ProtectedRegion region = manager.getRegionExact(getHome(player));
+                if (region == null) throw new CommandException("You do not have a home in this world!");
+                RegionDBUtil.removeFromDomain(region.getMembers(), args.getPaddedSlice(1, 0), 0);
+                try {
+                    manager.save();
+                } catch (ProtectionDatabaseException e) {
+                    ChatUtil.sendError(sender, "Failed to remove players from your home.");
+                }
+                ChatUtil.sendNotice(player, "Home successfully updated!");
             } else {
                 throw new CommandException("You must be a player to use this command.");
             }
@@ -100,19 +147,60 @@ public class HomeManagerComponent extends BukkitComponent {
 
     public class HomeAdminCommands {
 
-        @Command(aliases = {"create", "add"}, usage = "<player> <district>", desc = "Create a home",
+        @Command(aliases = {"create"}, usage = "<player> <district>", desc = "Create a home",
                 min = 2, max = 2)
         @CommandPermissions({"aurora.home.admin.create"})
         public void createHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (sender instanceof Player) {
+
+                Player admin = (Player) sender;
                 String player = args.getString(0);
                 String district = args.getString(1);
 
-                Bukkit.dispatchCommand(sender, "rg define " + getHome(player));
-                Bukkit.dispatchCommand(sender, "rg addowner " + getHome(player) + " " + player);
-                Bukkit.dispatchCommand(sender, "rg setpriority " + getHome(player) + " 10");
-                Bukkit.dispatchCommand(sender, "rg setparent " + getHome(player) + " " + district + "-district");
+                ProtectedRegion region;
+
+                RegionManager manager = WG.getRegionManager(admin.getWorld());
+
+                if (manager.hasRegion(getHome(player))) throw new CommandException("That player already has a home.");
+
+                Selection sel = WE.getSelection(admin);
+                if (sel == null) throw new CommandException("Select a region with WorldEdit first.");
+
+                if (sel instanceof Polygonal2DSelection) {
+                    Polygonal2DSelection polySel = (Polygonal2DSelection) sel;
+                    int minY = polySel.getNativeMinimumPoint().getBlockY();
+                    int maxY = polySel.getNativeMaximumPoint().getBlockY();
+                    region = new ProtectedPolygonalRegion(getHome(player), polySel.getNativePoints(), minY, maxY);
+                } else if (sel instanceof CuboidSelection) {
+                    BlockVector min = sel.getNativeMinimumPoint().toBlockVector();
+                    BlockVector max = sel.getNativeMaximumPoint().toBlockVector();
+                    region = new ProtectedCuboidRegion(getHome(player), min, max);
+                } else {
+                    throw new CommandException("The type of region selected in WorldEdit is unsupported.");
+                }
+
+                region.getOwners().addPlayer(player);
+                region.setPriority(10);
+                ProtectedRegion districtRegion = manager.getRegion(district + "-district");
+                if (districtRegion == null) throw new CommandException("Invalid district specified.");
+                try {
+                    region.setParent(districtRegion);
+                } catch (ProtectedRegion.CircularInheritanceException e) {
+                    throw new CommandException("Circular inheritance detected.");
+                }
+
+                manager.addRegion(region);
+                try {
+                    manager.save();
+                } catch (ProtectionDatabaseException e) {
+                    throw new CommandException("Failed to create a home for: " + player + ".");
+                }
+
+                ChatUtil.sendNotice(admin, "A home has been created successfully for: "
+                        + player + " in the district: " + district + ".");
+                ChatUtil.sendNotice(player, "A home has been created for you by: " + admin.getDisplayName() + ".");
+                log.info(admin.getName() + " created a home for: " + player + " in the district: " + district + ".");
             } else {
                 throw new CommandException("You must be a player to use this command.");
             }
@@ -133,33 +221,60 @@ public class HomeManagerComponent extends BukkitComponent {
             }
         }
 
-        @Command(aliases = {"biome"}, usage = "<player> <newbiome>", desc = "Change the biome of a home",
-                min = 2, max = 2)
-        @CommandPermissions({"aurora.home.admin.biome.change"})
-        public void homeBiomeChangeCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            if (sender instanceof Player) {
-                String player = args.getString(0);
-                String biomeString = args.getString(1);
-
-                Bukkit.dispatchCommand(sender, "rg select " + getHome(player));
-                Bukkit.dispatchCommand(sender, "/setbiome " + biomeString);
-            } else {
-                throw new CommandException("You must be a player to use this command.");
-            }
-        }
-
         @Command(aliases = {"move"}, usage = "<player> <newdistrict>", desc = "Move a home",
                 min = 2, max = 2)
-        @CommandPermissions({"aurora.home.admin.create"})
+        @CommandPermissions({"aurora.home.admin.move"})
         public void moveHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (sender instanceof Player) {
+                Player admin = (Player) sender;
                 String player = args.getString(0);
-                String newDistrict = args.getString(1);
+                String district = args.getString(1);
 
-                Bukkit.dispatchCommand(sender, "rg redefine " + getHome(player));
-                Bukkit.dispatchCommand(sender, "rg setparent " + getHome(player) + " " + newDistrict + "-district");
+                RegionManager manager = WG.getRegionManager(admin.getWorld());
+                ProtectedRegion existing = manager.getRegionExact(getHome(player));
+                if (existing == null) throw new CommandException("That player doesn't have a home.");
+                Selection sel = WE.getSelection(admin);
+                if (sel == null) throw new CommandException("Select a region with WorldEdit first.");
+
+                ProtectedRegion region;
+
+                // Detect the type of region from WorldEdit
+                if (sel instanceof Polygonal2DSelection) {
+                    Polygonal2DSelection polySel = (Polygonal2DSelection) sel;
+                    int minY = polySel.getNativeMinimumPoint().getBlockY();
+                    int maxY = polySel.getNativeMaximumPoint().getBlockY();
+                    region = new ProtectedPolygonalRegion(getHome(player), polySel.getNativePoints(), minY, maxY);
+                } else if (sel instanceof CuboidSelection) {
+                    BlockVector min = sel.getNativeMinimumPoint().toBlockVector();
+                    BlockVector max = sel.getNativeMaximumPoint().toBlockVector();
+                    region = new ProtectedCuboidRegion(getHome(player), min, max);
+                } else {
+                    throw new CommandException("The type of region selected in WorldEdit is unsupported.");
+                }
+
+                region.setMembers(existing.getMembers());
+                region.setOwners(existing.getOwners());
+                region.setFlags(existing.getFlags());
+                region.setPriority(existing.getPriority());
+                ProtectedRegion districtRegion = manager.getRegion(district + "-district");
+                if (districtRegion == null) throw new CommandException("Invalid district specified.");
+                try {
+                    region.setParent(districtRegion);
+                } catch (ProtectedRegion.CircularInheritanceException e) {
+                    throw new CommandException("Circular inheritance detected.");
+                }
+
+                manager.addRegion(region);
+                try {
+                    manager.save();
+                } catch (ProtectionDatabaseException e) {
+                    throw new CommandException("Failed to create a home for: " + player + ".");
+                }
+
+                ChatUtil.sendNotice(admin, "The player: " + player + "'s house has been moved to: " + district + ".");
+                ChatUtil.sendNotice(player, "Your home has been moved for you by: " + admin.getDisplayName() + ".");
+                log.info(admin.getName() + " moved a home for: " + player + " into the district: " + district + ".");
             } else {
                 throw new CommandException("You must be a player to use this command.");
             }
@@ -170,9 +285,22 @@ public class HomeManagerComponent extends BukkitComponent {
         public void removeHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (sender instanceof Player) {
+                Player admin = (Player) sender;
                 String player = args.getString(0);
 
-                Bukkit.dispatchCommand(sender, "rg remove " + getHome(player));
+                RegionManager manager = WG.getRegionManager(admin.getWorld());
+                ProtectedRegion region = manager.getRegionExact(getHome(player));
+                if (region == null) throw new CommandException("That player doesn't have a home.");
+
+                manager.removeRegion(region.getId());
+                try {
+                    manager.save();
+                } catch (ProtectionDatabaseException e) {
+                    throw new CommandException("Failed to remove the home of: " + player + ".");
+                }
+                ChatUtil.sendNotice(admin, "The player: " + player + "'s house has been removed.");
+                ChatUtil.sendNotice(player, "Your home has been removed by: " + admin.getDisplayName() + ".");
+                log.info(admin.getName() + " deleted the player: " + player + "'s home.");
             } else {
                 throw new CommandException("You must be a player to use this command.");
             }

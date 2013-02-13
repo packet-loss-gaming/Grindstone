@@ -1,7 +1,9 @@
 package us.arrowcraft.aurora.util;
 
+import com.sk89q.commandbook.util.PlayerUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 /**
  * @author Turtle9598
@@ -11,6 +13,12 @@ public class ChatUtil {
     public static void sendNotice(CommandSender sender, String notice) {
 
         sender.sendMessage(ChatColor.YELLOW + notice);
+    }
+
+    public static void sendNotice(String playerName, String notice) {
+
+        Player player = PlayerUtil.matchPlayerExactly(playerName);
+        if (player != null) player.sendMessage(ChatColor.YELLOW + notice);
     }
 
     public static void sendNotice(CommandSender[] senders, String notice) {
