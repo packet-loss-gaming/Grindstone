@@ -24,6 +24,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import us.arrowcraft.aurora.util.ChatUtil;
 
 import java.util.logging.Logger;
@@ -52,12 +53,26 @@ public class HomeManagerComponent extends BukkitComponent {
 
     private void setUpWorldEdit() {
 
+        Plugin plugin = server.getPluginManager().getPlugin("WorldEdit");
 
+        // WorldGuard may not be loaded
+        if (plugin == null || !(plugin instanceof WorldEditPlugin)) {
+            return;
+        }
+
+        this.WE = (WorldEditPlugin) plugin;
     }
 
     private void setUpWorldGauard() {
 
+        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
+        // WorldGuard may not be loaded
+        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+            return;
+        }
+
+        this.WG = (WorldGuardPlugin) plugin;
     }
 
     public class Commands {
