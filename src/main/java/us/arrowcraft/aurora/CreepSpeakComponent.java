@@ -10,12 +10,18 @@ import com.zachsthings.libcomponents.config.Setting;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Server;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Creeper;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.IronGolem;
+import org.bukkit.entity.PigZombie;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
+import us.arrowcraft.aurora.events.CreepSpeakEvent;
 import us.arrowcraft.aurora.util.ChanceUtil;
 import us.arrowcraft.aurora.util.ChatUtil;
 import us.arrowcraft.aurora.util.EnvironmentUtil;
@@ -82,6 +88,8 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
             if ((ninjaComponent.isNinja(player) && player.isSneaking()) || !rogueComponent.isVisible(player)
                     || (rogueComponent.isRogue(player) && inst.hasPermission(player, "aurora.rouge.guild"))) return;
 
+            ChatColor color = ChatColor.RED;
+            String message = "";
             if (entity instanceof Creeper) {
                 try {
                     if (event.getReason().equals(TargetReason.FORGOT_TARGET)
@@ -107,14 +115,14 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                             }
                         }, 20 * 30);
 
-                        ChatUtil.sendNotice(player, ChatColor.DARK_RED, "Alonzzzo ssssent ussss.");
+                        color = ChatColor.DARK_RED;
+                        message = "Alonzzzo ssssent ussss.";
                     } else if (!ChanceUtil.getChance(5)) {
-                        ChatUtil.sendNotice(player, ChatColor.DARK_GREEN, "That'sssss a very niccce"
-                                + " everything you have there.");
+                        color = ChatColor.DARK_GREEN;
+                        message = "That'sssss a very niccce everything you have there.";
                     }
                 } catch (Exception e) {
-                    log.warning("The creeper feature of the: "
-                            + this.getInformation().friendlyName()
+                    log.warning("The creeper feature of the: " + this.getInformation().friendlyName()
                             + " component could not be executed.");
                 }
             } else if (entity instanceof IronGolem) {
@@ -122,12 +130,13 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                     if (event.getReason().equals(TargetReason.FORGOT_TARGET)
                             || event.getReason().equals(TargetReason.TARGET_ATTACKED_OWNER)) return;
 
+                    color = ChatColor.RED;
                     if (event.getReason().equals(TargetReason.TARGET_ATTACKED_ENTITY)) {
-                        ChatUtil.sendWarning(player, "Vengance!");
+                        message = "Vengance!";
                     } else if (event.getReason().equals(TargetReason.TARGET_DIED)) {
-                        ChatUtil.sendWarning(player, "You ssssshall follow in your allies fate.");
+                        message = "You ssssshall follow in your allies fate.";
                     } else {
-                        ChatUtil.sendWarning(player, "RAUGHHHHHHHHHHH!!!!!");
+                        message = "RAUGHHHHHHHHHHH!!!!!";
                     }
                 } catch (Exception e) {
                     log.warning("The IronGolem feature of the: "
@@ -140,16 +149,25 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                             || event.getReason().equals(TargetReason.CLOSEST_PLAYER)
                             || event.getReason().equals(TargetReason.RANDOM_TARGET))) return;
 
+                    color = ChatColor.RED;
                     if (EnvironmentUtil.isServerTimeOdd(time)) {
-                        ChatUtil.sendWarning(player, "Brainz!!!");
+                        message = "Brainz!!!";
                     } else {
-                        ChatUtil.sendWarning(player, "Ugh...");
+                        message = "Ugh...";
                     }
                 } catch (Exception e) {
-                    log.warning("The Zombie feature of the: "
-                            + this.getInformation().friendlyName()
+                    log.warning("The Zombie feature of the: " + this.getInformation().friendlyName()
                             + " component could not be executed.");
                 }
+            }
+
+            if (!message.isEmpty()) {
+                CreepSpeakEvent creepyEvent = new CreepSpeakEvent(player, entity, color + message);
+                server.getPluginManager().callEvent(creepyEvent);
+                if (!creepyEvent.isCancelled()) {
+                    ChatUtil.sendNotice(creepyEvent.getPlayer(), creepyEvent.getMessage());
+                }
+
             }
         } catch (Exception e) {
             log.warning("The rouge & ninja settings settings might have been ignored by the: "

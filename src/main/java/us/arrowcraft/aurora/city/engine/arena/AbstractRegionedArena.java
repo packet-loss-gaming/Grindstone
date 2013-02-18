@@ -46,9 +46,29 @@ public abstract class AbstractRegionedArena {
 
         for (Player player : server.getOnlinePlayers()) {
 
-            if (LocationUtil.isInRegion(world, r, player)) returnedList.add(player);
+            if (player.isValid() && LocationUtil.isInRegion(world, r, player)) returnedList.add(player);
         }
         return returnedList.toArray(new Player[returnedList.size()]);
+    }
+
+    public Entity[] getContainedEntities() {
+
+
+        return getContainedEntities(0);
+    }
+
+    public Entity[] getContainedEntities(int parentsUp) {
+
+        List<Entity> returnedList = new ArrayList<>();
+
+        ProtectedRegion r = region;
+        for (int i = parentsUp; i > 0; i--) r = r.getParent();
+
+        for (Entity entity : world.getEntities()) {
+
+            if (entity.isValid() && LocationUtil.isInRegion(world, r, entity)) returnedList.add(entity);
+        }
+        return returnedList.toArray(new Entity[returnedList.size()]);
     }
 
     public boolean isEmpty() {

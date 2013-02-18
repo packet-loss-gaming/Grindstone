@@ -33,6 +33,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.admin.AdminState;
 import us.arrowcraft.aurora.economic.ImpersonalComponent;
+import us.arrowcraft.aurora.events.ApocalypseLocalSpawnEvent;
 import us.arrowcraft.aurora.events.PlayerAdminModeChangeEvent;
 import us.arrowcraft.aurora.events.PrayerApplicationEvent;
 import us.arrowcraft.aurora.util.ChanceUtil;
@@ -589,6 +590,14 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     public void onAdminModeChange(PlayerAdminModeChangeEvent event) {
 
         if (!event.getNewAdminState().equals(AdminState.MEMBER) && players.contains(event.getPlayer().getName())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onLocalSpawn(ApocalypseLocalSpawnEvent event) {
+
+        if (players.contains(event.getPlayer().getName())) {
             event.setCancelled(true);
         }
     }

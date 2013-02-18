@@ -623,6 +623,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     public class LostItemCommands {
 
+        // TODO properly set repair cost
+
         @Command(aliases = {"godarmour"},
                 usage = "<player>", desc = "Modify a player's permissions",
                 flags = "", min = 1, max = 1)

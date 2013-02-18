@@ -157,13 +157,14 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (player.getWorld().isThundering() && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(7)) {
 
             ChatUtil.sendNotice(player, "Your armour releases a burst of energy.");
-            player.setHealth(Math.min(player.getHealth() + 4, player.getMaxHealth()));
+            player.setHealth(Math.min(player.getHealth() + event.getDamage(), player.getMaxHealth()));
             ChatUtil.sendNotice(player, "You are healed by an ancient force.");
             List<Entity> entities = player.getNearbyEntities(8, 8, 8);
             for (Entity e : entities) {
                 if (e.isValid() && e instanceof LivingEntity) {
                     if (e instanceof Player) {
-                        ((Player) e).setHealth(Math.min(((Player) e).getHealth() + 4, ((Player) e).getMaxHealth()));
+                        ((Player) e).setHealth(Math.min(((Player) e).getHealth() + event.getDamage(),
+                                ((Player) e).getMaxHealth()));
                         ChatUtil.sendNotice((Player) e, "You are healed by an ancient force.");
                     } else if (EnvironmentUtil.isHostileEntity(e)) {
                         e.setVelocity(new Vector(

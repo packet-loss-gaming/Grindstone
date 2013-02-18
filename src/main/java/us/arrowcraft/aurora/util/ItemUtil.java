@@ -118,6 +118,15 @@ public class ItemUtil {
         return b[0] && b[1] && b[2] && b[3];
     }
 
+    public static boolean hasMasterSword(Player player) {
+
+        if (!player.isValid()) return false;
+
+        ItemStack held = player.getInventory().getItemInHand();
+        return held.hasItemMeta() && held.getItemMeta().hasDisplayName()
+                && held.getItemMeta().getDisplayName().contains(ChatColor.DARK_PURPLE + "Master Sword");
+    }
+
     public static int fortuneMultiplier(ItemStack pickaxe) {
 
         if (!pickaxe.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS)) return 1;

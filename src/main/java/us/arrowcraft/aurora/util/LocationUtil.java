@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -192,10 +193,9 @@ public class LocationUtil {
         return false;
     }
 
-    public static boolean isInRegion(World world, ProtectedRegion region, Player player) {
+    public static boolean isInRegion(World world, ProtectedRegion region, Entity entity) {
 
-        Location loc = player.getLocation();
-        return isInRegion(world, region, loc);
+        return isInRegion(world, region, entity.getLocation());
     }
 
     public static boolean isInRegion(World world, ProtectedRegion region, Location loc) {

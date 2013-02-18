@@ -26,6 +26,7 @@ import us.arrowcraft.aurora.city.engine.arena.DropPartyArena;
 import us.arrowcraft.aurora.city.engine.arena.DynamicSandArena;
 import us.arrowcraft.aurora.city.engine.arena.EnchantedForest;
 import us.arrowcraft.aurora.city.engine.arena.GenericArena;
+import us.arrowcraft.aurora.city.engine.arena.GiantBossArena;
 import us.arrowcraft.aurora.city.engine.arena.GoldRush;
 import us.arrowcraft.aurora.city.engine.arena.HotSpringArena;
 import us.arrowcraft.aurora.city.engine.arena.SnowSpleefArena;
@@ -142,6 +143,10 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         protected Set<String> goldRushes = new HashSet<>(Arrays.asList(
                 "vineam-district-gold-rush"
         ));
+        @Setting("zombie-bosses")
+        protected Set<String> zombieBosses = new HashSet<>(Arrays.asList(
+                "vineam-district-giant-boss-area"
+        ));
     }
 
     private class ArenaManager {
@@ -240,6 +245,18 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
+                }
+            }
+
+            // Add Zombie bosses
+            for (String region : config.zombieBosses) {
+                try {
+                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    arenas.add(new GiantBossArena(world, pr, adminComponent));
+                    log.info("Added region: " + pr.getId() + " to Arenas.");
+                } catch (Exception e) {
+                    log.warning("Failed to add arena: " + region + ".");
+                    e.printStackTrace();
                 }
             }
         }
