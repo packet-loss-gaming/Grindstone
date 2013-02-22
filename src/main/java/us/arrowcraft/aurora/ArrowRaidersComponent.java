@@ -74,7 +74,8 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.ApocalypseLocalSpawnEvent;
 import us.arrowcraft.aurora.events.EggDropEvent;
-import us.arrowcraft.aurora.events.JungleFallBlockerEvent;
+import us.arrowcraft.aurora.events.FallBlockerEvent;
+import us.arrowcraft.aurora.events.ThrowPlayerEvent;
 import us.arrowcraft.aurora.exceptions.UnsupportedPrayerException;
 import us.arrowcraft.aurora.prayer.Prayer;
 import us.arrowcraft.aurora.prayer.PrayerComponent;
@@ -683,7 +684,8 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 case FALL:
                     if (LocationUtil.getBelowID(e.getLocation(), BlockID.LEAVES)
                             || (gameFlags.contains('s') && gameFlags.contains('j'))) {
-                        server.getPluginManager().callEvent(new JungleFallBlockerEvent(player));
+                        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+                        server.getPluginManager().callEvent(new FallBlockerEvent(player));
                         if (ChanceUtil.getChance(2) || gameFlags.contains('j')) {
                             player.setVelocity(new org.bukkit.util.Vector(
                                     random.nextDouble() * 2.0 - 1.5,

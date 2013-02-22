@@ -32,7 +32,6 @@ import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.util.Vector;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.admin.AdminState;
 import us.arrowcraft.aurora.events.ApocalypseBedSpawnEvent;
@@ -41,14 +40,13 @@ import us.arrowcraft.aurora.events.PlayerAdminModeChangeEvent;
 import us.arrowcraft.aurora.homes.EnderPearlHomesComponent;
 import us.arrowcraft.aurora.jail.JailComponent;
 import us.arrowcraft.aurora.util.ChanceUtil;
-import us.arrowcraft.aurora.util.ChatUtil;
+import us.arrowcraft.aurora.util.EffectUtil;
 import us.arrowcraft.aurora.util.EnvironmentUtil;
 import us.arrowcraft.aurora.util.ItemUtil;
 import us.arrowcraft.aurora.util.LocationUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.logging.Logger;
 
 /**
@@ -143,39 +141,47 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
-
-    private Random random = new Random();
-
     @EventHandler(ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         Entity target = event.getEntity();
 
-        if (!(target instanceof Player)) return;
+        if (target == null || !(target instanceof LivingEntity) || target.getType() == null) return;
+        if (!target.getWorld().isThundering()) return;
 
-        Player player = (Player) target;
-        if (player.getWorld().isThundering() && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(7)) {
+        Player player;
+        switch (target.getType()) {
+            case PLAYER:
+                player = (Player) target;
+                if (ItemUtil.hasAncientArmour(player)) {
+                    if (ChanceUtil.getChance(7)) {
 
-            ChatUtil.sendNotice(player, "Your armour releases a burst of energy.");
-            player.setHealth(Math.min(player.getHealth() + event.getDamage(), player.getMaxHealth()));
-            ChatUtil.sendNotice(player, "You are healed by an ancient force.");
-            List<Entity> entities = player.getNearbyEntities(8, 8, 8);
-            for (Entity e : entities) {
-                if (e.isValid() && e instanceof LivingEntity) {
-                    if (e instanceof Player) {
-                        ((Player) e).setHealth(Math.min(((Player) e).getHealth() + event.getDamage(),
-                                ((Player) e).getMaxHealth()));
-                        ChatUtil.sendNotice((Player) e, "You are healed by an ancient force.");
-                    } else if (EnvironmentUtil.isHostileEntity(e)) {
-                        e.setVelocity(new Vector(
-                                random.nextDouble() * 1.7 - 1.5,
-                                random.nextDouble() * 4,
-                                random.nextDouble() * 1.7 - 1.5
-                        ));
-                        e.setFireTicks(ChanceUtil.getRandom(20 * 60));
+                        EffectUtil.Ancient.powerBurst(player, event.getDamage());
                     }
                 }
-            }
+                break;
+            default:
+                Entity attacker = event.getDamager();
+                LivingEntity defender = (LivingEntity) target;
+                if (attacker instanceof Player) {
+                    player = (Player) attacker;
+                    if (ItemUtil.hasMasterSword(player)) {
+
+                        if (ChanceUtil.getChance(10)) {
+                            EffectUtil.Master.healingBlade(player, defender);
+                        }
+
+                        if (ChanceUtil.getChance(18)) {
+                            List<LivingEntity> entities = new ArrayList<>();
+                            for (Entity e : player.getNearbyEntities(6, 4, 6)) {
+
+                                if (EnvironmentUtil.isHostileEntity(e)) entities.add((LivingEntity) e);
+                            }
+                            EffectUtil.Master.doomBlade(player, entities);
+                        }
+                    }
+                }
+                break;
         }
     }
 

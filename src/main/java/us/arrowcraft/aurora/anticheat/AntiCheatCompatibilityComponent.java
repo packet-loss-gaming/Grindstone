@@ -12,8 +12,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import us.arrowcraft.aurora.events.FallBlockerEvent;
-import us.arrowcraft.aurora.events.JungleFallBlockerEvent;
 import us.arrowcraft.aurora.events.PrayerApplicationEvent;
+import us.arrowcraft.aurora.events.ThrowPlayerEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +50,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
             Player player = Bukkit.getPlayerExact(e.getKey());
             if (player == null) continue;
             for (Map.Entry<CheckType, Long> p : e.getValue().entrySet()) {
-                if (System.currentTimeMillis() - p.getValue() / TimeUnit.SECONDS.toMillis(1) > 1.75) {
+                if (System.currentTimeMillis() - p.getValue() / TimeUnit.SECONDS.toMillis(1) > 3.75) {
                     AnticheatAPI.unexemptPlayer(player, p.getKey());
                     e.getValue().remove(p.getKey());
                 }
@@ -84,9 +84,9 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     }
 
     @EventHandler
-    public void onJungleFallBlocker(JungleFallBlockerEvent event) {
+    public void onPlayerThrow(ThrowPlayerEvent event) {
 
-        CheckType[] checkTypes = new CheckType[] {CheckType.FLY, CheckType.ZOMBE_FLY, CheckType.NOFALL};
+        CheckType[] checkTypes = new CheckType[] {CheckType.FLY, CheckType.ZOMBE_FLY};
         bypass(event.getPlayer(), checkTypes);
     }
 

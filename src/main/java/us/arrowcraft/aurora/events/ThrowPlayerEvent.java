@@ -6,11 +6,11 @@ import org.bukkit.event.player.PlayerEvent;
 /**
  * Author: Turtle9598
  */
-public class JungleFallBlockerEvent extends PlayerEvent {
+public class ThrowPlayerEvent extends PlayerEvent {
 
     private static final HandlerList handlers = new HandlerList();
 
-    public JungleFallBlockerEvent(Player player) {
+    public ThrowPlayerEvent(Player player) {
 
         super(player);
     }

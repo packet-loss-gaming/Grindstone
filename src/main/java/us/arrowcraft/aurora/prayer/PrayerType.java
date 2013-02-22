@@ -12,6 +12,7 @@ import us.arrowcraft.aurora.prayer.PrayerFX.FireFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.FlashFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.GodFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.HealthFX;
+import us.arrowcraft.aurora.prayer.PrayerFX.HulkFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.InventoryFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.InvisibilityFX;
 import us.arrowcraft.aurora.prayer.PrayerFX.MushroomFX;
@@ -67,7 +68,8 @@ public enum PrayerType {
     FLASH(2007, FlashFX.class),
     INVISIBILITY(2008, InvisibilityFX.class),
     DEADLYDEFENSE(2009, DeadlyDefenseFX.class),
-    DIGGYDIGGY(2010, DiggyDiggyFX.class);
+    DIGGYDIGGY(2010, DiggyDiggyFX.class),
+    HULK(2011, HulkFX.class);
 
     private final int id;
     private final Class FXClass;

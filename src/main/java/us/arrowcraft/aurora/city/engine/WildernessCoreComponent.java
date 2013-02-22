@@ -120,7 +120,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         public boolean enableSync = true;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerPortal(PlayerPortalEvent event) {
 
         PlayerTeleportEvent.TeleportCause e = event.getCause();
@@ -129,23 +129,37 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         switch (e) {
             case END_PORTAL:
                 try {
-                    World city = Bukkit.getWorld(config.cityWorld);
+                    final World city = Bukkit.getWorld(config.cityWorld);
 
                     try {
-                        World wilderness = Bukkit.getWorld(config.wildernessWorld);
+                        final World wilderness = Bukkit.getWorld(config.wildernessWorld);
 
-                        if (event.getFrom().getWorld().equals(city)) {
-                            event.useTravelAgent(false);
-                            event.setTo(wilderness.getSpawnLocation());
-                        } else if (event.getFrom().getWorld().equals(wilderness)) {
-                            event.useTravelAgent(false);
-                            event.setTo(city.getSpawnLocation());
-                        }
+                        event.setCancelled(true);
+                        /*
+                        event.useTravelAgent(true);
+                        TravelAgent agent = event.getPortalTravelAgent();
+                        agent.setCanCreatePortal(false);
+                        event.setPortalTravelAgent(agent);
+                        */
+
+                        final Location from = event.getFrom();
+                        server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                            @Override
+                            public void run() {
+
+                                if (from.getWorld().equals(city)) {
+                                    player.teleport(wilderness.getSpawnLocation());
+                                } else if (from.getWorld().equals(wilderness)) {
+                                    player.teleport(city.getSpawnLocation());
+                                }
+                            }
+                        }, 1);
                     } catch (NullPointerException wilderness) {
-                        log.warning("Please verify the world: " + config.wildernessWorld + "exists.");
+                        log.warning("Please verify the world: " + config.wildernessWorld + " exists.");
                     }
                 } catch (NullPointerException city) {
-                    log.warning("Please verify the world: " + config.cityWorld + "exists.");
+                    log.warning("Please verify the world: " + config.cityWorld + " exists.");
                 }
                 break;
             case NETHER_PORTAL:

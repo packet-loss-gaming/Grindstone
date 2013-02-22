@@ -19,6 +19,7 @@ import net.milkbowl.vault.permission.Permission;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -43,6 +44,7 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import us.arrowcraft.aurora.NinjaComponent;
@@ -798,6 +800,32 @@ public class AdminComponent extends BukkitComponent implements Listener {
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given new ancient armour.");
+        }
+
+        @Command(aliases = {"mastersword"},
+                usage = "<player>", desc = "Modify a player's permissions",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.god.sword"})
+        public void lostMasterSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            ItemStack masterSword = new ItemStack(Material.DIAMOND_SWORD);
+            ItemMeta masterMeta = masterSword.getItemMeta();
+            masterMeta.addEnchant(Enchantment.DAMAGE_ALL, 10, true);
+            masterMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 10, true);
+            masterMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 10, true);
+            masterMeta.addEnchant(Enchantment.FIRE_ASPECT, 10, true);
+            masterMeta.addEnchant(Enchantment.KNOCKBACK, 10, true);
+            masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
+            masterMeta.setDisplayName(ChatColor.DARK_PURPLE + "Master Sword");
+            ((Repairable) masterMeta).setRepairCost(400);
+            masterSword.setItemMeta(masterMeta);
+            player.getInventory().addItem(masterSword);
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new god sword.");
         }
     }
 }

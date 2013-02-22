@@ -709,11 +709,19 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
 
-        if (contains(event.getPlayer()) && players.contains(event.getPlayer().getName())) {
-            ChatUtil.sendWarning(event.getPlayer(), "[Partner] Thought you'd scam me huh kid?");
-            ChatUtil.sendWarning(event.getPlayer(), "[Partner] Well I'll teach you kid!");
-            ChatUtil.sendWarning(event.getPlayer(), "The alarm goes off.");
-            event.getPlayer().damage(2000);
+        final Player player = event.getPlayer();
+        if (contains(player) || players.contains(player.getName())) {
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                @Override
+                public void run() {
+
+                    ChatUtil.sendWarning(player, "[Partner] Thought you'd scam me huh kid?");
+                    ChatUtil.sendWarning(player, "[Partner] Well I'll teach you kid!");
+                    ChatUtil.sendWarning(player, "The alarm goes off.");
+                    player.damage(2000);
+                }
+            }, 1);
         }
     }
 
