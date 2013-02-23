@@ -29,12 +29,15 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.CreepSpeakEvent;
@@ -45,8 +48,10 @@ import us.arrowcraft.aurora.util.ChatUtil;
 import us.arrowcraft.aurora.util.EffectUtil;
 import us.arrowcraft.aurora.util.EnvironmentUtil;
 import us.arrowcraft.aurora.util.ItemUtil;
+import us.arrowcraft.aurora.util.player.PlayerState;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
@@ -60,15 +65,17 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    private AdminComponent adminComponent;
+
     private Giant boss = null;
     private long lastAttack = 0;
     private long lastDeath = 0;
     private boolean damageHeals = false;
+    private BukkitTask mobDestroyer;
     private Random random = new Random();
 
     private List<Location> spawnPts = new ArrayList<>();
-
-    private AdminComponent adminComponent;
+    private final HashMap<String, PlayerState> playerState = new HashMap<>();
 
     public GiantBossArena(World world, ProtectedRegion region, AdminComponent adminComponent) {
 
@@ -78,6 +85,17 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
 
+        // Mob Destroyer
+        mobDestroyer = server.getScheduler().runTaskTimer(inst, new Runnable() {
+
+            @Override
+            public void run() {
+
+                if (!getWorld().isThundering()) removeOutsideZombies();
+            }
+        }, 0, 20 * 2);
+
+        // First spawn requirement
         getMinionSpawnPts();
     }
 
@@ -164,16 +182,29 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             spawnBoss();
         } else if (!isEmpty()) {
             equalize();
+            hurt();
             runTargetAI(ChanceUtil.getRandom(OPTION_COUNT));
         }
-        if (!getWorld().isThundering()) removeOutsideZombies();
     }
 
-    private void removeMobs() {
+    public void removeMobs() {
 
-        for (Entity e : getContainedEntities()) {
+        for (Entity e : getContainedEntities(1)) {
 
-            if (EnvironmentUtil.isHostileEntity(e)) e.remove();
+            if (EnvironmentUtil.isHostileEntity(e)) {
+                for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
+                e.remove();
+            }
+        }
+    }
+
+    public void removeOutsideZombies() {
+
+        for (Entity e : getContainedEntities(1)) {
+            if (e instanceof Zombie && ((Zombie) e).isBaby() && !contains(e)) {
+                for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
+                e.remove();
+            }
         }
     }
 
@@ -182,6 +213,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         removeMobs();
         removeOutsideZombies();
+        if (mobDestroyer != null) mobDestroyer.cancel();
     }
 
     @Override
@@ -217,7 +249,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @EventHandler(ignoreCancelled = true)
     public void onCreepSpeak(CreepSpeakEvent event) {
 
-        if (contains(event.getPlayer()) || contains(event.getTargeter())) event.setCancelled(true);
+        if (contains(event.getPlayer(), 1) || contains(event.getTargeter(), 1)) event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -375,18 +407,60 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 event.setDroppedExp(256);
             } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
                 event.setDroppedExp(14);
-            } else if (e instanceof Player) {
-                boss.setHealth(Math.min(boss.getMaxHealth(), boss.getHealth() + 40));
             }
         }
     }
 
-    private void removeOutsideZombies() {
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
 
-        for (Entity entity : getContainedEntities(1)) {
-            if (entity instanceof Zombie && ((Zombie) entity).isBaby() && !contains(entity)) {
-                for (int i = 0; i < 20; i++) getWorld().playEffect(entity.getLocation(), Effect.SMOKE, 0);
-                entity.remove();
+        Player player = event.getEntity();
+        if (contains(player, 1)) {
+            boss.setHealth(Math.min(boss.getMaxHealth(), boss.getHealth() + 40));
+            playerState.put(player.getName(), new PlayerState(player.getName(),
+                    player.getInventory().getContents(),
+                    player.getInventory().getArmorContents(),
+                    player.getLevel(),
+                    player.getExp()));
+            event.getDrops().clear();
+            // event.setDroppedExp(0);
+            // event.setKeepLevel(true);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+
+        Player player = event.getPlayer();
+
+        // Restore their inventory if they have one stored
+        if (playerState.containsKey(player.getName()) && !adminComponent.isAdmin(player)) {
+
+            try {
+                PlayerState identity = playerState.get(player.getName());
+
+                // Restore the contents
+                player.getInventory().setArmorContents(identity.getArmourContents());
+                player.getInventory().setContents(identity.getInventoryContents());
+                // player.setLevel(identity.getLevel());
+                // player.setExp(identity.getExperience());
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                playerState.remove(player.getName());
+            }
+        }
+    }
+
+    private void hurt() {
+
+        Player[] contained = getContainedPlayers();
+        if (!isBossSpawned() || contained == null || contained.length <= 0) return;
+
+        for (Player player : contained) {
+
+            if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
+                player.damage(32, boss);
             }
         }
     }

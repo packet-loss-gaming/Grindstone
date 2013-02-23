@@ -85,14 +85,32 @@ public abstract class AbstractRegionedArena {
         return contains(entity.getLocation());
     }
 
+    public boolean contains(Entity entity, int parentsUp) {
+
+        return contains(entity.getLocation(), parentsUp);
+    }
+
     public boolean contains(Block block) {
 
         return contains(block.getLocation());
     }
 
+    public boolean contains(Block block, int parentsUp) {
+
+        return contains(block.getLocation(), parentsUp);
+    }
+
     public boolean contains(Location location) {
 
         return LocationUtil.isInRegion(world, region, location);
+    }
+
+    public boolean contains(Location location, int parentsUp) {
+
+        ProtectedRegion r = region;
+        for (int i = parentsUp; i > 0; i--) r = r.getParent();
+
+        return LocationUtil.isInRegion(world, r, location);
     }
 
     public ProtectedRegion getRegion() {

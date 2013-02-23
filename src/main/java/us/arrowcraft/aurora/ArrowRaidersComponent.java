@@ -71,6 +71,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.potion.PotionEffectType;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.ApocalypseLocalSpawnEvent;
 import us.arrowcraft.aurora.events.EggDropEvent;
@@ -311,8 +312,13 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         for (Prayer prayer : prayerComponent.getInfluences(player)) {
                             prayerComponent.uninfluencePlayer(player, prayer);
                         }
+                        for (PotionEffectType potionEffectType : PotionEffectType.values()) {
+                            if (potionEffectType == null) continue;
+                            if (player.hasPotionEffect(potionEffectType)) player.removePotionEffect(potionEffectType);
+                        }
                     } catch (Exception e) {
                         teams.remove(entry.getKey());
+                        e.printStackTrace();
                     }
                 }
             } else if (canAllRun() && !isArrowRaidActive()) {
@@ -323,8 +329,13 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         for (Prayer prayer : prayerComponent.getInfluences(player)) {
                             prayerComponent.uninfluencePlayer(player, prayer);
                         }
+                        for (PotionEffectType potionEffectType : PotionEffectType.values()) {
+                            if (potionEffectType == null) continue;
+                            if (player.hasPotionEffect(potionEffectType)) player.removePotionEffect(potionEffectType);
+                        }
                     } catch (Exception e) {
                         teams.remove(entry.getKey());
+                        e.printStackTrace();
                     }
                 }
             }
