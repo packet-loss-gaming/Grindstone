@@ -308,7 +308,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     private void addPool(final BaseBlock block, final Location altLoc) {
 
-        TaskPool aNewTaskPool = new TaskPool(altLoc, ChanceUtil.getRangedRandom(10, 34));
+        TaskPool aNewTaskPool = new TaskPool(altLoc, ChanceUtil.getRangedRandom(10, 26));
 
         if (taskPool.containsKey(altLoc)) {
             taskPool.get(altLoc).addAmount(aNewTaskPool.amount);

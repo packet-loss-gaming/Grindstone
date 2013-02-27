@@ -475,6 +475,14 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         }
     }
 
+    private void killAll() {
+
+        for (Player player : getContainedPlayers()) {
+
+            if (!lobby.contains(BukkitUtil.toVector(player.getLocation()))) player.setHealth(0);
+        }
+    }
+
     public void start() {
 
         startTime = System.currentTimeMillis(); // Reset start clock
@@ -485,11 +493,11 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     }
 
-    private static final ItemStack cookedPork = new ItemStack(ItemID.COOKED_PORKCHOP, 2);
+    public int moveLobby() {
 
-    public boolean moveLobby() {
-
-        if (!players.isEmpty()) return false;
+        long timeSpent = System.currentTimeMillis() - startTime;
+        if (timeSpent > TimeUnit.MINUTES.toMillis(7)) killAll();
+        if (!players.isEmpty()) return (int) ((TimeUnit.MINUTES.toMillis(7) - timeSpent) / 1000);
         for (Player aPlayer : server.getOnlinePlayers()) {
 
             if (LocationUtil.isInRegion(getWorld(), lobby, aPlayer)) {
@@ -508,7 +516,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 aPlayer.setFoodLevel(20);
                 aPlayer.setSaturation(5F);
                 aPlayer.setExhaustion(0F);
-                aPlayer.getInventory().addItem(cookedPork);
 
                 // Add
                 players.add(aPlayer.getName());
@@ -519,11 +526,12 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             }
         }
         if (!players.isEmpty()) {
-            lootSplit = ChanceUtil.getRangedRandom(64 * 3, 64 * 9) / players.size();
-            if (ChanceUtil.getChance(100)) lootSplit *= 10;
+            lootSplit = ChanceUtil.getRangedRandom(64 * 3, 64 * 5) / players.size();
+            if (ChanceUtil.getChance(135)) lootSplit *= 10;
+            else if (ChanceUtil.getChance(65)) lootSplit *= 2;
             start(); // Start if someone was teleported
         }
-        return true;
+        return 0;
     }
 
     @Override
@@ -626,8 +634,11 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
         BlockState state = event.getClickedBlock().getLocation().getBlock().getState();
         if (state.getTypeId() == BlockID.STONE_BUTTON && lobby.contains(BukkitUtil.toVector(state.getBlock()))) {
-            if (!moveLobby()) {
+            int waitingTime = moveLobby();
+            if (waitingTime != 0) {
                 ChatUtil.sendWarning(event.getPlayer(), "There is already a robbery in progress.");
+                ChatUtil.sendWarning(event.getPlayer(), "The current robbery will end within: "
+                        + waitingTime + " seconds.");
             }
         } else if (state.getTypeId() == BlockID.WALL_SIGN && locks.contains(state.getLocation())) {
             Sign sign = (Sign) state;
@@ -637,6 +648,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     ((Sign) state).setLine(2, "Locked");
                     ((Sign) state).setLine(3, "- Unlocked -");
                     sign.update(true);
+
+                    //noinspection deprecation
+                    event.getPlayer().updateInventory();
                 }
             } else if (sign.getLine(1).toLowerCase().contains("red")) {
                 if (event.getPlayer().getInventory().containsAtLeast(keys[1], 1)) {
@@ -644,6 +658,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     ((Sign) state).setLine(2, "Locked");
                     ((Sign) state).setLine(3, "- Unlocked -");
                     sign.update(true);
+
+                    //noinspection deprecation
+                    event.getPlayer().updateInventory();
                 }
             }
         } else if (state.getTypeId() == BlockID.WALL_SIGN) {
@@ -693,7 +710,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 ChatUtil.sendWarning(event.getPlayer(), "[Partner] Thought you'd scam me huh kid?");
                 ChatUtil.sendWarning(event.getPlayer(), "[Partner] Well I'll teach you kid!");
                 ChatUtil.sendWarning(event.getPlayer(), "The alarm goes off.");
-                event.getPlayer().damage(2000);
+                event.getPlayer().setHealth(0);
                 return;
             }
             if (rewardChest.equals(state.getLocation())) {
@@ -702,6 +719,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 event.getPlayer().teleport(new Location(getWorld(), 591, 84, 1182));
                 event.getPlayer().getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK, lootSplit));
                 ChatUtil.sendNotice(event.getPlayer(), "You have successfully robbed the bank!");
+
+                //noinspection deprecation
+                event.getPlayer().updateInventory();
             }
         }
     }
@@ -719,7 +739,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     ChatUtil.sendWarning(player, "[Partner] Thought you'd scam me huh kid?");
                     ChatUtil.sendWarning(player, "[Partner] Well I'll teach you kid!");
                     ChatUtil.sendWarning(player, "The alarm goes off.");
-                    player.damage(2000);
+                    player.setHealth(0);
                 }
             }, 1);
         }

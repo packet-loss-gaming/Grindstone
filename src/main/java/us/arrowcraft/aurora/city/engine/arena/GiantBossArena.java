@@ -67,6 +67,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     private AdminComponent adminComponent;
 
+    private static final double scalConstMulti = (18 / 17);
+    private static final double scalConstAdd = (48 / 17);
+
     private Giant boss = null;
     private long lastAttack = 0;
     private long lastDeath = 0;
@@ -377,7 +380,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         if (contains(event.getEntity())) {
             Entity e = event.getEntity();
             if (e instanceof Giant) {
-                for (int i = 0; i < ChanceUtil.getRandom(35); i++) {
+                int amt = getContainedPlayers() != null ? getContainedPlayers().length : 0;
+                for (int i = 0; i < ChanceUtil.getRandom(Math.round((scalConstMulti * amt) + scalConstAdd)); i++) {
                     event.getDrops().add(new ItemStack(BlockID.GOLD_BLOCK, 64));
                 }
                 if (ChanceUtil.getChance(250)) {
@@ -397,7 +401,6 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
                 lastDeath = System.currentTimeMillis();
                 boss = null;
-                int amt = getContainedPlayers() != null ? getContainedPlayers().length : 0;
                 for (int i = 0; i < Math.min(500, Math.max(21, amt ^ 3)); i++) {
                     Zombie z = (Zombie) getWorld().spawnEntity(event.getEntity().getLocation(), EntityType.ZOMBIE);
                     z.setBaby(true);
@@ -502,7 +505,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             case 2:
                 ChatUtil.sendWarning(contained, "Embrace my corruption!");
                 for (Player player : contained) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 12, 1));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 12, 2));
                 }
                 break;
             case 3:
