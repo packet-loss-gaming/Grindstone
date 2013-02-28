@@ -36,7 +36,6 @@ import us.arrowcraft.aurora.events.EggHatchEvent;
 import us.arrowcraft.aurora.util.ChanceUtil;
 import us.arrowcraft.aurora.util.ChatUtil;
 import us.arrowcraft.aurora.util.EnvironmentUtil;
-import us.arrowcraft.aurora.util.ItemUtil;
 import us.arrowcraft.aurora.util.LocationUtil;
 
 import java.util.AbstractMap;
@@ -142,24 +141,6 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                 map.remove(e.getKey());
             }
         }
-    }
-
-    private boolean checkInventory(Player player, ItemStack[] itemStacks) {
-
-        if (!inst.hasPermission(player, "aurora.prayer.intervention")) return false;
-        return ItemUtil.countItemsOfType(itemStacks, BlockID.LOG) > 0;
-    }
-
-    private boolean hasAncientArmour(Player player) {
-
-        boolean[] b = new boolean[] {false, false, false, false};
-        ItemStack[] armour = player.getInventory().getArmorContents();
-        for (int i = 0; i < 4; i++) {
-            b[i] = armour[i] != null && armour[i].getItemMeta().hasDisplayName()
-                    && armour[i].getItemMeta().getDisplayName().contains(ChatColor.GOLD + "Ancient");
-        }
-
-        return b[0] && b[1] && b[2] && b[3];
     }
 
     private List<ItemStack> getRandomDropSet(CommandSender player) {
