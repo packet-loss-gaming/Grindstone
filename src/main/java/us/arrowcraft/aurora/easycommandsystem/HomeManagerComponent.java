@@ -1,5 +1,6 @@
 package us.arrowcraft.aurora.easycommandsystem;
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -24,7 +25,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import us.arrowcraft.aurora.District;
+import us.arrowcraft.aurora.util.BookUtil;
 import us.arrowcraft.aurora.util.ChatUtil;
 
 import java.util.logging.Logger;
@@ -212,6 +216,8 @@ public class HomeManagerComponent extends BukkitComponent {
                     throw new CommandException("Failed to create a home for: " + player + ".");
                 }
 
+                giveRuleBook(sender, player, district);
+
                 ChatUtil.sendNotice(admin, "A home has been created successfully for: "
                         + player + " in the district: " + district + ".");
                 ChatUtil.sendNotice(player, "A home has been created for you by: " + admin.getDisplayName() + ".");
@@ -287,6 +293,8 @@ public class HomeManagerComponent extends BukkitComponent {
                     throw new CommandException("Failed to create a home for: " + player + ".");
                 }
 
+                giveRuleBook(sender, player, district);
+
                 ChatUtil.sendNotice(admin, "The player: " + player + "'s house has been moved to: " + district + ".");
                 ChatUtil.sendNotice(player, "Your home has been moved for you by: " + admin.getDisplayName() + ".");
                 log.info(admin.getName() + " moved a home for: " + player + " into the district: " + district + ".");
@@ -330,6 +338,57 @@ public class HomeManagerComponent extends BukkitComponent {
     private String getHome(Player player) {
 
         return player.getName() + "'s-house";
+    }
+
+    private void giveRuleBook(CommandSender sender, String player, String district) {
+
+        district = district.toLowerCase();
+
+        switch (district) {
+            case "carpe-diem":
+                giveRuleBook(sender, player, District.CARPE_DIEM);
+                break;
+            case "glacies-mare":
+                giveRuleBook(sender, player, District.GLACIES_MARE);
+                break;
+            case "oblitus":
+                giveRuleBook(sender, player, District.OBLITUS);
+                break;
+            case "vineam":
+                giveRuleBook(sender, player, District.VINEAM);
+                break;
+        }
+    }
+
+    private void giveRuleBook(CommandSender sender, String player, District district) {
+
+        ItemStack ruleBook;
+        switch (district) {
+            case CARPE_DIEM:
+                ruleBook = BookUtil.Rules.BuildingCode.carpeDiem();
+                break;
+            case GLACIES_MARE:
+                ruleBook = BookUtil.Rules.BuildingCode.glaciesMare();
+                break;
+            case OBLITUS:
+                ruleBook = BookUtil.Rules.BuildingCode.obiluts();
+                break;
+            case VINEAM:
+                ruleBook = BookUtil.Rules.BuildingCode.vineam();
+                break;
+            default:
+                return;
+        }
+
+        Player tPlayer;
+        try {
+            tPlayer = PlayerUtil.matchPlayerExactly(sender, player);
+        } catch (CommandException ex) {
+            tPlayer = null;
+        }
+
+        if (tPlayer == null) return;
+        tPlayer.getInventory().addItem(ruleBook);
     }
 
     public class TeleportCommands {
