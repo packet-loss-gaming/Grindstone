@@ -164,6 +164,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
     private List<ItemStack> getRandomDropSet(CommandSender player) {
 
+        // Create the Sacrifice
         ItemStack sacrifice;
         if (ChanceUtil.getChance(59)) {
             sacrifice = new ItemStack(BlockID.DIAMOND_BLOCK, 64);
@@ -171,7 +172,13 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             sacrifice = new ItemStack(ItemID.SPAWN_EGG, 8);
         }
 
-        List<ItemStack> loot = sacrificeComponent.getCalculatedLoot(player, sacrifice);
+        // Sacrifice and make loot list
+        List<ItemStack> loot;
+        do {
+            loot = sacrificeComponent.getCalculatedLoot(player, sacrifice);
+        } while (loot == null || loot.size() < 1);
+
+        // Shuffle and return loot for variety
         Collections.shuffle(loot);
         return loot;
     }
