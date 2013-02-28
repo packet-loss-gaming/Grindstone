@@ -330,13 +330,4 @@ public class EnvironmentUtil {
 
         return e != null && e.isValid() && e.getType() != null && hostileEntities.contains(e.getType());
     }
-
-    public static Class[] hostileEntities() {
-
-        List<Class> clazz = new ArrayList<>();
-        for (EntityType type : hostileEntities) {
-            clazz.add(type.getEntityClass());
-        }
-        return clazz.toArray(new Class[clazz.size()]);
-    }
 }

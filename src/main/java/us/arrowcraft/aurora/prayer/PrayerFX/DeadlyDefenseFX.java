@@ -1,4 +1,5 @@
 package us.arrowcraft.aurora.prayer.PrayerFX;
+import com.sk89q.commandbook.util.EntityUtil;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -22,12 +23,11 @@ public class DeadlyDefenseFX extends AbstractPrayer {
     @Override
     public void add(Player player) {
 
-        final Collection<Entity> entityList = player.getWorld().getEntitiesByClasses(EnvironmentUtil.hostileEntities());
         short arrow = 0;
-        for (Entity entity : entityList) {
+        for (Entity entity : player.getNearbyEntities(8, 3, 8)) {
 
             if (arrow > 10) break;
-            if (entity.getLocation().distanceSquared(player.getLocation()) < 8 * 8) {
+            if (EnvironmentUtil.isHostileEntity(entity)) {
                 ArrowUtil.shootArrow(player, (LivingEntity) entity, 1.6F, 0F);
             }
         }
