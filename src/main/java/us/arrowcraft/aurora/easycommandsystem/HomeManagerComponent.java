@@ -1,11 +1,8 @@
 package us.arrowcraft.aurora.easycommandsystem;
+
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.PlayerUtil;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandException;
-import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.minecraft.util.commands.NestedCommand;
+import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
@@ -174,8 +171,8 @@ public class HomeManagerComponent extends BukkitComponent {
             if (sender instanceof Player) {
 
                 Player admin = (Player) sender;
-                String player = args.getString(0);
-                String district = args.getString(1);
+                String player = args.getString(0).toLowerCase();
+                String district = args.getString(1).toLowerCase();
 
                 ProtectedRegion region;
 
@@ -249,8 +246,8 @@ public class HomeManagerComponent extends BukkitComponent {
 
             if (sender instanceof Player) {
                 Player admin = (Player) sender;
-                String player = args.getString(0);
-                String district = args.getString(1);
+                String player = args.getString(0).toLowerCase();
+                String district = args.getString(1).toLowerCase();
 
                 RegionManager manager = WG.getRegionManager(admin.getWorld());
                 ProtectedRegion existing = manager.getRegionExact(getHome(player));
@@ -309,7 +306,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
             if (sender instanceof Player) {
                 Player admin = (Player) sender;
-                String player = args.getString(0);
+                String player = args.getString(0).toLowerCase();
 
                 RegionManager manager = WG.getRegionManager(admin.getWorld());
                 ProtectedRegion region = manager.getRegionExact(getHome(player));
@@ -332,12 +329,12 @@ public class HomeManagerComponent extends BukkitComponent {
 
     private String getHome(String player) {
 
-        return player + "'s-house";
+        return player.toLowerCase() + "'s-house";
     }
 
     private String getHome(Player player) {
 
-        return player.getName() + "'s-house";
+        return getHome(player.getName());
     }
 
     private void giveRuleBook(CommandSender sender, String player, String district) {

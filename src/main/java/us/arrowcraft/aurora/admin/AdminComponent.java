@@ -1,13 +1,9 @@
 package us.arrowcraft.aurora.admin;
+
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.GodComponent;
 import com.sk89q.commandbook.util.PlayerUtil;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandException;
-import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.minecraft.util.commands.CommandPermissionsException;
-import com.sk89q.minecraft.util.commands.NestedCommand;
+import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
@@ -16,12 +12,7 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -37,11 +28,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.Repairable;
@@ -825,7 +812,28 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
-                    + " has been given a new god sword.");
+                    + " has been given a new master sword.");
+        }
+
+        @Command(aliases = {"pwngbow"},
+                usage = "<player>", desc = "Pwng Bow",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.god.pwngbow"})
+        public void lostPwngBowCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            ItemStack pwngBowStack = new ItemStack(Material.BOW);
+            ItemMeta pwngBow = pwngBowStack.getItemMeta();
+            pwngBow.addEnchant(Enchantment.ARROW_DAMAGE, 10000, true);
+            pwngBow.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+            pwngBow.setDisplayName(ChatColor.DARK_PURPLE + "Pwng Bow");
+            pwngBowStack.setItemMeta(pwngBow);
+            player.getInventory().addItem(pwngBowStack);
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new pwng bow.");
         }
     }
 }

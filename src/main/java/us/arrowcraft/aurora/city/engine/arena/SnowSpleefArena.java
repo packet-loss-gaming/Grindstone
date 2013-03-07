@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDamageEvent;
 import us.arrowcraft.aurora.admin.AdminComponent;
+import us.arrowcraft.aurora.events.FrostBiteEvent;
 import us.arrowcraft.aurora.util.LocationUtil;
 
 import java.util.logging.Logger;
@@ -45,7 +46,7 @@ public class SnowSpleefArena extends AbstractRegionedArena implements SpleefAren
 
             CuboidRegion snow = new CuboidRegion(getRegion().getMaximumPoint(), getRegion().getMinimumPoint());
 
-            if (snow.getArea() > 4000 || snow.getHeight() > 1) {
+            if (snow.getArea() > 8208 || snow.getHeight() > 1) {
                 log.warning("The region: " + getRegion().getId() + " is too large.");
                 return;
             }
@@ -57,6 +58,20 @@ public class SnowSpleefArena extends AbstractRegionedArena implements SpleefAren
         } catch (Exception e) {
             log.warning("An error has occurred while trying to create snow in the region: "
                     + getRegion().getId() + ".");
+        }
+    }
+
+    @Override
+    public void feed() {
+
+        for (Player player : getWorld().getPlayers()) {
+            try {
+                if (LocationUtil.isBelowPlayer(getWorld(), getRegion(), player) && player.getFoodLevel() < 8) {
+                    player.setFoodLevel(8);
+                }
+            } catch (Exception e) {
+                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
+            }
         }
     }
 
@@ -92,6 +107,7 @@ public class SnowSpleefArena extends AbstractRegionedArena implements SpleefAren
     public void run() {
 
         equalize();
+        feed();
         restoreFloor();
     }
 
@@ -101,7 +117,7 @@ public class SnowSpleefArena extends AbstractRegionedArena implements SpleefAren
         // No disable code
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onBlockDamage(BlockDamageEvent event) {
 
         Block block = event.getBlock();
@@ -109,5 +125,11 @@ public class SnowSpleefArena extends AbstractRegionedArena implements SpleefAren
         if (contains(block) && block.getTypeId() == BlockID.SNOW_BLOCK) {
             block.breakNaturally(null);
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onFrostBite(FrostBiteEvent event) {
+
+        if (contains(event.getPlayer(), 1)) event.setCancelled(true);
     }
 }

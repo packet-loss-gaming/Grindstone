@@ -1,4 +1,5 @@
 package us.arrowcraft.aurora.util;
+
 import org.bukkit.Effect;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;

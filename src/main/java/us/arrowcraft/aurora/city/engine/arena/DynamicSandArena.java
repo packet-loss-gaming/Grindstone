@@ -14,6 +14,7 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -231,8 +232,8 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
 
         Player player = event.getEntity();
 
-        if (LocationUtil.isInRegion(getWorld(), getRegion().getParent(), player)
-                || LocationUtil.isBelowPlayer(getWorld(), getRegion().getParent(), player)) {
+        if (contains(player, 1) && !adminComponent.isAdmin(player)) {
+
             playerState.put(player.getName(), new PlayerState(player.getName(),
                     player.getInventory().getContents(),
                     player.getInventory().getArmorContents(),
@@ -244,7 +245,7 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
 
         Player player = event.getPlayer();

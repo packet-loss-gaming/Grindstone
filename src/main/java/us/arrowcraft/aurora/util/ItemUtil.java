@@ -120,11 +120,13 @@ public class ItemUtil {
 
     public static boolean hasMasterSword(Player player) {
 
-        if (!player.isValid()) return false;
+        return player.isValid() && isMasterSword(player.getInventory().getItemInHand());
+    }
 
-        ItemStack held = player.getInventory().getItemInHand();
-        return held.hasItemMeta() && held.getItemMeta().hasDisplayName()
-                && held.getItemMeta().getDisplayName().contains(ChatColor.DARK_PURPLE + "Master Sword");
+    public static boolean isMasterSword(ItemStack item) {
+
+        return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
+                && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_PURPLE + "Master Sword");
     }
 
     public static int fortuneMultiplier(ItemStack pickaxe) {

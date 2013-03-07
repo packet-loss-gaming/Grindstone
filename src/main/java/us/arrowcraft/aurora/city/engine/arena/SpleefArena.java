@@ -6,4 +6,6 @@ public interface SpleefArena extends GenericArena {
 
     public void restoreFloor();
 
+    public void feed();
+
 }

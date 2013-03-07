@@ -1,10 +1,7 @@
 package us.arrowcraft.aurora.authentication;
+
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandException;
-import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.minecraft.util.commands.NestedCommand;
+import com.sk89q.minecraft.util.commands.*;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
@@ -22,14 +19,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import us.arrowcraft.aurora.util.ChatUtil;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;

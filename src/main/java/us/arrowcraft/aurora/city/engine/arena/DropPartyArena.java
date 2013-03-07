@@ -1,15 +1,11 @@
 package us.arrowcraft.aurora.city.engine.arena;
+
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
@@ -45,16 +41,13 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private SacrificeComponent sacrificeComponent;
-
     private List<ItemStack> drops;
     private BukkitTask task = null;
     private long lastDropPulse = 0;
 
-    public DropPartyArena(World world, ProtectedRegion region, SacrificeComponent sacrificeComponent) {
+    public DropPartyArena(World world, ProtectedRegion region) {
 
         super(world, region);
-        this.sacrificeComponent = sacrificeComponent;
         drops = new ArrayList<>();
 
         //noinspection AccessStaticViaInstance
@@ -90,17 +83,14 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         return ArenaType.COMMAND_TRIGGERED;
     }
 
-    private static final ItemStack[] sacrifices = new ItemStack[] {
-            new ItemStack(ItemID.BLAZE_ROD, 64)
-    };
-
     private void drop(final boolean populate) {
 
         Bukkit.broadcastMessage(ChatColor.GOLD + "Drop party in 60 seconds!");
 
         if (populate) {
             for (int i = 0; i < server.getOnlinePlayers().length * 12; i++) {
-                drops.addAll(sacrificeComponent.getCalculatedLoot(server.getConsoleSender(), sacrifices));
+                // Stack of Blaze Rod equivalent
+                drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, 1216));
             }
         }
 

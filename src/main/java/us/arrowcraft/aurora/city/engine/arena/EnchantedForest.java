@@ -1,15 +1,12 @@
 package us.arrowcraft.aurora.city.engine.arena;
+
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
@@ -38,12 +35,7 @@ import us.arrowcraft.aurora.util.ChatUtil;
 import us.arrowcraft.aurora.util.EnvironmentUtil;
 import us.arrowcraft.aurora.util.LocationUtil;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -57,17 +49,14 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     private final Server server = CommandBook.server();
 
     private AdminComponent adminComponent;
-    private SacrificeComponent sacrificeComponent;
 
     private final Random random = new Random();
     private ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> map = new ConcurrentHashMap<>();
 
-    public EnchantedForest(World world, ProtectedRegion region, AdminComponent adminComponent,
-                           SacrificeComponent sacrificeComponent) {
+    public EnchantedForest(World world, ProtectedRegion region, AdminComponent adminComponent) {
 
         super(world, region);
         this.adminComponent = adminComponent;
-        this.sacrificeComponent = sacrificeComponent;
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -146,17 +135,19 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     private List<ItemStack> getRandomDropSet(CommandSender player) {
 
         // Create the Sacrifice
-        ItemStack sacrifice;
+        int amt, value;
         if (ChanceUtil.getChance(59)) {
-            sacrifice = new ItemStack(BlockID.DIAMOND_BLOCK, 64);
+            amt = 64;
+            value = 5248;
         } else {
-            sacrifice = new ItemStack(ItemID.SPAWN_EGG, 8);
+            amt = 8;
+            value = 88;
         }
 
         // Sacrifice and make loot list
         List<ItemStack> loot;
         do {
-            loot = sacrificeComponent.getCalculatedLoot(player, sacrifice);
+            loot = SacrificeComponent.getCalculatedLoot(player, amt, value);
         } while (loot == null || loot.size() < 1);
 
         // Shuffle and return loot for variety

@@ -1,4 +1,5 @@
 package us.arrowcraft.aurora.city.engine;
+
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
@@ -20,27 +21,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import us.arrowcraft.aurora.SacrificeComponent;
 import us.arrowcraft.aurora.admin.AdminComponent;
-import us.arrowcraft.aurora.city.engine.arena.CommandTriggeredArena;
-import us.arrowcraft.aurora.city.engine.arena.CursedMine;
-import us.arrowcraft.aurora.city.engine.arena.DropPartyArena;
-import us.arrowcraft.aurora.city.engine.arena.DynamicSandArena;
-import us.arrowcraft.aurora.city.engine.arena.EnchantedForest;
-import us.arrowcraft.aurora.city.engine.arena.GenericArena;
-import us.arrowcraft.aurora.city.engine.arena.GiantBossArena;
-import us.arrowcraft.aurora.city.engine.arena.GoldRush;
-import us.arrowcraft.aurora.city.engine.arena.HotSpringArena;
-import us.arrowcraft.aurora.city.engine.arena.SnowSpleefArena;
+import us.arrowcraft.aurora.city.engine.arena.*;
 import us.arrowcraft.aurora.economic.ImpersonalComponent;
 import us.arrowcraft.aurora.jail.JailComponent;
 import us.arrowcraft.aurora.prayer.PrayerComponent;
 import us.arrowcraft.aurora.util.ChatUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -63,8 +50,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     private JailComponent jailComponent;
     @InjectComponent
     private PrayerComponent prayerComponent;
-    @InjectComponent
-    private SacrificeComponent sacrificeComponent;
     @InjectComponent
     private ImpersonalComponent impersonalComponent;
 
@@ -113,7 +98,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
 
         @Setting("snow-spleef-arenas")
         protected Set<String> snowSpleefRegions = new HashSet<>(Arrays.asList(
-                "oblitus-district-spleef-snow"
+                "glacies-mare-district-spleef-snow"
         ));
         @Setting("sand-dynamic-arenas")
         protected Set<String> dynamicSandRegions = new HashSet<>(Arrays.asList(
@@ -137,11 +122,15 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         ));
         @Setting("party-rooms")
         protected Set<String> partyRooms = new HashSet<>(Arrays.asList(
-                "glacies-mare-district-party-room-drop-zone"
+                "oblitus-district-party-room-drop-zone"
         ));
         @Setting("gold-rushes")
         protected Set<String> goldRushes = new HashSet<>(Arrays.asList(
                 "vineam-district-gold-rush"
+        ));
+        @Setting("prison-raids")
+        protected Set<String> prisonRaids = new HashSet<>(Arrays.asList(
+                "vineam-district-prison"
         ));
         @Setting("zombie-bosses")
         protected Set<String> zombieBosses = new HashSet<>(Arrays.asList(
@@ -194,7 +183,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             for (String region : config.enchantedForest) {
                 try {
                     ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
-                    arenas.add(new EnchantedForest(world, pr, adminComponent, sacrificeComponent));
+                    arenas.add(new EnchantedForest(world, pr, adminComponent));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
@@ -218,7 +207,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             for (String region : config.partyRooms) {
                 try {
                     ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
-                    arenas.add(new DropPartyArena(world, pr, sacrificeComponent));
+                    arenas.add(new DropPartyArena(world, pr));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
@@ -242,6 +231,19 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     ProtectedRegion d2 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
                             + "-door-two");
                     arenas.add(new GoldRush(world, pr, lb, r1, r2, r3, d1, d2, adminComponent, impersonalComponent));
+                    log.info("Added region: " + pr.getId() + " to Arenas.");
+                } catch (Exception e) {
+                    log.warning("Failed to add arena: " + region + ".");
+                }
+            }
+
+            // Add Prison Raids
+            for (String region : config.prisonRaids) {
+                try {
+                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    ProtectedRegion of = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
+                            + "-office");
+                    arenas.add(new Prison(world, pr, of, adminComponent));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");

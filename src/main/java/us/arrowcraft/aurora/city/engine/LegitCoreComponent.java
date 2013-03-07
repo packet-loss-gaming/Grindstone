@@ -1,4 +1,5 @@
 package us.arrowcraft.aurora.city.engine;
+
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
@@ -18,18 +19,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerBedEnterEvent;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerToggleFlightEvent;
+import org.bukkit.event.player.*;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.admin.AdminState;
-import us.arrowcraft.aurora.events.ApocalypseBedSpawnEvent;
-import us.arrowcraft.aurora.events.EggDropEvent;
-import us.arrowcraft.aurora.events.HomeTeleportEvent;
-import us.arrowcraft.aurora.events.PlayerAdminModeChangeEvent;
-import us.arrowcraft.aurora.events.PrayerApplicationEvent;
+import us.arrowcraft.aurora.events.*;
 import us.arrowcraft.aurora.homes.CSVHomeDatabase;
 import us.arrowcraft.aurora.homes.EnderPearlHomesComponent;
 import us.arrowcraft.aurora.homes.HomeDatabase;

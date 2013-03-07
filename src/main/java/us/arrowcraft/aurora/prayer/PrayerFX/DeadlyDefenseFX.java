@@ -1,13 +1,11 @@
 package us.arrowcraft.aurora.prayer.PrayerFX;
-import com.sk89q.commandbook.util.EntityUtil;
+
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import us.arrowcraft.aurora.prayer.PrayerType;
 import us.arrowcraft.aurora.util.ArrowUtil;
 import us.arrowcraft.aurora.util.EnvironmentUtil;
-
-import java.util.Collection;
 
 /**
  * Author: Turtle9598

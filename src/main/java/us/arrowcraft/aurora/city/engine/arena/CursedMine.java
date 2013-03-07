@@ -1,4 +1,5 @@
 package us.arrowcraft.aurora.city.engine.arena;
+
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.Vector;
@@ -10,12 +11,7 @@ import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Blaze;
@@ -27,13 +23,10 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerBucketFillEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
@@ -44,11 +37,7 @@ import us.arrowcraft.aurora.events.PrayerApplicationEvent;
 import us.arrowcraft.aurora.exceptions.UnsupportedPrayerException;
 import us.arrowcraft.aurora.prayer.PrayerComponent;
 import us.arrowcraft.aurora.prayer.PrayerType;
-import us.arrowcraft.aurora.util.ChanceUtil;
-import us.arrowcraft.aurora.util.ChatUtil;
-import us.arrowcraft.aurora.util.EnvironmentUtil;
-import us.arrowcraft.aurora.util.ItemUtil;
-import us.arrowcraft.aurora.util.LocationUtil;
+import us.arrowcraft.aurora.util.*;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -605,6 +594,20 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         if (event.getCause().getEffect().getType().isHoly() && contains(player)) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDamage(EntityDamageByEntityEvent event) {
+
+        if (event.getEntity() instanceof Player) {
+
+            Player player = (Player) event.getEntity();
+
+            if (!contains(player)) return;
+            if (ChanceUtil.getChance(7) && ItemUtil.hasMasterSword(player) && ItemUtil.hasAncientArmour(player)) {
+                EffectUtil.Master.ultimateStrength(player);
+            }
         }
     }
 

@@ -1,4 +1,5 @@
 package us.arrowcraft.aurora;
+
 import com.petrifiednightmares.pitfall.Pitfall;
 import com.petrifiednightmares.pitfall.PitfallEvent;
 import com.sk89q.commandbook.CommandBook;
@@ -14,11 +15,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
@@ -42,18 +39,9 @@ import us.arrowcraft.aurora.exceptions.UnsupportedPrayerException;
 import us.arrowcraft.aurora.prayer.Prayer;
 import us.arrowcraft.aurora.prayer.PrayerComponent;
 import us.arrowcraft.aurora.prayer.PrayerType;
-import us.arrowcraft.aurora.util.ChanceUtil;
-import us.arrowcraft.aurora.util.ChatUtil;
-import us.arrowcraft.aurora.util.EnvironmentUtil;
-import us.arrowcraft.aurora.util.LocationUtil;
+import us.arrowcraft.aurora.util.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -259,98 +247,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         return itemStackSize;
     }
 
-    private int calculateModifier(int value) {
+    private static int calculateModifier(int value) {
 
         return (value * 12) / 335;
-    }
-
-    @EventHandler
-    public void onEntityCombust(EntityCombustEvent event) {
-
-        if (entityTaskId.containsKey(event.getEntity().getEntityId())) event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onPlayerDropItem(PlayerDropItemEvent event) {
-
-        final Player player = event.getPlayer();
-        final Item item = event.getItemDrop();
-        if (!inst.hasPermission(player, "aurora.sacrifice")) return;
-
-        int taskId = server.getScheduler().scheduleSyncRepeatingTask(inst, new Runnable() {
-
-            @Override
-            public void run() {
-
-                int id = getEntityTaskId(item);
-
-                if (item.isDead() || item.getTicksLived() > 40) {
-
-                    if (id != -1) {
-                        removeEntity(item);
-                        server.getScheduler().cancelTask(id);
-                    }
-                } else {
-                    final Block searchBlock = item.getLocation().getBlock().getRelative(BlockFace.DOWN);
-
-                    int blockTypeId = searchBlock.getTypeId();
-                    int blockData = searchBlock.getData();
-                    if ((blockTypeId == config.sacrificialBlockId) && (blockData == config.sacrificialBlockData)) {
-                        try {
-                            // Create the event here
-                            PitfallEvent pitfallEvent = new PitfallEvent(searchBlock, player,
-                                    config.sacrificialBlockId, config.sacrificialBlockData,   // Old Block B
-                                    config.sacrificialBlockId, config.sacrificialBlockData,   // New Block B
-                                    BlockID.AIR, (byte) 0,                                    // Old Block H
-                                    BlockID.FIRE, (byte) 0,                                   // New Block H
-                                    20 * 4, false);
-                            getPitfall().getPitfallEngine().createPitfallEffect(pitfallEvent);
-                            if (pitfallEvent.isCancelled()) return;
-                            sacrifice(player, item.getItemStack().clone());
-                            removeEntity(item);
-                            item.remove();
-                            server.getScheduler().cancelTask(id);
-                            player.sendMessage(ChatColor.GOLD + "An ancient fire ignites.");
-                        } catch (Exception e) {
-                            log.warning("The: "
-                                    + SacrificeComponent.this.getInformation().friendlyName()
-                                    + " component could not contact Pitfall.");
-                        }
-                    }
-                }
-            }
-
-        }, 0, 1); // Start at 0 ticks and repeat every 1 ticks
-        addEntityTaskId(item, taskId);
-    }
-
-    @Override
-    public void run() {
-
-        for (Player player : server.getOnlinePlayers()) {
-            Location playerLoc = player.getLocation();
-            Block searchBlock = playerLoc.getBlock().getRelative(BlockFace.DOWN, 3);
-            if (searchBlock.getTypeId() == config.sacrificialBlockId
-                    && searchBlock.getData() == config.sacrificialBlockData) {
-                Location airLoc = LocationUtil.findRandomLoc(searchBlock, 3);
-
-                try {
-                    Location newLoc = new Location(player.getWorld(), airLoc.getX(), airLoc.getY(),
-                            airLoc.getZ(), playerLoc.getYaw(), playerLoc.getPitch());
-
-                    Location[] smokeLocation = new Location[4];
-                    smokeLocation[0] = player.getLocation();
-                    smokeLocation[1] = player.getEyeLocation();
-                    smokeLocation[2] = newLoc;
-                    smokeLocation[3] = newLoc.getBlock().getRelative(BlockFace.UP).getLocation();
-
-                    player.teleport(newLoc);
-                    EnvironmentUtil.generateRadialEffect(smokeLocation, Effect.SMOKE);
-                } catch (Exception e) {
-                    log.warning("Could not find a location to teleport the player: " + player.getName() + " to.");
-                }
-            }
-        }
     }
 
     /**
@@ -363,8 +262,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
      */
     public List<ItemStack> getCalculatedLoot(CommandSender sender, ItemStack... items) {
 
-        List<ItemStack> loot = new ArrayList<>();
-
         // Calculate the amt & value
         int amt = 0;
         int value = 0;
@@ -372,6 +269,13 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             amt += item.getAmount();
             value += calculateValue(item);
         }
+
+        return getCalculatedLoot(sender, amt, value);
+    }
+
+    public static List<ItemStack> getCalculatedLoot(CommandSender sender, int amt, int value) {
+
+        List<ItemStack> loot = new ArrayList<>();
 
         // Calculate the modifier
         int modifier = calculateModifier(value);
@@ -730,9 +634,114 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         return loot;
     }
 
+    @EventHandler
+    public void onEntityCombust(EntityCombustEvent event) {
+
+        if (entityTaskId.containsKey(event.getEntity().getEntityId())) event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
+
+        final Player player = event.getPlayer();
+        final Item item = event.getItemDrop();
+        if (!inst.hasPermission(player, "aurora.sacrifice")) return;
+
+        int taskId = server.getScheduler().scheduleSyncRepeatingTask(inst, new Runnable() {
+
+            @Override
+            public void run() {
+
+                int id = getEntityTaskId(item);
+
+                if (item.isDead() || item.getTicksLived() > 40) {
+
+                    if (id != -1) {
+                        removeEntity(item);
+                        server.getScheduler().cancelTask(id);
+                    }
+                } else {
+                    final Block searchBlock = item.getLocation().getBlock().getRelative(BlockFace.DOWN);
+
+                    int blockTypeId = searchBlock.getTypeId();
+                    int blockData = searchBlock.getData();
+                    if ((blockTypeId == config.sacrificialBlockId) && (blockData == config.sacrificialBlockData)) {
+                        try {
+                            // Create the event here
+                            PitfallEvent pitfallEvent = new PitfallEvent(searchBlock, player,
+                                    config.sacrificialBlockId, config.sacrificialBlockData,   // Old Block B
+                                    config.sacrificialBlockId, config.sacrificialBlockData,   // New Block B
+                                    BlockID.AIR, (byte) 0,                                    // Old Block H
+                                    BlockID.FIRE, (byte) 0,                                   // New Block H
+                                    20 * 4, false);
+                            getPitfall().getPitfallEngine().createPitfallEffect(pitfallEvent);
+                            if (pitfallEvent.isCancelled()) return;
+                            sacrifice(player, item.getItemStack().clone());
+                            removeEntity(item);
+                            item.remove();
+                            server.getScheduler().cancelTask(id);
+                            player.sendMessage(ChatColor.GOLD + "An ancient fire ignites.");
+                        } catch (Exception e) {
+                            log.warning("The: "
+                                    + SacrificeComponent.this.getInformation().friendlyName()
+                                    + " component could not contact Pitfall.");
+                        }
+                    }
+                }
+            }
+
+        }, 0, 1); // Start at 0 ticks and repeat every 1 ticks
+        addEntityTaskId(item, taskId);
+    }
+
+    @Override
+    public void run() {
+
+        for (Player player : server.getOnlinePlayers()) {
+            Location playerLoc = player.getLocation();
+            Block searchBlock = playerLoc.getBlock().getRelative(BlockFace.DOWN, 3);
+            if (searchBlock.getTypeId() == config.sacrificialBlockId
+                    && searchBlock.getData() == config.sacrificialBlockData) {
+                Location airLoc = LocationUtil.findRandomLoc(searchBlock, 3);
+
+                try {
+                    Location newLoc = new Location(player.getWorld(), airLoc.getX(), airLoc.getY(),
+                            airLoc.getZ(), playerLoc.getYaw(), playerLoc.getPitch());
+
+                    Location[] smokeLocation = new Location[4];
+                    smokeLocation[0] = player.getLocation();
+                    smokeLocation[1] = player.getEyeLocation();
+                    smokeLocation[2] = newLoc;
+                    smokeLocation[3] = newLoc.getBlock().getRelative(BlockFace.UP).getLocation();
+
+                    player.teleport(newLoc);
+                    EnvironmentUtil.generateRadialEffect(smokeLocation, Effect.SMOKE);
+                } catch (Exception e) {
+                    log.warning("Could not find a location to teleport the player: " + player.getName() + " to.");
+                }
+            }
+        }
+    }
+
     private void sacrifice(Player player, ItemStack item) {
 
         PlayerInventory pInventory = player.getInventory();
+
+        if (ItemUtil.isMasterSword(item)) {
+            ItemStack masterSword = new ItemStack(Material.DIAMOND_SWORD);
+            ItemMeta masterMeta = masterSword.getItemMeta();
+            masterMeta.addEnchant(Enchantment.DAMAGE_ALL, 10, true);
+            masterMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 10, true);
+            masterMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 10, true);
+            masterMeta.addEnchant(Enchantment.FIRE_ASPECT, 10, true);
+            masterMeta.addEnchant(Enchantment.KNOCKBACK, 10, true);
+            masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
+            masterMeta.setDisplayName(ChatColor.DARK_PURPLE + "Master Sword");
+            ((Repairable) masterMeta).setRepairCost(400);
+            masterSword.setItemMeta(masterMeta);
+            pInventory.addItem(masterSword);
+            return;
+        }
 
         for (ItemStack aItemStack : getCalculatedLoot(player, item)) {
             pInventory.addItem(aItemStack);

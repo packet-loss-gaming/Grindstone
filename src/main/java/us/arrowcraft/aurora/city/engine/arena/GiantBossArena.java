@@ -1,4 +1,6 @@
 package us.arrowcraft.aurora.city.engine.arena;
+
+import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.blocks.BlockID;
@@ -7,30 +9,17 @@ import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Giant;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
-import org.bukkit.entity.Zombie;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -39,15 +28,12 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
+import us.arrowcraft.aurora.SacrificeComponent;
 import us.arrowcraft.aurora.admin.AdminComponent;
 import us.arrowcraft.aurora.events.CreepSpeakEvent;
 import us.arrowcraft.aurora.events.PrayerApplicationEvent;
 import us.arrowcraft.aurora.events.ThrowPlayerEvent;
-import us.arrowcraft.aurora.util.ChanceUtil;
-import us.arrowcraft.aurora.util.ChatUtil;
-import us.arrowcraft.aurora.util.EffectUtil;
-import us.arrowcraft.aurora.util.EnvironmentUtil;
-import us.arrowcraft.aurora.util.ItemUtil;
+import us.arrowcraft.aurora.util.*;
 import us.arrowcraft.aurora.util.player.PlayerState;
 
 import java.util.ArrayList;
@@ -67,8 +53,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     private AdminComponent adminComponent;
 
-    private static final double scalConstMulti = (18 / 17);
-    private static final double scalConstAdd = (48 / 17);
+    private static final int groundLevel = 82;
+    private static final double scalOffst = 4;
 
     private Giant boss = null;
     private long lastAttack = 0;
@@ -94,7 +80,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             @Override
             public void run() {
 
-                if (!getWorld().isThundering()) removeOutsideZombies();
+                Entity[] contained = getContainedEntities(1);
+                if (!getWorld().isThundering()) removeOutsideZombies(contained);
+                removeXP(contained);
             }
         }, 0, 20 * 2);
 
@@ -130,11 +118,13 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         getMinionSpawnPts(min, max);
 
         Region region = new CuboidRegion(min, max);
-        Location l = BukkitUtil.toLocation(getWorld(), region.getCenter().setY(82));
+        Location l = BukkitUtil.toLocation(getWorld(), region.getCenter().setY(groundLevel));
         boss = (Giant) getWorld().spawnEntity(l, EntityType.GIANT);
         boss.setMaxHealth(750);
         boss.setHealth(750);
         boss.setRemoveWhenFarAway(false);
+
+        for (Player player : getContainedPlayers(1)) ChatUtil.sendWarning(player, "I live again!");
     }
 
     public void getMinionSpawnPts() {
@@ -180,13 +170,20 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @Override
     public void run() {
 
-        if (!isBossSpawned() && (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 2)) {
+        if (!isBossSpawned() && (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3)) {
             removeMobs();
             spawnBoss();
         } else if (!isEmpty()) {
             equalize();
-            hurt();
-            runTargetAI(ChanceUtil.getRandom(OPTION_COUNT));
+            runAttack(ChanceUtil.getRandom(OPTION_COUNT));
+        }
+    }
+
+    public void removeXP(Entity[] contained) {
+
+        for (Entity e : contained) {
+
+            if (e instanceof ExperienceOrb && e.getTicksLived() > 20 * 20) e.remove();
         }
     }
 
@@ -201,9 +198,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     }
 
-    public void removeOutsideZombies() {
+    public void removeOutsideZombies(Entity[] contained) {
 
-        for (Entity e : getContainedEntities(1)) {
+        for (Entity e : contained) {
             if (e instanceof Zombie && ((Zombie) e).isBaby() && !contains(e)) {
                 for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
                 e.remove();
@@ -215,7 +212,6 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     public void disable() {
 
         removeMobs();
-        removeOutsideZombies();
         if (mobDestroyer != null) mobDestroyer.cancel();
     }
 
@@ -231,6 +227,17 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         for (Player player : getContainedPlayers()) {
             try {
                 adminComponent.standardizePlayer(player);
+
+                if (!isBossSpawned()) return;
+
+                if (player.hasPotionEffect(PotionEffectType.REGENERATION)) {
+                    player.setHealth(1);
+                    player.removePotionEffect(PotionEffectType.REGENERATION);
+                }
+
+                if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
+                    player.damage(32, boss);
+                }
             } catch (Exception e) {
                 log.warning("The player: " + player.getName() + " may have an unfair advantage.");
             }
@@ -241,6 +248,38 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     public ArenaType getArenaType() {
 
         return ArenaType.MONITORED;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent event) {
+
+        if (contains(event.getBlock()) && !inst.hasPermission(event.getPlayer(), "aurora.boss.builder")) {
+            event.setCancelled(true);
+        }
+    }
+
+    private static final List<PlayerTeleportEvent.TeleportCause> causes = new ArrayList<>(2);
+
+    static {
+        causes.add(PlayerTeleportEvent.TeleportCause.COMMAND);
+        causes.add(PlayerTeleportEvent.TeleportCause.PLUGIN);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onTeleport(PlayerTeleportEvent event) {
+
+        if (contains(event.getTo()) && causes.contains(event.getCause())) {
+
+            Player player = event.getPlayer();
+
+            if (player.hasPotionEffect(PotionEffectType.REGENERATION)) {
+                player.removePotionEffect(PotionEffectType.REGENERATION);
+            }
+
+            if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
+                player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+            }
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -269,15 +308,22 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         Entity defender = event.getEntity();
         Entity attacker = null;
+        Projectile projectile = null;
 
-        if (!contains(defender)) return;
+        if (event.getCause().equals(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION)
+                && !contains(defender) && contains(defender, 1)) {
+            event.setCancelled(true);
+            return;
+        } else if (!contains(defender)) return;
+
         if (event instanceof EntityDamageByEntityEvent) attacker = ((EntityDamageByEntityEvent) event).getDamager();
 
         if (attacker != null) {
             if (attacker instanceof Projectile) {
                 if (((Projectile) attacker).getShooter() != null) {
-                    attacker = ((Projectile) attacker).getShooter();
-                } else return;
+                    projectile = (Projectile) attacker;
+                    attacker = projectile.getShooter();
+                } else if (!(attacker instanceof LivingEntity)) return;
             }
 
             if (defender instanceof Giant && attacker instanceof Player && !contains(attacker)) {
@@ -325,7 +371,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         if (defender instanceof Giant) {
             Giant boss = (Giant) defender;
             if (damageHeals) {
-                boss.setHealth(Math.min(boss.getMaxHealth(), event.getDamage() + boss.getHealth()));
+                boss.setHealth(Math.min(boss.getMaxHealth(), (event.getDamage() * 2) + boss.getHealth()));
+            } else if (projectile != null && projectile instanceof Arrow) {
+                event.setDamage(event.getDamage() / 2);
             }
 
             if (ChanceUtil.getChance(7)) {
@@ -374,6 +422,11 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     }
 
+    private static PotionEffect[] effects = new PotionEffect[] {
+            new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 60 * 3, 2),
+            new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 60 * 3, 2)
+    };
+
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
 
@@ -381,8 +434,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             Entity e = event.getEntity();
             if (e instanceof Giant) {
                 int amt = getContainedPlayers() != null ? getContainedPlayers().length : 0;
-                for (int i = 0; i < ChanceUtil.getRandom(Math.round((scalConstMulti * amt) + scalConstAdd)); i++) {
-                    event.getDrops().add(new ItemStack(BlockID.GOLD_BLOCK, 64));
+                // 38 blocks of gold equivalent
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 38, 2496));
+                for (int i = 0; i < Math.sqrt(amt) + scalOffst; i++) {
+                    event.getDrops().add(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRangedRandom(32, 64)));
                 }
                 if (ChanceUtil.getChance(250)) {
                     ItemStack masterSword = new ItemStack(Material.DIAMOND_SWORD);
@@ -401,14 +456,14 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
                 lastDeath = System.currentTimeMillis();
                 boss = null;
-                for (int i = 0; i < Math.min(500, Math.max(21, amt ^ 3)); i++) {
-                    Zombie z = (Zombie) getWorld().spawnEntity(event.getEntity().getLocation(), EntityType.ZOMBIE);
-                    z.setBaby(true);
-                    EntityEquipment equipment = z.getEquipment();
-                    equipment.setItemInHand(new ItemStack(ItemID.DIAMOND_SWORD));
+                for (Entity entity : getContainedEntities()) {
+                    if (entity instanceof Zombie) ((Zombie) entity).addPotionEffects(Lists.newArrayList(effects));
                 }
                 event.setDroppedExp(256);
             } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
+                if (ChanceUtil.getChance(28)) {
+                    event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(3)));
+                }
                 event.setDroppedExp(14);
             }
         }
@@ -418,8 +473,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
-        if (contains(player, 1)) {
-            boss.setHealth(Math.min(boss.getMaxHealth(), boss.getHealth() + 40));
+        if (contains(player, 1) && !adminComponent.isAdmin(player)) {
+            if (isBossSpawned()) boss.setHealth(Math.min(boss.getMaxHealth(), boss.getHealth() + 250));
             playerState.put(player.getName(), new PlayerState(player.getName(),
                     player.getInventory().getContents(),
                     player.getInventory().getArmorContents(),
@@ -455,36 +510,15 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     }
 
-    private void hurt() {
+    private final int OPTION_COUNT = 7;
 
-        Player[] contained = getContainedPlayers();
-        if (!isBossSpawned() || contained == null || contained.length <= 0) return;
-
-        for (Player player : contained) {
-
-            if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
-                player.damage(32, boss);
-            }
-        }
-    }
-
-    private final int OPTION_COUNT = 6;
-
-    private void runTargetAI(int attackCase) {
+    private void runAttack(int attackCase) {
 
         if (!isBossSpawned() || (lastAttack != 0
                 && System.currentTimeMillis() - lastAttack <= ChanceUtil.getRangedRandom(13000, 17000))) return;
 
         Player[] contained = getContainedPlayers();
         if (contained == null || contained.length <= 0) return;
-
-        for (Player player : contained) {
-
-            if (player.hasPotionEffect(PotionEffectType.REGENERATION)) {
-                player.setHealth(1);
-                player.removePotionEffect(PotionEffectType.REGENERATION);
-            }
-        }
 
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
         switch (attackCase) {
@@ -561,13 +595,45 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     }, 20 * 30);
                     break;
                 }
-                runTargetAI(ChanceUtil.getRandom(OPTION_COUNT));
+                runAttack(ChanceUtil.getRandom(OPTION_COUNT));
                 return;
             case 6:
                 ChatUtil.sendWarning(contained, "Fire is your friend...");
                 for (Player player : contained) {
                     player.setFireTicks(20 * 45);
                 }
+                break;
+            case 7:
+                ChatUtil.sendWarning(contained, ChatColor.DARK_RED + "Bask in my glory!");
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                    @Override
+                    public void run() {
+
+                        damageHeals = true;
+                        for (Player player : getContainedPlayers()) {
+                            if (player.getLocation().getBlock().getRelative(BlockFace.DOWN, 2).getTypeId()
+                                    != BlockID.DIAMOND_BLOCK) {
+                                ChatUtil.sendWarning(player, ChatColor.DARK_RED + "You!");
+                                for (Location pt : spawnPts) {
+                                    if (ChanceUtil.getChance(12)) {
+                                        getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), 10, false, false);
+                                    }
+                                }
+                                server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                                    @Override
+                                    public void run() {
+
+                                        damageHeals = false;
+                                    }
+                                }, 10);
+                                return;
+                            }
+                        }
+                        ChatUtil.sendNotice(getContainedPlayers(), "Gah... Afraid are you friends?");
+                    }
+                }, 20 * 7);
                 break;
         }
         lastAttack = System.currentTimeMillis();

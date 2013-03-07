@@ -121,7 +121,7 @@ public class EnderPearlHomesComponent extends BukkitComponent implements Listene
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
 
         HomeTeleportEvent HTE = new HomeTeleportEvent(event.getPlayer(), getRespawnLocation(event.getPlayer()));

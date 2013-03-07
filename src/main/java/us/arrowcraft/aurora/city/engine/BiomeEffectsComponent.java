@@ -21,6 +21,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import us.arrowcraft.aurora.admin.AdminComponent;
+import us.arrowcraft.aurora.events.FrostBiteEvent;
 import us.arrowcraft.aurora.jail.JailComponent;
 import us.arrowcraft.aurora.util.ChatUtil;
 import us.arrowcraft.aurora.util.EnvironmentUtil;
@@ -114,6 +115,11 @@ public class BiomeEffectsComponent extends BukkitComponent implements Listener, 
                     && player.getEyeLocation().getBlock().getLightLevel() <= (byte) 4
                     && !adminComponent.isAdmin(player)
                     && !jailComponent.isJailed(player)) {
+
+                FrostBiteEvent event = new FrostBiteEvent(player);
+                server.getPluginManager().callEvent(event);
+                if (event.isCancelled()) return;
+
                 ItemStack[] armorContents = player.getInventory().getArmorContents();
                 int damage = 4;
 

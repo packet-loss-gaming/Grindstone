@@ -123,8 +123,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         Player player = event.getPlayer();
 
         for (final Player otherPlayer : server.getOnlinePlayers()) {
-            if (otherPlayer != player)
-                otherPlayer.showPlayer(player);
+            if (otherPlayer != player) otherPlayer.showPlayer(player);
         }
     }
 
