@@ -60,7 +60,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
 
                 if (System.currentTimeMillis() - entry.getValue() >= TimeUnit.MINUTES.toMillis(30)) {
                     LocationUtil.toGround(entry.getKey());
-                    adminComponent.deadmin(entry.getKey());
+                    adminComponent.deadmin(entry.getKey(), true);
                     entry.getKey().setSleepingIgnored(false);
 
                     server.getScheduler().runTaskLater(inst, new Runnable() {

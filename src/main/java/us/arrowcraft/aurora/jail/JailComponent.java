@@ -147,7 +147,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                         assignCell(player, inmate.getPrisonName());
                     }
 
-                    adminComponent.standardizePlayer(player);
+                    adminComponent.standardizePlayer(player, true);
                     player.setFoodLevel(5);
 
                     Location loc = player.getLocation();

@@ -5,6 +5,10 @@ package us.arrowcraft.aurora.admin;
 public enum AdminState {
 
     /**
+     * Elevated Shade Admin Level
+     */
+    SYSOP,
+    /**
      * Lord and Shade Admin Level
      */
     ADMIN,

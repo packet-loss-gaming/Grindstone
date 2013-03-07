@@ -248,6 +248,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onAdminChange(PlayerAdminModeChangeEvent event) {
 
+        if (event.getNewAdminState().equals(AdminState.SYSOP)) return;
         if (!event.getNewAdminState().equals(AdminState.MEMBER) && event.getPlayer().getWorld().isThundering()) {
 
             event.setCancelled(true);

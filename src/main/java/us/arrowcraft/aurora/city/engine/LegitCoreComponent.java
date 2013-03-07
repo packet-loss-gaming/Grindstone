@@ -135,6 +135,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
         World world = event.getPlayer().getWorld();
 
+        if (event.getNewAdminState().equals(AdminState.SYSOP)) return;
         if (!event.getNewAdminState().equals(AdminState.MEMBER) && world.getName().contains(config.legitWorld)) {
             event.setCancelled(true);
         }

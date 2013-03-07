@@ -349,9 +349,8 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
             // Check for valid nameType
             try {
 
-                if (player.getName().equals(sender.getName())) {
-                    adminComponent.standardizePlayer(player); // Remove Admin & Guild
-                    uninfluencePlayer(player);                // Remove any other Prayers
+                if (player.getName().equals(sender.getName()) && adminComponent.standardizePlayer(player)) {
+                    uninfluencePlayer(player);
                     player.getWorld().strikeLightningEffect(player.getLocation());
                     player.setFireTicks(20 * 60);
                     throw new CommandException("The gods don't take kindly to using their power on yourself.");
@@ -399,7 +398,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
             return false;
         } else if (prayer.getEffect().getType().isUnholy()) {
 
-            adminComponent.standardizePlayer(player);
+            if (!adminComponent.standardizePlayer(player)) uninfluencePlayer(player);
         }
 
         return true;

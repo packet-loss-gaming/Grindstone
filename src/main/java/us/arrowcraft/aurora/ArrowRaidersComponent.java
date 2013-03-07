@@ -354,8 +354,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 try {
                     Player teamPlayer = Bukkit.getPlayerExact(name);
 
-                    adminComponent.deguildPlayer(teamPlayer);
-                    adminComponent.depowerPlayer(teamPlayer);
+                    adminComponent.standardizePlayer(teamPlayer);
                     if (teams.get(teamPlayer.getName()) == 0) {
                         teamZero++;
                     } else if (teams.get(teamPlayer.getName()) == 1) {
