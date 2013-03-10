@@ -226,9 +226,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
             int id = item.getItemStack().getTypeId();
             for (int aItem : items) {
-
                 if (aItem == id) {
-                    item.getItemStack().setAmount(item.getItemStack().getAmount() - 1);
+                    item.getItemStack().setAmount((int) (item.getItemStack().getAmount() * .8));
                     break;
                 }
             }
@@ -624,6 +623,12 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         revertPlayer(player);
 
         if (daveHitList.contains(player) || contains(player)) {
+
+            if (contains(player) && ChanceUtil.getChance(50)) {
+                ChatUtil.sendNotice(player, "You feel as though a spirit is trying to tell you something...");
+                event.getDrops().add(BookUtil.Lore.Areas.theGreatMine());
+            }
+
             if (daveHitList.contains(player)) daveHitList.remove(player);
             switch (ChanceUtil.getRandom(11)) {
                 case 1:

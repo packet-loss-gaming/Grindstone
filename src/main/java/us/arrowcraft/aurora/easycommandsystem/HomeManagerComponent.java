@@ -56,7 +56,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
         Plugin plugin = server.getPluginManager().getPlugin("WorldEdit");
 
-        // WorldGuard may not be loaded
+        // WorldEdit may not be loaded
         if (plugin == null || !(plugin instanceof WorldEditPlugin)) {
             return;
         }
@@ -154,9 +154,35 @@ public class HomeManagerComponent extends BukkitComponent {
 
         }
 
+        @Command(aliases = {"rules"}, usage = "[district]", desc = "District Rules", min = 0, max = 1)
+        public void homeRuleCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            if (!(sender instanceof Player)) return;
+
+            String district;
+
+            if (args.argsLength() == 0) {
+                RegionManager manager = WG.getRegionManager(((Player) sender).getWorld());
+                ProtectedRegion home = manager.getRegion(getHome(sender.getName()));
+
+                if (home == null) {
+                    throw new CommandException("You don't live in a district and did not "
+                            + "specify a district in this world.");
+                } else {
+                    district = home.getParent().getId().replace("-district", "");
+                }
+            } else {
+                district = args.getString(0).toLowerCase().replace("-district", "");
+            }
+
+            if (!giveRuleBook(sender, sender.getName(), district)) {
+                throw new CommandException("No district by that name found in this world.");
+            }
+        }
+
         @Command(aliases = {"admin"}, desc = "Admin Commands")
         @NestedCommand({HomeAdminCommands.class})
-        public void homeAdminCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void homeAdminCmds(CommandContext args, CommandSender sender) throws CommandException {
 
         }
     }
@@ -172,7 +198,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
                 Player admin = (Player) sender;
                 String player = args.getString(0).toLowerCase();
-                String district = args.getString(1).toLowerCase();
+                String district = args.getString(1).toLowerCase().replace("-district", "");
 
                 ProtectedRegion region;
 
@@ -247,7 +273,7 @@ public class HomeManagerComponent extends BukkitComponent {
             if (sender instanceof Player) {
                 Player admin = (Player) sender;
                 String player = args.getString(0).toLowerCase();
-                String district = args.getString(1).toLowerCase();
+                String district = args.getString(1).toLowerCase().replace("-district", "");
 
                 RegionManager manager = WG.getRegionManager(admin.getWorld());
                 ProtectedRegion existing = manager.getRegionExact(getHome(player));
@@ -325,6 +351,15 @@ public class HomeManagerComponent extends BukkitComponent {
                 throw new CommandException("You must be a player to use this command.");
             }
         }
+
+        @Command(aliases = {"help"}, desc = "Admin Help", min = 0, max = 0)
+        @CommandPermissions({"aurora.home.admin.help"})
+        public void adminHelpCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            if (!(sender instanceof Player)) return;
+
+            ((Player) sender).getInventory().addItem(BookUtil.Help.Admin.housing());
+        }
     }
 
     private String getHome(String player) {
@@ -337,27 +372,24 @@ public class HomeManagerComponent extends BukkitComponent {
         return getHome(player.getName());
     }
 
-    private void giveRuleBook(CommandSender sender, String player, String district) {
+    private boolean giveRuleBook(CommandSender sender, String player, String district) {
 
         district = district.toLowerCase();
 
         switch (district) {
             case "carpe-diem":
-                giveRuleBook(sender, player, District.CARPE_DIEM);
-                break;
+                return giveRuleBook(sender, player, District.CARPE_DIEM);
             case "glacies-mare":
-                giveRuleBook(sender, player, District.GLACIES_MARE);
-                break;
+                return giveRuleBook(sender, player, District.GLACIES_MARE);
             case "oblitus":
-                giveRuleBook(sender, player, District.OBLITUS);
-                break;
+                return giveRuleBook(sender, player, District.OBLITUS);
             case "vineam":
-                giveRuleBook(sender, player, District.VINEAM);
-                break;
+                return giveRuleBook(sender, player, District.VINEAM);
         }
+        return false;
     }
 
-    private void giveRuleBook(CommandSender sender, String player, District district) {
+    private boolean giveRuleBook(CommandSender sender, String player, District district) {
 
         ItemStack ruleBook;
         switch (district) {
@@ -374,7 +406,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 ruleBook = BookUtil.Rules.BuildingCode.vineam();
                 break;
             default:
-                return;
+                return false;
         }
 
         Player tPlayer;
@@ -384,8 +416,9 @@ public class HomeManagerComponent extends BukkitComponent {
             tPlayer = null;
         }
 
-        if (tPlayer == null) return;
+        if (tPlayer == null) return false;
         tPlayer.getInventory().addItem(ruleBook);
+        return true;
     }
 
     public class TeleportCommands {

@@ -434,10 +434,19 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             Entity e = event.getEntity();
             if (e instanceof Giant) {
                 int amt = getContainedPlayers() != null ? getContainedPlayers().length : 0;
+
+                // Sacrificial drops
                 // 38 blocks of gold equivalent
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 38, 2496));
+
+                // Gold drops
                 for (int i = 0; i < Math.sqrt(amt) + scalOffst; i++) {
                     event.getDrops().add(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRangedRandom(32, 64)));
+                }
+
+                // Unique drops
+                if (ChanceUtil.getChance(5)) {
+                    event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
                 if (ChanceUtil.getChance(250)) {
                     ItemStack masterSword = new ItemStack(Material.DIAMOND_SWORD);

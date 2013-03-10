@@ -14,6 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -160,6 +161,16 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
         if (blockedPlayers.contains(player)) {
             event.setCancelled(true);
             ChatUtil.sendError(player, "Please walk through the stone doors into the teleport room.");
+        }
+    }
+
+    @EventHandler
+    public void onPlayerConnect(PlayerLoginEvent event) {
+
+        if (event.getHostname().contains("arrowcraft")) {
+
+            event.setKickMessage("Please use \"server.skelril.com\" from now on.");
+            event.setResult(PlayerLoginEvent.Result.KICK_OTHER);
         }
     }
 
