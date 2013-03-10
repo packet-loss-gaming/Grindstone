@@ -1,0 +1,249 @@
+package com.skelril.aurora.jail;
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
+import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.util.PlayerUtil;
+import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
+
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+
+/**
+ * Author: Turtle9598
+ */
+public class CSVJailCellDatabase implements JailCellDatabase {
+
+    private final Logger log = CommandBook.inst().getLogger();
+    protected final Logger auditLogger
+            = Logger.getLogger("Minecraft.CommandBook.Jail");
+    protected final File cellFile;
+
+    /**
+     * Used to lookup cells by name
+     */
+    protected Map<String, JailCell> nameJailCell = new HashMap<>();
+
+    /**
+     * A set of all cells
+     */
+    protected final Set<JailCell> jailCells = new HashSet<>();
+
+    private static final SimpleDateFormat dateFormat =
+            new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+
+    public CSVJailCellDatabase(File cellStorageDir) {
+
+        cellFile = new File(cellStorageDir, "cells.csv");
+
+        // Set up an audit trail
+        try {
+            FileHandler handler = new FileHandler(
+                    (new File(cellStorageDir, "cells.%g.%u.log")).getAbsolutePath()
+                            .replace("\\", "/"), true);
+
+            handler.setFormatter(new java.util.logging.Formatter() {
+
+                @Override
+                public String format(LogRecord record) {
+
+                    return "[" + dateFormat.format(new Date())
+                            + "] " + record.getMessage() + "\r\n";
+                }
+            });
+
+            auditLogger.addHandler(handler);
+        } catch (SecurityException | IOException e) {
+            log.warning("Failed to setup audit log for the "
+                    + "CSV cell database: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public synchronized boolean load() {
+
+        FileInputStream input = null;
+        boolean successful = true;
+
+        try {
+            input = new FileInputStream(cellFile);
+            InputStreamReader streamReader = new InputStreamReader(input, "utf-8");
+            CSVReader reader = new CSVReader(new BufferedReader(streamReader));
+            String[] line;
+
+            while ((line = reader.readNext()) != null) {
+                if (line.length < 6) {
+                    log.warning("A cell entry with < 6 fields was found!");
+                    continue;
+                }
+                try {
+                    String name = line[0].trim().toLowerCase();
+                    String prison = line[1].trim().toLowerCase();
+                    String world = line[2].trim();
+                    int x = Integer.parseInt(line[3]);
+                    int y = Integer.parseInt(line[4]);
+                    int z = Integer.parseInt(line[5]);
+                    if ("".equals(name) || "null".equals(name))
+                        name = null;
+                    JailCell jailCell = new JailCell(name, prison, world, x, y, z);
+                    if (name != null) nameJailCell.put(name, jailCell);
+                    jailCells.add(jailCell);
+                } catch (NumberFormatException e) {
+                    log.warning("Non-int int field found in cell!");
+                }
+            }
+            log.info(jailCells.size() + " jail cell(s) loaded.");
+        } catch (FileNotFoundException ignored) {
+        } catch (IOException e) {
+            nameJailCell = new HashMap<String, JailCell>();
+            log.warning("Failed to load " + cellFile.getAbsolutePath()
+                    + ": " + e.getMessage());
+            successful = false;
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        return successful;
+    }
+
+    @Override
+    public synchronized boolean save() {
+
+        FileOutputStream output = null;
+        boolean successful = true;
+
+        try {
+            output = new FileOutputStream(cellFile);
+            CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(output, "utf-8")));
+            String[] line;
+
+            for (JailCell jailCell : jailCells) {
+                line = new String[] {
+                        jailCell.getCellName().trim().toLowerCase(),
+                        jailCell.getPrisonName().trim().toLowerCase(),
+                        jailCell.getWorldName().trim(),
+                        String.valueOf(jailCell.getX()),
+                        String.valueOf(jailCell.getY()),
+                        String.valueOf(jailCell.getZ())
+                };
+                writer.writeNext(line);
+            }
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            log.warning("Failed to save " + cellFile.getAbsolutePath() + ": " + e.getMessage());
+            successful = false;
+        } finally {
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        return successful;
+    }
+
+    @Override
+    public boolean unload() {
+
+        for (Handler handler : auditLogger.getHandlers()) {
+            if (handler instanceof FileHandler) {
+                handler.flush();
+                handler.close();
+                auditLogger.removeHandler(handler);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean cellExist(String name) {
+
+        JailCell jailCell = nameJailCell.get(name.trim().toLowerCase());
+        return jailCell != null;
+    }
+
+    @Override
+    public void createJailCell(String jailCellName, String prisonName, CommandSender source, Location location) {
+
+        JailCell jailCell = new JailCell(jailCellName.trim().toLowerCase(), prisonName.trim().toLowerCase(),
+                location.getWorld().getName().trim(), location.getBlockX(), location.getBlockY(),
+                location.getBlockZ());
+        jailCellName = jailCellName.trim().toLowerCase();
+        nameJailCell.put(jailCellName, jailCell);
+        jailCells.add(jailCell);
+        auditLogger.info(String.format("CELL: %s created cell: %s",
+                source == null ? "Plugin" : PlayerUtil.toUniqueName(source),
+                jailCellName));
+    }
+
+    @Override
+    public boolean deleteJailCell(String jailCellName, CommandSender source) {
+
+        JailCell jailCell = null;
+        String cellName = null;
+        if (jailCellName != null) {
+            jailCellName = jailCellName.trim().toLowerCase();
+            jailCell = nameJailCell.remove(jailCellName);
+            if (jailCell != null) {
+                cellName = jailCellName;
+            }
+        }
+        if (jailCell != null) {
+            jailCells.remove(jailCell);
+            auditLogger.info(String.format("CELL: %s removed cell: %s",
+                    source == null ? "Plugin" : PlayerUtil.toUniqueName(source),
+                    cellName));
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public JailCell getJailCell(String name) {
+
+        return nameJailCell.get(name.trim().toLowerCase());
+    }
+
+    @Override
+    public List<JailCell> getJailCells() {
+
+        return new ArrayList<JailCell>(jailCells);
+    }
+
+    @Override
+    public Iterator<JailCell> iterator() {
+
+        return new Iterator<JailCell>() {
+
+            private final Iterator<JailCell> setIter = jailCells.iterator();
+            private JailCell next;
+
+            public boolean hasNext() {
+
+                return setIter.hasNext();
+            }
+
+            public JailCell next() {
+
+                return next = setIter.next();
+            }
+
+            public void remove() {
+
+                deleteJailCell(next.getCellName(), null);
+            }
+        };
+    }
+}
