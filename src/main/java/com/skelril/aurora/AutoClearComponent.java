@@ -159,10 +159,11 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
                 }
 
 
-                if (timerSeconds > 0 && clearCount < config.itemCountMin * 3) {
+                boolean force = clearCount > config.itemCountMin * 3;
+                if ((timerSeconds > 0 && timerSeconds % 5 == 0 || timerSeconds <= 10 && timerSeconds > 0) && !force) {
                     Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops in "
                             + timerSeconds + " seconds!");
-                } else {
+                } else if (timerSeconds < 1 || force) {
                     Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops!");
 
                     // Remove Entities
