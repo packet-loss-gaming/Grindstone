@@ -2,7 +2,6 @@ package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockData;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -20,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockGrowEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -258,13 +258,29 @@ public class FishingComponent extends BukkitComponent implements Listener {
         return !arrowLoc.containsValue(loc);
     }
 
-    // Arrow Fishing
+    // Stack-o-fish
+    private final static ItemStack fishy = new ItemStack(Material.RAW_FISH, 1);
+
+    // Entity fishing
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBowFire(EntityShootBowEvent event) {
+
+        if (event.getForce() >= .85) arrowFish(new ProjectileLaunchEvent(event.getProjectile()));
+    }
+
+    // Non-entity Fishing
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onArrowFire(ProjectileLaunchEvent event) {
 
-        // Basic Check
+        Projectile projectile = event.getEntity();
+        if (projectile.getShooter() != null && !(projectile.getShooter() instanceof Player)) arrowFish(event);
+    }
+
+
+    public void arrowFish(ProjectileLaunchEvent event) {
+
         if (!config.enableArrowFishing) return;
-        if (event.getEntityType() != EntityType.ARROW) return;
+        if (!(event.getEntity() instanceof Arrow)) return;
         final Arrow arrow = (Arrow) event.getEntity();
 
         int taskId = server.getScheduler().scheduleSyncRepeatingTask(inst, new Runnable() {
@@ -282,23 +298,26 @@ public class FishingComponent extends BukkitComponent implements Listener {
                         server.getScheduler().cancelTask(id);
                     }
                 } else {
-                    int blockTypeId = arrow.getWorld().getBlockTypeIdAt(loc);
-                    boolean dropFish;
+                    int dropFish;
+
                     if (arrow.getShooter() instanceof Player) {
-                        dropFish = inst.hasPermission((Player) arrow.getShooter(),
-                                "aurora.fishing.arrow.master") ? ChanceUtil.getChance(1, 4) : ChanceUtil.getChance(1,
-                                16);
+                        dropFish = ChanceUtil.getRandom(16);
+
+                        if (inst.hasPermission((Player) arrow.getShooter(), "aurora.fishing.arrow.master")) {
+                            dropFish = (int) Math.sqrt(dropFish);
+                        }
                     } else {
-                        dropFish = ChanceUtil.getChance(1, 256);
+                        dropFish = ChanceUtil.getRandom(256);
                     }
 
                     addArrowLoc(arrow, loc.toString());
-                    if (dropFish && ((blockTypeId == BlockID.WATER) || (blockTypeId == BlockID.STATIONARY_WATER))) {
-                        arrow.getWorld().dropItemNaturally(loc, new ItemStack(Material.RAW_FISH, 1));
+                    if (ChanceUtil.getChance(dropFish) && EnvironmentUtil.isWater(loc.getBlock())) {
+                        arrow.getWorld().dropItemNaturally(loc, fishy);
                     }
                 }
             }
-        }, 0L, 3L); // Start at 0 ticks and repeat every 3 ticks
+        }, 0, 3); // Start at 0 ticks and repeat every 3 ticks
         addArrowTaskId(arrow, taskId);
+
     }
 }

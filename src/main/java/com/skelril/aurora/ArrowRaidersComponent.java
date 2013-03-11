@@ -54,8 +54,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -465,6 +465,17 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         }
 
         try {
+            // Discover chunks
+            World w = Bukkit.getWorld("City");
+            Location battleLoc = new Location(w, config.x, config.y, config.z);
+            ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
+
+            for (Entity entity : w.getEntitiesByClasses(Item.class, TNTPrimed.class)) {
+                if (rg.contains(BukkitUtil.toVector(entity.getLocation()))) {
+                    entity.remove();
+                }
+            }
+
             final Snapshot snap = worldEditConfig.snapshotRepo.getDefaultSnapshot(config.worldName);
 
             if (snap == null) {
@@ -472,10 +483,6 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 return;
             }
 
-            // Discover chunks
-            World w = Bukkit.getWorld("City");
-            Location battleLoc = new Location(w, config.x, config.y, config.z);
-            ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
             final List<Chunk> chunkList = new ArrayList<>();
             chunkList.add(battleLoc.getChunk());
 
@@ -567,14 +574,6 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         }
                     }
                 }, 5 * chunkList.indexOf(chunk));
-            }
-
-            for (Item item : w.getEntitiesByClass(Item.class)) {
-
-                Location itemLoc = item.getLocation();
-                if (rg.contains(itemLoc.getBlockX(), itemLoc.getBlockY(), itemLoc.getBlockZ())) {
-                    item.remove();
-                }
             }
         } catch (MissingWorldException e) {
             log.warning("The world: " + config.worldName + " could not be found, restoration cancelled.");
@@ -813,7 +812,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     }
 
     @EventHandler
-    public void onFireSpread(BlockSpreadEvent event) {
+    public void onFireSpread(BlockBurnEvent event) {
 
         Location l = event.getBlock().getLocation();
 
