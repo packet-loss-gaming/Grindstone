@@ -10,6 +10,7 @@ import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitConfiguration;
+import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.data.ChunkStore;
@@ -54,6 +55,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -805,12 +807,20 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         Player player = event.getPlayer();
 
-        if (isInArrowRaidingTeam(player)) {
-            int bt = event.getBlock().getTypeId();
-            if (!isArrowRaidInitialised()) {
-                event.setCancelled(true);
-            }
+        if (isInArrowRaidingTeam(player) && !isArrowRaidInitialised()) {
+            event.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onFireSpread(BlockSpreadEvent event) {
+
+        Location l = event.getBlock().getLocation();
+
+        World w = Bukkit.getWorld("City");
+        ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
+
+        if (rg.contains(BukkitUtil.toVector(l)) && gameFlags.contains('f')) event.setCancelled(true);
     }
 
     @EventHandler
@@ -821,7 +831,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         World w = Bukkit.getWorld("City");
         ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
 
-        if (rg.contains(new Vector(l.getBlockX(), l.getBlockY(), l.getBlockZ()))) event.setYield(0);
+        if (rg.contains(BukkitUtil.toVector(l))) event.setYield(0);
 
     }
 
@@ -860,7 +870,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (isInArrowRaidingTeam((Player) p.getShooter())) {
+        if (isInArrowRaidingTeam((Player) p.getShooter()) && isArrowRaidActive()) {
 
             int explosionSize = 2;
 
@@ -933,7 +943,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                     throw new CommandException("You must first leave admin mode.");
                 } else if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName))) {
                     throw new CommandException("You cannot access this Arrow Craft Raid from that world.");
-                } else if (isArrowRaidActive()) {
+                } else if (isArrowRaidInitialised()) {
                     throw new CommandException("You cannot add players while an Arrow Craft Raid game is active!");
                 } else if (isInArrowRaidingTeam(targetPlayer)) {
                     throw new CommandException("You are already in an Arrow Craft Raid.");
@@ -945,7 +955,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                     throw new CommandException("You must first leave admin mode.");
                 } else if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName))) {
                     throw new CommandException("You cannot access this Arrow Craft Raid from that world.");
-                } else if (isArrowRaidActive()) {
+                } else if (isArrowRaidInitialised()) {
                     throw new CommandException("You cannot add players while an Arrow Craft Raid game is active!");
                 } else if (isInArrowRaidingTeam(targetPlayer)) {
                     throw new CommandException("You are already in an Arrow Craft Raid.");
@@ -967,7 +977,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                     throw new CommandException("That player must first leave admin mode.");
                 } else if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName))) {
                     throw new CommandException("That player cannot access this Arrow Craft Raid from their world.");
-                } else if (isArrowRaidActive()) {
+                } else if (isArrowRaidInitialised()) {
                     throw new CommandException("You cannot add players while an Arrow Craft Raid game is active!");
                 } else if (isInArrowRaidingTeam(targetPlayer)) {
                     throw new CommandException("That player is already in an Arrow Craft Raid.");
