@@ -809,12 +809,6 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             int bt = event.getBlock().getTypeId();
             if (!isArrowRaidInitialised()) {
                 event.setCancelled(true);
-            } else if (gameFlags.contains('t') && bt == BlockID.TNT) {
-                ChatUtil.sendError(player, "You cannot use TNT this game.");
-                event.setCancelled(true);
-            } else if (gameFlags.contains('f') && bt == BlockID.FIRE) {
-                ChatUtil.sendError(player, "You cannot use fire this game.");
-                event.setCancelled(true);
             }
         }
     }
@@ -1068,7 +1062,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         @Command(aliases = {"start", "s"},
                 usage = "", desc = "Arrow Craft Raiders Management Commands",
-                flags = "sdajbtmxg", min = 0, max = 0)
+                flags = "sdajbtfmxg", min = 0, max = 0)
         @CommandPermissions({"aurora.jr.start"})
         public void startArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -1101,9 +1095,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         ChatUtil.sendWarning(players, "Grenades");
                     }
                 }
-                if (gameFlags.contains('t')) {
-                    ChatUtil.sendWarning(players, "Torment Arrows");
-                }
+                if (gameFlags.contains('t')) ChatUtil.sendWarning(players, "Torment Arrows");
                 if (gameFlags.contains('d')) ChatUtil.sendWarning(players, "Death touch");
                 if (gameFlags.contains('a')) ChatUtil.sendWarning(players, "2012");
                 if (gameFlags.contains('j')) {
@@ -1113,6 +1105,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         ChatUtil.sendNotice(players, ChatColor.AQUA, "Jumpy");
                     }
                 }
+                if (gameFlags.contains('f')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No fire spread");
                 if (gameFlags.contains('m')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No mining");
                 if (gameFlags.contains('b')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No block break");
             }
