@@ -136,22 +136,35 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             PlayerInventory playerInventory = player.getInventory();
             playerInventory.clear();
 
-            // Default setup
+            List<ItemStack> gear = new ArrayList<>();
             if (flags.contains('z')) {
                 ItemStack enchantedSword = sword.clone();
                 enchantedSword.addEnchantment(Enchantment.FIRE_ASPECT, 1);
                 enchantedSword.addEnchantment(Enchantment.KNOCKBACK, 1);
 
-                playerInventory.addItem(enchantedSword, tnt, tnt, tnt, flintAndSteel, shears, axe, steak);
+                gear.add(enchantedSword);
             } else if (flags.contains('a')) {
-                ItemStack enchantedBow = bow.clone();
-                enchantedBow.addEnchantment(Enchantment.ARROW_FIRE, 1);
-                enchantedBow.addEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
+                ItemStack dmgBow = bow.clone();
+                dmgBow.addEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
 
-                playerInventory.addItem(enchantedBow, tnt, tnt, tnt, flintAndSteel, shears, axe, steak, arrows, arrows);
+                ItemStack fireBow = bow.clone();
+                fireBow.addEnchantment(Enchantment.ARROW_FIRE, 1);
+
+                gear.add(dmgBow);
+                gear.add(fireBow);
             } else {
-                playerInventory.addItem(sword, bow, tnt, tnt, tnt, flintAndSteel, shears, axe, steak, arrows, arrows);
+                gear.add(sword);
+                gear.add(bow);
             }
+
+            for (int i = 0; i < 3; i++) gear.add(tnt.clone());
+            gear.add(flintAndSteel);
+            gear.add(shears);
+            gear.add(axe);
+            gear.add(steak);
+            for (int i = 0; i < 2; i++) gear.add(arrows.clone());
+
+            player.getInventory().addItem(gear.toArray(new ItemStack[gear.size()]));
 
             ItemStack[] leatherArmour = ItemUtil.leatherArmour;
             Color color = Color.WHITE;
