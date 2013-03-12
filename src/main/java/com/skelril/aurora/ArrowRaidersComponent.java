@@ -1071,7 +1071,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         @Command(aliases = {"start", "s"},
                 usage = "", desc = "Arrow Craft Raiders Management Commands",
-                flags = "sdajbtfmxg", min = 0, max = 0)
+                flags = "sdajbtfmxgh", min = 0, max = 0)
         @CommandPermissions({"aurora.jr.start"})
         public void startArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -1090,6 +1090,18 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             ChatUtil.sendNotice(players, ChatColor.GREEN, "Team one and all neutral players can now run!");
             if (gameFlags.size() > 0) {
                 ChatUtil.sendNotice(players, ChatColor.GREEN + "The following flags are enabled: ");
+                if (gameFlags.contains('h')) {
+                    ChatUtil.sendWarning(players, "Survival Mode");
+                    for (Player player : players) {
+                        PlayerInventory inventory = player.getInventory();
+                        ItemStack stack;
+                        for (int i = 0; i < inventory.getContents().length; i++)  {
+                            stack = inventory.getItem(i);
+                            if (stack == null || stack.getTypeId() == ItemID.COOKED_BEEF) continue;
+                            inventory.setItem(i, null);
+                        }
+                    }
+                }
                 if (gameFlags.contains('x')) {
                     if (gameFlags.contains('s')) {
                         ChatUtil.sendWarning(players, "Highly Explosive Arrows");
