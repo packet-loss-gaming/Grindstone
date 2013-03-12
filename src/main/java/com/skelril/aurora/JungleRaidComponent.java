@@ -77,9 +77,9 @@ import java.util.logging.Logger;
 /**
  * @author Turtle9598
  */
-@ComponentInformation(friendlyName = "Arrow Craft Raiders", desc = "Warfare at it's best!")
+@ComponentInformation(friendlyName = "Jungle Raid", desc = "Warfare at it's best!")
 @Depend(components = {AdminComponent.class, PrayerComponent.class}, plugins = {"WorldEdit", "WorldGuard"})
-public class ArrowRaidersComponent extends BukkitComponent implements Listener, Runnable {
+public class JungleRaidComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
@@ -119,7 +119,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     private static final ItemStack arrows = new ItemStack(ItemID.ARROW, 64);
 
     // Player Management
-    private void addToArrowRaidingTeam(Player player, int teamNumber, Set<Character> flags) {
+    private void addToJungleRaidTeam(Player player, int teamNumber, Set<Character> flags) {
 
         teams.put(player.getName(), teamNumber);
 
@@ -202,22 +202,22 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             prayerComponent.influencePlayer(player, getPrayers(player));
         } catch (Exception e) {
             Bukkit.broadcastMessage(ChatColor.RED + "An issue has been found in the configuration of the "
-                    + "Arrow Craft Raiders Component.");
+                    + "Jungle Raid Component.");
         }
-        player.sendMessage(ChatColor.YELLOW + "You have joined the Arrow Craft Raid.");
+        player.sendMessage(ChatColor.YELLOW + "You have joined the Jungle Raid.");
     }
 
-    private boolean isInArrowRaidingTeam(Player player) {
+    private boolean isInJungleRaidTeam(Player player) {
 
         return teams.containsKey(player.getName());
     }
 
-    private void removeFromArrowRaidingTeam(Player player) {
+    private void removeFromJungleRaidTeam(Player player) {
 
         teams.remove(player.getName());
     }
 
-    private boolean isArrowRaidActive() {
+    private boolean isJungleRaidActive() {
 
         return gameHasStarted;
     }
@@ -227,7 +227,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         return allowAllRun;
     }
 
-    private boolean isArrowRaidInitialised() {
+    private boolean isJungleRaidInitialised() {
 
         return gameHasBeenInitialised;
     }
@@ -252,6 +252,14 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             if (LocationUtil.isInRegion(w, r, player)) returnedList.add(player);
         }
         return returnedList.toArray(new Player[returnedList.size()]);
+    }
+
+    public boolean contains(Location location) {
+
+        World w = Bukkit.getWorld(config.worldName);
+        RegionManager manager = getWorldGuard().getRegionManager(w);
+        ProtectedRegion r = manager.getRegion(config.region);
+        return LocationUtil.isInRegion(w, r, location);
     }
 
     @Override
@@ -291,9 +299,9 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     public void run() {
 
         try {
-            if (teams.size() == 0 && !isArrowRaidInitialised()) return;
+            if (teams.size() == 0 && !isJungleRaidInitialised()) return;
 
-            if (isArrowRaidInitialised() && !canAllRun()) {
+            if (isJungleRaidInitialised() && !canAllRun()) {
                 for (Map.Entry<String, Integer> entry : teams.entrySet()) {
                     if (entry.getValue() > 1) continue;
                     try {
@@ -310,7 +318,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         e.printStackTrace();
                     }
                 }
-            } else if (canAllRun() && !isArrowRaidActive()) {
+            } else if (canAllRun() && !isJungleRaidActive()) {
                 for (Map.Entry<String, Integer> entry : teams.entrySet()) {
                     if (entry.getValue() != 2) continue;
                     try {
@@ -329,7 +337,19 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 }
             }
 
-            if (!isArrowRaidActive()) return;
+            if (!isJungleRaidActive()) return;
+
+            // Security
+            for (Player player : getContainedPlayers()) {
+
+                if (!player.getGameMode().equals(GameMode.SURVIVAL)) {
+                    if (player.isFlying()) {
+                        player.setAllowFlight(true);
+                        player.setFlying(true);
+                        player.setGameMode(GameMode.SURVIVAL);
+                    } else player.setGameMode(GameMode.SURVIVAL);
+                }
+            }
 
             // Distributor
             if (gameFlags.contains('a') || gameFlags.contains('g')) {
@@ -403,7 +423,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             for (String name : teams.keySet()) {
                 try {
                     Player teamPlayer = Bukkit.getPlayerExact(name);
-                    removeFromArrowRaidingTeam(teamPlayer);
+                    removeFromJungleRaidTeam(teamPlayer);
                     restorePlayer(teamPlayer, ChanceUtil.getRandom(10.00));
                 } catch (Exception e) {
                     teams.remove(name);
@@ -420,7 +440,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             gameHasBeenInitialised = false;
         } catch (Exception e) {
             e.printStackTrace();
-            Bukkit.broadcastMessage(ChatColor.RED + "The Arrow Craft Raiders Component has broken.");
+            Bukkit.broadcastMessage(ChatColor.RED + "[WARNING] Jungle Raid logic failed to process.");
         }
     }
 
@@ -618,7 +638,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         changeCount++;
                     }
 
-                    log.info("Arrow Raiders changed: " + changeCount + " blocks.");
+                    log.info("Jungle Raid Restorer changed: " + changeCount + " blocks.");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -652,7 +672,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     public void onCommandPreProcess(PlayerCommandPreprocessEvent event) {
 
         Player player = event.getPlayer();
-        if (isInArrowRaidingTeam(player)) {
+        if (isInJungleRaidTeam(player)) {
             String command = event.getMessage();
             boolean allowed = false;
             for (String cmd : cmdWhiteList) {
@@ -677,7 +697,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         Player player = (Player) e;
 
-        if (isInArrowRaidingTeam(player)) {
+        if (isInJungleRaidTeam(player)) {
             switch (event.getCause()) {
                 case FALL:
                     if (LocationUtil.getBelowID(e.getLocation(), BlockID.LEAVES)
@@ -698,9 +718,12 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                         event.setDamage(Math.min(event.getDamage(), 2));
                     }
                 case FIRE:
-                    if (!isArrowRaidActive()) event.setCancelled(true);
+                    if (!isJungleRaidActive()) event.setCancelled(true);
                     break;
             }
+        } else if (contains(player.getLocation())) {
+            player.teleport(player.getWorld().getSpawnLocation());
+            event.setCancelled(true);
         }
     }
 
@@ -723,21 +746,19 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             return;
         }
 
-        if (!isInArrowRaidingTeam(attackingPlayer) && isInArrowRaidingTeam(defendingPlayer)) {
+        if (!isInJungleRaidTeam(attackingPlayer) && isInJungleRaidTeam(defendingPlayer)) {
             event.setCancelled(true);
-            ChatUtil.sendWarning(attackingPlayer, "Don't attack Arrow Craft Raiders.");
+            ChatUtil.sendWarning(attackingPlayer, "Don't attack Jungle Raiders.");
             return;
         }
 
-        if (!isInArrowRaidingTeam(attackingPlayer)) return;
-        if (!isInArrowRaidingTeam(defendingPlayer)) {
-            defendingPlayer.teleport(defendingPlayer.getWorld().getSpawnLocation());
-            event.setCancelled(true);
+        if (!isInJungleRaidTeam(attackingPlayer)) return;
+        if (!isInJungleRaidTeam(defendingPlayer)) {
             ChatUtil.sendWarning(attackingPlayer, "Don't attack bystanders.");
             return;
         }
 
-        if (!isArrowRaidActive()) {
+        if (!isJungleRaidActive()) {
             event.setCancelled(true);
             ChatUtil.sendError(attackingPlayer, "The game has not yet started!");
             return;
@@ -761,10 +782,10 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
-        if (isInArrowRaidingTeam(player)) {
+        if (isInJungleRaidTeam(player)) {
             event.getDrops().clear();
             event.setDroppedExp(0);
-            removeFromArrowRaidingTeam(player);
+            removeFromJungleRaidTeam(player);
         }
     }
 
@@ -788,8 +809,8 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         Player player = event.getPlayer();
 
-        if (isInArrowRaidingTeam(player)) {
-            if (!isArrowRaidInitialised()) {
+        if (isInJungleRaidTeam(player)) {
+            if (!isJungleRaidInitialised()) {
                 event.setCancelled(true);
             } else if (gameFlags.contains('b')) {
                 ChatUtil.sendError(player, "You cannot break blocks by hand this game.");
@@ -806,7 +827,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         Player player = event.getPlayer();
 
-        if (isInArrowRaidingTeam(player) && !isArrowRaidInitialised()) {
+        if (isInJungleRaidTeam(player) && !isJungleRaidInitialised()) {
             event.setCancelled(true);
         }
     }
@@ -839,14 +860,14 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         Player player = event.getPlayer();
 
-        if (isInArrowRaidingTeam(event.getPlayer())) removeFromArrowRaidingTeam(event.getPlayer());
+        if (isInJungleRaidTeam(event.getPlayer())) removeFromJungleRaidTeam(event.getPlayer());
         restorePlayer(player, 0);
     }
 
     @EventHandler
     public void onZombieLocalSpawn(ApocalypseLocalSpawnEvent event) {
 
-        if (isInArrowRaidingTeam(event.getPlayer())) event.setCancelled(true);
+        if (isInJungleRaidTeam(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler
@@ -861,7 +882,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     @EventHandler
     public void onKick(PlayerKickEvent event) {
 
-        if (isInArrowRaidingTeam(event.getPlayer())) event.setCancelled(true);
+        if (isInJungleRaidTeam(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler
@@ -869,7 +890,7 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (isInArrowRaidingTeam((Player) p.getShooter()) && isArrowRaidActive()) {
+        if (isInJungleRaidTeam((Player) p.getShooter()) && isJungleRaidActive()) {
 
             int explosionSize = 2;
 
@@ -918,9 +939,9 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
 
     public class Commands {
 
-        @Command(aliases = {"ar"}, desc = "Arrow Craft Raiders Commands")
+        @Command(aliases = {"jr","ar"}, desc = "Jungle Raid Commands")
         @NestedCommand({NestedCommands.class})
-        public void arrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void jungleRaidCmds(CommandContext args, CommandSender sender) throws CommandException {
 
         }
     }
@@ -928,10 +949,10 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
     public class NestedCommands {
 
         @Command(aliases = {"join", "j"},
-                usage = "[Player] [Team Number]", desc = "Join an Arrow Craft raid.",
+                usage = "[Player] [Team Number]", desc = "Join the Jungle Raid.",
                 flags = "az", min = 0, max = 2)
         @CommandPermissions({"aurora.jr"})
-        public void joinArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void joinJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) sender.sendMessage("You must be a player to use this command.");
             Player targetPlayer = (Player) sender;
@@ -941,30 +962,30 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 if (adminComponent.isAdmin(targetPlayer)) {
                     throw new CommandException("You must first leave admin mode.");
                 } else if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName))) {
-                    throw new CommandException("You cannot access this Arrow Craft Raid from that world.");
-                } else if (isArrowRaidInitialised()) {
-                    throw new CommandException("You cannot add players while an Arrow Craft Raid game is active!");
-                } else if (isInArrowRaidingTeam(targetPlayer)) {
-                    throw new CommandException("You are already in an Arrow Craft Raid.");
+                    throw new CommandException("You cannot access this Jungle Raid from that world.");
+                } else if (isJungleRaidInitialised()) {
+                    throw new CommandException("You cannot add players while a Jungle Raid game is active!");
+                } else if (isInJungleRaidTeam(targetPlayer)) {
+                    throw new CommandException("You are already in a Jungle Raid.");
                 }
-                addToArrowRaidingTeam(targetPlayer, 0, args.getFlags());
+                addToJungleRaidTeam(targetPlayer, 0, args.getFlags());
             } else if (args.argsLength() == 1) {
                 inst.checkPermission(sender, "aurora.jr.self.join");
                 if (adminComponent.isAdmin(targetPlayer)) {
                     throw new CommandException("You must first leave admin mode.");
                 } else if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName))) {
-                    throw new CommandException("You cannot access this Arrow Craft Raid from that world.");
-                } else if (isArrowRaidInitialised()) {
-                    throw new CommandException("You cannot add players while an Arrow Craft Raid game is active!");
-                } else if (isInArrowRaidingTeam(targetPlayer)) {
-                    throw new CommandException("You are already in an Arrow Craft Raid.");
+                    throw new CommandException("You cannot access this Jungle Raid from that world.");
+                } else if (isJungleRaidInitialised()) {
+                    throw new CommandException("You cannot add players while a Jungle Raid game is active!");
+                } else if (isInJungleRaidTeam(targetPlayer)) {
+                    throw new CommandException("You are already in a Jungle Raid.");
                 }
 
                 try {
                     int integer = Integer.parseInt(args.getString(0));
 
                     if (integer > 2) throw new CommandException("Valid teams: 0, 1, 2.");
-                    addToArrowRaidingTeam(targetPlayer, integer, args.getFlags());
+                    addToJungleRaidTeam(targetPlayer, integer, args.getFlags());
                 } catch (Exception e) {
                     throw new CommandException("Valid teams: 0, 1, 2.");
                 }
@@ -975,17 +996,17 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 if (adminComponent.isAdmin(targetPlayer)) {
                     throw new CommandException("That player must first leave admin mode.");
                 } else if (!targetPlayer.getWorld().equals(Bukkit.getWorld(config.worldName))) {
-                    throw new CommandException("That player cannot access this Arrow Craft Raid from their world.");
-                } else if (isArrowRaidInitialised()) {
-                    throw new CommandException("You cannot add players while an Arrow Craft Raid game is active!");
-                } else if (isInArrowRaidingTeam(targetPlayer)) {
-                    throw new CommandException("That player is already in an Arrow Craft Raid.");
+                    throw new CommandException("That player cannot access this Jungle Raid from their world.");
+                } else if (isJungleRaidInitialised()) {
+                    throw new CommandException("You cannot add players while a Jungle Raid game is active!");
+                } else if (isInJungleRaidTeam(targetPlayer)) {
+                    throw new CommandException("That player is already in a Jungle Raid.");
                 }
                 try {
                     int integer = Integer.parseInt(args.getString(1));
 
                     if (integer > 2) throw new CommandException("Valid teams: 0, 1, 2.");
-                    addToArrowRaidingTeam(targetPlayer, integer, args.getFlags());
+                    addToJungleRaidTeam(targetPlayer, integer, args.getFlags());
                 } catch (Exception e) {
                     throw new CommandException("Valid teams: 0, 1, 2.");
                 }
@@ -993,10 +1014,10 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         }
 
         @Command(aliases = {"leave", "l"},
-                usage = "[Player]", desc = "Leave an Arrow Craft raid.",
+                usage = "[Player]", desc = "Leave the Jungle Raid.",
                 min = 0, max = 1)
         @CommandPermissions({"aurora.jr"})
-        public void leaveArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void leaveJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
             Player targetPlayer = (Player) sender;
@@ -1008,10 +1029,10 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 inst.checkPermission(sender, targetPlayer.getWorld(), "aurora.jr.other.leave");
             }
 
-            if (!isInArrowRaidingTeam(targetPlayer)) throw new CommandException("That player is not currently in a " +
-                    "Arrow Craft raiding team.");
+            if (!isInJungleRaidTeam(targetPlayer)) throw new CommandException("That player is not currently in a " +
+                    "Jungle Raid team.");
 
-            removeFromArrowRaidingTeam(targetPlayer);
+            removeFromJungleRaidTeam(targetPlayer);
             restorePlayer(targetPlayer, 0);
 
 
@@ -1022,11 +1043,11 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
                 }
             }
 
-            if (teams.size() < 2 && (isArrowRaidActive() || isArrowRaidInitialised())) {
+            if (teams.size() < 2 && (isJungleRaidActive() || isJungleRaidInitialised())) {
                 for (String name : teams.keySet()) {
                     try {
                         Player teamPlayer = Bukkit.getPlayerExact(name);
-                        removeFromArrowRaidingTeam(teamPlayer);
+                        removeFromJungleRaidTeam(teamPlayer);
                         restorePlayer(teamPlayer, 0);
                     } catch (Exception e) {
                         teams.remove(name);
@@ -1044,15 +1065,15 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
             }
         }
 
-        @Command(aliases = {"reset", "r"}, desc = "Reset an Arrow Craft raid.",
+        @Command(aliases = {"reset", "r"}, desc = "Reset the Jungle Raid.",
                 min = 0, max = 0)
         @CommandPermissions({"aurora.jr.reset"})
-        public void endArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void endJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             for (String name : teams.keySet()) {
                 try {
                     Player teamPlayer = Bukkit.getPlayerExact(name);
-                    removeFromArrowRaidingTeam(teamPlayer);
+                    removeFromJungleRaidTeam(teamPlayer);
                     restorePlayer(teamPlayer, 0);
                 } catch (Exception e) {
                     teams.remove(name);
@@ -1070,15 +1091,15 @@ public class ArrowRaidersComponent extends BukkitComponent implements Listener, 
         }
 
         @Command(aliases = {"start", "s"},
-                usage = "", desc = "Arrow Craft Raiders Management Commands",
+                usage = "", desc = "Jungle Raid start command",
                 flags = "sdajbtfmxgh", min = 0, max = 0)
         @CommandPermissions({"aurora.jr.start"})
-        public void startArrowRaidersCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void startJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(teams.size() >= 2)) {
-                throw new CommandException("You need more players to start an Arrow Craft Raid.");
+                throw new CommandException("You need more players to start a Jungle Raid.");
             } else if (gameHasBeenInitialised) {
-                throw new CommandException("The Arrow Craft Raid has already been initialised.");
+                throw new CommandException("The Jungle Raid has already been initialised.");
             }
 
             final Player[] players = getContainedPlayers();
