@@ -106,13 +106,14 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
                         PlayerInventory inventory = player.getInventory();
 
                         // Declare Item Stacks
-                        ItemStack[] startKit = new ItemStack[6];
+                        ItemStack[] startKit = new ItemStack[7];
                         startKit[0] = new ItemStack(ItemID.COOKED_BEEF, 32);
-                        startKit[1] = new ItemStack(ItemID.STONE_PICKAXE, 1);
-                        startKit[2] = new ItemStack(ItemID.STONE_AXE, 1);
-                        startKit[3] = new ItemStack(ItemID.STONE_SHOVEL, 1);
-                        startKit[4] = new ItemStack(ItemID.STONE_SWORD, 1);
-                        startKit[5] = new ItemStack(ItemID.STONE_HOE, 1);
+                        startKit[1] = new ItemStack(ItemID.STONE_PICKAXE);
+                        startKit[2] = new ItemStack(ItemID.STONE_AXE);
+                        startKit[3] = new ItemStack(ItemID.STONE_SHOVEL);
+                        startKit[4] = new ItemStack(ItemID.STONE_SWORD);
+                        startKit[5] = new ItemStack(ItemID.STONE_HOE);
+                        startKit[6] = new ItemStack(ItemID.MAP);
 
                         // Tell others to great him/her
                         for (Player otherPlayer : server.getOnlinePlayers()) {
