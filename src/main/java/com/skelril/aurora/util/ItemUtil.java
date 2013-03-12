@@ -4,6 +4,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 
 /**
  * Author: Turtle9598
@@ -120,13 +121,25 @@ public class ItemUtil {
 
     public static boolean hasMasterSword(Player player) {
 
-        return player.isValid() && isMasterSword(player.getInventory().getItemInHand());
+        return player.isValid() && isMasterSword(player.getItemInHand());
     }
 
     public static boolean isMasterSword(ItemStack item) {
 
         return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
                 && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_PURPLE + "Master Sword");
+    }
+
+    public static boolean hasForgeBook(Player player) {
+
+        return player.isValid() && hasForgeBook(player.getItemInHand());
+    }
+
+    public static boolean hasForgeBook(ItemStack item) {
+
+        return item.hasItemMeta() && item.getItemMeta() instanceof BookMeta
+                && ((BookMeta) item.getItemMeta()).hasAuthor()
+                && ((BookMeta) item.getItemMeta()).getAuthor().equals("The Forge Knights");
     }
 
     public static int fortuneMultiplier(ItemStack pickaxe) {

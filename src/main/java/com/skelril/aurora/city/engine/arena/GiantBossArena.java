@@ -93,7 +93,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @Override
     public boolean isBossSpawned() {
 
-        if (!BukkitUtil.toLocation(getWorld(), getRegion().getMinimumPoint()).getChunk().isLoaded()) return true;
+        if (!isArenaLoaded()) return true;
         boolean found = false;
         for (Entity e : getContainedEntities()) {
 
@@ -105,6 +105,15 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             }
         }
         return boss != null && boss.isValid();
+    }
+
+    public boolean isArenaLoaded() {
+
+        BlockVector min = getRegion().getMinimumPoint();
+        BlockVector max = getRegion().getMaximumPoint();
+
+        Region region = new CuboidRegion(min, max);
+        return BukkitUtil.toLocation(getWorld(), region.getCenter()).getChunk().isLoaded();
     }
 
     @Override
@@ -238,6 +247,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
                     player.damage(32, boss);
                 }
+
+                if (Math.abs(groundLevel - player.getLocation().getY()) > 10) runAttack(4);
             } catch (Exception e) {
                 log.warning("The player: " + player.getName() + " may have an unfair advantage.");
             }
@@ -314,7 +325,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 && !contains(defender) && contains(defender, 1)) {
             event.setCancelled(true);
             return;
-        } else if (!contains(defender)) return;
+        } else if (!contains(defender, 1)) return;
 
         if (event instanceof EntityDamageByEntityEvent) attacker = ((EntityDamageByEntityEvent) event).getDamager();
 
@@ -364,7 +375,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             }
         }
 
-        if (attacker != null && !contains(attacker) || !contains(defender)) return;
+        if (attacker != null && !contains(attacker, 1) || !contains(defender, 1)) return;
 
         Player[] contained = getContainedPlayers();
 
@@ -391,6 +402,26 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     }
                 }
             }
+
+            if (attacker != null && attacker instanceof Player) {
+
+                if (ItemUtil.hasForgeBook((Player) attacker)) {
+
+                    ((Giant) defender).setHealth(0);
+
+                    final Player finalAttacker = (Player) attacker;
+                    if (!finalAttacker.getGameMode().equals(GameMode.CREATIVE)) {
+                        server.getScheduler().runTaskLater(inst, new Runnable() {
+                            @Override
+                            public void run() {
+
+                                (finalAttacker).setItemInHand(null);
+                            }
+                        }, 1);
+                    }
+                }
+            }
+
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
             if (ItemUtil.hasAncientArmour(player)) {
@@ -436,8 +467,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 int amt = getContainedPlayers() != null ? getContainedPlayers().length : 0;
 
                 // Sacrificial drops
-                // 38 blocks of gold equivalent
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 38, 2496));
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, 200000));
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 10, 2000));
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 32, 200));
 
                 // Gold drops
                 for (int i = 0; i < Math.sqrt(amt) + scalOffst; i++) {
@@ -445,7 +477,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
 
                 // Unique drops
-                if (ChanceUtil.getChance(5)) {
+                if (ChanceUtil.getChance(25)) {
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
                 if (ChanceUtil.getChance(250)) {
@@ -526,13 +558,14 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         if (!isBossSpawned() || (lastAttack != 0
                 && System.currentTimeMillis() - lastAttack <= ChanceUtil.getRangedRandom(13000, 17000))) return;
 
+        Player[] containedP = getContainedPlayers(1);
         Player[] contained = getContainedPlayers();
         if (contained == null || contained.length <= 0) return;
 
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
         switch (attackCase) {
             case 1:
-                ChatUtil.sendWarning(contained, "Taste my wrath!");
+                ChatUtil.sendWarning(containedP, "Taste my wrath!");
                 for (Player player : contained) {
 
                     // Call this event to notify AntiCheat
@@ -546,19 +579,19 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
                 break;
             case 2:
-                ChatUtil.sendWarning(contained, "Embrace my corruption!");
+                ChatUtil.sendWarning(containedP, "Embrace my corruption!");
                 for (Player player : contained) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 12, 2));
                 }
                 break;
             case 3:
-                ChatUtil.sendWarning(contained, "Are you BLIND? Mwhahahaha!");
+                ChatUtil.sendWarning(containedP, "Are you BLIND? Mwhahahaha!");
                 for (Player player : contained) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 1));
                 }
                 break;
             case 4:
-                ChatUtil.sendWarning(contained, ChatColor.DARK_RED + "Lets dance...");
+                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Lets dance...");
                 server.getScheduler().runTaskLater(inst, new Runnable() {
 
                     @Override
@@ -588,7 +621,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 break;
             case 5:
                 if (!damageHeals) {
-                    ChatUtil.sendWarning(contained, "I am everlasting!");
+                    ChatUtil.sendWarning(containedP, "I am everlasting!");
                     damageHeals = true;
                     server.getScheduler().runTaskLater(inst, new Runnable() {
 
@@ -598,7 +631,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                             if (damageHeals) {
                                 damageHeals = false;
                                 if (!isBossSpawned()) return;
-                                ChatUtil.sendNotice(getContainedPlayers(), "Thank you for your assistance.");
+                                ChatUtil.sendNotice(getContainedPlayers(1), "Thank you for your assistance.");
                             }
                         }
                     }, 20 * 30);
@@ -607,40 +640,52 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 runAttack(ChanceUtil.getRandom(OPTION_COUNT));
                 return;
             case 6:
-                ChatUtil.sendWarning(contained, "Fire is your friend...");
+                ChatUtil.sendWarning(containedP, "Fire is your friend...");
                 for (Player player : contained) {
                     player.setFireTicks(20 * 45);
                 }
                 break;
             case 7:
-                ChatUtil.sendWarning(contained, ChatColor.DARK_RED + "Bask in my glory!");
+                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Bask in my glory!");
                 server.getScheduler().runTaskLater(inst, new Runnable() {
 
                     @Override
                     public void run() {
 
+                        // Set defaults
+                        boolean baskInGlory = getContainedPlayers().length == 0;
                         damageHeals = true;
+
+                        // Check Players
                         for (Player player : getContainedPlayers()) {
                             if (player.getLocation().getBlock().getRelative(BlockFace.DOWN, 2).getTypeId()
                                     != BlockID.DIAMOND_BLOCK) {
                                 ChatUtil.sendWarning(player, ChatColor.DARK_RED + "You!");
-                                for (Location pt : spawnPts) {
-                                    if (ChanceUtil.getChance(12)) {
-                                        getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), 10, false, false);
-                                    }
-                                }
-                                server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                                    @Override
-                                    public void run() {
-
-                                        damageHeals = false;
-                                    }
-                                }, 10);
-                                return;
+                                baskInGlory = true;
                             }
                         }
-                        ChatUtil.sendNotice(getContainedPlayers(), "Gah... Afraid are you friends?");
+
+                        //Attack
+                        if (baskInGlory) {
+                            for (Location pt : spawnPts) {
+                                if (ChanceUtil.getChance(12)) {
+                                    getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), 10, false, false);
+                                }
+                            }
+
+                            //Schedule Reset
+                            server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                                @Override
+                                public void run() {
+
+                                    damageHeals = false;
+                                }
+                            }, 10);
+                            return;
+                        }
+                        // Notify if avoided
+                        ChatUtil.sendNotice(getContainedPlayers(1), "Gah... Afraid are you friends?");
                     }
                 }, 20 * 7);
                 break;
