@@ -205,7 +205,7 @@ public class BookUtil {
                         "after the incident.");
                 pages.add("I leave you with a warning, under no circumstance must the seals put in" +
                         " place around the \"Cursed Mine\" as it is now known be broken.");
-                pages.add(ChatColor.ITALIC + "...there is appears to be a strange marking on this page...");
+                pages.add(ChatColor.ITALIC + "...there appears to be a strange marking on this page...");
 
                 return General.generateBook("The Great Mine", "The Forge Knights", pages);
             }
