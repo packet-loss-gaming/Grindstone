@@ -10,6 +10,8 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.arena.*;
+import com.skelril.aurora.city.engine.arena.factory.FactoryFloor;
+import com.skelril.aurora.city.engine.arena.factory.FactoryMech;
 import com.skelril.aurora.economic.ImpersonalComponent;
 import com.skelril.aurora.jail.JailComponent;
 import com.skelril.aurora.prayer.PrayerComponent;
@@ -136,6 +138,14 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         protected Set<String> zombieBosses = new HashSet<>(Arrays.asList(
                 "vineam-district-giant-boss-area"
         ));
+        @Setting("factories")
+        protected Set<String> factories = new HashSet<>(Arrays.asList(
+                "oblitus-district-old-factory"
+        ));
+        @Setting("factory-vats")
+        protected Set<String> factoryVats = new HashSet<>(Arrays.asList(
+                "vat-1", "vat-2", "vat-3"
+        ));
     }
 
     private class ArenaManager {
@@ -255,6 +265,26 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                 try {
                     ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
                     arenas.add(new GiantBossArena(world, pr, adminComponent));
+                    log.info("Added region: " + pr.getId() + " to Arenas.");
+                } catch (Exception e) {
+                    log.warning("Failed to add arena: " + region + ".");
+                    e.printStackTrace();
+                }
+            }
+
+            // Add factories
+            for (String region : config.factories) {
+                try {
+                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    ProtectedRegion ch = getWorldGuard().getGlobalRegionManager()
+                            .get(world).getRegion(region + "-producer");
+                    List<FactoryMech> mechs = new ArrayList<>();
+                    ProtectedRegion er;
+                    for (String mech : config.factoryVats) {
+                        er = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region + "-" + mech);
+                        mechs.add(new FactoryMech(world, er));
+                    }
+                    arenas.add(new FactoryFloor(world, pr, ch, mechs, adminComponent));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
