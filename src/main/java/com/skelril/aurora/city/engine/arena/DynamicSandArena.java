@@ -3,32 +3,22 @@ package com.skelril.aurora.city.engine.arena;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ItemUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.player.PlayerState;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.HashMap;
 import java.util.logging.Logger;
@@ -44,7 +34,6 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
 
     private AdminComponent adminComponent;
 
-    private static Economy economy = null;
     private int increaseRate;
     private int decreaseRate;
     private final HashMap<String, PlayerState> playerState = new HashMap<>();
@@ -59,8 +48,6 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-
-        setupEconomy();
     }
 
     @Override
@@ -201,33 +188,6 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
         // No disable code
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onEntityDamaged(EntityDamageEvent event) {
-
-        Entity e = event.getEntity();
-
-        if (!(e instanceof Player)
-                || event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)
-                || event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) return;
-
-        damageCheck((Player) e, null, event.getDamage());
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-
-        Entity e = event.getEntity();
-
-        if (!(e instanceof Player)) return;
-
-        Entity d = event.getDamager();
-        if (d instanceof Player) {
-            damageCheck((Player) e, (Player) d, event.getDamage());
-        } else if (d instanceof Arrow && ((Arrow) d).getShooter() instanceof Player) {
-            damageCheck((Player) e, (Player) ((Arrow) d).getShooter(), event.getDamage());
-        }
-    }
-
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
 
@@ -273,55 +233,6 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
                 playerState.remove(player.getName());
             }
         }
-    }
-
-    private void damageCheck(final Player player, final Player attacker, final int damage) {
-
-        if (attacker != null && !contains(attacker)) return;
-
-        if (contains(player)) {
-
-            final int orgDrop = damage * ChanceUtil.getRandom(3);
-            int drop = orgDrop;
-
-            if (!player.isDead()) {
-                PlayerInventory pInventory = player.getInventory();
-                int contained = ItemUtil.countItemsOfType(pInventory.getContents(), ItemID.GOLD_NUGGET);
-
-                if (contained > drop) contained = drop;
-
-                if (contained > 0) {
-                    pInventory.removeItem(new ItemStack(ItemID.GOLD_NUGGET, contained));
-                    drop -= contained;
-                }
-            }
-
-            if (drop > 0) {
-                if (!economy.has(player.getName(), drop)) {
-                    Vector v = getRespawnLocation();
-                    player.teleport(new Location(getWorld(), v.getX(), v.getY(), v.getZ()));
-                    return;
-                }
-                economy.withdrawPlayer(player.getName(), drop);
-                drop = 0;
-            }
-
-            for (short s = 0; s < orgDrop - drop; s++) {
-                player.getLocation().getWorld().dropItemNaturally(player.getLocation(),
-                        new ItemStack(ItemID.GOLD_NUGGET));
-            }
-        }
-    }
-
-    private boolean setupEconomy() {
-
-        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
-                .vault.economy.Economy.class);
-        if (economyProvider != null) {
-            economy = economyProvider.getProvider();
-        }
-
-        return (economy != null);
     }
 
     private Vector getRespawnLocation() {

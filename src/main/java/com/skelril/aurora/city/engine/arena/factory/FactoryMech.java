@@ -87,9 +87,9 @@ public class FactoryMech extends AbstractRegionedArena {
         potency = typeAmtHash.keySet().contains(ItemID.LIGHTSTONE_DUST);
         splash = typeAmtHash.keySet().contains(ItemID.SULPHUR);
 
-        int max = typeAmtHash.containsKey(ItemID.GLASS_BOTTLE) ? typeAmtHash.get(ItemID.GLASS_BOTTLE) / 3 : 0;
+        int max = typeAmtHash.containsKey(ItemID.GLASS_BOTTLE) ? typeAmtHash.get(ItemID.GLASS_BOTTLE) : 0;
         if (typeAmtHash.containsKey(ItemID.NETHER_WART_SEED)) {
-            max = Math.min(max,typeAmtHash.get(ItemID.NETHER_WART_SEED));
+            max = Math.min(max, typeAmtHash.get(ItemID.NETHER_WART_SEED));
         } else max = 0;
         if (max <= 0) return new ArrayList<>();
 
@@ -153,10 +153,10 @@ public class FactoryMech extends AbstractRegionedArena {
         int level = !duration && potency ? 2 : 1;
         short dmg = toDamageValue(target, level, splash, duration && !target.isInstant());
 
-        ChatUtil.sendNotice(playerList, "Brewing: " + (max * 3) + " " + target.toString() + " "
+        ChatUtil.sendNotice(playerList, "Brewing: " + max + " " + target.toString() + " "
                 + (level == 1 ? "I" : "II") + " " + (splash ? "splash" : "") + " potions.");
         List<ItemStack> product = new ArrayList<>();
-        for (int i = 0; i < max * 3; i++) product.add(new ItemStack(ItemID.POTION, 1, dmg));
+        for (int i = 0; i < max; i++) product.add(new ItemStack(ItemID.POTION, 1, dmg));
         return product;
     }
 
