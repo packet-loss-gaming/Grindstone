@@ -63,12 +63,18 @@ public class FactoryMech extends AbstractRegionedArena {
 
         for (Entity e : contained) {
 
-            if (e instanceof LivingEntity) ((LivingEntity) e).setHealth(0);
+            // Kill contained living entities
+            if (e instanceof LivingEntity) {
+                ((LivingEntity) e).setHealth(0);
+                continue;
+            }
 
+            // Find items and destroy those unwanted
             if (e instanceof Item) {
 
                 workingStack = ((Item) e).getItemStack();
 
+                // Add the item to the list
                 if (wanted.contains(workingStack.getTypeId())) {
                     total = workingStack.getAmount();
                     ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
@@ -77,22 +83,16 @@ public class FactoryMech extends AbstractRegionedArena {
                     }
                     typeAmtHash.put(workingStack.getTypeId(), total);
                 }
-                e.remove();
             }
+            e.remove();
         }
 
-        boolean duration, potency, splash;
+        // Check these to avoid doing more calculations than need be
+        int bottles = typeAmtHash.containsKey(ItemID.GLASS_BOTTLE) ? typeAmtHash.get(ItemID.GLASS_BOTTLE) : 0;
+        int max = typeAmtHash.containsKey(ItemID.NETHER_WART_SEED) ? typeAmtHash.get(ItemID.NETHER_WART_SEED) : 0;
+        if (bottles <= 0 || max <= 0) return new ArrayList<>();
 
-        duration = typeAmtHash.keySet().contains(ItemID.REDSTONE_DUST);
-        potency = typeAmtHash.keySet().contains(ItemID.LIGHTSTONE_DUST);
-        splash = typeAmtHash.keySet().contains(ItemID.SULPHUR);
-
-        int max = typeAmtHash.containsKey(ItemID.GLASS_BOTTLE) ? typeAmtHash.get(ItemID.GLASS_BOTTLE) : 0;
-        if (typeAmtHash.containsKey(ItemID.NETHER_WART_SEED)) {
-            max = Math.min(max, typeAmtHash.get(ItemID.NETHER_WART_SEED));
-        } else max = 0;
-        if (max <= 0) return new ArrayList<>();
-
+        // Figure out the potion the player is trying to make
         List<Integer> using = new ArrayList<>();
         PotionType target;
         if (typeAmtHash.containsKey(ItemID.MAGMA_CREAM)) {
@@ -121,9 +121,18 @@ public class FactoryMech extends AbstractRegionedArena {
             using.add(ItemID.GOLDEN_CARROT);
         } else return new ArrayList<>();
 
+        // Always used
         using.add(ItemID.GLASS_BOTTLE);
         using.add(ItemID.NETHER_WART_SEED);
 
+        // Setup some important information
+        boolean duration, potency, splash;
+
+        duration = typeAmtHash.keySet().contains(ItemID.REDSTONE_DUST);
+        potency = typeAmtHash.keySet().contains(ItemID.LIGHTSTONE_DUST);
+        splash = typeAmtHash.keySet().contains(ItemID.SULPHUR);
+
+        // Adapt as needed based on the information above
         if (duration && !target.isInstant()) {
             using.add(ItemID.REDSTONE_DUST);
         } else if (potency) {
@@ -134,27 +143,41 @@ public class FactoryMech extends AbstractRegionedArena {
             using.add(ItemID.SULPHUR);
         }
 
+        // Find the max amount skipping glass bottles (too be checked later)
         for (Integer used : using) {
+            if (used == ItemID.GLASS_BOTTLE) continue;
             max = Math.min(max, typeAmtHash.get(used));
         }
 
+        // This is confusing, essentially we are dividing the bottle count into three pieces
+        // That allows us to figure out how many potion sets can be made
+        // We will later expand the potion sets again
+        max = (int) Math.min(max, Math.floor(bottles / 3));
+
         if (max <= 0) return new ArrayList<>();
 
+        // Remove the used ingredients from the system
         int newAmt;
         for (Map.Entry<Integer, Integer> entry : typeAmtHash.entrySet()) {
 
             if (using.contains(entry.getKey())) {
-                newAmt = entry.getValue() - max;
+                newAmt = entry.getValue() - (entry.getKey() == ItemID.GLASS_BOTTLE ? max * 3 : max);
                 if (newAmt > 0) typeAmtHash.put(entry.getKey(), newAmt);
                 else typeAmtHash.remove(entry.getKey());
             }
         }
 
+        // Inflate potion quantity
+        max *= 3;
+
+        // Calculate damage
         int level = !duration && potency ? 2 : 1;
         short dmg = toDamageValue(target, level, splash, duration && !target.isInstant());
 
+        // Tell the player what we are making
         ChatUtil.sendNotice(playerList, "Brewing: " + max + " " + target.toString() + " "
                 + (level == 1 ? "I" : "II") + " " + (splash ? "splash" : "") + " potions.");
+        // Return the product for the que
         List<ItemStack> product = new ArrayList<>();
         for (int i = 0; i < max; i++) product.add(new ItemStack(ItemID.POTION, 1, dmg));
         return product;
