@@ -178,7 +178,7 @@ public class CSVLotteryWinnerDatabase implements LotteryWinnerDatabase {
         };
     }
 
-    private class Winner implements Comparable {
+    private class Winner implements Comparable<Winner> {
 
         private final String name;
         private final Long winTime;
@@ -200,11 +200,10 @@ public class CSVLotteryWinnerDatabase implements LotteryWinnerDatabase {
         }
 
         @Override
-        public int compareTo(Object o) {
+        public int compareTo(Winner winner) {
 
-            if (o == null || !(o instanceof Winner)) return -1;
+            if (winner == null) return -1;
 
-            Winner winner = (Winner) o;
             if (this.getTime().equals(winner.getTime())) return 0;
             if (this.getTime() < winner.getTime()) return 1;
             return -1;
