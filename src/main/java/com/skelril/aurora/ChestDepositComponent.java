@@ -38,8 +38,8 @@ public class ChestDepositComponent extends BukkitComponent implements Listener, 
     public void enable() {
 
         //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20);
+        //inst.registerEvents(this);
+        //server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20);
     }
 
     @Override

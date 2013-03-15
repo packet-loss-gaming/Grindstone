@@ -150,7 +150,7 @@ public class EnvironmentUtil {
             BlockID.GOLD_ORE, BlockID.LAPIS_LAZULI_ORE,
             BlockID.IRON_ORE, BlockID.DIAMOND_ORE,
             BlockID.REDSTONE_ORE, BlockID.GLOWING_REDSTONE_ORE,
-            BlockID.EMERALD_ORE
+            BlockID.EMERALD_ORE, BlockID.QUARTZ_ORE
     };
 
     public static boolean isValuableOre(Block block) {
@@ -196,6 +196,8 @@ public class EnvironmentUtil {
                     return new ItemStack(ItemID.DIAMOND);
                 case BlockID.EMERALD_ORE:
                     return new ItemStack(ItemID.EMERALD);
+                case BlockID.QUARTZ_ORE:
+                    return new ItemStack(ItemID.NETHER_QUARTZ);
                 default:
                     return null;
             }
@@ -204,9 +206,10 @@ public class EnvironmentUtil {
 
     private static final int[] containerBlocks = new int[] {
             BlockID.BREWING_STAND, BlockID.CHEST,
-            BlockID.DISPENSER, BlockID.FURNACE,
-            BlockID.BURNING_FURNACE, BlockID.JUKEBOX,
-            BlockID.ENDER_CHEST
+            BlockID.DISPENSER, BlockID.DROPPER,
+            BlockID.FURNACE, BlockID.BURNING_FURNACE,
+            BlockID.JUKEBOX, BlockID.ENDER_CHEST,
+            BlockID.TRAPPED_CHEST, BlockID.HOPPER
     };
 
     public static boolean isContainer(Block block) {

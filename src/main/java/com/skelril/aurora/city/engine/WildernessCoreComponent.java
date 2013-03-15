@@ -14,10 +14,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -117,72 +114,55 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         public boolean enableSync = true;
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerPortal(PlayerPortalEvent event) {
 
-        PlayerTeleportEvent.TeleportCause e = event.getCause();
+        TravelAgent agent = event.getPortalTravelAgent();
+
         final Player player = event.getPlayer();
+        final Location from = event.getFrom();
+        final Location to = event.getTo();
 
-        switch (e) {
+        final World city = Bukkit.getWorld(config.cityWorld);
+        final World wilderness = Bukkit.getWorld(config.wildernessWorld);
+        boolean kill = false;
+
+        if (city == null) {
+            log.warning("Please verify the world: " + config.cityWorld + " exist.");
+            kill = true;
+        }
+        if (wilderness == null) {
+            log.warning("Please verify the world: " + config.wildernessWorld + " exist.");
+            kill = true;
+        }
+        if (kill) return;
+
+
+        switch (event.getCause()) {
             case END_PORTAL:
-                try {
-                    final World city = Bukkit.getWorld(config.cityWorld);
-
-                    try {
-                        final World wilderness = Bukkit.getWorld(config.wildernessWorld);
-
-                        event.setCancelled(true);
-                        /*
-                        event.useTravelAgent(true);
-                        TravelAgent agent = event.getPortalTravelAgent();
-                        agent.setCanCreatePortal(false);
-                        event.setPortalTravelAgent(agent);
-                        */
-
-                        final Location from = event.getFrom();
-                        server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                if (from.getWorld().equals(city)) {
-                                    player.teleport(wilderness.getSpawnLocation());
-                                } else if (from.getWorld().equals(wilderness)) {
-                                    player.teleport(city.getSpawnLocation());
-                                }
-                            }
-                        }, 1);
-                    } catch (NullPointerException wilderness) {
-                        log.warning("Please verify the world: " + config.wildernessWorld + " exists.");
-                    }
-                } catch (NullPointerException city) {
-                    log.warning("Please verify the world: " + config.cityWorld + " exists.");
+                event.useTravelAgent(true);
+                agent.setCanCreatePortal(false);
+                event.setPortalTravelAgent(agent);
+                if (from.getWorld().equals(city)) {
+                    event.setTo(wilderness.getSpawnLocation());
+                } else if (from.getWorld().equals(wilderness)) {
+                    event.setTo(city.getSpawnLocation());
                 }
                 break;
             case NETHER_PORTAL:
-                if (event.getFrom().getWorld().getEnvironment().equals(World.Environment.NETHER)) {
-
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            World city = Bukkit.getWorld(config.cityWorld);
-                            player.teleport(city.getSpawnLocation());
-                        }
-                    }, 1);
+                event.useTravelAgent(true);
+                if (from.getWorld().getName().contains(config.cityWorld))  {
+                    agent.setCanCreatePortal(false);
+                    event.setPortalTravelAgent(agent);
+                    event.setTo(new Location(city, 592, 83, 1176.5));
+                } else if (to.getWorld().getName().contains(config.cityWorld)) {
+                    agent.setCanCreatePortal(false);
+                    event.setPortalTravelAgent(agent);
+                    event.setTo(city.getSpawnLocation());
                 } else {
-                    event.setCancelled(true);
+                    agent.setCanCreatePortal(true);
+                    event.setPortalTravelAgent(agent);
                 }
-                ChatUtil.sendError(player, "The nether is currently broken please come back later.");
-                ChatUtil.sendNotice(player, "Should be fixed in a few hours, sorry.");
-
-                /*
-                if (event.getTo().getWorld().getName().equals(config.cityWorld)) {
-                    event.setTo(event.getTo().getWorld().getSpawnLocation());
-                    event.useTravelAgent(false);
-                }
-                */
                 break;
         }
     }
