@@ -78,6 +78,7 @@ public class ConversionComponent extends BukkitComponent implements Listener {
 
                     for (ItemStack itemStack : player.getInventory().getContents()) {
                         if (itemStack != null) {
+                            if (itemStack.getItemMeta() != null && itemStack.getItemMeta().hasDisplayName()) continue;
                             if (itemStack.getTypeId() == ItemID.GOLD_NUGGET) {
                                 goldCount += itemStack.getAmount();
                             } else if (itemStack.getTypeId() == ItemID.GOLD_BAR) {
