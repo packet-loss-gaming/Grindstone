@@ -192,7 +192,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         for (Entity e : contained) {
 
-            if (e instanceof ExperienceOrb && e.getTicksLived() > 20 * 20) e.remove();
+            if (e instanceof ExperienceOrb && e.getTicksLived() > 20 * 13) e.remove();
         }
     }
 
@@ -239,11 +239,6 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 if (!isBossSpawned()) return;
 
-                if (player.hasPotionEffect(PotionEffectType.REGENERATION)) {
-                    player.setHealth(1);
-                    player.removePotionEffect(PotionEffectType.REGENERATION);
-                }
-
                 if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
                     player.damage(32, boss);
                 }
@@ -279,13 +274,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @EventHandler(ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent event) {
 
-        if (contains(event.getTo()) && causes.contains(event.getCause())) {
+        if (contains(event.getTo(), 1) && causes.contains(event.getCause())) {
 
             Player player = event.getPlayer();
-
-            if (player.hasPotionEffect(PotionEffectType.REGENERATION)) {
-                player.removePotionEffect(PotionEffectType.REGENERATION);
-            }
 
             if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
                 player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
@@ -383,9 +374,12 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             Giant boss = (Giant) defender;
             if (damageHeals) {
                 boss.setHealth(Math.min(boss.getMaxHealth(), (event.getDamage() * 2) + boss.getHealth()));
-            } else if (projectile != null && projectile instanceof Arrow) {
+            }
+            /*
+            else if (projectile != null && projectile instanceof Arrow) {
                 event.setDamage(event.getDamage() / 2);
             }
+            */
 
             if (ChanceUtil.getChance(7)) {
                 for (Location spawnPt : spawnPts) {
@@ -445,7 +439,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     defender.setFireTicks(0);
                 }
                 if (damageHeals && ChanceUtil.getChance(10)) {
-                    ChatUtil.sendNotice(getContainedPlayers(),
+                    ChatUtil.sendNotice(getContainedPlayers(), ChatColor.AQUA,
                             player.getDisplayName() + " has broken the giant's spell.");
                     damageHeals = false;
                 }
@@ -591,7 +585,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
                 break;
             case 4:
-                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Lets dance...");
+                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Tango time!");
                 server.getScheduler().runTaskLater(inst, new Runnable() {
 
                     @Override
