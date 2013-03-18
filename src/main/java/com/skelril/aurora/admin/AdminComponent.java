@@ -24,6 +24,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -39,7 +40,6 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
@@ -337,7 +337,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         final Player player = event.getPlayer();
 
-        if (!player.isFlying() && (isAdmin(player) || offlinePlayerState.containsKey(player.getName()))) {
+        if (!((Entity) player).isOnGround() && (isAdmin(player) || offlinePlayerState.containsKey(player.getName()))) {
             if (offlinePlayerState.containsKey(player.getName())) {
 
                 AdminPlayerState identity = offlinePlayerState.get(player.getName());
