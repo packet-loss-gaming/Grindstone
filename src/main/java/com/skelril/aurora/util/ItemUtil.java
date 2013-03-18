@@ -4,7 +4,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.Repairable;
 
 /**
  * Author: Turtle9598
@@ -27,6 +30,46 @@ public class ItemUtil {
             new ItemStack(ItemID.DIAMOND_BOOTS), new ItemStack(ItemID.DIAMOND_PANTS),
             new ItemStack(ItemID.DIAMOND_CHEST), new ItemStack(ItemID.DIAMOND_HELMET)
     };
+
+    public static class Master {
+
+        public static ItemStack makeBow() {
+
+            ItemStack masterBow = new ItemStack(ItemID.BOW);
+            ItemMeta masterMeta = masterBow.getItemMeta();
+            masterMeta.addEnchant(Enchantment.ARROW_DAMAGE, 10, true);
+            masterMeta.addEnchant(Enchantment.ARROW_FIRE, 10, true);
+            masterMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+            masterMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 10, true);
+            masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
+            masterMeta.setDisplayName(ChatColor.DARK_PURPLE + "Master Bow");
+            ((Repairable) masterMeta).setRepairCost(400);
+            masterBow.setItemMeta(masterMeta);
+            return masterBow;
+        }
+
+        public static ItemStack makeSword() {
+
+            ItemStack masterSword = new ItemStack(ItemID.DIAMOND_SWORD);
+            ItemMeta masterMeta = masterSword.getItemMeta();
+            masterMeta.addEnchant(Enchantment.DAMAGE_ALL, 10, true);
+            masterMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 10, true);
+            masterMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 10, true);
+            masterMeta.addEnchant(Enchantment.FIRE_ASPECT, 10, true);
+            masterMeta.addEnchant(Enchantment.KNOCKBACK, 10, true);
+            masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
+            masterMeta.setDisplayName(ChatColor.DARK_PURPLE + "Master Sword");
+            ((Repairable) masterMeta).setRepairCost(400);
+            masterSword.setItemMeta(masterMeta);
+            return masterSword;
+        }
+    }
+
+    public static int countFilledSlots(Player player) {
+
+        PlayerInventory inventory = player.getInventory();
+        return countFilledSlots(inventory.getContents()) + countFilledSlots(inventory.getArmorContents());
+    }
 
     public static int countFilledSlots(ItemStack[] inventory) {
 
@@ -128,6 +171,17 @@ public class ItemUtil {
 
         return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
                 && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_PURPLE + "Master Sword");
+    }
+
+    public static boolean hasMasterBow(Player player) {
+
+        return player.isValid() && isMasterBow(player.getItemInHand());
+    }
+
+    public static boolean isMasterBow(ItemStack item) {
+
+        return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
+                && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_PURPLE + "Master Bow");
     }
 
     public static boolean hasForgeBook(Player player) {

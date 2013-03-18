@@ -2,7 +2,9 @@ package com.skelril.aurora.city.engine.arena;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.util.ChanceUtil;
@@ -20,6 +22,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 public class Prison extends AbstractRegionedArena implements GenericArena, Listener {
@@ -135,12 +138,14 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         BlockState state = event.getClickedBlock().getLocation().getBlock().getState();
         if (state.getTypeId() == BlockID.CHEST && rewardChest.equals(state.getLocation())) {
 
+            List<ItemStack> loot = SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 10, 2000);
             int lootSplit = ChanceUtil.getRangedRandom(64 * 2, 64 * 4);
             if (ChanceUtil.getChance(135)) lootSplit *= 10;
             else if (ChanceUtil.getChance(65)) lootSplit *= 2;
 
             event.setUseInteractedBlock(Event.Result.DENY);
-            event.getPlayer().getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK, lootSplit));
+            event.getPlayer().getInventory().addItem(new ItemStack(ItemID.GOLD_BAR, lootSplit));
+            event.getPlayer().getInventory().addItem(loot.toArray(new ItemStack[loot.size()]));
 
             event.getPlayer().teleport(new Location(getWorld(), 256.18, 81, 136));
             ChatUtil.sendNotice(event.getPlayer(), "You have successfully raided the jail!");

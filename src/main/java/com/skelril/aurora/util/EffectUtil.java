@@ -1,7 +1,10 @@
 package com.skelril.aurora.util;
 
+import com.sk89q.commandbook.CommandBookUtil;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -24,11 +27,11 @@ public class EffectUtil {
                 target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 1));
                 ChatUtil.sendNotice(owner, "Your weapon blinds your victim.");
             } else {
-                healingBlade(owner, target);
+                healingLight(owner, target);
             }
         }
 
-        public static void healingBlade(Player owner, LivingEntity target) {
+        public static void healingLight(Player owner, LivingEntity target) {
 
             owner.setHealth(Math.min(owner.getMaxHealth(), owner.getHealth() + 5));
             for (int i = 0; i < 4; i++) {

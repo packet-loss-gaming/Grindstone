@@ -65,6 +65,12 @@ public class LocationUtil {
         return matchLocationFromId(getLocationId(name));
     }
 
+    public static Location grandBank(World world) {
+
+        if (!world.getName().equals("City")) return null;
+        return new Location(world, 592, 83, 1176.5);
+    }
+
     public static void toGround(Player player) {
 
         player.teleport(findFreePosition(player.getLocation()));

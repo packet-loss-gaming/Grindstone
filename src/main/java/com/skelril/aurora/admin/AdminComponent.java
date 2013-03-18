@@ -12,6 +12,7 @@ import com.skelril.aurora.RogueComponent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.ItemUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -827,23 +828,27 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @Command(aliases = {"mastersword"},
                 usage = "<player>", desc = "Modify a player's permissions",
                 flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.lost.god.sword"})
+        @CommandPermissions({"aurora.lost.master.sword"})
         public void lostMasterSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
-            ItemStack masterSword = new ItemStack(Material.DIAMOND_SWORD);
-            ItemMeta masterMeta = masterSword.getItemMeta();
-            masterMeta.addEnchant(Enchantment.DAMAGE_ALL, 10, true);
-            masterMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 10, true);
-            masterMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 10, true);
-            masterMeta.addEnchant(Enchantment.FIRE_ASPECT, 10, true);
-            masterMeta.addEnchant(Enchantment.KNOCKBACK, 10, true);
-            masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
-            masterMeta.setDisplayName(ChatColor.DARK_PURPLE + "Master Sword");
-            ((Repairable) masterMeta).setRepairCost(400);
-            masterSword.setItemMeta(masterMeta);
-            player.getInventory().addItem(masterSword);
+            player.getInventory().addItem(ItemUtil.Master.makeSword());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new master sword.");
+        }
+
+        @Command(aliases = {"masterbow"},
+                usage = "<player>", desc = "Modify a player's permissions",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.master.bow"})
+        public void lostMasterBowCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.Master.makeBow());
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()

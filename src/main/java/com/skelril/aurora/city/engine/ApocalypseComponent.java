@@ -159,7 +159,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                     if (ItemUtil.hasMasterSword(player)) {
 
                         if (ChanceUtil.getChance(10)) {
-                            EffectUtil.Master.healingBlade(player, defender);
+                            EffectUtil.Master.healingLight(player, defender);
                         }
 
                         if (ChanceUtil.getChance(18)) {
@@ -173,27 +173,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                     }
                 }
                 break;
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onXPPickUp(PlayerExpChangeEvent event) {
-
-        Player player = event.getPlayer();
-
-        if (ItemUtil.hasAncientArmour(player)) {
-            ItemStack[] armour = player.getInventory().getArmorContents();
-            ItemStack is = armour[ChanceUtil.getRandom(armour.length) - 1];
-            int exp = event.getAmount();
-            if (exp > is.getDurability()) {
-                exp -= is.getDurability();
-                is.setDurability((short) 0);
-            } else {
-                is.setDurability((short) (is.getDurability() - exp));
-                exp = 0;
-            }
-            player.getInventory().setArmorContents(armour);
-            event.setAmount(exp);
         }
     }
 

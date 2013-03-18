@@ -348,19 +348,21 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             if (attacker instanceof Player) {
 
                 Player player = (Player) attacker;
-                if (ItemUtil.hasMasterSword(player) && defender instanceof LivingEntity) {
+                if (defender instanceof LivingEntity) {
+                    if (ItemUtil.hasMasterSword(player)) {
 
-                    if (ChanceUtil.getChance(10)) {
-                        EffectUtil.Master.healingBlade(player, (LivingEntity) defender);
-                    }
-
-                    if (ChanceUtil.getChance(18)) {
-                        List<LivingEntity> entities = new ArrayList<>();
-                        for (Entity e : player.getNearbyEntities(6, 4, 6)) {
-
-                            if (EnvironmentUtil.isHostileEntity(e)) entities.add((LivingEntity) e);
+                        if (ChanceUtil.getChance(10)) {
+                            EffectUtil.Master.healingLight(player, (LivingEntity) defender);
                         }
-                        EffectUtil.Master.doomBlade(player, entities);
+
+                        if (ChanceUtil.getChance(18)) {
+                            List<LivingEntity> entities = new ArrayList<>();
+                            for (Entity e : player.getNearbyEntities(6, 4, 6)) {
+
+                                if (EnvironmentUtil.isHostileEntity(e)) entities.add((LivingEntity) e);
+                            }
+                            EffectUtil.Master.doomBlade(player, entities);
+                        }
                     }
                 }
             }
@@ -467,7 +469,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 // Gold drops
                 for (int i = 0; i < Math.sqrt(amt) + scalOffst; i++) {
-                    event.getDrops().add(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRangedRandom(32, 64)));
+                    event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRangedRandom(32, 64)));
                 }
 
                 // Unique drops
@@ -475,20 +477,12 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
                 if (ChanceUtil.getChance(250)) {
-                    ItemStack masterSword = new ItemStack(Material.DIAMOND_SWORD);
-                    ItemMeta masterMeta = masterSword.getItemMeta();
-                    masterMeta.addEnchant(Enchantment.DAMAGE_ALL, 10, true);
-                    masterMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 10, true);
-                    masterMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 10, true);
-                    masterMeta.addEnchant(Enchantment.FIRE_ASPECT, 10, true);
-                    masterMeta.addEnchant(Enchantment.KNOCKBACK, 10, true);
-                    masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
-                    masterMeta.setDisplayName(ChatColor.DARK_PURPLE + "Master Sword");
-                    ((Repairable) masterMeta).setRepairCost(400);
-                    masterSword.setItemMeta(masterMeta);
-
-                    event.getDrops().add(masterSword);
+                    event.getDrops().add(ItemUtil.Master.makeSword());
                 }
+                if (ChanceUtil.getChance(250)) {
+                    event.getDrops().add(ItemUtil.Master.makeBow());
+                }
+
                 lastDeath = System.currentTimeMillis();
                 boss = null;
                 for (Entity entity : getContainedEntities()) {

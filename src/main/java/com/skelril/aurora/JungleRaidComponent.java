@@ -94,7 +94,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     private final ConcurrentHashMap<String, PlayerState> playerState = new ConcurrentHashMap<>();
     private Set<Character> gameFlags = new HashSet<>();
     private static Economy economy = null;
-    private static final double BASE_AMT = 50.00;
+    private static final double BASE_AMT = 12;
 
     @InjectComponent
     AdminComponent adminComponent;

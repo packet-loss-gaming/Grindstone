@@ -8,6 +8,7 @@ import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.LocationUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -154,7 +155,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 if (from.getWorld().getName().contains(config.cityWorld))  {
                     agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);
-                    event.setTo(new Location(city, 592, 83, 1176.5));
+                    event.setTo(LocationUtil.grandBank(city));
                 } else if (to.getWorld().getName().contains(config.cityWorld)) {
                     agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);

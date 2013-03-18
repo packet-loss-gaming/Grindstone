@@ -2,19 +2,28 @@ package com.skelril.aurora;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
+import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerExpChangeEvent;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Custom Items Component", desc = "Custom Items")
-@Depend(plugins = "SpoutPlugin")
 public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -23,28 +32,49 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     @Override
     public void enable() {
 
-        //registerCommands(Commands.class);
-        //SpoutManager.getFileManager().addToPreLoginCache(inst,
-        // "http://dl.dropbox.com/u/28513466/CustomItems/Food/RootBeer.png");
-        //SpoutManager.getFileManager().addToPreLoginCache(inst,
-        // "http://dl.dropbox.com/u/28513466/CustomItems/Food/BeerGlass.png");
+        //noinspection AccessStaticViaInstance
+        inst.registerEvents(this);
     }
 
-    public class Commands {
+    @EventHandler(ignoreCancelled = true)
+    public void onXPPickUp(PlayerExpChangeEvent event) {
 
-        @Command(aliases = {"rb"},
-                usage = "", desc = "Get Root Beer",
-                min = 0, max = 0)
-        public void rbCmd(CommandContext args, CommandSender sender) {
+        Player player = event.getPlayer();
 
-            if (sender instanceof Player) {
+        if (ItemUtil.hasAncientArmour(player)) {
+            ItemStack[] armour = player.getInventory().getArmorContents();
+            ItemStack is = armour[ChanceUtil.getRandom(armour.length) - 1];
+            int exp = event.getAmount();
+            if (exp > is.getDurability()) {
+                exp -= is.getDurability();
+                is.setDurability((short) 0);
+            } else {
+                is.setDurability((short) (is.getDurability() - exp));
+                exp = 0;
+            }
+            player.getInventory().setArmorContents(armour);
+            event.setAmount(exp);
+        }
+    }
 
-                Player player = (Player) sender;
+    @EventHandler
+    public void onEntityDeath(EntityDeathEvent event) {
 
-                //RootBeer rootBeer = new RootBeer(inst, "Root Beer",
-                //        "http://dl.dropbox.com/u/28513466/CustomItems/Food/RootBeer.png", 20);
-                //ItemStack item = new SpoutItemStack(rootBeer, 1);
-                //player.getInventory().addItem(item);
+        LivingEntity damaged = event.getEntity();
+        Player player = damaged.getKiller();
+
+        if (player != null) {
+
+            World w = player.getWorld();
+            Location pLocation = player.getLocation();
+
+            if (ItemUtil.hasMasterBow(player) && !(damaged instanceof Player) && event.getDrops().size() > 0) {
+
+                for (ItemStack is : event.getDrops()) {
+                    if (is != null) w.dropItemNaturally(pLocation, is);
+                }
+                event.getDrops().clear();
+                ChatUtil.sendNotice(player, "The Master Bow releases a bright flash.");
             }
         }
     }

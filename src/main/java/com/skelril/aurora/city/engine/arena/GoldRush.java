@@ -522,9 +522,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             }
         }
         if (!players.isEmpty()) {
-            lootSplit = ChanceUtil.getRangedRandom(64 * 3, 64 * 5) / players.size();
+            lootSplit = ChanceUtil.getRangedRandom(64, 64 * 3) / players.size();
             if (ChanceUtil.getChance(135)) lootSplit *= 10;
-            else if (ChanceUtil.getChance(65)) lootSplit *= 2;
+            if (ChanceUtil.getChance(65)) lootSplit *= 2;
             start(); // Start if someone was teleported
         }
         return 0;
@@ -663,12 +663,16 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             Sign sign = (Sign) state;
             if (sign.getLine(1).equals("Play Gold Rush")) {
 
-                if (ItemUtil.countFilledSlots(event.getPlayer().getInventory().getContents()) > 0
-                        || ItemUtil.countFilledSlots(event.getPlayer().getInventory().getArmorContents()) > 0) {
+                if (ItemUtil.countFilledSlots(event.getPlayer()) > 0) {
                     ChatUtil.sendError(event.getPlayer(), "[Partner] Don't bring anything with ya kid,"
-                            + " it'll weigh you down");
+                            + " it'll weigh you down.");
+                    return;
+                } else if (!economy.has(event.getPlayer().getName(), 5000)) {
+                    ChatUtil.sendError(event.getPlayer(), "[Partner] Kid you don't have enough cash, " +
+                            "your balance will never pay bail.");
                     return;
                 }
+
                 Location location;
                 do {
                     location = BukkitUtil.toLocation(getWorld(),
@@ -676,19 +680,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     location.setY(lobby.getMinimumPoint().getBlockY() + 1);
                 } while (location.getBlock().getTypeId() != BlockID.AIR);
                 event.getPlayer().teleport(location);
-                double amt;
-                try {
-                    amt = Double.parseDouble(sign.getLine(2));
-                } catch (NumberFormatException ex) {
-                    amt = 5000;
-                }
-                if (!economy.has(event.getPlayer().getName(), amt)) {
-                    ChatUtil.sendError(event.getPlayer(), "[Partner] Ey kid, come back when you have more cash.");
-                    ChatUtil.sendError(event.getPlayer(), "[Partner] Need money to run this show, ya know?");
-                    return;
-                }
-                economy.withdrawPlayer(event.getPlayer().getName(), amt);
-                ChatUtil.sendNotice(event.getPlayer(), "[Partner] Ey there kid thanks for the cash,"
+                ChatUtil.sendNotice(event.getPlayer(), "[Partner] Ey there kid,"
                         + " just press that button over there to start.");
             }
         } else if (state.getTypeId() == BlockID.LEVER && leverBlocks.containsKey(state.getLocation())) {
@@ -712,8 +704,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             if (rewardChest.equals(state.getLocation())) {
                 players.remove(event.getPlayer().getName());
                 event.setUseInteractedBlock(Event.Result.DENY);
-                event.getPlayer().teleport(new Location(getWorld(), 591, 84, 1182));
-                event.getPlayer().getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK, lootSplit));
+                event.getPlayer().teleport(LocationUtil.grandBank(getWorld()));
+                event.getPlayer().getInventory().addItem(new ItemStack(ItemID.GOLD_BAR, lootSplit));
                 ChatUtil.sendNotice(event.getPlayer(), "You have successfully robbed the bank!");
 
                 //noinspection deprecation

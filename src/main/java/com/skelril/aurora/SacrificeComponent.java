@@ -728,18 +728,10 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         PlayerInventory pInventory = player.getInventory();
 
         if (ItemUtil.isMasterSword(item)) {
-            ItemStack masterSword = new ItemStack(Material.DIAMOND_SWORD);
-            ItemMeta masterMeta = masterSword.getItemMeta();
-            masterMeta.addEnchant(Enchantment.DAMAGE_ALL, 10, true);
-            masterMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 10, true);
-            masterMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 10, true);
-            masterMeta.addEnchant(Enchantment.FIRE_ASPECT, 10, true);
-            masterMeta.addEnchant(Enchantment.KNOCKBACK, 10, true);
-            masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
-            masterMeta.setDisplayName(ChatColor.DARK_PURPLE + "Master Sword");
-            ((Repairable) masterMeta).setRepairCost(400);
-            masterSword.setItemMeta(masterMeta);
-            pInventory.addItem(masterSword);
+            pInventory.addItem(ItemUtil.Master.makeSword());
+            return;
+        } else if (ItemUtil.isMasterBow(item)) {
+            pInventory.addItem(ItemUtil.Master.makeBow());
             return;
         }
 
