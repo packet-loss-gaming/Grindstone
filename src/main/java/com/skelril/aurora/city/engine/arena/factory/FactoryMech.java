@@ -50,6 +50,9 @@ public class FactoryMech extends AbstractRegionedArena {
         wanted.add(ItemID.BLAZE_POWDER);
         wanted.add(ItemID.FERMENTED_SPIDER_EYE);
         wanted.add(ItemID.GOLDEN_CARROT);
+
+        // Special - Non-Vanilla
+        wanted.add(ItemID.NETHER_QUARTZ);
     }
 
     public List<ItemStack> process() {
@@ -126,11 +129,12 @@ public class FactoryMech extends AbstractRegionedArena {
         using.add(ItemID.NETHER_WART_SEED);
 
         // Setup some important information
-        boolean duration, potency, splash;
+        boolean duration, potency, splash, increased;
 
         duration = typeAmtHash.keySet().contains(ItemID.REDSTONE_DUST);
         potency = typeAmtHash.keySet().contains(ItemID.LIGHTSTONE_DUST);
         splash = typeAmtHash.keySet().contains(ItemID.SULPHUR);
+        increased = typeAmtHash.keySet().contains(ItemID.NETHER_QUARTZ);
 
         // Adapt as needed based on the information above
         if (duration && !target.isInstant()) {
@@ -141,6 +145,9 @@ public class FactoryMech extends AbstractRegionedArena {
 
         if (splash) {
             using.add(ItemID.SULPHUR);
+        }
+        if (increased) {
+            using.add(ItemID.NETHER_QUARTZ);
         }
 
         // Find the max amount skipping glass bottles (too be checked later)
@@ -168,7 +175,7 @@ public class FactoryMech extends AbstractRegionedArena {
         }
 
         // Inflate potion quantity
-        max *= 3;
+        max *= increased ? 4 : 3;
 
         // Calculate damage
         int level = !duration && potency ? 2 : 1;
