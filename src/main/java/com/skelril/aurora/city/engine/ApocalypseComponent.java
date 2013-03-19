@@ -29,7 +29,6 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
-import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.inventory.EntityEquipment;
@@ -176,12 +175,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDeath(PlayerRespawnEvent event) {
 
         Player player = event.getPlayer();
 
-        if (player.getWorld().isThundering() && config.enableSafeRespawn) {
+        if (config.enableSafeRespawn) {
             int safeRespawnRadius = config.safeRespawnRadius * config.safeRespawnRadius;
 
             // Ensure the radius is at least 2
