@@ -297,7 +297,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     @Override
     public void run() {
 
-        for (GenericArena arena : Collections.unmodifiableList(arenas)) {
+        for (GenericArena arena : Collections.synchronizedList(arenas)) {
             if (!(arena instanceof CommandTriggeredArena)) arena.run();
         }
     }
