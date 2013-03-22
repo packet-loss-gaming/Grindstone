@@ -57,10 +57,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerKickEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -306,9 +303,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     if (entry.getValue() > 1) continue;
                     try {
                         Player player = Bukkit.getPlayerExact(entry.getKey());
-                        for (Prayer prayer : prayerComponent.getInfluences(player)) {
-                            prayerComponent.uninfluencePlayer(player, prayer);
-                        }
+                        if (player == null) continue;
+                        prayerComponent.uninfluencePlayer(player);
                         for (PotionEffectType potionEffectType : PotionEffectType.values()) {
                             if (potionEffectType == null) continue;
                             if (player.hasPotionEffect(potionEffectType)) player.removePotionEffect(potionEffectType);
@@ -323,9 +319,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     if (entry.getValue() != 2) continue;
                     try {
                         Player player = Bukkit.getPlayerExact(entry.getKey());
-                        for (Prayer prayer : prayerComponent.getInfluences(player)) {
-                            prayerComponent.uninfluencePlayer(player, prayer);
-                        }
+                        if (player == null) continue;
+                        prayerComponent.uninfluencePlayer(player);
                         for (PotionEffectType potionEffectType : PotionEffectType.values()) {
                             if (potionEffectType == null) continue;
                             if (player.hasPotionEffect(potionEffectType)) player.removePotionEffect(potionEffectType);
@@ -665,7 +660,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
     private final String[] cmdWhiteList = new String[] {
             "ar", "stopweather", "me", "say", "pm", "msg", "message", "whisper", "tell",
-            "reply", "r", "mute", "unmute", "debug", "dropclear", "dc", "auth"
+            "reply", "r", "mute", "unmute", "debug", "dropclear", "dc", "auth", "toggleeditwand"
     };
 
     @EventHandler(ignoreCancelled = true)
@@ -686,6 +681,12 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 event.setCancelled(true);
             }
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onItemDrop(PlayerDropItemEvent event) {
+
+        if (isInJungleRaidTeam(event.getPlayer()) && !isJungleRaidActive()) event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -846,13 +847,15 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     @EventHandler
     public void onTNTExplode(EntityExplodeEvent event) {
 
-        Location l = event.getLocation();
-
         World w = Bukkit.getWorld("City");
         ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
 
-        if (rg.contains(BukkitUtil.toVector(l))) event.setYield(0);
-
+        for (Block block : event.blockList()) {
+            if (rg.contains(BukkitUtil.toVector(block))) {
+                event.setYield(0);
+                break;
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -893,11 +896,6 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         if (isInJungleRaidTeam((Player) p.getShooter()) && isJungleRaidActive()) {
 
             int explosionSize = 2;
-
-            World w = Bukkit.getWorld(config.worldName);
-            RegionManager manager = getWorldGuard().getRegionManager(w);
-            ProtectedRegion r = manager.getRegion(config.region);
-            if (!LocationUtil.isInRegion(w, r, p.getLocation())) return;
 
             if (p instanceof Arrow) {
                 if (gameFlags.contains('t')) {
@@ -1010,6 +1008,14 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 } catch (Exception e) {
                     throw new CommandException("Valid teams: 0, 1, 2.");
                 }
+            }
+
+            ChatUtil.sendNotice(targetPlayer, ChatColor.DARK_GREEN, "Currently present players:");
+            for (Player player : getContainedPlayers()) {
+                if (targetPlayer.equals(player)) continue;
+                ChatUtil.sendNotice(targetPlayer, ChatColor.GREEN, player.getName());
+                ChatUtil.sendNotice(player, ChatColor.DARK_GREEN,
+                        targetPlayer.getName() + " has joined the Jungle Raid.");
             }
         }
 
