@@ -102,13 +102,6 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             public void run() {
 
                 if (lastDropPulse != 0 && System.currentTimeMillis() - lastDropPulse < TimeUnit.SECONDS.toMillis(3)) {
-                    ChatUtil.sendNotice(getContainedPlayers(1), "Drop Party temporarily suspended for: Drop Clear.");
-                    for (Item item : getWorld().getEntitiesByClass(Item.class)) {
-                        if (getRegion().getParent().contains(BukkitUtil.toVector(item.getLocation()))) {
-                            drops.add(item.getItemStack());
-                            item.remove();
-                        }
-                    }
                     return;
                 }
 
@@ -155,7 +148,16 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     @EventHandler
     public void onDropClearPulse(DropClearPulseEvent event) {
 
-        if (task != null) lastDropPulse = System.currentTimeMillis();
+        if (task != null) {
+            lastDropPulse = System.currentTimeMillis();
+            ChatUtil.sendNotice(getContainedPlayers(1), "Drop Party temporarily suspended for: Drop Clear.");
+            for (Item item : getWorld().getEntitiesByClass(Item.class)) {
+                if (getRegion().getParent().contains(BukkitUtil.toVector(item.getLocation()))) {
+                    drops.add(item.getItemStack());
+                    item.remove();
+                }
+            }
+        }
     }
 
     @EventHandler
