@@ -6,6 +6,7 @@ import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.FrostBiteEvent;
 import com.skelril.aurora.jail.JailComponent;
+import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
@@ -16,7 +17,10 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -110,46 +114,23 @@ public class BiomeEffectsComponent extends BukkitComponent implements Listener, 
     private void frostBite(Player player) {
 
         try {
+            ItemStack held = player.getItemInHand();
             if (config.enableFrozen
-                    && EnvironmentUtil.isFrozenBiome(player.getLocation().getBlock().getBiome())
-                    && player.getLocation().getBlock().getLightLevel() <= (byte) 4
-                    && player.getEyeLocation().getBlock().getLightLevel() <= (byte) 4
+                    && EnvironmentUtil.isFrozenBiome(player.getEyeLocation().getBlock().getBiome())
+                    && (held == null || held.getTypeId() != BlockID.TORCH)
                     && !adminComponent.isAdmin(player)
                     && !jailComponent.isJailed(player)) {
 
-                FrostBiteEvent event = new FrostBiteEvent(player);
+                int damage = 5 - player.getEyeLocation().getBlock().getLightLevel();
+
+                FrostBiteEvent event = new FrostBiteEvent(player, damage);
                 server.getPluginManager().callEvent(event);
-                if (event.isCancelled()) return;
 
-                ItemStack[] armorContents = player.getInventory().getArmorContents();
-                int damage = 4;
+                damage = event.getDamage();
 
-                for (ItemStack itemStack : armorContents) {
-                    if (itemStack != null && itemStack.getTypeId() != 0
-                            && itemStack.getTypeId() != BlockID.PUMPKIN) {
-                        itemStack.setDurability((short) (itemStack.getDurability() + 1));
-                        damage--;
-                    }
-                }
-
-                if (damage > 0) {
-                    if (damage == 4) {
-                        ChatUtil.sendWarning(player, "The cold temperatures eat away at your body.");
-                    } else {
-                        ChatUtil.sendWarning(player, "The cold temperatures eat away at your body and armor.");
-                    }
-
-                    // Damage the player
-                    if ((player.getHealth() - damage) >= 0) {
-                        player.setHealth(player.getHealth() - damage);
-                        player.playEffect(EntityEffect.HURT);
-                    } else {
-                        player.setHealth(0);
-                        player.playEffect(EntityEffect.DEATH);
-                    }
-                } else {
-                    ChatUtil.sendWarning(player, "The cold temperatures eat away at your armor.");
-                }
+                if (event.isCancelled() || damage <= 0) return;
+                player.damage(ChanceUtil.getChance(damage) ? damage * ChanceUtil.getRandom(4) : damage);
+                ChatUtil.sendWarning(player, "The cold temperatures eat away at you.");
             }
         } catch (Exception e) {
             log.warning("Frost Bite could not be executed for the player: " + player.getName() + ".");

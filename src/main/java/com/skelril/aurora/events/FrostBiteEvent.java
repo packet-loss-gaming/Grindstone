@@ -11,10 +11,22 @@ public class FrostBiteEvent extends PlayerEvent implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
+    private int damage;
 
-    public FrostBiteEvent(Player player) {
+    public FrostBiteEvent(Player player, int damage) {
 
         super(player);
+        this.damage = damage;
+    }
+
+    public void setDamage(int damage) {
+
+        this.damage = damage;
+    }
+
+    public int getDamage() {
+
+        return damage;
     }
 
     public HandlerList getHandlers() {
