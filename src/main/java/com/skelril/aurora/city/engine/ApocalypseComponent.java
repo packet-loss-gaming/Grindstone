@@ -289,8 +289,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                             ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(player,
                                     LocationUtil.findFreePosition(bedLocation));
                             server.getPluginManager().callEvent(apocalypseEvent);
-                            if (!apocalypseEvent.isCancelled()
-                                    && apocalypseEvent.getLocation().getWorld().equals(world)) {
+                            if (!apocalypseEvent.isCancelled()) {
 
                                 spawnAndArm(apocalypseEvent.getLocation(), config.attackMob, true);
                             }

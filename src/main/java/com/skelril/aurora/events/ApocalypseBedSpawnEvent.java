@@ -1,4 +1,5 @@
 package com.skelril.aurora.events;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -33,6 +34,9 @@ public class ApocalypseBedSpawnEvent extends PlayerEvent implements Cancellable 
      * @param spawnLocation
      */
     public void setLocation(Location spawnLocation) {
+
+        Validate.notNull(spawnLocation);
+        Validate.isTrue(this.spawnLocation.getWorld().equals(spawnLocation.getWorld()));
 
         this.spawnLocation = spawnLocation;
     }
