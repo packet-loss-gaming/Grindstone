@@ -232,6 +232,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Player player = event.getPlayer();
 
+        if (adminComponent.isAdmin(player)) return;
         if (player.getWorld().getName().contains(config.wildernessWorld) && event.isFlying()) event.setCancelled(true);
     }
 
