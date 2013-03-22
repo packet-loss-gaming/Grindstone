@@ -31,8 +31,10 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -236,7 +238,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     break;
                 case 2:
                     // Make potion
-                    ItemStack potion = new ItemStack(Material.POTION);
+                    ItemStack potion = new Potion(PotionType.INSTANT_DAMAGE).toItemStack(1);
                     PotionMeta pMeta = (PotionMeta) potion.getItemMeta();
                     pMeta.addCustomEffect(
                             new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 2), false);
@@ -249,10 +251,6 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     pMeta.addCustomEffect(
                             new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 2), false);
                     pMeta.setDisplayName(ChatColor.WHITE + "Extreme Combat Potion");
-
-                    List<String> extremeLore = new ArrayList<>();
-                    extremeLore.add("A very powerful and devastating potion.");
-                    pMeta.setLore(extremeLore);
                     potion.setItemMeta(pMeta);
 
                     // Give potion

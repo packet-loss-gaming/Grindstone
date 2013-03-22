@@ -38,8 +38,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -470,7 +472,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         }
                         break;
                     case 23:
-                        itemStack = new ItemStack(Material.POTION);
+                        itemStack = new Potion(PotionType.INSTANT_DAMAGE).toItemStack(1);
                         PotionMeta pMeta = (PotionMeta) itemStack.getItemMeta();
 
                         if (Util.getChance(sender, modifier, 5)) {
@@ -485,12 +487,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                             pMeta.addCustomEffect(
                                     new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 5), false);
                             pMeta.setDisplayName(ChatColor.WHITE + "Divine Combat Potion");
-
-                            // Lore
-                            List<String> divineLore = new ArrayList<>();
-                            divineLore.add("You can almost smell the ultimate power");
-                            divineLore.add("in this potion.");
-                            pMeta.setLore(divineLore);
                         } else if (Util.getChance(sender, modifier, 2)) {
                             pMeta.addCustomEffect(
                                     new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 45, 5), false);
@@ -503,12 +499,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                             pMeta.addCustomEffect(
                                     new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 45, 5), false);
                             pMeta.setDisplayName(ChatColor.WHITE + "Holy Combat Potion");
-
-                            // Lore
-                            List<String> holyLore = new ArrayList<>();
-                            holyLore.add("A liquid so sweet it gives you the power");
-                            holyLore.add("of the gods for a short time.");
-                            pMeta.setLore(holyLore);
                         } else {
                             pMeta.addCustomEffect(
                                     new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 2), false);
@@ -521,11 +511,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                             pMeta.addCustomEffect(
                                     new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 2), false);
                             pMeta.setDisplayName(ChatColor.WHITE + "Extreme Combat Potion");
-
-                            // Lore
-                            List<String> extremeLore = new ArrayList<>();
-                            extremeLore.add("A very powerful and devastating potion.");
-                            pMeta.setLore(extremeLore);
                         }
                         itemMeta = pMeta;
                         break;
