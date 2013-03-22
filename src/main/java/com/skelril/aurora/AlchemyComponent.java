@@ -51,10 +51,10 @@ public class AlchemyComponent extends BukkitComponent implements Listener {
                 Set<ItemStack> itemStacks = getBaseItemStack(item);
 
 
-                if (itemStacks == null)
-                    throw new CommandException("You cannot break this item down.");
-                if (item.getDurability() != 0 && item.getTypeId() != ItemID.GOLD_APPLE)
+                if (itemStacks == null) throw new CommandException("You cannot break this item down.");
+                if (item.getDurability() != 0 && item.getTypeId() != ItemID.GOLD_APPLE) {
                     throw new CommandException("You cannot break a damaged item down!");
+                }
 
                 player.getInventory().setItemInHand(new ItemStack(BlockID.AIR));
                 for (ItemStack itemStack : itemStacks) {
