@@ -305,23 +305,13 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                         Block playerBlock = player.getLocation().getBlock();
                         Location ls;
 
-                        if (playerBlock.getLightLevel() < 4) {
-                            for (int i = 0; i < ChanceUtil.getRandom(7); i++) {
-                                ls = LocationUtil.findFreePosition(LocationUtil.findRandomLoc(playerBlock, 8, true));
-                                ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, ls);
-                                server.getPluginManager().callEvent(apocalypseEvent);
-
-                                if (!apocalypseEvent.isCancelled()) {
-                                    spawnAndArm(apocalypseEvent.getLocation(), config.attackMob, false);
-                                }
-                            }
-                        } else {
+                        for (int i = 0; i < ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i++) {
                             ls = LocationUtil.findFreePosition(LocationUtil.findRandomLoc(playerBlock, 8, true));
                             ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, ls);
                             server.getPluginManager().callEvent(apocalypseEvent);
 
                             if (!apocalypseEvent.isCancelled()) {
-                                spawn(apocalypseEvent.getLocation(), config.attackMob);
+                                spawnAndArm(apocalypseEvent.getLocation(), config.attackMob, false);
                             }
                         }
                     } catch (Exception e) {
