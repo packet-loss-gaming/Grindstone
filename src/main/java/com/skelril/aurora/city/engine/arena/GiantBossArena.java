@@ -19,18 +19,17 @@ import com.skelril.aurora.util.player.PlayerState;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.Repairable;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
@@ -278,8 +277,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
             Player player = event.getPlayer();
 
-            if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
-                player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+            for (PotionEffectType potionEffectType : PotionEffectType.values()) {
+                if (potionEffectType == null) continue;
+                if (player.hasPotionEffect(potionEffectType)) player.removePotionEffect(potionEffectType);
             }
         }
     }
@@ -304,6 +304,28 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             event.setCancelled(true);
         }
     }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onConsume(PlayerItemConsumeEvent event) {
+
+        Player player = event.getPlayer();
+
+        if (contains(player, 1)) {
+
+            ItemStack stack = event.getItem();
+
+            if (stack.getItemMeta() instanceof PotionMeta) {
+
+                PotionMeta pMeta = (PotionMeta) stack.getItemMeta();
+
+                if (pMeta.hasCustomEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
+                    ChatUtil.sendWarning(player, "You find yourself unable to drink the potion.");
+                    event.setCancelled(true);
+                }
+            }
+        }
+    }
+
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityDamageEvent(EntityDamageEvent event) {
