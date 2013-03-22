@@ -104,7 +104,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
     public void onPlayerLogin(PlayerLoginEvent event) {
 
         try {
-            if (!canJoin(event.getPlayer())) {
+            if (!canJoin(event.getPlayer()) && event.getResult().equals(PlayerLoginEvent.Result.ALLOWED)) {
                 event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, "You must register on " +
                         "your account on " + config.websiteUrl + ".");
             }

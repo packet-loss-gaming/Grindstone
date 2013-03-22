@@ -169,7 +169,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
     @EventHandler
     public void onPlayerConnect(PlayerLoginEvent event) {
 
-        if (event.getHostname().contains("arrowcraft")) {
+        if (event.getHostname().contains("arrowcraft") && event.getResult().equals(PlayerLoginEvent.Result.ALLOWED)) {
 
             event.setKickMessage("Please use \"server.skelril.com\" from now on.");
             event.setResult(PlayerLoginEvent.Result.KICK_OTHER);
