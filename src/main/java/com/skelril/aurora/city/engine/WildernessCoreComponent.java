@@ -70,39 +70,43 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     @Override
     public void run() {
 
-        try {
-            World wilderness = Bukkit.getWorld(config.wildernessWorld);
+        sync: {
+            final World city = Bukkit.getWorld(config.cityWorld);
+            final World wilderness = Bukkit.getWorld(config.wildernessWorld);
+            boolean kill = false;
 
-            if (config.enableSync) {
-                try {
-                    World city = Bukkit.getWorld(config.cityWorld);
-
-                    if (city.hasStorm()) {
-                        wilderness.setStorm(true);
-                        if (wilderness.getWeatherDuration() != city.getWeatherDuration()) {
-                            wilderness.setWeatherDuration(city.getWeatherDuration());
-                        }
-                        if (city.isThundering()) {
-                            wilderness.setThundering(true);
-                            if (wilderness.getThunderDuration() != city.getWeatherDuration()) {
-                                wilderness.setThunderDuration(city.getThunderDuration());
-                            }
-                        } else {
-                            wilderness.setThundering(false);
-                        }
-                    } else {
-                        wilderness.setStorm(false);
-                    }
-
-                    if (wilderness.getTime() != city.getTime()) {
-                        wilderness.setTime(city.getTime());
-                    }
-                } catch (Exception e) {
-                    log.warning("Please verify the world: " + config.cityWorld + " exists.");
-                }
+            if (city == null) {
+                log.warning("Please verify the world: " + config.cityWorld + " exist.");
+                kill = true;
             }
-        } catch (Exception e) {
-            log.warning("Please verify the world: " + config.wildernessWorld + " exists.");
+            if (wilderness == null) {
+                log.warning("Please verify the world: " + config.wildernessWorld + " exist.");
+                kill = true;
+            }
+            if (kill) break sync;
+
+            // Time
+            if (wilderness.getTime() != city.getTime()) {
+                wilderness.setTime(city.getTime());
+            }
+
+            // Storm - General
+            if (wilderness.hasStorm() != city.hasStorm()) {
+                wilderness.setStorm(city.hasStorm());
+            }
+
+            if (wilderness.getWeatherDuration() != city.getWeatherDuration()) {
+                wilderness.setWeatherDuration(city.getWeatherDuration());
+            }
+
+            // Storm - Thunder
+            if (wilderness.isThundering() != city.isThundering()) {
+                wilderness.setThundering(city.isThundering());
+            }
+
+            if (wilderness.getThunderDuration() != city.getThunderDuration()) {
+                wilderness.setThunderDuration(city.getThunderDuration());
+            }
         }
     }
 
