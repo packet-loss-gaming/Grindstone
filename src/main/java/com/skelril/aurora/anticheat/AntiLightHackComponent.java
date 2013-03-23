@@ -3,6 +3,7 @@ package com.skelril.aurora.anticheat;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.events.DarkAreaInjuryEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -70,8 +71,14 @@ public class AntiLightHackComponent extends BukkitComponent implements Listener 
             if (player.hasPotionEffect(PotionEffectType.NIGHT_VISION)) return;
 
             // Damage
-            ChatUtil.sendWarning(player, textOps[ChanceUtil.getRandom(textOps.length) - 1]);
-            player.damage(ChanceUtil.getRandom(5));
+            DarkAreaInjuryEvent aEvent = new DarkAreaInjuryEvent(player,
+                    ChanceUtil.getRandom(5), textOps[ChanceUtil.getRandom(textOps.length) - 1]);
+            server.getPluginManager().callEvent(aEvent);
+
+            if (aEvent.isCancelled()) return;
+
+            ChatUtil.sendWarning(player, aEvent.getMessage());
+            player.damage(aEvent.getDamage());
         }
     }
 

@@ -24,10 +24,7 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
-import com.skelril.aurora.events.ApocalypseLocalSpawnEvent;
-import com.skelril.aurora.events.EggDropEvent;
-import com.skelril.aurora.events.FallBlockerEvent;
-import com.skelril.aurora.events.ThrowPlayerEvent;
+import com.skelril.aurora.events.*;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
@@ -873,13 +870,19 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         if (isInJungleRaidTeam(event.getPlayer())) event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onEggDrop(EggDropEvent event) {
 
         World w = Bukkit.getWorld(config.worldName);
         RegionManager manager = getWorldGuard().getRegionManager(w);
         ProtectedRegion r = manager.getRegion(config.region);
         if (LocationUtil.isInRegion(w, r, event.getLocation())) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onDarkAreaInjury(DarkAreaInjuryEvent event) {
+
+        if (isInJungleRaidTeam(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler
