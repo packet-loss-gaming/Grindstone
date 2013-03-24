@@ -60,7 +60,9 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import java.io.IOException;
 import java.util.*;
@@ -89,6 +91,9 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     private Set<Character> gameFlags = new HashSet<>();
     private static Economy economy = null;
     private static final double BASE_AMT = 12;
+
+    private int amt = 7;
+    private static final int potionAmt = PotionType.values().length;
 
     @InjectComponent
     AdminComponent adminComponent;
@@ -344,14 +349,14 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             }
 
             // Distributor
-            if (gameFlags.contains('a') || gameFlags.contains('g')) {
+            if (gameFlags.contains('a') || gameFlags.contains('g') || gameFlags.contains('p')) {
 
                 World w = Bukkit.getWorld(config.worldName);
                 ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
                 BlockVector bvMax = rg.getMaximumPoint();
                 BlockVector bvMin = rg.getMinimumPoint();
 
-                for (int i = 0; i < ChanceUtil.getRandom(7); i++) {
+                for (int i = 0; i < ChanceUtil.getRandom(Math.min(100, amt)); i++) {
 
                     Vector v = LocationUtil.pickLocation(bvMin.getX(), bvMax.getX(),
                             bvMin.getZ(), bvMax.getZ()).add(0, bvMax.getY(), 0);
@@ -367,10 +372,18 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                                 random.nextDouble() * 2.0 - 1.5));
                         e.setFuseTicks(20 * 10);
                         if (ChanceUtil.getChance(4)) e.setIsIncendiary(true);
-                    } else if (gameFlags.contains('g')) {
+                    }
+                    if (gameFlags.contains('p')) {
+                        ThrownPotion potion = (ThrownPotion) w.spawnEntity(testLoc, EntityType.SPLASH_POTION);
+                        PotionType type = PotionType.values()[ChanceUtil.getRandom(potionAmt) - 1];
+                        if (type == null) continue;
+                        potion.setItem(new Potion(type).splash().toItemStack(1));
+                    }
+                    if (gameFlags.contains('g')) {
                         testLoc.getWorld().dropItem(testLoc, new ItemStack(ItemID.SNOWBALL, ChanceUtil.getRandom(3)));
                     }
                 }
+                if (ChanceUtil.getChance(gameFlags.contains('s') ? 9 : 25)) amt++;
             }
 
             // Team Counter
@@ -427,6 +440,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
             restore();
 
+            amt = 7;
             gameHasStarted = false;
             allowAllRun = false;
             gameHasBeenInitialised = false;
@@ -656,7 +670,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     }
 
     private final String[] cmdWhiteList = new String[] {
-            "ar", "stopweather", "me", "say", "pm", "msg", "message", "whisper", "tell",
+            "ar", "jr", "stopweather", "me", "say", "pm", "msg", "message", "whisper", "tell",
             "reply", "r", "mute", "unmute", "debug", "dropclear", "dc", "auth", "toggleeditwand"
     };
 
@@ -668,7 +682,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             String command = event.getMessage();
             boolean allowed = false;
             for (String cmd : cmdWhiteList) {
-                if (command.startsWith("/" + cmd)) {
+                if (command.toLowerCase().startsWith("/" + cmd)) {
                     allowed = true;
                     break;
                 }
@@ -1095,6 +1109,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
             restore();
 
+            amt = 7;
             gameHasStarted = false;
             allowAllRun = false;
             gameHasBeenInitialised = false;
@@ -1102,7 +1117,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         @Command(aliases = {"start", "s"},
                 usage = "", desc = "Jungle Raid start command",
-                flags = "sdajbtfmxgh", min = 0, max = 0)
+                flags = "sdajbtfmxghp", min = 0, max = 0)
         @CommandPermissions({"aurora.jr.start"})
         public void startJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -1150,6 +1165,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 if (gameFlags.contains('t')) ChatUtil.sendWarning(players, "Torment Arrows");
                 if (gameFlags.contains('d')) ChatUtil.sendWarning(players, "Death touch");
                 if (gameFlags.contains('a')) ChatUtil.sendWarning(players, "2012");
+                if (gameFlags.contains('p')) ChatUtil.sendNotice(players, ChatColor.MAGIC, "Potion Plummet");
                 if (gameFlags.contains('j')) {
                     if (gameFlags.contains('s')) {
                         ChatUtil.sendNotice(players, ChatColor.AQUA, "Super jumpy");
