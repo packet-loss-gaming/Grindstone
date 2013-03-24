@@ -1121,10 +1121,12 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         @CommandPermissions({"aurora.jr.start"})
         public void startJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(teams.size() >= 2)) {
+            if (!(sender instanceof Player) || !isInJungleRaidTeam((Player) sender)) {
+                throw new CommandException("You must first join a Jungle Raid.");
+            } else if (!(teams.size() >= 2)) {
                 throw new CommandException("You need more players to start a Jungle Raid.");
             } else if (gameHasBeenInitialised) {
-                throw new CommandException("The Jungle Raid has already been initialised.");
+                throw new CommandException("This Jungle Raid has already been initialised.");
             }
 
             final Player[] players = getContainedPlayers();
