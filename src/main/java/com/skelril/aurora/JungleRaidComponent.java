@@ -712,7 +712,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     }
                     break;
                 case BLOCK_EXPLOSION:
-                    if (gameFlags.contains('x') && !(event instanceof EntityDamageByEntityEvent)) {
+                    if ((gameFlags.contains('x') || gameFlags.contains('g'))
+                            && !(event instanceof EntityDamageByEntityEvent)) {
                         event.setDamage(Math.min(event.getDamage(), 2));
                     }
                 case FIRE:
