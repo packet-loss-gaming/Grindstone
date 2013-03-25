@@ -92,6 +92,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     private static Economy economy = null;
     private static final double BASE_AMT = 12;
 
+    private long start = 0;
     private int amt = 7;
     private static final int potionAmt = PotionType.values().length;
 
@@ -348,8 +349,13 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 }
             }
 
+            // Sudden death
+            boolean suddenD = !gameFlags.contains('S')
+                    && System.currentTimeMillis() - start >= TimeUnit.MINUTES.toMillis(15);
+            if (suddenD) amt = 100;
+
             // Distributor
-            if (gameFlags.contains('a') || gameFlags.contains('g') || gameFlags.contains('p')) {
+            if (gameFlags.contains('a') || gameFlags.contains('g') || gameFlags.contains('p') || suddenD) {
 
                 World w = Bukkit.getWorld(config.worldName);
                 ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
@@ -364,20 +370,25 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
                     if (testLoc.getBlock().getTypeId() != BlockID.AIR) continue;
 
-                    if (gameFlags.contains('a')) {
+                    if (gameFlags.contains('a') || suddenD) {
                         TNTPrimed e = (TNTPrimed) w.spawnEntity(testLoc, EntityType.PRIMED_TNT);
                         e.setVelocity(new org.bukkit.util.Vector(
                                 random.nextDouble() * 2.0 - 1.5,
                                 random.nextDouble() * 2 * -1,
                                 random.nextDouble() * 2.0 - 1.5));
-                        e.setFuseTicks(20 * 10);
                         if (ChanceUtil.getChance(4)) e.setIsIncendiary(true);
                     }
                     if (gameFlags.contains('p')) {
-                        ThrownPotion potion = (ThrownPotion) w.spawnEntity(testLoc, EntityType.SPLASH_POTION);
                         PotionType type = PotionType.values()[ChanceUtil.getRandom(potionAmt) - 1];
                         if (type == null) continue;
-                        potion.setItem(new Potion(type).splash().toItemStack(1));
+                        for (int ii = 0; ii < ChanceUtil.getRandom(5); ii++) {
+                            ThrownPotion potion = (ThrownPotion) w.spawnEntity(testLoc, EntityType.SPLASH_POTION);
+                            potion.setItem(new Potion(type).splash().toItemStack(1));
+                            potion.setVelocity(new org.bukkit.util.Vector(
+                                    random.nextDouble() * 2.0 - 1.75,
+                                    0,
+                                    random.nextDouble() * 2.0 - 1.75));
+                        }
                     }
                     if (gameFlags.contains('g')) {
                         testLoc.getWorld().dropItem(testLoc, new ItemStack(ItemID.SNOWBALL, ChanceUtil.getRandom(3)));
@@ -1117,7 +1128,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         @Command(aliases = {"start", "s"},
                 usage = "", desc = "Jungle Raid start command",
-                flags = "sdajbtfmxghp", min = 0, max = 0)
+                flags = "sdajbtfmxghpS", min = 0, max = 0)
         @CommandPermissions({"aurora.jr.start"})
         public void startJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -1178,6 +1189,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 if (gameFlags.contains('f')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No fire spread");
                 if (gameFlags.contains('m')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No mining");
                 if (gameFlags.contains('b')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No block break");
+
+                if (gameFlags.contains('S')) ChatUtil.sendNotice(players, ChatColor.GOLD, "Sudden death disabled");
             }
 
 
@@ -1196,6 +1209,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
                             ChatUtil.sendNotice(players, ChatColor.GREEN, "Fighting can now commence!");
                             gameHasStarted = true;
+                            start = System.currentTimeMillis();
                         }
                     }, 20 * 15);
                 }
