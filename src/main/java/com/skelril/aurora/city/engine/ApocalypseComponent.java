@@ -25,7 +25,6 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
@@ -105,6 +104,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
+    /*
     @EventHandler(priority = EventPriority.MONITOR)
     public void onEntitySpawn(CreatureSpawnEvent event) {
 
@@ -115,6 +115,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 && event.isCancelled())
             event.setCancelled(false);
     }
+    */
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityTarget(EntityTargetLivingEntityEvent event) {
