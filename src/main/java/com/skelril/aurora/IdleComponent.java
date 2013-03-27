@@ -158,7 +158,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
     @EventHandler
     public void onMoveChange(PlayerMoveEvent event) {
 
-        if (event.getFrom().distance(event.getTo()) >= 2.11) update(event.getPlayer());
+        if (event.getFrom().distance(event.getTo()) >= .211) update(event.getPlayer());
     }
 
     @EventHandler
