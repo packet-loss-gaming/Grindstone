@@ -49,7 +49,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 60, 20 * 10);
+        server.getScheduler().runTaskTimer(inst, this, 20 * 60, 20 * 10);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
 
             if (System.currentTimeMillis() - entry.getValue() >= TimeUnit.MINUTES.toMillis(3)) {
 
-                if (System.currentTimeMillis() - entry.getValue() >= TimeUnit.MINUTES.toMillis(30)) {
+                if (System.currentTimeMillis() - entry.getValue() >= TimeUnit.MINUTES.toMillis(60)) {
                     LocationUtil.toGround(entry.getKey());
                     adminComponent.deadmin(entry.getKey(), true);
                     entry.getKey().setSleepingIgnored(false);
@@ -69,7 +69,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
                         @Override
                         public void run() {
 
-                            entry.getKey().kickPlayer("Inactivity");
+                            entry.getKey().kickPlayer("Inactivity - 60 Minutes");
                         }
                     }, 1);
                 } else if (!entry.getKey().isSleepingIgnored()) {
@@ -132,18 +132,6 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
     }
 
     @EventHandler
-    public void onToggleSprint(PlayerToggleSprintEvent event) {
-
-        update(event.getPlayer());
-    }
-
-    @EventHandler
-    public void onToggleSneak(PlayerToggleSneakEvent event) {
-
-        update(event.getPlayer());
-    }
-
-    @EventHandler
     public void onInventoryOpen(InventoryOpenEvent event) {
 
         if (event.getPlayer() instanceof Player) update((Player) event.getPlayer());
@@ -165,6 +153,12 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
     public void onEntityDamageEntityEvent(EntityDamageByEntityEvent event) {
 
         if (event.getDamager() instanceof Player) update((Player) event.getDamager());
+    }
+
+    @EventHandler
+    public void onMoveChange(PlayerMoveEvent event) {
+
+        if (event.getFrom().distance(event.getTo()) >= 2.11) update(event.getPlayer());
     }
 
     @EventHandler
