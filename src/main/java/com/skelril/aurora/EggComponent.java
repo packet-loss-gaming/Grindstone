@@ -6,6 +6,11 @@ import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.sk89q.worldedit.bukkit.BukkitUtil;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.skelril.aurora.events.EggDropEvent;
 import com.skelril.aurora.events.EggHatchEvent;
 import com.skelril.aurora.util.ChanceUtil;
@@ -27,7 +32,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Eggs", desc = "Mob Eggs")
@@ -40,6 +47,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
     @InjectComponent
     SessionComponent sessions;
 
+    private WorldGuardPlugin worldGuard;
     private LocalConfiguration config;
 
     @Override
@@ -49,6 +57,9 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         registerCommands(Commands.class);
+
+        setUpWorldGuard();
+
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 120);
     }
 
@@ -65,6 +76,8 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         public boolean enableEasterEggs = true;
         @Setting("enable-halloween-eggs")
         public boolean enableHalloweenEggs = true;
+        @Setting("strict-mode")
+        public boolean strictMode = true;
     }
 
     @Override
@@ -80,6 +93,19 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
                 hatchEgg(item);
             }
         }
+    }
+
+    private void setUpWorldGuard() {
+
+        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
+
+        // WorldGuard may not be loaded
+        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+            worldGuard = null;
+        }
+
+        //noinspection ConstantConditions
+        worldGuard = (WorldGuardPlugin) plugin;
     }
 
     public void eggOn(Player player) {
@@ -294,6 +320,24 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         server.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
+
+            if (config.strictMode && worldGuard != null) {
+
+                RegionManager mgr = worldGuard.getGlobalRegionManager().get(egg.getWorld());
+                ApplicableRegionSet set = mgr.getApplicableRegions(BukkitUtil.toVector(event.getLocation()));
+
+                if (!set.allows(DefaultFlag.MOB_SPAWNING)) {
+                    event.setCancelled(true);
+                    return false;
+                }
+
+                Set<EntityType> entityTypes = set.getFlag(DefaultFlag.DENY_SPAWN);
+                if (entityTypes != null && entityTypes.contains(event.getEggType())) {
+                    event.setCancelled(true);
+                    return false;
+                }
+            }
+
             int hatchCount = 0;
             int c;
             for (c = 0; c < egg.getItemStack().getAmount(); c++) {
