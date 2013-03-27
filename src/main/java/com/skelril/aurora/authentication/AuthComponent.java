@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import static org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
+
 /**
  * Author: Turtle9598
  */
@@ -39,7 +41,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
     private final Logger log = inst.getLogger();
 
     private LocalConfiguration config;
-    private ConcurrentHashMap<String, Character> characters = new ConcurrentHashMap<String, Character>();
+    private ConcurrentHashMap<String, Character> characters = new ConcurrentHashMap<>();
 
 
     @Override
@@ -55,7 +57,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
             log.warning("The update frequency was set at: " + config.updateFrequency + " minutes"
                     + " and must be at least 30 minutes.");
         }
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 20 * 60 * config.updateFrequency);
+        server.getScheduler().runTaskTimerAsynchronously(inst, this, 0, 20 * 60 * config.updateFrequency);
     }
 
     @Override
@@ -78,7 +80,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
 
         JSONArray[] objects = getFrom("characters.json");
 
@@ -101,16 +103,15 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
     }
 
     @EventHandler(priority = EventPriority.LOW)
-    public void onPlayerLogin(PlayerLoginEvent event) {
+    public void onPlayerLogin(AsyncPlayerPreLoginEvent event) {
 
         try {
-            if (!canJoin(event.getPlayer()) && event.getResult().equals(PlayerLoginEvent.Result.ALLOWED)) {
-                event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, "You must register on " +
+            if (!canJoin(event.getName()) && event.getLoginResult().equals(Result.ALLOWED)) {
+                event.disallow(Result.KICK_WHITELIST, "You must register on " +
                         "your account on " + config.websiteUrl + ".");
             }
         } catch (Exception e) {
-            event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, "An error has occurred " +
-                    "please try again in a few minutes.");
+            event.disallow(Result.KICK_WHITELIST, "An error has occurred please try again in a few minutes.");
         }
     }
 
@@ -173,17 +174,12 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         }
     }
 
-    public boolean canJoin(Player player) {
-
-        return canJoin(player.getName());
-    }
-
-    public boolean canJoin(String playerName) {
+    public synchronized boolean canJoin(String playerName) {
 
         return characters.keySet().contains(playerName.trim().toLowerCase());
     }
 
-    public JSONArray[] getFrom(String subAddress) {
+    public synchronized JSONArray[] getFrom(String subAddress) {
 
         JSONArray objective[] = null;
         HttpURLConnection connection = null;
@@ -248,7 +244,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         }
     };
 
-    public void updateWhiteList(JSONArray[] object) {
+    public synchronized void updateWhiteList(JSONArray[] object) {
 
         // Load the storage directory
         File charactersDirectory = new File(inst.getDataFolder().getPath() + "/characters");
@@ -290,7 +286,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         log.info("The white list has updated successfully.");
     }
 
-    private void loadBackupWhiteList() {
+    private synchronized void loadBackupWhiteList() {
 
         File charactersDirectory = new File(inst.getDataFolder().getPath() + "/characters");
         if (!charactersDirectory.exists()) {
@@ -329,7 +325,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         log.info("All found offline files have been loaded.");
     }
 
-    public void addCharacters(JSONArray aJSONArray) {
+    public synchronized void addCharacters(JSONArray aJSONArray) {
 
         // Remove Old Characters
         characters.clear();
