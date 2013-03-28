@@ -30,11 +30,13 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
+import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -231,6 +233,17 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (!event.getNewAdminState().equals(AdminState.MEMBER) && event.getPlayer().getWorld().isThundering()) {
 
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onThunderChange(ThunderChangeEvent event) {
+
+        if (!event.toThunderState()) {
+            Collection<Entity> toDie = event.getWorld().getEntitiesByClasses(config.getAttackMob().getEntityClass());
+            for (Entity entity : toDie) {
+                if (entity.isValid() && entity instanceof LivingEntity) ((LivingEntity) entity).setHealth(0);
+            }
         }
     }
 
