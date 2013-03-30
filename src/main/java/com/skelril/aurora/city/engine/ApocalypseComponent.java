@@ -30,13 +30,11 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
-import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -128,7 +126,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (!(target instanceof Player) || !targeter.isValid() || !targeter.getType().equals(config.attackMob)) return;
 
         Player player = (Player) target;
-        if (player.getWorld().isThundering() && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(8)) {
+        if (checkEntity((LivingEntity) targeter) && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(8)) {
 
             targeter.setFireTicks(ChanceUtil.getRandom(20 * 60));
         }
@@ -138,9 +136,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         Entity target = event.getEntity();
+        Entity attacker = event.getDamager();
 
-        if (target == null || !(target instanceof LivingEntity) || target.getType() == null) return;
-        if (!target.getWorld().isThundering()) return;
+        if (target == null || !(target instanceof LivingEntity) || !target.isValid()) return;
+        if (attacker == null || !(attacker instanceof LivingEntity) || !attacker.isValid()) return;
+        if (!checkEntity((LivingEntity) attacker)) return;
 
         Player player;
         switch (target.getType()) {
@@ -154,7 +154,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 }
                 break;
             default:
-                Entity attacker = event.getDamager();
                 LivingEntity defender = (LivingEntity) target;
                 if (attacker instanceof Player) {
                     player = (Player) attacker;
@@ -193,6 +192,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 Location respawnLoc = event.getRespawnLocation();
                 for (Entity attackMob : respawnLoc.getWorld().getEntitiesByClass(config.attackMob.getEntityClass())) {
 
+                    if (!(attackMob instanceof LivingEntity) || !checkEntity((LivingEntity) attackMob)) continue;
                     if (attackMob.getLocation().distanceSquared(respawnLoc) < safeRespawnRadius) attackMob.remove();
                 }
             } catch (Exception e) {
@@ -218,7 +218,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             }
         }
 
-        if (world.isThundering()) {
+        if (ent instanceof LivingEntity && checkEntity((LivingEntity) ent)) {
             if (ent.getType().equals(entType) && ChanceUtil.getChance(5)) {
                 event.setDroppedExp(event.getDroppedExp() * 3);
                 event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(8)));
@@ -233,17 +233,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (!event.getNewAdminState().equals(AdminState.MEMBER) && event.getPlayer().getWorld().isThundering()) {
 
             event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onThunderChange(ThunderChangeEvent event) {
-
-        if (!event.toThunderState()) {
-            Collection<Entity> toDie = event.getWorld().getEntitiesByClasses(config.getAttackMob().getEntityClass());
-            for (Entity entity : toDie) {
-                if (entity.isValid() && entity instanceof LivingEntity) ((LivingEntity) entity).setHealth(0);
-            }
         }
     }
 
@@ -340,6 +329,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
+    public boolean checkEntity(LivingEntity e) {
+
+        return e.isValid() && (e.getWorld().isThundering() || e.getCustomName().equals("Apocalyptic Zombie"));
+    }
+
     private void spawnAndArm(Location location, EntityType type, boolean allowItemPickup) {
 
         Entity e = spawn(location, type);
@@ -353,7 +347,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     private Entity spawn(Location location, EntityType type) {
 
-        return location != null ? location.getWorld().spawnEntity(location, type) : null;
+        if (location == null || !type.isAlive()) return null;
+        LivingEntity entity = (LivingEntity) location.getWorld().spawnEntity(location, type);
+        entity.setCustomName("Apocalyptic Zombie");
+        entity.setCustomNameVisible(false);
+        return entity;
     }
 
     private void arm(Entity e, boolean allowItemPickup) {
