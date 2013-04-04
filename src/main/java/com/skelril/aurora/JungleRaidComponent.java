@@ -21,10 +21,10 @@ import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.snapshots.Snapshot;
 import com.sk89q.worldedit.snapshots.SnapshotRestore;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.*;
+import com.skelril.aurora.exceptions.UnkownPluginException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
@@ -81,6 +81,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
 
+    private ProtectedRegion region;
+    private World world;
     private final Random random = new Random();
     private boolean gameHasBeenInitialised = false;
     private boolean allowAllRun = false;
@@ -91,6 +93,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     private Set<Character> gameFlags = new HashSet<>();
     private static Economy economy = null;
     private static final double BASE_AMT = 12;
+    private short attempts = 0;
 
     private long start = 0;
     private int amt = 7;
@@ -241,25 +244,41 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     public Player[] getContainedPlayers(int parentsUp) {
 
         List<Player> returnedList = new ArrayList<>();
-
-        World w = Bukkit.getWorld(config.worldName);
-        RegionManager manager = getWorldGuard().getRegionManager(w);
-        ProtectedRegion r = manager.getRegion(config.region);
+        ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
 
         for (Player player : server.getOnlinePlayers()) {
 
-            if (LocationUtil.isInRegion(w, r, player)) returnedList.add(player);
+            if (LocationUtil.isInRegion(world, r, player)) returnedList.add(player);
         }
         return returnedList.toArray(new Player[returnedList.size()]);
     }
 
     public boolean contains(Location location) {
 
-        World w = Bukkit.getWorld(config.worldName);
-        RegionManager manager = getWorldGuard().getRegionManager(w);
-        ProtectedRegion r = manager.getRegion(config.region);
-        return LocationUtil.isInRegion(w, r, location);
+        return LocationUtil.isInRegion(world, region, location);
+    }
+
+    public boolean probe() {
+
+        world = Bukkit.getWorld(config.worldName);
+        try {
+            region = getWorldGuard().getGlobalRegionManager().get(world).getRegion(config.region);
+        } catch (UnkownPluginException |NullPointerException e) {
+            if (attempts > 10) {
+                e.printStackTrace();
+                return false;
+            }
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+                    attempts++;
+                    probe();
+                }
+            }, 2);
+        }
+
+        return world != null && region != null;
     }
 
     @Override
@@ -267,6 +286,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         config = configure(new LocalConfiguration());
 
+        probe();
         setupEconomy();
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -279,6 +299,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         super.reload();
         configure(config);
+        probe();
         saveInventories();
     }
 
@@ -357,21 +378,19 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             // Distributor
             if (gameFlags.contains('a') || gameFlags.contains('g') || gameFlags.contains('p') || suddenD) {
 
-                World w = Bukkit.getWorld(config.worldName);
-                ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
-                BlockVector bvMax = rg.getMaximumPoint();
-                BlockVector bvMin = rg.getMinimumPoint();
+                BlockVector bvMax = region.getMaximumPoint();
+                BlockVector bvMin = region.getMinimumPoint();
 
                 for (int i = 0; i < ChanceUtil.getRandom(Math.min(100, amt)); i++) {
 
                     Vector v = LocationUtil.pickLocation(bvMin.getX(), bvMax.getX(),
                             bvMin.getZ(), bvMax.getZ()).add(0, bvMax.getY(), 0);
-                    Location testLoc = new Location(w, v.getX(), v.getY(), v.getZ());
+                    Location testLoc = new Location(world, v.getX(), v.getY(), v.getZ());
 
                     if (testLoc.getBlock().getTypeId() != BlockID.AIR) continue;
 
                     if (gameFlags.contains('a') || suddenD) {
-                        TNTPrimed e = (TNTPrimed) w.spawnEntity(testLoc, EntityType.PRIMED_TNT);
+                        TNTPrimed e = (TNTPrimed) world.spawnEntity(testLoc, EntityType.PRIMED_TNT);
                         e.setVelocity(new org.bukkit.util.Vector(
                                 random.nextDouble() * 2.0 - 1.5,
                                 random.nextDouble() * 2 * -1,
@@ -382,7 +401,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                         PotionType type = PotionType.values()[ChanceUtil.getRandom(potionAmt) - 1];
                         if (type == null) continue;
                         for (int ii = 0; ii < ChanceUtil.getRandom(5); ii++) {
-                            ThrownPotion potion = (ThrownPotion) w.spawnEntity(testLoc, EntityType.SPLASH_POTION);
+                            ThrownPotion potion = (ThrownPotion) world.spawnEntity(testLoc, EntityType.SPLASH_POTION);
                             potion.setItem(new Potion(type).splash().toItemStack(1));
                             potion.setVelocity(new org.bukkit.util.Vector(
                                     random.nextDouble() * 2.0 - 1.75,
@@ -495,7 +514,12 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
     private void restore() {
 
-        BukkitConfiguration worldEditConfig = getWorldEdit().getLocalConfiguration();
+        BukkitConfiguration worldEditConfig = null;
+        try {
+            worldEditConfig = getWorldEdit().getLocalConfiguration();
+        } catch (UnkownPluginException e) {
+            e.printStackTrace();
+        }
         if (worldEditConfig.snapshotRepo == null) {
             log.warning("No snapshots configured, restoration cancelled.");
             return;
@@ -503,12 +527,10 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         try {
             // Discover chunks
-            World w = Bukkit.getWorld("City");
-            Location battleLoc = new Location(w, config.x, config.y, config.z);
-            ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
+            Location battleLoc = new Location(world, config.x, config.y, config.z);
 
-            for (Entity entity : w.getEntitiesByClasses(Item.class, TNTPrimed.class)) {
-                if (rg.contains(BukkitUtil.toVector(entity.getLocation()))) {
+            for (Entity entity : world.getEntitiesByClasses(Item.class, TNTPrimed.class)) {
+                if (region.contains(BukkitUtil.toVector(entity.getLocation()))) {
                     entity.remove();
                 }
             }
@@ -523,8 +545,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             final List<Chunk> chunkList = new ArrayList<>();
             chunkList.add(battleLoc.getChunk());
 
-            Vector min = rg.getMinimumPoint();
-            Vector max = rg.getMaximumPoint();
+            Vector min = region.getMinimumPoint();
+            Vector max = region.getMaximumPoint();
 
             final int minX = min.getBlockX();
             final int minZ = min.getBlockZ();
@@ -536,7 +558,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             Chunk c;
             for (int x = minX; x <= maxX; x += 16) {
                 for (int z = minZ; z <= maxZ; z += 16) {
-                    c = w.getBlockAt(x, minY, z).getChunk();
+                    c = world.getBlockAt(x, minY, z).getChunk();
                     if (!chunkList.contains(c)) chunkList.add(c);
                 }
             }
@@ -549,7 +571,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             }
 
             // Setup task to progressively restore
-            final EditSession fakeEditor = new EditSession(new BukkitWorld(w), -1);
+            final EditSession fakeEditor = new EditSession(new BukkitWorld(world), -1);
             for (final Chunk chunk : chunkList) {
                 server.getScheduler().runTaskLater(inst, new Runnable() {
 
@@ -861,20 +883,14 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         Location l = event.getBlock().getLocation();
 
-        World w = Bukkit.getWorld("City");
-        ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
-
-        if (rg.contains(BukkitUtil.toVector(l)) && gameFlags.contains('f')) event.setCancelled(true);
+        if (contains(l) && gameFlags.contains('f')) event.setCancelled(true);
     }
 
     @EventHandler
     public void onTNTExplode(EntityExplodeEvent event) {
 
-        World w = Bukkit.getWorld("City");
-        ProtectedRegion rg = getWorldGuard().getGlobalRegionManager().get(w).getRegion(config.region);
-
         for (Block block : event.blockList()) {
-            if (rg.contains(BukkitUtil.toVector(block))) {
+            if (contains(block.getLocation())) {
                 event.setYield(0);
                 break;
             }
@@ -899,10 +915,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     @EventHandler(ignoreCancelled = true)
     public void onEggDrop(EggDropEvent event) {
 
-        World w = Bukkit.getWorld(config.worldName);
-        RegionManager manager = getWorldGuard().getRegionManager(w);
-        ProtectedRegion r = manager.getRegion(config.region);
-        if (LocationUtil.isInRegion(w, r, event.getLocation())) event.setCancelled(true);
+        if (contains(event.getLocation())) event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -958,10 +971,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     @EventHandler(ignoreCancelled = true)
     public void onBlockChangePreLog(BlockChangePreLogEvent event) {
 
-        World w = Bukkit.getWorld(config.worldName);
-        RegionManager manager = getWorldGuard().getRegionManager(w);
-        ProtectedRegion r = manager.getRegion(config.region);
-        if (LocationUtil.isInRegion(w, r, event.getLocation())) event.setCancelled(true);
+        if (contains(event.getLocation())) event.setCancelled(true);
     }
 
     public class Commands {
@@ -1101,6 +1111,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         }
 
         @Command(aliases = {"reset", "r"}, desc = "Reset the Jungle Raid.",
+                flags = "p",
                 min = 0, max = 0)
         @CommandPermissions({"aurora.jr.reset"})
         public void endJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
@@ -1118,6 +1129,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             teams.clear();
             gameFlags.clear();
 
+            if (args.hasFlag('p')) probe();
             restore();
 
             amt = 7;
@@ -1217,25 +1229,25 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         }
     }
 
-    private WorldEditPlugin getWorldEdit() {
+    private WorldEditPlugin getWorldEdit() throws UnkownPluginException {
 
         Plugin plugin = server.getPluginManager().getPlugin("WorldEdit");
 
         // WorldEdit may not be loaded
         if (plugin == null || !(plugin instanceof WorldEditPlugin)) {
-            return null; // Maybe you want throw an exception instead
+            throw new UnkownPluginException("WorldEdit");
         }
 
         return (WorldEditPlugin) plugin;
     }
 
-    private WorldGuardPlugin getWorldGuard() {
+    private WorldGuardPlugin getWorldGuard() throws UnkownPluginException {
 
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
         if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
-            return null; // Maybe you want throw an exception instead
+            throw new UnkownPluginException("WorldGuard");
         }
 
         return (WorldGuardPlugin) plugin;
