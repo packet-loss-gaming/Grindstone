@@ -44,8 +44,11 @@ public class SoftWoolComponent extends BukkitComponent implements Listener {
         if (damageCause.equals(EntityDamageEvent.DamageCause.FALL)
                 && LocationUtil.getBelowID(entity.getLocation(), BlockID.CLOTH)) {
             if (entity instanceof Player) {
-                server.getPluginManager().callEvent(new FallBlockerEvent((Player) entity));
-                ChatUtil.sendNotice((Player) entity, "The cloth negates your fall damage.");
+                FallBlockerEvent fEvent = new FallBlockerEvent((Player) entity);
+                server.getPluginManager().callEvent(fEvent);
+                if (fEvent.isDisplayingMessage()) {
+                    ChatUtil.sendNotice((Player) entity, "The cloth negates your fall damage.");
+                }
             }
             event.setCancelled(true);
         }

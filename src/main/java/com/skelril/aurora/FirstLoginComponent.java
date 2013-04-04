@@ -4,6 +4,8 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.skelril.aurora.events.ApocalypseLocalSpawnEvent;
+import com.skelril.aurora.events.FallBlockerEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
@@ -13,18 +15,23 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import org.bukkit.*;
+import org.bukkit.entity.Creature;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -33,7 +40,7 @@ import java.util.logging.Logger;
  */
 @ComponentInformation(friendlyName = "First Login", desc = "Get stuff the first time you come.")
 @Depend(plugins = {"WorldGuard"})
-public class FirstLoginComponent extends BukkitComponent implements Listener, Runnable {
+public class FirstLoginComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -48,7 +55,6 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
         config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20 * 30);
     }
 
     @Override
@@ -62,8 +68,8 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
 
         @Setting("enable-lucky-diamond")
         public boolean luckyDiamond = true;
-        @Setting("exit-region")
-        public String exitRegion = "city-dung-exit";
+        @Setting("first-region")
+        public String firstRegion = "city-dung";
         @Setting("first-teleport-x")
         public int firstTeleportX = 0;
         @Setting("first-teleport-y")
@@ -86,73 +92,78 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
         return (WorldGuardPlugin) plugin;
     }
 
-    @Override
-    public void run() {
+    @EventHandler
+    public void onSafeFall(FallBlockerEvent event) {
 
-        // Region info
-        try {
-            World world = Bukkit.getWorld(config.mainWorld);
-            try {
-                ProtectedRegion protectedRegion = getWorldGuard().getRegionManager(world).getRegion(config.exitRegion);
+        Player player = event.getPlayer();
+        World world = player.getWorld();
 
-                for (Player player : world.getPlayers()) {
+        if (blockedPlayers.contains(event.getPlayer())) {
 
-                    if (LocationUtil.isBelowPlayer(world, protectedRegion, player)) {
+            // Stop the fall message
+            event.setDisplayMessage(false);
 
-                        // Remove teleport block
-                        blockedPlayers.remove(player);
+            // Stop any thunderstorms
+            world.setThundering(false);
 
-                        // Main player info
-                        PlayerInventory inventory = player.getInventory();
-
-                        // Declare Item Stacks
-                        ItemStack[] startKit = new ItemStack[7];
-                        startKit[0] = new ItemStack(ItemID.COOKED_BEEF, 32);
-                        startKit[1] = new ItemStack(ItemID.STONE_PICKAXE);
-                        startKit[2] = new ItemStack(ItemID.STONE_AXE);
-                        startKit[3] = new ItemStack(ItemID.STONE_SHOVEL);
-                        startKit[4] = new ItemStack(ItemID.STONE_SWORD);
-                        startKit[5] = new ItemStack(ItemID.STONE_HOE);
-                        startKit[6] = new ItemStack(ItemID.MAP);
-
-                        // Tell others to great him/her
-                        for (Player otherPlayer : server.getOnlinePlayers()) {
-                            // Don't tell the player we are sending this message
-                            if (otherPlayer != player) {
-                                ChatUtil.sendNotice(otherPlayer, "Please welcome, "
-                                        + player.getDisplayName() + " to the server.");
-                            }
-                        }
-
-                        // Intro Messaging
-                        ChatUtil.sendNotice(player, "Hello and welcome to Arrow Craft.");
-
-                        // Give Items
-                        ChatUtil.sendNotice(player, "Here have some free stuff. :D");
-                        inventory.addItem(startKit);
-
-                        // Greeting
-                        ChatUtil.sendNotice(player, "Enjoy your time on Arrow Craft!");
-
-                        // Surprise!
-                        if (ChanceUtil.getChance(10) && config.luckyDiamond) {
-
-                            // Give Items
-                            inventory.addItem(new ItemStack(ItemID.DIAMOND, 1));
-
-                            // Notify Player
-                            ChatUtil.sendNotice(player, ChatColor.GOLD, "What's this, a diamond! You are very luck!");
-                        }
-
-                        player.teleport(world.getSpawnLocation());
-                    }
+            // Kill All mobs
+            Collection<Entity> zombies = world.getEntitiesByClasses(Creature.class);
+            String customName;
+            for (Entity entity : zombies) {
+                if (entity == null || !entity.isValid() || !(entity instanceof LivingEntity)) continue;
+                customName = ((LivingEntity) entity).getCustomName();
+                if (customName != null && customName.contains("Apocalyptic")) {
+                    ((LivingEntity) entity).setHealth(0);
                 }
-            } catch (Exception e) {
-                log.warning("Please verify the region: " + config.exitRegion + " exists.");
             }
-        } catch (Exception e) {
-            log.warning("Please verify the world: " + config.mainWorld + " exists.");
+
+            // Remove teleport block
+            blockedPlayers.remove(player);
+
+            // Main player info
+            PlayerInventory inventory = player.getInventory();
+
+            // Declare Item Stacks
+            ItemStack[] startKit = new ItemStack[] {
+                    new ItemStack(ItemID.COOKED_BEEF, 32),
+                    new ItemStack(ItemID.STONE_PICKAXE),
+                    new ItemStack(ItemID.STONE_AXE),
+                    new ItemStack(ItemID.STONE_SHOVEL),
+                    new ItemStack(ItemID.STONE_SWORD),
+                    new ItemStack(ItemID.STONE_HOE),
+                    new ItemStack(ItemID.MAP)
+            };
+
+            // Tell others to great him/her
+            for (Player otherPlayer : server.getOnlinePlayers()) {
+                // Don't tell the player we are sending this message
+                if (otherPlayer != player) {
+                    ChatUtil.sendNotice(otherPlayer, "Please welcome, " + player.getDisplayName() + " to the server.");
+                }
+            }
+
+            // Greeting
+            ChatUtil.sendNotice(player, "Welcome to Skelril!");
+            inventory.addItem(startKit);
+
+            // Surprise!
+            if (ChanceUtil.getChance(10) && config.luckyDiamond) {
+
+                // Give Items
+                inventory.addItem(new ItemStack(ItemID.DIAMOND, 1));
+
+                // Notify Player
+                ChatUtil.sendNotice(player, ChatColor.GOLD, "What's this, a diamond! You are very luck!");
+            }
+
+            player.teleport(world.getSpawnLocation());
         }
+    }
+
+    @EventHandler
+    public void onLocalApocalypseSpawn(ApocalypseLocalSpawnEvent event) {
+
+        if (blockedPlayers.contains(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler
@@ -162,7 +173,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
 
         if (blockedPlayers.contains(player)) {
             event.setCancelled(true);
-            ChatUtil.sendError(player, "Please walk through the stone doors into the teleport room.");
+            ChatUtil.sendError(player, "Please stick to the path.");
         }
     }
 
@@ -185,8 +196,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
 
         try {
             final World world = Bukkit.getWorld(config.mainWorld);
-            ProtectedRegion protectedRegion
-                    = getWorldGuard().getRegionManager(world).getRegion(config.exitRegion).getParent();
+            ProtectedRegion protectedRegion = getWorldGuard().getRegionManager(world).getRegion(config.firstRegion);
 
             if (!player.hasPlayedBefore() || LocationUtil.isInRegion(world, protectedRegion, player)) {
 
@@ -197,15 +207,13 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
 
                         try {
 
-                            player.teleport(new Location(world, config.firstTeleportX, config.firstTeleportY,
-                                    config.firstTeleportZ));
+                            Location firstLoc = new Location(world, config.firstTeleportX, config.firstTeleportY,
+                                    config.firstTeleportZ);
+                            firstLoc.setPitch(2);
+                            player.teleport(firstLoc);
 
-                            ChatUtil.sendNotice(player, "This is the Arrow Craft Dungeon.");
-                            ChatUtil.sendNotice(player, "Don't break the rules and you will never see it again. :)");
-                            ChatUtil.sendNotice(player, "To leave walk through the stone piston door and wait for the" +
-                                    " " +
-                                    "teleport system" +
-                                    ".");
+                            ChatUtil.sendNotice(player, "Welcome to Skelril!");
+                            ChatUtil.sendNotice(player, "Follow the path to begin your adventure!");
                             if (!blockedPlayers.contains(player)) blockedPlayers.add(player);
                         } catch (Exception e) {
                             log.warning("Please ensure the following location exists: "
@@ -213,11 +221,11 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
                                     + ", " + config.firstTeleportZ + " in the world: " + config.mainWorld + ".");
                         }
                     }
-                }, 20);
+                }, 5);
             }
 
             // Surprise!
-            if (ChanceUtil.getChance(1, 1000) && config.luckyDiamond && inst.hasPermission(player,
+            if (ChanceUtil.getChance(1000) && config.luckyDiamond && inst.hasPermission(player,
                     "aurora.loginkit.diamond")) {
 
                 // Give Items
@@ -228,8 +236,14 @@ public class FirstLoginComponent extends BukkitComponent implements Listener, Ru
             }
         } catch (Exception e) {
             log.warning("Please ensure the following region exists: "
-                    + config.exitRegion + " and has a parent in the world: " + config.mainWorld + ".");
+                    + config.firstRegion + " and has a parent in the world: " + config.mainWorld + ".");
         }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+
+        if (blockedPlayers.contains(event.getPlayer())) blockedPlayers.remove(event.getPlayer());
     }
 
 }

@@ -76,7 +76,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private static class LocalConfiguration extends ConfigurationBase {
 
         @Setting("multiplier")
-        public int multiplier = 3;
+        public int multiplier = 6;
+        @Setting("local-de-multiplier")
+        public int deMultiplier = 4;
         @Setting("max-mobs")
         public int maxMobs = 1000;
         @Setting("armour-chance")
@@ -140,7 +142,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         if (target == null || !(target instanceof LivingEntity) || !target.isValid()) return;
         if (attacker == null || !(attacker instanceof LivingEntity) || !attacker.isValid()) return;
-        if (!checkEntity((LivingEntity) attacker)) return;
+        if (target.getType() == null || attacker.getType() == null || !checkEntity((LivingEntity) attacker)) return;
 
         Player player;
         switch (target.getType()) {
@@ -283,7 +285,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                     spawnAndArm(LocationUtil.findFreePosition(lightningStrikeLoc), config.attackMob, true);
                     spawnAndArm(LocationUtil.findFreePosition(world.getSpawnLocation()), config.attackMob, true);
 
-                    if (ChanceUtil.getChance((multiplier / 2) * applicablePlayers.size())) {
+                    if (ChanceUtil.getChance((multiplier / config.deMultiplier) * applicablePlayers.size())) {
                         for (Player player : applicablePlayers) {
 
                             if (inst.hasPermission(player, "aurora.apocalypse.bedsafe")) continue;
@@ -331,7 +333,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     public boolean checkEntity(LivingEntity e) {
 
-        return e.isValid() && (e.getWorld().isThundering() || e.getCustomName().equals("Apocalyptic Zombie"));
+        return e.getWorld().isThundering()
+                || (e.getCustomName() != null && e.getCustomName().equals("Apocalyptic Zombie"));
     }
 
     private void spawnAndArm(Location location, EntityType type, boolean allowItemPickup) {

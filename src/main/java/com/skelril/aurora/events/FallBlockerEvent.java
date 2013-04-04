@@ -9,10 +9,21 @@ import org.bukkit.event.player.PlayerEvent;
 public class FallBlockerEvent extends PlayerEvent {
 
     private static final HandlerList handlers = new HandlerList();
+    private boolean displayMessage = true;
 
     public FallBlockerEvent(Player player) {
 
         super(player);
+    }
+
+    public boolean isDisplayingMessage() {
+
+        return displayMessage;
+    }
+
+    public void setDisplayMessage(boolean displayMessage) {
+
+        this.displayMessage = displayMessage;
     }
 
     public HandlerList getHandlers() {
