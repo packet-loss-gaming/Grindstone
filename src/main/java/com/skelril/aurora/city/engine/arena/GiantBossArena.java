@@ -21,6 +21,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -85,7 +86,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 Entity[] contained = getContainedEntities(1);
                 if (!getWorld().isThundering()) removeOutsideZombies(contained);
-                removeXP(contained);
+                if (isBossSpawned()) removeXP(contained);
             }
         }, 0, 20 * 2);
 
@@ -196,6 +197,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         @Override
         public void run() {
             for (Location pt : spawnPts) {
+                if (!ChanceUtil.getChance(6)) continue;
                 ThrownExpBottle bottle = (ThrownExpBottle) getWorld().spawnEntity(pt, EntityType.THROWN_EXP_BOTTLE);
                 bottle.setVelocity(new Vector(
                         random.nextDouble() * 1.7 - 1.5,
@@ -348,7 +350,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     }
 
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEvent(EntityDamageEvent event) {
 
         Entity defender = event.getEntity();
@@ -516,13 +518,13 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
 
                 // Unique drops
-                if (ChanceUtil.getChance((difficulty + 2) * 5)) {
+                if (ChanceUtil.getChance(25)) {
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
-                if (ChanceUtil.getChance(difficulty * 90)) {
+                if (ChanceUtil.getChance(250)) {
                     event.getDrops().add(ItemUtil.Master.makeSword());
                 }
-                if (ChanceUtil.getChance(difficulty * 90)) {
+                if (ChanceUtil.getChance(250)) {
                     event.getDrops().add(ItemUtil.Master.makeBow());
                 }
 
@@ -533,7 +535,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
 
                 for (int i = 0; i < 7; i++) {
-                    server.getScheduler().runTaskLater(inst, spawnXP, (i + 1) * 20);
+                    server.getScheduler().runTaskLater(inst, spawnXP, i * 2 * 20);
                 }
             } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
                 if (ChanceUtil.getChance(28)) {
@@ -609,13 +611,13 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                             random.nextDouble() * 2,
                             random.nextDouble() * 1.7 - 1.5
                     ));
-                    player.setFireTicks(54);
+                    player.setFireTicks(difficulty * 18);
                 }
                 break;
             case 2:
                 ChatUtil.sendWarning(containedP, "Embrace my corruption!");
                 for (Player player : contained) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 12, 2));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 12, difficulty > 2 ? 2 : 1));
                 }
                 break;
             case 3:
@@ -637,7 +639,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                                     != BlockID.DIAMOND_BLOCK) {
                                 ChatUtil.sendNotice(player, "Come closer...");
                                 player.teleport(boss.getLocation());
-                                player.damage(104, boss);
+                                player.damage(difficulty * 32, boss);
 
                                 // Call this event to notify AntiCheat
                                 server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
@@ -651,7 +653,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                             }
                         }
                     }
-                }, 20 * 7);
+                }, 20 * (28 - (difficulty * 7)));
                 break;
             case 5:
                 if (!damageHeals) {
@@ -668,7 +670,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                                 ChatUtil.sendNotice(getContainedPlayers(1), "Thank you for your assistance.");
                             }
                         }
-                    }, 20 * 30);
+                    }, 20 * (difficulty * 10));
                     break;
                 }
                 runAttack(ChanceUtil.getRandom(OPTION_COUNT));
@@ -676,7 +678,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             case 6:
                 ChatUtil.sendWarning(containedP, "Fire is your friend...");
                 for (Player player : contained) {
-                    player.setFireTicks(20 * 45);
+                    player.setFireTicks(20 * (difficulty * 15));
                 }
                 break;
             case 7:
@@ -701,9 +703,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                         //Attack
                         if (baskInGlory) {
+                            int dmgFact = difficulty * 3 + 1;
                             for (Location pt : spawnPts) {
                                 if (ChanceUtil.getChance(12)) {
-                                    getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), 10, false, false);
+                                    getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), dmgFact, false, false);
                                 }
                             }
 
@@ -721,7 +724,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         // Notify if avoided
                         ChatUtil.sendNotice(getContainedPlayers(1), "Gah... Afraid are you friends?");
                     }
-                }, 20 * 7);
+                }, 20 * (28 - (difficulty * 7)));
                 break;
         }
         lastAttack = System.currentTimeMillis();
