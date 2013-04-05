@@ -65,6 +65,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     private BukkitTask mobDestroyer;
     private Random random = new Random();
 
+    private int difficulty = Difficulty.HARD.getValue();
     private List<Location> spawnPts = new ArrayList<>();
     private final HashMap<String, PlayerState> playerState = new HashMap<>();
 
@@ -121,6 +122,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @Override
     public void spawnBoss() {
 
+        difficulty = getWorld().getDifficulty().getValue();
         spawnPts.clear();
 
         BlockVector min = getRegion().getMinimumPoint();
@@ -131,8 +133,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         Region region = new CuboidRegion(min, max);
         Location l = BukkitUtil.toLocation(getWorld(), region.getCenter().setY(groundLevel));
         boss = (Giant) getWorld().spawnEntity(l, EntityType.GIANT);
-        boss.setMaxHealth(750);
-        boss.setHealth(750);
+        boss.setMaxHealth(510 + (difficulty * 80));
+        boss.setHealth(510 + (difficulty * 80));
         boss.setRemoveWhenFarAway(false);
 
         for (Player player : getContainedPlayers(1)) ChatUtil.sendWarning(player, "I live again!");
@@ -189,6 +191,20 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             runAttack(ChanceUtil.getRandom(OPTION_COUNT));
         }
     }
+
+    public Runnable spawnXP = new Runnable() {
+        @Override
+        public void run() {
+            for (Location pt : spawnPts) {
+                ThrownExpBottle bottle = (ThrownExpBottle) getWorld().spawnEntity(pt, EntityType.THROWN_EXP_BOTTLE);
+                bottle.setVelocity(new Vector(
+                        random.nextDouble() * 1.7 - 1.5,
+                        random.nextDouble() * 1.5,
+                        random.nextDouble() * 1.7 - 1.5)
+                );
+            }
+        }
+    };
 
     public void removeXP(Entity[] contained) {
 
@@ -363,7 +379,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 // Evil code of doom
                 ChatUtil.sendNotice((Player) attacker, "Come closer...");
                 attacker.teleport(boss.getLocation());
-                ((Player) attacker).damage(96, boss);
+                ((Player) attacker).damage(difficulty * 32, boss);
                 server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) attacker));
                 attacker.setVelocity(new Vector(
                         random.nextDouble() * 1.7 - 1.5,
@@ -378,11 +394,11 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 if (defender instanceof LivingEntity) {
                     if (ItemUtil.hasMasterSword(player)) {
 
-                        if (ChanceUtil.getChance(10)) {
+                        if (ChanceUtil.getChance(difficulty * 3 + 1)) {
                             EffectUtil.Master.healingLight(player, (LivingEntity) defender);
                         }
 
-                        if (ChanceUtil.getChance(18)) {
+                        if (ChanceUtil.getChance(difficulty * 3)) {
                             List<LivingEntity> entities = new ArrayList<>();
                             for (Entity e : player.getNearbyEntities(6, 4, 6)) {
 
@@ -402,7 +418,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         if (defender instanceof Giant) {
             Giant boss = (Giant) defender;
             if (damageHeals) {
-                boss.setHealth(Math.min(boss.getMaxHealth(), (event.getDamage() * 2) + boss.getHealth()));
+                boss.setHealth(Math.min(boss.getMaxHealth(), (event.getDamage() * difficulty) + boss.getHealth()));
             }
             /*
             else if (projectile != null && projectile instanceof Arrow) {
@@ -412,7 +428,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
             if (ChanceUtil.getChance(7)) {
                 for (Location spawnPt : spawnPts) {
-                    if (ChanceUtil.getChance(18)) {
+                    if (ChanceUtil.getChance(36 - (difficulty * 6))) {
                         for (int i = 0; i < Math.max(3, contained.length); i++) {
                             Zombie z = (Zombie) getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
                             z.setBaby(true);
@@ -451,7 +467,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 if (attacker != null) {
                     if (attacker instanceof Zombie) {
                         Zombie zombie = (Zombie) attacker;
-                        if (zombie.isBaby() && ChanceUtil.getChance(14)) {
+                        if (zombie.isBaby() && ChanceUtil.getChance(difficulty * 5)) {
                             ChatUtil.sendNotice(player, "Your armour weakens the zombies.");
                             for (Entity e : player.getNearbyEntities(8, 8, 8)) {
                                 if (e.isValid() && e instanceof Zombie && ((Zombie) e).isBaby()) {
@@ -461,13 +477,13 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         }
                     }
 
-                    if (ChanceUtil.getChance(7)) EffectUtil.Ancient.powerBurst(player, event.getDamage());
+                    if (ChanceUtil.getChance(difficulty * 3)) EffectUtil.Ancient.powerBurst(player, event.getDamage());
                 }
-                if (ChanceUtil.getChance(3) && defender.getFireTicks() > 0) {
+                if (ChanceUtil.getChance(difficulty) && defender.getFireTicks() > 0) {
                     ChatUtil.sendNotice((Player) defender, "Your armour extinguishes the fire.");
                     defender.setFireTicks(0);
                 }
-                if (damageHeals && ChanceUtil.getChance(10)) {
+                if (damageHeals && ChanceUtil.getChance(difficulty * 3 + 1)) {
                     ChatUtil.sendNotice(getContainedPlayers(), ChatColor.AQUA,
                             player.getDisplayName() + " has broken the giant's spell.");
                     damageHeals = false;
@@ -500,13 +516,13 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
 
                 // Unique drops
-                if (ChanceUtil.getChance(25)) {
+                if (ChanceUtil.getChance((difficulty + 2) * 5)) {
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
-                if (ChanceUtil.getChance(250)) {
+                if (ChanceUtil.getChance(difficulty * 90)) {
                     event.getDrops().add(ItemUtil.Master.makeSword());
                 }
-                if (ChanceUtil.getChance(250)) {
+                if (ChanceUtil.getChance(difficulty * 90)) {
                     event.getDrops().add(ItemUtil.Master.makeBow());
                 }
 
@@ -515,7 +531,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 for (Entity entity : getContainedEntities()) {
                     if (entity instanceof Zombie) ((Zombie) entity).addPotionEffects(Lists.newArrayList(effects));
                 }
-                event.setDroppedExp(256);
+
+                for (int i = 0; i < 7; i++) {
+                    server.getScheduler().runTaskLater(inst, spawnXP, (i + 1) * 20);
+                }
             } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
                 if (ChanceUtil.getChance(28)) {
                     event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(3)));
