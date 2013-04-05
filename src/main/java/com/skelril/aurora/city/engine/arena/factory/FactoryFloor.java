@@ -49,7 +49,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
     @Override
     public void run() {
 
-        for (FactoryMech mech : Collections.unmodifiableList(mechs)) que.addAll(mech.process());
+        for (FactoryMech mech : Collections.synchronizedList(mechs)) que.addAll(mech.process());
 
         if (que.isEmpty()) return;
         List<ItemStack> shortList = new ArrayList<>();
