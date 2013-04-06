@@ -11,6 +11,9 @@ import com.sk89q.worldedit.bukkit.selections.Selection;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.databases.RegionDBUtil;
+import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.RegionGroupFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
@@ -22,6 +25,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -86,6 +90,70 @@ public class HomeManagerComponent extends BukkitComponent {
     }
 
     public class NestedCommands {
+
+        @Command(aliases = {"info"}, usage = "", desc = "View info about your home",
+                min = 0, max = 0)
+        @CommandPermissions({"aurora.home.self.info"})
+        public void infoHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            if (sender instanceof Player) {
+                Player player = (Player) sender;
+
+                RegionManager manager = WG.getRegionManager(player.getWorld());
+                ProtectedRegion region = manager.getRegionExact(getHome(player));
+                if (region == null) throw new CommandException("You do not have a home in this world!");
+                District district = getDistrict(region.getParent().getId().replace("-district", ""));
+
+                StringBuilder builtInfo = new StringBuilder();
+                builtInfo.append(ChatColor.YELLOW + "Home Owner: ").append(sender.getName()).append(", ");
+                builtInfo.append(ChatColor.GRAY + "District: ").append(district.toProperName());
+                builtInfo.append("\n");
+                builtInfo.append(ChatColor.AQUA + "Server Managers: ").append(District.GLOBAL.getManagersFriendly());
+                builtInfo.append("\n");
+                builtInfo.append(ChatColor.AQUA + "District Managers: ").append(district.getManagersFriendly());
+
+
+                if (region.getMembers().size() > 0) {
+                    builtInfo.append("\n");
+                    builtInfo.append(ChatColor.BLUE + "Friends: ").append(region.getMembers().toUserFriendlyString());
+                }
+
+                boolean hasFlags = false;
+                final StringBuilder s = new StringBuilder("\n" + ChatColor.BLUE + "Properties: ");
+                for (Flag<?> flag : DefaultFlag.getFlags()) {
+                    Object val = region.getFlag(flag), group = null;
+
+                    if (val == null) {
+                        continue;
+                    }
+
+                    if (hasFlags) {
+                        s.append(", ");
+                    }
+
+                    RegionGroupFlag groupFlag = flag.getRegionGroupFlag();
+                    if (groupFlag != null) {
+                        group = region.getFlag(groupFlag);
+                    }
+
+                    if (group == null) {
+                        s.append(flag.getName()).append(": ").append(String.valueOf(val));
+                    } else {
+                        s.append(flag.getName()).append(" -g ").append(String.valueOf(group)).append(": ")
+                                .append(String.valueOf(val));
+                    }
+
+                    hasFlags = true;
+                }
+                if (hasFlags) {
+                    builtInfo.append(s.toString());
+                }
+
+                ChatUtil.sendNotice(sender, ChatColor.RESET, builtInfo.toString());
+            } else {
+                throw new CommandException("You must be a player to use this command.");
+            }
+        }
 
         @Command(aliases = {"addplayer"}, usage = "<player>", desc = "Add a player to your home",
                 min = 1, max = 1)
@@ -372,21 +440,29 @@ public class HomeManagerComponent extends BukkitComponent {
         return getHome(player.getName());
     }
 
-    private boolean giveRuleBook(CommandSender sender, String player, String district) {
+    private District getDistrict(String district) {
 
         district = district.toLowerCase();
 
         switch (district) {
             case "carpe-diem":
-                return giveRuleBook(sender, player, District.CARPE_DIEM);
+                return District.CARPE_DIEM;
             case "glacies-mare":
-                return giveRuleBook(sender, player, District.GLACIES_MARE);
+                return District.GLACIES_MARE;
             case "oblitus":
-                return giveRuleBook(sender, player, District.OBLITUS);
+                return District.OBLITUS;
             case "vineam":
-                return giveRuleBook(sender, player, District.VINEAM);
+                return District.VINEAM;
         }
-        return false;
+        return District.GLOBAL;
+    }
+
+    private boolean giveRuleBook(CommandSender sender, String player, String district) {
+
+        district = district.toLowerCase();
+        District aDistrict = getDistrict(district);
+
+        return aDistrict != District.GLOBAL && giveRuleBook(sender, player, aDistrict);
     }
 
     private boolean giveRuleBook(CommandSender sender, String player, District district) {
