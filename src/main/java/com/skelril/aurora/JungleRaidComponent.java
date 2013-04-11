@@ -24,7 +24,7 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.*;
-import com.skelril.aurora.exceptions.UnkownPluginException;
+import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
@@ -57,6 +57,7 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -264,7 +265,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         world = Bukkit.getWorld(config.worldName);
         try {
             region = getWorldGuard().getGlobalRegionManager().get(world).getRegion(config.region);
-        } catch (UnkownPluginException |NullPointerException e) {
+        } catch (UnknownPluginException |NullPointerException e) {
             if (attempts > 10) {
                 e.printStackTrace();
                 return false;
@@ -517,7 +518,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         BukkitConfiguration worldEditConfig = null;
         try {
             worldEditConfig = getWorldEdit().getLocalConfiguration();
-        } catch (UnkownPluginException e) {
+        } catch (UnknownPluginException e) {
             e.printStackTrace();
         }
         if (worldEditConfig.snapshotRepo == null) {
@@ -827,8 +828,45 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     @EventHandler(ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
 
-        Player player = event.getEntity();
+        final Player player = event.getEntity();
         if (isInJungleRaidTeam(player)) {
+            int killerColor = 0;
+            int teamColor = teams.get(player.getName());
+            Player killer = player.getKiller();
+            if (killer != null && isInJungleRaidTeam(killer)) killerColor = teams.get(killer.getName());
+
+            final List<Color> colors;
+            if (teamColor < 1) {
+                colors = Arrays.asList(Color.WHITE);
+            } else {
+                colors = teamColor == 1 ? Arrays.asList(Color.BLUE) : Arrays.asList(Color.RED);
+            }
+
+            final List<Color> fades;
+            if (killerColor < 1) {
+                fades = Arrays.asList(Color.WHITE);
+            } else {
+                fades = killerColor == 1 ? Arrays.asList(Color.BLUE) : Arrays.asList(Color.RED);
+            }
+
+            for (int i = 0; i < 12; i++) {
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+                    @Override
+                    public void run() {
+                        Firework firework = (Firework) world.spawnEntity(player.getLocation(), EntityType.FIREWORK);
+                        FireworkMeta meta = firework.getFireworkMeta();
+                        FireworkEffect.Builder builder = FireworkEffect.builder();
+                        builder.flicker(ChanceUtil.getChance(2));
+                        builder.trail(ChanceUtil.getChance(2));
+                        builder.withColor(colors);
+                        builder.withFade(fades);
+                        meta.addEffect(builder.build());
+                        meta.setPower(ChanceUtil.getRangedRandom(2, 5));
+                        firework.setFireworkMeta(meta);
+                    }
+                }, i * 4);
+            }
+
             event.getDrops().clear();
             event.setDroppedExp(0);
             removeFromJungleRaidTeam(player);
@@ -1021,7 +1059,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 try {
                     int integer = Integer.parseInt(args.getString(0));
 
-                    if (integer > 2) throw new CommandException("Valid teams: 0, 1, 2.");
+                    if (integer > 2 || integer < 0) throw new CommandException("Valid teams: 0, 1, 2.");
                     addToJungleRaidTeam(targetPlayer, integer, args.getFlags());
                 } catch (Exception e) {
                     throw new CommandException("Valid teams: 0, 1, 2.");
@@ -1042,7 +1080,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 try {
                     int integer = Integer.parseInt(args.getString(1));
 
-                    if (integer > 2) throw new CommandException("Valid teams: 0, 1, 2.");
+                    if (integer > 2 || integer < 0) throw new CommandException("Valid teams: 0, 1, 2.");
                     addToJungleRaidTeam(targetPlayer, integer, args.getFlags());
                 } catch (Exception e) {
                     throw new CommandException("Valid teams: 0, 1, 2.");
@@ -1229,25 +1267,25 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         }
     }
 
-    private WorldEditPlugin getWorldEdit() throws UnkownPluginException {
+    private WorldEditPlugin getWorldEdit() throws UnknownPluginException {
 
         Plugin plugin = server.getPluginManager().getPlugin("WorldEdit");
 
         // WorldEdit may not be loaded
         if (plugin == null || !(plugin instanceof WorldEditPlugin)) {
-            throw new UnkownPluginException("WorldEdit");
+            throw new UnknownPluginException("WorldEdit");
         }
 
         return (WorldEditPlugin) plugin;
     }
 
-    private WorldGuardPlugin getWorldGuard() throws UnkownPluginException {
+    private WorldGuardPlugin getWorldGuard() throws UnknownPluginException {
 
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
         if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
-            throw new UnkownPluginException("WorldGuard");
+            throw new UnknownPluginException("WorldGuard");
         }
 
         return (WorldGuardPlugin) plugin;
