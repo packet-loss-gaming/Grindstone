@@ -285,6 +285,30 @@ public class EnvironmentUtil {
         return false;
     }
 
+    private static final int[] lavaBlocks = new int[] {
+            BlockID.LAVA, BlockID.STATIONARY_LAVA
+    };
+
+    public static boolean isLava(Block block) {
+
+        return isLava(block.getTypeId());
+    }
+
+    public static boolean isLava(int block) {
+
+        for (int lava : lavaBlocks) {
+            if (lava == block) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isLiquid(int block) {
+
+        return isWater(block) || isLava(block);
+    }
+
     private static final Biome[] frozenBiomes = new Biome[] {
             Biome.FROZEN_OCEAN, Biome.FROZEN_RIVER,
             Biome.ICE_MOUNTAINS, Biome.ICE_PLAINS
