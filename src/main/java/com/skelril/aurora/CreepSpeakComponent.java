@@ -93,7 +93,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                             || event.getReason().equals(TargetReason.TARGET_ATTACKED_OWNER)) return;
 
                     // Alonzo Feature
-                    if (ChanceUtil.getChance(220) && !inst.hasPermission(player, "aurora.alonzo.immune")
+                    if (ChanceUtil.getChance(157) && !inst.hasPermission(player, "aurora.alonzo.immune")
                             && config.enableAlonzo && !alonzoCreepersActive.contains(player)) {
                         Location loc = entity.getLocation();
 
