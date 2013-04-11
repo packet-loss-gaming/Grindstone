@@ -134,7 +134,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         Entity target = event.getEntity();
