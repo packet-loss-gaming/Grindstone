@@ -240,7 +240,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         if (player.getWorld().getName().contains(config.wildernessWorld) && event.isFlying()) event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
 
         Player player = event.getPlayer();
@@ -280,7 +280,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         return false;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityExplosion(EntityExplodeEvent event) {
 
         for (Block block : event.blockList()) {
