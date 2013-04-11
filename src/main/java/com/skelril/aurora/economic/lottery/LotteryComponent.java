@@ -321,7 +321,7 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
         String name = findNewMillionaire();
         if (name.equals("404 Not Found")) return;
 
-        double cash = Math.max(getWinnerCash(), MIN_WINNING);
+        double cash = getWinnerCash();
 
         economy.depositPlayer(name, cash);
         Bukkit.broadcastMessage(ChatColor.YELLOW + name + " has won: " +
@@ -336,9 +336,14 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
 
     public double getWinnerCash() {
 
-        List<GenericWealthStore> tickets = lotteryTicketDatabase.getTickets();
+        final double min = (config.maxPerLotto * config.ticketPrice) / .75;
 
-        return tickets.size() > 0 ? Math.max(Math.round(getCount(tickets) * config.ticketPrice * .75), MIN_WINNING) : 0;
+        List<GenericWealthStore> tickets = lotteryTicketDatabase.getTickets();
+        int ticketCount = getCount(tickets);
+
+        double ticketSize = Math.round(ticketCount * config.ticketPrice);
+
+        return ticketCount * config.ticketPrice > min ? ticketSize * .75 : ticketSize * 1.25;
     }
 
     public int getCount() {
