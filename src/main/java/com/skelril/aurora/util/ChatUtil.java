@@ -145,19 +145,24 @@ public class ChatUtil {
         StringBuilder out = new StringBuilder();
 
         char[] chars = string.toCharArray();
-        boolean next = true;
+        boolean nextAllowed = true;
 
         for (int i = 0; i < chars.length; i++) {
 
             if (!Character.isAlphabetic(chars[i])) {
-                next = true;
+                nextAllowed = true;
                 continue;
             }
 
-            if (!next) {
+            if ((i == 0 || Character.isSpaceChar(chars[i-1])) && chars[i] == 'X') {
+                nextAllowed = true;
+                continue;
+            }
+
+            if (!nextAllowed) {
                 chars[i] = Character.toLowerCase(chars[i]);
             }
-            next = false;
+            nextAllowed = false;
         }
 
         for (char character : chars) {
