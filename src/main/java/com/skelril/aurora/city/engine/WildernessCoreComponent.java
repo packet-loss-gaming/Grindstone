@@ -162,47 +162,46 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 }
                 break;
             case NETHER_PORTAL:
-                event.useTravelAgent(true);
 
+                // Wilderness Code
+                event.useTravelAgent(true);
                 if (from.getWorld().equals(wilderness)) {
                     pLoc.setWorld(wildernessNether);
                     pLoc.setX(pLoc.getBlockX() / 8);
                     pLoc.setZ(pLoc.getBlockZ() / 8);
-                    event.setTo(pLoc);
+                    agent.setCanCreatePortal(true);
+                    event.setPortalTravelAgent(agent);
+                    event.setTo(agent.findOrCreate(pLoc));
+                    return;
                 } else if (from.getWorld().getName().contains(config.wildernessWorld)) {
                     pLoc.setWorld(wilderness);
                     pLoc.setX(pLoc.getBlockX() * 8);
                     pLoc.setZ(pLoc.getBlockZ() * 8);
-                    event.setTo(pLoc);
+                    agent.setCanCreatePortal(true);
+                    event.setPortalTravelAgent(agent);
+                    event.setTo(agent.findOrCreate(pLoc));
+                    return;
                 }
 
+                // City Code
                 if (from.getWorld().getName().contains(config.cityWorld))  {
-                    agent.setCanCreatePortal(false);
-                    event.setPortalTravelAgent(agent);
                     event.setTo(LocationUtil.grandBank(city));
-                } else if (to.getWorld().getName().contains(config.cityWorld)) {
                     agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);
+                } else if (to.getWorld().getName().contains(config.cityWorld)) {
                     event.setTo(city.getSpawnLocation());
-                } else {
-                    agent.setCanCreatePortal(true);
+                    agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);
                 }
                 break;
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPortalForm(PortalCreateEvent event) {
 
         if (event.getReason().equals(PortalCreateEvent.CreateReason.FIRE)) return;
-        //noinspection LoopStatementThatDoesntLoop
-        for (Block block : event.getBlocks()) {
-            if (block.getWorld().equals(Bukkit.getWorld(config.cityWorld))) {
-                event.setCancelled(true);
-            }
-            break;
-        }
+        if (event.getWorld().getName().contains(config.cityWorld)) event.setCancelled(true);
     }
 
     @EventHandler
