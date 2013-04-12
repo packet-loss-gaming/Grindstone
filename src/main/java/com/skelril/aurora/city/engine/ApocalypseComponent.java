@@ -35,6 +35,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -220,7 +221,14 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             }
         }
 
-        if (ent instanceof LivingEntity && checkEntity((LivingEntity) ent)) {
+        if (checkEntity((LivingEntity) ent)) {
+
+            Iterator<ItemStack> dropIterator = event.getDrops().iterator();
+            while (dropIterator.hasNext()) {
+                ItemStack next = dropIterator.next();
+                if (next != null && next.getTypeId() == ItemID.ROTTEN_FLESH) dropIterator.remove();
+            }
+
             if (ent.getType().equals(entType) && ChanceUtil.getChance(5)) {
                 event.setDroppedExp(event.getDroppedExp() * 3);
                 event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(8)));
