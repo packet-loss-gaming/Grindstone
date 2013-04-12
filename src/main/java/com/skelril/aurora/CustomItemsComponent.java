@@ -1,21 +1,19 @@
 package com.skelril.aurora;
+
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
-import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.*;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.inventory.ItemStack;
@@ -36,7 +34,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         inst.registerEvents(this);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onXPPickUp(PlayerExpChangeEvent event) {
 
         Player player = event.getPlayer();
@@ -57,7 +55,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onEntityDeath(EntityDeathEvent event) {
 
         LivingEntity damaged = event.getEntity();
