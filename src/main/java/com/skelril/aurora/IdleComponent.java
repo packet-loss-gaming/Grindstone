@@ -11,6 +11,7 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -158,7 +159,15 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
     @EventHandler
     public void onMoveChange(PlayerMoveEvent event) {
 
-        if (event.getFrom().distance(event.getTo()) >= .211) update(event.getPlayer());
+        // Get the locations
+        Location from = event.getFrom().clone();
+        Location to = event.getTo().clone();
+
+        // Ignore vertical shift
+        from.setY(0);
+        to.setY(0);
+
+        if (from.distanceSquared(to) > .04) update(event.getPlayer());
     }
 
     @EventHandler
