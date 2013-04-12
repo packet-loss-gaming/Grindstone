@@ -2,6 +2,7 @@ package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.SessionComponent;
+import com.skelril.aurora.city.engine.ApocalypseComponent;
 import com.skelril.aurora.events.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -29,13 +30,15 @@ import java.util.logging.Logger;
  * @author Turtle9598
  */
 @ComponentInformation(friendlyName = "Creep Speak", desc = "Make mobs talk.")
-@Depend(components = {SessionComponent.class, NinjaComponent.class, RogueComponent.class})
+@Depend(components = {ApocalypseComponent.class, SessionComponent.class, NinjaComponent.class, RogueComponent.class})
 public class CreepSpeakComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    @InjectComponent
+    private ApocalypseComponent apocalypse;
     @InjectComponent
     private SessionComponent sessions;
     @InjectComponent
@@ -145,6 +148,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                             || event.getReason().equals(TargetReason.CLOSEST_PLAYER)
                             || event.getReason().equals(TargetReason.RANDOM_TARGET))) return;
 
+                    if (apocalypse.checkEntity((LivingEntity) entity)) return;
                     color = ChatColor.RED;
                     if (EnvironmentUtil.isServerTimeOdd(time)) {
                         message = "Brainz!!!";
