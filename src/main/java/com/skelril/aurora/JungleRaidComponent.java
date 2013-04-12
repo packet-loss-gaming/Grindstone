@@ -64,6 +64,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
 import java.util.*;
@@ -95,6 +96,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     private static Economy economy = null;
     private static final double BASE_AMT = 12;
     private short attempts = 0;
+    private List<BukkitTask> restorationTask = new ArrayList<>();
 
     private long start = 0;
     private int amt = 7;
@@ -307,14 +309,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     @Override
     public void disable() {
 
+        stopRestore();
         saveInventories();
-    }
-
-    private void saveInventories() {
-
-        for (Player player : server.getOnlinePlayers()) {
-            restorePlayer(player, 0);
-        }
     }
 
     @Override
@@ -481,6 +477,13 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         }
     }
 
+    public void saveInventories() {
+
+        for (Player player : server.getOnlinePlayers()) {
+            restorePlayer(player, 0);
+        }
+    }
+
     private void restorePlayer(Player teamPlayer, double multiplier) {
 
         // Restore Player
@@ -513,6 +516,16 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         }
     }
 
+    public void stopRestore() {
+
+        if (restorationTask.size() < 1) return;
+        Bukkit.broadcastMessage(ChatColor.RED + "Jungle Arena restoration cancelled.");
+        for (BukkitTask task : Collections.synchronizedList(restorationTask)) {
+
+            task.cancel();
+        }
+    }
+
     private void restore() {
 
         BukkitConfiguration worldEditConfig = null;
@@ -521,7 +534,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         } catch (UnknownPluginException e) {
             e.printStackTrace();
         }
-        if (worldEditConfig.snapshotRepo == null) {
+        if ((worldEditConfig != null ? worldEditConfig.snapshotRepo : null) == null) {
             log.warning("No snapshots configured, restoration cancelled.");
             return;
         }
@@ -574,7 +587,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             // Setup task to progressively restore
             final EditSession fakeEditor = new EditSession(new BukkitWorld(world), -1);
             for (final Chunk chunk : chunkList) {
-                server.getScheduler().runTaskLater(inst, new Runnable() {
+                BukkitTask aTask = server.getScheduler().runTaskLater(inst, new Runnable() {
 
                     @Override
                     public void run() {
@@ -634,7 +647,17 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                         }
                     }
                 }, 5 * chunkList.indexOf(chunk));
+                restorationTask.add(aTask);
             }
+
+            // Setup a task to clear out any restoration task
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+
+                    restorationTask.clear();
+                }
+            }, (5 * chunkList.size()) + 20);
         } catch (MissingWorldException e) {
             log.warning("The world: " + config.worldName + " could not be found, restoration cancelled.");
         }
