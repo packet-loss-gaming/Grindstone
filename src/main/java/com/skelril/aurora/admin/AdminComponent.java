@@ -453,7 +453,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
 
         Player player = event.getPlayer();
