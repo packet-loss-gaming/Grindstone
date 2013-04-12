@@ -280,7 +280,20 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         if (to.contains(config.legitWorld) && !from.contains(config.legitWorld)) {
 
             adminComponent.standardizePlayer(player);
-            if (!playerList.contains(player)) ChatUtil.sendNotice(player, "You have entered legit world.");
+            if (!playerList.contains(player)) {
+                ChatUtil.sendNotice(player, "You have entered legit world.");
+
+                // Haha take that Nyghtstarr!
+                World fromW = Bukkit.getWorld(from);
+                if (fromW != null && fromW.isThundering()) {
+
+                    World toW = Bukkit.getWorld(to);
+                    if (toW != null) {
+                        toW.setThundering(true);
+                        toW.setThunderDuration(fromW.getThunderDuration());
+                    }
+                }
+            }
             playerList.add(player);
         } else if (from.contains(config.legitWorld) && !to.contains(config.legitWorld)) {
 
