@@ -126,11 +126,13 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         TravelAgent agent = event.getPortalTravelAgent();
 
         final Player player = event.getPlayer();
+        final Location pLoc = player.getLocation().clone();
         final Location from = event.getFrom();
         final Location to = event.getTo();
 
         final World city = Bukkit.getWorld(config.cityWorld);
         final World wilderness = Bukkit.getWorld(config.wildernessWorld);
+        final World wildernessNether = Bukkit.getWorld(config.wildernessWorld + "_nether");
         boolean kill = false;
 
         if (city == null) {
@@ -139,6 +141,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         }
         if (wilderness == null) {
             log.warning("Please verify the world: " + config.wildernessWorld + " exist.");
+            kill = true;
+        }
+        if (wildernessNether == null) {
+            log.warning("Please verify the world: " + config.wildernessWorld + "_nether exist.");
             kill = true;
         }
         if (kill) return;
@@ -157,6 +163,19 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 break;
             case NETHER_PORTAL:
                 event.useTravelAgent(true);
+
+                if (from.getWorld().equals(wilderness)) {
+                    pLoc.setWorld(wildernessNether);
+                    pLoc.setX(pLoc.getBlockX() / 8);
+                    pLoc.setZ(pLoc.getBlockZ() / 8);
+                    event.setTo(pLoc);
+                } else if (from.getWorld().getName().contains(config.wildernessWorld)) {
+                    pLoc.setWorld(wilderness);
+                    pLoc.setX(pLoc.getBlockX() * 8);
+                    pLoc.setZ(pLoc.getBlockZ() * 8);
+                    event.setTo(pLoc);
+                }
+
                 if (from.getWorld().getName().contains(config.cityWorld))  {
                     agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);
