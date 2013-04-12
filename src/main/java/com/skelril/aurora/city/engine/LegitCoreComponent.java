@@ -19,13 +19,11 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.*;
 
@@ -160,6 +158,55 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         if (world.getName().contains(config.legitWorld)) {
 
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerPortal(PlayerPortalEvent event) {
+
+        TravelAgent agent = event.getPortalTravelAgent();
+
+        final Player player = event.getPlayer();
+        final Location pLoc = player.getLocation().clone();
+        final Location from = event.getFrom();
+
+        final World legit = Bukkit.getWorld(config.legitWorld);
+        final World legitNether = Bukkit.getWorld(config.legitWorld + "_nether");
+        boolean kill = false;
+
+        if (legit == null) {
+            log.warning("Please verify the world: " + config.legitWorld + " exist.");
+            kill = true;
+        }
+        if (legitNether == null) {
+            log.warning("Please verify the world: " + config.legitWorld + "_nether exist.");
+            kill = true;
+        }
+        if (kill) return;
+
+
+        switch (event.getCause()) {
+            case NETHER_PORTAL:
+
+                event.useTravelAgent(true);
+                if (from.getWorld().equals(legit)) {
+                    pLoc.setWorld(legitNether);
+                    pLoc.setX(pLoc.getBlockX() / 8);
+                    pLoc.setZ(pLoc.getBlockZ() / 8);
+                    agent.setCanCreatePortal(true);
+                    event.setPortalTravelAgent(agent);
+                    event.setTo(agent.findOrCreate(pLoc));
+                    return;
+                } else if (from.getWorld().getName().contains(config.legitWorld)) {
+                    pLoc.setWorld(legit);
+                    pLoc.setX(pLoc.getBlockX() * 8);
+                    pLoc.setZ(pLoc.getBlockZ() * 8);
+                    agent.setCanCreatePortal(true);
+                    event.setPortalTravelAgent(agent);
+                    event.setTo(agent.findOrCreate(pLoc));
+                    return;
+                }
+                break;
         }
     }
 
