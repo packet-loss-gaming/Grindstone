@@ -555,12 +555,18 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
+    private static List<PlayerTeleportEvent.TeleportCause> accepted = new ArrayList<>();
+
+    static {
+        accepted.add(PlayerTeleportEvent.TeleportCause.UNKNOWN);
+    }
+
     @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
 
         Player player = event.getPlayer();
 
-        if (map.containsKey(player) && !daveHitList.contains(player)) {
+        if (map.containsKey(player) && !daveHitList.contains(player) && !accepted.contains(event.getCause())) {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You have been tele-blocked!");
         }

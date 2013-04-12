@@ -22,6 +22,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -113,10 +114,16 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         return ArenaType.MONITORED;
     }
 
+    private static List<PlayerTeleportEvent.TeleportCause> accepted = new ArrayList<>();
+
+    static {
+        accepted.add(PlayerTeleportEvent.TeleportCause.UNKNOWN);
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
 
-        if (contains(event.getTo())) {
+        if (contains(event.getTo()) && !accepted.contains(event.getCause())) {
             event.setCancelled(true);
             ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport to that location.");
         }
