@@ -120,6 +120,11 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         return jailCells;
     }
 
+    public void jail(String name, long time) {
+
+        getInmateDatabase().jail(name, "lava-flow", server.getConsoleSender(), "", System.currentTimeMillis() + time);
+    }
+
     public boolean isJailed(Player player) {
 
         return isJailed(player.getName());
