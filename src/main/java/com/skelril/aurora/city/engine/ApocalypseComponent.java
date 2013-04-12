@@ -142,13 +142,13 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         if (target == null || !(target instanceof LivingEntity) || !target.isValid()) return;
         if (attacker == null || !(attacker instanceof LivingEntity) || !attacker.isValid()) return;
-        if (target.getType() == null || attacker.getType() == null || !checkEntity((LivingEntity) attacker)) return;
+        if (target.getType() == null || attacker.getType() == null) return;
 
         Player player;
         switch (target.getType()) {
             case PLAYER:
                 player = (Player) target;
-                if (ItemUtil.hasAncientArmour(player)) {
+                if (ItemUtil.hasAncientArmour(player) && checkEntity((LivingEntity) attacker)) {
                     if (ChanceUtil.getChance(7)) {
 
                         EffectUtil.Ancient.powerBurst(player, event.getDamage());
@@ -159,7 +159,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 LivingEntity defender = (LivingEntity) target;
                 if (attacker instanceof Player) {
                     player = (Player) attacker;
-                    if (ItemUtil.hasMasterSword(player)) {
+                    if (ItemUtil.hasMasterSword(player) && checkEntity(defender)) {
 
                         if (ChanceUtil.getChance(10)) {
                             EffectUtil.Master.healingLight(player, defender);
