@@ -214,10 +214,14 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         EntityType entType = config.attackMob;
 
         if (ent instanceof Skeleton && ((Skeleton) ent).getKiller() != null) {
-            if (world.isThundering() && ChanceUtil.getChance(5)) {
-                event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8) * 2)));
-            } else {
-                event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8))));
+            ItemStack held = ((Skeleton) ent).getEquipment().getItemInHand();
+            if (held != null && held.getTypeId() == ItemID.BOW) {
+                if (world.isThundering() && ChanceUtil.getChance(5)) {
+                    event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8) * 2)));
+                } else {
+                    event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8))));
+
+                }
             }
         }
 
