@@ -1,6 +1,7 @@
 package com.skelril.aurora.city.engine;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
@@ -322,7 +323,13 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                         Location ls;
 
                         for (int i = 0; i < ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i++) {
-                            ls = LocationUtil.findFreePosition(LocationUtil.findRandomLoc(playerBlock, 8, true));
+
+                            ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
+
+                            if (!BlockType.isTranslucent(ls.getBlock().getTypeId())) {
+                                ls = player.getLocation();
+                            }
+
                             ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, ls);
                             server.getPluginManager().callEvent(apocalypseEvent);
 
