@@ -28,6 +28,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -618,7 +619,16 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     public void onBlockBreak(BlockBreakEvent event) {
 
         if (players.contains(event.getPlayer().getName())) {
-            ChatUtil.sendNotice(event.getPlayer(), ChatColor.DARK_RED, "You don't have permission for this area.");
+            ChatUtil.sendNotice(event.getPlayer(), ChatColor.DARK_RED, "Are you sure that's a good idea right now?");
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent event) {
+
+        if (players.contains(event.getPlayer().getName())) {
+            ChatUtil.sendNotice(event.getPlayer(), ChatColor.DARK_RED, "Are you sure that's a good idea right now?");
             event.setCancelled(true);
         }
     }
