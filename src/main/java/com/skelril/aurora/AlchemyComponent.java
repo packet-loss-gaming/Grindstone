@@ -44,20 +44,29 @@ public class AlchemyComponent extends BukkitComponent implements Listener {
                 }
 
                 if (item.getTypeId() == BlockID.TNT) {
-                    player.setHealth(1);
-                    player.getWorld().createExplosion(player.getLocation(), 0);
+                    double x, y, z;
+                    x = player.getLocation().getX();
+                    y = Math.max(0, player.getLocation().getY() - 2);
+                    z = player.getLocation().getZ();
+                    player.getWorld().createExplosion(x, y, z, 4, false, false);
                     throw new CommandException("The TNT explodes!");
                 }
                 Set<ItemStack> itemStacks = getBaseItemStack(item);
 
 
-                if (itemStacks == null) throw new CommandException("You cannot break this item down.");
+                if (itemStacks == null || item.getItemMeta().hasDisplayName()) {
+                    throw new CommandException("You cannot break this item down.");
+                }
                 if (item.getDurability() != 0 && item.getTypeId() != ItemID.GOLD_APPLE) {
                     throw new CommandException("You cannot break a damaged item down!");
                 }
 
                 player.getInventory().setItemInHand(new ItemStack(BlockID.AIR));
                 for (ItemStack itemStack : itemStacks) {
+                    if (player.getInventory().firstEmpty() == -1) {
+                        player.getWorld().dropItem(player.getLocation(), itemStack);
+                        continue;
+                    }
                     player.getInventory().addItem(itemStack);
                 }
             } else {
