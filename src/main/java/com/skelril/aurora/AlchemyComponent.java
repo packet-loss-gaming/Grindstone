@@ -46,9 +46,9 @@ public class AlchemyComponent extends BukkitComponent implements Listener {
                 if (item.getTypeId() == BlockID.TNT) {
                     double x, y, z;
                     x = player.getLocation().getX();
-                    y = Math.max(0, player.getLocation().getY() - 2);
+                    y = player.getLocation().getY();
                     z = player.getLocation().getZ();
-                    player.getWorld().createExplosion(x, y, z, 4, false, false);
+                    player.getWorld().createExplosion(x, y, z, 2, false, false);
                     throw new CommandException("The TNT explodes!");
                 }
                 Set<ItemStack> itemStacks = getBaseItemStack(item);
