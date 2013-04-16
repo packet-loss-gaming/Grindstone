@@ -23,10 +23,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -160,7 +157,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                     Location cellLoc = cell.get(player).getLocation();
                     if (player.getWorld() != cellLoc.getWorld()
                             || loc.distanceSquared(cellLoc) > MOVE_THRESHOLD_SQ) {
-                        player.teleport(cell.get(player).getLocation());
+                        player.teleport(cell.get(player).getLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     }
                 }
 
