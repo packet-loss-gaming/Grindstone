@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 /**
  * Author: Turtle9598
  */
-public class Prayer implements Comparable {
+public class Prayer implements Comparable<Prayer> {
 
     private final Player player;
     private final AbstractPrayer abstractPrayer;
@@ -59,11 +59,10 @@ public class Prayer implements Comparable {
     }
 
     @Override
-    public int compareTo(Object o) {
+    public int compareTo(Prayer prayer) {
 
-        if (o == null || !(o instanceof Prayer)) return 0;
+        if (prayer == null) return 0;
 
-        Prayer prayer = (Prayer) o;
         if (this.getEffect().getType().getValue() == prayer.getEffect().getType().getValue()) return 0;
         if (this.getEffect().getType().getValue() > prayer.getEffect().getType().getValue()) return 1;
         return -1;
