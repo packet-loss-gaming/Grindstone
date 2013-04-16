@@ -358,6 +358,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     private void spawnAndArm(Location location, EntityType type, boolean allowItemPickup) {
 
+        if (!location.getChunk().isLoaded()) return;
+
         Entity e = spawn(location, type);
         if (e == null) return;
         if (e instanceof Zombie && ChanceUtil.getChance(16)) {
