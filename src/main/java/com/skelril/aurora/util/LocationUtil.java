@@ -154,37 +154,22 @@ public class LocationUtil {
 
     public static Location findRandomLoc(Block searchFromLocation, final int radius, boolean trueRandom) {
 
-        int trueRadius = radius;
-        if (trueRandom)
-            trueRadius = ChanceUtil.getRandom(radius);
+        return findRandomLoc(searchFromLocation, radius, trueRandom, true);
+    }
 
-        switch (ChanceUtil.getRandom(8)) {
-            case 1:
-                return findFreePosition(searchFromLocation.getRelative(BlockFace.NORTH,
-                        ChanceUtil.getRandom(trueRadius)).getLocation());
-            case 2:
-                return findFreePosition(searchFromLocation.getRelative(BlockFace.SOUTH,
-                        ChanceUtil.getRandom(trueRadius)).getLocation());
-            case 3:
-                return findFreePosition(searchFromLocation.getRelative(BlockFace.EAST,
-                        ChanceUtil.getRandom(trueRadius)).getLocation());
-            case 4:
-                return findFreePosition(searchFromLocation.getRelative(BlockFace.WEST,
-                        ChanceUtil.getRandom(trueRadius)).getLocation());
-            case 5:
-                return findFreePosition(searchFromLocation.getRelative(BlockFace.NORTH_EAST,
-                        ChanceUtil.getRandom(trueRadius)).getLocation());
-            case 6:
-                return findFreePosition(searchFromLocation.getRelative(BlockFace.NORTH_WEST,
-                        ChanceUtil.getRandom(trueRadius)).getLocation());
-            case 7:
-                return findFreePosition(searchFromLocation.getRelative(BlockFace.SOUTH_EAST,
-                        ChanceUtil.getRandom(trueRadius)).getLocation());
-            case 8:
-                return findFreePosition(searchFromLocation.getRelative(BlockFace.SOUTH_WEST,
-                        ChanceUtil.getRandom(trueRadius)).getLocation());
-            default:
-                return null;
+    public static Location findRandomLoc(Block searchFromLocation, final int radius, boolean trueRandom, boolean airOnly) {
+
+        int trueRadius = trueRandom ? ChanceUtil.getRandom(radius) : radius;
+
+        BlockFace dir;
+        do {
+            dir = BlockFace.values()[(ChanceUtil.getRandom(BlockFace.values().length) - 1)];
+        } while (dir == null);
+
+        if (airOnly) {
+            return findFreePosition(searchFromLocation.getRelative(dir, trueRadius).getLocation());
+        } else {
+            return searchFromLocation.getRelative(dir, trueRadius).getLocation();
         }
     }
 
