@@ -353,6 +353,18 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 }
             }
 
+            // Kill missing players
+            for (Map.Entry<String, Integer> entry : teams.entrySet()) {
+                try {
+                    Player player = Bukkit.getPlayerExact(entry.getKey());
+                    if (player == null || !player.isValid() || contains(player.getLocation())) continue;
+                    player.setHealth(0);
+                } catch (Exception e) {
+                    teams.remove(entry.getKey());
+                    e.printStackTrace();
+                }
+            }
+
             if (!isJungleRaidActive()) return;
 
             // Security
@@ -767,6 +779,19 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         Player player = (Player) e;
 
         if (isInJungleRaidTeam(player)) {
+
+            if (!isJungleRaidActive()) {
+                event.setCancelled(true);
+
+                if (event instanceof EntityDamageByEntityEvent) {
+
+                    Entity attacker = ((EntityDamageByEntityEvent) event).getDamager();
+                    if (!(attacker instanceof Player)) return;
+                    ChatUtil.sendError((Player) attacker, "The game has not yet started!");
+                }
+                return;
+            }
+
             switch (event.getCause()) {
                 case FALL:
                     if (LocationUtil.getBelowID(e.getLocation(), BlockID.LEAVES)
@@ -787,9 +812,6 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                             && !(event instanceof EntityDamageByEntityEvent)) {
                         event.setDamage(Math.min(event.getDamage(), 2));
                     }
-                case FIRE:
-                    if (!isJungleRaidActive()) event.setCancelled(true);
-                    break;
             }
         } else if (contains(player.getLocation())) {
             player.teleport(player.getWorld().getSpawnLocation());
@@ -825,12 +847,6 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         if (!isInJungleRaidTeam(attackingPlayer)) return;
         if (!isInJungleRaidTeam(defendingPlayer)) {
             ChatUtil.sendWarning(attackingPlayer, "Don't attack bystanders.");
-            return;
-        }
-
-        if (!isJungleRaidActive()) {
-            event.setCancelled(true);
-            ChatUtil.sendError(attackingPlayer, "The game has not yet started!");
             return;
         }
 
@@ -872,11 +888,13 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 fades = killerColor == 1 ? Arrays.asList(Color.BLUE) : Arrays.asList(Color.RED);
             }
 
+            final Location playerLoc = player.getLocation().clone();
+
             for (int i = 0; i < 12; i++) {
                 server.getScheduler().runTaskLater(inst, new Runnable() {
                     @Override
                     public void run() {
-                        Firework firework = (Firework) world.spawnEntity(player.getLocation(), EntityType.FIREWORK);
+                        Firework firework = (Firework) world.spawnEntity(playerLoc, EntityType.FIREWORK);
                         FireworkMeta meta = firework.getFireworkMeta();
                         FireworkEffect.Builder builder = FireworkEffect.builder();
                         builder.flicker(ChanceUtil.getChance(2));
@@ -1112,7 +1130,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
             ChatUtil.sendNotice(targetPlayer, ChatColor.DARK_GREEN, "Currently present players:");
             for (Player player : getContainedPlayers()) {
-                if (targetPlayer.equals(player)) continue;
+                if (!player.isValid() || targetPlayer.equals(player)) continue;
                 ChatUtil.sendNotice(targetPlayer, ChatColor.GREEN, player.getName());
                 ChatUtil.sendNotice(player, ChatColor.DARK_GREEN,
                         targetPlayer.getName() + " has joined the Jungle Raid.");
@@ -1147,6 +1165,12 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                         || prayer.getEffect().getType().equals(PrayerType.WALK)) {
                     prayerComponent.uninfluencePlayer(targetPlayer, prayer);
                 }
+            }
+
+            for (Player player : getContainedPlayers()) {
+                if (!player.isValid() || targetPlayer.equals(player)) continue;
+                ChatUtil.sendNotice(player, ChatColor.DARK_GREEN,
+                        targetPlayer.getName() + " has left the Jungle Raid.");
             }
 
             if (teams.size() < 2 && (isJungleRaidActive() || isJungleRaidInitialised())) {
