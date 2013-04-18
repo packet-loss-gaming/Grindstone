@@ -23,7 +23,6 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -31,6 +30,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -92,6 +92,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         // First spawn requirement
         getMinionSpawnPts();
+
+        // Set difficulty
+        difficulty = getWorld().getDifficulty().getValue();
     }
 
     @Override
@@ -123,7 +126,6 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @Override
     public void spawnBoss() {
 
-        difficulty = getWorld().getDifficulty().getValue();
         spawnPts.clear();
 
         BlockVector min = getRegion().getMinimumPoint();
@@ -276,14 +278,6 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         return ArenaType.MONITORED;
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent event) {
-
-        if (contains(event.getBlock()) && !inst.hasPermission(event.getPlayer(), "aurora.boss.builder")) {
-            event.setCancelled(true);
-        }
-    }
-
     private static final List<PlayerTeleportEvent.TeleportCause> causes = new ArrayList<>(2);
 
     static {
@@ -315,6 +309,26 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     public void onCreepSpeak(CreepSpeakEvent event) {
 
         if (contains(event.getPlayer(), 1) || contains(event.getTargeter(), 1)) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onThunderChange(ThunderChangeEvent event) {
+
+        if (event.getWorld().equals(getWorld())) {
+
+            int diff = getWorld().getDifficulty().getValue();
+            if (event.toThunderState()) {
+                difficulty = diff + diff;
+            } else {
+                difficulty = diff;
+            }
+
+            if (isBossSpawned()) {
+                int newHealth = 510 + (difficulty * 80);
+                boss.setHealth(Math.min(boss.getHealth(), newHealth));
+                boss.setMaxHealth(newHealth);
+            }
+        }
     }
 
     /*
