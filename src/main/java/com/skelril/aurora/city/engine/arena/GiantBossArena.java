@@ -444,7 +444,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
             if (ChanceUtil.getChance(7)) {
                 for (Location spawnPt : spawnPts) {
-                    if (ChanceUtil.getChance(36 - (difficulty * 6))) {
+                    if (ChanceUtil.getChance(18)) {
                         for (int i = 0; i < Math.max(3, contained.length); i++) {
                             Zombie z = (Zombie) getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
                             z.setBaby(true);
