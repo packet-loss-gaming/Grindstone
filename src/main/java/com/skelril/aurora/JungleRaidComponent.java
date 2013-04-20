@@ -52,6 +52,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
+import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
@@ -101,6 +102,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     private long start = 0;
     private int amt = 7;
     private static final int potionAmt = PotionType.values().length;
+
+    private String titan = "";
 
     @InjectComponent
     AdminComponent adminComponent;
@@ -356,6 +359,11 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             // Kill missing players
             for (Map.Entry<String, Integer> entry : teams.entrySet()) {
                 try {
+                    if (!playerState.containsKey(entry.getKey())) {
+                        teams.remove(entry.getKey());
+                        continue;
+                    }
+
                     Player player = Bukkit.getPlayerExact(entry.getKey());
                     if (player == null || !player.isValid() || contains(player.getLocation())) continue;
                     player.setHealth(0);
@@ -501,6 +509,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         // Restore Player
         if (playerState.containsKey(teamPlayer.getName())) {
 
+            prayerComponent.uninfluencePlayer(teamPlayer);
+
             if (multiplier > 0 && economy != null) {
                 economy.depositPlayer(teamPlayer.getName(), BASE_AMT * multiplier);
                 ChatUtil.sendNotice(teamPlayer, "You received: " + economy.format(BASE_AMT * multiplier)
@@ -536,6 +546,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
             task.cancel();
         }
+        restorationTask.clear();
     }
 
     private void restore() {
@@ -855,6 +866,11 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             event.setCancelled(true);
             ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
         } else {
+
+            if (gameFlags.contains('T') && titan.equals(attackingPlayer.getName())) {
+                event.setDamage(event.getDamage() * 2);
+            }
+
             if (gameFlags.contains('d')) {
                 event.setDamage(200);
                 ChatUtil.sendNotice(attackingPlayer, "You've killed " + defendingPlayer.getName() + "!");
@@ -927,6 +943,19 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 restorePlayer(p, 1);
             }
         }, 1);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockDamage(BlockDamageEvent event) {
+
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+
+        if (gameFlags.contains('T') && contains(block.getLocation())) {
+            if (titan.equals(player.getName()) && block.getTypeId() != BlockID.BEDROCK) {
+                event.setInstaBreak(true);
+            }
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -1225,7 +1254,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         @Command(aliases = {"start", "s"},
                 usage = "", desc = "Jungle Raid start command",
-                flags = "sdajbtfmxghpS", min = 0, max = 0)
+                flags = "sdajbtfmxghpST", min = 0, max = 0)
         @CommandPermissions({"aurora.jr.start"})
         public void startJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -1246,6 +1275,36 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             ChatUtil.sendNotice(players, ChatColor.GREEN, "Team one and all neutral players can now run!");
             if (gameFlags.size() > 0) {
                 ChatUtil.sendNotice(players, ChatColor.GREEN + "The following flags are enabled: ");
+                if (gameFlags.contains('T')) {
+                    ChatUtil.sendNotice(players, "Titan Mode");
+
+                    String[] playersArr = teams.keySet().toArray(new String[teams.keySet().size()]);
+                    for (String playerName : playersArr) {
+                        teams.put(playerName, 0);
+
+                        try {
+                            final Player player = Bukkit.getPlayerExact(playerName);
+                            if (player == null || !player.isValid()) continue;
+
+                            PlayerInventory pInventory = player.getInventory();
+                            ItemStack[] stacks = pInventory.getArmorContents();
+
+                            for (ItemStack stack : stacks) {
+                                if (stack == null || !stack.hasItemMeta()) continue;
+                                if (stack.getItemMeta() instanceof LeatherArmorMeta) {
+                                    LeatherArmorMeta meta = (LeatherArmorMeta) stack.getItemMeta();
+                                    meta.setColor(Color.BLACK);
+                                    stack.setItemMeta(meta);
+                                }
+                            }
+                            pInventory.setArmorContents(stacks);
+                        } catch (Exception e) {
+                            teams.remove(playerName);
+                            e.printStackTrace();
+                        }
+                    }
+                    titan = playersArr[ChanceUtil.getRandom(players.length) - 1];
+                }
                 if (gameFlags.contains('h')) {
                     ChatUtil.sendWarning(players, "Survival Mode");
                     for (Player player : players) {
