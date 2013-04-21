@@ -43,9 +43,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -413,6 +411,17 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
+    private static Set<InventoryType> accepted = new HashSet<>();
+
+    static {
+        accepted.add(InventoryType.PLAYER);
+        accepted.add(InventoryType.CRAFTING);
+        accepted.add(InventoryType.CREATIVE);
+        accepted.add(InventoryType.ENCHANTING);
+        accepted.add(InventoryType.WORKBENCH);
+        accepted.add(InventoryType.ANVIL);
+    }
+
     @EventHandler
     public void onPlayerClick(InventoryClickEvent event) {
 
@@ -425,9 +434,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         //InventoryType.SlotType st = event.getSlotType();
         if (isAdmin(player) && (event.getCurrentItem() != null && event.getCurrentItem().getTypeId() != 0
                 || event.getCursor() != null && event.getCursor().getTypeId() != 0)
-                && !(event.getInventory().getType().equals(InventoryType.PLAYER)
-                || event.getInventory().getType().equals(InventoryType.CREATIVE)
-                || event.getInventory().getType().equals(InventoryType.CRAFTING))) {
+                && !accepted.contains(event.getInventory().getType())) {
             event.setResult(Event.Result.DENY);
             ChatUtil.sendWarning((Player) event.getWhoClicked(), "You cannot do this while in admin mode.");
         }

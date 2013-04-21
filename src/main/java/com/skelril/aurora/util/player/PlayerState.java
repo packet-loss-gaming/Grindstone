@@ -43,7 +43,7 @@ public class PlayerState extends GenericWealthStore {
         this.hunger = hunger;
         this.saturation = saturation;
         this.exhaustion = exhaustion;
-        this.location = location;
+        this.location = location == null ? null : location.clone();
     }
 
     public PlayerState(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents, int health,
@@ -56,7 +56,7 @@ public class PlayerState extends GenericWealthStore {
         this.exhaustion = exhaustion;
         this.level = level;
         this.experience = experience;
-        this.location = location;
+        this.location = location == null ? null : location.clone();
     }
 
 
@@ -127,7 +127,7 @@ public class PlayerState extends GenericWealthStore {
 
     public void setLocation(Location location) {
 
-        this.location = location;
+        this.location = location == null ? null : location.clone();
     }
 
 }

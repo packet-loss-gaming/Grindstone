@@ -18,14 +18,23 @@ public abstract class GenericWealthStore {
     public GenericWealthStore(String ownerName, ItemStack[] inventoryContents) {
 
         this.ownerName = ownerName;
-        this.inventoryContents = inventoryContents;
+        this.inventoryContents = new ItemStack[inventoryContents.length];
+        for (int i = 0; i < inventoryContents.length; i++) {
+            this.inventoryContents[i] = inventoryContents[i] == null ? null : inventoryContents[i].clone();
+        }
     }
 
     public GenericWealthStore(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents) {
 
         this.ownerName = ownerName;
-        this.inventoryContents = inventoryContents;
-        this.armourContents = armourContents;
+        this.inventoryContents = new ItemStack[inventoryContents.length];
+        for (int i = 0; i < inventoryContents.length; i++) {
+            this.inventoryContents[i] = inventoryContents[i] == null ? null : inventoryContents[i].clone();
+        }
+        this.armourContents = new ItemStack[armourContents.length];
+        for (int i = 0; i < armourContents.length; i++) {
+            this.armourContents[i] = armourContents[i] == null ? null : armourContents[i].clone();
+        }
     }
 
     public GenericWealthStore(String ownerName, List<ItemStack> itemStacks) {
@@ -64,7 +73,10 @@ public abstract class GenericWealthStore {
 
     public void setArmourContents(ItemStack[] armourContents) {
 
-        this.armourContents = armourContents;
+        this.armourContents = new ItemStack[armourContents.length];
+        for (int i = 0; i < armourContents.length; i++) {
+            this.armourContents[i] = armourContents[i] == null ? null : armourContents[i].clone();
+        }
     }
 
     public ItemStack[] getInventoryContents() {
@@ -74,7 +86,10 @@ public abstract class GenericWealthStore {
 
     public void setInventoryContents(ItemStack[] inventoryContents) {
 
-        this.inventoryContents = inventoryContents;
+        this.inventoryContents = new ItemStack[inventoryContents.length];
+        for (int i = 0; i < inventoryContents.length; i++) {
+            this.inventoryContents[i] = inventoryContents[i] == null ? null : inventoryContents[i].clone();
+        }
     }
 
     public List<ItemStack> getItemStacks() {
