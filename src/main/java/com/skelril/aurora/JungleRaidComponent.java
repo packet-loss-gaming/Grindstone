@@ -8,6 +8,7 @@ import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitConfiguration;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
@@ -63,6 +64,7 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitTask;
@@ -223,8 +225,15 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
     private void removeFromJungleRaidTeam(Player player) {
 
-        teams.remove(player.getName());
+        removeFromJungleRaidTeam(player, false);
     }
+
+    private void removeFromJungleRaidTeam(Player player, boolean freeWill) {
+
+        teams.remove(player.getName());
+        if (freeWill) player.sendMessage(ChatColor.YELLOW + "You have left the Jungle Raid.");
+    }
+
 
     private boolean isJungleRaidActive() {
 
@@ -373,10 +382,12 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 }
             }
 
-            if (!isJungleRaidActive()) return;
+            if (!isJungleRaidInitialised()) return;
 
             // Security
             for (Player player : getContainedPlayers()) {
+
+                if (!player.isValid()) continue;
 
                 if (!player.getGameMode().equals(GameMode.SURVIVAL)) {
                     if (player.isFlying()) {
@@ -385,7 +396,15 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                         player.setGameMode(GameMode.SURVIVAL);
                     } else player.setGameMode(GameMode.SURVIVAL);
                 }
+
+                if (gameFlags.contains('T') && titan.equals(player.getName())) {
+
+                    player.removePotionEffect(PotionEffectType.NIGHT_VISION);
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 20 * 20, 1, true));
+                }
             }
+
+            if (!isJungleRaidActive()) return;
 
             // Sudden death
             boolean suddenD = !gameFlags.contains('S')
@@ -398,7 +417,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 BlockVector bvMax = region.getMaximumPoint();
                 BlockVector bvMin = region.getMinimumPoint();
 
-                for (int i = 0; i < ChanceUtil.getRandom(Math.min(100, amt)); i++) {
+                for (int i = 0; i < ChanceUtil.getRandom(amt); i++) {
 
                     Vector v = LocationUtil.pickLocation(bvMin.getX(), bvMax.getX(),
                             bvMin.getZ(), bvMax.getZ()).add(0, bvMax.getY(), 0);
@@ -409,9 +428,9 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     if (gameFlags.contains('a') || suddenD) {
                         TNTPrimed e = (TNTPrimed) world.spawnEntity(testLoc, EntityType.PRIMED_TNT);
                         e.setVelocity(new org.bukkit.util.Vector(
-                                random.nextDouble() * 2.0 - 1.5,
+                                random.nextDouble() * 2.0 - 1,
                                 random.nextDouble() * 2 * -1,
-                                random.nextDouble() * 2.0 - 1.5));
+                                random.nextDouble() * 2.0 - 1));
                         if (ChanceUtil.getChance(4)) e.setIsIncendiary(true);
                     }
                     if (gameFlags.contains('p')) {
@@ -421,16 +440,16 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                             ThrownPotion potion = (ThrownPotion) world.spawnEntity(testLoc, EntityType.SPLASH_POTION);
                             potion.setItem(new Potion(type).splash().toItemStack(1));
                             potion.setVelocity(new org.bukkit.util.Vector(
-                                    random.nextDouble() * 2.0 - 1.75,
+                                    random.nextDouble() * 2.0 - 1,
                                     0,
-                                    random.nextDouble() * 2.0 - 1.75));
+                                    random.nextDouble() * 2.0 - 1));
                         }
                     }
                     if (gameFlags.contains('g')) {
                         testLoc.getWorld().dropItem(testLoc, new ItemStack(ItemID.SNOWBALL, ChanceUtil.getRandom(3)));
                     }
                 }
-                if (ChanceUtil.getChance(gameFlags.contains('s') ? 9 : 25)) amt++;
+                if (amt < 100 && ChanceUtil.getChance(gameFlags.contains('s') ? 9 : 25)) amt++;
             }
 
             // Team Counter
@@ -797,8 +816,16 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 if (event instanceof EntityDamageByEntityEvent) {
 
                     Entity attacker = ((EntityDamageByEntityEvent) event).getDamager();
+                    boolean wasProjectile = attacker instanceof Projectile;
+                    if (wasProjectile) {
+                        attacker = ((Projectile) attacker).getShooter();
+                    }
                     if (!(attacker instanceof Player)) return;
                     ChatUtil.sendError((Player) attacker, "The game has not yet started!");
+
+                    if (!wasProjectile) {
+                        attacker.teleport(new Location(world, config.x, config.y, config.z));
+                    }
                 }
                 return;
             }
@@ -888,7 +915,16 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             int killerColor = 0;
             int teamColor = teams.get(player.getName());
             Player killer = player.getKiller();
-            if (killer != null && isInJungleRaidTeam(killer)) killerColor = teams.get(killer.getName());
+            if (killer != null && isInJungleRaidTeam(killer)) {
+                killerColor = teams.get(killer.getName());
+                if (gameFlags.contains('T') && killer.isValid()) {
+                    if (titan.equals(player.getName())) {
+                        titan = killer.getName();
+                    } else if (titan.equals(killer.getName())) {
+                        killerColor = -1;
+                    }
+                }
+            }
 
             final List<Color> colors;
             if (teamColor < 1) {
@@ -898,7 +934,9 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             }
 
             final List<Color> fades;
-            if (killerColor < 1) {
+            if (killerColor == -1) {
+                fades = Arrays.asList(Color.BLACK);
+            } else if (killerColor < 1) {
                 fades = Arrays.asList(Color.WHITE);
             } else {
                 fades = killerColor == 1 ? Arrays.asList(Color.BLUE) : Arrays.asList(Color.RED);
@@ -924,6 +962,15 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 }, i * 4);
             }
 
+            if (killer != null) {
+                if (killerColor == -1) {
+                    event.setDeathMessage(player.getName() + " has been taken out by the titan");
+                } else {
+                    event.setDeathMessage(player.getName() + " has been taken out by " + killer.getName());
+                }
+            } else {
+                event.setDeathMessage(player.getName() + " is out");
+            }
             event.getDrops().clear();
             event.setDroppedExp(0);
             removeFromJungleRaidTeam(player);
@@ -965,13 +1012,16 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         if (isInJungleRaidTeam(player)) {
             if (!isJungleRaidInitialised()) {
+                ChatUtil.sendError(player, "The game has not yet started.");
                 event.setCancelled(true);
             } else if (gameFlags.contains('b')) {
                 ChatUtil.sendError(player, "You cannot break blocks by hand this game.");
                 event.setCancelled(true);
             } else if (gameFlags.contains('m')) {
-                int bt = event.getBlock().getTypeId();
-                if (bt == BlockID.STONE || bt == BlockID.DIRT || bt == BlockID.GRASS) event.setCancelled(true);
+                if (BlockType.isNaturalTerrainBlock(event.getBlock().getTypeId())) {
+                    ChatUtil.sendError(player, "You cannot mine this game.");
+                    event.setCancelled(true);
+                }
             }
         }
     }
@@ -1112,6 +1162,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     throw new CommandException("You cannot add players while a Jungle Raid game is active!");
                 } else if (isInJungleRaidTeam(targetPlayer)) {
                     throw new CommandException("You are already in a Jungle Raid.");
+                } else if (targetPlayer.isSleeping()) {
+                    throw new CommandException("You cannot join while sleeping.");
                 }
                 addToJungleRaidTeam(targetPlayer, 0, args.getFlags());
             } else if (args.argsLength() == 1) {
@@ -1124,6 +1176,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     throw new CommandException("You cannot add players while a Jungle Raid game is active!");
                 } else if (isInJungleRaidTeam(targetPlayer)) {
                     throw new CommandException("You are already in a Jungle Raid.");
+                } else if (targetPlayer.isSleeping()) {
+                    throw new CommandException("You cannot join while sleeping.");
                 }
 
                 try {
@@ -1146,6 +1200,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     throw new CommandException("You cannot add players while a Jungle Raid game is active!");
                 } else if (isInJungleRaidTeam(targetPlayer)) {
                     throw new CommandException("That player is already in a Jungle Raid.");
+                } else if (targetPlayer.isSleeping()) {
+                    throw new CommandException("That player is sleeping.");
                 }
                 try {
                     int integer = Integer.parseInt(args.getString(1));
@@ -1157,12 +1213,15 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 }
             }
 
-            ChatUtil.sendNotice(targetPlayer, ChatColor.DARK_GREEN, "Currently present players:");
-            for (Player player : getContainedPlayers()) {
-                if (!player.isValid() || targetPlayer.equals(player)) continue;
-                ChatUtil.sendNotice(targetPlayer, ChatColor.GREEN, player.getName());
-                ChatUtil.sendNotice(player, ChatColor.DARK_GREEN,
-                        targetPlayer.getName() + " has joined the Jungle Raid.");
+            Player[] containedPlayers = getContainedPlayers();
+            if (containedPlayers.length > 1) {
+                ChatUtil.sendNotice(targetPlayer, ChatColor.DARK_GREEN, "Currently present players:");
+                for (Player player : containedPlayers) {
+                    if (!player.isValid() || targetPlayer.equals(player)) continue;
+                    ChatUtil.sendNotice(targetPlayer, ChatColor.GREEN, player.getName());
+                    ChatUtil.sendNotice(player, ChatColor.DARK_GREEN,
+                            targetPlayer.getName() + " has joined the Jungle Raid.");
+                }
             }
         }
 
@@ -1185,7 +1244,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             if (!isInJungleRaidTeam(targetPlayer)) throw new CommandException("That player is not currently in a " +
                     "Jungle Raid team.");
 
-            removeFromJungleRaidTeam(targetPlayer);
+            removeFromJungleRaidTeam(targetPlayer, true);
             restorePlayer(targetPlayer, 0);
 
 
