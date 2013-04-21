@@ -30,6 +30,7 @@ import org.bukkit.event.player.*;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -107,24 +108,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
             Player player = (Player) sender;
 
-            if (player.getWorld().getName().contains(config.legitWorld)) {
-                try {
-                    Location l = mainHomeDatabase.getBedLocation(player);
-                    if (l != null && !l.getWorld().getName().contains(config.legitWorld)) {
-                        player.teleport(l);
-                    } else {
-                        player.teleport(Bukkit.getWorld(config.cityWorld).getSpawnLocation());
-                    }
-                } catch (Exception e) {
-                    log.warning("Please verify the world: " + config.cityWorld + "exists.");
-                }
-            } else {
-                try {
-                    player.teleport(getRespawnLocation(player));
-                } catch (Exception e) {
-                    log.warning("Please verify the world: " + config.legitWorld + "exists.");
-                }
-            }
+            player.teleport(getTo(player, player.getWorld().getName().contains(config.legitWorld)));
         }
     }
 
@@ -330,5 +314,67 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
         if (adminComponent.isAdmin(player)) return;
         if (player.getWorld().getName().contains(config.legitWorld) && event.isFlying()) event.setCancelled(true);
+    }
+
+    private ConcurrentHashMap<String, LocationIndex> legitIndex = new ConcurrentHashMap<>();
+
+    public Location getTo(Player player, boolean fromLegit) {
+
+        LocationIndex index;
+        if (fromLegit) {
+            if (legitIndex.containsKey(player.getName())) {
+                index = legitIndex.get(player.getName());
+                index.setLegitIndex(player.getLocation());
+                Location from = index.getFromIndex();
+                return from != null ? from : mainHomeDatabase.getRespawnLocation(player);
+            } else {
+                index = new LocationIndex(player.getLocation(), mainHomeDatabase.getRespawnLocation(player));
+                legitIndex.put(player.getName(), index);
+                return mainHomeDatabase.getRespawnLocation(player);
+            }
+        } else {
+            if (legitIndex.containsKey(player.getName())) {
+                index = legitIndex.get(player.getName());
+                index.setFromIndex(player.getLocation());
+                Location legit = index.getLegitIndex();
+                return legit != null ? legit : getRespawnLocation(player);
+            } else {
+                index = new LocationIndex(getRespawnLocation(player), player.getLocation());
+                legitIndex.put(player.getName(), index);
+                return getRespawnLocation(player);
+            }
+        }
+    }
+
+    private class LocationIndex {
+
+        Location legitIndex;
+        Location fromIndex;
+
+        public LocationIndex(Location legit, Location from) {
+
+            legitIndex = legit;
+            fromIndex = from;
+        }
+
+        public Location getLegitIndex() {
+
+            return legitIndex;
+        }
+
+        public void setLegitIndex(Location legitIndex) {
+
+            this.legitIndex = legitIndex;
+        }
+
+        public Location getFromIndex() {
+
+            return fromIndex;
+        }
+
+        public void setFromIndex(Location fromIndex) {
+
+            this.fromIndex = fromIndex;
+        }
     }
 }
