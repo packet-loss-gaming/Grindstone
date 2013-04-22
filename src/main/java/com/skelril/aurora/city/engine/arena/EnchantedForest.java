@@ -4,6 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
@@ -179,19 +180,15 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     switch (pInv.getItemInHand().getTypeId()) {
                         case ItemID.DIAMOND_AXE:
                             pInv.addItem(new ItemStack(ItemID.DIAMOND, 2), new ItemStack(ItemID.STICK, 2));
-                            ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                             break;
                         case ItemID.GOLD_AXE:
                             pInv.addItem(new ItemStack(ItemID.GOLD_BAR, 2), new ItemStack(ItemID.STICK, 2));
-                            ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                             break;
                         case ItemID.IRON_AXE:
                             pInv.addItem(new ItemStack(ItemID.IRON_BAR, 2), new ItemStack(ItemID.STICK, 2));
-                            ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                             break;
                         case ItemID.WOOD_AXE:
                             pInv.addItem(new ItemStack(BlockID.WOOD, 2), new ItemStack(ItemID.STICK, 2));
-                            ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                             break;
                         default:
                             hasAxe = false;
@@ -206,6 +203,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     }
 
                     if (hasAxe) {
+                        ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                         server.getScheduler().runTaskLater(inst, new Runnable() {
                             @Override
                             public void run() {
@@ -236,7 +234,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     ChatUtil.sendWarning(player, "You might need this friend ;)");
                     getWorld().dropItemNaturally(player.getLocation(), potion);
                     int waves = 5 * ChanceUtil.getRandom(3);
-                    for (int i = 1; i < waves; i++) {
+                    for (int i = 0; i < waves; i++) {
                         server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
 
                             @Override
@@ -268,7 +266,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                 }
 
                             }
-                        }, 20 * 7 * i);
+                        }, 20 * 7 * (i + 1));
                     }
                     server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
 
@@ -289,8 +287,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                 v = v.add(0, 83, 0);
                                 if (getRegion().contains(v.getBlockX(), v.getBlockY(), v.getBlockZ())) {
                                     Block b = getWorld().getBlockAt(v.getBlockX(), v.getBlockY(), v.getBlockZ());
-                                    if (b.getTypeId() == BlockID.AIR
-                                            || EnvironmentUtil.isShrubBlock(b.getTypeId())) {
+                                    if (BlockType.canPassThrough(b.getTypeId())) {
                                         Slime s = (Slime) getWorld().spawnEntity(b.getLocation(), EntityType.SLIME);
                                         s.setSize(16);
                                         s.setRemoveWhenFarAway(false);
@@ -302,6 +299,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
                         }
                     }, 20 * 7 * (waves + 1));
+                    break;
+
             }
         }
     }
