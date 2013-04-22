@@ -175,57 +175,26 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             final PlayerInventory pInv = player.getInventory();
             switch (ChanceUtil.getRandom(2)) {
                 case 1:
-                    Runnable r = null;
+                    boolean hasAxe = true;
                     switch (pInv.getItemInHand().getTypeId()) {
                         case ItemID.DIAMOND_AXE:
                             pInv.addItem(new ItemStack(ItemID.DIAMOND, 2), new ItemStack(ItemID.STICK, 2));
                             ChatUtil.sendWarning(player, "The fairy breaks your axe.");
-                            r = new Runnable() {
-
-                                @Override
-                                public void run() {
-
-                                    player.getInventory().removeItem(new ItemStack(ItemID.DIAMOND_AXE));
-                                }
-                            };
                             break;
                         case ItemID.GOLD_AXE:
-                            r = new Runnable() {
-
-                                @Override
-                                public void run() {
-
-                                    player.getInventory().removeItem(new ItemStack(ItemID.GOLD_AXE));
-                                }
-                            };
                             pInv.addItem(new ItemStack(ItemID.GOLD_BAR, 2), new ItemStack(ItemID.STICK, 2));
                             ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                             break;
                         case ItemID.IRON_AXE:
-                            r = new Runnable() {
-
-                                @Override
-                                public void run() {
-
-                                    player.getInventory().removeItem(new ItemStack(ItemID.IRON_AXE));
-                                }
-                            };
                             pInv.addItem(new ItemStack(ItemID.IRON_BAR, 2), new ItemStack(ItemID.STICK, 2));
                             ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                             break;
                         case ItemID.WOOD_AXE:
-                            r = new Runnable() {
-
-                                @Override
-                                public void run() {
-
-                                    player.getInventory().removeItem(new ItemStack(ItemID.WOOD_AXE));
-                                }
-                            };
                             pInv.addItem(new ItemStack(BlockID.WOOD, 2), new ItemStack(ItemID.STICK, 2));
                             ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                             break;
                         default:
+                            hasAxe = false;
                             ChatUtil.sendWarning(player, "The fairy couldn't find an axe and instead throws a rock" +
                                     "at you.");
                             player.damage(7);
@@ -235,8 +204,15 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                     random.nextDouble() * 2.0 - 1.5)
                             );
                     }
-                    if (r != null) {
-                        server.getScheduler().runTaskLater(inst, r, 1);
+
+                    if (hasAxe) {
+                        server.getScheduler().runTaskLater(inst, new Runnable() {
+                            @Override
+                            public void run() {
+
+                                player.getInventory().setItemInHand(null);
+                            }
+                        }, 1);
                     }
                     break;
                 case 2:
@@ -259,7 +235,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     // Give potion
                     ChatUtil.sendWarning(player, "You might need this friend ;)");
                     getWorld().dropItemNaturally(player.getLocation(), potion);
-                    int waves = ChanceUtil.getRandom(10);
+                    int waves = 5 * ChanceUtil.getRandom(3);
                     for (int i = 1; i < waves; i++) {
                         server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
 
@@ -273,7 +249,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
                                 short sOut = 1000;
                                 com.sk89q.worldedit.Vector v;
-                                for (int i = 0; i < ChanceUtil.getRandom(50); i++) {
+                                for (int i = 0; i < 25 * ChanceUtil.getRandom(4); i++) {
                                     sOut--;
                                     if (sOut < 0) break;
                                     v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ());
