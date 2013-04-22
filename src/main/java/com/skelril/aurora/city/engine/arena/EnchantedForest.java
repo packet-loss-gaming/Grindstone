@@ -260,6 +260,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                                 || EnvironmentUtil.isShrubBlock(b.getTypeId())) {
                                             Slime s = (Slime) getWorld().spawnEntity(b.getLocation(), EntityType.SLIME);
                                             s.setSize(ChanceUtil.getRandom(8));
+                                            s.setRemoveWhenFarAway(false);
                                             continue;
                                         }
                                     }
@@ -292,6 +293,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                             || EnvironmentUtil.isShrubBlock(b.getTypeId())) {
                                         Slime s = (Slime) getWorld().spawnEntity(b.getLocation(), EntityType.SLIME);
                                         s.setSize(16);
+                                        s.setRemoveWhenFarAway(false);
                                         continue;
                                     }
                                 }
