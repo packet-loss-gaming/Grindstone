@@ -13,7 +13,10 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
@@ -115,7 +118,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
     public void restoreBlocks() {
 
-        int min = 1000 * 60 * 85;
+        int min = 1000 * 60 * 170;
 
         BaseBlock b;
         for (Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e : map.entrySet()) {
