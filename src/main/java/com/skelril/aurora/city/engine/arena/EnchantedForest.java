@@ -24,6 +24,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -122,18 +123,22 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         int min = 1000 * 60 * 170;
 
         BaseBlock b;
-        for (Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e : map.entrySet()) {
+        Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e;
+        Iterator<Map.Entry<Location,AbstractMap.SimpleEntry<Long,BaseBlock>>> it = map.entrySet().iterator();
+
+        while(it.hasNext()) {
+            e = it.next();
             if ((System.currentTimeMillis() - e.getValue().getKey()) > min) {
                 b = e.getValue().getValue();
                 if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
                 e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-                map.remove(e.getKey());
+                it.remove();
             } else if (System.currentTimeMillis() - e.getValue().getKey() > (min / 20)
                     && EnvironmentUtil.isShrubBlock(e.getValue().getValue().getType())) {
                 b = e.getValue().getValue();
                 if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
                 e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-                map.remove(e.getKey());
+                it.remove();
             }
         }
     }
@@ -305,7 +310,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
 
         final Player player = event.getPlayer();
@@ -340,7 +345,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onLeafDecay(LeavesDecayEvent event) {
 
         if (contains(event.getBlock())) {
@@ -355,7 +360,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onItemSpawn(ItemSpawnEvent event) {
 
         if (contains(event.getEntity())) {
@@ -372,7 +377,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent event) {
 
         if (contains(event.getItemDrop())) {
@@ -402,7 +407,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBucketFill(PlayerBucketFillEvent event) {
 
         if (contains(event.getBlockClicked())) {
@@ -414,7 +419,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
 
 

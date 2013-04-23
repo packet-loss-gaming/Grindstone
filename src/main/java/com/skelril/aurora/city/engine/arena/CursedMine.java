@@ -39,10 +39,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -183,38 +180,58 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     public void randomRestore() {
 
+        int skipped;
+
         int min;
         BaseBlock b;
+        Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> se;
+
         for (Map.Entry<Player, ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long,
                 BaseBlock>>> e : map.entrySet()) {
+
+            if (e.getValue().isEmpty()) {
+                map.remove(e.getKey());
+                continue;
+            }
+
+            skipped = 0;
+
             min = ChanceUtil.getRangedRandom(9000, 60000);
-            for (Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> se : e.getValue().entrySet()) {
+            Iterator<Map.Entry<Location,AbstractMap.SimpleEntry<Long,BaseBlock>>> it = e.getValue().entrySet().iterator();
+
+            while (it.hasNext()) {
+                se = it.next();
                 if ((System.currentTimeMillis() - se.getValue().getKey()) > min) {
                     b = se.getValue().getValue();
                     if (!se.getKey().getChunk().isLoaded()) se.getKey().getChunk().load();
                     se.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
                     e.getValue().remove(se.getKey());
+                    it.remove();
                     if (!EnvironmentUtil.isOre(b.getType())) continue;
                     for (int i = 0; i < 20; i++) getWorld().playEffect(se.getKey(), Effect.MOBSPAWNER_FLAMES, 0);
-                }
+                } else skipped++;
             }
-            if (e.getValue().isEmpty()) {
-                map.remove(e.getKey());
-            }
+
+            if (skipped == 0) map.remove(e.getKey());
         }
     }
 
     public void revertPlayer(Player player) {
 
-        BaseBlock b;
         if (map.containsKey(player)) {
-            for (Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e : map.get(player).entrySet()) {
+            BaseBlock b;
+            Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e;
+            Iterator<Map.Entry<Location,AbstractMap.SimpleEntry<Long,BaseBlock>>> it = map.get(player).entrySet().iterator();
+            while (it.hasNext()) {
+                e = it.next();
                 b = e.getValue().getValue();
                 if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
                 e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
+                it.remove();
                 if (!EnvironmentUtil.isOre(b.getType())) continue;
                 for (int i = 0; i < 20; i++) getWorld().playEffect(e.getKey(), Effect.MOBSPAWNER_FLAMES, 0);
             }
+            map.remove(player);
         }
     }
 
@@ -441,7 +458,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
 
         final Player player = event.getPlayer();
@@ -501,7 +518,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onItemSpawn(ItemSpawnEvent event) {
 
         if (contains(event.getEntity())) {
@@ -520,7 +537,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent event) {
 
         if (contains(event.getItemDrop())) {
@@ -561,7 +578,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         accepted.add(PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
 
         Player player = event.getPlayer();
@@ -572,7 +589,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBucketFill(PlayerBucketFillEvent event) {
 
         if (contains(event.getBlockClicked())) {
@@ -588,7 +605,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
 
         if (contains(event.getBlockClicked())) {
@@ -607,7 +624,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
 
         if (event.getEntity() instanceof Player) {
@@ -621,7 +638,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
 
         revertPlayer(event.getPlayer());
