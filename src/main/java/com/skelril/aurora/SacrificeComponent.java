@@ -1,7 +1,5 @@
 package com.skelril.aurora;
 
-import com.petrifiednightmares.pitfall.Pitfall;
-import com.petrifiednightmares.pitfall.PitfallEvent;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
@@ -9,6 +7,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.skelril.aurora.events.PlayerSacrificeItemEvent;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
@@ -20,7 +19,10 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
@@ -37,7 +39,6 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.Repairable;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -76,18 +77,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         super.reload();
         configure(config);
-    }
-
-    private Pitfall getPitfall() {
-
-        Plugin plugin = server.getPluginManager().getPlugin("Pitfall");
-
-        // Pitfall may not be loaded
-        if (plugin == null || !(plugin instanceof Pitfall)) {
-            return null; // Maybe you want throw an exception instead
-        }
-
-        return (Pitfall) plugin;
     }
 
     private static class LocalConfiguration extends ConfigurationBase {
@@ -625,6 +614,38 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         if (entityTaskId.containsKey(event.getEntity().getEntityId())) event.setCancelled(true);
     }
 
+    private static Set<BlockFace> surrounding = new HashSet<>();
+
+    static {
+        surrounding.add(BlockFace.SELF);
+        surrounding.add(BlockFace.NORTH);
+        surrounding.add(BlockFace.EAST);
+        surrounding.add(BlockFace.SOUTH);
+        surrounding.add(BlockFace.WEST);
+    }
+
+    public void createFire(Block origin) {
+
+        if (origin.getTypeId() != config.getSacrificialBlockId()
+                || origin.getData() != config.getSacrificialBlockData()) return;
+
+        final Block above = origin.getRelative(BlockFace.UP);
+        if (above.getTypeId() == BlockID.AIR) {
+            above.setTypeId(BlockID.FIRE);
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+
+                    above.setTypeId(BlockID.AIR);
+                }
+            }, 20 * 4);
+
+            for (BlockFace face : surrounding) {
+                createFire(origin.getRelative(face));
+            }
+        }
+    }
+
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
 
@@ -653,15 +674,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                     if ((blockTypeId == config.sacrificialBlockId) && (blockData == config.sacrificialBlockData)) {
                         try {
                             // Create the event here
-                            PitfallEvent pitfallEvent = new PitfallEvent(searchBlock, player,
-                                    config.sacrificialBlockId, config.sacrificialBlockData,   // Old Block B
-                                    config.sacrificialBlockId, config.sacrificialBlockData,   // New Block B
-                                    BlockID.AIR, (byte) 0,                                    // Old Block H
-                                    BlockID.FIRE, (byte) 0,                                   // New Block H
-                                    20 * 4, false);
-                            getPitfall().getPitfallEngine().createPitfallEffect(pitfallEvent);
-                            if (pitfallEvent.isCancelled()) return;
-                            sacrifice(player, item.getItemStack().clone());
+                            PlayerSacrificeItemEvent sacrificeItemEvent =
+                                    new PlayerSacrificeItemEvent(player, searchBlock, item.getItemStack().clone());
+                            server.getPluginManager().callEvent(sacrificeItemEvent);
+                            if (sacrificeItemEvent.isCancelled()) return;
+                            createFire(searchBlock);
+                            sacrifice(player, sacrificeItemEvent.getItemStack());
                             removeEntity(item);
                             item.remove();
                             server.getScheduler().cancelTask(id);

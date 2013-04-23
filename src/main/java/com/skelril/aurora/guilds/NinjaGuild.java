@@ -1,7 +1,6 @@
 package com.skelril.aurora.guilds;
 
-import com.petrifiednightmares.pitfall.PitfallEvent;
-import com.sk89q.worldedit.blocks.BlockID;
+import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.player.GeneralPlayerUtil;
@@ -153,15 +152,14 @@ public class NinjaGuild extends AbstractGuild implements Runnable, Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPitfallEvent(PitfallEvent event) {
+    public void onPitfallEvent(PitfallTriggerEvent event) {
 
-        Entity entity = event.getCause();
+        Entity entity = event.getEntity();
 
         if (entity instanceof Player) {
             Player player = (Player) entity;
 
-            if (isActive(player) && player.isSneaking()
-                    && event.getNewTypeIdB() == BlockID.AIR && event.getNewTypeIdH() == BlockID.AIR) {
+            if (isActive(player) && player.isSneaking()) {
                 event.setCancelled(true);
             }
         }

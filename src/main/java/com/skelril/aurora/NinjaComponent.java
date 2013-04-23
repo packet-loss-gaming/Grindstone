@@ -1,6 +1,5 @@
 package com.skelril.aurora;
 
-import com.petrifiednightmares.pitfall.PitfallEvent;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
@@ -8,7 +7,7 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.worldedit.blocks.BlockID;
+import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -33,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Ninja", desc = "Disappear into the night!")
-@Depend(components = {SessionComponent.class, RogueComponent.class})
+@Depend(plugins = "Pitfall", components = {SessionComponent.class, RogueComponent.class})
 public class NinjaComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
@@ -128,17 +127,15 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
-    @EventHandler
-    public void onPitfallEvent(PitfallEvent event) {
+    @EventHandler(ignoreCancelled = true)
+    public void onPitfallEvent(PitfallTriggerEvent event) {
 
-        Entity entity = event.getCause();
+        Entity entity = event.getEntity();
 
         if (entity instanceof Player) {
             Player player = (Player) entity;
 
-            if (isNinja(player) && player.isSneaking() && inst.hasPermission(player, "aurora.ninja.guild")
-                    && event.getNewTypeIdB() == BlockID.AIR
-                    && event.getNewTypeIdH() == BlockID.AIR) {
+            if (isNinja(player) && player.isSneaking() && inst.hasPermission(player, "aurora.ninja.guild")) {
                 event.setCancelled(true);
             }
         }

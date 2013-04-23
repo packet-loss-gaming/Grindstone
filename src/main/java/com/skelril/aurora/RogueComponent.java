@@ -1,6 +1,5 @@
 package com.skelril.aurora;
 
-import com.petrifiednightmares.pitfall.PitfallEvent;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
@@ -9,7 +8,7 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.worldedit.blocks.BlockID;
+import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -37,7 +36,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Rogue", desc = "Speed and strength is always the answer.")
-@Depend(components = {SessionComponent.class, NinjaComponent.class})
+@Depend(plugins = {"Pitfall"}, components = {SessionComponent.class, NinjaComponent.class})
 public class RogueComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
@@ -241,15 +240,15 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPitfallTrigger(PitfallEvent event) {
+    public void onPitfallTrigger(PitfallTriggerEvent event) {
 
-        if (event.getCause() instanceof Player) {
+        Entity entity = event.getEntity();
 
-            Player player = (Player) event.getCause();
+        if (entity instanceof Player) {
 
-            if (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")
-                    && event.getNewTypeIdB() == BlockID.AIR
-                    && event.getNewTypeIdH() == BlockID.AIR) {
+            Player player = (Player) entity;
+
+            if (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")) {
 
                 Vector vel = player.getLocation().getDirection();
                 vel.multiply(3);
