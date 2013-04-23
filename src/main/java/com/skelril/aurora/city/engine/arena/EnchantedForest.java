@@ -1,5 +1,6 @@
 package com.skelril.aurora.city.engine.arena;
 
+import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.blocks.BaseBlock;
@@ -21,6 +22,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
@@ -179,7 +181,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         if (ChanceUtil.getChance(256)) {
             final PlayerInventory pInv = player.getInventory();
-            switch (ChanceUtil.getRandom(2)) {
+            switch (ChanceUtil.getRandom(3)) {
                 case 1:
                     boolean hasAxe = true;
                     switch (pInv.getItemInHand().getTypeId()) {
@@ -305,7 +307,21 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                         }
                     }, 20 * 7 * (waves + 1));
                     break;
-
+                case 3:
+                    List<ItemStack> toDrop = Lists.newArrayList(pInv.getArmorContents());
+                    toDrop.addAll(Arrays.asList(pInv.getContents()));
+                    for (ItemStack aDrop : toDrop) {
+                        if (aDrop == null || aDrop.getTypeId() == BlockID.AIR) continue;
+                        Item item = getWorld().dropItem(player.getLocation(), aDrop);
+                        item.setVelocity(new Vector(
+                                random.nextDouble() * 2 - 1,
+                                random.nextDouble() * 1,
+                                random.nextDouble() * 2 - 1
+                        ));
+                    }
+                    pInv.setArmorContents(null);
+                    pInv.clear();
+                    ChatUtil.sendNotice(player, "The fair throws your stuff all over the place");
             }
         }
     }
