@@ -1,5 +1,6 @@
 package com.skelril.aurora;
 
+import com.petrifiednightmares.pitfall.PitfallEvent;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
@@ -8,6 +9,7 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.worldedit.blocks.BlockID;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -28,6 +30,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -234,6 +237,25 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                     attacked.remove(attacker);
                 }
             }, (20 * 7)); // Multiply seconds by 20 to convert to ticks
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPitfallTrigger(PitfallEvent event) {
+
+        if (event.getCause() instanceof Player) {
+
+            Player player = (Player) event.getCause();
+
+            if (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")
+                    && event.getNewTypeIdB() == BlockID.AIR
+                    && event.getNewTypeIdH() == BlockID.AIR) {
+
+                Vector vel = player.getLocation().getDirection();
+                vel.multiply(3);
+                vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
+                player.setVelocity(vel);
+            }
         }
     }
 
