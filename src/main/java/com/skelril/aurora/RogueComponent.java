@@ -168,7 +168,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
                         attacked.remove(player);
                     }
-                }, (20 * 35)); // Multiply seconds by 20 to convert to ticks
+                }, (20 * 7)); // Multiply seconds by 20 to convert to ticks
             }
         }
     }
@@ -233,7 +233,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
                     attacked.remove(attacker);
                 }
-            }, (20 * 15)); // Multiply seconds by 20 to convert to ticks
+            }, (20 * 7)); // Multiply seconds by 20 to convert to ticks
         }
     }
 
