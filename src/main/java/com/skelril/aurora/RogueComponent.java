@@ -125,8 +125,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         for (Player otherPlayer : server.getOnlinePlayers()) {
             // Show Yourself!
-            if (otherPlayer != player && !otherPlayer.canSee(player))
-                otherPlayer.showPlayer(player);
+            if (otherPlayer != player && !otherPlayer.canSee(player)) otherPlayer.showPlayer(player);
         }
     }
 
@@ -136,7 +135,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         Player player = event.getPlayer();
 
         // On Sneak
-        if (isRogue(player) && event.isSprinting() && !player.isFlying()) {
+        if (isRogue(player) && event.isSprinting()) {
             if (attacked.containsKey(player) && attacked.get(player) == null) return;
             // Hide and tell the player
             hidePlayer(player);
@@ -158,7 +157,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (event.getEntity() instanceof Player) {
             final Player player = (Player) event.getEntity();
 
-            if (isRogue(player) && event.getForce() > .1) {
+            if (isRogue(player) && event.getForce() > .85) {
                 showPlayer(player);
                 ChatUtil.sendWarning(player, "Your bow fire allows everyone to see you!");
                 attacked.put(player, null);
@@ -170,7 +169,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
                         attacked.remove(player);
                     }
-                }, (20 * 7)); // Multiply seconds by 20 to convert to ticks
+                }, (20 * 15)); // Multiply seconds by 20 to convert to ticks
             }
         }
     }
