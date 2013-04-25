@@ -55,7 +55,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
             }
 
             for (Map.Entry<CheckType, Long> p : e.getValue().entrySet()) {
-                if (System.currentTimeMillis() - p.getValue() / 1000 > 3.75) {
+                if (System.currentTimeMillis() - p.getValue() / 1000 > 5) {
                     AnticheatAPI.unexemptPlayer(player, p.getKey());
                     e.getValue().remove(p.getKey());
                 }
