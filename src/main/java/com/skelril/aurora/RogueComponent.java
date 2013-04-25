@@ -9,6 +9,7 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
+import com.skelril.aurora.events.CreepSpeakEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.ThrowPlayerEvent;
 import com.skelril.aurora.util.ChatUtil;
@@ -70,6 +71,15 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(RogueState.class, player).isRogue();
     }
 
+    public void setSilentMode(Player player, boolean bool) {
+
+        sessions.getSession(RogueState.class, player).setSilentMode(bool);
+    }
+
+    public boolean isOnSilent(Player player) {
+
+        return sessions.getSession(RogueState.class, player).isOnSilent();
+    }
 
     public void showToGuild(Player player) {
 
@@ -140,7 +150,10 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             if (attacked.containsKey(player) && attacked.get(player) == null) return;
             // Hide and tell the player
             hidePlayer(player);
-            ChatUtil.sendNotice(player, "You disappear!");
+
+            if (!isOnSilent(player)) {
+                ChatUtil.sendNotice(player, "You disappear!");
+            }
         }
 
         // On Leave Sneak
@@ -148,7 +161,10 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             // Show and tell the player
             showPlayer(player);
             if (attacked.containsKey(player) && attacked.get(player) == null) return;
-            ChatUtil.sendNotice(player, "You appear!");
+
+            if (!isOnSilent(player)) {
+                ChatUtil.sendNotice(player, "You appear!");
+            }
         }
     }
 
@@ -186,8 +202,18 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         Player player = (Player) targetEntity;
 
-        if (((isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")) || !isVisible(player))
+        if ((!isVisible(player) || (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")))
                 && !player.getWorld().isThundering()) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onCreepSpeak(CreepSpeakEvent event) {
+
+        Player player = event.getPlayer();
+
+        if (!isVisible(player) || (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild"))) {
             event.setCancelled(true);
         }
     }
@@ -294,7 +320,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"rogue"}, desc = "Give a player the Rogue power",
-                flags = "g", min = 0, max = 0)
+                flags = "gs", min = 0, max = 0)
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -311,6 +337,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             } else {
                 ChatUtil.sendError(sender, "You must be a member of the rogue guild to use this flag.");
             }
+            setSilentMode((Player) sender, args.hasFlag('s'));
             ChatUtil.sendNotice(sender, "You gain the power of a rogue warrior!");
         }
 
@@ -337,6 +364,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         private boolean isVisible = true;
         private boolean isRogue = false;
         private boolean showToGuild = false;
+        private boolean silentMode = false;
 
         protected RogueState() {
 
@@ -371,6 +399,16 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         public void showToGuild(boolean showToGuild) {
 
             this.showToGuild = showToGuild;
+        }
+
+        public boolean isOnSilent() {
+
+            return silentMode;
+        }
+
+        public void setSilentMode(boolean silentMode) {
+
+            this.silentMode = silentMode;
         }
 
         public Player getPlayer() {
