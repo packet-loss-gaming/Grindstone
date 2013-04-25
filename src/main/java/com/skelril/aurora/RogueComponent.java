@@ -10,6 +10,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
+import com.skelril.aurora.events.ThrowPlayerEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -249,6 +250,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             if (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")) {
 
+                server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
                 Vector vel = player.getLocation().getDirection();
                 vel.multiply(3);
                 vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
