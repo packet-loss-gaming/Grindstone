@@ -88,19 +88,19 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
         }
     }
 
+    private static final CheckType[] playerThrowCheckTypes = new CheckType[] {CheckType.FLY, CheckType.ZOMBE_FLY};
+    private static final CheckType[] fallBlockerCheckTypes = new CheckType[] {CheckType.NOFALL};
+
     @EventHandler
     public void onPlayerThrow(ThrowPlayerEvent event) {
 
-        CheckType[] checkTypes = new CheckType[] {CheckType.FLY, CheckType.ZOMBE_FLY};
-        bypass(event.getPlayer(), checkTypes);
+        bypass(event.getPlayer(), playerThrowCheckTypes);
     }
 
     @EventHandler
     public void onFallBlocker(FallBlockerEvent event) {
 
-
-        CheckType[] checkTypes = new CheckType[] {CheckType.NOFALL};
-        bypass(event.getPlayer(), checkTypes);
+        bypass(event.getPlayer(), fallBlockerCheckTypes);
     }
 
     @EventHandler(ignoreCancelled = true)
