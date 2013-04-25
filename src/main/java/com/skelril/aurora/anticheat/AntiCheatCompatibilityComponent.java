@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -48,10 +47,15 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     public void run() {
 
         for (Map.Entry<String, ConcurrentHashMap<CheckType, Long>> e : playerList.entrySet()) {
+
             Player player = Bukkit.getPlayerExact(e.getKey());
-            if (player == null) continue;
+            if (player == null) {
+                playerList.remove(e.getKey());
+                continue;
+            }
+
             for (Map.Entry<CheckType, Long> p : e.getValue().entrySet()) {
-                if (System.currentTimeMillis() - p.getValue() / TimeUnit.SECONDS.toMillis(1) > 3.75) {
+                if (System.currentTimeMillis() - p.getValue() / 1000 > 3.75) {
                     AnticheatAPI.unexemptPlayer(player, p.getKey());
                     e.getValue().remove(p.getKey());
                 }
