@@ -667,7 +667,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                             }
                         }
                     }
-                }, 20 * (28 - (difficulty * 7)));
+                }, 20 * (28 - (difficulty == 1 ? 14 : 7)));
                 break;
             case 5:
                 if (!damageHeals) {
@@ -738,7 +738,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         // Notify if avoided
                         ChatUtil.sendNotice(getContainedPlayers(1), "Gah... Afraid are you friends?");
                     }
-                }, 20 * (28 - (difficulty * 7)));
+                }, 20 * (difficulty == 1 ? 14 : 7));
                 break;
         }
         lastAttack = System.currentTimeMillis();
