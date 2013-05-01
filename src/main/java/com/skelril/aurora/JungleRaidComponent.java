@@ -24,6 +24,7 @@ import com.sk89q.worldedit.snapshots.SnapshotRestore;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
 import com.skelril.aurora.events.*;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
@@ -42,6 +43,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
+import net.h31ix.anticheat.manage.CheckType;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -111,6 +113,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     AdminComponent adminComponent;
     @InjectComponent
     PrayerComponent prayerComponent;
+    @InjectComponent
+    AntiCheatCompatibilityComponent antiCheat;
 
     private Prayer[] getPrayers(Player player) throws UnsupportedPrayerException {
 
@@ -912,14 +916,29 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         final Player player = event.getEntity();
         if (isInJungleRaidTeam(player)) {
+
+            // Enable disabled Checks
+            boolean isTitanEnabled = gameFlags.contains('T');
+            boolean isTitan = titan.equals(player.getName());
+
+            if (isTitanEnabled && isTitan) {
+                antiCheat.unexempt(Bukkit.getPlayerExact(titan), CheckType.FAST_BREAK);
+            }
+
+            // Normal Jungle Raid fireworks and stuff
             int killerColor = 0;
             int teamColor = teams.get(player.getName());
             Player killer = player.getKiller();
             if (killer != null && isInJungleRaidTeam(killer)) {
                 killerColor = teams.get(killer.getName());
-                if (gameFlags.contains('T') && killer.isValid()) {
-                    if (titan.equals(player.getName())) {
+                if (isTitanEnabled && killer.isValid()) {
+                    if (isTitan) {
                         titan = killer.getName();
+                        try {
+                            antiCheat.exempt(Bukkit.getPlayerExact(titan), CheckType.FAST_BREAK);
+                        } catch (Exception ex) {
+                            ChatUtil.sendNotice(getContainedPlayers(), ChatColor.RED, "[ERROR] Cannot find titan.");
+                        }
                     } else if (titan.equals(killer.getName())) {
                         killerColor = -1;
                     }
@@ -1363,6 +1382,11 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                         }
                     }
                     titan = playersArr[ChanceUtil.getRandom(players.length) - 1];
+                    try {
+                        antiCheat.exempt(Bukkit.getPlayerExact(titan), CheckType.FAST_BREAK);
+                    } catch (Exception ex) {
+                        ChatUtil.sendNotice(players, ChatColor.RED, "[ERROR] Cannot find titan.");
+                    }
                 }
                 if (gameFlags.contains('h')) {
                     ChatUtil.sendWarning(players, "Survival Mode");

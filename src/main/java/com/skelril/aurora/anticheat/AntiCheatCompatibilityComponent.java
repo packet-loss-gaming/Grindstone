@@ -56,11 +56,21 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
 
             for (Map.Entry<CheckType, Long> p : e.getValue().entrySet()) {
                 if (System.currentTimeMillis() - p.getValue() / 1000 > 5) {
-                    AnticheatAPI.unexemptPlayer(player, p.getKey());
+                    unexempt(player, p.getKey());
                     e.getValue().remove(p.getKey());
                 }
             }
         }
+    }
+
+    public void exempt(Player player, CheckType checkType) {
+
+        AnticheatAPI.exemptPlayer(player, checkType);
+    }
+
+    public void unexempt(Player player, CheckType checkType) {
+
+        AnticheatAPI.unexemptPlayer(player, checkType);
     }
 
     public void bypass(Player player, CheckType[] checkTypes) {
@@ -70,8 +80,9 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
         else hashMap = new ConcurrentHashMap<>();
 
         for (CheckType checkType : checkTypes) {
+            if (AnticheatAPI.isExempt(player, checkType) && !hashMap.containsKey(checkType)) continue;
             hashMap.put(checkType, System.currentTimeMillis());
-            AnticheatAPI.exemptPlayer(player, checkType);
+            exempt(player, checkType);
         }
         playerList.put(player.getName(), hashMap);
     }
