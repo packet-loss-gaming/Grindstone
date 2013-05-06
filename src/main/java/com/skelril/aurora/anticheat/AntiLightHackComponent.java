@@ -11,6 +11,8 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import com.zachsthings.libcomponents.config.ConfigurationBase;
+import com.zachsthings.libcomponents.config.Setting;
 import org.bukkit.Server;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -39,11 +41,31 @@ public class AntiLightHackComponent extends BukkitComponent implements Listener 
     @InjectComponent
     AdminComponent adminComponent;
 
+    LocalConfiguration config;
+
     @Override
     public void enable() {
 
+        config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+    }
+
+    @Override
+    public void reload() {
+
+        super.reload();
+        configure(config);
+    }
+
+    private static class LocalConfiguration extends ConfigurationBase {
+
+        @Setting("chance-of-failure")
+        public int failRate = 3;
+        @Setting("max-damage")
+        public int maxDamage = 5;
+        @Setting("max-light")
+        public double maxLight = 0;
     }
 
     @EventHandler
@@ -59,20 +81,20 @@ public class AntiLightHackComponent extends BukkitComponent implements Listener 
             // Light
             int light = pBlock.getLightLevel();
             light += pEyeBlock.getLightLevel();
-            if (light > 0) return;
+            if (light > config.maxLight) return;
 
             // Environment
             if (!isValidEnvironment(pBlock)) return;
 
             // Chanced
-            if (!ChanceUtil.getChance(3)) return;
+            if (!ChanceUtil.getChance(config.failRate)) return;
 
             // Potions
             if (player.hasPotionEffect(PotionEffectType.NIGHT_VISION)) return;
 
             // Damage
             DarkAreaInjuryEvent aEvent = new DarkAreaInjuryEvent(player,
-                    ChanceUtil.getRandom(5), textOps[ChanceUtil.getRandom(textOps.length) - 1]);
+                    ChanceUtil.getRandom(config.maxDamage), textOps[ChanceUtil.getRandom(textOps.length) - 1]);
             server.getPluginManager().callEvent(aEvent);
 
             if (aEvent.isCancelled()) return;

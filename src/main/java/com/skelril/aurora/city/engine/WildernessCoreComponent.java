@@ -71,6 +71,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     public void run() {
 
         sync: {
+            if (!config.enableSync) break sync;
+
             final World city = Bukkit.getWorld(config.cityWorld);
             final World wilderness = Bukkit.getWorld(config.wildernessWorld);
             boolean kill = false;

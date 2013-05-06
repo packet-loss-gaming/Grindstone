@@ -10,6 +10,8 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import com.zachsthings.libcomponents.config.ConfigurationBase;
+import com.zachsthings.libcomponents.config.Setting;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.EntityEffect;
@@ -46,10 +48,12 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
     private double profit = 20000;
     private static Economy economy = null;
     private List<Player> recentList = new ArrayList<>();
+    private LocalConfiguration config;
 
     @Override
     public void enable() {
 
+        config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         setupEconomy();
@@ -57,9 +61,29 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
     }
 
     @Override
+    public void reload() {
+
+        super.reload();
+        configure(config);
+    }
+
+    private static class LocalConfiguration extends ConfigurationBase {
+
+        @Setting("min-profit")
+        public double minProfit = 20000;
+        @Setting("operator-loss-scale")
+        public int operatorLossScale = 10;
+
+        @Setting("slot-chance")
+        public int slotChance = 20;
+        @Setting("roulette-chance")
+        public int rouletteChance = 35;
+    }
+
+    @Override
     public void run() {
 
-        profit = Math.max(profit, 20000);
+        profit = Math.max(profit, config.minProfit);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -159,7 +183,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
 
     private void operateSlots(String operator, Player player, double bet) {
 
-        double loot = bet * 20;
+        double loot = bet * config.slotChance;
 
         if (!operatorHasMoney(operator, player, loot)) return;
 
@@ -186,21 +210,21 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
         if (one.equals(two) && two.equals(three)) {
             profit -= loot;
             economy.depositPlayer(player.getName(), loot);
-            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot / 10);
+            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot / config.operatorLossScale);
             ChatUtil.sendNotice(player, ChatColor.GOLD, "Jackpot!");
             ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot),
                     " " + economy.currencyNamePlural() + "."));
         } else {
             profit += bet;
             economy.withdrawPlayer(player.getName(), bet);
-            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet / 10);
+            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet / config.operatorLossScale);
             ChatUtil.sendNotice(player, "Better luck next time.");
         }
     }
 
     private void operateRoulette(String operator, Player player, double bet) {
 
-        double loot = bet * 35;
+        double loot = bet * config.rouletteChance;
 
         if (!operatorHasMoney(operator, player, loot)) return;
 
@@ -215,13 +239,13 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
         if (ChanceUtil.getChance(38) && profit > 0) {
             profit -= loot;
             economy.depositPlayer(player.getName(), loot);
-            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot / 10);
+            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot / config.operatorLossScale);
             ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot),
                     " " + economy.currencyNamePlural() + "."));
         } else {
             profit += bet;
             economy.withdrawPlayer(player.getName(), bet);
-            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet / 10);
+            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet / config.operatorLossScale);
             ChatUtil.sendNotice(player, "Better luck next time.");
         }
     }
@@ -258,13 +282,13 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
 
             profit -= loot;
             economy.depositPlayer(player.getName(), loot);
-            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot / 10);
+            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot / config.operatorLossScale);
             ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot),
                     " " + economy.currencyNamePlural() + "."));
         } else {
             profit += bet;
             economy.withdrawPlayer(player.getName(), bet);
-            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet / 10);
+            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet / config.operatorLossScale);
             ChatUtil.sendNotice(player, "Better luck next time.");
         }
     }
@@ -290,7 +314,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
         } else if (!economy.hasAccount(operator)) {
             ChatUtil.sendError(better, "The Operator: " + operator + " does not exist.");
             return false;
-        } else if (!economy.has(operator, loot / 10)) {
+        } else if (!economy.has(operator, loot / config.operatorLossScale)) {
             ChatUtil.sendError(better, "The Operator: " + operator + " does not have sufficient funds.");
             return false;
         } else {

@@ -8,7 +8,7 @@ public interface LotteryWinnerDatabase extends Iterable<String> {
 
     public boolean load();
 
-    public boolean save();
+    public boolean save(int max);
 
     public void addWinner(String name);
 

@@ -171,7 +171,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 return 3;
             }
         }
-
     }
 
     private void addEntityTaskId(Entity entity, int taskId) {

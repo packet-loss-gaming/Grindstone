@@ -7,6 +7,8 @@ import com.skelril.aurora.events.ThrowPlayerEvent;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import com.zachsthings.libcomponents.config.ConfigurationBase;
+import com.zachsthings.libcomponents.config.Setting;
 import net.h31ix.anticheat.api.AnticheatAPI;
 import net.h31ix.anticheat.manage.CheckType;
 import org.bukkit.Bukkit;
@@ -33,14 +35,29 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    private LocalConfiguration config;
     private ConcurrentHashMap<String, ConcurrentHashMap<CheckType, Long>> playerList = new ConcurrentHashMap<>();
 
     @Override
     public void enable() {
 
+        config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 20, 20 * 5);
+    }
+
+    @Override
+    public void reload() {
+
+        super.reload();
+        configure(config);
+    }
+
+    private static class LocalConfiguration extends ConfigurationBase {
+
+        @Setting("removal-delay")
+        public int removalDelay = 5;
     }
 
     @Override
@@ -55,7 +72,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
             }
 
             for (Map.Entry<CheckType, Long> p : e.getValue().entrySet()) {
-                if (System.currentTimeMillis() - p.getValue() / 1000 > 5) {
+                if (System.currentTimeMillis() - p.getValue() / 1000 > config.removalDelay) {
                     unexempt(player, p.getKey());
                     e.getValue().remove(p.getKey());
                 }

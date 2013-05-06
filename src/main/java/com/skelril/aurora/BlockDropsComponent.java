@@ -47,6 +47,11 @@ public class BlockDropsComponent extends BukkitComponent implements Listener {
 
     private static class LocalConfiguration extends ConfigurationBase {
 
+        @Setting("common-chance")
+        public int commonChance = 10;
+        @Setting("rare-chance")
+        public int rareChance = 1000;
+
         @Setting("gravel-drops")
         public List<Integer> gravelDrops = new ArrayList<>(Arrays.asList(
                 ItemID.SULPHUR, ItemID.BUCKET, ItemID.ARROW,
@@ -65,7 +70,7 @@ public class BlockDropsComponent extends BukkitComponent implements Listener {
 
         Block block = event.getBlock();
 
-        if (!ChanceUtil.getChance(10)) return;
+        if (!ChanceUtil.getChance(config.commonChance)) return;
 
         switch (block.getTypeId()) {
             case BlockID.GRAVEL:
@@ -74,7 +79,7 @@ public class BlockDropsComponent extends BukkitComponent implements Listener {
                 break;
         }
 
-        if (!ChanceUtil.getChance(1000)) return;
+        if (!ChanceUtil.getChance(config.rareChance)) return;
 
         switch (block.getTypeId()) {
             case BlockID.GRAVEL:

@@ -68,6 +68,8 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
 
         @Setting("enable-alonzo")
         public boolean enableAlonzo = true;
+        @Setting("alonzo-creeper-chance")
+        public int alonzoCreeperChance = 157;
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -96,11 +98,12 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                             || event.getReason().equals(TargetReason.TARGET_ATTACKED_OWNER)) return;
 
                     // Alonzo Feature
-                    if (ChanceUtil.getChance(157) && !inst.hasPermission(player, "aurora.alonzo.immune")
-                            && config.enableAlonzo && !alonzoCreepersActive.contains(player)) {
+                    if (config.enableAlonzo && ChanceUtil.getChance(config.alonzoCreeperChance)
+                            && !inst.hasPermission(player, "aurora.alonzo.immune")
+                            && !alonzoCreepersActive.contains(player)) {
                         Location loc = entity.getLocation();
 
-                        for (int i = 0; i < ((ChanceUtil.getRandom(10) * ChanceUtil.getRandom(6)) + 4); i++) {
+                        for (int i = 0; i < ((ChanceUtil.getRandom(12) * ChanceUtil.getRandom(12)) + 6); i++) {
                             entity.getWorld().spawn(loc, Creeper.class);
                         }
 

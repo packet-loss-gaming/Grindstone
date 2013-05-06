@@ -64,6 +64,10 @@ public class FishingComponent extends BukkitComponent implements Listener {
         public boolean enableRareCatches = true;
         @Setting("enable-arrow-fishing")
         public boolean enableArrowFishing = true;
+        @Setting("minimum-bow-force")
+        public double minBowForce = .85;
+        @Setting("fish-drop-chance")
+        public int fishDropChance = 16;
     }
 
     // Native American Crops
@@ -81,50 +85,47 @@ public class FishingComponent extends BukkitComponent implements Listener {
 
             // Get needed data for a cycle
             int type = block.getTypeId();
-            byte data = block.getData();
-            byte newData = (byte) BlockData.cycle(type, data, 1);
-
-            while (newData < BlockData.cycle(type, newData, 1)) {
-                newData = (byte) BlockData.cycle(type, newData, 1);
-            }
+            int data = block.getData();
+            int newData = BlockData.cycle(type, data, 1);
 
             // Check growth progress and adjust accordingly
-            if (((int) newData) <= ((int) data) || ((int) data) >= 7) {
+            if (newData <= data) {
                 ChatUtil.sendError(player, "Fish can no longer help this crop.");
-            } else {
-                // GROW!!! :D
-                BlockState state = block.getState();
-                state.setTypeId(type);
-                state.setRawData(newData);
+                return;
+            }
 
-                BlockGrowEvent blockGrowEvent = new BlockGrowEvent(block, state);
-                server.getPluginManager().callEvent(blockGrowEvent);
+            // GROW!!! :D
+            BlockState state = block.getState();
+            state.setTypeId(type);
+            state.setRawData((byte) newData);
 
-                if (!blockGrowEvent.isCancelled()) {
+            BlockGrowEvent blockGrowEvent = new BlockGrowEvent(block, state);
+            server.getPluginManager().callEvent(blockGrowEvent);
 
-                    // Take Fish
-                    // ### BEGIN WORK AROUND ###
-                    final int amt = player.getItemInHand().getAmount();
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
+            if (!blockGrowEvent.isCancelled()) {
 
-                        @Override
-                        public void run() {
+                // Take Fish
+                // ### BEGIN WORK AROUND ###
+                final int amt = player.getItemInHand().getAmount();
+                server.getScheduler().runTaskLater(inst, new Runnable() {
 
-                            if (amt > 1) {
-                                player.setItemInHand(new ItemStack(ItemID.RAW_FISH, amt - 1));
-                            } else {
-                                player.setItemInHand(null);
-                            }
+                    @Override
+                    public void run() {
+
+                        if (amt > 1) {
+                            player.setItemInHand(new ItemStack(ItemID.RAW_FISH, amt - 1));
+                        } else {
+                            player.setItemInHand(null);
                         }
-                    }, 1);
-                    // ### END WORK AROUND ###
+                    }
+                }, 1);
+                // ### END WORK AROUND ###
 
-                    //player.getInventory().removeItem(new ItemStack(ItemID.RAW_FISH));
+                //player.getInventory().removeItem(new ItemStack(ItemID.RAW_FISH));
 
-                    // Update Block State
-                    state.update(true);
-                    ChatUtil.sendNotice(player, ChatColor.GREEN, "You use some fish to grow the crop!");
-                }
+                // Update Block State
+                state.update(true);
+                ChatUtil.sendNotice(player, ChatColor.GREEN, "You use some fish to grow the crop!");
             }
         }
     }
@@ -150,18 +151,18 @@ public class FishingComponent extends BukkitComponent implements Listener {
 
         // Drop Boolean
         boolean[] fishingDrops = new boolean[6];
-        fishingDrops[0] = ChanceUtil.getChance(1, 25);
-        fishingDrops[1] = ChanceUtil.getChance(1, 35);
-        fishingDrops[2] = ChanceUtil.getChance(1, 50);
-        fishingDrops[3] = ChanceUtil.getChance(1, 75);
-        fishingDrops[4] = ChanceUtil.getChance(1, 100);
-        fishingDrops[5] = ChanceUtil.getChance(1, 500);
+        fishingDrops[0] = ChanceUtil.getChance(25);
+        fishingDrops[1] = ChanceUtil.getChance(35);
+        fishingDrops[2] = ChanceUtil.getChance(50);
+        fishingDrops[3] = ChanceUtil.getChance(75);
+        fishingDrops[4] = ChanceUtil.getChance(100);
+        fishingDrops[5] = ChanceUtil.getChance(500);
 
         // Monster Boolean
         boolean[] fishingMonsters = new boolean[3];
-        fishingMonsters[0] = ChanceUtil.getChance(1, 200);
-        fishingMonsters[1] = ChanceUtil.getChance(1, 400);
-        fishingMonsters[2] = ChanceUtil.getChance(1, 500);
+        fishingMonsters[0] = ChanceUtil.getChance(75);
+        fishingMonsters[1] = ChanceUtil.getChance(75);
+        fishingMonsters[2] = ChanceUtil.getChance(75);
 
         // Execute
         String drop = null;
@@ -265,7 +266,7 @@ public class FishingComponent extends BukkitComponent implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBowFire(EntityShootBowEvent event) {
 
-        if (event.getForce() >= .85) arrowFish(new ProjectileLaunchEvent(event.getProjectile()));
+        if (event.getForce() >= config.minBowForce) arrowFish(new ProjectileLaunchEvent(event.getProjectile()));
     }
 
     // Non-entity Fishing
@@ -298,16 +299,16 @@ public class FishingComponent extends BukkitComponent implements Listener {
                         server.getScheduler().cancelTask(id);
                     }
                 } else {
-                    int dropFish;
+                    int dropFish = config.fishDropChance;
 
                     if (arrow.getShooter() instanceof Player) {
-                        dropFish = ChanceUtil.getRandom(16);
+                        dropFish = ChanceUtil.getRandom(dropFish);
 
                         if (inst.hasPermission((Player) arrow.getShooter(), "aurora.fishing.arrow.master")) {
                             dropFish = (int) Math.sqrt(dropFish);
                         }
                     } else {
-                        dropFish = ChanceUtil.getRandom(256);
+                        dropFish = ChanceUtil.getRandom(dropFish^2);
                     }
 
                     addArrowLoc(arrow, loc.toString());

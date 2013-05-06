@@ -83,6 +83,13 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
     }
 
     @Override
+    public void reload() {
+
+        super.reload();
+        configure(config);
+    }
+
+    @Override
     public void run() {
 
         completeLottery();
@@ -96,7 +103,8 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
         public int maxSellCount = 50;
         @Setting("max-per-lotto")
         public int maxPerLotto = 150;
-
+        @Setting("recent-length")
+        public int recentLength = 5;
     }
 
     public class Commands {
@@ -329,7 +337,7 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
                         " " + economy.currencyNamePlural() + " via the lottery!"));
 
         lotteryWinnerDatabase.addWinner(name + ChatColor.GOLD + " - " + ChatColor.WHITE + economy.format(cash));
-        lotteryWinnerDatabase.save();
+        lotteryWinnerDatabase.save(config.recentLength);
         lotteryTicketDatabase.clearTickets();
         lotteryTicketDatabase.save();
     }

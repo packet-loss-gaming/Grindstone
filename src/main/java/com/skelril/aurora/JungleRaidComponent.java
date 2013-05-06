@@ -319,7 +319,6 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         super.reload();
         configure(config);
         probe();
-        saveInventories();
     }
 
     @Override

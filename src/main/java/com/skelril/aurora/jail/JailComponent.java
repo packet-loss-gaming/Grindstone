@@ -14,7 +14,6 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -23,7 +22,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -50,8 +52,6 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     private JailCellDatabase jailCells;
     private LocalConfiguration config;
     private Map<Player, JailCell> cell = new HashMap<>();
-    private static final int MOVE_THRESHOLD = 8;
-    private static final int MOVE_THRESHOLD_SQ = MOVE_THRESHOLD * MOVE_THRESHOLD;
 
     @Override
     public void enable() {
@@ -77,8 +77,8 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     public void reload() {
 
         super.reload();
-        getInmateDatabase().load();
-        getJailCellDatabase().load();
+        inmates.load();
+        jailCells.load();
         configure(config);
     }
 
@@ -95,6 +95,9 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         public String jailMessage = "You have been jailed";
         @Setting("broadcast-jails")
         public boolean broadcastJails = true;
+
+        @Setting("move-threshold")
+        public int moveThreshold = 8;
     }
 
     /**
@@ -156,19 +159,13 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                     Location loc = player.getLocation();
                     Location cellLoc = cell.get(player).getLocation();
                     if (player.getWorld() != cellLoc.getWorld()
-                            || loc.distanceSquared(cellLoc) > MOVE_THRESHOLD_SQ) {
+                            || loc.distanceSquared(cellLoc) > (config.moveThreshold^2)) {
                         player.teleport(cell.get(player).getLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     }
                 }
-
-
             } catch (Exception e) {
                 log.warning("Could not find a cell for the player: " + player.getName() + ".");
-                PlayerKickEvent playerKickEvent = new PlayerKickEvent(player, "Jail", "Kicked!");
-                if (!playerKickEvent.isCancelled()) {
-                    Bukkit.broadcastMessage("The player: " + player.getName() + " has been kicked.");
-                    player.kickPlayer("Kicked!");
-                }
+                player.kickPlayer("Kicked!");
             }
         }
     }
@@ -222,8 +219,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
             String inmateName = "";
             String prisonName = args.getString(1);
             long endDate = args.hasFlag('t') ? CommandBookUtil.matchFutureDate(args.getFlag('t')) : 0L;
-            String message = args.argsLength() >= 3 ? args.getJoinedStrings(1)
-                                                    : "Jailed!";
+            String message = args.argsLength() >= 3 ? args.getJoinedStrings(1) : "Jailed!";
 
             final boolean hasExemptOverride = args.hasFlag('o')
                     && inst.hasPermission(sender, "aurora.jail.exempt.override");

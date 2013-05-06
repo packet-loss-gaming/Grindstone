@@ -10,6 +10,8 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import com.zachsthings.libcomponents.config.ConfigurationBase;
+import com.zachsthings.libcomponents.config.Setting;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -43,14 +45,53 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
     @InjectComponent
     GodComponent godComponent;
 
+    private LocalConfiguration config;
     private ConcurrentHashMap<Player, Long> afk = new ConcurrentHashMap<>();
 
     @Override
     public void enable() {
 
+        config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         server.getScheduler().runTaskTimer(inst, this, 20 * 60, 20 * 10);
+    }
+
+    @Override
+    public void reload() {
+
+        super.reload();
+        configure(config);
+    }
+
+    private static class LocalConfiguration extends ConfigurationBase {
+
+        @Setting("movement-threshold")
+        public double movementThreshold = .04;
+        @Setting("afk-minutes")
+        public int afkMinutes = 3;
+        @Setting("afk-kick-minutes")
+        public int afkKickMinutes = 60;
+    }
+
+    public boolean isAfk(Player player) {
+
+        return isAfk(afk.get(player));
+    }
+
+    public boolean isAfk(long time) {
+
+        return System.currentTimeMillis() - time >= TimeUnit.MINUTES.toMillis(config.afkMinutes);
+    }
+
+    public boolean shouldKick(Player player) {
+
+        return shouldKick(afk.get(player));
+    }
+
+    public boolean shouldKick(long time) {
+
+        return System.currentTimeMillis() - time >= TimeUnit.MINUTES.toMillis(config.afkKickMinutes);
     }
 
     @Override
@@ -58,9 +99,8 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
 
         for (final Map.Entry<Player, Long> entry : afk.entrySet()) {
 
-            if (System.currentTimeMillis() - entry.getValue() >= TimeUnit.MINUTES.toMillis(3)) {
-
-                if (System.currentTimeMillis() - entry.getValue() >= TimeUnit.MINUTES.toMillis(60)) {
+            if (isAfk(entry.getValue())) {
+                if (shouldKick(entry.getValue())) {
                     LocationUtil.toGround(entry.getKey());
                     adminComponent.deadmin(entry.getKey(), true);
                     entry.getKey().setSleepingIgnored(false);
@@ -96,7 +136,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
 
         if (event.getTarget() instanceof Player && afk.containsKey(event.getTarget())) {
 
-            if (System.currentTimeMillis() - afk.get(event.getTarget()) >= TimeUnit.MINUTES.toMillis(3)) {
+            if (isAfk((Player) event.getTarget())) {
                 event.setCancelled(true);
             }
         }
@@ -167,7 +207,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
         from.setY(0);
         to.setY(0);
 
-        if (from.distanceSquared(to) > .04) update(event.getPlayer());
+        if (from.distanceSquared(to) > config.movementThreshold) update(event.getPlayer());
     }
 
     @EventHandler

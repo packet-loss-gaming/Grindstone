@@ -57,6 +57,8 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
 
         @Setting("min-item-count")
         public int itemCountMin = 1000;
+        @Setting("max-delay")
+        public int maxDelay = 120;
     }
 
     @Override
@@ -117,8 +119,8 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
             // Don't send a fake world
             if (Bukkit.getWorlds().contains(world)) {
 
-                if (seconds > 120) {
-                    dropClear(world, 120);
+                if (seconds > config.maxDelay) {
+                    dropClear(world, config.maxDelay);
                 } else {
                     dropClear(world, seconds);
                 }

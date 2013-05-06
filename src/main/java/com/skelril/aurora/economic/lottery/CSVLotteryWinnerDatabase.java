@@ -72,7 +72,7 @@ public class CSVLotteryWinnerDatabase implements LotteryWinnerDatabase {
     }
 
     @Override
-    public synchronized boolean save() {
+    public synchronized boolean save(int maxKept) {
 
         FileOutputStream output = null;
         boolean successful = true;
@@ -84,9 +84,8 @@ public class CSVLotteryWinnerDatabase implements LotteryWinnerDatabase {
 
             Collections.sort(winners);
 
-            short max = 10;
             for (Winner winner : winners) {
-                if (max > 0) max--;
+                if (maxKept > 0) maxKept--;
                 else break;
 
                 line = new String[] {

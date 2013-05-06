@@ -82,13 +82,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     }
 
     @Override
-    public void reload() {
-
-        super.reload();
-        configure(config);
-    }
-
-    @Override
     public void disable() {
 
         for (GenericArena arena : arenas) {
