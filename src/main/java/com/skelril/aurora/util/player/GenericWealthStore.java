@@ -1,4 +1,5 @@
 package com.skelril.aurora.util.player;
+import com.skelril.aurora.util.ItemUtil;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -18,23 +19,14 @@ public abstract class GenericWealthStore {
     public GenericWealthStore(String ownerName, ItemStack[] inventoryContents) {
 
         this.ownerName = ownerName;
-        this.inventoryContents = new ItemStack[inventoryContents.length];
-        for (int i = 0; i < inventoryContents.length; i++) {
-            this.inventoryContents[i] = inventoryContents[i] == null ? null : inventoryContents[i].clone();
-        }
+        this.inventoryContents = ItemUtil.clone(inventoryContents);
     }
 
     public GenericWealthStore(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents) {
 
         this.ownerName = ownerName;
-        this.inventoryContents = new ItemStack[inventoryContents.length];
-        for (int i = 0; i < inventoryContents.length; i++) {
-            this.inventoryContents[i] = inventoryContents[i] == null ? null : inventoryContents[i].clone();
-        }
-        this.armourContents = new ItemStack[armourContents.length];
-        for (int i = 0; i < armourContents.length; i++) {
-            this.armourContents[i] = armourContents[i] == null ? null : armourContents[i].clone();
-        }
+        this.inventoryContents = ItemUtil.clone(inventoryContents);
+        this.armourContents = ItemUtil.clone(armourContents);
     }
 
     public GenericWealthStore(String ownerName, List<ItemStack> itemStacks) {
@@ -73,10 +65,7 @@ public abstract class GenericWealthStore {
 
     public void setArmourContents(ItemStack[] armourContents) {
 
-        this.armourContents = new ItemStack[armourContents.length];
-        for (int i = 0; i < armourContents.length; i++) {
-            this.armourContents[i] = armourContents[i] == null ? null : armourContents[i].clone();
-        }
+        this.armourContents = ItemUtil.clone(armourContents);
     }
 
     public ItemStack[] getInventoryContents() {
@@ -86,10 +75,7 @@ public abstract class GenericWealthStore {
 
     public void setInventoryContents(ItemStack[] inventoryContents) {
 
-        this.inventoryContents = new ItemStack[inventoryContents.length];
-        for (int i = 0; i < inventoryContents.length; i++) {
-            this.inventoryContents[i] = inventoryContents[i] == null ? null : inventoryContents[i].clone();
-        }
+        this.inventoryContents = ItemUtil.clone(inventoryContents);
     }
 
     public List<ItemStack> getItemStacks() {

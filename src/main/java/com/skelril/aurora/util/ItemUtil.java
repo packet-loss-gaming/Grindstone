@@ -65,6 +65,15 @@ public class ItemUtil {
         }
     }
 
+    public static ItemStack[] clone(ItemStack[] stacks) {
+
+        ItemStack[] returnStack = new ItemStack[stacks.length];
+        for (int i = 0; i < stacks.length; i++) {
+            returnStack[i] = stacks[i] == null ? null : stacks[i].clone();
+        }
+        return returnStack;
+    }
+
     public static int countFilledSlots(Player player) {
 
         PlayerInventory inventory = player.getInventory();
