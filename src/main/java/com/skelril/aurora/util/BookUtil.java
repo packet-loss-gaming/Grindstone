@@ -62,6 +62,15 @@ public class BookUtil {
 
         public static class BuildingCode {
 
+            public static ItemStack server() {
+
+                List<String> rules = new ArrayList<>();
+                rules.add("You may not defile trees or landscaping in the City");
+                rules.add("Admin have the right to remove unsightly blemishes from houses");
+
+                return generateRuleBook("Global", rules);
+            }
+
             public static ItemStack carpeDiem() {
 
                 List<String> rules = new ArrayList<>();
@@ -74,7 +83,6 @@ public class BookUtil {
 
                 List<String> rules = new ArrayList<>();
                 rules.add("Building height cannot exceed layer 100");
-                rules.add("Admin have the right to remove unsightly blemishes from houses");
                 rules.add("Alteration of the building's exterior will be subject of approval by admin");
                 rules.add("Infringement upon the street by the player or his/her belongings is forbidden");
                 rules.add("Shops outside of a designated area must be approved by admins");
@@ -89,7 +97,6 @@ public class BookUtil {
 
                 List<String> rules = new ArrayList<>();
                 rules.add("Building height cannot exceed layer 96");
-                rules.add("Admin have the right to remove unsightly blemishes from houses");
                 rules.add("Alteration of the building's exterior will be subject of approval by admin");
                 rules.add("Infringement upon the street by the player or his/her belongings is forbidden");
                 rules.add("Any redstone or craftbook devices are not to expand over the players plot boundaries");
@@ -104,7 +111,6 @@ public class BookUtil {
 
                 List<String> rules = new ArrayList<>();
                 rules.add("Building height cannot exceed layer 96");
-                rules.add("Admin have the right to remove unsightly blemishes from houses");
                 rules.add("Alteration of the building's exterior will be subject of approval by admin");
                 rules.add("Infringement upon the street by the player or his/her belongings is forbidden");
                 rules.add("House interiors should be up kept and nice");
@@ -130,7 +136,6 @@ public class BookUtil {
 
                     ruleBookMeta.addPage("Rule #" + (i + 1) + "\n\n" + text.get(i));
                 }
-
                 ruleBook.setItemMeta(ruleBookMeta);
 
                 return ruleBook;

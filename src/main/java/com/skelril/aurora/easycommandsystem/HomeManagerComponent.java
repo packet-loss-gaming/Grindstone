@@ -493,6 +493,7 @@ public class HomeManagerComponent extends BukkitComponent {
         }
 
         if (tPlayer == null) return false;
+        tPlayer.getInventory().addItem(BookUtil.Rules.BuildingCode.server());
         tPlayer.getInventory().addItem(ruleBook);
         return true;
     }
