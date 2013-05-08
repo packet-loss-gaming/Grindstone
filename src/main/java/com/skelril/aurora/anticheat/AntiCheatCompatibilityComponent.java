@@ -116,7 +116,9 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
         }
     }
 
-    private static final CheckType[] playerThrowCheckTypes = new CheckType[] {CheckType.FLY, CheckType.ZOMBE_FLY};
+    private static final CheckType[] playerThrowCheckTypes = new CheckType[] {
+            CheckType.FLY, CheckType.ZOMBE_FLY, CheckType.SPEED
+    };
     private static final CheckType[] fallBlockerCheckTypes = new CheckType[] {CheckType.NOFALL};
 
     @EventHandler
@@ -142,6 +144,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
             case DOOM:
                 checkTypes.add(CheckType.FLY);
                 checkTypes.add(CheckType.ZOMBE_FLY);
+                checkTypes.add(CheckType.SPEED);
             case BUTTERFINGERS:
                 checkTypes.add(CheckType.ITEM_SPAM);
                 break;
