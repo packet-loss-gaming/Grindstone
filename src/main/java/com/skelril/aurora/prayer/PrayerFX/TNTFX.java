@@ -19,7 +19,7 @@ public class TNTFX extends AbstractPrayer {
     public void add(Player player) {
 
         Location playerLoc = player.getLocation();
-        player.getWorld().createExplosion(playerLoc.getX(), playerLoc.getY(), playerLoc.getZ(), .3F, false, false);
+        player.getWorld().createExplosion(playerLoc.getX(), playerLoc.getY(), playerLoc.getZ(), .1F, false, false);
     }
 
     @Override
