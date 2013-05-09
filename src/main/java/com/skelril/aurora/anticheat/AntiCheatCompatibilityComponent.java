@@ -138,13 +138,13 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
 
         List<CheckType> checkTypes = new ArrayList<>();
         switch (event.getCause().getEffect().getType()) {
-            case ALONZO:
             case ROCKET:
             case SLAP:
             case DOOM:
                 checkTypes.add(CheckType.FLY);
                 checkTypes.add(CheckType.ZOMBE_FLY);
                 checkTypes.add(CheckType.SPEED);
+            case ALONZO:
             case BUTTERFINGERS:
                 checkTypes.add(CheckType.ITEM_SPAM);
                 break;
