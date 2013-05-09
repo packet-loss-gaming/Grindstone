@@ -24,6 +24,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
+import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -349,6 +350,11 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
             // Check for valid nameType
             try {
 
+                if (sender instanceof BlockCommandSender) {
+                    commandBlock(player, prayerString);
+                    return;
+                }
+
                 if (player.getName().equals(sender.getName()) && adminComponent.standardizePlayer(player)) {
                     uninfluencePlayer(player);
                     player.getWorld().strikeLightningEffect(player.getLocation());
@@ -383,6 +389,12 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 throw new CommandException("That is not a valid prayer!");
             }
         }
+    }
+
+    private void commandBlock(Player player, String prayerString) throws InvalidPrayerException, UnsupportedPrayerException {
+
+        Prayer prayer = constructPrayer(player, getPrayerByString(prayerString), TimeUnit.MINUTES.toMillis(1));
+        influencePlayer(player, prayer);
     }
 
     private boolean integrityTest(Player player, Prayer prayer) {
