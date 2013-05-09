@@ -1,5 +1,6 @@
 package com.skelril.aurora.util;
 
+import com.sk89q.commandbook.CommandBook;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import org.bukkit.Effect;
 import org.bukkit.entity.Entity;
@@ -15,6 +16,43 @@ import java.util.Collection;
  * Author: Turtle9598
  */
 public class EffectUtil {
+
+    public static class Fear {
+
+        public static void fearBlaze(Player owner, LivingEntity target) {
+
+            target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, target.getHealth() * 20, 1));
+            target.setFireTicks(owner.getHealth() * 20);
+        }
+
+        public static void poison(Player owner, LivingEntity target) {
+
+            target.addPotionEffect(new PotionEffect(PotionEffectType.POISON, target.getHealth() * 10, 3));
+        }
+
+        public static void weaken(Player owner, LivingEntity target) {
+
+            target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, owner.getHealth() * 18, 2));
+        }
+
+        public static void confuse(Player owner, LivingEntity target) {
+
+            target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, owner.getHealth() * 18, 1));
+        }
+
+        public static void wrath(final Player owner, final LivingEntity target, int x) {
+
+            for (int i = 0; i < x; i++) {
+                CommandBook.server().getScheduler().scheduleSyncDelayedTask(CommandBook.inst(), new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (!target.isValid()) target.damage(5, owner);
+                    }
+                }, (1 + i) * 20);
+            }
+        }
+    }
 
     public static class Master {
 

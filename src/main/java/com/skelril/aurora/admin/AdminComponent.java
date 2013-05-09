@@ -865,6 +865,21 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @Command(aliases = {"pwngbow"},
                 usage = "<player>", desc = "Pwng Bow",
                 flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.fear.sword"})
+        public void lostFearSword(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.Fear.makeSword());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new fear sword.");
+        }
+
+        @Command(aliases = {"pwngbow"},
+                usage = "<player>", desc = "Pwng Bow",
+                flags = "", min = 1, max = 1)
         @CommandPermissions({"aurora.lost.god.pwngbow"})
         public void lostPwngBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 

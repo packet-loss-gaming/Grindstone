@@ -3,17 +3,21 @@ package com.skelril.aurora;
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EffectUtil;
 import com.skelril.aurora.util.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.inventory.ItemStack;
@@ -32,6 +36,35 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
+
+        Player owner = event.getEntity() instanceof Player ? (Player) event.getEntity() : null;
+        LivingEntity target = event.getDamager() instanceof LivingEntity ? (LivingEntity) event.getDamager() : null;
+
+        if (owner != null && ChanceUtil.getChance(12) && ItemUtil.hasFearSword(owner)) {
+
+            switch (ChanceUtil.getRandom(5)) {
+                case 1:
+                    EffectUtil.Fear.confuse(owner, target);
+                    break;
+                case 2:
+                    EffectUtil.Fear.fearBlaze(owner, target);
+                    break;
+                case 3:
+                    EffectUtil.Fear.poison(owner, target);
+                    break;
+                case 4:
+                    EffectUtil.Fear.weaken(owner, target);
+                    break;
+                case 5:
+                    EffectUtil.Fear.wrath(owner, target, ChanceUtil.getRandom(4));
+                    break;
+            }
+            ChatUtil.sendNotice(owner, "Your sword focuses the power of fear.");
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
