@@ -10,13 +10,12 @@ import org.bukkit.potion.PotionEffectType;
 public class DoomFX extends AbstractPrayer {
 
     private static final AbstractPrayer[] subFX = new AbstractPrayer[] {
-            new SlapFX(), new TNTFX()
+            new SlapFX(), new PoisonFX(), new FakeTNTFX()
     };
-    private static final PotionEffect effect = new PotionEffect(PotionEffectType.POISON, 20 * 600, 2);
 
     public DoomFX() {
 
-        super(subFX, effect);
+        super(subFX);
     }
 
     @Override
