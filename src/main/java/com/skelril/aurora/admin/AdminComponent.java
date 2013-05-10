@@ -862,7 +862,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     + " has been given a new master sword.");
         }
 
-        @Command(aliases = {"pwngbow"},
+        @Command(aliases = {"fearsword"},
                 usage = "<player>", desc = "Pwng Bow",
                 flags = "", min = 1, max = 1)
         @CommandPermissions({"aurora.lost.fear.sword"})

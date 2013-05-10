@@ -77,6 +77,7 @@ public class ItemUtil {
             fearMeta.addEnchant(Enchantment.FIRE_ASPECT, 7, true);
             fearMeta.addEnchant(Enchantment.KNOCKBACK, 7, true);
             fearMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 7, true);
+            fearMeta.setDisplayName(ChatColor.DARK_RED + "Fear Sword");
             ((Repairable) fearMeta).setRepairCost(400);
             fearSword.setItemMeta(fearMeta);
             return fearSword;

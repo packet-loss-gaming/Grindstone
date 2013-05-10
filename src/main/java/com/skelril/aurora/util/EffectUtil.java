@@ -3,6 +3,7 @@ package com.skelril.aurora.util;
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import org.bukkit.Effect;
+import org.bukkit.Server;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -11,11 +12,16 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
+import java.util.logging.Logger;
 
 /**
  * Author: Turtle9598
  */
 public class EffectUtil {
+
+    private static final CommandBook inst = CommandBook.inst();
+    private static final Logger log = inst.getLogger();
+    private static final Server server = CommandBook.server();
 
     public static class Fear {
 
@@ -23,34 +29,42 @@ public class EffectUtil {
 
             target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, target.getHealth() * 20, 1));
             target.setFireTicks(owner.getHealth() * 20);
+            ChatUtil.sendNotice(owner, "Your sword releases a deadly blaze.");
         }
 
         public static void poison(Player owner, LivingEntity target) {
 
             target.addPotionEffect(new PotionEffect(PotionEffectType.POISON, target.getHealth() * 10, 3));
+            ChatUtil.sendNotice(owner, "Your sword poisons its victim.");
         }
 
         public static void weaken(Player owner, LivingEntity target) {
 
             target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, owner.getHealth() * 18, 2));
+            owner.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, owner.getHealth() * 18, 2));
+            ChatUtil.sendNotice(owner, "Your sword leaches strength from its victim.");
         }
 
         public static void confuse(Player owner, LivingEntity target) {
 
             target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, owner.getHealth() * 18, 1));
+            ChatUtil.sendNotice(owner, "Your sword confuses its victim.");
         }
 
         public static void wrath(final Player owner, final LivingEntity target, int x) {
 
             for (int i = 0; i < x; i++) {
-                CommandBook.server().getScheduler().scheduleSyncDelayedTask(CommandBook.inst(), new Runnable() {
+                server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
                     @Override
                     public void run() {
 
-                        if (!target.isValid()) target.damage(5, owner);
+                        if (target.isValid() && target.getHealth() > (target.getMaxHealth() / 4)) {
+                            target.damage(target.getMaxHealth() / 5);
+                        }
                     }
-                }, (1 + i) * 20);
+                }, (1 + i) * 15);
             }
+            ChatUtil.sendNotice(owner, "Your sword releases a series of rapid lethal attacks.");
         }
     }
 

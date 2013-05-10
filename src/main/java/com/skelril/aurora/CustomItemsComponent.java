@@ -41,10 +41,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
-        Player owner = event.getEntity() instanceof Player ? (Player) event.getEntity() : null;
-        LivingEntity target = event.getDamager() instanceof LivingEntity ? (LivingEntity) event.getDamager() : null;
+        Player owner = event.getDamager() instanceof Player ? (Player) event.getDamager() : null;
+        LivingEntity target = event.getEntity() instanceof LivingEntity ? (LivingEntity) event.getEntity() : null;
 
-        if (owner != null && ChanceUtil.getChance(12) && ItemUtil.hasFearSword(owner)) {
+        if (owner != null && target != null && ChanceUtil.getChance(3) && ItemUtil.hasFearSword(owner)) {
 
             switch (ChanceUtil.getRandom(5)) {
                 case 1:
@@ -60,10 +60,9 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     EffectUtil.Fear.weaken(owner, target);
                     break;
                 case 5:
-                    EffectUtil.Fear.wrath(owner, target, ChanceUtil.getRandom(4));
+                    EffectUtil.Fear.wrath(owner, target, ChanceUtil.getRangedRandom(2, 5));
                     break;
             }
-            ChatUtil.sendNotice(owner, "Your sword focuses the power of fear.");
         }
     }
 
