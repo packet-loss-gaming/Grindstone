@@ -577,7 +577,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
 
         @Command(aliases = {"lost"}, desc = "Permissions Commands")
-        @NestedCommand({LostItemCommands.class})
+        @NestedCommand({NestedLostItemCommands.class})
         public void lostItemCommands(CommandContext args, CommandSender sender) throws CommandException {
 
         }
@@ -653,15 +653,46 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
-    public class LostItemCommands {
+    public class NestedLostItemCommands {
 
-        // TODO properly set repair cost
+        @Command(aliases = {"god"}, desc = "Lost God items")
+        @NestedCommand({LostGodItem.class})
+        public void lostGodCommands(CommandContext args, CommandSender sender) throws CommandException {
 
-        @Command(aliases = {"godarmour"},
-                usage = "<player>", desc = "Modify a player's permissions",
+        }
+
+        @Command(aliases = {"ancient"}, desc = "Lost Ancient items")
+        @NestedCommand({LostAncientItem.class})
+        public void lostAncientCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+
+        @Command(aliases = {"master"}, desc = "Lost Master items")
+        @NestedCommand({LostMasterItem.class})
+        public void lostMasterCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+
+        @Command(aliases = {"fear"}, desc = "Lost Fear items")
+        @NestedCommand({LostFearItem.class})
+        public void lostFearCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+
+        @Command(aliases = {"admin"}, desc = "Lost Admin items")
+        @NestedCommand({LostAdminItem.class})
+        public void lostAdminCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+    }
+
+    public class LostGodItem {
+
+        @Command(aliases = {"armor"},
+                usage = "<player>", desc = "Return a player's God Armor",
                 flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.lost.god.armour"})
-        public void lostGodArmourCmd(CommandContext args, CommandSender sender) throws CommandException {
+        @CommandPermissions({"aurora.lost.god.armor"})
+        public void lostArmorCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
@@ -705,11 +736,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     + " has been given new god armour.");
         }
 
-        @Command(aliases = {"godbow"},
-                usage = "<player>", desc = "Modify a player's permissions",
+        @Command(aliases = {"bow"},
+                usage = "<player>", desc = "Return a player's God Bow",
                 flags = "", min = 1, max = 1)
         @CommandPermissions({"aurora.lost.god.bow"})
-        public void lostGodBowCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void lostBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
@@ -728,11 +759,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     + " has been given a new god bow.");
         }
 
-        @Command(aliases = {"godsword"},
-                usage = "<player>", desc = "Modify a player's permissions",
+        @Command(aliases = {"sword"},
+                usage = "<player>", desc = "Return a player's God Sword",
                 flags = "", min = 1, max = 1)
         @CommandPermissions({"aurora.lost.god.sword"})
-        public void lostGodSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
@@ -753,11 +784,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     + " has been given a new god sword.");
         }
 
-        @Command(aliases = {"godpickaxe", "godpick"},
-                usage = "<player>", desc = "Modify a player's permissions",
+        @Command(aliases = {"pickaxe", "pick"},
+                usage = "<player>", desc = "Return a player's God Pickaxe",
                 flags = "l", min = 1, max = 1)
         @CommandPermissions({"aurora.lost.god.pickaxe"})
-        public void lostGodPickaxeCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void lostPickaxeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
@@ -783,12 +814,15 @@ public class AdminComponent extends BukkitComponent implements Listener {
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given a new god pickaxe.");
         }
+    }
 
-        @Command(aliases = {"ancientarmour"},
-                usage = "<player>", desc = "Modify a player's permissions",
+    public class LostAncientItem {
+
+        @Command(aliases = {"armor"},
+                usage = "<player>", desc = "Return a player's Ancient Armour",
                 flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.lost.ancient.armour"})
-        public void lostAncientArmourCmd(CommandContext args, CommandSender sender) throws CommandException {
+        @CommandPermissions({"aurora.lost.ancient.armor"})
+        public void lostArmorCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
@@ -831,12 +865,15 @@ public class AdminComponent extends BukkitComponent implements Listener {
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given new ancient armour.");
         }
+    }
 
-        @Command(aliases = {"mastersword"},
-                usage = "<player>", desc = "Modify a player's permissions",
+    public class LostMasterItem {
+
+        @Command(aliases = {"sword"},
+                usage = "<player>", desc = "Return a player's Master Sword",
                 flags = "", min = 1, max = 1)
         @CommandPermissions({"aurora.lost.master.sword"})
-        public void lostMasterSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
@@ -847,11 +884,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     + " has been given a new master sword.");
         }
 
-        @Command(aliases = {"masterbow"},
-                usage = "<player>", desc = "Modify a player's permissions",
+        @Command(aliases = {"bow"},
+                usage = "<player>", desc = "Return a player's Master Bow",
                 flags = "", min = 1, max = 1)
         @CommandPermissions({"aurora.lost.master.bow"})
-        public void lostMasterBowCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void lostBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
@@ -861,12 +898,15 @@ public class AdminComponent extends BukkitComponent implements Listener {
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given a new master sword.");
         }
+    }
 
-        @Command(aliases = {"fearsword"},
-                usage = "<player>", desc = "Pwng Bow",
+    public class LostFearItem {
+
+        @Command(aliases = {"sword"},
+                usage = "<player>", desc = "Return a player's Fear Sword",
                 flags = "", min = 1, max = 1)
         @CommandPermissions({"aurora.lost.fear.sword"})
-        public void lostFearSword(CommandContext args, CommandSender sender) throws CommandException {
+        public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
@@ -876,9 +916,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given a new fear sword.");
         }
+    }
+
+    public class LostAdminItem {
 
         @Command(aliases = {"pwngbow"},
-                usage = "<player>", desc = "Pwng Bow",
+                usage = "<player>", desc = "Return a player's pwngbow",
                 flags = "", min = 1, max = 1)
         @CommandPermissions({"aurora.lost.god.pwngbow"})
         public void lostPwngBowCmd(CommandContext args, CommandSender sender) throws CommandException {
