@@ -161,6 +161,9 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
             case HEALTH:
                 prayerEffects = new HealthFX();
                 break;
+            case HULK:
+                prayerEffects = new HulkFX();
+                break;
             case INVENTORY:
                 prayerEffects = new InventoryFX();
                 break;
