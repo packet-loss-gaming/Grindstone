@@ -193,7 +193,7 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
 
         Player player = event.getEntity();
 
-        if (contains(player, 1) && !adminComponent.isAdmin(player)) {
+        if (!playerState.containsKey(player.getName()) && contains(player, 1) && !adminComponent.isAdmin(player)) {
 
             playerState.put(player.getName(), new PlayerState(player.getName(),
                     player.getInventory().getContents(),
