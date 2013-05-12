@@ -273,7 +273,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                         lever.setPowered(false);
                         block.setData(lever);
                         block.update(true);
-                        leverBlocks.put(block.getLocation(), ChanceUtil.getChance(3));
+                        leverBlocks.put(block.getLocation(), !ChanceUtil.getChance(3));
                         for (int i = y; i < maxY; i++) {
                             block = getWorld().getBlockAt(x, i, z).getState();
                             if (block.getTypeId() == BlockID.AIR) {
