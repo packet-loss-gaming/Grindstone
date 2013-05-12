@@ -3,6 +3,7 @@ package com.skelril.aurora.anticheat;
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.aurora.events.FallBlockerEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
+import com.skelril.aurora.events.RapidHitEvent;
 import com.skelril.aurora.events.ThrowPlayerEvent;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -120,6 +121,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
             CheckType.FLY, CheckType.ZOMBE_FLY, CheckType.SPEED
     };
     private static final CheckType[] fallBlockerCheckTypes = new CheckType[] {CheckType.NOFALL};
+    private static final CheckType[] rapidHitCheckTypes = new CheckType[] {CheckType.NO_SWING, CheckType.FORCEFIELD};
 
     @EventHandler
     public void onPlayerThrow(ThrowPlayerEvent event) {
@@ -131,6 +133,12 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     public void onFallBlocker(FallBlockerEvent event) {
 
         bypass(event.getPlayer(), fallBlockerCheckTypes);
+    }
+
+    @EventHandler
+    public void onRapidHit(RapidHitEvent event) {
+
+        bypass(event.getPlayer(), rapidHitCheckTypes);
     }
 
     @EventHandler(ignoreCancelled = true)
