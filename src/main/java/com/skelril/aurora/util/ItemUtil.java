@@ -108,6 +108,30 @@ public class ItemUtil {
         return count;
     }
 
+    public static boolean findItemOfName(ItemStack[] itemStacks, String name) {
+
+        for (ItemStack itemStack : itemStacks) {
+            if (itemStack != null && itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
+
+                if (itemStack.getItemMeta().getDisplayName().contains(name)) return true;
+            }
+        }
+        return false;
+    }
+
+    public static int countItemsOfName(ItemStack[] itemStacks, String name) {
+
+        int count = 0;
+        for (ItemStack itemStack : itemStacks) {
+            if (itemStack != null && itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
+
+                if (itemStack.getItemMeta().getDisplayName().contains(name)) count++;
+            }
+        }
+        return count;
+    }
+
+
     public static int countItemsOfType(ItemStack[] itemStacks, int typeId) {
 
         int count = 0;
@@ -124,8 +148,7 @@ public class ItemUtil {
         int count = 0;
         for (ItemStack itemStack : itemStacks) {
             for (ItemStack checkItem : checkItemStacks) {
-                if (itemStack != null && itemStack.getTypeId() == checkItem.getTypeId()
-                        && itemStack.getEnchantments().equals(checkItem.getEnchantments())) {
+                if (itemStack != null && itemStack.equals(checkItem)) {
                     count++;
                 }
             }
@@ -210,6 +233,17 @@ public class ItemUtil {
 
         return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
                 && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_PURPLE + "Master Bow");
+    }
+
+    public static boolean hasFearHelmet(Player player) {
+
+        return player.isValid() && isFearHelmet(player.getInventory().getHelmet());
+    }
+
+    public static boolean isFearHelmet(ItemStack item) {
+
+        return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
+                && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_RED + "Fear Helmet");
     }
 
     public static boolean hasFearSword(Player player) {

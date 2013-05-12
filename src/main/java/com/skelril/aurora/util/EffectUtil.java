@@ -1,6 +1,7 @@
 package com.skelril.aurora.util;
 
 import com.sk89q.commandbook.CommandBook;
+import com.skelril.aurora.events.RapidHitEvent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import org.bukkit.Effect;
 import org.bukkit.Server;
@@ -51,20 +52,38 @@ public class EffectUtil {
             ChatUtil.sendNotice(owner, "Your sword confuses its victim.");
         }
 
-        public static void wrath(final Player owner, final LivingEntity target, int x) {
+        public static void wrath(final Player owner, final LivingEntity target, final int x, int y) {
 
-            for (int i = 0; i < x; i++) {
+            final int z = (((1 + ChanceUtil.getRandom(3)) * x) / y^2)^3 + 4;
+
+            String damageRating;
+            if (z > 50) {
+                damageRating = "lethal";
+            } else if (z > 40) {
+                damageRating = "devastating";
+            } else if (z > 30) {
+                damageRating = "strong";
+            } else if (z > 20) {
+                damageRating = "frightening";
+            } else {
+                damageRating = "weak";
+            }
+
+            target.damage(z);
+            for (int i = 0; i < y - 1; i++) {
                 server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
                     @Override
                     public void run() {
 
-                        if (target.isValid() && target.getHealth() > (target.getMaxHealth() / 4)) {
-                            target.damage(target.getMaxHealth() / 5);
+                        if (!target.isDead() && target.getHealth() < target.getMaxHealth()) {
+                            RapidHitEvent event = new RapidHitEvent(owner, z);
+                            server.getPluginManager().callEvent(event);
+                            target.damage(event.getDamage(), owner);
                         }
                     }
-                }, (1 + i) * 15);
+                }, (i + 1) * 25);
             }
-            ChatUtil.sendNotice(owner, "Your sword releases a series of rapid lethal attacks.");
+            ChatUtil.sendNotice(owner, "Your sword releases a series of rapid " + damageRating + " attacks.");
         }
     }
 

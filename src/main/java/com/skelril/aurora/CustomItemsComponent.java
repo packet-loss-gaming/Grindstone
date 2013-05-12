@@ -20,7 +20,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Author: Turtle9598
@@ -38,13 +43,25 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         inst.registerEvents(this);
     }
 
+    private ConcurrentHashMap<String, Long> fearSpec = new ConcurrentHashMap<>();
+
+    private boolean canSpeced(String name) {
+
+        if (fearSpec.containsKey(name)) {
+
+            return System.currentTimeMillis() - fearSpec.get(name) >= 3800;
+        }
+        return true;
+    }
+
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         Player owner = event.getDamager() instanceof Player ? (Player) event.getDamager() : null;
         LivingEntity target = event.getEntity() instanceof LivingEntity ? (LivingEntity) event.getEntity() : null;
 
-        if (owner != null && target != null && ChanceUtil.getChance(3) && ItemUtil.hasFearSword(owner)) {
+        if (owner != null && target != null && ItemUtil.hasFearSword(owner) && canSpeced(owner.getName())) {
 
             switch (ChanceUtil.getRandom(5)) {
                 case 1:
@@ -60,9 +77,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     EffectUtil.Fear.weaken(owner, target);
                     break;
                 case 5:
-                    EffectUtil.Fear.wrath(owner, target, ChanceUtil.getRangedRandom(2, 5));
+                    EffectUtil.Fear.wrath(owner, target, event.getDamage(), 4);
                     break;
             }
+            fearSpec.put(owner.getName(), System.currentTimeMillis());
         }
     }
 
@@ -107,5 +125,12 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 ChatUtil.sendNotice(player, "The Master Bow releases a bright flash.");
             }
         }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+
+        String name = event.getPlayer().getName();
+        if (fearSpec.containsKey(name)) fearSpec.remove(name);
     }
 }
