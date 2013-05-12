@@ -45,42 +45,42 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private ConcurrentHashMap<String, Long> fearSpec = new ConcurrentHashMap<>();
 
-    private boolean canSpeced(String name) {
+    private boolean canFearSpec(String name) {
 
-        if (fearSpec.containsKey(name)) {
-
-            return System.currentTimeMillis() - fearSpec.get(name) >= 3800;
-        }
-        return true;
+        return !fearSpec.containsKey(name) || System.currentTimeMillis() - fearSpec.get(name) >= 3800;
     }
 
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         Player owner = event.getDamager() instanceof Player ? (Player) event.getDamager() : null;
         LivingEntity target = event.getEntity() instanceof LivingEntity ? (LivingEntity) event.getEntity() : null;
 
-        if (owner != null && target != null && ItemUtil.hasFearSword(owner) && canSpeced(owner.getName())) {
+        if (owner != null && target != null) {
 
-            switch (ChanceUtil.getRandom(5)) {
-                case 1:
-                    EffectUtil.Fear.confuse(owner, target);
-                    break;
-                case 2:
-                    EffectUtil.Fear.fearBlaze(owner, target);
-                    break;
-                case 3:
-                    EffectUtil.Fear.poison(owner, target);
-                    break;
-                case 4:
-                    EffectUtil.Fear.weaken(owner, target);
-                    break;
-                case 5:
-                    EffectUtil.Fear.wrath(owner, target, event.getDamage(), 4);
-                    break;
+            if (canFearSpec(owner.getName())) {
+                if (ItemUtil.hasFearSword(owner)) {
+                    switch (ChanceUtil.getRandom(5)) {
+                        case 1:
+                            EffectUtil.Fear.confuse(owner, target);
+                            break;
+                        case 2:
+                            EffectUtil.Fear.fearBlaze(owner, target);
+                            break;
+                        case 3:
+                            EffectUtil.Fear.poison(owner, target);
+                            break;
+                        case 4:
+                            EffectUtil.Fear.weaken(owner, target);
+                            break;
+                        case 5:
+                            EffectUtil.Fear.wrath(owner, target, event.getDamage(), ChanceUtil.getRangedRandom(2, 6));
+                            break;
+                    }
+                    fearSpec.put(owner.getName(), System.currentTimeMillis());
+                }
             }
-            fearSpec.put(owner.getName(), System.currentTimeMillis());
         }
     }
 
@@ -105,7 +105,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDeath(EntityDeathEvent event) {
 
         LivingEntity damaged = event.getEntity();
