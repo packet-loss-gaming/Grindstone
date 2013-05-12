@@ -916,6 +916,21 @@ public class AdminComponent extends BukkitComponent implements Listener {
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given a new fear sword.");
         }
+
+        @Command(aliases = {"bow"},
+                usage = "<player>", desc = "Return a player's Fear Bow",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.fear.bow"})
+        public void lostBowCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.Fear.makeBow());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new fear bow.");
+        }
     }
 
     public class LostAdminItem {

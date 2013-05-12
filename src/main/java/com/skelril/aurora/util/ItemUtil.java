@@ -82,6 +82,21 @@ public class ItemUtil {
             fearSword.setItemMeta(fearMeta);
             return fearSword;
         }
+
+        public static ItemStack makeBow() {
+
+            ItemStack masterBow = new ItemStack(ItemID.BOW);
+            ItemMeta masterMeta = masterBow.getItemMeta();
+            masterMeta.addEnchant(Enchantment.ARROW_DAMAGE, 7, true);
+            masterMeta.addEnchant(Enchantment.ARROW_FIRE, 7, true);
+            masterMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+            masterMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 7, true);
+            masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 7, true);
+            masterMeta.setDisplayName(ChatColor.DARK_RED + "Fear Bow");
+            ((Repairable) masterMeta).setRepairCost(400);
+            masterBow.setItemMeta(masterMeta);
+            return masterBow;
+        }
     }
 
     public static ItemStack[] clone(ItemStack[] stacks) {
@@ -255,6 +270,17 @@ public class ItemUtil {
 
         return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
                 && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_RED + "Fear Sword");
+    }
+
+    public static boolean hasFearBow(Player player) {
+
+        return player.isValid() && isFearBow(player.getItemInHand());
+    }
+
+    public static boolean isFearBow(ItemStack item) {
+
+        return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
+                && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_RED + "Fear Bow");
     }
 
     public static boolean hasForgeBook(Player player) {

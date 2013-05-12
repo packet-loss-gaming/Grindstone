@@ -11,9 +11,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -22,6 +20,8 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +54,12 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
-        Player owner = event.getDamager() instanceof Player ? (Player) event.getDamager() : null;
+        Entity damager = event.getDamager();
+        if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
+            damager = ((Projectile) damager).getShooter();
+        }
+
+        Player owner = damager instanceof Player ? (Player) damager : null;
         LivingEntity target = event.getEntity() instanceof LivingEntity ? (LivingEntity) event.getEntity() : null;
 
         if (owner != null && target != null) {
@@ -77,6 +82,32 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                         case 5:
                             EffectUtil.Fear.wrath(owner, target, event.getDamage(), ChanceUtil.getRangedRandom(2, 6));
                             break;
+                    }
+                    fearSpec.put(owner.getName(), System.currentTimeMillis());
+                } else if (ItemUtil.hasFearBow(owner)) {
+                    int attack = ChanceUtil.getRandom(4);
+
+                    switch (attack) {
+                        case 1:
+                            if (EffectUtil.Fear.disarm(owner, target)) {
+                                break;
+                            }
+                        case 2:
+                            EffectUtil.Fear.poison(owner, target);
+                            break;
+                        case 3:
+                            EffectUtil.Fear.magicChain(owner, target);
+                            break;
+                        case 4:
+                            event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage()));
+                            break;
+                    }
+
+                    if (attack != 4 && ChanceUtil.getChance(6)) {
+                        Location targetLoc = target.getLocation();
+                        if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
+                            targetLoc.getWorld().strikeLightning(targetLoc);
+                        }
                     }
                     fearSpec.put(owner.getName(), System.currentTimeMillis());
                 }

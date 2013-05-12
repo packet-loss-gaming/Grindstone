@@ -2,12 +2,17 @@ package com.skelril.aurora.util;
 
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.aurora.events.RapidHitEvent;
+import com.skelril.aurora.events.ThrowPlayerEvent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import org.bukkit.Effect;
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -36,7 +41,7 @@ public class EffectUtil {
         public static void poison(Player owner, LivingEntity target) {
 
             target.addPotionEffect(new PotionEffect(PotionEffectType.POISON, target.getHealth() * 10, 3));
-            ChatUtil.sendNotice(owner, "Your sword poisons its victim.");
+            ChatUtil.sendNotice(owner, "Your weapon poisons its victim.");
         }
 
         public static void weaken(Player owner, LivingEntity target) {
@@ -84,6 +89,56 @@ public class EffectUtil {
                 }, (i + 1) * 25);
             }
             ChatUtil.sendNotice(owner, "Your sword releases a series of rapid " + damageRating + " attacks.");
+        }
+
+        public static boolean disarm(Player owner, LivingEntity target) {
+
+            ItemStack held;
+            if (target instanceof Player) {
+                held = ((Player) target).getItemInHand();
+                if (held != null) held = held.clone();
+                ((Player) target).setItemInHand(null);
+            } else {
+                held = target.getEquipment().getItemInHand();
+                if (held != null) held = held.clone();
+                target.getEquipment().setItemInHand(null);
+            }
+            if (held == null || held.getTypeId() == 0) return false;
+            Item item = target.getWorld().dropItem(target.getLocation(), held);
+            item.setPickupDelay(25);
+            ChatUtil.sendNotice(owner, "Your bow disarms its victim.");
+            return true;
+        }
+
+        public static void magicChain(Player owner, LivingEntity target) {
+
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, owner.getHealth() * 18, 2));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, owner.getHealth() * 18, 2));
+            ChatUtil.sendNotice(owner, "Your bow slows its victim.");
+        }
+
+        public static int fearStrike(Player owner, LivingEntity target, int x) {
+
+            server.getPluginManager().callEvent(new RapidHitEvent(owner));
+
+            for (Entity e : target.getNearbyEntities(8, 8, 8)) {
+                if (e.isValid() && e instanceof LivingEntity) {
+                    if (e.equals(owner)) continue;
+                    if (e instanceof Player) {
+                        EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(
+                                owner, target, EntityDamageEvent.DamageCause.ENTITY_ATTACK, 2
+                        );
+                        server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) target));
+                        server.getPluginManager().callEvent(event);
+                        if (event.isCancelled()) continue;
+                    }
+                    e.setVelocity(owner.getLocation().getDirection().multiply(2).setY(Math.random() * 3));
+                    e.setFireTicks(ChanceUtil.getRandom(20 * 60));
+                }
+            }
+            ChatUtil.sendNotice(owner, "You fire a terrifyingly powerful shot.");
+
+            return x * ChanceUtil.getRandom(2);
         }
     }
 
@@ -147,9 +202,9 @@ public class EffectUtil {
                         ChatUtil.sendNotice((Player) e, "You are healed by an ancient force.");
                     } else if (EnvironmentUtil.isHostileEntity(e)) {
                         e.setVelocity(new Vector(
-                                Math.random() * 1.7 - 1.5,
+                                Math.random() * 3 - 1.5,
                                 Math.random() * 4,
-                                Math.random() * 1.7 - 1.5
+                                Math.random() * 3 - 1.5
                         ));
                         e.setFireTicks(ChanceUtil.getRandom(20 * 60));
                     }
