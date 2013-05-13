@@ -298,7 +298,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 for (int i = 0; i < (multiplier * applicablePlayers.size()); i++) {
 
                     spawnAndArm(LocationUtil.findFreePosition(lightningStrikeLoc), config.attackMob, true);
-                    spawnAndArm(LocationUtil.findFreePosition(world.getSpawnLocation()), config.attackMob, true);
 
                     if (ChanceUtil.getChance((multiplier / config.deMultiplier) * applicablePlayers.size())) {
                         for (Player player : applicablePlayers) {

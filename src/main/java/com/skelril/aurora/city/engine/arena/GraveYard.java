@@ -126,6 +126,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void localSpawn(Player player) {
 
+        if (!EnvironmentUtil.isNightTime(player.getWorld().getTime()) && !player.getWorld().hasStorm()) return;
         Block playerBlock = player.getLocation().getBlock();
         Location ls;
 
@@ -235,6 +236,13 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                         phantomGold.setItemMeta(meta);
                         drops.add(phantomGold);
                     }
+
+                    Iterator<ItemStack> it = drops.iterator();
+                    while (it.hasNext()) {
+                        ItemStack stack = it.next();
+
+                        if (stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
+                    }
                 }
             }
         }
@@ -256,7 +264,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         Block block = event.getBlock();
         BaseBlock baseBlock = new BaseBlock(block.getTypeId(), block.getData());
-        if (contains(block)) {
+        if (contains(block) && !adminComponent.isAdmin(event.getPlayer())) {
 
             if (!breakable.contains(baseBlock)) {
                 event.setCancelled(true);
@@ -270,7 +278,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onBlockPlace(BlockPlaceEvent event) {
 
-        if (contains(event.getBlock())) {
+        if (contains(event.getBlock()) && !adminComponent.isAdmin(event.getPlayer())) {
 
             event.setCancelled(true);
         }
@@ -308,13 +316,13 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         PotionType type = PotionType.values()[ChanceUtil.getRandom(PotionType.values().length) - 1];
         potion.setItem(new Potion(type).splash().toItemStack(1));
         potion.setVelocity(new Vector(
-                random.nextDouble() * .25 - .25,
+                random.nextDouble() * .5 - .25,
                 random.nextDouble() * .4 + .1,
-                random.nextDouble() * .25 - .25
+                random.nextDouble() * .5 - .25
         ));
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
@@ -331,6 +339,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void makeGrave(String name, ItemStack[] itemStacks) {
 
+        if (headStones.size() < 1) return;
         Location headStone = headStones.get(ChanceUtil.getRandom(headStones.size()) - 1).clone();
         BlockState signState = headStone.getBlock().getState();
 
@@ -460,6 +469,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void fogPlayer(Player player) {
 
+        if (adminComponent.isAdmin(player)) return;
+
         Location loc = player.getLocation();
 
         if (loc.getBlock().getLightLevel() <= 4 || loc.getBlock().getLightFromSky() <= 12 && loc.getBlockY() < 93) {
@@ -512,6 +523,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     @Override
     public void run() {
 
+        equalize();
         restoreBlocks();
         isPressurePlateLocked = !checkPressurePlateLock();
 
@@ -539,7 +551,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     @Override
     public void disable() {
 
-        restoreBlocks();
+        forceRestoreBlocks();
     }
 
     @Override

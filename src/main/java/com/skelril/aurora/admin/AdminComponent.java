@@ -497,7 +497,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
