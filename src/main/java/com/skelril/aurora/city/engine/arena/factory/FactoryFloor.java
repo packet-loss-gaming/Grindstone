@@ -31,9 +31,9 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
     private Random random = new Random();
     private Queue<ItemStack> que = new LinkedList<>();
 
-    public FactoryFloor(World world, ProtectedRegion region, ProtectedRegion chamber,
-                        List<FactoryMech> mechs, AdminComponent adminComponent) {
-        super(world, region, chamber);
+    public FactoryFloor(World world, ProtectedRegion[] regions, List<FactoryMech> mechs,
+                        AdminComponent adminComponent) {
+        super(world, regions[0], regions[1]);
         this.adminComponent = adminComponent;
 
         this.mechs = Lists.newArrayList(mechs);

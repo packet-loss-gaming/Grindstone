@@ -78,21 +78,19 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private List<String> players = new ArrayList<>();
     private boolean leversTriggered = false;
 
-    public GoldRush(World world, ProtectedRegion region, ProtectedRegion lobby,
-                    ProtectedRegion roomOne, ProtectedRegion roomTwo, ProtectedRegion roomThree,
-                    ProtectedRegion doorOne, ProtectedRegion doorTwo,
+    public GoldRush(World world, ProtectedRegion[] regions,
                     AdminComponent adminComponent, ImpersonalComponent impersonalComponent) {
 
-        super(world, region);
+        super(world, regions[0]);
 
-        this.lobby = lobby;
+        this.lobby = regions[1];
 
-        this.roomOne = roomOne;
-        this.roomTwo = roomTwo;
-        this.roomThree = roomThree;
+        this.roomOne = regions[2];
+        this.roomTwo = regions[3];
+        this.roomThree = regions[4];
 
-        this.doorOne = doorOne;
-        this.doorTwo = doorTwo;
+        this.doorOne = regions[5];
+        this.doorTwo = regions[6];
 
         this.adminComponent = adminComponent;
         this.impersonalComponent = impersonalComponent;

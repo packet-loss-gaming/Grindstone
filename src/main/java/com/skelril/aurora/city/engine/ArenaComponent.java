@@ -6,6 +6,7 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.GlobalRegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
@@ -139,16 +140,21 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         protected Set<String> factoryVats = new HashSet<>(Arrays.asList(
                 "vat-1", "vat-2", "vat-3"
         ));
+        @Setting("grave-yards")
+        protected Set<String> graveYards = new HashSet<>(Arrays.asList(
+                "carpe-diem-district-grave-yard"
+        ));
     }
 
     private class ArenaManager {
 
         public void setupArenas() {
 
+            GlobalRegionManager mgr = getWorldGuard().getGlobalRegionManager();
             // Add Snow Spleef Arenas
             for (String region : config.snowSpleefRegions) {
                 try {
-                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    ProtectedRegion pr = mgr.get(world).getRegion(region);
                     arenas.add(new SnowSpleefArena(world, pr, adminComponent));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -160,7 +166,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Dynamic Arenas
             for (String region : config.dynamicSandRegions) {
                 try {
-                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    ProtectedRegion pr = mgr.get(world).getRegion(region);
                     arenas.add(new DynamicSandArena(world, pr, config.dynamicSandRegionsIR, config.dynamicSandRegionsDR,
                             adminComponent));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
@@ -173,7 +179,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Cursed Mines
             for (String region : config.cursedMines) {
                 try {
-                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    ProtectedRegion pr = mgr.get(world).getRegion(region);
                     arenas.add(new CursedMine(world, pr, adminComponent, prayerComponent));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -185,7 +191,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Enchanted Forest
             for (String region : config.enchantedForest) {
                 try {
-                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    ProtectedRegion pr = mgr.get(world).getRegion(region);
                     arenas.add(new EnchantedForest(world, pr, adminComponent));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -197,7 +203,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Hot springs
             for (String region : config.hotSprings) {
                 try {
-                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    ProtectedRegion pr = mgr.get(world).getRegion(region);
                     arenas.add(new HotSpringArena(world, pr, adminComponent));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -209,7 +215,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Party rooms
             for (String region : config.partyRooms) {
                 try {
-                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    ProtectedRegion pr = mgr.get(world).getRegion(region);
                     arenas.add(new DropPartyArena(world, pr));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -220,21 +226,16 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Gold Rushes
             for (String region : config.goldRushes) {
                 try {
-                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
-                    ProtectedRegion lb = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
-                            + "-lobby");
-                    ProtectedRegion r1 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
-                            + "-room-one");
-                    ProtectedRegion r2 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
-                            + "-room-two");
-                    ProtectedRegion r3 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
-                            + "-room-three");
-                    ProtectedRegion d1 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
-                            + "-door-one");
-                    ProtectedRegion d2 = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
-                            + "-door-two");
-                    arenas.add(new GoldRush(world, pr, lb, r1, r2, r3, d1, d2, adminComponent, impersonalComponent));
-                    log.info("Added region: " + pr.getId() + " to Arenas.");
+                    ProtectedRegion[] PRs = new ProtectedRegion[7];
+                    PRs[0] = mgr.get(world).getRegion(region);
+                    PRs[1] = mgr.get(world).getRegion(region + "-lobby");
+                    PRs[2] = mgr.get(world).getRegion(region + "-room-one");
+                    PRs[3] = mgr.get(world).getRegion(region + "-room-two");
+                    PRs[4] = mgr.get(world).getRegion(region + "-room-three");
+                    PRs[5] = mgr.get(world).getRegion(region + "-door-one");
+                    PRs[6] = mgr.get(world).getRegion(region + "-door-two");
+                    arenas.add(new GoldRush(world, PRs, adminComponent, impersonalComponent));
+                    log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
                 }
@@ -243,11 +244,11 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Prison Raids
             for (String region : config.prisonRaids) {
                 try {
-                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
-                    ProtectedRegion of = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region
-                            + "-office");
-                    arenas.add(new Prison(world, pr, of, adminComponent));
-                    log.info("Added region: " + pr.getId() + " to Arenas.");
+                    ProtectedRegion[] PRs = new ProtectedRegion[2];
+                    PRs[0] = mgr.get(world).getRegion(region);
+                    PRs[1] = mgr.get(world).getRegion(region + "-office");
+                    arenas.add(new Prison(world, PRs, adminComponent));
+                    log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
                 }
@@ -256,7 +257,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Zombie bosses
             for (String region : config.zombieBosses) {
                 try {
-                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
+                    ProtectedRegion pr = mgr.get(world).getRegion(region);
                     arenas.add(new GiantBossArena(world, pr, adminComponent));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -268,17 +269,34 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add factories
             for (String region : config.factories) {
                 try {
-                    ProtectedRegion pr = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region);
-                    ProtectedRegion ch = getWorldGuard().getGlobalRegionManager()
-                            .get(world).getRegion(region + "-producer");
+                    ProtectedRegion[] PRs = new ProtectedRegion[2];
+                    PRs[0] = mgr.get(world).getRegion(region);
+                    PRs[1] = mgr.get(world).getRegion(region + "-producer");
+
                     List<FactoryMech> mechs = new ArrayList<>();
                     ProtectedRegion er;
                     for (String mech : config.factoryVats) {
-                        er = getWorldGuard().getGlobalRegionManager().get(world).getRegion(region + "-" + mech);
+                        er = mgr.get(world).getRegion(region + "-" + mech);
                         mechs.add(new FactoryMech(world, er));
                     }
-                    arenas.add(new FactoryFloor(world, pr, ch, mechs, adminComponent));
-                    log.info("Added region: " + pr.getId() + " to Arenas.");
+                    arenas.add(new FactoryFloor(world, PRs, mechs, adminComponent));
+                    log.info("Added region: " + PRs[0].getId() + " to Arenas.");
+                } catch (Exception e) {
+                    log.warning("Failed to add arena: " + region + ".");
+                    e.printStackTrace();
+                }
+            }
+
+            // Add Grave Yards
+            for (String region : config.graveYards) {
+                try {
+                    ProtectedRegion[] PRs = new ProtectedRegion[3];
+                    PRs[0] = mgr.get(world).getRegion(region);
+                    PRs[1] = mgr.get(world).getRegion(region + "-temple");
+                    PRs[2] = mgr.get(world).getRegion(region + "-temple-pressure-plate-lock");
+
+                    arenas.add(new GraveYard(world, PRs, adminComponent));
+                    log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
                     e.printStackTrace();

@@ -39,10 +39,12 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
     // Block - Is unlocked
     private Location rewardChest;
 
-    public Prison(World world, ProtectedRegion region, ProtectedRegion office, AdminComponent adminComponent) {
+    public Prison(World world, ProtectedRegion[] regions, AdminComponent adminComponent) {
 
-        super(world, region);
-        this.office = office;
+        super(world, regions[0]);
+
+        this.office = regions[1];
+
         this.adminComponent = adminComponent;
 
         findRewardChest();     // Setup office

@@ -87,11 +87,18 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     // Block Restoration Map
     private ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> map = new ConcurrentHashMap<>();
 
-    public GraveYard(World world, ProtectedRegion region) {
-        super(world, region);
+    public GraveYard(World world, ProtectedRegion[] regions, AdminComponent adminComponent) {
+        super(world, regions[0]);
+
+        this.temple = regions[1];
+        this.pressurePlateLockArea = regions[2];
+        this.adminComponent = adminComponent;
 
         findHeadStones();
         findPressurePlateLockLevers();
+
+        //noinspection AccessStaticViaInstance
+        inst.registerEvents(this);
     }
 
     @EventHandler(ignoreCancelled = true)
