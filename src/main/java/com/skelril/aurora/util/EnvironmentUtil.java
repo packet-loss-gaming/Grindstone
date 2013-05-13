@@ -6,6 +6,7 @@ import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
@@ -23,14 +24,16 @@ public class EnvironmentUtil {
 
     public static boolean isNightTime(long time) {
 
-        long day = ((24) * 1000);
-        long night = ((22 - 8 + 24) * 1000);
-        return (time >= night) || (time <= day);
+        return !isDayTime(time);
     }
 
     public static boolean isDayTime(long time) {
 
-        return !isNightTime(time);
+        if (time < 0) {
+            time += 24000;
+        }
+
+        return time >= 0L && time <= 13000L;
     }
 
     public static boolean isServerTimeOdd(long time) {
@@ -354,5 +357,16 @@ public class EnvironmentUtil {
     public static boolean isHostileEntity(Entity e) {
 
         return e != null && e.isValid() && e.getType() != null && hostileEntities.contains(e.getType());
+    }
+
+    private static final BlockFace[] nearby = new BlockFace[] {
+            BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.EAST, BlockFace.NORTH_WEST,
+            BlockFace.SOUTH, BlockFace.SOUTH_EAST, BlockFace.WEST, BlockFace.SOUTH_WEST,
+            BlockFace.SELF
+    };
+
+    public static BlockFace[] getNearbyBlockFaces() {
+
+        return nearby;
     }
 }
