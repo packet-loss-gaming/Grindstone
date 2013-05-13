@@ -1,4 +1,4 @@
-package com.skelril.aurora.events;
+package com.skelril.aurora.events.anticheat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;

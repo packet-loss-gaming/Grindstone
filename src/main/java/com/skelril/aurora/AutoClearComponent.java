@@ -4,7 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.skelril.aurora.events.DropClearPulseEvent;
+import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;

@@ -4,7 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.admin.AdminComponent;
-import com.skelril.aurora.events.FrostBiteEvent;
+import com.skelril.aurora.events.environment.FrostBiteEvent;
 import com.skelril.aurora.jail.JailComponent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;

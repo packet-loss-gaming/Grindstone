@@ -2,7 +2,7 @@ package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
-import com.skelril.aurora.events.ChestSuckEvent;
+import com.skelril.aurora.events.entity.item.ChestSuckEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;

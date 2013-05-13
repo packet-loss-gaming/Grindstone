@@ -1,5 +1,5 @@
-package com.skelril.aurora.events;
-import org.bukkit.Location;
+package com.skelril.aurora.events.environment;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
@@ -8,27 +8,38 @@ import org.bukkit.event.player.PlayerEvent;
 /**
  * Author: Turtle9598
  */
-public class ApocalypseLocalSpawnEvent extends PlayerEvent implements Cancellable {
+public class CreepSpeakEvent extends PlayerEvent implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
-    private Location spawnLocation;
+    private Entity targeter;
+    private String message;
 
-
-    public ApocalypseLocalSpawnEvent(final Player player, Location spawnLocation) {
+    public CreepSpeakEvent(Player player, Entity targeter, String message) {
 
         super(player);
-        this.spawnLocation = spawnLocation;
+        this.targeter = targeter;
+        this.message = message;
     }
 
-    public Location getLocation() {
+    public Entity getTargeter() {
 
-        return spawnLocation;
+        return targeter;
     }
 
-    public void setLocation(Location spawnLocation) {
+    public void setTargeter(Entity targeter) {
 
-        this.spawnLocation = spawnLocation;
+        this.targeter = targeter;
+    }
+
+    public String getMessage() {
+
+        return message;
+    }
+
+    public void setMessage(String message) {
+
+        this.message = message;
     }
 
     public HandlerList getHandlers() {

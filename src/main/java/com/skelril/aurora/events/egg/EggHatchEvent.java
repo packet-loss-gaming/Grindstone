@@ -1,33 +1,38 @@
-package com.skelril.aurora.events;
+package com.skelril.aurora.events.egg;
 
-import com.skelril.aurora.EggComponent;
 import org.bukkit.Location;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-/**
- * Author: Turtle9598
- */
-public class EggDropEvent extends Event implements Cancellable {
+public class EggHatchEvent extends Event implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
-    private EggComponent.EggEntity eggType;
+    private final Item egg;
+    private EntityType eggType;
     private Location location;
 
-    public EggDropEvent(EggComponent.EggEntity eggType, Location location) {
+    public EggHatchEvent(Item egg, EntityType eggType, Location location) {
 
+        this.egg = egg;
         this.eggType = eggType;
         this.location = location;
     }
 
-    public EggComponent.EggEntity getEggType() {
+    public Item getEgg() {
+
+        return egg;
+    }
+
+    public EntityType getEggType() {
 
         return eggType;
     }
 
-    public void setEggType(EggComponent.EggEntity eggType) {
+    public void setEggType(EntityType eggType) {
 
         this.eggType = eggType;
     }

@@ -2,7 +2,7 @@ package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
-import com.skelril.aurora.events.FallBlockerEvent;
+import com.skelril.aurora.events.anticheat.FallBlockerEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.zachsthings.libcomponents.ComponentInformation;

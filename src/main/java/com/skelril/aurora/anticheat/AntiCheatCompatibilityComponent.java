@@ -1,10 +1,10 @@
 package com.skelril.aurora.anticheat;
 
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.aurora.events.FallBlockerEvent;
+import com.skelril.aurora.events.anticheat.FallBlockerEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
-import com.skelril.aurora.events.RapidHitEvent;
-import com.skelril.aurora.events.ThrowPlayerEvent;
+import com.skelril.aurora.events.anticheat.RapidHitEvent;
+import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;

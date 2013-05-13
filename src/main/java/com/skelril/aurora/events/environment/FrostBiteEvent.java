@@ -1,5 +1,4 @@
-package com.skelril.aurora.events;
-import org.bukkit.entity.Entity;
+package com.skelril.aurora.events.environment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
@@ -8,38 +7,26 @@ import org.bukkit.event.player.PlayerEvent;
 /**
  * Author: Turtle9598
  */
-public class CreepSpeakEvent extends PlayerEvent implements Cancellable {
+public class FrostBiteEvent extends PlayerEvent implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
-    private Entity targeter;
-    private String message;
+    private int damage;
 
-    public CreepSpeakEvent(Player player, Entity targeter, String message) {
+    public FrostBiteEvent(Player player, int damage) {
 
         super(player);
-        this.targeter = targeter;
-        this.message = message;
+        this.damage = damage;
     }
 
-    public Entity getTargeter() {
+    public void setDamage(int damage) {
 
-        return targeter;
+        this.damage = damage;
     }
 
-    public void setTargeter(Entity targeter) {
+    public int getDamage() {
 
-        this.targeter = targeter;
-    }
-
-    public String getMessage() {
-
-        return message;
-    }
-
-    public void setMessage(String message) {
-
-        this.message = message;
+        return damage;
     }
 
     public HandlerList getHandlers() {

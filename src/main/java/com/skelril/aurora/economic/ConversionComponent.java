@@ -6,7 +6,7 @@ import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.ItemUtil;
+import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;

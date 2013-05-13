@@ -1,9 +1,12 @@
-package com.skelril.aurora.util;
+package com.skelril.aurora.util.item;
 
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.aurora.events.RapidHitEvent;
-import com.skelril.aurora.events.ThrowPlayerEvent;
+import com.skelril.aurora.events.anticheat.RapidHitEvent;
+import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
+import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
 import org.bukkit.Effect;
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
@@ -132,7 +135,7 @@ public class EffectUtil {
                         server.getPluginManager().callEvent(event);
                         if (event.isCancelled()) continue;
                     }
-                    e.setVelocity(owner.getLocation().getDirection().multiply(2).setY(Math.random() * 3));
+                    e.setVelocity(owner.getLocation().getDirection().multiply(2).setY(Math.random() * 2 + 1.27));
                     e.setFireTicks(ChanceUtil.getRandom(20 * 60));
                 }
             }

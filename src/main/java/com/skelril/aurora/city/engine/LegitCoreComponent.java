@@ -8,6 +8,8 @@ import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.events.*;
+import com.skelril.aurora.events.apocalypse.ApocalypseBedSpawnEvent;
+import com.skelril.aurora.events.egg.EggDropEvent;
 import com.skelril.aurora.homes.CSVHomeDatabase;
 import com.skelril.aurora.homes.EnderPearlHomesComponent;
 import com.skelril.aurora.homes.HomeDatabase;

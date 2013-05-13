@@ -1,4 +1,4 @@
-package com.skelril.aurora.events;
+package com.skelril.aurora.events.entity.item;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Item;
 import org.bukkit.event.Cancellable;

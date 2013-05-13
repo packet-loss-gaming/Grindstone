@@ -6,7 +6,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
-import com.skelril.aurora.events.FrostBiteEvent;
+import com.skelril.aurora.events.environment.FrostBiteEvent;
 import com.skelril.aurora.util.LocationUtil;
 import org.bukkit.Server;
 import org.bukkit.World;

@@ -12,7 +12,7 @@ import com.skelril.aurora.RogueComponent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.ItemUtil;
+import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;

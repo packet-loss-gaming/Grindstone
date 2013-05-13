@@ -3,7 +3,7 @@ package com.skelril.aurora;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.skelril.aurora.city.engine.ApocalypseComponent;
-import com.skelril.aurora.events.CreepSpeakEvent;
+import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;

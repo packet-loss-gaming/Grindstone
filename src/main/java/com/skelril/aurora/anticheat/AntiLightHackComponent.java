@@ -3,7 +3,7 @@ package com.skelril.aurora.anticheat;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.skelril.aurora.admin.AdminComponent;
-import com.skelril.aurora.events.DarkAreaInjuryEvent;
+import com.skelril.aurora.events.environment.DarkAreaInjuryEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;

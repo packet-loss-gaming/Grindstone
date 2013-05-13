@@ -1,4 +1,4 @@
-package com.skelril.aurora.util;
+package com.skelril.aurora.util.item;
 import com.sk89q.worldedit.blocks.ItemID;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
