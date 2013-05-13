@@ -187,7 +187,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
 
         try {
 
-            List<JSONArray> objects = new ArrayList<JSONArray>();
+            List<JSONArray> objects = new ArrayList<>();
             JSONParser parser = new JSONParser();
             for (int i = 1; true; i++) {
 

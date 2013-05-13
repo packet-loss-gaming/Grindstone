@@ -100,7 +100,7 @@ public class CSVJailCellDatabase implements JailCellDatabase {
             log.info(jailCells.size() + " jail cell(s) loaded.");
         } catch (FileNotFoundException ignored) {
         } catch (IOException e) {
-            nameJailCell = new HashMap<String, JailCell>();
+            nameJailCell = new HashMap<>();
             log.warning("Failed to load " + cellFile.getAbsolutePath()
                     + ": " + e.getMessage());
             successful = false;
@@ -219,7 +219,7 @@ public class CSVJailCellDatabase implements JailCellDatabase {
     @Override
     public List<JailCell> getJailCells() {
 
-        return new ArrayList<JailCell>(jailCells);
+        return new ArrayList<>(jailCells);
     }
 
     @Override

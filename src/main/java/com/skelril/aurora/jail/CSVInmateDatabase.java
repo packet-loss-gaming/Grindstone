@@ -271,6 +271,6 @@ public class CSVInmateDatabase implements InmateDatabase {
     @Override
     public List<Inmate> getInmatesList() {
 
-        return new ArrayList<Inmate>(inmates);
+        return new ArrayList<>(inmates);
     }
 }
