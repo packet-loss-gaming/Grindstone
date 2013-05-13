@@ -126,10 +126,7 @@ public class ItemUtil {
     public static boolean findItemOfName(ItemStack[] itemStacks, String name) {
 
         for (ItemStack itemStack : itemStacks) {
-            if (itemStack != null && itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
-
-                if (itemStack.getItemMeta().getDisplayName().contains(name)) return true;
-            }
+            if (matchesFilter(itemStack, name)) return true;
         }
         return false;
     }
@@ -138,10 +135,7 @@ public class ItemUtil {
 
         int count = 0;
         for (ItemStack itemStack : itemStacks) {
-            if (itemStack != null && itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
-
-                if (itemStack.getItemMeta().getDisplayName().contains(name)) count++;
-            }
+            if (matchesFilter(itemStack, name)) count++;
         }
         return count;
     }
@@ -222,10 +216,19 @@ public class ItemUtil {
         boolean[] b = new boolean[] {false, false, false, false};
         ItemStack[] armour = player.getInventory().getArmorContents();
         for (int i = 0; i < 4; i++) {
-            b[i] = armour[i] != null && armour[i].hasItemMeta() && armour[i].getItemMeta().hasDisplayName()
-                    && armour[i].getItemMeta().getDisplayName().contains(ChatColor.GOLD + "Ancient");
+            b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient");
         }
         return b[0] && b[1] && b[2] && b[3];
+    }
+
+    private static boolean isCustomItem(ItemStack stack) {
+
+        return stack != null && stack.hasItemMeta() && stack.getItemMeta().hasDisplayName();
+    }
+
+    private static boolean matchesFilter(ItemStack stack, String filter) {
+
+        return isCustomItem(stack) && stack.getItemMeta().getDisplayName().contains(filter);
     }
 
     public static boolean hasMasterSword(Player player) {
@@ -235,8 +238,7 @@ public class ItemUtil {
 
     public static boolean isMasterSword(ItemStack item) {
 
-        return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-                && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_PURPLE + "Master Sword");
+        return matchesFilter(item, ChatColor.DARK_PURPLE + "Master Sword");
     }
 
     public static boolean hasMasterBow(Player player) {
@@ -246,8 +248,7 @@ public class ItemUtil {
 
     public static boolean isMasterBow(ItemStack item) {
 
-        return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-                && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_PURPLE + "Master Bow");
+        return matchesFilter(item, ChatColor.DARK_PURPLE + "Master Bow");
     }
 
     public static boolean hasFearHelmet(Player player) {
@@ -257,8 +258,7 @@ public class ItemUtil {
 
     public static boolean isFearHelmet(ItemStack item) {
 
-        return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-                && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_RED + "Fear Helmet");
+        return matchesFilter(item, ChatColor.DARK_RED + "Fear Helmet");
     }
 
     public static boolean hasFearSword(Player player) {
@@ -268,8 +268,7 @@ public class ItemUtil {
 
     public static boolean isFearSword(ItemStack item) {
 
-        return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-                && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_RED + "Fear Sword");
+        return matchesFilter(item, ChatColor.DARK_RED + "Fear Sword");
     }
 
     public static boolean hasFearBow(Player player) {
@@ -279,8 +278,7 @@ public class ItemUtil {
 
     public static boolean isFearBow(ItemStack item) {
 
-        return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-                && item.getItemMeta().getDisplayName().contains(ChatColor.DARK_RED + "Fear Bow");
+        return matchesFilter(item, ChatColor.DARK_RED + "Fear Bow");
     }
 
     public static boolean hasForgeBook(Player player) {
