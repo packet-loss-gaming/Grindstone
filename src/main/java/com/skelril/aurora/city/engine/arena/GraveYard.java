@@ -7,6 +7,7 @@ import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -15,10 +16,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.Sign;
+import org.bukkit.block.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -63,15 +61,16 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     // Block information
     private static Set<BaseBlock> breakable = new HashSet<>();
     static {
-        breakable.add(new BaseBlock(BlockID.DIRT));
-        breakable.add(new BaseBlock(BlockID.TORCH));
+        breakable.add(new BaseBlock(BlockID.DIRT, -1));
+        breakable.add(new BaseBlock(BlockID.TORCH, -1));
         breakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
+        breakable.add(new BaseBlock(BlockID.WEB, -1));
     }
     private static Set<BaseBlock> autoBreakable = new HashSet<>();
     static {
-        breakable.add(new BaseBlock(BlockID.STEP, 5));
-        breakable.add(new BaseBlock(BlockID.STEP, 11));
-        breakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
+        autoBreakable.add(new BaseBlock(BlockID.STEP, 5));
+        autoBreakable.add(new BaseBlock(BlockID.STEP, 13));
+        autoBreakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
     }
 
     private final Random random = new Random();
@@ -102,6 +101,12 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     }
 
     @EventHandler(ignoreCancelled = true)
+    public void onCreepSpeak(CreepSpeakEvent event) {
+
+        if (contains(event.getPlayer())) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onThunderChange(ThunderChangeEvent event) {
 
         if (event.toThunderState()) {
@@ -126,7 +131,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void localSpawn(Player player) {
 
-        if (!EnvironmentUtil.isNightTime(player.getWorld().getTime()) && !player.getWorld().hasStorm()) return;
+        if (!ChanceUtil.getChance(3)) return;
+
         Block playerBlock = player.getLocation().getBlock();
         Location ls;
 
@@ -168,7 +174,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         ((LivingEntity) e).setCanPickupItems(allowItemPickup);
 
         if (ChanceUtil.getChance(50)) {
-            if (ChanceUtil.getChance(35)) {
+            if (ChanceUtil.getChance(15)) {
                 equipment.setArmorContents(ItemUtil.diamondArmour);
             } else {
                 equipment.setArmorContents(ItemUtil.ironArmour);
@@ -214,35 +220,43 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         LivingEntity entity = event.getEntity();
 
-        if (contains(entity)) {
+        if (entity.getCustomName() != null) {
+            String customName = entity.getCustomName();
+            List<ItemStack> drops = event.getDrops();
 
-            if (entity.getCustomName() != null) {
-                String customName = entity.getCustomName();
-                List<ItemStack> drops = event.getDrops();
+            if (customName.equals("Grave Zombie")) {
+                if (ChanceUtil.getChance(6000) || getWorld().isThundering() && ChanceUtil.getChance(4000)) {
+                    ItemStack stack = new ItemStack(ItemID.EMERALD);
+                    ItemMeta meta = stack.getItemMeta();
+                    meta.setDisplayName(ChatColor.DARK_RED + "Gem of Darkness");
+                    stack.setItemMeta(meta);
+                    drops.add(stack);
+                }
 
-                if (customName.equals("Grave Zombie")) {
-                    if (ChanceUtil.getChance(400) || getWorld().isThundering() && ChanceUtil.getChance(275)) {
-                        ItemStack stack = new ItemStack(ItemID.EMERALD);
-                        ItemMeta meta = stack.getItemMeta();
-                        meta.setDisplayName(ChatColor.DARK_RED + "Gem of Darkness");
-                        stack.setItemMeta(meta);
-                        drops.add(stack);
+                if (ChanceUtil.getChance(400)) {
+                    ItemStack phantomGold = new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(3));
+                    ItemMeta meta = phantomGold.getItemMeta();
+                    meta.setDisplayName(ChatColor.GOLD + "Phantom Gold");
+                    phantomGold.setItemMeta(meta);
+                    drops.add(phantomGold);
+                }
+
+                if (ChanceUtil.getChance(1000000)) {
+                    switch (ChanceUtil.getRandom(2)) {
+                        case 1:
+                            drops.add(ItemUtil.Fear.makeSword());
+                            break;
+                        case 2:
+                            drops.add(ItemUtil.Fear.makeBow());
+                            break;
                     }
+                }
 
-                    if (ChanceUtil.getChance(237)) {
-                        ItemStack phantomGold = new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(3));
-                        ItemMeta meta = phantomGold.getItemMeta();
-                        meta.setDisplayName(ChatColor.GOLD + "Phantom Gold");
-                        phantomGold.setItemMeta(meta);
-                        drops.add(phantomGold);
-                    }
+                Iterator<ItemStack> it = drops.iterator();
+                while (it.hasNext()) {
+                    ItemStack stack = it.next();
 
-                    Iterator<ItemStack> it = drops.iterator();
-                    while (it.hasNext()) {
-                        ItemStack stack = it.next();
-
-                        if (stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
-                    }
+                    if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
                 }
             }
         }
@@ -266,11 +280,12 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         BaseBlock baseBlock = new BaseBlock(block.getTypeId(), block.getData());
         if (contains(block) && !adminComponent.isAdmin(event.getPlayer())) {
 
-            if (!breakable.contains(baseBlock)) {
-                event.setCancelled(true);
+            event.setCancelled(true);
+            if (!accept(baseBlock, breakable)) {
                 return;
             }
 
+            block.setTypeId(0);
             map.put(block.getLocation(), new AbstractMap.SimpleEntry<>(System.currentTimeMillis(), baseBlock));
         }
     }
@@ -310,12 +325,20 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
     }
 
+    private static final PotionType[] thrownTypes = new PotionType[] {
+            PotionType.INSTANT_DAMAGE, PotionType.POISON, PotionType.WEAKNESS,
+            PotionType.SLOWNESS
+    };
+
     private void throwSlashPotion(Location location) {
 
-        ThrownPotion potion = (ThrownPotion) getWorld().spawnEntity(location, EntityType.SPLASH_POTION);
-        PotionType type = PotionType.values()[ChanceUtil.getRandom(PotionType.values().length) - 1];
-        potion.setItem(new Potion(type).splash().toItemStack(1));
-        potion.setVelocity(new Vector(
+        ThrownPotion potionEntity = (ThrownPotion) getWorld().spawnEntity(location, EntityType.SPLASH_POTION);
+        PotionType type = thrownTypes[ChanceUtil.getRandom(thrownTypes.length) - 1];
+        Potion potion = new Potion(type);
+        potion.setLevel(type.getMaxLevel());
+        potion.setSplash(true);
+        potionEntity.setItem(potion.toItemStack(1));
+        potionEntity.setVelocity(new Vector(
                 random.nextDouble() * .5 - .25,
                 random.nextDouble() * .4 + .1,
                 random.nextDouble() * .5 - .25
@@ -345,8 +368,16 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         if (signState instanceof Sign) {
 
+            Calendar calendar = Calendar.getInstance();
+            // Why the month is zero based I'll never know
+            int month = calendar.get(Calendar.MONTH) + 1;
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+            int year = calendar.get(Calendar.YEAR);
+
+            ((Sign) signState).setLine(0, month + "/" + day + "/" + year);
             ((Sign) signState).setLine(1, "RIP");
             ((Sign) signState).setLine(2, name);
+            signState.update();
 
             headStone.add(0, -2, 0);
 
@@ -394,11 +425,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         BlockState block = getWorld().getBlockAt(x, y, z).getState();
         if (!block.getChunk().isLoaded()) block.getChunk().load();
         if (block.getTypeId() == BlockID.WALL_SIGN) {
-            ((Sign) block).setLine(0, null);
-            ((Sign) block).setLine(1, null);
-            ((Sign) block).setLine(2, null);
-            ((Sign) block).setLine(3, null);
-            block.update(true);
             headStones.add(block.getLocation());
             return true;
         }
@@ -461,25 +487,29 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
     }
 
-    private boolean breakBlock(Location location) {
+    private void breakBlock(Entity e, Location location) {
+
+        int chance = e instanceof Player ? 2 : 6;
 
         Block block = location.getBlock();
-        return ChanceUtil.getChance(3) && autoBreakable.contains(new BaseBlock(block.getTypeId(), block.getData()));
+        for (BlockFace face : EnvironmentUtil.getNearbyBlockFaces()) {
+            Block aBlock = block.getRelative(face);
+            if (!BlockType.canPassThrough(aBlock.getRelative(BlockFace.DOWN).getTypeId())) continue;
+            BaseBlock aBB = new BaseBlock(aBlock.getTypeId(), aBlock.getData());
+            if (ChanceUtil.getChance(chance) && accept(aBB, autoBreakable)) {
+                map.put(aBlock.getLocation(), new AbstractMap.SimpleEntry<>(System.currentTimeMillis(), aBB));
+                aBlock.setTypeId(0);
+            }
+        }
     }
 
     private void fogPlayer(Player player) {
 
-        if (adminComponent.isAdmin(player)) return;
-
-        Location loc = player.getLocation();
-
-        if (loc.getBlock().getLightLevel() <= 4 || loc.getBlock().getLightFromSky() <= 12 && loc.getBlockY() < 93) {
-
-            if (ItemUtil.hasFearHelmet(player)) return;
-            ItemStack[] inventoryContents = player.getInventory().getContents();
-            if (ItemUtil.findItemOfName(inventoryContents, ChatColor.RED + "Gem of Darkness")) return;
-            player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 20, 2));
-        }
+        if (ItemUtil.hasFearHelmet(player)) return;
+        ItemStack[] inventoryContents = player.getInventory().getContents();
+        if (ItemUtil.findItemOfName(inventoryContents, ChatColor.DARK_RED + "Gem of Darkness")) return;
+        player.removePotionEffect(PotionEffectType.BLINDNESS);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 6, 1));
     }
 
     @Override
@@ -497,7 +527,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     public void restoreBlocks() {
 
-        int min = 1000 * 60 * 10;
+        int min = 1000 * 27;
 
         BaseBlock b;
         Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e;
@@ -523,6 +553,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     @Override
     public void run() {
 
+        if (isEmpty()) return;
+
         equalize();
         restoreBlocks();
         isPressurePlateLocked = !checkPressurePlateLock();
@@ -531,21 +563,39 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         for (Entity entity : contained) {
 
             // Auto break stuff
-            Location belowLoc = entity.getLocation().add(0, -1, 0);
-            if (breakBlock(belowLoc) || breakBlock(belowLoc.add(0, -1, 0))) {
+            Location belowLoc = entity.getLocation();
+            breakBlock(entity, belowLoc);
+            breakBlock(entity, belowLoc.add(0, -1, 0));
+            breakBlock(entity, belowLoc.add(0, -1, 0));
 
-                Block belowBlock = belowLoc.getBlock();
-                BaseBlock belowBaseBlock = new BaseBlock(belowBlock.getTypeId(), belowBlock.getData());
-                map.put(belowLoc, new AbstractMap.SimpleEntry<>(System.currentTimeMillis(), belowBaseBlock));
-                belowLoc.getBlock().breakNaturally();
-            }
-
-            // Blind people
-            if (entity instanceof Player) {
+            // People Code
+            if (entity instanceof Player && isEvilMode(entity.getLocation().getBlock())) {
+                if (adminComponent.isAdmin((Player) entity)) continue;
                 fogPlayer((Player) entity);
                 localSpawn((Player) entity);
             }
         }
+    }
+
+    private boolean accept(BaseBlock baseBlock, Set<BaseBlock> baseBlocks) {
+
+        for (BaseBlock aBaseBlock : baseBlocks) {
+
+            if (baseBlock.equalsFuzzy(aBaseBlock)) return true;
+        }
+        return false;
+    }
+    private boolean isEvilMode(Block block) {
+
+        // Weather/Day Check
+        if (EnvironmentUtil.isNightTime(getWorld().getTime()) || getWorld().hasStorm()) return true;
+        // Location
+        //noinspection RedundantIfStatement,SimplifiableIfStatement
+        if (LocationUtil.isInRegion(getWorld(), temple, block.getLocation()) && block.getY() < 93) {
+            return block.getLightFromSky() < 15;
+        }
+
+        return false;
     }
 
     @Override

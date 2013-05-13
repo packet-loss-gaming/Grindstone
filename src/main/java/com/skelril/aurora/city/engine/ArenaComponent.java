@@ -293,7 +293,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     ProtectedRegion[] PRs = new ProtectedRegion[3];
                     PRs[0] = mgr.get(world).getRegion(region);
                     PRs[1] = mgr.get(world).getRegion(region + "-temple");
-                    PRs[2] = mgr.get(world).getRegion(region + "-temple-pressure-plate-lock");
+                    PRs[2] = mgr.get(world).getRegion(region + "-temple-puzzle-one");
 
                     arenas.add(new GraveYard(world, PRs, adminComponent));
                     log.info("Added region: " + PRs[0].getId() + " to Arenas.");
