@@ -679,6 +679,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         }
 
+        @Command(aliases = {"unleashed", "unl"}, desc = "Lost Unleashed items")
+        @NestedCommand({LostUnleashedItem.class})
+        public void lostUnleashedCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+
         @Command(aliases = {"admin"}, desc = "Lost Admin items")
         @NestedCommand({LostAdminItem.class})
         public void lostAdminCommands(CommandContext args, CommandSender sender) throws CommandException {
@@ -930,6 +936,39 @@ public class AdminComponent extends BukkitComponent implements Listener {
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given a new fear bow.");
+        }
+    }
+
+    public class LostUnleashedItem {
+
+        @Command(aliases = {"sword"},
+                usage = "<player>", desc = "Return a player's Unleashed Sword",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.unleashed.sword"})
+        public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.Unleashed.makeSword());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new unleashed sword.");
+        }
+
+        @Command(aliases = {"bow"},
+                usage = "<player>", desc = "Return a player's Unleashed Bow",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.unleashed.bow"})
+        public void lostBowCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.Unleashed.makeBow());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new unleashed bow.");
         }
     }
 

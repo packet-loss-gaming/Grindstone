@@ -17,9 +17,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
+import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -39,12 +41,17 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     }
 
     private ConcurrentHashMap<String, Long> fearSpec = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Long> unleashedSpec = new ConcurrentHashMap<>();
 
     private boolean canFearSpec(String name) {
 
         return !fearSpec.containsKey(name) || System.currentTimeMillis() - fearSpec.get(name) >= 3800;
     }
 
+    private boolean canUnleashedSpec(String name) {
+
+        return !unleashedSpec.containsKey(name) || System.currentTimeMillis() - unleashedSpec.get(name) >= 3800;
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
@@ -61,6 +68,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             if (canFearSpec(owner.getName())) {
                 if (ItemUtil.hasFearSword(owner)) {
+                    fearSpec.put(owner.getName(), System.currentTimeMillis());
                     switch (ChanceUtil.getRandom(5)) {
                         case 1:
                             EffectUtil.Fear.confuse(owner, target);
@@ -78,8 +86,9 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Fear.wrath(owner, target, event.getDamage(), ChanceUtil.getRangedRandom(2, 6));
                             break;
                     }
-                    fearSpec.put(owner.getName(), System.currentTimeMillis());
                 } else if (ItemUtil.hasFearBow(owner)) {
+
+                    fearSpec.put(owner.getName(), System.currentTimeMillis());
                     int attack = ChanceUtil.getRandom(4);
 
                     switch (attack) {
@@ -104,7 +113,36 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             targetLoc.getWorld().strikeLightning(targetLoc);
                         }
                     }
-                    fearSpec.put(owner.getName(), System.currentTimeMillis());
+                }
+            }
+
+            if (canUnleashedSpec(owner.getName())) {
+                if (ItemUtil.hasUnleashedSword(owner)) {
+                    unleashedSpec.put(owner.getName(), System.currentTimeMillis());
+                    switch (ChanceUtil.getRandom(6)) {
+                        case 1:
+                            EffectUtil.Unleashed.blind(owner, target);
+                            break;
+                        case 2:
+                            EffectUtil.Unleashed.healingLight(owner, target);
+                            break;
+                        case 3:
+                            EffectUtil.Unleashed.speed(owner, target);
+                            break;
+                        case 4:
+                            EffectUtil.Unleashed.regen(owner, target);
+                            break;
+                        case 5:
+                            EffectUtil.Unleashed.doomBlade(owner, target);
+                            break;
+                        case 6:
+                            EffectUtil.Unleashed.lifeLeech(owner, target);
+                            break;
+                    }
+                } else if (ItemUtil.hasUnleashedBow(owner)) {
+                    unleashedSpec.put(owner.getName(), System.currentTimeMillis());
+                    ChatUtil.sendError(owner, "This weapon is currently a WIP.");
+
                 }
             }
         }
@@ -131,6 +169,35 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onItemBreak(PlayerItemBreakEvent event) {
+
+        ItemStack broken = event.getBrokenItem();
+        ItemStack newItem = null;
+
+        if (ItemUtil.isFearSword(broken) || ItemUtil.isUnleashedSword(broken)) {
+            newItem = ItemUtil.Master.makeSword();
+        } else if (ItemUtil.isFearBow(broken) || ItemUtil.isUnleashedBow(broken)) {
+            newItem = ItemUtil.Master.makeBow();
+        }
+
+        if (newItem == null) return;
+
+        final Player player = event.getPlayer();
+        final ItemStack finalNewItem = newItem;
+        server.getScheduler().runTaskLater(inst, new Runnable() {
+            @Override
+            public void run() {
+
+                if (player.isDead()) {
+                    player.getWorld().dropItem(player.getLocation(), finalNewItem);
+                } else {
+                    player.setItemInHand(finalNewItem);
+                }
+            }
+        }, 1);
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDeath(EntityDeathEvent event) {
 
@@ -142,13 +209,17 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             World w = player.getWorld();
             Location pLocation = player.getLocation();
 
-            if (ItemUtil.hasMasterBow(player) && !(damaged instanceof Player) && event.getDrops().size() > 0) {
+            List<ItemStack> drops = event.getDrops();
 
-                for (ItemStack is : event.getDrops()) {
-                    if (is != null) w.dropItemNaturally(pLocation, is);
+            if (drops.size() > 0) {
+                if (ItemUtil.hasUnleashedBow(player) || ItemUtil.hasMasterBow(player) && !(damaged instanceof Player)) {
+
+                    for (ItemStack is : ItemUtil.clone(drops.toArray(new ItemStack[drops.size()]))) {
+                        if (is != null) w.dropItemNaturally(pLocation, is);
+                    }
+                    drops.clear();
+                    ChatUtil.sendNotice(player, "Your Bow releases a bright flash.");
                 }
-                event.getDrops().clear();
-                ChatUtil.sendNotice(player, "The Master Bow releases a bright flash.");
             }
         }
     }
@@ -158,5 +229,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         String name = event.getPlayer().getName();
         if (fearSpec.containsKey(name)) fearSpec.remove(name);
+        if (unleashedSpec.containsKey(name)) unleashedSpec.remove(name);
     }
 }

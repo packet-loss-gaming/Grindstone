@@ -65,6 +65,27 @@ public class ItemUtil {
         }
     }
 
+    public static class Unleashed {
+
+        public static ItemStack makeSword() {
+
+            ItemStack unleashedSword = Master.makeSword();
+            ItemMeta unleashedMeta = unleashedSword.getItemMeta();
+            unleashedMeta.setDisplayName(ChatColor.DARK_PURPLE + "Unleashed Sword");
+            unleashedSword.setItemMeta(unleashedMeta);
+            return unleashedSword;
+        }
+
+        public static ItemStack makeBow() {
+
+            ItemStack unleashedBow = Master.makeBow();
+            ItemMeta unleashedMeta = unleashedBow.getItemMeta();
+            unleashedMeta.setDisplayName(ChatColor.DARK_PURPLE + "Unleashed Bow");
+            unleashedBow.setItemMeta(unleashedMeta);
+            return unleashedBow;
+        }
+    }
+
     public static class Fear {
 
         public static ItemStack makeSword() {
@@ -85,17 +106,17 @@ public class ItemUtil {
 
         public static ItemStack makeBow() {
 
-            ItemStack masterBow = new ItemStack(ItemID.BOW);
-            ItemMeta masterMeta = masterBow.getItemMeta();
-            masterMeta.addEnchant(Enchantment.ARROW_DAMAGE, 7, true);
-            masterMeta.addEnchant(Enchantment.ARROW_FIRE, 7, true);
-            masterMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-            masterMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 7, true);
-            masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 7, true);
-            masterMeta.setDisplayName(ChatColor.DARK_RED + "Fear Bow");
-            ((Repairable) masterMeta).setRepairCost(400);
-            masterBow.setItemMeta(masterMeta);
-            return masterBow;
+            ItemStack fearBow = new ItemStack(ItemID.BOW);
+            ItemMeta fearMeta = fearBow.getItemMeta();
+            fearMeta.addEnchant(Enchantment.ARROW_DAMAGE, 7, true);
+            fearMeta.addEnchant(Enchantment.ARROW_FIRE, 7, true);
+            fearMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+            fearMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 7, true);
+            fearMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 7, true);
+            fearMeta.setDisplayName(ChatColor.DARK_RED + "Fear Bow");
+            ((Repairable) fearMeta).setRepairCost(400);
+            fearBow.setItemMeta(fearMeta);
+            return fearBow;
         }
     }
 
@@ -249,6 +270,26 @@ public class ItemUtil {
     public static boolean isMasterBow(ItemStack item) {
 
         return matchesFilter(item, ChatColor.DARK_PURPLE + "Master Bow");
+    }
+
+    public static boolean hasUnleashedSword(Player player) {
+
+        return player.isValid() && isUnleashedSword(player.getItemInHand());
+    }
+
+    public static boolean isUnleashedSword(ItemStack item) {
+
+        return matchesFilter(item, ChatColor.DARK_PURPLE + "Unleashed Sword");
+    }
+
+    public static boolean hasUnleashedBow(Player player) {
+
+        return player.isValid() && isUnleashedBow(player.getItemInHand());
+    }
+
+    public static boolean isUnleashedBow(ItemStack item) {
+
+        return matchesFilter(item, ChatColor.DARK_PURPLE + "Unleashed Bow");
     }
 
     public static boolean hasFearHelmet(Player player) {

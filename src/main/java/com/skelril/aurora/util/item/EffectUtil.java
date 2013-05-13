@@ -21,6 +21,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -142,6 +143,91 @@ public class EffectUtil {
             ChatUtil.sendNotice(owner, "You fire a terrifyingly powerful shot.");
 
             return x * ChanceUtil.getRandom(2);
+        }
+    }
+
+    public static class Unleashed {
+
+        public static void regen(Player owner, LivingEntity target) {
+
+            owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, target.getHealth() * 10, 3));
+            ChatUtil.sendNotice(owner, "You gain a healing aura.");
+        }
+
+        public static void speed(Player owner, LivingEntity target) {
+
+            owner.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, owner.getHealth() * 18, 3));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, owner.getHealth() * 18, 3));
+            ChatUtil.sendNotice(owner, "You gain a agile advantage over your opponent.");
+        }
+
+        public static void lifeLeech(Player owner, LivingEntity target) {
+
+            final int ownerMax = owner.getMaxHealth();
+
+            final double ownerHP = (double) owner.getHealth() / (double) ownerMax;
+            final double targetHP = (double) target.getHealth() / (double) target.getMaxHealth();
+
+            if (ownerHP >= targetHP) {
+                owner.setHealth(owner.getMaxHealth());
+                ChatUtil.sendNotice(owner, "Your weapon fully heals you.");
+            } else {
+                target.setHealth((int) Math.floor(target.getMaxHealth() * ownerHP));
+                owner.setHealth((int) Math.min(ownerMax, Math.floor(ownerMax * targetHP * 1.25)));
+                ChatUtil.sendNotice(owner, "You leech the health of your foe.");
+            }
+        }
+
+        public static void blind(Player owner, LivingEntity target) {
+
+            if (target instanceof Player) {
+                target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 1));
+                ChatUtil.sendNotice(owner, "Your weapon blinds your victim.");
+            } else {
+                healingLight(owner, target);
+            }
+        }
+
+        public static void healingLight(Player owner, LivingEntity target) {
+
+            server.getPluginManager().callEvent(new RapidHitEvent(owner));
+
+            owner.setHealth(Math.min(owner.getMaxHealth(), owner.getHealth() + 5));
+            for (int i = 0; i < 4; i++) {
+                target.getWorld().playEffect(target.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
+            }
+
+            target.damage(20, owner);
+            ChatUtil.sendNotice(owner, "Your weapon glows dimly.");
+        }
+
+        public static void doomBlade(Player owner, LivingEntity target) {
+
+            ChatUtil.sendNotice(owner, "Your weapon releases a huge burst of energy.");
+
+            server.getPluginManager().callEvent(new RapidHitEvent(owner));
+
+            int dmgTotal = 0;
+            List<Entity> entityList = target.getNearbyEntities(8, 8, 8);
+            entityList.add(target);
+            for (Entity e : entityList) {
+                if (e.isValid() && e instanceof LivingEntity) {
+                    if (e.equals(owner)) continue;
+                    int maxHit = owner.getMaxHealth() * 10;
+                    if (e instanceof Player) {
+                        EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(
+                                owner, target, EntityDamageEvent.DamageCause.ENTITY_ATTACK, 2
+                        );
+                        server.getPluginManager().callEvent(event);
+                        if (event.isCancelled()) continue;
+                        maxHit = ((Player) e).getMaxHealth() * 2;
+                    }
+                    for (int i = 0; i < 20; i++) e.getWorld().playEffect(e.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
+                    ((LivingEntity) e).damage(maxHit, owner);
+                    dmgTotal += maxHit;
+                }
+            }
+            ChatUtil.sendNotice(owner, "Your sword dishes out an incredible " + dmgTotal + " damage!");
         }
     }
 
