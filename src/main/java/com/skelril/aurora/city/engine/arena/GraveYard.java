@@ -12,10 +12,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.LocationUtil;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -553,6 +550,15 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         Entity[] contained = getContainedEntities();
         for (Entity entity : contained) {
+
+            if (!entity.isValid()) continue;
+
+            // Cave Spider killer
+            if (entity instanceof CaveSpider && entity.getLocation().getBlock().getLightFromSky() >= 10) {
+                for (int i = 0; i < 20; i++) getWorld().playEffect(entity.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
+                entity.remove();
+                continue;
+            }
 
             // Auto break stuff
             Location belowLoc = entity.getLocation();
