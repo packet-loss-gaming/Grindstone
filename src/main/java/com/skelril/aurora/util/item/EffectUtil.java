@@ -213,14 +213,14 @@ public class EffectUtil {
             for (Entity e : entityList) {
                 if (e.isValid() && e instanceof LivingEntity) {
                     if (e.equals(owner)) continue;
-                    int maxHit = owner.getMaxHealth() * 10;
+                    int maxHit = ChanceUtil.getRangedRandom(150, 350);
                     if (e instanceof Player) {
                         EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(
                                 owner, target, EntityDamageEvent.DamageCause.ENTITY_ATTACK, 2
                         );
                         server.getPluginManager().callEvent(event);
                         if (event.isCancelled()) continue;
-                        maxHit = ((Player) e).getMaxHealth() * 2;
+                        maxHit = (int) ((1.0 / 3.0) * maxHit);
                     }
                     for (int i = 0; i < 20; i++) e.getWorld().playEffect(e.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
                     ((LivingEntity) e).damage(maxHit, owner);
@@ -266,9 +266,10 @@ public class EffectUtil {
 
             int dmgTotal = 0;
             for (LivingEntity e : entities) {
+                int maxHit = ChanceUtil.getRangedRandom(150, 350);
                 for (int i = 0; i < 20; i++) e.getWorld().playEffect(e.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
-                e.damage(200);
-                dmgTotal += 200;
+                e.damage(maxHit);
+                dmgTotal += maxHit;
             }
             ChatUtil.sendNotice(owner, "Your sword dishes out an incredible " + dmgTotal + " damage!");
         }
