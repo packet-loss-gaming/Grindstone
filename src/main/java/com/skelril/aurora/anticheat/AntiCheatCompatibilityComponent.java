@@ -118,7 +118,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     }
 
     private static final CheckType[] playerThrowCheckTypes = new CheckType[] {
-            CheckType.FLY, CheckType.ZOMBE_FLY, CheckType.SPEED
+            CheckType.FLY, CheckType.ZOMBE_FLY, CheckType.SPEED, CheckType.SNEAK, CheckType.SPIDER
     };
     private static final CheckType[] fallBlockerCheckTypes = new CheckType[] {CheckType.NOFALL};
     private static final CheckType[] rapidHitCheckTypes = new CheckType[] {CheckType.NO_SWING, CheckType.FORCEFIELD};
@@ -153,6 +153,8 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
                 checkTypes.add(CheckType.FLY);
                 checkTypes.add(CheckType.ZOMBE_FLY);
                 checkTypes.add(CheckType.SPEED);
+                checkTypes.add(CheckType.SNEAK);
+                checkTypes.add(CheckType.SPIDER);
             case ALONZO:
             case BUTTERFINGERS:
                 checkTypes.add(CheckType.ITEM_SPAM);

@@ -925,7 +925,9 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             boolean isTitan = titan.equals(player.getName());
 
             if (isTitanEnabled && isTitan) {
-                antiCheat.unexempt(Bukkit.getPlayerExact(titan), CheckType.FAST_BREAK);
+                Player aPlayer = Bukkit.getPlayerExact(titan);
+                antiCheat.unexempt(aPlayer, CheckType.FAST_BREAK);
+                antiCheat.unexempt(aPlayer, CheckType.NO_SWING);
             }
 
             // Normal Jungle Raid fireworks and stuff
@@ -938,7 +940,9 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     if (isTitan) {
                         titan = killer.getName();
                         try {
-                            antiCheat.exempt(Bukkit.getPlayerExact(titan), CheckType.FAST_BREAK);
+                            Player aPlayer = Bukkit.getPlayerExact(titan);
+                            antiCheat.exempt(aPlayer, CheckType.FAST_BREAK);
+                            antiCheat.exempt(aPlayer, CheckType.NO_SWING);
                         } catch (Exception ex) {
                             ChatUtil.sendNotice(getContainedPlayers(), ChatColor.RED, "[ERROR] Cannot find titan.");
                         }
