@@ -511,8 +511,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
 
         @Command(aliases = {"admin", "alivemin"},
-                usage = "", desc = "Enter Admin Mode",
-                flags = "e", min = 0, max = 0)
+                usage = "[-c \"command\"]", desc = "Enter Admin Mode",
+                flags = "ec:", min = 0, max = 0)
         public void adminModeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
@@ -531,7 +531,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     throw new CommandPermissionsException();
                 }
 
-                if (admin) {
+                if (args.hasFlag('c') && admin) {
+                    String command = args.getFlag('c');
+                    player.performCommand(command);
+                    deadmin(player, true);
+                    ChatUtil.sendNotice(sender, "Ran command: " + command + ".");
+                } else if (admin) {
                     ChatUtil.sendNotice(sender, "You have entered admin mode.");
                 } else {
                     ChatUtil.sendWarning(sender, "You fail to enter admin mode.");
