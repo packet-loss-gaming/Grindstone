@@ -79,12 +79,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     @Override
-    public void reload() {
-
-        saveInventories();
-    }
-
-    @Override
     public void disable() {
 
         saveInventories();
