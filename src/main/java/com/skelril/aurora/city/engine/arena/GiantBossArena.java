@@ -670,7 +670,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                             }
                         }
                     }
-                }, 20 * (28 - (difficulty == 1 ? 14 : 7)));
+                }, 20 * difficulty == 1 ? 14 : 7);
                 break;
             case 5:
                 if (!damageHeals) {
