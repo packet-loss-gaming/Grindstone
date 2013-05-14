@@ -561,7 +561,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             breakBlock(entity, belowLoc.add(0, -1, 0));
 
             // People Code
-            if (entity instanceof Player && isEvilMode(entity.getLocation().getBlock())) {
+            if (entity instanceof Player && isEvilMode(((Player) entity).getEyeLocation().getBlock())) {
                 if (adminComponent.isAdmin((Player) entity)) continue;
                 fogPlayer((Player) entity);
                 localSpawn((Player) entity);
