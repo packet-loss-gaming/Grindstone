@@ -226,19 +226,11 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             if (customName.equals("Grave Zombie")) {
                 if (ChanceUtil.getChance(6000) || getWorld().isThundering() && ChanceUtil.getChance(4000)) {
-                    ItemStack stack = new ItemStack(ItemID.EMERALD);
-                    ItemMeta meta = stack.getItemMeta();
-                    meta.setDisplayName(ChatColor.DARK_RED + "Gem of Darkness");
-                    stack.setItemMeta(meta);
-                    drops.add(stack);
+                    drops.add(ItemUtil.GraveYard.gemOfDarkness(1));
                 }
 
                 if (ChanceUtil.getChance(400)) {
-                    ItemStack phantomGold = new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(3));
-                    ItemMeta meta = phantomGold.getItemMeta();
-                    meta.setDisplayName(ChatColor.GOLD + "Phantom Gold");
-                    phantomGold.setItemMeta(meta);
-                    drops.add(phantomGold);
+                    drops.add(ItemUtil.GraveYard.phantomGold(ChanceUtil.getRandom(3)));
                 }
 
                 if (ChanceUtil.getChance(1000000)) {

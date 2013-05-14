@@ -1,5 +1,6 @@
 package com.skelril.aurora.util.item;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.skelril.aurora.util.ChanceUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -117,6 +118,27 @@ public class ItemUtil {
             ((Repairable) fearMeta).setRepairCost(400);
             fearBow.setItemMeta(fearMeta);
             return fearBow;
+        }
+    }
+
+    public static class GraveYard {
+
+        public static ItemStack gemOfDarkness(int amount) {
+
+            ItemStack gemOfDarkness = new ItemStack(ItemID.EMERALD, Math.max(0, Math.min(64, amount)));
+            ItemMeta gemMeta = gemOfDarkness.getItemMeta();
+            gemMeta.setDisplayName(ChatColor.DARK_RED + "Gem of Darkness");
+            gemOfDarkness.setItemMeta(gemMeta);
+            return gemOfDarkness;
+        }
+
+        public static ItemStack phantomGold(int amount) {
+
+            ItemStack phantomGold = new ItemStack(ItemID.GOLD_BAR, Math.max(0, Math.min(64, amount)));
+            ItemMeta goldMeta = phantomGold.getItemMeta();
+            goldMeta.setDisplayName(ChatColor.GOLD + "Phantom Gold");
+            phantomGold.setItemMeta(goldMeta);
+            return phantomGold;
         }
     }
 
