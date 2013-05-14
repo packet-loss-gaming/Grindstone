@@ -58,7 +58,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
     private static class LocalConfiguration extends ConfigurationBase {
 
         @Setting("removal-delay")
-        public int removalDelay = 5;
+        public int removalDelay = 3;
     }
 
     @Override
@@ -73,7 +73,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
             }
 
             for (Map.Entry<CheckType, Long> p : e.getValue().entrySet()) {
-                if (System.currentTimeMillis() - p.getValue() / 1000 > config.removalDelay) {
+                if ((System.currentTimeMillis() - p.getValue()) / 1000 > config.removalDelay) {
                     unexempt(player, p.getKey());
                     e.getValue().remove(p.getKey());
                 }
