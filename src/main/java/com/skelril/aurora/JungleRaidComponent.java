@@ -928,6 +928,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 Player aPlayer = Bukkit.getPlayerExact(titan);
                 antiCheat.unexempt(aPlayer, CheckType.FAST_BREAK);
                 antiCheat.unexempt(aPlayer, CheckType.NO_SWING);
+                antiCheat.unexempt(aPlayer, CheckType.AUTOTOOL);
             }
 
             // Normal Jungle Raid fireworks and stuff
@@ -943,6 +944,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                             Player aPlayer = Bukkit.getPlayerExact(titan);
                             antiCheat.exempt(aPlayer, CheckType.FAST_BREAK);
                             antiCheat.exempt(aPlayer, CheckType.NO_SWING);
+                            antiCheat.exempt(aPlayer, CheckType.AUTOTOOL);
                         } catch (Exception ex) {
                             ChatUtil.sendNotice(getContainedPlayers(), ChatColor.RED, "[ERROR] Cannot find titan.");
                         }
@@ -1390,7 +1392,10 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     }
                     titan = playersArr[ChanceUtil.getRandom(players.length) - 1];
                     try {
-                        antiCheat.exempt(Bukkit.getPlayerExact(titan), CheckType.FAST_BREAK);
+                        Player aPlayer = Bukkit.getPlayerExact(titan);
+                        antiCheat.exempt(aPlayer, CheckType.FAST_BREAK);
+                        antiCheat.exempt(aPlayer, CheckType.NO_SWING);
+                        antiCheat.exempt(aPlayer, CheckType.AUTOTOOL);
                     } catch (Exception ex) {
                         ChatUtil.sendNotice(players, ChatColor.RED, "[ERROR] Cannot find titan.");
                     }
