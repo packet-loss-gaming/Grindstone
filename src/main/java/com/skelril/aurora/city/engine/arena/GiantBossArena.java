@@ -42,10 +42,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -89,7 +86,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 Entity[] contained = getContainedEntities(1);
                 if (!getWorld().isThundering()) removeOutsideZombies(contained);
-                if (isBossSpawned()) removeXP(contained);
+                if (isBossSpawned()) {
+                    buffBabies(contained);
+                    removeXP(contained);
+                }
             }
         }, 0, 20 * 2);
 
@@ -213,11 +213,26 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     };
 
+    public void buffBabies(Entity[] contained) {
+
+        List<Zombie> que = new ArrayList<>();
+        for (Entity entity : contained) {
+            if (entity.isValid() && entity instanceof Zombie && ((Zombie) entity).isBaby()) {
+                que.add((Zombie) entity);
+            }
+        }
+
+        if (que.size() < 400) return;
+
+        for (Zombie zombie : que) {
+            zombie.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 20, 3));
+        }
+    }
     public void removeXP(Entity[] contained) {
 
         for (Entity e : contained) {
 
-            if (e instanceof ExperienceOrb && e.getTicksLived() > 20 * 13) e.remove();
+            if (e.isValid() && e instanceof ExperienceOrb && e.getTicksLived() > 20 * 13) e.remove();
         }
     }
 
@@ -225,7 +240,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         for (Entity e : getContainedEntities(1)) {
 
-            if (EnvironmentUtil.isHostileEntity(e)) {
+            if (e.isValid() && EnvironmentUtil.isHostileEntity(e)) {
                 for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
                 e.remove();
             }
@@ -366,6 +381,13 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     }
 
+    private static Set<EntityDamageByEntityEvent.DamageCause> acceptedReasons = new HashSet<>();
+    static {
+        acceptedReasons.add(EntityDamageEvent.DamageCause.ENTITY_ATTACK);
+        acceptedReasons.add(EntityDamageEvent.DamageCause.PROJECTILE);
+        acceptedReasons.add(EntityDamageEvent.DamageCause.MAGIC);
+        acceptedReasons.add(EntityDamageEvent.DamageCause.THORNS);
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEvent(EntityDamageEvent event) {
@@ -445,9 +467,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             }
             */
 
-            if (ChanceUtil.getChance(7)) {
+            if (ChanceUtil.getChance(3) && acceptedReasons.contains(event.getCause())) {
+
                 for (Location spawnPt : spawnPts) {
-                    if (ChanceUtil.getChance(18)) {
+                    if (ChanceUtil.getChance(11)) {
                         for (int i = 0; i < Math.max(3, contained.length); i++) {
                             Zombie z = (Zombie) getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
                             z.setBaby(true);
@@ -670,7 +693,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                             }
                         }
                     }
-                }, 20 * difficulty == 1 ? 14 : 7);
+                }, 20 * (difficulty == 1 ? 14 : 7));
                 break;
             case 5:
                 if (!damageHeals) {
