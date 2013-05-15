@@ -906,7 +906,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             }
 
             if (gameFlags.contains('d')) {
-                event.setDamage(200);
+                event.setDamage(defendingPlayer.getMaxHealth()^3);
                 ChatUtil.sendNotice(attackingPlayer, "You've killed " + defendingPlayer.getName() + "!");
             } else {
                 ChatUtil.sendNotice(attackingPlayer, "You've hit " + defendingPlayer.getName() + "!");
