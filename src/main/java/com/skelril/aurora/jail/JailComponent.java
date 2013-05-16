@@ -159,7 +159,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                     Location loc = player.getLocation();
                     Location cellLoc = cell.get(player).getLocation();
                     if (player.getWorld() != cellLoc.getWorld()
-                            || loc.distanceSquared(cellLoc) > (config.moveThreshold^2)) {
+                            || loc.distanceSquared(cellLoc) > (config.moveThreshold * config.moveThreshold)) {
                         player.teleport(cell.get(player).getLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     }
                 }

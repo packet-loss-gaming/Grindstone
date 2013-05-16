@@ -69,7 +69,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             if (canFearSpec(owner.getName())) {
                 if (ItemUtil.hasFearSword(owner)) {
                     fearSpec.put(owner.getName(), System.currentTimeMillis());
-                    switch (ChanceUtil.getRandom(5)) {
+                    switch (ChanceUtil.getRandom(6)) {
                         case 1:
                             EffectUtil.Fear.confuse(owner, target);
                             break;
@@ -83,6 +83,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Fear.weaken(owner, target);
                             break;
                         case 5:
+                        case 6:
                             EffectUtil.Fear.wrath(owner, target, event.getDamage(), ChanceUtil.getRangedRandom(2, 6));
                             break;
                     }

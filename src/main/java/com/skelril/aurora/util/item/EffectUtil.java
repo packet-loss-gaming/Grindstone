@@ -63,7 +63,10 @@ public class EffectUtil {
 
         public static void wrath(final Player owner, final LivingEntity target, final int x, int y) {
 
-            final int z = (((1 + ChanceUtil.getRandom(3)) * x) / y^2)^3 + 4;
+            ChatUtil.sendNotice(owner, "Base: " + x);
+            ChatUtil.sendNotice(owner, "Times: " + y);
+            final int z = ((x / ((2 + ChanceUtil.getRandom(2)) * y)) * 15) + 4;
+            ChatUtil.sendNotice(owner, "Target Damage: " + z);
 
             String damageRating;
             if (z > 50) {
@@ -78,19 +81,21 @@ public class EffectUtil {
                 damageRating = "weak";
             }
 
-            target.damage(z);
+            RapidHitEvent event = new RapidHitEvent(owner, z);
+            server.getPluginManager().callEvent(event);
+            target.damage(ChanceUtil.getRandom(z));
             for (int i = 0; i < y - 1; i++) {
                 server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
                     @Override
                     public void run() {
 
                         if (!target.isDead() && target.getHealth() < target.getMaxHealth()) {
-                            RapidHitEvent event = new RapidHitEvent(owner, z);
+                            RapidHitEvent event = new RapidHitEvent(owner, ChanceUtil.getRandom(z));
                             server.getPluginManager().callEvent(event);
                             target.damage(event.getDamage(), owner);
                         }
                     }
-                }, (i + 1) * 25);
+                }, (i + 1) * 45);
             }
             ChatUtil.sendNotice(owner, "Your sword releases a series of rapid " + damageRating + " attacks.");
         }
@@ -168,7 +173,7 @@ public class EffectUtil {
             final double ownerHP = (double) owner.getHealth() / (double) ownerMax;
             final double targetHP = (double) target.getHealth() / (double) target.getMaxHealth();
 
-            if (ownerHP >= targetHP) {
+            if (ownerHP > targetHP) {
                 owner.setHealth(owner.getMaxHealth());
                 ChatUtil.sendNotice(owner, "Your weapon fully heals you.");
             } else {

@@ -308,7 +308,7 @@ public class FishingComponent extends BukkitComponent implements Listener {
                             dropFish = (int) Math.sqrt(dropFish);
                         }
                     } else {
-                        dropFish = ChanceUtil.getRandom(dropFish^2);
+                        dropFish = ChanceUtil.getRandom(dropFish * dropFish);
                     }
 
                     addArrowLoc(arrow, loc.toString());
