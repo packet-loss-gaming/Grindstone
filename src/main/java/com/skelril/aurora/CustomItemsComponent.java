@@ -1,6 +1,7 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
+import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.EffectUtil;
@@ -21,8 +22,11 @@ import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.*;
 
 /**
  * Author: Turtle9598
@@ -53,6 +57,21 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         return !unleashedSpec.containsKey(name) || System.currentTimeMillis() - unleashedSpec.get(name) >= 3800;
     }
 
+    private Specs callSpec(Player owner, LivingEntity target, int start, int end) {
+
+        Specs[] availible;
+        Specs used;
+        SpecialAttackEvent event;
+
+        availible = Arrays.copyOfRange(Specs.values(), start, end);
+        used = availible[ChanceUtil.getRandom(availible.length) - 1];
+        event = new SpecialAttackEvent(owner, target, used);
+
+        server.getPluginManager().callEvent(event);
+
+        return event.isCancelled() ? null : event.getSpec();
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
@@ -66,49 +85,51 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         if (owner != null && target != null) {
 
+            Specs used;
             if (canFearSpec(owner.getName())) {
                 if (ItemUtil.hasFearSword(owner)) {
+                    used = callSpec(owner, target, 0, 5);
+                    if (used == null) return;
                     fearSpec.put(owner.getName(), System.currentTimeMillis());
-                    switch (ChanceUtil.getRandom(6)) {
-                        case 1:
+                    switch (used) {
+                        case CONFUSE:
                             EffectUtil.Fear.confuse(owner, target);
                             break;
-                        case 2:
+                        case BLAZE:
                             EffectUtil.Fear.fearBlaze(owner, target);
                             break;
-                        case 3:
-                            EffectUtil.Fear.poison(owner, target);
+                        case CURSE:
+                            EffectUtil.Fear.curse(owner, target);
                             break;
-                        case 4:
+                        case WEAKEN:
                             EffectUtil.Fear.weaken(owner, target);
                             break;
-                        case 5:
-                        case 6:
-                            EffectUtil.Fear.wrath(owner, target, event.getDamage(), ChanceUtil.getRangedRandom(2, 6));
+                        case SOUL_SMITE:
+                            EffectUtil.Fear.soulSmite(owner, target);
                             break;
                     }
                 } else if (ItemUtil.hasFearBow(owner)) {
-
+                    used = callSpec(owner, target, 5, 9);
+                    if (used == null) return;
                     fearSpec.put(owner.getName(), System.currentTimeMillis());
-                    int attack = ChanceUtil.getRandom(4);
 
-                    switch (attack) {
-                        case 1:
+                    switch (used) {
+                        case DISARM:
                             if (EffectUtil.Fear.disarm(owner, target)) {
                                 break;
                             }
-                        case 2:
-                            EffectUtil.Fear.poison(owner, target);
+                        case RANGE_CURSE:
+                            EffectUtil.Fear.curse(owner, target);
                             break;
-                        case 3:
+                        case MAGIC_CHAIN:
                             EffectUtil.Fear.magicChain(owner, target);
                             break;
-                        case 4:
+                        case FEAR_STRIKE:
                             event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage()));
                             break;
                     }
 
-                    if (attack != 4 && ChanceUtil.getChance(6)) {
+                    if (used != Specs.FEAR_STRIKE && ChanceUtil.getChance(4)) {
                         Location targetLoc = target.getLocation();
                         if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
                             targetLoc.getWorld().strikeLightning(targetLoc);
@@ -119,24 +140,26 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             if (canUnleashedSpec(owner.getName())) {
                 if (ItemUtil.hasUnleashedSword(owner)) {
+                    used = callSpec(owner, target, 9, 15);
+                    if (used == null) return;
                     unleashedSpec.put(owner.getName(), System.currentTimeMillis());
-                    switch (ChanceUtil.getRandom(6)) {
-                        case 1:
+                    switch (used) {
+                        case BLIND:
                             EffectUtil.Unleashed.blind(owner, target);
                             break;
-                        case 2:
+                        case HEALING_LIGHT:
                             EffectUtil.Unleashed.healingLight(owner, target);
                             break;
-                        case 3:
+                        case SPEED:
                             EffectUtil.Unleashed.speed(owner, target);
                             break;
-                        case 4:
+                        case REGEN:
                             EffectUtil.Unleashed.regen(owner, target);
                             break;
-                        case 5:
+                        case DOOM_BLADE:
                             EffectUtil.Unleashed.doomBlade(owner, target);
                             break;
-                        case 6:
+                        case LIFE_LEECH:
                             EffectUtil.Unleashed.lifeLeech(owner, target);
                             break;
                     }

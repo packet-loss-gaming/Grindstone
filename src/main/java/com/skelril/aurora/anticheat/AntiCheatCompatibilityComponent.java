@@ -121,7 +121,9 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
             CheckType.FLY, CheckType.ZOMBE_FLY, CheckType.SPEED, CheckType.SNEAK, CheckType.SPIDER
     };
     private static final CheckType[] fallBlockerCheckTypes = new CheckType[] {CheckType.NOFALL};
-    private static final CheckType[] rapidHitCheckTypes = new CheckType[] {CheckType.NO_SWING, CheckType.FORCEFIELD};
+    private static final CheckType[] rapidHitCheckTypes = new CheckType[] {
+            CheckType.NO_SWING, CheckType.FORCEFIELD, CheckType.LONG_REACH
+    };
 
     @EventHandler
     public void onPlayerThrow(ThrowPlayerEvent event) {

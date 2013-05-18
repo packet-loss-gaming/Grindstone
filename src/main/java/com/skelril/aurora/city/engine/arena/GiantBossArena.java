@@ -11,6 +11,7 @@ import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
@@ -381,6 +382,34 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     }
 
+    private static Set<SpecialAttackEvent.Specs> generalBlacklistedSpecs = new HashSet<>();
+    private static Set<SpecialAttackEvent.Specs> bossBlacklistedSpecs = new HashSet<>();
+    static {
+        generalBlacklistedSpecs.add(SpecialAttackEvent.Specs.DISARM);
+
+        bossBlacklistedSpecs.add(SpecialAttackEvent.Specs.LIFE_LEECH);
+        bossBlacklistedSpecs.add(SpecialAttackEvent.Specs.SOUL_SMITE);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSpecialAttack(SpecialAttackEvent event) {
+
+        LivingEntity target = event.getTarget();
+
+        if (!contains(target)) return;
+
+        SpecialAttackEvent.Specs spec = event.getSpec();
+
+        if (target instanceof Giant && bossBlacklistedSpecs.contains(spec)) {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (generalBlacklistedSpecs.contains(spec)) {
+            event.setCancelled(true);
+        }
+    }
+
     private static Set<EntityDamageByEntityEvent.DamageCause> acceptedReasons = new HashSet<>();
     static {
         acceptedReasons.add(EntityDamageEvent.DamageCause.ENTITY_ATTACK);
@@ -535,8 +564,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     }
 
     private static PotionEffect[] effects = new PotionEffect[] {
-            new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 60 * 3, 2),
-            new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 60 * 3, 2)
+            new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 60 * 3, 1),
+            new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 60 * 3, 1)
     };
 
     @EventHandler
@@ -590,7 +619,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
-        if (contains(player, 1) && !adminComponent.isAdmin(player)) {
+        if (contains(player, 1) && !adminComponent.isAdmin(player) && !playerState.containsKey(player.getName())) {
             if (isBossSpawned()) boss.setHealth(Math.min(boss.getMaxHealth(), boss.getHealth() + 250));
             playerState.put(player.getName(), new PlayerState(player.getName(),
                     player.getInventory().getContents(),
@@ -657,13 +686,13 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             case 2:
                 ChatUtil.sendWarning(containedP, "Embrace my corruption!");
                 for (Player player : contained) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 12, difficulty > 2 ? 2 : 1));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 12, difficulty > 2 ? 1 : 0));
                 }
                 break;
             case 3:
                 ChatUtil.sendWarning(containedP, "Are you BLIND? Mwhahahaha!");
                 for (Player player : contained) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 1));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0));
                 }
                 break;
             case 4:
