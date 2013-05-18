@@ -20,9 +20,13 @@ import com.skelril.aurora.util.item.BookUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
+import com.skelril.aurora.util.timer.IntegratedRunnable;
+import com.skelril.aurora.util.timer.TimedRunnable;
+import com.skelril.aurora.util.timer.TimerUtil;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -69,6 +73,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     private int difficulty = Difficulty.HARD.getValue();
     private List<Location> spawnPts = new ArrayList<>();
+    private List<Location> chestPts = new ArrayList<>();
     private final HashMap<String, PlayerState> playerState = new HashMap<>();
 
     public GiantBossArena(World world, ProtectedRegion region, AdminComponent adminComponent) {
@@ -95,7 +100,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }, 0, 20 * 2);
 
         // First spawn requirement
-        getMinionSpawnPts();
+        probeArea();
 
         // Set difficulty
         difficulty = getWorld().getDifficulty().getValue();
@@ -130,12 +135,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @Override
     public void spawnBoss() {
 
-        spawnPts.clear();
-
         BlockVector min = getRegion().getMinimumPoint();
         BlockVector max = getRegion().getMaximumPoint();
-
-        getMinionSpawnPts(min, max);
 
         Region region = new CuboidRegion(min, max);
         Location l = BukkitUtil.toLocation(getWorld(), region.getCenter().setY(groundLevel));
@@ -147,12 +148,13 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         for (Player player : getContainedPlayers(1)) ChatUtil.sendWarning(player, "I live again!");
     }
 
-    public void getMinionSpawnPts() {
+    public void probeArea() {
 
-        getMinionSpawnPts(getRegion().getMinimumPoint(), getRegion().getMaximumPoint());
-    }
+        spawnPts.clear();
+        chestPts.clear();
 
-    public void getMinionSpawnPts(BlockVector min, BlockVector max) {
+        BlockVector min = getRegion().getParent().getMinimumPoint();
+        BlockVector max = getRegion().getParent().getMaximumPoint();
 
         int minX = min.getBlockX();
         int minZ = min.getBlockZ();
@@ -169,6 +171,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     if (!block.getChunk().isLoaded()) block.getChunk().load();
                     if (block.getTypeId() == BlockID.GOLD_BLOCK) {
                         spawnPts.add(block.getLocation().add(0, 2, 0));
+                        continue;
+                    }
+                    if (block.getTypeId() == BlockID.CHEST) {
+                        chestPts.add(block.getLocation());
                     }
                 }
             }
@@ -489,6 +495,27 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             Giant boss = (Giant) defender;
             if (damageHeals) {
                 boss.setHealth(Math.min(boss.getMaxHealth(), (event.getDamage() * difficulty) + boss.getHealth()));
+
+                if (ChanceUtil.getChance(4)) {
+
+                    int affected = 0;
+                    for (Entity e : boss.getNearbyEntities(8, 8, 8)) {
+                        if (e.isValid() && e instanceof Player && contains(e)) {
+                            server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
+                            e.setVelocity(new Vector(
+                                    Math.random() * 3 - 1.5,
+                                    Math.random() * 4,
+                                    Math.random() * 3 - 1.5
+                            ));
+                            e.setFireTicks(ChanceUtil.getRandom(20 * 60));
+                            affected++;
+                        }
+                    }
+
+                    if (affected > 0) {
+                        ChatUtil.sendNotice(getContainedPlayers(1), "Feel my power!");
+                    }
+                }
             }
             /*
             else if (projectile != null && projectile instanceof Arrow) {
@@ -606,6 +633,33 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 for (int i = 0; i < 7; i++) {
                     server.getScheduler().runTaskLater(inst, spawnXP, i * 2 * 20);
                 }
+
+                IntegratedRunnable normal = new IntegratedRunnable() {
+
+                    @Override
+                    public void run(int times) {
+
+                        if (!TimerUtil.matchesFilter(times, 10, 5)) return;
+                        ChatUtil.sendWarning(getContainedPlayers(1), "Clearing chest contents in: "
+                                + times + " seconds.");
+                    }
+
+                    @Override
+                    public void end() {
+
+                        ChatUtil.sendWarning(getContainedPlayers(1), "Clearing chest contents!");
+                        for (Location location : chestPts) {
+
+                            BlockState state = location.getBlock().getState();
+                            if (state instanceof Chest) {
+                                ((Chest) state).getInventory().clear();
+                            }
+                        }
+                    }
+                };
+                TimedRunnable timed = new TimedRunnable(normal, 60);
+                BukkitTask task = server.getScheduler().runTaskTimer(inst, timed, 0, 20);
+                timed.setTask(task);
             } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
                 if (ChanceUtil.getChance(28)) {
                     event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(3)));
