@@ -112,7 +112,7 @@ public class EffectUtil {
 
             server.getPluginManager().callEvent(new RapidHitEvent(owner));
 
-            for (Entity e : target.getNearbyEntities(8, 8, 8)) {
+            for (Entity e : target.getNearbyEntities(8, 4, 8)) {
                 if (e.isValid() && e instanceof LivingEntity) {
                     if (e.equals(owner)) continue;
                     if (e instanceof Player) {
@@ -195,7 +195,7 @@ public class EffectUtil {
             server.getPluginManager().callEvent(new RapidHitEvent(owner));
 
             int dmgTotal = 0;
-            List<Entity> entityList = target.getNearbyEntities(8, 8, 8);
+            List<Entity> entityList = target.getNearbyEntities(6, 4, 6);
             entityList.add(target);
             for (Entity e : entityList) {
                 if (e.isValid() && e instanceof LivingEntity) {
@@ -249,7 +249,7 @@ public class EffectUtil {
 
             int dmgTotal = 0;
             for (LivingEntity e : entities) {
-                int maxHit = ChanceUtil.getRangedRandom(150, 350);
+                int maxHit = ChanceUtil.getRangedRandom(150, 250);
                 for (int i = 0; i < 20; i++) e.getWorld().playEffect(e.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
                 e.damage(maxHit);
                 dmgTotal += maxHit;
