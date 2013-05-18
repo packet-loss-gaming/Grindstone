@@ -59,12 +59,12 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private Specs callSpec(Player owner, LivingEntity target, int start, int end) {
 
-        Specs[] availible;
+        Specs[] available;
         Specs used;
         SpecialAttackEvent event;
 
-        availible = Arrays.copyOfRange(Specs.values(), start, end);
-        used = availible[ChanceUtil.getRandom(availible.length) - 1];
+        available = Arrays.copyOfRange(Specs.values(), start, end);
+        used = available[ChanceUtil.getRandom(available.length) - 1];
         event = new SpecialAttackEvent(owner, target, used);
 
         server.getPluginManager().callEvent(event);

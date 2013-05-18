@@ -51,6 +51,7 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
 
         this.cancelled = cancelled;
     }
+
     public static enum Specs {
 
         BLAZE,
