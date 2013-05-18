@@ -550,7 +550,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                     if (ChanceUtil.getChance(difficulty * 3)) EffectUtil.Ancient.powerBurst(player, event.getDamage());
                 }
-                if (ChanceUtil.getChance(difficulty) && defender.getFireTicks() > 0) {
+                if (ChanceUtil.getChance(difficulty * 9) && defender.getFireTicks() > 0) {
                     ChatUtil.sendNotice((Player) defender, "Your armour extinguishes the fire.");
                     defender.setFireTicks(0);
                 }
