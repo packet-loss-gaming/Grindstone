@@ -28,8 +28,18 @@ public class TimedRunnable implements Runnable {
         if (times > 0) {
             action.run(times);
         } else {
-            action.end();
-            task.cancel();
+            cancel(true);
         }
+    }
+
+    public void cancel() {
+
+        cancel(false);
+    }
+
+    public void cancel(boolean withEnd) {
+
+        if (withEnd) action.end();
+        task.cancel();
     }
 }
