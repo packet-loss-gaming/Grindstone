@@ -3,7 +3,12 @@ package com.skelril.aurora.admin;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.GodComponent;
 import com.sk89q.commandbook.util.PlayerUtil;
-import com.sk89q.minecraft.util.commands.*;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.minecraft.util.commands.CommandPermissionsException;
+import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
@@ -12,15 +17,20 @@ import com.skelril.aurora.RogueComponent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Effect;
+import org.bukkit.GameMode;
+import org.bukkit.Material;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -37,13 +47,21 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -1019,6 +1037,21 @@ public class AdminComponent extends BukkitComponent implements Listener {
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: "
                     + player.getDisplayName() + " has been given " + stack.getAmount() + " Phantom Gold.");
+        }
+
+        @Command(aliases = {"batbow"},
+                usage = "<player>", desc = "Return a player's Bat Bow",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.graveyard.bow.bat"})
+        public void lostBatBowCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.GraveYard.batBow());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: "
+                    + player.getDisplayName() + " has been a new Bat Bow.");
         }
     }
 

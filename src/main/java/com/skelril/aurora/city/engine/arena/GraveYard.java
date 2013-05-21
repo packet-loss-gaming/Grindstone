@@ -10,12 +10,25 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.LocationUtil;
-import org.bukkit.*;
-import org.bukkit.block.*;
+import com.skelril.aurora.util.item.ItemUtil;
+import org.bukkit.ChatColor;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
+import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.CaveSpider;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.ThrownPotion;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -39,11 +52,19 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-public class GraveYard extends AbstractRegionedArena implements MonitoredArena, Listener{
+public class GraveYard extends AbstractRegionedArena implements MonitoredArena, Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -57,13 +78,16 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     // Block information
     private static Set<BaseBlock> breakable = new HashSet<>();
+
     static {
         breakable.add(new BaseBlock(BlockID.DIRT, -1));
         breakable.add(new BaseBlock(BlockID.TORCH, -1));
         breakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
         breakable.add(new BaseBlock(BlockID.WEB, -1));
     }
+
     private static Set<BaseBlock> autoBreakable = new HashSet<>();
+
     static {
         autoBreakable.add(new BaseBlock(BlockID.STEP, 5));
         autoBreakable.add(new BaseBlock(BlockID.STEP, 13));
@@ -84,6 +108,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     private ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> map = new ConcurrentHashMap<>();
 
     public GraveYard(World world, ProtectedRegion[] regions, AdminComponent adminComponent) {
+
         super(world, regions[0]);
 
         this.temple = regions[1];
@@ -222,6 +247,11 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             List<ItemStack> drops = event.getDrops();
 
             if (customName.equals("Grave Zombie")) {
+
+                if (ChanceUtil.getChance(6000) || getWorld().isThundering() && ChanceUtil.getChance(4000)) {
+                    drops.add(ItemUtil.GraveYard.batBow());
+                }
+
                 if (ChanceUtil.getChance(6000) || getWorld().isThundering() && ChanceUtil.getChance(4000)) {
                     drops.add(ItemUtil.GraveYard.gemOfDarkness(1));
                 }
@@ -520,9 +550,9 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         BaseBlock b;
         Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e;
-        Iterator<Map.Entry<Location,AbstractMap.SimpleEntry<Long,BaseBlock>>> it = map.entrySet().iterator();
+        Iterator<Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>>> it = map.entrySet().iterator();
 
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             e = it.next();
             if ((System.currentTimeMillis() - e.getValue().getKey()) > min) {
                 b = e.getValue().getValue();
@@ -583,6 +613,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
         return false;
     }
+
     private boolean isEvilMode(Block block) {
 
         // Weather/Day Check

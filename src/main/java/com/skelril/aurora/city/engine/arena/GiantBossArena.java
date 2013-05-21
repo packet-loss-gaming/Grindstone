@@ -11,11 +11,13 @@ import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
-import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
-import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
-import com.skelril.aurora.util.*;
+import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
+import com.skelril.aurora.events.environment.CreepSpeakEvent;
+import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.item.BookUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -23,11 +25,25 @@ import com.skelril.aurora.util.player.PlayerState;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
 import com.skelril.aurora.util.timer.TimerUtil;
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Difficulty;
+import org.bukkit.Effect;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ExperienceOrb;
+import org.bukkit.entity.Giant;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.ThrownExpBottle;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -47,7 +63,12 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -206,8 +227,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     }
 
     public Runnable spawnXP = new Runnable() {
+
         @Override
         public void run() {
+
             for (Location pt : spawnPts) {
                 if (!ChanceUtil.getChance(6)) continue;
                 ThrownExpBottle bottle = (ThrownExpBottle) getWorld().spawnEntity(pt, EntityType.THROWN_EXP_BOTTLE);
@@ -235,6 +258,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             zombie.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 20, 3));
         }
     }
+
     public void removeXP(Entity[] contained) {
 
         for (Entity e : contained) {
@@ -390,6 +414,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     private static Set<SpecialAttackEvent.Specs> generalBlacklistedSpecs = new HashSet<>();
     private static Set<SpecialAttackEvent.Specs> bossBlacklistedSpecs = new HashSet<>();
+
     static {
         generalBlacklistedSpecs.add(SpecialAttackEvent.Specs.DISARM);
 
@@ -400,13 +425,12 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @EventHandler(ignoreCancelled = true)
     public void onSpecialAttack(SpecialAttackEvent event) {
 
-        LivingEntity target = event.getTarget();
-
-        if (!contains(target)) return;
+        if (!contains(event.getLocation())) return;
 
         SpecialAttackEvent.Specs spec = event.getSpec();
+        LivingEntity target = event.getTarget();
 
-        if (target instanceof Giant && bossBlacklistedSpecs.contains(spec)) {
+        if (target != null && target instanceof Giant && bossBlacklistedSpecs.contains(spec)) {
             event.setCancelled(true);
             return;
         }
@@ -417,6 +441,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     }
 
     private static Set<EntityDamageByEntityEvent.DamageCause> acceptedReasons = new HashSet<>();
+
     static {
         acceptedReasons.add(EntityDamageEvent.DamageCause.ENTITY_ATTACK);
         acceptedReasons.add(EntityDamageEvent.DamageCause.PROJECTILE);
@@ -549,6 +574,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     final Player finalAttacker = (Player) attacker;
                     if (!finalAttacker.getGameMode().equals(GameMode.CREATIVE)) {
                         server.getScheduler().runTaskLater(inst, new Runnable() {
+
                             @Override
                             public void run() {
 

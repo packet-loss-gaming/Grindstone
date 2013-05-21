@@ -12,8 +12,10 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import org.bukkit.Effect;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -25,6 +27,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
@@ -72,6 +75,7 @@ public class EffectUtil {
 
             target.setHealth((int) Math.floor(((targetHP / 2) * target.getMaxHealth())));
             server.getScheduler().runTaskLater(inst, new Runnable() {
+
                 @Override
                 public void run() {
 
@@ -312,6 +316,38 @@ public class EffectUtil {
                     }
                 }
             }
+        }
+    }
+
+    public static class Strange {
+
+        public static void goneBatty(Player owner, Location location) {
+
+            final List<Entity> bats = new ArrayList<>();
+
+            for (int i = 0; i < 125; i++) {
+
+                bats.add(location.getWorld().spawnEntity(location, EntityType.BAT));
+            }
+
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                @Override
+                public void run() {
+
+                    for (Entity bat : bats) {
+
+                        if (bat.isValid()) {
+                            bat.remove();
+                            for (int i = 0; i < 20; i++) {
+                                bat.getWorld().playEffect(bat.getLocation(), Effect.SMOKE, 0);
+                            }
+                        }
+                    }
+                }
+            }, 20 * 30);
+
+            ChatUtil.sendNotice(owner, "Your bow releases a batty attack.");
         }
     }
 }

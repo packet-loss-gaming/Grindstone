@@ -1,6 +1,5 @@
 package com.skelril.aurora.util.item;
 import com.sk89q.worldedit.blocks.ItemID;
-import com.skelril.aurora.util.ChanceUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -140,6 +139,16 @@ public class ItemUtil {
             phantomGold.setItemMeta(goldMeta);
             return phantomGold;
         }
+
+        public static ItemStack batBow() {
+
+            ItemStack batBow = new ItemStack(ItemID.BOW);
+            ItemMeta batMeta = batBow.getItemMeta();
+            batMeta.setDisplayName(ChatColor.DARK_RED + "Bat Bow");
+            ((Repairable) batMeta).setRepairCost(400);
+            batBow.setItemMeta(batMeta);
+            return batBow;
+        }
     }
 
     public static ItemStack[] clone(ItemStack[] stacks) {
@@ -272,6 +281,16 @@ public class ItemUtil {
     private static boolean matchesFilter(ItemStack stack, String filter) {
 
         return isCustomItem(stack) && stack.getItemMeta().getDisplayName().contains(filter);
+    }
+
+    public static boolean hasBatBow(Player player) {
+
+        return player.isValid() && isBatBow(player.getItemInHand());
+    }
+
+    public static boolean isBatBow(ItemStack item) {
+
+        return matchesFilter(item, ChatColor.DARK_RED + "Bat Bow");
     }
 
     public static boolean hasMasterSword(Player player) {

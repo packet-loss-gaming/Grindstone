@@ -2,16 +2,23 @@ package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
+import com.skelril.aurora.events.entity.ProjectileTickEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Bat;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -27,7 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.*;
+import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
 
 /**
  * Author: Turtle9598
@@ -47,6 +54,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private ConcurrentHashMap<String, Long> fearSpec = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Long> unleashedSpec = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Long> batSpec = new ConcurrentHashMap<>();
 
     private boolean canFearSpec(String name) {
 
@@ -58,7 +66,28 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         return !unleashedSpec.containsKey(name) || System.currentTimeMillis() - unleashedSpec.get(name) >= 3800;
     }
 
-    private Specs callSpec(Player owner, LivingEntity target, int start, int end) {
+    private boolean canBatSpec(String name) {
+
+        return !batSpec.containsKey(name) || System.currentTimeMillis() - batSpec.get(name) >= 15000;
+    }
+
+    private Specs callSpec(Player owner, Object target, Specs spec) {
+
+        SpecialAttackEvent event;
+        if (target instanceof LivingEntity) {
+            event = new SpecialAttackEvent(owner, (LivingEntity) target, spec);
+        } else if (target instanceof Location) {
+            event = new SpecialAttackEvent(owner, (Location) target, spec);
+        } else {
+            return null;
+        }
+
+        server.getPluginManager().callEvent(event);
+
+        return event.isCancelled() ? null : event.getSpec();
+    }
+
+    private Specs callSpec(Player owner, Object target, int start, int end) {
 
         Specs[] available;
         Specs used;
@@ -66,7 +95,14 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         available = Arrays.copyOfRange(Specs.values(), start, end);
         used = available[ChanceUtil.getRandom(available.length) - 1];
-        event = new SpecialAttackEvent(owner, target, used);
+
+        if (target instanceof LivingEntity) {
+            event = new SpecialAttackEvent(owner, (LivingEntity) target, used);
+        } else if (target instanceof Location) {
+            event = new SpecialAttackEvent(owner, (Location) target, used);
+        } else {
+            return null;
+        }
 
         server.getPluginManager().callEvent(event);
 
@@ -129,6 +165,13 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage()));
                             break;
                     }
+
+                    if (used != Specs.FEAR_STRIKE && ChanceUtil.getChance(4)) {
+                        Location targetLoc = target.getLocation();
+                        if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
+                            targetLoc.getWorld().strikeLightning(targetLoc);
+                        }
+                    }
                 }
             }
 
@@ -158,9 +201,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             break;
                     }
                 } else if (ItemUtil.hasUnleashedBow(owner)) {
+                    //used = callSpec(owner, target, 16, 17);
+                    //if (used == null) return;
                     unleashedSpec.put(owner.getName(), System.currentTimeMillis());
                     ChatUtil.sendError(owner, "This weapon is currently a WIP.");
-
                 }
             }
         }
@@ -169,17 +213,58 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     @EventHandler
     public void onArrowLand(ProjectileHitEvent event) {
 
-        Location arrowLoc = event.getEntity().getLocation();
+        Entity shooter = event.getEntity().getShooter();
 
-        LivingEntity shooter = event.getEntity().getShooter();
-        if (shooter instanceof Player) {
+        if (shooter != null && shooter instanceof Player) {
 
-            if (ItemUtil.hasFearBow((Player) shooter)) {
-                if (!canFearSpec(((Player) shooter).getName())) {
-                    if (!arrowLoc.getWorld().isThundering() && arrowLoc.getBlock().getLightFromSky() > 0) {
-                        arrowLoc.getWorld().strikeLightning(arrowLoc);
+            Player owner = (Player) shooter;
+            if (canBatSpec(owner.getName())) {
+                Specs used;
+                if (ItemUtil.hasBatBow(owner)) {
+                    used = callSpec(owner, event.getEntity().getLocation(), Specs.BAT_ATTACK);
+                    if (used == null) return;
+                    batSpec.put(owner.getName(), System.currentTimeMillis());
+                    switch (used) {
+                        case BAT_ATTACK:
+                            EffectUtil.Strange.goneBatty(owner, event.getEntity().getLocation());
+                            break;
                     }
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onArrowTick(ProjectileTickEvent event) {
+
+        Entity shooter = event.getEntity().getShooter();
+
+        if (shooter != null && shooter instanceof Player) {
+
+            if (ChanceUtil.getChance(5) && ItemUtil.hasBatBow((Player) shooter)) {
+
+                final Location location = event.getEntity().getLocation();
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                    @Override
+                    public void run() {
+
+                        final Bat bat = (Bat) location.getWorld().spawnEntity(location, EntityType.BAT);
+                        server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                            @Override
+                            public void run() {
+
+                                if (bat.isValid()) {
+                                    bat.remove();
+                                    for (int i = 0; i < 20; i++) {
+                                        bat.getWorld().playEffect(bat.getLocation(), Effect.SMOKE, 0);
+                                    }
+                                }
+                            }
+                        }, 20 * 3);
+                    }
+                }, 3);
             }
         }
     }
@@ -222,6 +307,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         final Player player = event.getPlayer();
         final ItemStack finalNewItem = newItem;
         server.getScheduler().runTaskLater(inst, new Runnable() {
+
             @Override
             public void run() {
 
@@ -266,5 +352,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         String name = event.getPlayer().getName();
         if (fearSpec.containsKey(name)) fearSpec.remove(name);
         if (unleashedSpec.containsKey(name)) unleashedSpec.remove(name);
+        if (batSpec.containsKey(name)) batSpec.remove(name);
     }
 }

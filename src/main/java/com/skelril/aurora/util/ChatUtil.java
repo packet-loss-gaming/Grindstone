@@ -11,6 +11,19 @@ import org.bukkit.entity.Player;
  */
 public class ChatUtil {
 
+    public static void sendDebug(String message) {
+
+        try {
+            Player player = PlayerUtil.matchPlayerExactly(null, "Dark_Arc");
+            StringBuilder builder = new StringBuilder();
+            builder.append(ChatColor.BLACK).append("[");
+            builder.append(ChatColor.DARK_RED).append("DEBUG");
+            builder.append(ChatColor.BLACK).append("] ");
+            builder.append(ChatColor.GRAY).append(message);
+            player.sendMessage(builder.toString());
+        } catch (CommandException ignored) {}
+    }
+
     public static void sendNotice(CommandSender sender, String notice) {
 
         sender.sendMessage(ChatColor.YELLOW + notice);
@@ -154,7 +167,7 @@ public class ChatUtil {
                 continue;
             }
 
-            if ((i == 0 || Character.isSpaceChar(chars[i-1])) && chars[i] == 'X') {
+            if ((i == 0 || Character.isSpaceChar(chars[i - 1])) && chars[i] == 'X') {
                 nextAllowed = true;
                 continue;
             }

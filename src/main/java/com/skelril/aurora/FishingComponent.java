@@ -3,6 +3,7 @@ package com.skelril.aurora;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockData;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.skelril.aurora.events.entity.ProjectileTickEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -10,23 +11,27 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Creeper;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockGrowEvent;
-import org.bukkit.event.entity.EntityShootBowEvent;
-import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Turtle9598
@@ -38,8 +43,6 @@ public class FishingComponent extends BukkitComponent implements Listener {
     private final Server server = CommandBook.server();
 
     private LocalConfiguration config;
-    private Map<Integer, Integer> arrowTaskId = new HashMap<>();
-    private Map<Integer, String> arrowLoc = new HashMap<>();
 
     @Override
     public void enable() {
@@ -222,103 +225,36 @@ public class FishingComponent extends BukkitComponent implements Listener {
         }
     }
 
-    // Arrow Fishing
-    private void addArrowTaskId(Arrow arrow, int taskId) {
-
-        arrowTaskId.put(arrow.getEntityId(), taskId);
-    }
-
-    private void addArrowLoc(Arrow arrow, String loc) {
-
-        arrowLoc.put(arrow.getEntityId(), loc);
-    }
-
-    private void removeArrow(Arrow arrow) {
-
-        if (arrowTaskId.containsKey(arrow.getEntityId())) {
-            arrowTaskId.remove(arrow.getEntityId());
-        }
-
-        if (arrowLoc.containsKey(arrow.getEntityId())) {
-            arrowLoc.remove(arrow.getEntityId());
-        }
-
-    }
-
-    private int getArrowTaskId(Arrow arrow) {
-
-        int getArrowTaskId = 0;
-        if (arrowTaskId.containsKey(arrow.getEntityId())) {
-            getArrowTaskId = arrowTaskId.get(arrow.getEntityId());
-        }
-        return getArrowTaskId;
-    }
-
-    private boolean arrowLocChanged(String loc) {
-
-        return !arrowLoc.containsValue(loc);
-    }
-
     // Stack-o-fish
     private final static ItemStack fishy = new ItemStack(Material.RAW_FISH, 1);
 
-    // Entity fishing
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBowFire(EntityShootBowEvent event) {
+    @EventHandler
+    public void onProjectileTick(ProjectileTickEvent event) {
 
-        if (event.getForce() >= config.minBowForce) arrowFish(new ProjectileLaunchEvent(event.getProjectile()));
-    }
+        if (!config.enableArrowFishing || !(event.getEntity() instanceof Arrow)) return;
 
-    // Non-entity Fishing
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onArrowFire(ProjectileLaunchEvent event) {
+        // Was 3 ticks is now 1 tick
+        if (ChanceUtil.getChance(3) || event.hasLaunchForce() && event.getLaunchForce() < config.minBowForce) return;
 
-        Projectile projectile = event.getEntity();
-        if (projectile.getShooter() != null && !(projectile.getShooter() instanceof Player)) arrowFish(event);
-    }
+        Arrow arrow = (Arrow) event.getEntity();
+        Location loc = arrow.getLocation();
 
+        int dropFish = config.fishDropChance;
 
-    public void arrowFish(ProjectileLaunchEvent event) {
+        if (event.hasLaunchForce()) {
 
-        if (!config.enableArrowFishing) return;
-        if (!(event.getEntity() instanceof Arrow)) return;
-        final Arrow arrow = (Arrow) event.getEntity();
+            Player shooter = arrow.getShooter() instanceof Player ? (Player) arrow.getShooter() : null;
+            dropFish = ChanceUtil.getRandom(dropFish);
 
-        int taskId = server.getScheduler().scheduleSyncRepeatingTask(inst, new Runnable() {
-
-            @Override
-            public void run() {
-
-                Location loc = arrow.getLocation();
-
-                if (arrow.isDead() || (!(arrowLocChanged(loc.toString())))) {
-                    int id = getArrowTaskId(arrow);
-
-                    if (id != -1) {
-                        removeArrow(arrow);
-                        server.getScheduler().cancelTask(id);
-                    }
-                } else {
-                    int dropFish = config.fishDropChance;
-
-                    if (arrow.getShooter() instanceof Player) {
-                        dropFish = ChanceUtil.getRandom(dropFish);
-
-                        if (inst.hasPermission((Player) arrow.getShooter(), "aurora.fishing.arrow.master")) {
-                            dropFish = (int) Math.sqrt(dropFish);
-                        }
-                    } else {
-                        dropFish = ChanceUtil.getRandom(dropFish * dropFish);
-                    }
-
-                    addArrowLoc(arrow, loc.toString());
-                    if (ChanceUtil.getChance(dropFish) && EnvironmentUtil.isWater(loc.getBlock())) {
-                        arrow.getWorld().dropItemNaturally(loc, fishy);
-                    }
-                }
+            if (shooter != null && inst.hasPermission(shooter, "aurora.fishing.arrow.master")) {
+                dropFish = (int) Math.sqrt(dropFish);
             }
-        }, 0, 3); // Start at 0 ticks and repeat every 3 ticks
-        addArrowTaskId(arrow, taskId);
+        } else {
+            dropFish = ChanceUtil.getRandom(dropFish * dropFish);
+        }
 
+        if (ChanceUtil.getChance(dropFish) && EnvironmentUtil.isWater(loc.getBlock())) {
+            arrow.getWorld().dropItemNaturally(loc, fishy);
+        }
     }
 }
