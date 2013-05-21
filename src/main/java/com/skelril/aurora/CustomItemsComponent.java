@@ -18,9 +18,11 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Bat;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Pig;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -215,21 +217,15 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     @EventHandler
     public void onArrowLand(ProjectileHitEvent event) {
 
-        Entity shooter = event.getEntity().getShooter();
+        Projectile projectile = event.getEntity();
+        Entity shooter = projectile.getShooter();
 
         if (shooter != null && shooter instanceof Player) {
 
             Player owner = (Player) shooter;
             Location targetLoc = event.getEntity().getLocation();
 
-            boolean isPVP = targetLoc.getWorld().getPVP();
-
-            if (WG != null) {
-                RegionManager mgr = WG.getGlobalRegionManager().get(targetLoc.getWorld());
-                ApplicableRegionSet app = mgr.getApplicableRegions(targetLoc);
-
-                if (!app.allows(DefaultFlag.PVP)) isPVP = false;
-            }
+            RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
 
             if (canBatSpec(owner.getName())) {
                 Specs used;
@@ -249,10 +245,27 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                 if (ItemUtil.hasFearBow(owner)) {
                     if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
-                        if (isPVP) {
-                            targetLoc.getWorld().strikeLightning(targetLoc);
-                        } else {
-                            targetLoc.getWorld().strikeLightningEffect(targetLoc);
+                        // Simulate a lightning strike
+                        targetLoc.getWorld().strikeLightningEffect(targetLoc);
+                        for (Entity e : projectile.getNearbyEntities(2, 4, 2)) {
+                            if (!e.isValid() || !(e instanceof LivingEntity)) continue;
+                            // Pig Zombie
+                            if (e instanceof Pig) {
+                                e.getWorld().spawnEntity(e.getLocation(), EntityType.PIG_ZOMBIE);
+                                e.remove();
+                                continue;
+                            }
+                            // Creeper
+                            if (e instanceof Creeper) {
+                                ((Creeper) e).setPowered(true);
+                            }
+                            // Player
+                            if (mgr != null && e instanceof Player) {
+                                ApplicableRegionSet app = mgr.getApplicableRegions(e.getLocation());
+                                if (!app.allows(DefaultFlag.PVP)) continue;
+                            }
+
+                            ((LivingEntity) e).damage(5);
                         }
                     }
                 }
