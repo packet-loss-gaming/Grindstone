@@ -165,13 +165,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage()));
                             break;
                     }
-
-                    if (used != Specs.FEAR_STRIKE && ChanceUtil.getChance(4)) {
-                        Location targetLoc = target.getLocation();
-                        if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
-                            targetLoc.getWorld().strikeLightning(targetLoc);
-                        }
-                    }
                 }
             }
 
@@ -218,16 +211,27 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         if (shooter != null && shooter instanceof Player) {
 
             Player owner = (Player) shooter;
+            Location targetLoc = event.getEntity().getLocation();
+
             if (canBatSpec(owner.getName())) {
                 Specs used;
                 if (ItemUtil.hasBatBow(owner)) {
-                    used = callSpec(owner, event.getEntity().getLocation(), Specs.BAT_ATTACK);
+                    used = callSpec(owner, targetLoc, Specs.BAT_ATTACK);
                     if (used == null) return;
                     batSpec.put(owner.getName(), System.currentTimeMillis());
                     switch (used) {
                         case BAT_ATTACK:
-                            EffectUtil.Strange.goneBatty(owner, event.getEntity().getLocation());
+                            EffectUtil.Strange.goneBatty(owner, targetLoc);
                             break;
+                    }
+                }
+            }
+
+            if (ItemUtil.hasFearBow(owner)) {
+
+                if (!canFearSpec(owner.getName())) {
+                    if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
+                        targetLoc.getWorld().strikeLightning(targetLoc);
                     }
                 }
             }
