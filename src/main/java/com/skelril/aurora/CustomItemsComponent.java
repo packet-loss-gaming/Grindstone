@@ -227,9 +227,9 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 }
             }
 
-            if (ItemUtil.hasFearBow(owner)) {
+            if (!canFearSpec(owner.getName())) {
 
-                if (!canFearSpec(owner.getName())) {
+                if (ItemUtil.hasFearBow(owner)) {
                     if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
                         targetLoc.getWorld().strikeLightning(targetLoc);
                     }
