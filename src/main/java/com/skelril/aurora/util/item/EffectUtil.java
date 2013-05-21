@@ -2,7 +2,6 @@ package com.skelril.aurora.util.item;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
@@ -19,10 +18,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -117,18 +113,11 @@ public class EffectUtil {
             ChatUtil.sendNotice(owner, "Your bow slows its victim.");
         }
 
-        public static int fearStrike(Player owner, LivingEntity target, int x) {
+        public static int fearStrike(Player owner, LivingEntity target, int x, WorldGuardPlugin WG) {
 
             server.getPluginManager().callEvent(new RapidHitEvent(owner));
 
-            Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-            WorldGuardPlugin WG;
-            RegionManager mgr = null;
-            if (plugin != null && plugin instanceof WorldGuardPlugin) {
-
-                WG = (WorldGuardPlugin) plugin;
-                mgr = WG.getGlobalRegionManager().get(owner.getWorld());
-            }
+            RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
 
             List<Entity> entityList = target.getNearbyEntities(8, 4, 8);
             entityList.add(target);
@@ -210,20 +199,13 @@ public class EffectUtil {
             ChatUtil.sendNotice(owner, "Your weapon glows dimly.");
         }
 
-        public static void doomBlade(Player owner, LivingEntity target) {
+        public static void doomBlade(Player owner, LivingEntity target, WorldGuardPlugin WG) {
 
             ChatUtil.sendNotice(owner, "Your weapon releases a huge burst of energy.");
 
             server.getPluginManager().callEvent(new RapidHitEvent(owner));
 
-            Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-            WorldGuardPlugin WG;
-            RegionManager mgr = null;
-            if (plugin != null && plugin instanceof WorldGuardPlugin) {
-
-                WG = (WorldGuardPlugin) plugin;
-                mgr = WG.getGlobalRegionManager().get(owner.getWorld());
-            }
+            RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
 
             int dmgTotal = 0;
             List<Entity> entityList = target.getNearbyEntities(6, 4, 6);

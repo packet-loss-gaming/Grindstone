@@ -1,6 +1,10 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.entity.ProjectileTickEvent;
 import com.skelril.aurora.util.ChanceUtil;
@@ -29,6 +33,7 @@ import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,12 +49,16 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Server server = CommandBook.server();
+    private WorldGuardPlugin WG;
 
     @Override
     public void enable() {
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+
+        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
+        WG = plugin != null && plugin instanceof WorldGuardPlugin ? (WorldGuardPlugin) plugin : null;
     }
 
     private ConcurrentHashMap<String, Long> fearSpec = new ConcurrentHashMap<>();
@@ -162,7 +171,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Fear.magicChain(owner, target);
                             break;
                         case FEAR_STRIKE:
-                            event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage()));
+                            event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage(), WG));
                             break;
                     }
                 }
@@ -187,7 +196,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Unleashed.regen(owner, target);
                             break;
                         case DOOM_BLADE:
-                            EffectUtil.Unleashed.doomBlade(owner, target);
+                            EffectUtil.Unleashed.doomBlade(owner, target, WG);
                             break;
                         case LIFE_LEECH:
                             EffectUtil.Unleashed.lifeLeech(owner, target);
@@ -213,6 +222,15 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             Player owner = (Player) shooter;
             Location targetLoc = event.getEntity().getLocation();
 
+            boolean isPVP = targetLoc.getWorld().getPVP();
+
+            if (WG != null) {
+                RegionManager mgr = WG.getGlobalRegionManager().get(targetLoc.getWorld());
+                ApplicableRegionSet app = mgr.getApplicableRegions(targetLoc);
+
+                if (!app.allows(DefaultFlag.PVP)) isPVP = false;
+            }
+
             if (canBatSpec(owner.getName())) {
                 Specs used;
                 if (ItemUtil.hasBatBow(owner)) {
@@ -231,7 +249,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                 if (ItemUtil.hasFearBow(owner)) {
                     if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
-                        targetLoc.getWorld().strikeLightning(targetLoc);
+                        if (isPVP) {
+                            targetLoc.getWorld().strikeLightning(targetLoc);
+                        } else {
+                            targetLoc.getWorld().strikeLightningEffect(targetLoc);
+                        }
                     }
                 }
             }
