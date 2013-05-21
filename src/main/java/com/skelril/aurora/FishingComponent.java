@@ -32,6 +32,7 @@ import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 /**
  * @author Turtle9598
@@ -254,7 +255,13 @@ public class FishingComponent extends BukkitComponent implements Listener {
         }
 
         if (ChanceUtil.getChance(dropFish) && EnvironmentUtil.isWater(loc.getBlock())) {
-            arrow.getWorld().dropItemNaturally(loc, fishy);
+            ItemStack fish = fishy.clone();
+            if (ChanceUtil.getChance(250)) {
+                ItemMeta fishMeta = fish.getItemMeta();
+                fishMeta.setDisplayName(ChatColor.BLUE + "God Fish");
+                fish.setItemMeta(fishMeta);
+            }
+            arrow.getWorld().dropItemNaturally(loc, fish);
         }
     }
 }

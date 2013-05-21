@@ -278,7 +278,7 @@ public class ItemUtil {
         return stack != null && stack.hasItemMeta() && stack.getItemMeta().hasDisplayName();
     }
 
-    private static boolean matchesFilter(ItemStack stack, String filter) {
+    public static boolean matchesFilter(ItemStack stack, String filter) {
 
         return isCustomItem(stack) && stack.getItemMeta().getDisplayName().contains(filter);
     }
