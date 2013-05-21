@@ -1,6 +1,10 @@
 package com.skelril.aurora.util.item;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
@@ -16,6 +20,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -112,24 +117,37 @@ public class EffectUtil {
 
             server.getPluginManager().callEvent(new RapidHitEvent(owner));
 
-            for (Entity e : target.getNearbyEntities(8, 4, 8)) {
+            Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
+            WorldGuardPlugin WG;
+            RegionManager mgr = null;
+            if (plugin != null && plugin instanceof WorldGuardPlugin) {
+
+                WG = (WorldGuardPlugin) plugin;
+                mgr = WG.getGlobalRegionManager().get(owner.getWorld());
+            }
+
+            List<Entity> entityList = target.getNearbyEntities(8, 4, 8);
+            entityList.add(target);
+            for (Entity e : entityList) {
                 if (e.isValid() && e instanceof LivingEntity) {
                     if (e.equals(owner)) continue;
                     if (e instanceof Player) {
-                        EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(
-                                owner, target, EntityDamageEvent.DamageCause.ENTITY_ATTACK, 2
-                        );
+                        if (mgr != null && !mgr.getApplicableRegions(e.getLocation()).allows(DefaultFlag.PVP)) {
+                            continue;
+                        }
                         server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) target));
-                        server.getPluginManager().callEvent(event);
-                        if (event.isCancelled()) continue;
                     }
-                    e.setVelocity(owner.getLocation().getDirection().multiply(2).setY(Math.random() * 2 + 1.27));
-                    e.setFireTicks(ChanceUtil.getRandom(20 * 60));
+
+                    Vector velocity = owner.getLocation().getDirection().multiply(2);
+                    velocity.setY(Math.max(velocity.getY(), Math.random() * 2 + 1.27));
+                    ChatUtil.sendNotice(owner, velocity.toString());
+                    e.setVelocity(velocity);
+                    e.setFireTicks(20 * ChanceUtil.getRandom(60));
                 }
             }
             ChatUtil.sendNotice(owner, "You fire a terrifyingly powerful shot.");
 
-            return x * ChanceUtil.getRandom(2);
+            return x * ChanceUtil.getRangedRandom(2, 3);
         }
     }
 
@@ -194,6 +212,15 @@ public class EffectUtil {
 
             server.getPluginManager().callEvent(new RapidHitEvent(owner));
 
+            Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
+            WorldGuardPlugin WG;
+            RegionManager mgr = null;
+            if (plugin != null && plugin instanceof WorldGuardPlugin) {
+
+                WG = (WorldGuardPlugin) plugin;
+                mgr = WG.getGlobalRegionManager().get(owner.getWorld());
+            }
+
             int dmgTotal = 0;
             List<Entity> entityList = target.getNearbyEntities(6, 4, 6);
             entityList.add(target);
@@ -202,10 +229,12 @@ public class EffectUtil {
                     if (e.equals(owner)) continue;
                     int maxHit = ChanceUtil.getRangedRandom(150, 350);
                     if (e instanceof Player) {
+                        if (mgr != null && !mgr.getApplicableRegions(e.getLocation()).allows(DefaultFlag.PVP)) {
+                            continue;
+                        }
                         maxHit = (int) ((1.0 / 3.0) * maxHit);
                     }
                     ((LivingEntity) e).damage(maxHit, owner);
-                    if (e.getLastDamageCause().isCancelled()) continue;
                     for (int i = 0; i < 20; i++) e.getWorld().playEffect(e.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
                     dmgTotal += maxHit;
                 }

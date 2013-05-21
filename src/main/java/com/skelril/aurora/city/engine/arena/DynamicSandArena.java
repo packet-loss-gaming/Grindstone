@@ -6,6 +6,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.player.PlayerState;
@@ -13,6 +14,7 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,6 +23,8 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -186,6 +190,24 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
     public void disable() {
 
         // No disable code
+    }
+
+    private static Set<SpecialAttackEvent.Specs> blacklistedSpecs = new HashSet<>();
+    static {
+        blacklistedSpecs.add(SpecialAttackEvent.Specs.DISARM);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSpecialAttack(SpecialAttackEvent event) {
+
+        LivingEntity target = event.getTarget();
+
+        if (!contains(target)) return;
+
+        if (blacklistedSpecs.contains(event.getSpec())) {
+
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler

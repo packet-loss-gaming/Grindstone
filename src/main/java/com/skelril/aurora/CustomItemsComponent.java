@@ -17,6 +17,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -128,13 +129,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage()));
                             break;
                     }
-
-                    if (used != Specs.FEAR_STRIKE && ChanceUtil.getChance(4)) {
-                        Location targetLoc = target.getLocation();
-                        if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
-                            targetLoc.getWorld().strikeLightning(targetLoc);
-                        }
-                    }
                 }
             }
 
@@ -167,6 +161,24 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     unleashedSpec.put(owner.getName(), System.currentTimeMillis());
                     ChatUtil.sendError(owner, "This weapon is currently a WIP.");
 
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onArrowLand(ProjectileHitEvent event) {
+
+        Location arrowLoc = event.getEntity().getLocation();
+
+        LivingEntity shooter = event.getEntity().getShooter();
+        if (shooter instanceof Player) {
+
+            if (ItemUtil.hasFearBow((Player) shooter)) {
+                if (!canFearSpec(((Player) shooter).getName())) {
+                    if (!arrowLoc.getWorld().isThundering() && arrowLoc.getBlock().getLightFromSky() > 0) {
+                        arrowLoc.getWorld().strikeLightning(arrowLoc);
+                    }
                 }
             }
         }
