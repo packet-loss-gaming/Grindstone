@@ -20,6 +20,7 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Bat;
+import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -68,7 +69,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private ConcurrentHashMap<String, Long> fearSpec = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Long> unleashedSpec = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, Long> batSpec = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Long> animalSpec = new ConcurrentHashMap<>();
 
     private boolean canFearSpec(String name) {
 
@@ -80,9 +81,9 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         return !unleashedSpec.containsKey(name) || System.currentTimeMillis() - unleashedSpec.get(name) >= 3800;
     }
 
-    private boolean canBatSpec(String name) {
+    private boolean canAnimalSpec(String name) {
 
-        return !batSpec.containsKey(name) || System.currentTimeMillis() - batSpec.get(name) >= 15000;
+        return !animalSpec.containsKey(name) || System.currentTimeMillis() - animalSpec.get(name) >= 15000;
     }
 
     private Specs callSpec(Player owner, Object target, Specs spec) {
@@ -160,7 +161,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             break;
                     }
                 } else if (ItemUtil.hasFearBow(owner)) {
-                    used = callSpec(owner, target, 5, 9);
+                    used = callSpec(owner, target, 5, 10);
                     if (used == null) return;
                     fearSpec.put(owner.getName(), System.currentTimeMillis());
 
@@ -178,13 +179,16 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                         case FEAR_STRIKE:
                             event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage(), WG));
                             break;
+                        case FEAR_BOMB:
+                            EffectUtil.Fear.fearBomb(owner, target, WG);
+                            break;
                     }
                 }
             }
 
             if (canUnleashedSpec(owner.getName())) {
                 if (ItemUtil.hasUnleashedSword(owner)) {
-                    used = callSpec(owner, target, 9, 15);
+                    used = callSpec(owner, target, 10, 16);
                     if (used == null) return;
                     unleashedSpec.put(owner.getName(), System.currentTimeMillis());
                     switch (used) {
@@ -208,7 +212,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             break;
                     }
                 } else if (ItemUtil.hasUnleashedBow(owner)) {
-                    //used = callSpec(owner, target, 16, 17);
+                    //used = callSpec(owner, target, 17, 18);
                     //if (used == null) return;
                     unleashedSpec.put(owner.getName(), System.currentTimeMillis());
                     ChatUtil.sendError(owner, "This weapon is currently a WIP.");
@@ -230,15 +234,24 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
 
-            if (canBatSpec(owner.getName())) {
+            if (canAnimalSpec(owner.getName())) {
                 Specs used;
                 if (ItemUtil.hasBatBow(owner)) {
-                    used = callSpec(owner, targetLoc, Specs.BAT_ATTACK);
+                    used = callSpec(owner, targetLoc, Specs.MOB_ATTACK);
                     if (used == null) return;
-                    batSpec.put(owner.getName(), System.currentTimeMillis());
+                    animalSpec.put(owner.getName(), System.currentTimeMillis());
                     switch (used) {
-                        case BAT_ATTACK:
-                            EffectUtil.Strange.goneBatty(owner, targetLoc);
+                        case MOB_ATTACK:
+                            EffectUtil.Strange.mobBarrage(owner, targetLoc, EntityType.BAT);
+                            break;
+                    }
+                } else if (ItemUtil.hasChickenBow(owner)) {
+                    used = callSpec(owner, targetLoc, Specs.MOB_ATTACK);
+                    if (used == null) return;
+                    animalSpec.put(owner.getName(), System.currentTimeMillis());
+                    switch (used) {
+                        case MOB_ATTACK:
+                            EffectUtil.Strange.mobBarrage(owner, targetLoc, EntityType.CHICKEN);
                             break;
                     }
                 }
@@ -283,9 +296,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         if (shooter != null && shooter instanceof Player) {
 
-            if (ChanceUtil.getChance(5) && ItemUtil.hasBatBow((Player) shooter)) {
+            final Location location = event.getEntity().getLocation();
+            if (ItemUtil.hasBatBow((Player) shooter)) {
 
-                final Location location = event.getEntity().getLocation();
+                if (!ChanceUtil.getChance(5)) return;
                 server.getScheduler().runTaskLater(inst, new Runnable() {
 
                     @Override
@@ -301,6 +315,30 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                                     bat.remove();
                                     for (int i = 0; i < 20; i++) {
                                         bat.getWorld().playEffect(bat.getLocation(), Effect.SMOKE, 0);
+                                    }
+                                }
+                            }
+                        }, 20 * 3);
+                    }
+                }, 3);
+            } else if (ItemUtil.hasChickenBow((Player) shooter)) {
+
+                if (!ChanceUtil.getChance(5)) return;
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                    @Override
+                    public void run() {
+
+                        final Chicken chicken = (Chicken) location.getWorld().spawnEntity(location, EntityType.CHICKEN);
+                        server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                            @Override
+                            public void run() {
+
+                                if (chicken.isValid()) {
+                                    chicken.remove();
+                                    for (int i = 0; i < 20; i++) {
+                                        chicken.getWorld().playEffect(chicken.getLocation(), Effect.SMOKE, 0);
                                     }
                                 }
                             }
@@ -406,6 +444,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         String name = event.getPlayer().getName();
         if (fearSpec.containsKey(name)) fearSpec.remove(name);
         if (unleashedSpec.containsKey(name)) unleashedSpec.remove(name);
-        if (batSpec.containsKey(name)) batSpec.remove(name);
+        if (animalSpec.containsKey(name)) animalSpec.remove(name);
     }
 }

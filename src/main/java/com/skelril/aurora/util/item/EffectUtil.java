@@ -10,9 +10,13 @@ import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.timer.IntegratedRunnable;
+import com.skelril.aurora.util.timer.TimedRunnable;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
@@ -21,10 +25,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -141,6 +147,68 @@ public class EffectUtil {
             ChatUtil.sendNotice(owner, "You fire a terrifyingly powerful shot.");
 
             return x * ChanceUtil.getRangedRandom(2, 3);
+        }
+
+        public static void fearBomb(Player owner, LivingEntity target, WorldGuardPlugin WG) {
+
+            final List<Block> blocks = new ArrayList<>();
+            Block block = target.getLocation().getBlock();
+            blocks.add(block);
+            for (BlockFace blockFace : EnvironmentUtil.getNearbyBlockFaces()) {
+                blocks.add(block.getRelative(blockFace));
+            }
+
+            List<Block> blockList = new ArrayList<>();
+            for (BlockFace blockFace : EnvironmentUtil.getNearbyBlockFaces()) {
+                for (Block aBlock : blocks) {
+                    Block testBlock = aBlock.getRelative(blockFace);
+                    if (!blocks.contains(testBlock) && !blockList.contains(testBlock)) blockList.add(testBlock);
+                }
+            }
+
+            Collections.addAll(blocks, blockList.toArray(new Block[blockList.size()]));
+            final RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
+
+            IntegratedRunnable bomb = new IntegratedRunnable() {
+
+                @Override
+                public void run(int times) {
+
+                    for (Block block : blocks) {
+                        for (int i = 0; i < 20; i++) {
+                            block.getWorld().playEffect(block.getRelative(BlockFace.UP).getLocation(), Effect.SMOKE, 0);
+                        }
+                    }
+                }
+
+                @Override
+                public void end() {
+
+                    for (Block block : blocks) {
+                        block.getWorld().createExplosion(block.getLocation(), 0F);
+                        for (Entity entity : block.getChunk().getEntities()) {
+                            if (!(entity instanceof LivingEntity)) continue;
+                            if (entity instanceof Player) {
+                                if (mgr != null) {
+                                    if (!mgr.getApplicableRegions(entity.getLocation()).allows(DefaultFlag.PVP)) {
+                                        continue;
+                                    }
+                                }
+                            }
+                            if (entity.getLocation().distanceSquared(block.getLocation()) <= 4) {
+                                ((LivingEntity) entity).setHealth(0);
+                            }
+                        }
+                    }
+                }
+            };
+
+            TimedRunnable timedRunnable = new TimedRunnable(bomb, 6);
+
+            BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 20);
+            timedRunnable.setTask(task);
+
+            ChatUtil.sendNotice(owner, "Your bow creates a powerful bomb.");
         }
     }
 
@@ -303,13 +371,13 @@ public class EffectUtil {
 
     public static class Strange {
 
-        public static void goneBatty(Player owner, Location location) {
+        public static void mobBarrage(Player owner, Location location, EntityType type) {
 
-            final List<Entity> bats = new ArrayList<>();
+            final List<Entity> entities = new ArrayList<>();
 
             for (int i = 0; i < 125; i++) {
 
-                bats.add(location.getWorld().spawnEntity(location, EntityType.BAT));
+                entities.add(location.getWorld().spawnEntity(location, type));
             }
 
             server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -317,19 +385,23 @@ public class EffectUtil {
                 @Override
                 public void run() {
 
-                    for (Entity bat : bats) {
+                    for (Entity entity : entities) {
 
-                        if (bat.isValid()) {
-                            bat.remove();
+                        if (entity.isValid()) {
+                            entity.remove();
                             for (int i = 0; i < 20; i++) {
-                                bat.getWorld().playEffect(bat.getLocation(), Effect.SMOKE, 0);
+                                entity.getWorld().playEffect(entity.getLocation(), Effect.SMOKE, 0);
                             }
                         }
                     }
                 }
             }, 20 * 30);
 
-            ChatUtil.sendNotice(owner, "Your bow releases a batty attack.");
+            if (type == EntityType.BAT) {
+                ChatUtil.sendNotice(owner, "Your bow releases a batty attack.");
+            } else {
+                ChatUtil.sendNotice(owner, "Your bow releases a " + type.getName().toLowerCase() + " attack.");
+            }
         }
     }
 }

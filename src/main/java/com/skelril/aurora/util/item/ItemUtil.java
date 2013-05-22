@@ -149,6 +149,16 @@ public class ItemUtil {
             batBow.setItemMeta(batMeta);
             return batBow;
         }
+
+        public static ItemStack chickenBow() {
+
+            ItemStack chickenBow = new ItemStack(ItemID.BOW);
+            ItemMeta chickenMeta = chickenBow.getItemMeta();
+            chickenMeta.setDisplayName(ChatColor.DARK_RED + "Chicken Bow");
+            ((Repairable) chickenMeta).setRepairCost(400);
+            chickenBow.setItemMeta(chickenMeta);
+            return chickenBow;
+        }
     }
 
     public static ItemStack[] clone(ItemStack[] stacks) {
@@ -291,6 +301,16 @@ public class ItemUtil {
     public static boolean isBatBow(ItemStack item) {
 
         return matchesFilter(item, ChatColor.DARK_RED + "Bat Bow");
+    }
+
+    public static boolean hasChickenBow(Player player) {
+
+        return player.isValid() && isChickenBow(player.getItemInHand());
+    }
+
+    public static boolean isChickenBow(ItemStack item) {
+
+        return matchesFilter(item, ChatColor.DARK_RED + "Chicken Bow");
     }
 
     public static boolean hasMasterSword(Player player) {

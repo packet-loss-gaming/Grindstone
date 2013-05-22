@@ -14,7 +14,6 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -193,6 +192,7 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
     }
 
     private static Set<SpecialAttackEvent.Specs> blacklistedSpecs = new HashSet<>();
+
     static {
         blacklistedSpecs.add(SpecialAttackEvent.Specs.DISARM);
     }
@@ -200,9 +200,7 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
     @EventHandler(ignoreCancelled = true)
     public void onSpecialAttack(SpecialAttackEvent event) {
 
-        LivingEntity target = event.getTarget();
-
-        if (!contains(target)) return;
+        if (!contains(event.getLocation())) return;
 
         if (blacklistedSpecs.contains(event.getSpec())) {
 

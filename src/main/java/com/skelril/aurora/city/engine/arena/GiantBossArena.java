@@ -417,6 +417,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     static {
         generalBlacklistedSpecs.add(SpecialAttackEvent.Specs.DISARM);
+        generalBlacklistedSpecs.add(SpecialAttackEvent.Specs.MOB_ATTACK);
+        generalBlacklistedSpecs.add(SpecialAttackEvent.Specs.FEAR_BOMB);
 
         bossBlacklistedSpecs.add(SpecialAttackEvent.Specs.LIFE_LEECH);
         bossBlacklistedSpecs.add(SpecialAttackEvent.Specs.SOUL_SMITE);

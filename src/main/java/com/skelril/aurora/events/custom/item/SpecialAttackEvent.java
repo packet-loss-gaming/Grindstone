@@ -79,6 +79,7 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
         RANGE_CURSE,
         MAGIC_CHAIN,
         FEAR_STRIKE,
+        FEAR_BOMB,
 
         REGEN,
         SPEED,
@@ -87,6 +88,6 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
         HEALING_LIGHT,
         DOOM_BLADE,
 
-        BAT_ATTACK
+        MOB_ATTACK
     }
 }
