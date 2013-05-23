@@ -47,6 +47,8 @@ public class AntiJumpComponent extends BukkitComponent implements Listener {
         public double upwardsVelocity = .1;
         @Setting("leap-distance")
         public double leapDistance = 1.2;
+        @Setting("radius")
+        public double radius = 2;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -55,19 +57,32 @@ public class AntiJumpComponent extends BukkitComponent implements Listener {
         if (event.isCancelled()) {
 
             final Player player = event.getPlayer();
+            final Location playerLoc = player.getLocation();
 
-            final double x = player.getLocation().getX();
-            final double y = player.getLocation().getY();
-            final double z = player.getLocation().getZ();
+            final double x = playerLoc.getX();
+            final double y = playerLoc.getY();
+            final double z = playerLoc.getZ();
 
-            final int blockY = event.getBlock().getY();
+            final Location blockLoc = event.getBlock().getLocation();
+            final int blockY = blockLoc.getBlockY();
 
             if (Math.abs(player.getVelocity().getY()) > config.upwardsVelocity && y > blockY) {
                 server.getScheduler().runTaskLater(inst, new Runnable() {
+
                     @Override
                     public void run() {
 
                         if (player.getLocation().getY() >= (blockY + config.leapDistance)) {
+
+                            Location basePlayerLoc = playerLoc.clone();
+                            basePlayerLoc.setY(0);
+                            Location baseBlockLoc = blockLoc.clone();
+                            baseBlockLoc.setY(0);
+
+                            if (basePlayerLoc.distanceSquared(baseBlockLoc) > config.radius * config.radius) {
+                                return;
+                            }
+
                             ChatUtil.sendWarning(player, "Hack jumping detected.");
 
                             Location playerLoc = player.getLocation();
