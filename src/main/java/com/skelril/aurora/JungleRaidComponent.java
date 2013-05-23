@@ -2,7 +2,11 @@ package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.PlayerUtil;
-import com.sk89q.minecraft.util.commands.*;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
@@ -25,11 +29,11 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
-import com.skelril.aurora.events.environment.DarkAreaInjuryEvent;
 import com.skelril.aurora.events.anticheat.FallBlockerEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.egg.EggDropEvent;
+import com.skelril.aurora.events.environment.DarkAreaInjuryEvent;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
@@ -37,8 +41,8 @@ import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -49,11 +53,29 @@ import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import net.h31ix.anticheat.manage.CheckType;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Firework;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Snowball;
+import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.ThrownPotion;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -61,8 +83,16 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.*;
-import org.bukkit.event.player.*;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.FireworkMeta;
@@ -76,7 +106,14 @@ import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -287,14 +324,16 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         world = Bukkit.getWorld(config.worldName);
         try {
             region = getWorldGuard().getGlobalRegionManager().get(world).getRegion(config.region);
-        } catch (UnknownPluginException |NullPointerException e) {
+        } catch (UnknownPluginException | NullPointerException e) {
             if (attempts > 10) {
                 e.printStackTrace();
                 return false;
             }
             server.getScheduler().runTaskLater(inst, new Runnable() {
+
                 @Override
                 public void run() {
+
                     attempts++;
                     probe();
                 }
@@ -445,7 +484,10 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                         if (type == null) continue;
                         for (int ii = 0; ii < ChanceUtil.getRandom(5); ii++) {
                             ThrownPotion potion = (ThrownPotion) world.spawnEntity(testLoc, EntityType.SPLASH_POTION);
-                            potion.setItem(new Potion(type).splash().toItemStack(1));
+                            Potion brewedPotion = new Potion(type);
+                            brewedPotion.setLevel(type.getMaxLevel());
+                            brewedPotion.setSplash(true);
+                            potion.setItem(brewedPotion.toItemStack(1));
                             potion.setVelocity(new org.bukkit.util.Vector(
                                     random.nextDouble() * 2.0 - 1,
                                     0,
@@ -701,6 +743,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
             // Setup a task to clear out any restoration task
             server.getScheduler().runTaskLater(inst, new Runnable() {
+
                 @Override
                 public void run() {
 
@@ -975,8 +1018,10 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
             for (int i = 0; i < 12; i++) {
                 server.getScheduler().runTaskLater(inst, new Runnable() {
+
                     @Override
                     public void run() {
+
                         Firework firework = (Firework) world.spawnEntity(playerLoc, EntityType.FIREWORK);
                         FireworkMeta meta = firework.getFireworkMeta();
                         FireworkEffect.Builder builder = FireworkEffect.builder();
@@ -1163,7 +1208,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
     public class Commands {
 
-        @Command(aliases = {"jr","ar"}, desc = "Jungle Raid Commands")
+        @Command(aliases = {"jr", "ar"}, desc = "Jungle Raid Commands")
         @NestedCommand({NestedCommands.class})
         public void jungleRaidCmds(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -1406,7 +1451,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     for (Player player : players) {
                         PlayerInventory inventory = player.getInventory();
                         ItemStack stack;
-                        for (int i = 0; i < inventory.getContents().length; i++)  {
+                        for (int i = 0; i < inventory.getContents().length; i++) {
                             stack = inventory.getItem(i);
                             if (stack == null || stack.getTypeId() == ItemID.COOKED_BEEF) continue;
                             inventory.setItem(i, null);
