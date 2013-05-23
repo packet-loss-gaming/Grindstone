@@ -9,6 +9,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -122,6 +123,17 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         inst.registerEvents(this);
     }
 
+    public Player[] getTempleContained() {
+
+        List<Player> returnedList = new ArrayList<>();
+
+        for (Player player : server.getOnlinePlayers()) {
+
+            if (player.isValid() && LocationUtil.isInRegion(getWorld(), temple, player)) returnedList.add(player);
+        }
+        return returnedList.toArray(new Player[returnedList.size()]);
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onCreepSpeak(CreepSpeakEvent event) {
 
@@ -133,6 +145,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         if (event.toThunderState()) {
             resetPressurePlateLock();
+            isPressurePlateLocked = !checkPressurePlateLock();
         }
     }
 
@@ -241,10 +254,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     public void onEntityDeath(EntityDeathEvent event) {
 
         LivingEntity entity = event.getEntity();
+        List<ItemStack> drops = event.getDrops();
 
         if (entity.getCustomName() != null) {
             String customName = entity.getCustomName();
-            List<ItemStack> drops = event.getDrops();
 
             if (customName.equals("Grave Zombie")) {
 
@@ -276,6 +289,18 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     ItemStack stack = it.next();
 
                     if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
+                }
+            }
+        } else if (contains(entity)) {
+            if (entity instanceof CaveSpider) {
+                Iterator<ItemStack> it = drops.iterator();
+                while (it.hasNext()) {
+                    ItemStack stack = it.next();
+
+                    if (stack != null && !ChanceUtil.getChance(15)) {
+                        if (stack.getTypeId() == ItemID.STRING) it.remove();
+                        if (stack.getTypeId() == ItemID.SPIDER_EYE) it.remove();
+                    }
                 }
             }
         }
@@ -336,10 +361,22 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         Block block = event.getClickedBlock();
         Location clickedLoc = block.getLocation();
         if (LocationUtil.isInRegion(getWorld(), temple, clickedLoc)) {
-            if (event.getAction().equals(Action.PHYSICAL)) {
-                if (block.getTypeId() == BlockID.STONE_PRESSURE_PLATE && isPressurePlateLocked) {
-                    throwSlashPotion(clickedLoc);
-                }
+            switch (block.getTypeId()) {
+                case BlockID.LEVER:
+                    server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                        @Override
+                        public void run() {
+
+                            isPressurePlateLocked = !checkPressurePlateLock();
+                        }
+                    }, 1);
+                    break;
+                case BlockID.STONE_PRESSURE_PLATE:
+                    if (isPressurePlateLocked && event.getAction().equals(Action.PHYSICAL)) {
+                        throwSlashPotion(clickedLoc);
+                    }
+                    break;
             }
         }
     }
@@ -488,6 +525,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             Lever aLever = (Lever) lever.getKey().getBlock().getState().getData();
             if (aLever.isPowered() != lever.getValue()) return false;
         }
+
+        ChatUtil.sendNotice(getTempleContained(), "You hear a clicking sound.");
         return true;
     }
 
@@ -576,7 +615,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         equalize();
         restoreBlocks();
-        isPressurePlateLocked = !checkPressurePlateLock();
 
         Entity[] contained = getContainedEntities();
         for (Entity entity : contained) {
@@ -598,6 +636,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             // People Code
             if (entity instanceof Player && isEvilMode(((Player) entity).getEyeLocation().getBlock())) {
+
                 if (adminComponent.isAdmin((Player) entity)) continue;
                 fogPlayer((Player) entity);
                 localSpawn((Player) entity);
