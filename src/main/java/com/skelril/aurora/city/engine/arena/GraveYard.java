@@ -7,12 +7,14 @@ import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.events.PlayerSacrificeItemEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -49,6 +51,7 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Lever;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -75,6 +78,9 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     // Components
     private AdminComponent adminComponent;
+
+    // Other
+    private Economy economy;
 
     // Temple regions
     private ProtectedRegion temple, pressurePlateLockArea;
@@ -126,6 +132,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+
+        setupEconomy();
     }
 
     public Player[] getTempleContained() {
@@ -252,6 +260,21 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             equipment.setChestplateDropChance(.55F);
             equipment.setLeggingsDropChance(.55F);
             equipment.setBootsDropChance(.55F);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSacrifice(PlayerSacrificeItemEvent event) {
+
+        ItemStack item = event.getItemStack();
+        Location origin = event.getBlock().getLocation();
+
+        if (ItemUtil.isPhantomGold(item)) {
+            int amount = 1000;
+            if (contains(origin) && origin.getY() < 80) {
+                amount = 2500;
+            }
+            economy.depositPlayer(event.getPlayer().getName(), amount);
         }
     }
 
@@ -736,5 +759,16 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     public ArenaType getArenaType() {
 
         return ArenaType.MONITORED;
+    }
+
+    private boolean setupEconomy() {
+
+        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
+                .vault.economy.Economy.class);
+        if (economyProvider != null) {
+            economy = economyProvider.getProvider();
+        }
+
+        return (economy != null);
     }
 }

@@ -280,6 +280,11 @@ public class ItemUtil {
         return false;
     }
 
+    public static boolean isPhantomGold(ItemStack stack) {
+
+        return matchesFilter(stack, ChatColor.GOLD + "Phantom Gold");
+    }
+
     public static boolean hasAncientArmour(Player player) {
 
         if (!player.isValid()) return false;

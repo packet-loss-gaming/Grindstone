@@ -39,7 +39,7 @@ public class PlayerSacrificeItemEvent extends PlayerEvent implements Cancellable
 
     public ItemStack getItemStack() {
 
-        return itemStack;
+        return itemStack.clone();
     }
 
     public HandlerList getHandlers() {

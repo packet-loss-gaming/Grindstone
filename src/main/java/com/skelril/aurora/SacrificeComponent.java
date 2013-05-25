@@ -12,7 +12,10 @@ import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerType;
-import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -45,7 +48,13 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -633,6 +642,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         if (above.getTypeId() == BlockID.AIR) {
             above.setTypeId(BlockID.FIRE);
             server.getScheduler().runTaskLater(inst, new Runnable() {
+
                 @Override
                 public void run() {
 
@@ -675,7 +685,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         try {
                             // Create the event here
                             PlayerSacrificeItemEvent sacrificeItemEvent =
-                                    new PlayerSacrificeItemEvent(player, searchBlock, item.getItemStack().clone());
+                                    new PlayerSacrificeItemEvent(player, searchBlock, item.getItemStack());
                             server.getPluginManager().callEvent(sacrificeItemEvent);
                             if (sacrificeItemEvent.isCancelled()) return;
                             createFire(searchBlock);
