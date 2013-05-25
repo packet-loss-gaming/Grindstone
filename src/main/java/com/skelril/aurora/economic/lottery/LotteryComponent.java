@@ -1,9 +1,14 @@
 package com.skelril.aurora.economic.lottery;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.minecraft.util.commands.*;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.economic.ImpersonalComponent;
+import com.skelril.aurora.exceptions.NotFoundException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -326,8 +331,12 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
 
     public void completeLottery() {
 
-        String name = findNewMillionaire();
-        if (name.equals("404 Not Found")) return;
+        String name;
+        try {
+            name = findNewMillionaire();
+        } catch (NotFoundException ex) {
+            return;
+        }
 
         double cash = getWinnerCash();
 
@@ -344,14 +353,7 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
 
     public double getWinnerCash() {
 
-        final double min = (config.maxPerLotto * config.ticketPrice) / .75;
-
-        List<GenericWealthStore> tickets = lotteryTicketDatabase.getTickets();
-        int ticketCount = getCount(tickets);
-
-        double ticketSize = Math.round(ticketCount * config.ticketPrice);
-
-        return ticketCount * config.ticketPrice > min ? ticketSize * .75 : ticketSize * 1.25;
+        return Math.round(getCount(lotteryTicketDatabase.getTickets()) * config.ticketPrice) * .75;
     }
 
     public int getCount() {
@@ -368,17 +370,20 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
         return count;
     }
 
-    private String findNewMillionaire() {
+    private String findNewMillionaire() throws NotFoundException {
+
+        List<GenericWealthStore> ticketDB = lotteryTicketDatabase.getTickets();
+        if (ticketDB.size() < 2) throw new NotFoundException();
 
         HashMap<Integer, String> tickets = new HashMap<>();
 
         int t = 0;
-        for (GenericWealthStore lotteryTicket : lotteryTicketDatabase.getTickets()) {
+        for (GenericWealthStore lotteryTicket : ticketDB) {
             for (int i = 0; i < lotteryTicket.getValue(); i++) {
                 t++;
                 tickets.put(t, lotteryTicket.getOwnerName());
             }
         }
-        return tickets.size() > 0 ? tickets.get(ChanceUtil.getRandom(tickets.size() - 1)) : "404 Not Found";
+        return tickets.get(ChanceUtil.getRandom(tickets.size() - 1));
     }
 }
