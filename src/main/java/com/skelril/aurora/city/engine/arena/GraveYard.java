@@ -305,7 +305,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         Entity entity = event.getEntity();
         if (contains(entity) && entity instanceof Sheep) {
-            if (event.getTo() == Material.DIRT) {
+            int type = event.getBlock().getTypeId();
+            if (type == BlockID.GRASS || EnvironmentUtil.isShrubBlock(type)) {
                 event.setCancelled(true);
                 Location loc = entity.getLocation();
                 entity.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(), 4, false, false);
