@@ -266,6 +266,17 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             if (customName.equals("Grave Zombie")) {
 
+                Iterator<ItemStack> it = drops.iterator();
+                while (it.hasNext()) {
+                    ItemStack stack = it.next();
+
+                    if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
+                }
+
+                if (ChanceUtil.getChance(10000)) {
+                    drops.add(ItemUtil.GraveYard.imbuedCrystal(1));
+                }
+
                 if (ChanceUtil.getChance(6000) || getWorld().isThundering() && ChanceUtil.getChance(4000)) {
                     drops.add(ItemUtil.GraveYard.batBow());
                 }
@@ -287,13 +298,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                             drops.add(ItemUtil.Fear.makeBow());
                             break;
                     }
-                }
-
-                Iterator<ItemStack> it = drops.iterator();
-                while (it.hasNext()) {
-                    ItemStack stack = it.next();
-
-                    if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
                 }
             }
         } else if (contains(entity)) {
@@ -326,7 +330,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     public void onSheepEatGrass(EntityChangeBlockEvent event) {
 
         Entity entity = event.getEntity();
-        if (contains(entity) && entity instanceof Sheep) {
+        if (entity instanceof Sheep && contains(entity)) {
             int type = event.getBlock().getTypeId();
             if (type == BlockID.GRASS || EnvironmentUtil.isShrubBlock(type)) {
                 event.setCancelled(true);
@@ -475,14 +479,14 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     BlockFace attachedFace = sign.getAttachedFace();
 
                     headStone = headStone.getBlock().getRelative(attachedFace, 2).getLocation();
-                    headStone.add(0, 1, 0);
+                    headStone.add(0, 2, 0);
                     chestState = headStone.getBlock().getState();
 
                     if (chestState instanceof Chest) {
                         ((Chest) chestState).getInventory().clear();
                         ((Chest) chestState).getInventory().addItem(itemStacks);
                     } else {
-                        headStone.add(0, 1, 0);
+                        headStone.add(0, -1, 0);
                         chestState = headStone.getBlock().getState();
 
                         if (chestState instanceof Chest) {
@@ -511,8 +515,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
-                if (!checkHeadStone(x, 82, z)) {
-                    checkHeadStone(x, 81, z);
+                if (!checkHeadStone(x, 81, z)) {
+                    checkHeadStone(x, 82, z);
                 }
             }
         }
@@ -640,12 +644,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
                 e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
                 it.remove();
-            } else if (System.currentTimeMillis() - e.getValue().getKey() > (min / 20)
-                    && EnvironmentUtil.isShrubBlock(e.getValue().getValue().getType())) {
-                b = e.getValue().getValue();
-                if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
-                e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-                it.remove();
             }
         }
     }
@@ -672,7 +670,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             // Auto break stuff
             Location belowLoc = entity.getLocation();
-            if (LocationUtil.isInRegion(getWorld(), temple, belowLoc)) {
+            if (!(entity instanceof Player) || LocationUtil.isInRegion(getWorld(), temple, belowLoc)) {
                 breakBlock(entity, belowLoc);
                 breakBlock(entity, belowLoc.add(0, -1, 0));
                 breakBlock(entity, belowLoc.add(0, -1, 0));

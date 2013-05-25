@@ -124,7 +124,7 @@ public class ItemUtil {
 
         public static ItemStack gemOfDarkness(int amount) {
 
-            ItemStack gemOfDarkness = new ItemStack(ItemID.EMERALD, Math.max(0, Math.min(64, amount)));
+            ItemStack gemOfDarkness = new ItemStack(ItemID.EMERALD, amount);
             ItemMeta gemMeta = gemOfDarkness.getItemMeta();
             gemMeta.setDisplayName(ChatColor.DARK_RED + "Gem of Darkness");
             gemOfDarkness.setItemMeta(gemMeta);
@@ -133,11 +133,20 @@ public class ItemUtil {
 
         public static ItemStack phantomGold(int amount) {
 
-            ItemStack phantomGold = new ItemStack(ItemID.GOLD_BAR, Math.max(0, Math.min(64, amount)));
+            ItemStack phantomGold = new ItemStack(ItemID.GOLD_BAR, amount);
             ItemMeta goldMeta = phantomGold.getItemMeta();
             goldMeta.setDisplayName(ChatColor.GOLD + "Phantom Gold");
             phantomGold.setItemMeta(goldMeta);
             return phantomGold;
+        }
+
+        public static ItemStack imbuedCrystal(int amount) {
+
+            ItemStack gemOfDarkness = new ItemStack(ItemID.DIAMOND, amount);
+            ItemMeta gemMeta = gemOfDarkness.getItemMeta();
+            gemMeta.setDisplayName(ChatColor.AQUA + "Imbued Crystal");
+            gemOfDarkness.setItemMeta(gemMeta);
+            return gemOfDarkness;
         }
 
         public static ItemStack batBow() {
@@ -290,7 +299,7 @@ public class ItemUtil {
 
     public static boolean matchesFilter(ItemStack stack, String filter) {
 
-        return isCustomItem(stack) && stack.getItemMeta().getDisplayName().contains(filter);
+        return isCustomItem(stack) && stack.getItemMeta().getDisplayName().startsWith(filter);
     }
 
     public static boolean hasBatBow(Player player) {
