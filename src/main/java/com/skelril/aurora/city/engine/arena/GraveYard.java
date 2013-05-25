@@ -13,23 +13,10 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.Sign;
+import org.bukkit.*;
+import org.bukkit.block.*;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.CaveSpider;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.ThrownPotion;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -37,6 +24,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -53,15 +41,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -81,6 +61,9 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     private static Set<BaseBlock> breakable = new HashSet<>();
 
     static {
+        breakable.add(new BaseBlock(BlockID.LONG_GRASS, -1));
+        breakable.add(new BaseBlock(BlockID.RED_FLOWER, -1));
+        breakable.add(new BaseBlock(BlockID.YELLOW_FLOWER, -1));
         breakable.add(new BaseBlock(BlockID.DIRT, -1));
         breakable.add(new BaseBlock(BlockID.TORCH, -1));
         breakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
@@ -317,6 +300,19 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onSheepEatGrass(EntityChangeBlockEvent event) {
+
+        Entity entity = event.getEntity();
+        if (contains(entity) && entity instanceof Sheep) {
+            if (event.getTo() == Material.DIRT) {
+                event.setCancelled(true);
+                Location loc = entity.getLocation();
+                entity.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(), 4, false, false);
+            }
+        }
+    }
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onBlockBreak(BlockBreakEvent event) {
 
@@ -440,7 +436,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             BlockState chestState = headStone.getBlock().getState();
 
             if (chestState instanceof Chest) {
-
                 ((Chest) chestState).getInventory().clear();
                 ((Chest) chestState).getInventory().addItem(itemStacks);
             } else {
@@ -449,9 +444,33 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 chestState = headStone.getBlock().getState();
 
                 if (chestState instanceof Chest) {
-
                     ((Chest) chestState).getInventory().clear();
                     ((Chest) chestState).getInventory().addItem(itemStacks);
+                } else {
+                    org.bukkit.material.Sign sign =
+                            new org.bukkit.material.Sign(BlockID.WALL_SIGN, signState.getRawData());
+                    BlockFace attachedFace = sign.getAttachedFace();
+
+                    headStone = headStone.getBlock().getRelative(attachedFace, 2).getLocation();
+                    headStone.add(0, 2, 0);
+                    chestState = headStone.getBlock().getState();
+
+                    if (chestState instanceof Chest) {
+                        ((Chest) chestState).getInventory().clear();
+                        ((Chest) chestState).getInventory().addItem(itemStacks);
+                    } else {
+                        headStone.add(0, 1, 0);
+                        chestState = headStone.getBlock().getState();
+
+                        if (chestState instanceof Chest) {
+                            ((Chest) chestState).getInventory().clear();
+                            ((Chest) chestState).getInventory().addItem(itemStacks);
+                        } else {
+                            for (ItemStack stack : itemStacks) {
+                                getWorld().dropItem(signState.getLocation(), stack);
+                            }
+                        }
+                    }
                 }
             }
         }
