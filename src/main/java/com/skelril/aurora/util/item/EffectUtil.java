@@ -377,7 +377,11 @@ public class EffectUtil {
 
             for (int i = 0; i < 125; i++) {
 
-                entities.add(location.getWorld().spawnEntity(location, type));
+                Entity entity = location.getWorld().spawnEntity(location, type);
+                if (entity instanceof LivingEntity) {
+                    ((LivingEntity) entity).setRemoveWhenFarAway(true);
+                }
+                entities.add(entity);
             }
 
             server.getScheduler().runTaskLater(inst, new Runnable() {
