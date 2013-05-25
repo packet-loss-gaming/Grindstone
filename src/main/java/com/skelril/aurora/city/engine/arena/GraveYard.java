@@ -13,10 +13,24 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
-import org.bukkit.*;
-import org.bukkit.block.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
+import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.CaveSpider;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Sheep;
+import org.bukkit.entity.ThrownPotion;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -41,7 +55,15 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -453,7 +475,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     BlockFace attachedFace = sign.getAttachedFace();
 
                     headStone = headStone.getBlock().getRelative(attachedFace, 2).getLocation();
-                    headStone.add(0, 2, 0);
+                    headStone.add(0, 1, 0);
                     chestState = headStone.getBlock().getState();
 
                     if (chestState instanceof Chest) {
@@ -650,9 +672,11 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             // Auto break stuff
             Location belowLoc = entity.getLocation();
-            breakBlock(entity, belowLoc);
-            breakBlock(entity, belowLoc.add(0, -1, 0));
-            breakBlock(entity, belowLoc.add(0, -1, 0));
+            if (LocationUtil.isInRegion(getWorld(), temple, belowLoc)) {
+                breakBlock(entity, belowLoc);
+                breakBlock(entity, belowLoc.add(0, -1, 0));
+                breakBlock(entity, belowLoc.add(0, -1, 0));
+            }
 
             // People Code
             if (entity instanceof Player && isEvilMode(((Player) entity).getEyeLocation().getBlock())) {
