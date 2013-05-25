@@ -683,7 +683,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             return block.getLightFromSky() < 15;
         }
 
-        return false;
+        return block.getLightLevel() == 0;
     }
 
     @Override
