@@ -342,7 +342,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         return deadmin(player, force) && deguildPlayer(player);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
 
         final Player player = event.getPlayer();
@@ -821,23 +821,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
-            ItemStack itemStack = new ItemStack(ItemID.DIAMOND_PICKAXE);
-            if (args.hasFlag('l')) {
-                itemStack.addEnchantment(Enchantment.DIG_SPEED, 5);
-                itemStack.addEnchantment(Enchantment.DURABILITY, 3);
-                itemStack.addEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 3);
-                ItemMeta itemMeta = itemStack.getItemMeta();
-                itemMeta.setDisplayName(ChatColor.GREEN + "Legendary God Pickaxe");
-                itemStack.setItemMeta(itemMeta);
-            } else {
-                itemStack.addEnchantment(Enchantment.DIG_SPEED, 4);
-                itemStack.addEnchantment(Enchantment.SILK_TOUCH, 1);
-                ItemMeta itemMeta = itemStack.getItemMeta();
-                itemMeta.setDisplayName(ChatColor.GREEN + "God Pickaxe");
-                itemStack.setItemMeta(itemMeta);
-            }
-
-            player.getInventory().addItem(itemStack);
+            player.getInventory().addItem(ItemUtil.God.makePickaxe(args.hasFlag('l')));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()

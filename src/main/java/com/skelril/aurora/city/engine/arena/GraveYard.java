@@ -33,6 +33,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Sheep;
 import org.bukkit.entity.ThrownPotion;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -45,6 +46,8 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.EntityEquipment;
@@ -83,7 +86,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     private Economy economy;
 
     // Temple regions
-    private ProtectedRegion temple, pressurePlateLockArea;
+    private ProtectedRegion temple, pressurePlateLockArea, rewards, teleporter;
 
     // Block information
     private static Set<BaseBlock> breakable = new HashSet<>();
@@ -104,6 +107,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     static {
         autoBreakable.add(new BaseBlock(BlockID.STEP, 5));
         autoBreakable.add(new BaseBlock(BlockID.STEP, 13));
+        autoBreakable.add(new BaseBlock(BlockID.WOODEN_STEP, 8));
         autoBreakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
     }
 
@@ -111,6 +115,9 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     // Head Stones
     private List<Location> headStones = new ArrayList<>();
+
+    // Reward Chest
+    private List<Location> rewardChest = new ArrayList<>();
 
     // Pressure Plate Lock
     // Use a boolean to store the check value instead of checking for every step
@@ -126,10 +133,15 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         this.temple = regions[1];
         this.pressurePlateLockArea = regions[2];
+        this.rewards = regions[3];
+        this.teleporter = regions[4];
         this.adminComponent = adminComponent;
 
         findHeadStones();
         findPressurePlateLockLevers();
+        findRewardChest();
+
+        resetRewardChest();
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -143,7 +155,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         for (Player player : server.getOnlinePlayers()) {
 
-            if (player.isValid() && LocationUtil.isInRegion(getWorld(), temple, player)) returnedList.add(player);
+            if (player.isValid() && isHostileTempleArea(player.getLocation())) returnedList.add(player);
         }
         return returnedList.toArray(new Player[returnedList.size()]);
     }
@@ -157,9 +169,25 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     @EventHandler(ignoreCancelled = true)
     public void onThunderChange(ThunderChangeEvent event) {
 
-        if (event.toThunderState()) {
+        if (event.toThunderState() && !event.getWorld().isThundering()) {
             resetPressurePlateLock();
             isPressurePlateLocked = !checkPressurePlateLock();
+            resetRewardChest();
+
+            List<Player> returnedList = new ArrayList<>();
+
+            for (Player player : server.getOnlinePlayers()) {
+
+                if (player.isValid() && LocationUtil.isInRegion(getWorld(), rewards, player)) returnedList.add(player);
+            }
+
+            for (Player player : returnedList) {
+                ChatUtil.sendNotice(player, ChatColor.DARK_RED + "You dare disturb our graves!");
+                ChatUtil.sendNotice(player, ChatColor.DARK_RED + "Taste the wrath of thousands!");
+                for (int i = 0; i < 15; i++) {
+                    localSpawn(player, true);
+                }
+            }
         }
     }
 
@@ -180,10 +208,43 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void localSpawn(Player player) {
 
-        if (!ChanceUtil.getChance(3)) return;
+        localSpawn(player, false);
+    }
+
+    private void localSpawn(Player player, boolean bypass) {
+
+        if (!ChanceUtil.getChance(3) && !bypass) return;
 
         Block playerBlock = player.getLocation().getBlock();
         Location ls;
+
+        if (LocationUtil.isInRegion(getWorld(), rewards, player)) {
+            for (int i = 0; i < 3; i++) {
+
+                ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
+
+                if (!BlockType.isTranslucent(ls.getBlock().getTypeId())) {
+                    ls = player.getLocation();
+                }
+
+                Zombie zombie = (Zombie) spawn(ls, EntityType.ZOMBIE, "Guardian Zombie");
+                EntityEquipment equipment = zombie.getEquipment();
+
+                equipment.setArmorContents(new ItemStack[] {
+                        ItemUtil.Ancient.makeBoots(), ItemUtil.Ancient.makeLegs(),
+                        ItemUtil.Ancient.makeChest(), ItemUtil.Ancient.makeHelmet()
+                });
+                equipment.setItemInHand(ItemUtil.Master.makeSword());
+
+                // Drop Chances
+                equipment.setItemInHandDropChance(0);
+                equipment.setHelmetDropChance(0);
+                equipment.setChestplateDropChance(0);
+                equipment.setLeggingsDropChance(0);
+                equipment.setBootsDropChance(0);
+            }
+            return;
+        }
 
         for (int i = 0; i < ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i++) {
 
@@ -197,20 +258,26 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
     }
 
-    private void spawnAndArm(Location location, EntityType type, boolean allowItemPickup) {
+    private Entity spawnAndArm(Location location, EntityType type, boolean allowItemPickup) {
 
-        if (!location.getChunk().isLoaded()) return;
+        if (!location.getChunk().isLoaded()) return null;
 
         Entity e = spawn(location, type);
-        if (e == null) return;
+        if (e == null) return null;
         arm(e, allowItemPickup);
+        return e;
     }
 
     private Entity spawn(Location location, EntityType type) {
 
+        return spawn(location, type, "Grave Zombie");
+    }
+
+    private Entity spawn(Location location, EntityType type, String name) {
+
         if (location == null || !type.isAlive()) return null;
         LivingEntity entity = (LivingEntity) location.getWorld().spawnEntity(location, type);
-        entity.setCustomName("Grave Zombie");
+        entity.setCustomName(name);
         entity.setCustomNameVisible(false);
         return entity;
     }
@@ -264,6 +331,15 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
     }
 
+    private boolean teleport(Player player) {
+
+        if (LocationUtil.isInRegion(getWorld(), teleporter, player)) {
+            player.teleport(headStones.get(ChanceUtil.getRandom(headStones.size()) - 1));
+            return true;
+        }
+        return false;
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSacrifice(PlayerSacrificeItemEvent event) {
 
@@ -272,7 +348,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         if (ItemUtil.isPhantomGold(item)) {
             int amount = 1000;
-            if (contains(origin) && origin.getY() < 80) {
+            if (LocationUtil.isInRegion(getWorld(), rewards, origin)) {
                 amount = 2500;
             }
             economy.depositPlayer(event.getPlayer().getName(), amount);
@@ -314,12 +390,59 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 }
 
                 if (ChanceUtil.getChance(1000000)) {
-                    switch (ChanceUtil.getRandom(2)) {
+                    switch (ChanceUtil.getRandom(4)) {
                         case 1:
                             drops.add(ItemUtil.Fear.makeSword());
                             break;
                         case 2:
                             drops.add(ItemUtil.Fear.makeBow());
+                            break;
+                        case 3:
+                            drops.add(ItemUtil.Unleashed.makeSword());
+                            break;
+                        case 4:
+                            drops.add(ItemUtil.Unleashed.makeBow());
+                            break;
+                    }
+                }
+            } else if (customName.equals("Guardian Zombie")) {
+
+                Iterator<ItemStack> it = drops.iterator();
+                while (it.hasNext()) {
+                    ItemStack stack = it.next();
+
+                    if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
+                }
+
+                if (ChanceUtil.getChance(100)) {
+                    drops.add(ItemUtil.GraveYard.imbuedCrystal(1));
+                }
+
+                if (ChanceUtil.getChance(60) || getWorld().isThundering() && ChanceUtil.getChance(40)) {
+                    drops.add(ItemUtil.GraveYard.batBow());
+                }
+
+                if (ChanceUtil.getChance(60) || getWorld().isThundering() && ChanceUtil.getChance(40)) {
+                    drops.add(ItemUtil.GraveYard.gemOfDarkness(1));
+                }
+
+                if (ChanceUtil.getChance(20)) {
+                    drops.add(ItemUtil.GraveYard.phantomGold(1));
+                }
+
+                if (ChanceUtil.getChance(8000)) {
+                    switch (ChanceUtil.getRandom(4)) {
+                        case 1:
+                            drops.add(ItemUtil.Fear.makeSword());
+                            break;
+                        case 2:
+                            drops.add(ItemUtil.Fear.makeBow());
+                            break;
+                        case 3:
+                            drops.add(ItemUtil.Unleashed.makeSword());
+                            break;
+                        case 4:
+                            drops.add(ItemUtil.Unleashed.makeBow());
                             break;
                     }
                 }
@@ -395,10 +518,47 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         Block block = event.getBlock();
         Location contactedLoc = block.getLocation();
-        if (LocationUtil.isInRegion(getWorld(), temple, contactedLoc)) {
-            if (block.getTypeId() == BlockID.STONE_PRESSURE_PLATE && isPressurePlateLocked) {
+        if (isHostileTempleArea(contactedLoc)) {
+            if (block.getTypeId() == BlockID.STONE_PRESSURE_PLATE
+                    && (isPressurePlateLocked || contactedLoc.getBlockY() < 57)) {
                 throwSlashPotion(contactedLoc);
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+
+        final Player player = event.getPlayer();
+
+        server.getScheduler().runTaskLater(inst, new Runnable() {
+
+            @Override
+            public void run() {
+
+                if (isHostileTempleArea(player.getLocation()) && !adminComponent.isAdmin(player)) {
+                    player.teleport(headStones.get(ChanceUtil.getRandom(headStones.size()) - 1));
+                    ChatUtil.sendWarning(player, "You feel dazed and confused as you wake up near a head stone.");
+                }
+            }
+        }, 1);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+
+        Player player = event.getPlayer();
+        if (isHostileTempleArea(event.getTo()) && !adminComponent.isSysop(player)) {
+            if (contains(event.getFrom())) {
+                event.setCancelled(true);
+            } else {
+                Location tg = headStones.get(ChanceUtil.getRandom(headStones.size()) - 1);
+                tg = LocationUtil.findFreePosition(tg);
+                if (tg == null) tg = getWorld().getSpawnLocation();
+                event.setTo(tg);
+            }
+
+            ChatUtil.sendWarning(event.getPlayer(), "It would seem your teleport has failed to penetrate the temple.");
         }
     }
 
@@ -407,7 +567,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         Block block = event.getClickedBlock();
         Location clickedLoc = block.getLocation();
-        if (LocationUtil.isInRegion(getWorld(), temple, clickedLoc)) {
+        if (isHostileTempleArea(clickedLoc)) {
             switch (block.getTypeId()) {
                 case BlockID.LEVER:
                     server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -420,7 +580,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     }, 1);
                     break;
                 case BlockID.STONE_PRESSURE_PLATE:
-                    if (isPressurePlateLocked && event.getAction().equals(Action.PHYSICAL)) {
+                    if ((isPressurePlateLocked || clickedLoc.getBlockY() < 57)
+                            && event.getAction().equals(Action.PHYSICAL)) {
                         throwSlashPotion(clickedLoc);
                     }
                     break;
@@ -615,6 +776,116 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
     }
 
+    private void findRewardChest() {
+
+        com.sk89q.worldedit.Vector min = rewards.getMinimumPoint();
+        com.sk89q.worldedit.Vector max = rewards.getMaximumPoint();
+
+        int minX = min.getBlockX();
+        int minZ = min.getBlockZ();
+        int minY = min.getBlockY();
+        int maxX = max.getBlockX();
+        int maxZ = max.getBlockZ();
+        int maxY = max.getBlockY();
+
+        BlockState block;
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                for (int y = maxY; y >= minY; --y) {
+                    block = getWorld().getBlockAt(x, y, z).getState();
+                    if (!block.getChunk().isLoaded()) block.getChunk().load();
+                    if (block.getTypeId() == BlockID.CHEST) {
+                        rewardChest.add(block.getLocation());
+                    }
+                }
+            }
+        }
+    }
+
+    private void resetRewardChest() {
+
+        BlockState block;
+        Chest chest;
+        for (Location location : rewardChest) {
+            block = location.getBlock().getState();
+            if (!block.getChunk().isLoaded()) block.getChunk().load();
+            chest = (Chest) block;
+            chest.getBlockInventory().clear();
+
+            int length = chest.getBlockInventory().getContents().length;
+            for (int i = 0; i < length / 3; i++) {
+                chest.getBlockInventory().setItem(ChanceUtil.getRandom(length) - 1, pickRandomItem());
+            }
+            chest.update();
+        }
+    }
+
+    private ItemStack pickRandomItem() {
+
+        switch (ChanceUtil.getRandom(46)) {
+            case 1:
+                if (!ChanceUtil.getChance(5)) return null;
+                return ItemUtil.Master.makeSword();
+            case 2:
+                if (!ChanceUtil.getChance(5)) return null;
+                return ItemUtil.Master.makeBow();
+            case 3:
+                if (!ChanceUtil.getChance(10)) return null;
+                return ItemUtil.Fear.makeSword();
+            case 4:
+                if (!ChanceUtil.getChance(10)) return null;
+                return ItemUtil.Fear.makeBow();
+            case 5:
+                if (!ChanceUtil.getChance(10)) return null;
+                return ItemUtil.Unleashed.makeSword();
+            case 6:
+                if (!ChanceUtil.getChance(10)) return null;
+                return ItemUtil.Unleashed.makeBow();
+            case 7:
+                return ItemUtil.GraveYard.imbuedCrystal(1);
+            case 8:
+                return ItemUtil.GraveYard.gemOfDarkness(1);
+            case 9:
+                return ItemUtil.GraveYard.batBow();
+            case 10:
+                return ItemUtil.GraveYard.phantomGold(ChanceUtil.getRandom(64));
+            case 11:
+                return ItemUtil.Ancient.makeHelmet();
+            case 12:
+                return ItemUtil.Ancient.makeChest();
+            case 13:
+                return ItemUtil.Ancient.makeLegs();
+            case 14:
+                return ItemUtil.Ancient.makeBoots();
+            case 15:
+                return ItemUtil.God.makeHelmet();
+            case 16:
+                return ItemUtil.God.makeChest();
+            case 17:
+                return ItemUtil.God.makeLegs();
+            case 18:
+                return ItemUtil.God.makeBoots();
+            case 19:
+                return ItemUtil.God.makePickaxe(false);
+            case 20:
+                return ItemUtil.God.makePickaxe(true);
+            case 21:
+                return new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(64));
+            case 22:
+                return new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(64));
+            case 23:
+                return new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(64));
+            case 24:
+                return new ItemStack(ItemID.REDSTONE_DUST, ChanceUtil.getRandom(64));
+            case 25:
+                return new ItemStack(ItemID.ENDER_PEARL, ChanceUtil.getRandom(16));
+            case 26:
+                return new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(64), (short) 1);
+            default:
+                return new ItemStack(ItemID.BONE, ChanceUtil.getRandom(14));
+        }
+    }
+
     private void breakBlock(Entity e, Location location) {
 
         int chance = e instanceof Player ? 2 : 6;
@@ -694,7 +965,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             // Auto break stuff
             Location belowLoc = entity.getLocation();
-            if (!(entity instanceof Player) || LocationUtil.isInRegion(getWorld(), temple, belowLoc)) {
+            if (!(entity instanceof Player) || isInEvilRegion(belowLoc)) {
                 breakBlock(entity, belowLoc);
                 breakBlock(entity, belowLoc.add(0, -1, 0));
                 breakBlock(entity, belowLoc.add(0, -1, 0));
@@ -702,8 +973,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             // People Code
             if (entity instanceof Player && isEvilMode(((Player) entity).getEyeLocation().getBlock())) {
-
-                if (adminComponent.isAdmin((Player) entity)) continue;
+                if (adminComponent.isAdmin((Player) entity) || teleport((Player) entity)) continue;
                 fogPlayer((Player) entity);
                 localSpawn((Player) entity);
             }
@@ -723,13 +993,21 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         // Weather/Day Check
         if (EnvironmentUtil.isNightTime(getWorld().getTime()) || getWorld().hasStorm()) return true;
-        // Location
-        //noinspection RedundantIfStatement,SimplifiableIfStatement
-        if (LocationUtil.isInRegion(getWorld(), temple, block.getLocation()) && block.getY() < 93) {
-            return block.getLightFromSky() < 15;
-        }
 
-        return block.getLightLevel() == 0;
+        return isHostileTempleArea(block.getLocation()) || block.getLightLevel() == 0;
+    }
+
+    private boolean isHostileTempleArea(Location location) {
+
+        return isInEvilRegion(location) && location.getY() < 93 && location.getBlock().getLightFromSky() < 4;
+    }
+
+    private boolean isInEvilRegion(Location location) {
+
+        for (ProtectedRegion region : new ProtectedRegion[] {temple}) {
+            if (LocationUtil.isInRegion(getWorld(), region, location)) return true;
+        }
+        return location.getY() < 69;
     }
 
     @Override

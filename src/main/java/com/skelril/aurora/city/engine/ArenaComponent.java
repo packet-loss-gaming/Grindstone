@@ -10,7 +10,18 @@ import com.sk89q.worldguard.protection.GlobalRegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
-import com.skelril.aurora.city.engine.arena.*;
+import com.skelril.aurora.city.engine.arena.CommandTriggeredArena;
+import com.skelril.aurora.city.engine.arena.CursedMine;
+import com.skelril.aurora.city.engine.arena.DropPartyArena;
+import com.skelril.aurora.city.engine.arena.DynamicSandArena;
+import com.skelril.aurora.city.engine.arena.EnchantedForest;
+import com.skelril.aurora.city.engine.arena.GenericArena;
+import com.skelril.aurora.city.engine.arena.GiantBossArena;
+import com.skelril.aurora.city.engine.arena.GoldRush;
+import com.skelril.aurora.city.engine.arena.GraveYard;
+import com.skelril.aurora.city.engine.arena.HotSpringArena;
+import com.skelril.aurora.city.engine.arena.Prison;
+import com.skelril.aurora.city.engine.arena.SnowSpleefArena;
 import com.skelril.aurora.city.engine.arena.factory.FactoryFloor;
 import com.skelril.aurora.city.engine.arena.factory.FactoryMech;
 import com.skelril.aurora.economic.ImpersonalComponent;
@@ -30,7 +41,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -290,10 +306,12 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Grave Yards
             for (String region : config.graveYards) {
                 try {
-                    ProtectedRegion[] PRs = new ProtectedRegion[3];
+                    ProtectedRegion[] PRs = new ProtectedRegion[5];
                     PRs[0] = mgr.get(world).getRegion(region);
                     PRs[1] = mgr.get(world).getRegion(region + "-temple");
                     PRs[2] = mgr.get(world).getRegion(region + "-temple-puzzle-one");
+                    PRs[3] = mgr.get(world).getRegion(region + "-temple-rewards");
+                    PRs[4] = mgr.get(world).getRegion(region + "-temple-teleporter");
 
                     arenas.add(new GraveYard(world, PRs, adminComponent));
                     log.info("Added region: " + PRs[0].getId() + " to Arenas.");

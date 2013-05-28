@@ -31,6 +31,150 @@ public class ItemUtil {
             new ItemStack(ItemID.DIAMOND_CHEST), new ItemStack(ItemID.DIAMOND_HELMET)
     };
 
+    public static class Ancient {
+
+        public static ItemStack makeHelmet() {
+
+            ItemStack ancientHelmet = new ItemStack(ItemID.CHAINMAIL_HELMET);
+            ItemMeta ancientMeta = ancientHelmet.getItemMeta();
+            ancientMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            ancientMeta.addEnchant(Enchantment.OXYGEN, 3, true);
+            ancientMeta.addEnchant(Enchantment.WATER_WORKER, 1, true);
+            ancientMeta.setDisplayName(ChatColor.GOLD + "Ancient Helmet");
+            ((Repairable) ancientMeta).setRepairCost(400);
+            ancientHelmet.setItemMeta(ancientMeta);
+            return ancientHelmet;
+        }
+
+        public static ItemStack makeChest() {
+
+            ItemStack ancientChestplate = new ItemStack(ItemID.CHAINMAIL_CHEST);
+            ItemMeta ancientMeta = ancientChestplate.getItemMeta();
+            ancientMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            ancientMeta.setDisplayName(ChatColor.GOLD + "Ancient Chestplate");
+            ((Repairable) ancientMeta).setRepairCost(400);
+            ancientChestplate.setItemMeta(ancientMeta);
+            return ancientChestplate;
+        }
+
+        public static ItemStack makeLegs() {
+
+            ItemStack ancientLeggings = new ItemStack(ItemID.CHAINMAIL_PANTS);
+            ItemMeta ancientMeta = ancientLeggings.getItemMeta();
+            ancientMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            ancientMeta.setDisplayName(ChatColor.GOLD + "Ancient Leggings");
+            ((Repairable) ancientMeta).setRepairCost(400);
+            ancientLeggings.setItemMeta(ancientMeta);
+            return ancientLeggings;
+        }
+
+        public static ItemStack makeBoots() {
+
+            ItemStack ancientBoots = new ItemStack(ItemID.CHAINMAIL_BOOTS);
+            ItemMeta ancientMeta = ancientBoots.getItemMeta();
+            ancientMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_FALL, 4, true);
+            ancientMeta.setDisplayName(ChatColor.GOLD + "Ancient Boots");
+            ((Repairable) ancientMeta).setRepairCost(400);
+            ancientBoots.setItemMeta(ancientMeta);
+            return ancientBoots;
+        }
+    }
+
+    public static class God {
+
+        public static ItemStack makeHelmet() {
+
+            ItemStack godHelmet = new ItemStack(ItemID.DIAMOND_HELMET);
+            ItemMeta godMeta = godHelmet.getItemMeta();
+            godMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            godMeta.addEnchant(Enchantment.OXYGEN, 3, true);
+            godMeta.addEnchant(Enchantment.WATER_WORKER, 1, true);
+            godMeta.setDisplayName(ChatColor.RED + "God Helmet");
+            ((Repairable) godMeta).setRepairCost(400);
+            godHelmet.setItemMeta(godMeta);
+            return godHelmet;
+        }
+
+        public static ItemStack makeChest() {
+
+            ItemStack godChestplate = new ItemStack(ItemID.DIAMOND_CHEST);
+            ItemMeta godMeta = godChestplate.getItemMeta();
+            godMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            godMeta.setDisplayName(ChatColor.RED + "God Chestplate");
+            ((Repairable) godMeta).setRepairCost(400);
+            godChestplate.setItemMeta(godMeta);
+            return godChestplate;
+        }
+
+        public static ItemStack makeLegs() {
+
+            ItemStack godLeggings = new ItemStack(ItemID.DIAMOND_PANTS);
+            ItemMeta godMeta = godLeggings.getItemMeta();
+            godMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            godMeta.setDisplayName(ChatColor.RED + "God Leggings");
+            ((Repairable) godMeta).setRepairCost(400);
+            godLeggings.setItemMeta(godMeta);
+            return godLeggings;
+        }
+
+        public static ItemStack makeBoots() {
+
+            ItemStack godBoots = new ItemStack(ItemID.DIAMOND_BOOTS);
+            ItemMeta godMeta = godBoots.getItemMeta();
+            godMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_FALL, 4, true);
+            godMeta.setDisplayName(ChatColor.RED + "God Boots");
+            ((Repairable) godMeta).setRepairCost(400);
+            godBoots.setItemMeta(godMeta);
+            return godBoots;
+        }
+
+        public static ItemStack makePickaxe(boolean legendary) {
+
+            ItemStack pickaxe = new ItemStack(ItemID.DIAMOND_PICKAXE);
+            if (legendary) {
+                pickaxe.addEnchantment(Enchantment.DIG_SPEED, 5);
+                pickaxe.addEnchantment(Enchantment.DURABILITY, 3);
+                pickaxe.addEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 3);
+                ItemMeta godMeta = pickaxe.getItemMeta();
+                godMeta.setDisplayName(ChatColor.GREEN + "Legendary God Pickaxe");
+                pickaxe.setItemMeta(godMeta);
+            } else {
+                pickaxe.addEnchantment(Enchantment.DIG_SPEED, 4);
+                pickaxe.addEnchantment(Enchantment.SILK_TOUCH, 1);
+                ItemMeta godMeta = pickaxe.getItemMeta();
+                godMeta.setDisplayName(ChatColor.GREEN + "God Pickaxe");
+                pickaxe.setItemMeta(godMeta);
+            }
+            return pickaxe;
+        }
+    }
+
     public static class Master {
 
         public static ItemStack makeBow() {
