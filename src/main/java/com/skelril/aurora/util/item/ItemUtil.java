@@ -216,7 +216,7 @@ public class ItemUtil {
 
         int count = 0;
         for (ItemStack itemStack : itemStacks) {
-            if (itemStack != null && itemStack.getTypeId() == typeId) {
+            if (itemStack != null && !isNamed(itemStack) && itemStack.getTypeId() == typeId) {
                 count += itemStack.getAmount();
             }
         }
@@ -228,7 +228,7 @@ public class ItemUtil {
         int count = 0;
         for (ItemStack itemStack : itemStacks) {
             for (ItemStack checkItem : checkItemStacks) {
-                if (itemStack != null && itemStack.equals(checkItem)) {
+                if (itemStack != null && !isNamed(itemStack) && itemStack.equals(checkItem)) {
                     count++;
                 }
             }
@@ -297,14 +297,14 @@ public class ItemUtil {
         return b[0] && b[1] && b[2] && b[3];
     }
 
-    private static boolean isCustomItem(ItemStack stack) {
+    private static boolean isNamed(ItemStack stack) {
 
         return stack != null && stack.hasItemMeta() && stack.getItemMeta().hasDisplayName();
     }
 
     public static boolean matchesFilter(ItemStack stack, String filter) {
 
-        return isCustomItem(stack) && stack.getItemMeta().getDisplayName().startsWith(filter);
+        return isNamed(stack) && stack.getItemMeta().getDisplayName().startsWith(filter);
     }
 
     public static boolean hasBatBow(Player player) {
