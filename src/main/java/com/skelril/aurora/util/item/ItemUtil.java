@@ -105,7 +105,7 @@ public class ItemUtil {
             godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
             godMeta.addEnchant(Enchantment.OXYGEN, 3, true);
             godMeta.addEnchant(Enchantment.WATER_WORKER, 1, true);
-            godMeta.setDisplayName(ChatColor.RED + "God Helmet");
+            godMeta.setDisplayName(ChatColor.BLUE + "God Helmet");
             ((Repairable) godMeta).setRepairCost(400);
             godHelmet.setItemMeta(godMeta);
             return godHelmet;
@@ -119,7 +119,7 @@ public class ItemUtil {
             godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
-            godMeta.setDisplayName(ChatColor.RED + "God Chestplate");
+            godMeta.setDisplayName(ChatColor.BLUE + "God Chestplate");
             ((Repairable) godMeta).setRepairCost(400);
             godChestplate.setItemMeta(godMeta);
             return godChestplate;
@@ -133,7 +133,7 @@ public class ItemUtil {
             godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
-            godMeta.setDisplayName(ChatColor.RED + "God Leggings");
+            godMeta.setDisplayName(ChatColor.BLUE + "God Leggings");
             ((Repairable) godMeta).setRepairCost(400);
             godLeggings.setItemMeta(godMeta);
             return godLeggings;
@@ -148,7 +148,7 @@ public class ItemUtil {
             godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_FALL, 4, true);
-            godMeta.setDisplayName(ChatColor.RED + "God Boots");
+            godMeta.setDisplayName(ChatColor.BLUE + "God Boots");
             ((Repairable) godMeta).setRepairCost(400);
             godBoots.setItemMeta(godMeta);
             return godBoots;
@@ -346,11 +346,32 @@ public class ItemUtil {
         return false;
     }
 
+    public static ItemStack[] removeItemOfType(ItemStack[] itemStacks, int typeId) {
+
+        for (int i = 0; i < itemStacks.length; i++) {
+            ItemStack is = itemStacks[i];
+            if (is != null && !isNamed(is) && is.getTypeId() == typeId) {
+                itemStacks[i] = null;
+            }
+        }
+        return itemStacks;
+    }
+
+    public static ItemStack[] removeItemOfName(ItemStack[] itemStacks, String name) {
+
+        for (int i = 0; i < itemStacks.length; i++) {
+            if (matchesFilter(itemStacks[i], name)) {
+                itemStacks[i] = null;
+            }
+        }
+        return itemStacks;
+    }
+
     public static int countItemsOfName(ItemStack[] itemStacks, String name) {
 
         int count = 0;
         for (ItemStack itemStack : itemStacks) {
-            if (matchesFilter(itemStack, name)) count++;
+            if (matchesFilter(itemStack, name)) count += itemStack.getAmount();
         }
         return count;
     }
