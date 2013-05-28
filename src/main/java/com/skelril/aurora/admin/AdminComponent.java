@@ -522,6 +522,20 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     public class Commands {
 
+        @Command(aliases = {"simulatedamage"}, desc = "Simulate damage on the currently held item")
+        @CommandPermissions("aurora.admin.simulation.damage")
+        public void simulateDamageCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+
+            Player player = (Player) sender;
+
+            ItemStack is = player.getInventory().getItemInHand();
+            is.setDurability((short) Math.max(0, is.getData().getItemType().getMaxDurability() - 20));
+            player.setItemInHand(is);
+            ChatUtil.sendNotice(player, "Damage simulated!");
+        }
+
         @Command(aliases = {"user"}, desc = "User Management Commands")
         @NestedCommand({NestedAdminCommands.class})
         public void userManagementCommands(CommandContext args, CommandSender sender) throws CommandException {
