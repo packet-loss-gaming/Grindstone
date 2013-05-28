@@ -38,6 +38,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -727,7 +728,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                     smokeLocation[2] = newLoc;
                     smokeLocation[3] = newLoc.getBlock().getRelative(BlockFace.UP).getLocation();
 
-                    player.teleport(newLoc);
+                    player.teleport(newLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     EnvironmentUtil.generateRadialEffect(smokeLocation, Effect.SMOKE);
                 } catch (Exception e) {
                     log.warning("Could not find a location to teleport the player: " + player.getName() + " to.");
@@ -737,6 +738,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     private void sacrifice(Player player, ItemStack item) {
+
+        if (item.getTypeId() == 0) return;
 
         PlayerInventory pInventory = player.getInventory();
 
