@@ -96,6 +96,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         breakable.add(new BaseBlock(BlockID.TORCH, -1));
         breakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
         breakable.add(new BaseBlock(BlockID.WEB, -1));
+        breakable.add(new BaseBlock(BlockID.LEAVES, -1));
     }
 
     private static Set<BaseBlock> autoBreakable = new HashSet<>();
@@ -249,17 +250,17 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
 
         if (allowItemPickup) {
-            equipment.setItemInHandDropChance(1);
-            equipment.setHelmetDropChance(1);
-            equipment.setChestplateDropChance(1);
-            equipment.setLeggingsDropChance(1);
-            equipment.setBootsDropChance(1);
+            equipment.setItemInHandDropChance(equipment.getItemInHand() == null ? 1 : .35F);
+            equipment.setHelmetDropChance(equipment.getHelmet() == null ? 1 : .35F);
+            equipment.setChestplateDropChance(equipment.getChestplate() == null ? 1 : .35F);
+            equipment.setLeggingsDropChance(equipment.getLeggings() == null ? 1 : .35F);
+            equipment.setBootsDropChance(equipment.getBoots() == null ? 1 : .35F);
         } else {
-            equipment.setItemInHandDropChance(.55F);
-            equipment.setHelmetDropChance(.55F);
-            equipment.setChestplateDropChance(.55F);
-            equipment.setLeggingsDropChance(.55F);
-            equipment.setBootsDropChance(.55F);
+            equipment.setItemInHandDropChance(.17F);
+            equipment.setHelmetDropChance(.17F);
+            equipment.setChestplateDropChance(.17F);
+            equipment.setLeggingsDropChance(.17F);
+            equipment.setBootsDropChance(.17F);
         }
     }
 
