@@ -37,7 +37,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
-import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -420,36 +419,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 }
             }, 1);
         }
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onItemBreak(PlayerItemBreakEvent event) {
-
-        ItemStack broken = event.getBrokenItem();
-        ItemStack newItem = null;
-
-        if (ItemUtil.isFearSword(broken) || ItemUtil.isUnleashedSword(broken)) {
-            newItem = ItemUtil.Master.makeSword();
-        } else if (ItemUtil.isFearBow(broken) || ItemUtil.isUnleashedBow(broken)) {
-            newItem = ItemUtil.Master.makeBow();
-        }
-
-        if (newItem == null) return;
-
-        final Player player = event.getPlayer();
-        final ItemStack finalNewItem = newItem;
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-
-            @Override
-            public void run() {
-
-                if (player.isDead()) {
-                    player.getWorld().dropItem(player.getLocation(), finalNewItem);
-                } else {
-                    player.setItemInHand(finalNewItem);
-                }
-            }
-        }, 1);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
