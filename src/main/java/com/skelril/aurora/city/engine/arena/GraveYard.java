@@ -598,7 +598,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         watchedCauses.add(PlayerTeleportEvent.TeleportCause.PLUGIN);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
 
         Player player = event.getPlayer();
