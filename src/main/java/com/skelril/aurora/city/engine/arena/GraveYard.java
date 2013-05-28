@@ -47,6 +47,7 @@ import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
@@ -73,6 +74,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+
 public class GraveYard extends AbstractRegionedArena implements MonitoredArena, Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -86,7 +89,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     private Economy economy;
 
     // Temple regions
-    private ProtectedRegion temple, pressurePlateLockArea, rewards, teleporter;
+    private ProtectedRegion temple, pressurePlateLockArea, rewards;
 
     // Block information
     private static Set<BaseBlock> breakable = new HashSet<>();
@@ -134,7 +137,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         this.temple = regions[1];
         this.pressurePlateLockArea = regions[2];
         this.rewards = regions[3];
-        this.teleporter = regions[4];
         this.adminComponent = adminComponent;
 
         findHeadStones();
@@ -329,15 +331,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             equipment.setLeggingsDropChance(.17F);
             equipment.setBootsDropChance(.17F);
         }
-    }
-
-    private boolean teleport(Player player) {
-
-        if (LocationUtil.isInRegion(getWorld(), teleporter, player)) {
-            player.teleport(headStones.get(ChanceUtil.getRandom(headStones.size()) - 1));
-            return true;
-        }
-        return false;
     }
 
     private final String IMBUED = ChatColor.AQUA + "Imbued Crystal";
@@ -590,12 +583,23 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }, 1);
     }
 
-    private static Set<PlayerTeleportEvent.TeleportCause> watchedCauses = new HashSet<>();
+    private static Set<TeleportCause> watchedCauses = new HashSet<>();
 
     static {
-        watchedCauses.add(PlayerTeleportEvent.TeleportCause.ENDER_PEARL);
-        watchedCauses.add(PlayerTeleportEvent.TeleportCause.COMMAND);
-        watchedCauses.add(PlayerTeleportEvent.TeleportCause.PLUGIN);
+        watchedCauses.add(TeleportCause.ENDER_PEARL);
+        watchedCauses.add(TeleportCause.COMMAND);
+        watchedCauses.add(TeleportCause.PLUGIN);
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onPlayerPortal(PlayerPortalEvent event) {
+
+        if (isHostileTempleArea(event.getFrom()) && event.getCause().equals(TeleportCause.NETHER_PORTAL)) {
+            Location tg = headStones.get(ChanceUtil.getRandom(headStones.size()) - 1);
+            tg = LocationUtil.findFreePosition(tg);
+            if (tg == null) tg = getWorld().getSpawnLocation();
+            event.setTo(tg);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1028,7 +1032,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             // People Code
             if (entity instanceof Player && isEvilMode(((Player) entity).getEyeLocation().getBlock())) {
-                if (adminComponent.isAdmin((Player) entity) || teleport((Player) entity)) continue;
+                if (adminComponent.isAdmin((Player) entity)) continue;
                 fogPlayer((Player) entity);
                 localSpawn((Player) entity);
             }

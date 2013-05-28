@@ -311,7 +311,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     PRs[1] = mgr.get(world).getRegion(region + "-temple");
                     PRs[2] = mgr.get(world).getRegion(region + "-temple-puzzle-one");
                     PRs[3] = mgr.get(world).getRegion(region + "-temple-rewards");
-                    PRs[4] = mgr.get(world).getRegion(region + "-temple-teleporter");
 
                     arenas.add(new GraveYard(world, PRs, adminComponent));
                     log.info("Added region: " + PRs[0].getId() + " to Arenas.");
