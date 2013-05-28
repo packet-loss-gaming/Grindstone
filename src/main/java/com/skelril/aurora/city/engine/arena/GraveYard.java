@@ -340,18 +340,64 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         return false;
     }
 
+    private final String IMBUED = ChatColor.AQUA + "Imbued Crystal";
+    private final String DARKNESS = ChatColor.DARK_RED + "Gem of Darkness";
+
+    @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSacrifice(PlayerSacrificeItemEvent event) {
+
+        Player player = event.getPlayer();
 
         ItemStack item = event.getItemStack();
         Location origin = event.getBlock().getLocation();
 
+        boolean isInRewardsRoom = LocationUtil.isInRegion(getWorld(), rewards, origin);
+        int c;
+        int m = item.getType().getMaxDurability();
+        ItemStack[] i;
         if (ItemUtil.isPhantomGold(item)) {
             int amount = 1000;
-            if (LocationUtil.isInRegion(getWorld(), rewards, origin)) {
+            if (isInRewardsRoom) {
                 amount = 2500;
             }
-            economy.depositPlayer(event.getPlayer().getName(), amount);
+            economy.depositPlayer(player.getName(), amount * item.getAmount());
+            event.setItemStack(null);
+        } else if (ItemUtil.isFearSword(item) || ItemUtil.isFearBow(item)) {
+            if (!isInRewardsRoom) return;
+            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), DARKNESS);
+            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), DARKNESS);
+            player.getInventory().setContents(i);
+            while (item.getDurability() > 0 && c > 0) {
+                item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
+                c--;
+            }
+            player.getInventory().addItem(item);
+            int amount = Math.min(c, 64);
+            while (amount > 0) {
+                player.getInventory().addItem(ItemUtil.GraveYard.gemOfDarkness(amount));
+                c -= amount;
+                amount = Math.min(c, 64);
+            }
+            player.updateInventory();
+            event.setItemStack(null);
+        } else if (ItemUtil.isUnleashedSword(item) || ItemUtil.isUnleashedBow(item)) {
+            if (!isInRewardsRoom) return;
+            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), IMBUED);
+            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), IMBUED);
+            player.getInventory().setContents(i);
+            while (item.getDurability() > 0 && c > 0) {
+                item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
+                c--;
+            }
+            player.getInventory().addItem(item);
+            int amount = Math.min(c, 64);
+            while (amount > 0) {
+                player.getInventory().addItem(ItemUtil.GraveYard.imbuedCrystal(amount));
+                c -= amount;
+                amount = Math.min(c, 64);
+            }
+            event.setItemStack(null);
         }
     }
 
@@ -544,11 +590,20 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }, 1);
     }
 
+    private static Set<PlayerTeleportEvent.TeleportCause> watchedCauses = new HashSet<>();
+
+    static {
+        watchedCauses.add(PlayerTeleportEvent.TeleportCause.ENDER_PEARL);
+        watchedCauses.add(PlayerTeleportEvent.TeleportCause.COMMAND);
+        watchedCauses.add(PlayerTeleportEvent.TeleportCause.PLUGIN);
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
 
         Player player = event.getPlayer();
         if (isHostileTempleArea(event.getTo()) && !adminComponent.isSysop(player)) {
+            if (!watchedCauses.contains(event.getCause())) return;
             if (contains(event.getFrom())) {
                 event.setCancelled(true);
             } else {
@@ -822,29 +877,29 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private ItemStack pickRandomItem() {
 
-        switch (ChanceUtil.getRandom(46)) {
+        switch (ChanceUtil.getRandom(44)) {
             case 1:
-                if (!ChanceUtil.getChance(5)) return null;
+                if (!ChanceUtil.getChance(10)) return null;
                 return ItemUtil.Master.makeSword();
             case 2:
-                if (!ChanceUtil.getChance(5)) return null;
+                if (!ChanceUtil.getChance(10)) return null;
                 return ItemUtil.Master.makeBow();
             case 3:
-                if (!ChanceUtil.getChance(10)) return null;
+                if (!ChanceUtil.getChance(17)) return null;
                 return ItemUtil.Fear.makeSword();
             case 4:
-                if (!ChanceUtil.getChance(10)) return null;
+                if (!ChanceUtil.getChance(17)) return null;
                 return ItemUtil.Fear.makeBow();
             case 5:
-                if (!ChanceUtil.getChance(10)) return null;
+                if (!ChanceUtil.getChance(25)) return null;
                 return ItemUtil.Unleashed.makeSword();
             case 6:
-                if (!ChanceUtil.getChance(10)) return null;
+                if (!ChanceUtil.getChance(25)) return null;
                 return ItemUtil.Unleashed.makeBow();
             case 7:
-                return ItemUtil.GraveYard.imbuedCrystal(1);
+                return ItemUtil.GraveYard.imbuedCrystal(ChanceUtil.getRandom(3));
             case 8:
-                return ItemUtil.GraveYard.gemOfDarkness(1);
+                return ItemUtil.GraveYard.gemOfDarkness(ChanceUtil.getRandom(3));
             case 9:
                 return ItemUtil.GraveYard.batBow();
             case 10:
