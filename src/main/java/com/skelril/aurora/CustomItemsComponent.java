@@ -1,6 +1,8 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
@@ -37,6 +39,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -379,6 +382,43 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
             player.getInventory().setArmorContents(armour);
             event.setAmount(exp);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void onItemPickup(PlayerPickupItemEvent event) {
+
+        final Player player = event.getPlayer();
+        ItemStack itemStack = event.getItem().getItemStack();
+
+        if (itemStack.getTypeId() == ItemID.GOLD_BAR || itemStack.getTypeId() == ItemID.GOLD_NUGGET) {
+
+            if (!ItemUtil.findItemOfName(player.getInventory().getContents(), ChatColor.AQUA + "Imbued Crystal")) {
+                return;
+            }
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                @Override
+                public void run() {
+
+                    int nugget = ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_NUGGET);
+                    while (nugget / 9 > 0 && player.getInventory().firstEmpty() != -1) {
+                        player.getInventory().removeItem(new ItemStack(ItemID.GOLD_NUGGET, 9));
+                        player.getInventory().addItem(new ItemStack(ItemID.GOLD_BAR));
+                        nugget -= 9;
+                    }
+
+                    int bar = ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_BAR);
+                    while (bar / 9 > 0 && player.getInventory().firstEmpty() != -1) {
+                        player.getInventory().removeItem(new ItemStack(ItemID.GOLD_BAR, 9));
+                        player.getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK));
+                        bar -= 9;
+                    }
+
+                    //noinspection deprecation
+                    player.updateInventory();
+                }
+            }, 1);
         }
     }
 
