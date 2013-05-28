@@ -15,7 +15,11 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.TravelAgent;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -26,7 +30,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.entity.EntityPortalEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
@@ -70,7 +79,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     @Override
     public void run() {
 
-        sync: {
+        sync:
+        {
             if (!config.enableSync) break sync;
 
             final World city = Bukkit.getWorld(config.cityWorld);
@@ -122,7 +132,13 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         public boolean enableSync = true;
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityPortal(EntityPortalEvent event) {
+
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
 
         TravelAgent agent = event.getPortalTravelAgent();
@@ -186,7 +202,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 }
 
                 // City Code
-                if (from.getWorld().getName().contains(config.cityWorld))  {
+                if (from.getWorld().getName().contains(config.cityWorld)) {
                     event.setTo(LocationUtil.grandBank(city));
                     agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);
