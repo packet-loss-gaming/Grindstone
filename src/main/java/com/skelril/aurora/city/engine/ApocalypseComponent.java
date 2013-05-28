@@ -5,12 +5,14 @@ import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
+import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseBedSpawnEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
-import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.homes.EnderPearlHomesComponent;
 import com.skelril.aurora.jail.JailComponent;
-import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -24,7 +26,13 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LightningStrike;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -153,7 +161,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             case PLAYER:
                 player = (Player) target;
                 if (ItemUtil.hasAncientArmour(player) && checkEntity((LivingEntity) attacker)) {
-                    if (ChanceUtil.getChance(7)) {
+                    int diff = player.getMaxHealth() - player.getHealth();
+                    if (ChanceUtil.getChance(Math.max(3, player.getMaxHealth() - diff))) {
 
                         EffectUtil.Ancient.powerBurst(player, event.getDamage());
                     }
