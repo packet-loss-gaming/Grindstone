@@ -591,7 +591,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         watchedCauses.add(TeleportCause.PLUGIN);
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
 
         if (isHostileTempleArea(event.getFrom()) && event.getCause().equals(TeleportCause.NETHER_PORTAL)) {
@@ -599,6 +599,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             tg = LocationUtil.findFreePosition(tg);
             if (tg == null) tg = getWorld().getSpawnLocation();
             event.setTo(tg);
+            event.useTravelAgent(false);
         }
     }
 
