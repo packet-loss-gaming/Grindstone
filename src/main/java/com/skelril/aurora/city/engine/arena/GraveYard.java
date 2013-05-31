@@ -550,6 +550,26 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             block.setTypeId(0);
             map.put(block.getLocation(), new AbstractMap.SimpleEntry<>(System.currentTimeMillis(), baseBlock));
+
+            // Degrade the tool
+            final Player player = event.getPlayer();
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                @Override
+                public void run() {
+
+                    ItemStack held = player.getItemInHand();
+                    if (!ItemUtil.isPickAxe(held.getTypeId())) return;
+                    short newDurability = (short) (held.getDurability() + 1);
+                    short maxDurability = held.getType().getMaxDurability();
+                    if (newDurability >= maxDurability) {
+                        player.setItemInHand(null);
+                    } else {
+                        held.setDurability(newDurability);
+                        player.setItemInHand(held);
+                    }
+                }
+            }, 1);
         }
     }
 
