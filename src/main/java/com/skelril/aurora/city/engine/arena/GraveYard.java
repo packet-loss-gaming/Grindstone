@@ -27,6 +27,7 @@ import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.CaveSpider;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -495,6 +496,15 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     if (stack != null && !ChanceUtil.getChance(15)) {
                         if (stack.getTypeId() == ItemID.STRING) it.remove();
                         if (stack.getTypeId() == ItemID.SPIDER_EYE) it.remove();
+                    }
+                }
+            } else if (entity instanceof Creeper) {
+                Iterator<ItemStack> it = drops.iterator();
+                while (it.hasNext()) {
+                    ItemStack stack = it.next();
+
+                    if (stack != null && !ChanceUtil.getChance(15)) {
+                        if (stack.getTypeId() == ItemID.SULPHUR) it.remove();
                     }
                 }
             }
