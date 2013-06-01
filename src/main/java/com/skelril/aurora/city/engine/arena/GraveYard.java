@@ -1097,7 +1097,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         for (ProtectedRegion region : new ProtectedRegion[] {temple}) {
             if (LocationUtil.isInRegion(getWorld(), region, location)) return true;
         }
-        return location.getY() < 69;
+        return location.getY() < 69 && contains(location);
     }
 
     @Override
