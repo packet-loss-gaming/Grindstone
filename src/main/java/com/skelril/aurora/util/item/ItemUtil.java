@@ -2,7 +2,9 @@ package com.skelril.aurora.util.item;
 import com.sk89q.worldedit.blocks.ItemID;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BookMeta;
@@ -94,6 +96,22 @@ public class ItemUtil {
     }
 
     public static class God {
+
+        public static ItemStack makeSword() {
+
+            ItemStack godSword = new ItemStack(ItemID.DIAMOND_SWORD);
+            ItemMeta godMeta = godSword.getItemMeta();
+            godMeta.addEnchant(Enchantment.DAMAGE_ALL, 5, true);
+            godMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 5, true);
+            godMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 5, true);
+            godMeta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
+            godMeta.addEnchant(Enchantment.KNOCKBACK, 2, true);
+            godMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 3, true);
+            godMeta.setDisplayName(ChatColor.RED + "God Sword");
+            ((Repairable) godMeta).setRepairCost(400);
+            godSword.setItemMeta(godMeta);
+            return godSword;
+        }
 
         public static ItemStack makeHelmet() {
 
@@ -450,12 +468,17 @@ public class ItemUtil {
         return matchesFilter(stack, ChatColor.GOLD + "Phantom Gold");
     }
 
-    public static boolean hasAncientArmour(Player player) {
+    public static boolean hasAncientArmour(LivingEntity entity) {
 
-        if (!player.isValid()) return false;
+        if (!entity.isValid()) return false;
+
+        ItemStack[] armour;
+        EntityEquipment equipment = entity.getEquipment();
+        if (equipment != null) armour = equipment.getArmorContents();
+        else return false;
 
         boolean[] b = new boolean[] {false, false, false, false};
-        ItemStack[] armour = player.getInventory().getArmorContents();
+
         for (int i = 0; i < 4; i++) {
             b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient");
         }

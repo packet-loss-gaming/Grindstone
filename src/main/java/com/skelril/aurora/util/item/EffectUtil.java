@@ -343,20 +343,27 @@ public class EffectUtil {
 
     public static class Ancient {
 
-        public static void powerBurst(Player player, int attackDamage) {
+        public static void powerBurst(LivingEntity entity, int attackDamage) {
 
-            ChatUtil.sendNotice(player, "Your armour releases a burst of energy.");
-            ChatUtil.sendNotice(player, "You are healed by an ancient force.");
+            if (entity instanceof Player) {
+                ChatUtil.sendNotice((Player) entity, "Your armour releases a burst of energy.");
+                ChatUtil.sendNotice((Player) entity, "You are healed by an ancient force.");
+            }
 
-            player.setHealth(Math.min(player.getHealth() + attackDamage, player.getMaxHealth()));
+            entity.setHealth(Math.min(entity.getHealth() + attackDamage, entity.getMaxHealth()));
 
-            for (Entity e : player.getNearbyEntities(8, 8, 8)) {
+            for (Entity e : entity.getNearbyEntities(8, 8, 8)) {
                 if (e.isValid() && e instanceof LivingEntity) {
-                    if (e instanceof Player) {
-                        ((Player) e).setHealth(Math.min(((Player) e).getHealth() + attackDamage,
-                                ((Player) e).getMaxHealth()));
-                        ChatUtil.sendNotice((Player) e, "You are healed by an ancient force.");
-                    } else if (EnvironmentUtil.isHostileEntity(e)) {
+                    if (e.getType() == entity.getType()) {
+                        ((LivingEntity) e).setHealth(Math.min(((LivingEntity) e).getHealth() + attackDamage,
+                                ((LivingEntity) e).getMaxHealth()));
+                        if (e instanceof Player) {
+                            ChatUtil.sendNotice((Player) e, "You are healed by an ancient force.");
+                        }
+                    } else if (!(entity instanceof Player) || EnvironmentUtil.isHostileEntity(e)) {
+                        if (e instanceof Player) {
+                            server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
+                        }
                         e.setVelocity(new Vector(
                                 Math.random() * 3 - 1.5,
                                 Math.random() * 4,

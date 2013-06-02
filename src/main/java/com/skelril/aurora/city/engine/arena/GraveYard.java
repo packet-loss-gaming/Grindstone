@@ -8,11 +8,13 @@ import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PlayerSacrificeItemEvent;
+import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
@@ -42,10 +44,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityInteractEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -170,6 +169,12 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     }
 
     @EventHandler(ignoreCancelled = true)
+    public void onPrayerApplication(PrayerApplicationEvent event) {
+
+        if (isHostileTempleArea(event.getPlayer().getLocation())) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onThunderChange(ThunderChangeEvent event) {
 
         if (event.toThunderState() && !event.getWorld().isThundering()) {
@@ -209,6 +214,86 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
     }
 
+    private static Set<PotionEffectType> excludedTypes = new HashSet<>();
+
+    static {
+        excludedTypes.add(PotionEffectType.SLOW);
+        excludedTypes.add(PotionEffectType.POISON);
+        excludedTypes.add(PotionEffectType.WEAKNESS);
+        excludedTypes.add(PotionEffectType.REGENERATION);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+
+        Entity aDefender = event.getEntity();
+        Entity aAttacker = event.getDamager();
+
+        if (!(aDefender instanceof LivingEntity)) return;
+        if (isHostileTempleArea(event.getEntity().getLocation())) {
+
+            int damage = event.getDamage();
+            LivingEntity defender = (LivingEntity) aDefender;
+            if (ItemUtil.hasAncientArmour(defender) && !(getWorld().isThundering() && defender instanceof Player)) {
+                int diff = defender.getMaxHealth() - defender.getHealth();
+                if (ChanceUtil.getChance(Math.max(3, defender.getMaxHealth() - diff))) {
+                    EffectUtil.Ancient.powerBurst(defender, damage);
+                }
+            }
+
+            if (aAttacker instanceof Player) {
+                Player player = (Player) aAttacker;
+
+                for (PotionEffect effect : player.getActivePotionEffects()) {
+
+                    if (!excludedTypes.contains(effect.getType())) {
+                        defender.addPotionEffect(effect);
+                    }
+                }
+
+                if (getWorld().isThundering()) return;
+
+                if (ItemUtil.hasMasterSword(player)) {
+
+                    if (ChanceUtil.getChance(10)) {
+                        EffectUtil.Master.healingLight(player, defender);
+                    }
+
+                    if (ChanceUtil.getChance(18)) {
+                        List<LivingEntity> entities = new ArrayList<>();
+                        for (Entity e : player.getNearbyEntities(6, 4, 6)) {
+
+                            if (EnvironmentUtil.isHostileEntity(e)) entities.add((LivingEntity) e);
+                        }
+                        EffectUtil.Master.doomBlade(player, entities);
+                    }
+                }
+            } else if (defender instanceof Player) {
+
+                Player player = (Player) defender;
+                Iterator<PotionEffect> potionIt = player.getActivePotionEffects().iterator();
+                while (potionIt.hasNext()) {
+
+                    potionIt.next();
+                    if (ChanceUtil.getChance(18)) {
+                        potionIt.remove();
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPotionSplash(PotionSplashEvent event) {
+
+        for (Entity entity : event.getAffectedEntities()) {
+            if (entity != null && entity instanceof Player && ChanceUtil.getChance(14)) {
+                ((Player) entity).removePotionEffect(PotionEffectType.REGENERATION);
+                ((Player) entity).removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+            }
+        }
+    }
+
     private void localSpawn(Player player) {
 
         localSpawn(player, false);
@@ -237,7 +322,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                         ItemUtil.Ancient.makeBoots(), ItemUtil.Ancient.makeLegs(),
                         ItemUtil.Ancient.makeChest(), ItemUtil.Ancient.makeHelmet()
                 });
-                equipment.setItemInHand(ItemUtil.Master.makeSword());
+                equipment.setItemInHand(ItemUtil.God.makeSword());
 
                 // Drop Chances
                 equipment.setItemInHandDropChance(0);
