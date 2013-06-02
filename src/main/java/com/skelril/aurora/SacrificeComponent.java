@@ -443,7 +443,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         }
                         break;
                     case 20:
-                        itemStack = new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(4), (short) 1);
+                        itemStack = new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(9));
                         break;
                     case 21:
                         itemStack = new ItemStack(ItemID.DIAMOND_HELMET);
