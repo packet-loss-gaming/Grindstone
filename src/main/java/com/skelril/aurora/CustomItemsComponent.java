@@ -7,6 +7,7 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.entity.ProjectileTickEvent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
@@ -15,7 +16,11 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import net.h31ix.anticheat.api.AnticheatAPI;
+import net.h31ix.anticheat.manage.CheckType;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -33,13 +38,12 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.player.PlayerExpChangeEvent;
-import org.bukkit.event.player.PlayerItemConsumeEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
@@ -53,10 +57,15 @@ import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Custom Items Component", desc = "Custom Items")
+@Depend(components = {AntiCheatCompatibilityComponent.class})
 public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Server server = CommandBook.server();
+
+    @InjectComponent
+    private AntiCheatCompatibilityComponent antiCheat;
+
     private WorldGuardPlugin WG;
 
     @Override
@@ -349,6 +358,40 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 }, 3);
             }
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+
+        Player player = event.getPlayer();
+        ItemStack itemStack = event.getItem();
+
+        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
+            event.setCancelled(handleRightClick(player, event.getClickedBlock().getLocation(), itemStack));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+
+        Player player = event.getPlayer();
+        ItemStack itemStack = player.getItemInHand();
+
+        event.setCancelled(handleRightClick(player, event.getRightClicked().getLocation(), itemStack));
+    }
+
+    public boolean handleRightClick(Player player, Location location, ItemStack itemStack) {
+
+        if (ItemUtil.matchesFilter(itemStack, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+            player.setAllowFlight(!player.getAllowFlight());
+            if (player.getAllowFlight()) {
+                antiCheat.exempt(player, CheckType.FLY);
+            } else {
+                antiCheat.unexempt(player, CheckType.FLY);
+            }
+            return true;
+        }
+        return false;
     }
 
     @EventHandler(ignoreCancelled = true)

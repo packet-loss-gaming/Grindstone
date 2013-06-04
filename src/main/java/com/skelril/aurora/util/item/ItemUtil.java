@@ -282,7 +282,7 @@ public class ItemUtil {
         }
     }
 
-    public static class GraveYard {
+    public static class Misc {
 
         public static ItemStack gemOfDarkness(int amount) {
 
@@ -329,6 +329,15 @@ public class ItemUtil {
             ((Repairable) chickenMeta).setRepairCost(400);
             chickenBow.setItemMeta(chickenMeta);
             return chickenBow;
+        }
+
+        public static ItemStack magicBucket() {
+
+            ItemStack magicBucket = new ItemStack(ItemID.BUCKET);
+            ItemMeta magicMeta = magicBucket.getItemMeta();
+            magicMeta.setDisplayName(ChatColor.DARK_PURPLE + "Magic Bucket");
+            magicBucket.setItemMeta(magicMeta);
+            return magicBucket;
         }
     }
 
@@ -600,15 +609,6 @@ public class ItemUtil {
     public static int fortuneMultiplier(ItemStack pickaxe) {
 
         if (!pickaxe.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS)) return 1;
-        switch (pickaxe.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS)) {
-            case 1:
-                return 2;
-            case 2:
-                return 3;
-            case 3:
-                return 4;
-            default:
-                return 1;
-        }
+        return pickaxe.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS) + 1;
     }
 }

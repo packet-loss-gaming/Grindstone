@@ -454,7 +454,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             player.getInventory().addItem(item);
             int amount = Math.min(c, 64);
             while (amount > 0) {
-                player.getInventory().addItem(ItemUtil.GraveYard.gemOfDarkness(amount));
+                player.getInventory().addItem(ItemUtil.Misc.gemOfDarkness(amount));
                 c -= amount;
                 amount = Math.min(c, 64);
             }
@@ -472,7 +472,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             player.getInventory().addItem(item);
             int amount = Math.min(c, 64);
             while (amount > 0) {
-                player.getInventory().addItem(ItemUtil.GraveYard.imbuedCrystal(amount));
+                player.getInventory().addItem(ItemUtil.Misc.imbuedCrystal(amount));
                 c -= amount;
                 amount = Math.min(c, 64);
             }
@@ -499,19 +499,19 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 }
 
                 if (ChanceUtil.getChance(10000)) {
-                    drops.add(ItemUtil.GraveYard.imbuedCrystal(1));
+                    drops.add(ItemUtil.Misc.imbuedCrystal(1));
                 }
 
                 if (ChanceUtil.getChance(6000) || getWorld().isThundering() && ChanceUtil.getChance(4000)) {
-                    drops.add(ItemUtil.GraveYard.batBow());
+                    drops.add(ItemUtil.Misc.batBow());
                 }
 
                 if (ChanceUtil.getChance(6000) || getWorld().isThundering() && ChanceUtil.getChance(4000)) {
-                    drops.add(ItemUtil.GraveYard.gemOfDarkness(1));
+                    drops.add(ItemUtil.Misc.gemOfDarkness(1));
                 }
 
                 if (ChanceUtil.getChance(400)) {
-                    drops.add(ItemUtil.GraveYard.phantomGold(ChanceUtil.getRandom(3)));
+                    drops.add(ItemUtil.Misc.phantomGold(ChanceUtil.getRandom(3)));
                 }
 
                 if (ChanceUtil.getChance(1000000)) {
@@ -540,19 +540,19 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 }
 
                 if (ChanceUtil.getChance(100)) {
-                    drops.add(ItemUtil.GraveYard.imbuedCrystal(1));
+                    drops.add(ItemUtil.Misc.imbuedCrystal(1));
                 }
 
                 if (ChanceUtil.getChance(60) || getWorld().isThundering() && ChanceUtil.getChance(40)) {
-                    drops.add(ItemUtil.GraveYard.batBow());
+                    drops.add(ItemUtil.Misc.batBow());
                 }
 
                 if (ChanceUtil.getChance(60) || getWorld().isThundering() && ChanceUtil.getChance(40)) {
-                    drops.add(ItemUtil.GraveYard.gemOfDarkness(1));
+                    drops.add(ItemUtil.Misc.gemOfDarkness(1));
                 }
 
                 if (ChanceUtil.getChance(20)) {
-                    drops.add(ItemUtil.GraveYard.phantomGold(1));
+                    drops.add(ItemUtil.Misc.phantomGold(1));
                 }
 
                 if (ChanceUtil.getChance(8000)) {
@@ -997,13 +997,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private ItemStack pickRandomItem() {
 
-        switch (ChanceUtil.getRandom(44)) {
-            case 1:
-                if (!ChanceUtil.getChance(10)) return null;
-                return ItemUtil.Master.makeSword();
-            case 2:
-                if (!ChanceUtil.getChance(10)) return null;
-                return ItemUtil.Master.makeBow();
+        switch (ChanceUtil.getRandom(46)) {
             case 3:
                 if (!ChanceUtil.getChance(17)) return null;
                 return ItemUtil.Fear.makeSword();
@@ -1017,13 +1011,13 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 if (!ChanceUtil.getChance(25)) return null;
                 return ItemUtil.Unleashed.makeBow();
             case 7:
-                return ItemUtil.GraveYard.imbuedCrystal(ChanceUtil.getRandom(3));
+                return ItemUtil.Misc.imbuedCrystal(ChanceUtil.getRandom(3));
             case 8:
-                return ItemUtil.GraveYard.gemOfDarkness(ChanceUtil.getRandom(3));
+                return ItemUtil.Misc.gemOfDarkness(ChanceUtil.getRandom(3));
             case 9:
-                return ItemUtil.GraveYard.batBow();
+                return ItemUtil.Misc.batBow();
             case 10:
-                return ItemUtil.GraveYard.phantomGold(ChanceUtil.getRandom(64));
+                return ItemUtil.Misc.phantomGold(ChanceUtil.getRandom(64));
             case 11:
                 return ItemUtil.Ancient.makeHelmet();
             case 12:

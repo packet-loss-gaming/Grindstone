@@ -645,11 +645,14 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 if (ChanceUtil.getChance(25)) {
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
-                if (ChanceUtil.getChance(250)) {
+                if (ChanceUtil.getChance(138)) {
                     event.getDrops().add(ItemUtil.Master.makeSword());
                 }
-                if (ChanceUtil.getChance(250)) {
+                if (ChanceUtil.getChance(138)) {
                     event.getDrops().add(ItemUtil.Master.makeBow());
+                }
+                if (ChanceUtil.getChance(200)) {
+                    event.getDrops().add(ItemUtil.Misc.magicBucket());
                 }
 
                 lastDeath = System.currentTimeMillis();

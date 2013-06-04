@@ -723,7 +723,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
 
         @Command(aliases = {"graveyard"}, desc = "Lost Grave Yard items")
-        @NestedCommand({LostGraveYardItem.class})
+        @NestedCommand({LostMiscItem.class})
         public void lostGraveYardCommands(CommandContext args, CommandSender sender) throws CommandException {
 
         }
@@ -993,12 +993,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
-    public class LostGraveYardItem {
+    public class LostMiscItem {
 
         @Command(aliases = {"gemofdarkness"},
                 usage = "<player> [amount]", desc = "Give a player some Gems of Darkness",
                 flags = "", min = 1, max = 2)
-        @CommandPermissions({"aurora.lost.graveyard.gemofdarkness"})
+        @CommandPermissions({"aurora.lost.misc.gemofdarkness"})
         public void lostGemOfDarknessCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
@@ -1008,7 +1008,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 amount = args.getInteger(1);
             }
 
-            ItemStack stack = ItemUtil.GraveYard.gemOfDarkness(Math.max(0, Math.min(64, amount)));
+            ItemStack stack = ItemUtil.Misc.gemOfDarkness(Math.max(0, Math.min(64, amount)));
             player.getInventory().addItem(stack);
 
             // Tell Admin
@@ -1019,7 +1019,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @Command(aliases = {"phantomgold"},
                 usage = "<player> [amount]", desc = "Give a player some Phantom Gold",
                 flags = "", min = 1, max = 2)
-        @CommandPermissions({"aurora.lost.graveyard.phantomgold"})
+        @CommandPermissions({"aurora.lost.misc.phantomgold"})
         public void lostPhantomGoldCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
@@ -1029,7 +1029,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 amount = args.getInteger(1);
             }
 
-            ItemStack stack = ItemUtil.GraveYard.phantomGold(Math.max(0, Math.min(64, amount)));
+            ItemStack stack = ItemUtil.Misc.phantomGold(Math.max(0, Math.min(64, amount)));
             player.getInventory().addItem(stack);
 
             // Tell Admin
@@ -1040,7 +1040,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @Command(aliases = {"imbuedcrystal"},
                 usage = "<player> [amount]", desc = "Give a player some Imbued Crystals",
                 flags = "", min = 1, max = 2)
-        @CommandPermissions({"aurora.lost.graveyard.imbuedcrystal"})
+        @CommandPermissions({"aurora.lost.misc.imbuedcrystal"})
         public void lostImbuedCrystalCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
@@ -1050,7 +1050,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 amount = args.getInteger(1);
             }
 
-            ItemStack stack = ItemUtil.GraveYard.imbuedCrystal(Math.max(0, Math.min(64, amount)));
+            ItemStack stack = ItemUtil.Misc.imbuedCrystal(Math.max(0, Math.min(64, amount)));
             player.getInventory().addItem(stack);
 
             // Tell Admin
@@ -1061,12 +1061,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @Command(aliases = {"batbow"},
                 usage = "<player>", desc = "Return a player's Bat Bow",
                 flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.lost.graveyard.bow.bat"})
+        @CommandPermissions({"aurora.lost.misc.bow.bat"})
         public void lostBatBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.GraveYard.batBow());
+            player.getInventory().addItem(ItemUtil.Misc.batBow());
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: "
@@ -1076,16 +1076,31 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @Command(aliases = {"chickenbow"},
                 usage = "<player>", desc = "Return a player's Chicken Bow",
                 flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.lost.graveyard.bow.chicken"})
+        @CommandPermissions({"aurora.lost.misc.bow.chicken"})
         public void lostChickenBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.GraveYard.chickenBow());
+            player.getInventory().addItem(ItemUtil.Misc.chickenBow());
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: "
                     + player.getDisplayName() + " has been a new Chicken Bow.");
+        }
+
+        @Command(aliases = {"magicbucket"},
+                usage = "<player>", desc = "Return a player's Magic Bucket",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.misc.magicbucket"})
+        public void lostMagicBucketCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.Misc.magicBucket());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: "
+                    + player.getDisplayName() + " has been a new Magic Bucket.");
         }
     }
 
