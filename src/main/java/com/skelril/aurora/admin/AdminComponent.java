@@ -45,8 +45,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -424,6 +423,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     private static Set<InventoryType> accepted = new HashSet<>();
+    private static Set<InventoryAction> acceptedActions = new HashSet<>();
 
     static {
         accepted.add(InventoryType.PLAYER);
@@ -432,9 +432,21 @@ public class AdminComponent extends BukkitComponent implements Listener {
         accepted.add(InventoryType.ENCHANTING);
         accepted.add(InventoryType.WORKBENCH);
         accepted.add(InventoryType.ANVIL);
+
+        acceptedActions.add(InventoryAction.SWAP_WITH_CURSOR);
+        acceptedActions.add(InventoryAction.CLONE_STACK);
+
+        acceptedActions.add(InventoryAction.PLACE_ALL);
+        acceptedActions.add(InventoryAction.PICKUP_SOME);
+        acceptedActions.add(InventoryAction.PLACE_ONE);
+
+        acceptedActions.add(InventoryAction.PICKUP_ALL);
+        acceptedActions.add(InventoryAction.PICKUP_HALF);
+        acceptedActions.add(InventoryAction.PICKUP_SOME);
+        acceptedActions.add(InventoryAction.PICKUP_ONE);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerClick(InventoryClickEvent event) {
 
         if (!(event.getWhoClicked() instanceof Player)) return;
@@ -444,11 +456,38 @@ public class AdminComponent extends BukkitComponent implements Listener {
         if (isSysop(player)) return;
 
         //InventoryType.SlotType st = event.getSlotType();
-        if (isAdmin(player) && (event.getCurrentItem() != null && event.getCurrentItem().getTypeId() != 0
-                || event.getCursor() != null && event.getCursor().getTypeId() != 0)
-                && !accepted.contains(event.getInventory().getType())) {
+        if (isAdmin(player) && !accepted.contains(event.getInventory().getType())) {
+
+            if (event.getAction().equals(InventoryAction.NOTHING)) return;
+            if (acceptedActions.contains(event.getAction())) {
+                if (event.getRawSlot() + 1 > event.getInventory().getSize()) {
+                    return;
+                }
+            }
+
             event.setResult(Event.Result.DENY);
-            ChatUtil.sendWarning((Player) event.getWhoClicked(), "You cannot do this while in admin mode.");
+            ChatUtil.sendWarning(player, "You cannot do this while in admin mode.");
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDrag(InventoryDragEvent event) {
+
+        if (!(event.getWhoClicked() instanceof Player)) return;
+
+        Player player = (Player) event.getWhoClicked();
+
+        if (isSysop(player)) return;
+
+        if (isAdmin(player) && !accepted.contains(event.getInventory().getType())) {
+
+            for (int i : event.getRawSlots()) {
+                if (i + 1 <= event.getInventory().getSize()) {
+                    event.setResult(Event.Result.DENY);
+                    ChatUtil.sendWarning(player, "You cannot do this while in admin mode.");
+                    return;
+                }
+            }
         }
     }
 
