@@ -36,9 +36,7 @@ public class FlightComponent extends BukkitComponent implements Listener {
     // Player Management Section
     private void wingPlayer(Player player) {
 
-        player.setAllowFlight(true);
-        player.setFlying(true);
-        ChatUtil.sendNotice(player, "You gain wings and can fly!");
+        wingPlayer(player, .3F);
     }
 
     private void wingPlayer(Player player, float speed) {
@@ -46,7 +44,6 @@ public class FlightComponent extends BukkitComponent implements Listener {
         final boolean couldFly = player.getAllowFlight();
 
         player.setAllowFlight(true);
-        player.setFlying(true);
         player.setFlySpeed(speed);
 
         if (couldFly) ChatUtil.sendNotice(player, "Your wings have been changed!");
@@ -55,9 +52,8 @@ public class FlightComponent extends BukkitComponent implements Listener {
 
     private void dewingPlayer(Player player) {
 
-        player.setFallDistance(0);
-        player.setFlying(false);
         player.setAllowFlight(false);
+        player.setFallDistance(0F);
         ChatUtil.sendWarning(player, "You loose your wings and can no longer fly.");
     }
 

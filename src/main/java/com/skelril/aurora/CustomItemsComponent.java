@@ -19,30 +19,18 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import net.h31ix.anticheat.api.AnticheatAPI;
 import net.h31ix.anticheat.manage.CheckType;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
-import org.bukkit.entity.Bat;
-import org.bukkit.entity.Chicken;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Pig;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.*;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityInteractEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -380,18 +368,83 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         event.setCancelled(handleRightClick(player, event.getRightClicked().getLocation(), itemStack));
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerBucketFill(PlayerBucketFillEvent event) {
+
+        Player player = event.getPlayer();
+        ItemStack itemStack = player.getItemInHand();
+
+        event.setCancelled(handleRightClick(player, event.getBlockClicked().getLocation(), itemStack));
+        //noinspection deprecation
+        player.updateInventory();
+    }
+
     public boolean handleRightClick(Player player, Location location, ItemStack itemStack) {
 
         if (ItemUtil.matchesFilter(itemStack, ChatColor.DARK_PURPLE + "Magic Bucket")) {
             player.setAllowFlight(!player.getAllowFlight());
             if (player.getAllowFlight()) {
                 antiCheat.exempt(player, CheckType.FLY);
+                ChatUtil.sendNotice(player, "The bucket glows brightly.");
             } else {
                 antiCheat.unexempt(player, CheckType.FLY);
+                ChatUtil.sendNotice(player, "The power of the bucket fades.");
             }
             return true;
         }
         return false;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
+
+        final Player player = event.getPlayer();
+        ItemStack itemStack = event.getItemDrop().getItemStack();
+
+        if (ItemUtil.matchesFilter(itemStack, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+                    ItemStack[] contents = player.getInventory().getContents();
+                    if (!ItemUtil.findItemOfName(contents, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+                        player.setAllowFlight(false);
+                        antiCheat.unexempt(player, CheckType.FLY);
+                        ChatUtil.sendNotice(player, "The power of the bucket fades.");
+                    }
+                }
+            }, 1);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onClose(InventoryCloseEvent event) {
+
+        Player player = (Player) event.getPlayer();
+
+        if (!player.getAllowFlight()) return;
+
+        ItemStack[] chestContents = event.getInventory().getContents();
+        if (!ItemUtil.findItemOfName(chestContents, ChatColor.DARK_PURPLE + "Magic Bucket")) return;
+
+        ItemStack[] contents = player.getInventory().getContents();
+        if (!ItemUtil.findItemOfName(contents, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+            player.setAllowFlight(false);
+            antiCheat.unexempt(player, CheckType.FLY);
+            ChatUtil.sendNotice(player, "The power of the bucket fades.");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+
+        Player player = event.getEntity();
+        ItemStack[] drops = event.getDrops().toArray(new ItemStack[event.getDrops().size()]);
+
+        if (ItemUtil.findItemOfName(drops, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+            player.setAllowFlight(false);
+            antiCheat.unexempt(player, CheckType.FLY);
+            ChatUtil.sendNotice(player, "The power of the bucket fades.");
+        }
     }
 
     @EventHandler(ignoreCancelled = true)

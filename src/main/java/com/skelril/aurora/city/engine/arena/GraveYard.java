@@ -17,26 +17,10 @@ import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.Sign;
+import org.bukkit.*;
+import org.bukkit.block.*;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.CaveSpider;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Sheep;
-import org.bukkit.entity.ThrownPotion;
-import org.bukkit.entity.Zombie;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -62,15 +46,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -318,7 +294,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 Zombie zombie = (Zombie) spawn(ls, EntityType.ZOMBIE, "Guardian Zombie");
                 EntityEquipment equipment = zombie.getEquipment();
 
-                equipment.setArmorContents(new ItemStack[] {
+                equipment.setArmorContents(new ItemStack[]{
                         ItemUtil.Ancient.makeBoots(), ItemUtil.Ancient.makeLegs(),
                         ItemUtil.Ancient.makeChest(), ItemUtil.Ancient.makeHelmet()
                 });
@@ -764,7 +740,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
     }
 
-    private static final PotionType[] thrownTypes = new PotionType[] {
+    private static final PotionType[] thrownTypes = new PotionType[]{
             PotionType.INSTANT_DAMAGE, PotionType.POISON, PotionType.WEAKNESS,
             PotionType.SLOWNESS
     };
@@ -1173,7 +1149,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private boolean isInEvilRegion(Location location) {
 
-        for (ProtectedRegion region : new ProtectedRegion[] {temple}) {
+        for (ProtectedRegion region : new ProtectedRegion[]{temple}) {
             if (LocationUtil.isInRegion(getWorld(), region, location)) return true;
         }
         return location.getY() < 69 && contains(location);

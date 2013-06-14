@@ -10,18 +10,7 @@ import com.sk89q.worldguard.protection.GlobalRegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
-import com.skelril.aurora.city.engine.arena.CommandTriggeredArena;
-import com.skelril.aurora.city.engine.arena.CursedMine;
-import com.skelril.aurora.city.engine.arena.DropPartyArena;
-import com.skelril.aurora.city.engine.arena.DynamicSandArena;
-import com.skelril.aurora.city.engine.arena.EnchantedForest;
-import com.skelril.aurora.city.engine.arena.GenericArena;
-import com.skelril.aurora.city.engine.arena.GiantBossArena;
-import com.skelril.aurora.city.engine.arena.GoldRush;
-import com.skelril.aurora.city.engine.arena.GraveYard;
-import com.skelril.aurora.city.engine.arena.HotSpringArena;
-import com.skelril.aurora.city.engine.arena.Prison;
-import com.skelril.aurora.city.engine.arena.SnowSpleefArena;
+import com.skelril.aurora.city.engine.arena.*;
 import com.skelril.aurora.city.engine.arena.factory.FactoryFloor;
 import com.skelril.aurora.city.engine.arena.factory.FactoryMech;
 import com.skelril.aurora.economic.ImpersonalComponent;
@@ -41,12 +30,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**

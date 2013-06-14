@@ -1,8 +1,8 @@
 package com.skelril.aurora.anticheat;
 
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.aurora.events.anticheat.FallBlockerEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
+import com.skelril.aurora.events.anticheat.FallBlockerEvent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -117,11 +117,11 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
         }
     }
 
-    private static final CheckType[] playerThrowCheckTypes = new CheckType[] {
+    private static final CheckType[] playerThrowCheckTypes = new CheckType[]{
             CheckType.FLY, CheckType.ZOMBE_FLY, CheckType.SPEED, CheckType.SNEAK, CheckType.SPIDER
     };
-    private static final CheckType[] fallBlockerCheckTypes = new CheckType[] {CheckType.NOFALL};
-    private static final CheckType[] rapidHitCheckTypes = new CheckType[] {
+    private static final CheckType[] fallBlockerCheckTypes = new CheckType[]{CheckType.NOFALL};
+    private static final CheckType[] rapidHitCheckTypes = new CheckType[]{
             CheckType.NO_SWING, CheckType.FORCEFIELD, CheckType.LONG_REACH
     };
 

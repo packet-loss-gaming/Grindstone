@@ -4,8 +4,8 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.anticheat.FallBlockerEvent;
+import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
@@ -124,7 +124,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
             PlayerInventory inventory = player.getInventory();
 
             // Declare Item Stacks
-            ItemStack[] startKit = new ItemStack[] {
+            ItemStack[] startKit = new ItemStack[]{
                     new ItemStack(ItemID.COOKED_BEEF, 32),
                     new ItemStack(ItemID.STONE_PICKAXE),
                     new ItemStack(ItemID.STONE_AXE),

@@ -71,9 +71,9 @@ public class LocationUtil {
         return new Location(world, 592, 83, 1176.5);
     }
 
-    public static void toGround(Player player) {
+    public static boolean toGround(Player player) {
 
-        player.teleport(findFreePosition(player.getLocation()));
+        return player.teleport(findFreePosition(player.getLocation()));
     }
 
     public static Location findFreePosition(Location pos) {
@@ -150,6 +150,12 @@ public class LocationUtil {
                                          boolean trueRandom) {
 
         return findRandomLoc(searchFromLocation.getBlock(), radius, trueRandom);
+    }
+
+    public static Location findRandomLoc(Location searchFromLocation, final int radius,
+                                         boolean trueRandom, boolean airOnly) {
+
+        return findRandomLoc(searchFromLocation.getBlock(), radius, trueRandom, airOnly);
     }
 
     public static Location findRandomLoc(Block searchFromLocation, final int radius, boolean trueRandom) {

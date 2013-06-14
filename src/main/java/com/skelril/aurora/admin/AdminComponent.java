@@ -3,12 +3,7 @@ package com.skelril.aurora.admin;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.GodComponent;
 import com.sk89q.commandbook.util.PlayerUtil;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandException;
-import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.minecraft.util.commands.CommandPermissionsException;
-import com.sk89q.minecraft.util.commands.NestedCommand;
+import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
@@ -25,12 +20,7 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -45,22 +35,17 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.*;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -145,7 +130,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * This method is used to determine if the player is in Admin Mode.
      *
      * @param player - The player to check
-     *
      * @return - true if the player is in Admin Mode
      */
     public boolean isAdmin(Player player) {
@@ -162,7 +146,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * This method is used to determine the {@link AdminState} of the player.
      *
      * @param player - The player to check
-     *
      * @return - The {@link AdminState} of the player
      */
     public AdminState getAdminState(Player player) {
@@ -183,7 +166,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
      *
      * @param player     - The player to execute this for
      * @param adminState - The {@link AdminState} to attempt to achieve
-     *
      * @return - true if the player entered a level of Admin Mode
      */
     public boolean admin(Player player, AdminState adminState) {
@@ -273,17 +255,42 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * This method is used when removing permissions is not required just the current admin powers.
      *
      * @param player - The player to disable power for
-     *
      * @return - true if all active powers have been disabled
      */
-    public boolean depowerPlayer(Player player) {
+    public boolean depowerPlayer(final Player player) {
 
         if (worldEdit().getSession(player).hasSuperPickAxe()) worldEdit().getSession(player).disableSuperPickAxe();
         if (godComponent.hasGodMode(player)) godComponent.disableGodMode(player);
         if (player.getGameMode().equals(GameMode.CREATIVE)) player.setGameMode(GameMode.SURVIVAL);
         if (player.getAllowFlight()) {
             player.setAllowFlight(false);
-            player.setFallDistance(0);
+            player.setFallDistance(0F);
+
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+                    Location toBlock = LocationUtil.findFreePosition(player.getLocation());
+                    boolean done = toBlock != null && player.teleport(toBlock);
+                    short max = 200;
+
+                    while (!done && max > 0) {
+
+                        max--;
+
+                        if (toBlock == null) toBlock = player.getLocation();
+
+                        toBlock = LocationUtil.findRandomLoc(toBlock, 1, false, false);
+
+                        Location testBlock = LocationUtil.findFreePosition(toBlock);
+                        done = testBlock != null && player.teleport(testBlock);
+                    }
+
+                    if (max <= 0) {
+                        player.teleport(player.getWorld().getSpawnLocation());
+                        ChatUtil.sendError(player, "Failed to locate a safe location, teleporting to spawn!");
+                    }
+                }
+            }, 1);
         }
         return true;
     }
@@ -293,7 +300,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * lowest level possible.
      *
      * @param player - The player to remove from Admin Mode
-     *
      * @return - true if all active powers and elevated permission levels have been removed
      */
     public boolean deadmin(Player player) {
@@ -313,7 +319,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * and the {@link RogueComponent}.
      *
      * @param player - The player to disable guild powers for
-     *
      * @return - true if all active guild powers have been disabled
      */
     public boolean deguildPlayer(Player player) {
@@ -328,7 +333,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * deguildPlayer method supports.
      *
      * @param player - The player to remove from Admin Mode and remove guild and admin powers for
-     *
      * @return - true if all active guild and admin powers have been disabled
      */
     public boolean standardizePlayer(Player player) {

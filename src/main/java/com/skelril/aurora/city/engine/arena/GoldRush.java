@@ -8,10 +8,13 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.economic.ImpersonalComponent;
-import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
-import com.skelril.aurora.util.*;
+import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
+import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
@@ -183,7 +186,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     }
 
     private static final ItemStack goldBar = new ItemStack(ItemID.GOLD_BAR);
-    private static final ItemStack[] keys = new ItemStack[] {
+    private static final ItemStack[] keys = new ItemStack[]{
             new ItemStack(BlockID.CLOTH, 1, (short) 11),
             new ItemStack(BlockID.CLOTH, 1, (short) 14)
     };
