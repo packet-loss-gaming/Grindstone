@@ -332,6 +332,23 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                 }
             }
         }
+
+        @Command(aliases = {"dropparty"},
+                usage = "<area name> <value>", desc = "Create a drop party",
+                flags = "", min = 2, max = 2)
+        @CommandPermissions("aurora.arena.trigger")
+        public void dropParty(CommandContext args, CommandSender sender) throws CommandException {
+
+            for (GenericArena arena : arenas) {
+                if (arena instanceof DropPartyArena) {
+                    if (!args.getString(0).equalsIgnoreCase(arena.getId())) {
+                        continue;
+                    }
+                    ((DropPartyArena) arena).drop(args.getInteger(1), 5);
+                    return;
+                }
+            }
+        }
     }
 
     protected WorldGuardPlugin getWorldGuard() {

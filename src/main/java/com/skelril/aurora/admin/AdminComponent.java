@@ -759,15 +759,22 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         }
 
+        @Command(aliases = {"donation"}, desc = "Lost Donation items")
+        @NestedCommand({LostDonationItem.class})
+        public void lostDonationCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+
+
         @Command(aliases = {"admin"}, desc = "Lost Admin items")
         @NestedCommand({LostAdminItem.class})
         public void lostAdminCommands(CommandContext args, CommandSender sender) throws CommandException {
 
         }
 
-        @Command(aliases = {"graveyard"}, desc = "Lost Grave Yard items")
+        @Command(aliases = {"misc"}, desc = "Lost Grave Yard items")
         @NestedCommand({LostMiscItem.class})
-        public void lostGraveYardCommands(CommandContext args, CommandSender sender) throws CommandException {
+        public void lostMiscCommands(CommandContext args, CommandSender sender) throws CommandException {
 
         }
     }
@@ -1147,12 +1154,34 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
+    public class LostDonationItem {
+
+        @Command(aliases = {"butterboots"},
+                usage = "<player>", desc = "Return a player's butter boots",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.donation.butterboots"})
+        public void lostButterBootsCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            ItemStack bootStack = new ItemStack(ItemID.GOLD_BOOTS);
+            ItemMeta butterMeta = bootStack.getItemMeta();
+            butterMeta.setDisplayName(ChatColor.GOLD + "Butter Boots");
+            bootStack.setItemMeta(butterMeta);
+            player.getInventory().addItem(bootStack);
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given new butter boots.");
+        }
+    }
+
     public class LostAdminItem {
 
         @Command(aliases = {"pwngbow"},
                 usage = "<player>", desc = "Return a player's pwngbow",
                 flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.lost.god.pwngbow"})
+        @CommandPermissions({"aurora.lost.admin.pwngbow"})
         public void lostPwngBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));

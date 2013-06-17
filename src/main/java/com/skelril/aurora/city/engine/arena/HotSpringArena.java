@@ -4,6 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import org.bukkit.Effect;
 import org.bukkit.Server;
@@ -116,9 +117,17 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                 player.removePotionEffect(PotionEffectType.SPEED);
                 player.removePotionEffect(PotionEffectType.JUMP);
 
-                player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 300, 2));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 180, 1));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20 * 180, 1));
+                int duration[] = new int[]{300, 180, 180};
+                if (inst.hasPermission(player, "aurora.prayer.intervention")) {
+                    for (int i = 0; i < duration.length; i++) {
+                        duration[i] *= 2;
+                    }
+                    ChatUtil.sendNotice(player, "The gods double the effectiveness of the spring.");
+                }
+
+                player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * duration[0], 2));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * duration[1], 1));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20 * duration[2], 1));
             } catch (Exception e) {
 
                 log.warning("The player: " + player.getName() + " was not boosted by the hot spring: " + getId() + ".");

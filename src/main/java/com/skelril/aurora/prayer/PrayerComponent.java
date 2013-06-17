@@ -128,6 +128,9 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
             case ARROW:
                 prayerEffects = new ArrowFX();
                 break;
+            case BEDROCKBOX:
+                prayerEffects = new BedrockBoxFX();
+                break;
             case BLINDNESS:
                 prayerEffects = new BlindnessFX();
                 break;
@@ -335,7 +338,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                         }
                         if (quantity > 0) sb.append(ChatColor.YELLOW + ", ");
                         sb.append(prayer.isHoly() ? ChatColor.BLUE
-                                                  : ChatColor.RED).append(prayer.toString().toLowerCase());
+                                : ChatColor.RED).append(prayer.toString().toLowerCase());
                         quantity++;
                     }
                     sb.append(ChatColor.YELLOW + ".");

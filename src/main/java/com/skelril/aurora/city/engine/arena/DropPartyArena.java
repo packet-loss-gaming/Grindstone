@@ -57,7 +57,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     @Override
     public void run() {
 
-        drop(true);
+        drop(1216);
     }
 
     @Override
@@ -83,14 +83,20 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         return ArenaType.COMMAND_TRIGGERED;
     }
 
-    private void drop(final boolean populate) {
+    public void drop(int populatorValue) {
 
+        drop(populatorValue, 12);
+    }
+
+    public void drop(int populatorValue, int modifier) {
+
+        final boolean populate = populatorValue > 0;
         Bukkit.broadcastMessage(ChatColor.GOLD + "Drop party in 60 seconds!");
 
         if (populate) {
-            for (int i = 0; i < server.getOnlinePlayers().length * 12; i++) {
+            for (int i = 0; i < server.getOnlinePlayers().length * modifier; i++) {
                 // Stack of Blaze Rod equivalent
-                drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, 1216));
+                drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
             }
         }
 
@@ -204,7 +210,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 }
             }
 
-            drop(false);
+            drop(0);
         }
     }
 }

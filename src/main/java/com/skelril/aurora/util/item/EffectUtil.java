@@ -376,6 +376,11 @@ public class EffectUtil {
 
         public static void mobBarrage(Player owner, Location location, EntityType type) {
 
+            mobBarrage(owner, location, type, false);
+        }
+
+        public static void mobBarrage(Player owner, Location location, EntityType type, boolean silent) {
+
             final List<Entity> entities = new ArrayList<>();
 
             for (int i = 0; i < 125; i++) {
@@ -403,6 +408,8 @@ public class EffectUtil {
                     }
                 }
             }, 20 * 30);
+
+            if (silent) return;
 
             if (type == EntityType.BAT) {
                 ChatUtil.sendNotice(owner, "Your bow releases a batty attack.");

@@ -30,6 +30,7 @@ public enum PrayerType {
     CANNON(1015, CannonFX.class),
     ALONZO(1016, AlonzoFX.class),
     ROCKET(1017, RocketFX.class),
+    BEDROCKBOX(1018, BedrockBoxFX.class),
 
     FIREBALL(2000, ThrownFireballFX.class),
     HEALTH(2001, HealthFX.class),
