@@ -251,7 +251,7 @@ public class FishingComponent extends BukkitComponent implements Listener {
                 fishMeta.setDisplayName(ChatColor.BLUE + "God Fish");
                 fish.setItemMeta(fishMeta);
             }
-            arrow.getWorld().dropItemNaturally(loc, fish);
+            arrow.getWorld().dropItem(loc, fish);
         }
     }
 }
