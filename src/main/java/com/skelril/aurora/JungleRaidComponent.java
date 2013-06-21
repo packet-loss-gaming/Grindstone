@@ -444,7 +444,10 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     }
                     if (gameFlags.contains('p')) {
                         PotionType type = PotionType.values()[ChanceUtil.getRandom(potionAmt) - 1];
-                        if (type == null) continue;
+                        if (type == null || type == PotionType.WATER) {
+                            i--;
+                            continue;
+                        }
                         for (int ii = 0; ii < ChanceUtil.getRandom(5); ii++) {
                             ThrownPotion potion = (ThrownPotion) world.spawnEntity(testLoc, EntityType.SPLASH_POTION);
                             Potion brewedPotion = new Potion(type);

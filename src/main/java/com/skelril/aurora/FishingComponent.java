@@ -21,6 +21,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -134,29 +135,25 @@ public class FishingComponent extends BukkitComponent implements Listener {
         // Basic Checks
         if (!config.enableRareCatches
                 || !player.hasPermission("aurora.fishing.rare")
-                || event.getState() != PlayerFishEvent.State.CAUGHT_ENTITY) return;
+                || event.getState() != PlayerFishEvent.State.CAUGHT_FISH) return;
 
         // Entity Check
-        Entity entity = event.getCaught();
-        Location entityLoc = event.getCaught().getLocation();
-        if (!(entity instanceof Item)) return;
-
-        // Message Info
+        Location entityLoc = event.getHook().getLocation();
 
         // Drop Boolean
         boolean[] fishingDrops = new boolean[6];
-        fishingDrops[0] = ChanceUtil.getChance(25);
-        fishingDrops[1] = ChanceUtil.getChance(35);
-        fishingDrops[2] = ChanceUtil.getChance(50);
-        fishingDrops[3] = ChanceUtil.getChance(75);
-        fishingDrops[4] = ChanceUtil.getChance(100);
-        fishingDrops[5] = ChanceUtil.getChance(500);
+        fishingDrops[0] = ChanceUtil.getChance(7);
+        fishingDrops[1] = ChanceUtil.getChance(8);
+        fishingDrops[2] = ChanceUtil.getChance(15);
+        fishingDrops[3] = ChanceUtil.getChance(25);
+        fishingDrops[4] = ChanceUtil.getChance(35);
+        fishingDrops[5] = ChanceUtil.getChance(50);
 
         // Monster Boolean
         boolean[] fishingMonsters = new boolean[3];
-        fishingMonsters[0] = ChanceUtil.getChance(75);
-        fishingMonsters[1] = ChanceUtil.getChance(75);
-        fishingMonsters[2] = ChanceUtil.getChance(75);
+        fishingMonsters[0] = ChanceUtil.getChance(15);
+        fishingMonsters[1] = ChanceUtil.getChance(15);
+        fishingMonsters[2] = ChanceUtil.getChance(15);
 
         // Execute
         String drop = null;
@@ -197,7 +194,9 @@ public class FishingComponent extends BukkitComponent implements Listener {
         } else if (fishingMonsters[1] && EnvironmentUtil.isNightTime(world.getTime())) {
             creature = "skeleton(s)";
             for (int i = 1; i < ChanceUtil.getRandom(10); i++) {
-                world.spawn(entityLoc, Skeleton.class);
+                Skeleton skeleton = world.spawn(entityLoc, Skeleton.class);
+                EntityEquipment equipment = skeleton.getEquipment();
+                equipment.setItemInHand(new ItemStack(ItemID.BOW));
             }
         } else if (fishingMonsters[0] && EnvironmentUtil.isNightTime(world.getTime())) {
             creature = "zombie(s)";
