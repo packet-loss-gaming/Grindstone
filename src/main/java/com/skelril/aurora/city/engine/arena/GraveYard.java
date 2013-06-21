@@ -973,7 +973,9 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private ItemStack pickRandomItem() {
 
-        switch (ChanceUtil.getRandom(46)) {
+        switch (ChanceUtil.getRandom(47)) {
+            case 2:
+                return ItemUtil.Misc.barbarianBone(ChanceUtil.getRandom(5));
             case 3:
                 if (!ChanceUtil.getChance(17)) return null;
                 return ItemUtil.Fear.makeSword();

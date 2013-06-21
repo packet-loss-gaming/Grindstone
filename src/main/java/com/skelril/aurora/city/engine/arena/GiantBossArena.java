@@ -603,6 +603,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 60 * 3, 1),
             new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 60 * 3, 1)
     };
+    private static String BARBARIAN_BONES = ChatColor.DARK_RED + "Barbarian Bones";
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
@@ -610,7 +611,20 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         if (contains(event.getEntity())) {
             Entity e = event.getEntity();
             if (e instanceof Giant) {
-                int amt = getContainedPlayers() != null ? getContainedPlayers().length : 0;
+                Player[] players = getContainedPlayers();
+                Player player = null;
+                int amt = players != null ? players.length : 0;
+
+                // Figure out if someone has Barbarian Bones
+                if (amt != 0) {
+                    for (Player aPlayer : players) {
+
+                        if (ItemUtil.findItemOfName(aPlayer.getInventory().getContents(), BARBARIAN_BONES)) {
+                            player = aPlayer;
+                            break;
+                        }
+                    }
+                }
 
                 // Sacrificial drops
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, 200000));
@@ -623,17 +637,33 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
 
                 // Unique drops
-                if (ChanceUtil.getChance(25)) {
+                if (ChanceUtil.getChance(25) || player != null && ChanceUtil.getChance(3)) {
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
-                if (ChanceUtil.getChance(138)) {
+                if (ChanceUtil.getChance(138) || player != null && ChanceUtil.getChance(10)) {
                     event.getDrops().add(ItemUtil.Master.makeSword());
                 }
-                if (ChanceUtil.getChance(138)) {
+                if (ChanceUtil.getChance(138) || player != null && ChanceUtil.getChance(10)) {
                     event.getDrops().add(ItemUtil.Master.makeBow());
                 }
-                if (ChanceUtil.getChance(200)) {
+                if (ChanceUtil.getChance(200) || player != null && ChanceUtil.getChance(13)) {
                     event.getDrops().add(ItemUtil.Misc.magicBucket());
+                }
+
+                // Remove the Barbarian Bones
+                if (player != null) {
+                    int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), BARBARIAN_BONES);
+                    ItemStack[] nc = ItemUtil.removeItemOfName(player.getInventory().getContents(), BARBARIAN_BONES);
+                    player.getInventory().setContents(nc);
+
+                    int amount = Math.min(c, 64);
+                    while (amount > 0) {
+                        player.getInventory().addItem(ItemUtil.Misc.barbarianBone(amount));
+                        c -= amount;
+                        amount = Math.min(c, 64);
+                    }
+                    //noinspection deprecation
+                    player.updateInventory();
                 }
 
                 lastDeath = System.currentTimeMillis();

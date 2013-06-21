@@ -311,6 +311,15 @@ public class ItemUtil {
             return gemOfDarkness;
         }
 
+        public static ItemStack barbarianBone(int amount) {
+
+            ItemStack barbarianBones = new ItemStack(ItemID.BONE, amount);
+            ItemMeta boneMeta = barbarianBones.getItemMeta();
+            boneMeta.setDisplayName(ChatColor.DARK_RED + "Barbarian Bone");
+            barbarianBones.setItemMeta(boneMeta);
+            return barbarianBones;
+        }
+
         public static ItemStack batBow() {
 
             ItemStack batBow = new ItemStack(ItemID.BOW);
