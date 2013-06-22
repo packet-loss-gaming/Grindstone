@@ -1,6 +1,7 @@
 package com.skelril.aurora.util.item;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.FreezeComponent;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ClothColor;
@@ -13,7 +14,6 @@ import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
 import org.bukkit.*;
@@ -26,7 +26,10 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -276,8 +279,8 @@ public class EffectUtil {
             final double targetHP = (double) target.getHealth() / (double) target.getMaxHealth();
 
             if (ownerHP > targetHP) {
-                owner.setHealth(owner.getMaxHealth());
-                ChatUtil.sendNotice(owner, "Your weapon fully heals you.");
+                owner.setHealth((int) Math.min(ownerMax, ownerMax * (ownerHP + .1)));
+                ChatUtil.sendNotice(owner, "Your weapon heals you.");
             } else {
                 target.setHealth((int) Math.floor(target.getMaxHealth() * ownerHP));
                 owner.setHealth((int) Math.min(ownerMax, Math.floor(ownerMax * targetHP * 1.25)));
@@ -335,6 +338,21 @@ public class EffectUtil {
                 }
             }
             ChatUtil.sendNotice(owner, "Your sword dishes out an incredible " + dmgTotal + " damage!");
+        }
+
+        public static void evilFocus(Player owner, final LivingEntity target, final FreezeComponent FZ) {
+
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * target.getHealth(), 9));
+            if (target instanceof Player && !FZ.isFrozen((Player) target)) {
+                FZ.freezePlayer((Player) target);
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+                    @Override
+                    public void run() {
+                        FZ.unfreezePlayer((Player) target);
+                    }
+                }, 20 * target.getHealth());
+            }
+            ChatUtil.sendNotice(owner, "Your bow traps your foe in their own sins.");
         }
     }
 

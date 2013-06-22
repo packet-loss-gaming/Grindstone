@@ -1,6 +1,7 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.FreezeComponent;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
@@ -45,7 +46,7 @@ import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Custom Items Component", desc = "Custom Items")
-@Depend(components = {AntiCheatCompatibilityComponent.class})
+@Depend(components = {AntiCheatCompatibilityComponent.class, FreezeComponent.class})
 public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -53,6 +54,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     @InjectComponent
     private AntiCheatCompatibilityComponent antiCheat;
+    @InjectComponent
+    private FreezeComponent freeze;
 
     private WorldGuardPlugin WG;
 
@@ -211,10 +214,17 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             break;
                     }
                 } else if (ItemUtil.hasUnleashedBow(owner)) {
-                    //used = callSpec(owner, target, 17, 18);
-                    //if (used == null) return;
+                    used = callSpec(owner, target, 17, 19);
+                    if (used == null) return;
                     unleashedSpec.put(owner.getName(), System.currentTimeMillis());
-                    ChatUtil.sendError(owner, "This weapon is currently a WIP.");
+                    switch (used) {
+                        case HEALING_LIGHT_BOW:
+                            EffectUtil.Unleashed.lifeLeech(owner, target);
+                            break;
+                        case EVIL_FOCUS:
+                            EffectUtil.Unleashed.evilFocus(owner, target, freeze);
+                            break;
+                    }
                 }
             }
         }

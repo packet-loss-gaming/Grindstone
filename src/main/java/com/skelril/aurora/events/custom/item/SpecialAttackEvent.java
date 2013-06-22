@@ -88,6 +88,9 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
         HEALING_LIGHT,
         DOOM_BLADE,
 
-        MOB_ATTACK
+        MOB_ATTACK,
+
+        HEALING_LIGHT_BOW,
+        EVIL_FOCUS
     }
 }
