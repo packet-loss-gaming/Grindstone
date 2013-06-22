@@ -1,6 +1,9 @@
 package com.skelril.aurora.util.item;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldedit.blocks.BlockType;
+import com.sk89q.worldedit.blocks.ClothColor;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -10,11 +13,10 @@ import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
@@ -24,10 +26,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -135,9 +134,8 @@ public class EffectUtil {
 
                     Vector velocity = owner.getLocation().getDirection().multiply(2);
                     velocity.setY(Math.max(velocity.getY(), Math.random() * 2 + 1.27));
-                    ChatUtil.sendNotice(owner, velocity.toString());
                     e.setVelocity(velocity);
-                    e.setFireTicks(20 * ChanceUtil.getRandom(60));
+                    e.setFireTicks(20 * (ChanceUtil.getRandom(40) + 20));
                 }
             }
             ChatUtil.sendNotice(owner, "You fire a terrifyingly powerful shot.");
@@ -170,9 +168,30 @@ public class EffectUtil {
                 @Override
                 public void run(int times) {
 
+                    Location loc = new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
+                    List<Player> players = null;
+
                     for (Block block : blocks) {
-                        for (int i = 0; i < 20; i++) {
-                            block.getWorld().playEffect(block.getRelative(BlockFace.UP).getLocation(), Effect.SMOKE, 0);
+
+                        if (players == null) {
+                            players = block.getWorld().getPlayers();
+                        }
+
+                        loc = block.getLocation(loc);
+                        while (loc.getY() > 0 && BlockType.canPassThrough(loc.getBlock().getTypeId())) {
+                            loc.add(0, -1, 0);
+                        }
+
+                        if (times % 2 == 0) {
+                            for (Player player : players) {
+                                if (!player.isValid()) continue;
+                                player.sendBlockChange(loc, BlockID.CLOTH, (byte) ClothColor.WHITE.getID());
+                            }
+                        } else {
+                            for (Player player : players) {
+                                if (!player.isValid()) continue;
+                                player.sendBlockChange(loc, BlockID.CLOTH, (byte) ClothColor.RED.getID());
+                            }
                         }
                     }
                 }
@@ -180,10 +199,19 @@ public class EffectUtil {
                 @Override
                 public void end() {
 
+                    Location loc = new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
+                    List<Chunk> chunks = new ArrayList<>();
+
                     for (Block block : blocks) {
-                        block.getWorld().createExplosion(block.getLocation(), 0F);
-                        for (Entity entity : block.getChunk().getEntities()) {
-                            if (!(entity instanceof LivingEntity)) continue;
+
+                        loc = block.getLocation(loc);
+                        while (loc.getY() > 0 && BlockType.canPassThrough(loc.getBlock().getTypeId())) {
+                            loc.add(0, -1, 0);
+                        }
+
+                        block.getWorld().createExplosion(loc, 0F);
+                        for (Entity entity : block.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
+                            if (!entity.isValid()) continue;
                             if (entity instanceof Player) {
                                 if (mgr != null) {
                                     if (!mgr.getApplicableRegions(entity.getLocation()).allows(DefaultFlag.PVP)) {
@@ -191,10 +219,27 @@ public class EffectUtil {
                                     }
                                 }
                             }
-                            if (entity.getLocation().distanceSquared(block.getLocation()) <= 4) {
-                                ((LivingEntity) entity).setHealth(0);
+                            if (entity.getLocation().distanceSquared(loc) <= 4) {
+                                ((LivingEntity) entity).damage(10000);
                             }
                         }
+
+                        Chunk chunk = block.getChunk();
+                        int x = chunk.getX();
+                        int z = chunk.getZ();
+
+                        findChunk:
+                        {
+                            for (Chunk aChunk : chunks) {
+                                if (aChunk.getX() == x && aChunk.getZ() == z) break findChunk;
+                            }
+
+                            chunks.add(chunk);
+                        }
+                    }
+
+                    for (Chunk chunk : chunks) {
+                        loc.getWorld().refreshChunk(chunk.getX(), chunk.getZ());
                     }
                 }
             };
