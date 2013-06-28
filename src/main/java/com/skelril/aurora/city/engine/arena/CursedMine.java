@@ -26,10 +26,7 @@ import com.skelril.aurora.util.item.ItemUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Blaze;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Wolf;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -39,6 +36,8 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
@@ -252,7 +251,12 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             int id = item.getItemStack().getTypeId();
             for (int aItem : items) {
                 if (aItem == id) {
-                    item.getItemStack().setAmount((int) (item.getItemStack().getAmount() * .8));
+                    double newAmt = item.getItemStack().getAmount() * .8;
+                    if (newAmt < 1) {
+                        item.remove();
+                    } else {
+                        item.getItemStack().setAmount((int) newAmt);
+                    }
                     break;
                 }
             }
@@ -261,50 +265,58 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     public void drain() {
 
-        for (Player player : getContainedPlayers()) {
+        for (Entity e : getContainedEntities()) {
+            if (!(e instanceof InventoryHolder)) continue;
             try {
-                PlayerInventory pInventory = player.getInventory();
+                Inventory eInventory = ((InventoryHolder) e).getInventory();
 
-                for (int i = 0; i < (ItemUtil.countFilledSlots(pInventory.getContents()) / 2) - 2 || i < 1; i++) {
+                for (int i = 0; i < (ItemUtil.countFilledSlots(eInventory.getContents()) / 2) - 2 || i < 1; i++) {
 
-                    if (ChanceUtil.getChance(15) && checkInventory(player, pInventory.getContents())) {
-                        ChatUtil.sendNotice(player, "Divine intervention protects some of your items.");
-                        continue;
+                    if (e instanceof Player) {
+                        if (ChanceUtil.getChance(15) && checkInventory((Player) e, eInventory.getContents())) {
+                            ChatUtil.sendNotice((Player) e, "Divine intervention protects some of your items.");
+                            continue;
+                        }
                     }
 
                     // Iron
-                    pInventory.removeItem(new ItemStack(BlockID.IRON_BLOCK, ChanceUtil.getRandom(2)));
-                    pInventory.removeItem(new ItemStack(BlockID.IRON_ORE, ChanceUtil.getRandom(4)));
-                    pInventory.removeItem(new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(8)));
+                    eInventory.removeItem(new ItemStack(BlockID.IRON_BLOCK, ChanceUtil.getRandom(2)));
+                    eInventory.removeItem(new ItemStack(BlockID.IRON_ORE, ChanceUtil.getRandom(4)));
+                    eInventory.removeItem(new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(8)));
 
                     // Gold
-                    pInventory.removeItem(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRandom(2)));
-                    pInventory.removeItem(new ItemStack(BlockID.GOLD_ORE, ChanceUtil.getRandom(4)));
-                    pInventory.removeItem(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(10)));
-                    pInventory.removeItem(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(80)));
+                    eInventory.removeItem(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRandom(2)));
+                    eInventory.removeItem(new ItemStack(BlockID.GOLD_ORE, ChanceUtil.getRandom(4)));
+                    eInventory.removeItem(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(10)));
+                    eInventory.removeItem(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(80)));
 
                     // Redstone
-                    pInventory.removeItem(new ItemStack(BlockID.REDSTONE_ORE, ChanceUtil.getRandom(2)));
-                    pInventory.removeItem(new ItemStack(BlockID.GLOWING_REDSTONE_ORE, ChanceUtil.getRandom(2)));
-                    pInventory.removeItem(new ItemStack(ItemID.REDSTONE_DUST, ChanceUtil.getRandom(34)));
+                    eInventory.removeItem(new ItemStack(BlockID.REDSTONE_ORE, ChanceUtil.getRandom(2)));
+                    eInventory.removeItem(new ItemStack(BlockID.GLOWING_REDSTONE_ORE, ChanceUtil.getRandom(2)));
+                    eInventory.removeItem(new ItemStack(ItemID.REDSTONE_DUST, ChanceUtil.getRandom(34)));
 
                     // Lap
-                    pInventory.removeItem(new ItemStack(BlockID.LAPIS_LAZULI_BLOCK, ChanceUtil.getRandom(2)));
-                    pInventory.removeItem(new ItemStack(BlockID.LAPIS_LAZULI_ORE, ChanceUtil.getRandom(4)));
-                    pInventory.removeItem(new ItemStack(ItemID.INK_SACK, ChanceUtil.getRandom(34), (short) 4));
+                    eInventory.removeItem(new ItemStack(BlockID.LAPIS_LAZULI_BLOCK, ChanceUtil.getRandom(2)));
+                    eInventory.removeItem(new ItemStack(BlockID.LAPIS_LAZULI_ORE, ChanceUtil.getRandom(4)));
+                    eInventory.removeItem(new ItemStack(ItemID.INK_SACK, ChanceUtil.getRandom(34), (short) 4));
 
                     // Diamond
-                    pInventory.removeItem(new ItemStack(BlockID.DIAMOND_BLOCK, ChanceUtil.getRandom(2)));
-                    pInventory.removeItem(new ItemStack(BlockID.DIAMOND_ORE, ChanceUtil.getRandom(4)));
-                    pInventory.removeItem(new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(16)));
+                    eInventory.removeItem(new ItemStack(BlockID.DIAMOND_BLOCK, ChanceUtil.getRandom(2)));
+                    eInventory.removeItem(new ItemStack(BlockID.DIAMOND_ORE, ChanceUtil.getRandom(4)));
+                    eInventory.removeItem(new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(16)));
 
                     // Emerald
                     //pInventory.removeItem(new ItemStack(BlockID.EMERALD_BLOCK, ChanceUtil.getRandom(2)));
                     //pInventory.removeItem(new ItemStack(BlockID.EMERALD_ORE, ChanceUtil.getRandom(4)));
                     //pInventory.removeItem(new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(12)));
                 }
-            } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " has avoided the drain.");
+            } catch (Exception ex) {
+                log.warning("=== Cursed Mine Drain System Error ===");
+                if (e instanceof Player) {
+                    log.warning("The player: " + ((Player) e).getName() + " has avoided the drain.");
+                } else {
+                    log.warning("An entity has avoided the drain.");
+                }
             }
         }
     }
