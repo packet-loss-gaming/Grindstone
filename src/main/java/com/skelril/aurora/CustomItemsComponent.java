@@ -218,7 +218,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     if (used == null) return;
                     unleashedSpec.put(owner.getName(), System.currentTimeMillis());
                     switch (used) {
-                        case HEALING_LIGHT_BOW:
+                        case HEALING_LIFE_LEECH:
                             EffectUtil.Unleashed.lifeLeech(owner, target);
                             break;
                         case EVIL_FOCUS:

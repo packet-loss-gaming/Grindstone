@@ -90,7 +90,7 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
 
         MOB_ATTACK,
 
-        HEALING_LIGHT_BOW,
+        HEALING_LIFE_LEECH,
         EVIL_FOCUS
     }
 }

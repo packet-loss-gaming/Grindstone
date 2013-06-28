@@ -264,8 +264,12 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         for (Entity entity : event.getAffectedEntities()) {
             if (entity != null && entity instanceof Player && ChanceUtil.getChance(14)) {
-                ((Player) entity).removePotionEffect(PotionEffectType.REGENERATION);
-                ((Player) entity).removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+                if (ChanceUtil.getChance(14)) {
+                    ((Player) entity).removePotionEffect(PotionEffectType.REGENERATION);
+                }
+                if (ChanceUtil.getChance(14)) {
+                    ((Player) entity).removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+                }
             }
         }
     }
