@@ -181,6 +181,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         World world = event.getWorld();
         if (getWorld().equals(world) && world.isThundering()) {
             for (Location headStone : headStones) {
+                if (world.getEntitiesByClass(Zombie.class).size() > 1000) return;
                 if (ChanceUtil.getChance(18)) {
                     for (int i = 0; i < ChanceUtil.getRangedRandom(3, 6); i++) {
                         spawnAndArm(headStone, EntityType.ZOMBIE, true);
