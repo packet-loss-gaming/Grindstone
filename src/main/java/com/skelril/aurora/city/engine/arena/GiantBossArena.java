@@ -619,6 +619,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 if (amt != 0) {
                     for (Player aPlayer : players) {
 
+                        if (adminComponent.isAdmin(aPlayer)) continue;
                         if (ItemUtil.findItemOfName(aPlayer.getInventory().getContents(), BARBARIAN_BONES)) {
                             player = aPlayer;
                             break;

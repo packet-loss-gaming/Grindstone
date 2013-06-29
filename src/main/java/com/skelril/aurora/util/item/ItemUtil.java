@@ -1,4 +1,5 @@
 package com.skelril.aurora.util.item;
+
 import com.sk89q.worldedit.blocks.ItemID;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
@@ -16,19 +17,19 @@ import org.bukkit.inventory.meta.Repairable;
  */
 public class ItemUtil {
 
-    public static final ItemStack[] leatherArmour = new ItemStack[] {
+    public static final ItemStack[] leatherArmour = new ItemStack[]{
             new ItemStack(ItemID.LEATHER_BOOTS), new ItemStack(ItemID.LEATHER_PANTS),
             new ItemStack(ItemID.LEATHER_CHEST), new ItemStack(ItemID.LEATHER_HELMET)
     };
-    public static final ItemStack[] ironArmour = new ItemStack[] {
+    public static final ItemStack[] ironArmour = new ItemStack[]{
             new ItemStack(ItemID.IRON_BOOTS), new ItemStack(ItemID.IRON_PANTS),
             new ItemStack(ItemID.IRON_CHEST), new ItemStack(ItemID.IRON_HELMET)
     };
-    public static final ItemStack[] goldArmour = new ItemStack[] {
+    public static final ItemStack[] goldArmour = new ItemStack[]{
             new ItemStack(ItemID.GOLD_BOOTS), new ItemStack(ItemID.GOLD_PANTS),
             new ItemStack(ItemID.GOLD_CHEST), new ItemStack(ItemID.GOLD_HELMET)
     };
-    public static final ItemStack[] diamondArmour = new ItemStack[] {
+    public static final ItemStack[] diamondArmour = new ItemStack[]{
             new ItemStack(ItemID.DIAMOND_BOOTS), new ItemStack(ItemID.DIAMOND_PANTS),
             new ItemStack(ItemID.DIAMOND_CHEST), new ItemStack(ItemID.DIAMOND_HELMET)
     };
@@ -311,6 +312,15 @@ public class ItemUtil {
             return gemOfDarkness;
         }
 
+        public static ItemStack gemOfLife(int amount) {
+
+            ItemStack gemOfLife = new ItemStack(ItemID.DIAMOND, amount);
+            ItemMeta gemMeta = gemOfLife.getItemMeta();
+            gemMeta.setDisplayName(ChatColor.DARK_AQUA + "Gem of Life");
+            gemOfLife.setItemMeta(gemMeta);
+            return gemOfLife;
+        }
+
         public static ItemStack barbarianBone(int amount) {
 
             ItemStack barbarianBones = new ItemStack(ItemID.BONE, amount);
@@ -437,7 +447,7 @@ public class ItemUtil {
         return count;
     }
 
-    private static final int[] axes = new int[] {
+    private static final int[] axes = new int[]{
             ItemID.WOOD_AXE, ItemID.STONE_AXE,
             ItemID.IRON_AXE, ItemID.DIAMOND_AXE
     };
@@ -452,7 +462,7 @@ public class ItemUtil {
         return false;
     }
 
-    private static final int[] pickAxes = new int[] {
+    private static final int[] pickAxes = new int[]{
             ItemID.WOOD_PICKAXE, ItemID.STONE_PICKAXE,
             ItemID.IRON_PICK, ItemID.DIAMOND_PICKAXE
     };
@@ -467,7 +477,7 @@ public class ItemUtil {
         return false;
     }
 
-    private static final int[] ingots = new int[] {
+    private static final int[] ingots = new int[]{
             ItemID.IRON_BAR, ItemID.GOLD_BAR
     };
 
@@ -495,7 +505,7 @@ public class ItemUtil {
         if (equipment != null) armour = equipment.getArmorContents();
         else return false;
 
-        boolean[] b = new boolean[] {false, false, false, false};
+        boolean[] b = new boolean[]{false, false, false, false};
 
         for (int i = 0; i < 4; i++) {
             b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient");

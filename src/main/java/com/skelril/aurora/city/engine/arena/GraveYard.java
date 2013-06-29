@@ -16,6 +16,7 @@ import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.player.PlayerState;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.*;
@@ -29,10 +30,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerPortalEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.EntityEquipment;
@@ -103,6 +101,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     private boolean isPressurePlateLocked = true;
     private ConcurrentHashMap<Location, Boolean> pressurePlateLocks = new ConcurrentHashMap<>();
 
+    // Respawn Inventory Map
+    private final HashMap<String, PlayerState> playerState = new HashMap<>();
     // Block Restoration Map
     private ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> map = new ConcurrentHashMap<>();
 
@@ -315,12 +315,22 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             return;
         }
 
+        Block aBlock;
+
         for (int i = 0; i < ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i++) {
 
             ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
 
             if (!BlockType.isTranslucent(ls.getBlock().getTypeId())) {
                 ls = player.getLocation();
+            }
+
+            aBlock = ls.getBlock().getRelative(BlockFace.DOWN);
+            // If the block is a half slab or it is wood, don't do this
+            if (aBlock.getTypeId() != BlockID.STEP && aBlock.getTypeId() != BlockID.WOOD) {
+                if (BlockType.canPassThrough(aBlock.getRelative(BlockFace.DOWN, 2).getTypeId())) {
+                    ls.add(0, -3, 0);
+                }
             }
 
             spawnAndArm(ls, EntityType.ZOMBIE, true);
@@ -491,6 +501,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     drops.add(ItemUtil.Misc.gemOfDarkness(1));
                 }
 
+                if (ChanceUtil.getChance(6000) || getWorld().isThundering() && ChanceUtil.getChance(4000)) {
+                    drops.add(ItemUtil.Misc.gemOfLife(1));
+                }
+
                 if (ChanceUtil.getChance(400)) {
                     drops.add(ItemUtil.Misc.phantomGold(ChanceUtil.getRandom(3)));
                 }
@@ -530,6 +544,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
                 if (ChanceUtil.getChance(60) || getWorld().isThundering() && ChanceUtil.getChance(40)) {
                     drops.add(ItemUtil.Misc.gemOfDarkness(1));
+                }
+
+                if (ChanceUtil.getChance(60) || getWorld().isThundering() && ChanceUtil.getChance(40)) {
+                    drops.add(ItemUtil.Misc.gemOfLife(1));
                 }
 
                 if (ChanceUtil.getChance(20)) {
@@ -765,18 +783,72 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         ));
     }
 
+    private static final String GEM_OF_LIFE = ChatColor.DARK_AQUA + "Gem of Life";
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
 
-        if (LocationUtil.isInRegion(getWorld(), getRegion(), player.getLocation())) {
+        if (contains(player)) {
 
             List<ItemStack> drops = event.getDrops();
-            makeGrave(player.getName(), ItemUtil.clone(drops.toArray(new ItemStack[drops.size()])));
+            ItemStack[] dropArray = ItemUtil.clone(drops.toArray(new ItemStack[drops.size()]));
+            if (ItemUtil.findItemOfName(dropArray, GEM_OF_LIFE)) {
+                if (!playerState.containsKey(player.getName())) {
+                    playerState.put(player.getName(), new PlayerState(player.getName(),
+                            player.getInventory().getContents(),
+                            player.getInventory().getArmorContents(),
+                            player.getLevel(),
+                            player.getExp()));
+                    dropArray = null;
+                }
+            }
+
+            // Leave admin mode deaths out of this
+            if (adminComponent.isAdmin(player)) return;
+
+            makeGrave(player.getName(), dropArray);
             drops.clear();
 
             event.setDeathMessage(ChatColor.DARK_RED + "RIP ~ " + player.getName());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+
+        Player player = event.getPlayer();
+
+        // Restore their inventory if they have one stored
+        if (playerState.containsKey(player.getName()) && !adminComponent.isAdmin(player)) {
+
+            try {
+                PlayerState identity = playerState.get(player.getName());
+
+                // Restore the contents
+                player.getInventory().setArmorContents(identity.getArmourContents());
+                player.getInventory().setContents(identity.getInventoryContents());
+
+                // Count then remove the Gems of Life
+                int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), GEM_OF_LIFE) - 1;
+                ItemStack[] newInv = ItemUtil.removeItemOfName(player.getInventory().getContents(), GEM_OF_LIFE);
+                player.getInventory().setContents(newInv);
+
+                // Add back the gems of life as needed
+                int amount = Math.min(c, 64);
+                while (amount > 0) {
+                    player.getInventory().addItem(ItemUtil.Misc.gemOfLife(amount));
+                    c -= amount;
+                    amount = Math.min(c, 64);
+                }
+                //noinspection deprecation
+                player.updateInventory();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                playerState.remove(player.getName());
+            }
         }
     }
 
@@ -798,6 +870,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             ((Sign) signState).setLine(1, "RIP");
             ((Sign) signState).setLine(2, name);
             signState.update();
+
+            if (itemStacks == null) return;
 
             headStone.add(0, -2, 0);
 
@@ -969,8 +1043,14 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             chest.getBlockInventory().clear();
 
             int length = chest.getBlockInventory().getContents().length;
+            int target;
             for (int i = 0; i < length / 3; i++) {
-                chest.getBlockInventory().setItem(ChanceUtil.getRandom(length) - 1, pickRandomItem());
+                target = ChanceUtil.getRandom(length) - 1;
+                if (chest.getBlockInventory().getContents()[target] != null) {
+                    i--;
+                    continue;
+                }
+                chest.getBlockInventory().setItem(target, pickRandomItem());
             }
             chest.update();
         }
@@ -978,9 +1058,9 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private ItemStack pickRandomItem() {
 
-        switch (ChanceUtil.getRandom(47)) {
-            case 2:
-                return ItemUtil.Misc.barbarianBone(ChanceUtil.getRandom(5));
+        switch (ChanceUtil.getRandom(35)) {
+            case 1:
+                return ItemUtil.Misc.gemOfLife(6);
             case 3:
                 if (!ChanceUtil.getChance(17)) return null;
                 return ItemUtil.Fear.makeSword();
@@ -1034,7 +1114,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             case 26:
                 return new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(64), (short) 1);
             default:
-                return new ItemStack(ItemID.BONE, ChanceUtil.getRandom(14));
+                return ItemUtil.Misc.barbarianBone(ChanceUtil.getRandom(5));
         }
     }
 
