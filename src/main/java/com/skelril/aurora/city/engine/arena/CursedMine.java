@@ -478,7 +478,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
             recordSystem.addItem(player.getName(), new BlockRecord(block));
             restorationUtil.blockAndLogEvent(event);
-        } else if (contains(block)) {
+        } else if (!adminComponent.isAdmin(player) && contains(block)) {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
         }

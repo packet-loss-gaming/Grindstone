@@ -334,7 +334,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             } else {
                 generalMap.addItem(new BlockRecord(block));
             }
-        } else if (contains(block)) {
+        } else if (!adminComponent.isAdmin(player) && contains(block)) {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
         }
