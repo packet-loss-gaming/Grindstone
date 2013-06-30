@@ -420,9 +420,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 public void run() {
                     ItemStack[] contents = player.getInventory().getContents();
                     if (!ItemUtil.findItemOfName(contents, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+                        if (player.getAllowFlight()) {
+                            ChatUtil.sendNotice(player, "The power of the bucket fades.");
+                        }
                         player.setAllowFlight(false);
                         antiCheat.unexempt(player, CheckType.FLY);
-                        ChatUtil.sendNotice(player, "The power of the bucket fades.");
                     }
                 }
             }, 1);
@@ -441,9 +443,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         ItemStack[] contents = player.getInventory().getContents();
         if (!ItemUtil.findItemOfName(contents, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+            if (player.getAllowFlight()) {
+                ChatUtil.sendNotice(player, "The power of the bucket fades.");
+            }
             player.setAllowFlight(false);
             antiCheat.unexempt(player, CheckType.FLY);
-            ChatUtil.sendNotice(player, "The power of the bucket fades.");
         }
     }
 
@@ -454,9 +458,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         ItemStack[] drops = event.getDrops().toArray(new ItemStack[event.getDrops().size()]);
 
         if (ItemUtil.findItemOfName(drops, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+            if (player.getAllowFlight()) {
+                ChatUtil.sendNotice(player, "The power of the bucket fades.");
+            }
             player.setAllowFlight(false);
             antiCheat.unexempt(player, CheckType.FLY);
-            ChatUtil.sendNotice(player, "The power of the bucket fades.");
         }
     }
 
