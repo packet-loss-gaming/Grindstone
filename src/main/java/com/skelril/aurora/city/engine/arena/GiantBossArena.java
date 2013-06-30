@@ -200,9 +200,11 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @Override
     public void run() {
 
-        if (!isBossSpawned() && (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3)) {
-            removeMobs();
-            spawnBoss();
+        if (!isBossSpawned()) {
+            if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
+                removeMobs();
+                spawnBoss();
+            }
         } else if (!isEmpty()) {
             equalize();
             runAttack(ChanceUtil.getRandom(OPTION_COUNT));
@@ -291,10 +293,13 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             try {
                 adminComponent.standardizePlayer(player);
 
-                if (!isBossSpawned()) return;
-
                 if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
                     player.damage(32, boss);
+                }
+
+                if (player.getVehicle() != null) {
+                    player.getVehicle().eject();
+                    ChatUtil.sendWarning(player, "The boss throws you off!");
                 }
 
                 if (Math.abs(groundLevel - player.getLocation().getY()) > 10) runAttack(4);
@@ -779,8 +784,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     private void runAttack(int attackCase) {
 
-        if (!isBossSpawned() || (lastAttack != 0
-                && System.currentTimeMillis() - lastAttack <= ChanceUtil.getRangedRandom(13000, 17000))) return;
+        int delay = ChanceUtil.getRangedRandom(13000, 17000);
+        if (lastAttack != 0 && System.currentTimeMillis() - lastAttack <= delay) return;
 
         Player[] containedP = getContainedPlayers(1);
         Player[] contained = getContainedPlayers();
