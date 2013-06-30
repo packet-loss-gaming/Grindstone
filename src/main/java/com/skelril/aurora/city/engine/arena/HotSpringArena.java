@@ -1,19 +1,27 @@
 package com.skelril.aurora.city.engine.arena;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.timer.IntegratedRunnable;
+import com.skelril.aurora.util.timer.TimedRunnable;
 import org.bukkit.Effect;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 import java.util.logging.Logger;
 
@@ -104,7 +112,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
     public void effect() {
 
-        for (Player player : getContainedPlayers()) {
+        for (final Player player : getContainedPlayers()) {
             try {
 
                 player.removePotionEffect(PotionEffectType.CONFUSION);
@@ -128,6 +136,45 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                 player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * duration[0], 2));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * duration[1], 1));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20 * duration[2], 1));
+
+                Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
+                if (downward.getTypeId() != BlockID.LAPIS_LAZULI_BLOCK) {
+                    downward = downward.getRelative(BlockFace.DOWN);
+                    if (downward.getTypeId() != BlockID.LAPIS_LAZULI_BLOCK) {
+                        continue;
+                    }
+                }
+
+                IntegratedRunnable runnable = new IntegratedRunnable() {
+                    @Override
+                    public void run(int times) {
+
+                        if (player == null || !player.isValid()) return;
+
+                        Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
+                        if (!BlockType.canPassThrough(downward.getTypeId()) && player.getLocation().getBlockY() > 70) {
+                            return;
+                        }
+
+                        player.setFlying(false);
+                        player.setAllowFlight(false);
+
+                        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+                        Vector vector = player.getVelocity();
+                        vector.add(new Vector(0, 1.2, 0));
+                        player.setVelocity(vector);
+
+                        player.setFallDistance(0);
+                    }
+
+                    @Override
+                    public void end() {
+                    }
+                };
+
+                TimedRunnable timedRunnable = new TimedRunnable(runnable, 14);
+                BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 15);
+                timedRunnable.setTask(task);
             } catch (Exception e) {
 
                 log.warning("The player: " + player.getName() + " was not boosted by the hot spring: " + getId() + ".");

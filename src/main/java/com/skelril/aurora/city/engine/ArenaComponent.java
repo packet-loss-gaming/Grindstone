@@ -117,7 +117,8 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         ));
         @Setting("hot-springs")
         protected Set<String> hotSprings = new HashSet<>(Arrays.asList(
-                "glacies-mare-district-hot-spring"
+                "glacies-mare-district-hot-spring",
+                "carpe-diem-distrcit-hot-spring"
         ));
         @Setting("party-rooms")
         protected Set<String> partyRooms = new HashSet<>(Arrays.asList(
