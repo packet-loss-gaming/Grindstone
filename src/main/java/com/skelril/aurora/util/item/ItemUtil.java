@@ -486,6 +486,11 @@ public class ItemUtil {
         return false;
     }
 
+    public static boolean isTool(int itemId) {
+
+        return isAxe(itemId) || isPickAxe(itemId);
+    }
+
     private static final int[] ingots = new int[]{
             ItemID.IRON_BAR, ItemID.GOLD_BAR
     };

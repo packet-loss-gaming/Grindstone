@@ -17,6 +17,9 @@ import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
+import com.skelril.aurora.util.restoration.BaseBlockRecordIndex;
+import com.skelril.aurora.util.restoration.BlockRecord;
+import com.skelril.aurora.util.restoration.RestorationUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.*;
@@ -101,10 +104,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     private boolean isPressurePlateLocked = true;
     private ConcurrentHashMap<Location, Boolean> pressurePlateLocks = new ConcurrentHashMap<>();
 
+    // Block Restoration
+    private BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
     // Respawn Inventory Map
     private final HashMap<String, PlayerState> playerState = new HashMap<>();
-    // Block Restoration Map
-    private ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> map = new ConcurrentHashMap<>();
 
     public GraveYard(World world, ProtectedRegion[] regions, AdminComponent adminComponent) {
 
@@ -640,28 +643,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 return;
             }
 
+            generalIndex.addItem(new BlockRecord(block));
+
             block.setTypeId(0);
-            map.put(block.getLocation(), new AbstractMap.SimpleEntry<>(System.currentTimeMillis(), baseBlock));
-
-            // Degrade the tool
-            final Player player = event.getPlayer();
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    ItemStack held = player.getItemInHand();
-                    if (!ItemUtil.isPickAxe(held.getTypeId())) return;
-                    short newDurability = (short) (held.getDurability() + 1);
-                    short maxDurability = held.getType().getMaxDurability();
-                    if (newDurability >= maxDurability) {
-                        player.setItemInHand(null);
-                    } else {
-                        held.setDurability(newDurability);
-                        player.setItemInHand(held);
-                    }
-                }
-            }, 1);
+            RestorationUtil.handleToolDamage(event.getPlayer());
         }
     }
 
@@ -1162,7 +1147,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             if (!BlockType.canPassThrough(aBlock.getRelative(BlockFace.DOWN).getTypeId())) continue;
             BaseBlock aBB = new BaseBlock(aBlock.getTypeId(), aBlock.getData());
             if (ChanceUtil.getChance(chance) && accept(aBB, autoBreakable)) {
-                map.put(aBlock.getLocation(), new AbstractMap.SimpleEntry<>(System.currentTimeMillis(), aBB));
+                generalIndex.addItem(new BlockRecord(aBlock.getLocation(location), aBB));
                 aBlock.setTypeId(0);
             }
         }
@@ -1181,32 +1166,12 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     public void forceRestoreBlocks() {
 
         resetPressurePlateLock();
-        BaseBlock b;
-        for (Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e : map.entrySet()) {
-            b = e.getValue().getValue();
-            if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
-            e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-        }
-        map.clear();
+        generalIndex.revertAll();
     }
 
     public void restoreBlocks() {
 
-        int min = 1000 * 27;
-
-        BaseBlock b;
-        Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e;
-        Iterator<Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>>> it = map.entrySet().iterator();
-
-        while (it.hasNext()) {
-            e = it.next();
-            if ((System.currentTimeMillis() - e.getValue().getKey()) > min) {
-                b = e.getValue().getValue();
-                if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
-                e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-                it.remove();
-            }
-        }
+        generalIndex.revertByTime(1000 * 27);
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.skelril.aurora.city.engine.arena;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
@@ -15,8 +14,9 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.restoration.BaseBlockRecordIndex;
+import com.skelril.aurora.util.restoration.BlockRecord;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -44,8 +44,10 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.logging.Logger;
 
 /**
@@ -60,7 +62,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     private AdminComponent adminComponent;
 
     private final Random random = new Random();
-    private ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> map = new ConcurrentHashMap<>();
+    private BaseBlockRecordIndex treeMap = new BaseBlockRecordIndex();
+    private BaseBlockRecordIndex generalMap = new BaseBlockRecordIndex();
 
     public EnchantedForest(World world, ProtectedRegion region, AdminComponent adminComponent) {
 
@@ -74,13 +77,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     @Override
     public void forceRestoreBlocks() {
 
-        BaseBlock b;
-        for (Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e : map.entrySet()) {
-            b = e.getValue().getValue();
-            if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
-            e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-        }
-        map.clear();
+        treeMap.revertAll();
+        generalMap.revertAll();
     }
 
     @Override
@@ -122,27 +120,11 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
     public void restoreBlocks() {
 
-        int min = 1000 * 60 * 170;
+        int mainMin = 1000 * 60 * 170;
+        int secMin = mainMin / 20;
 
-        BaseBlock b;
-        Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e;
-        Iterator<Map.Entry<Location,AbstractMap.SimpleEntry<Long,BaseBlock>>> it = map.entrySet().iterator();
-
-        while(it.hasNext()) {
-            e = it.next();
-            if ((System.currentTimeMillis() - e.getValue().getKey()) > min) {
-                b = e.getValue().getValue();
-                if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
-                e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-                it.remove();
-            } else if (System.currentTimeMillis() - e.getValue().getKey() > (min / 20)
-                    && EnvironmentUtil.isShrubBlock(e.getValue().getValue().getType())) {
-                b = e.getValue().getValue();
-                if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
-                e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-                it.remove();
-            }
-        }
+        treeMap.revertByTime(mainMin);
+        generalMap.revertByTime(secMin);
     }
 
     private List<ItemStack> getRandomDropSet(CommandSender player) {
@@ -332,12 +314,9 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         final Player player = event.getPlayer();
         final Block block = event.getBlock();
 
-        ItemStack itemInHand = player.getItemInHand();
-
         if (!adminComponent.isAdmin(player)
                 && contains(block)
-                && (block.getTypeId() == BlockID.LOG || EnvironmentUtil.isShrubBlock(block))
-                && itemInHand != null) {
+                && (block.getTypeId() == BlockID.LOG || EnvironmentUtil.isShrubBlock(block))) {
 
             if (block.getTypeId() == BlockID.LOG) {
                 short c = 0;
@@ -350,11 +329,11 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                 event.setExpToDrop(ChanceUtil.getRandom(4));
                 eatFood(player);
                 trick(player);
+
+                treeMap.addItem(new BlockRecord(block));
+            } else {
+                generalMap.addItem(new BlockRecord(block));
             }
-
-            map.put(block.getLocation(), new AbstractMap.SimpleEntry<>(System.currentTimeMillis(),
-                    new BaseBlock(block.getTypeId(), block.getData())));
-
         } else if (contains(block)) {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
@@ -368,8 +347,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
             Block block = event.getBlock();
 
-            map.put(block.getLocation(), new AbstractMap.SimpleEntry<>(System.currentTimeMillis(),
-                    new BaseBlock(block.getTypeId(), block.getData())));
+            treeMap.addItem(new BlockRecord(block));
 
             if (!ChanceUtil.getChance(14)) return;
             getWorld().dropItemNaturally(block.getLocation(), getRandomDropSet(server.getConsoleSender()).get(0));
@@ -377,18 +355,13 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onItemSpawn(ItemSpawnEvent event) {
+    public void onItemDrop(ItemSpawnEvent event) {
 
-        if (contains(event.getEntity())) {
-            for (Location l : map.keySet()) {
-                if (l.getBlock().equals(event.getEntity().getLocation().getBlock())) {
-                    int is = event.getEntity().getItemStack().getTypeId();
-
-                    if (is == BlockID.LOG || is == BlockID.SAPLING) {
-                        event.setCancelled(true);
-                    }
-                    return;
-                }
+        Item item = event.getEntity();
+        if (contains(item)) {
+            int typeId = item.getItemStack().getTypeId();
+            if (typeId == BlockID.LOG || typeId == BlockID.SAPLING) {
+                event.setCancelled(true);
             }
         }
     }
@@ -396,17 +369,12 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     @EventHandler(ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent event) {
 
-        if (contains(event.getItemDrop())) {
-            for (Location l : map.keySet()) {
-                if (event.getItemDrop().getLocation().getBlock().equals(l.getBlock())) {
-                    int is = event.getItemDrop().getItemStack().getTypeId();
-
-                    if (is == BlockID.LOG || is == BlockID.SAPLING) {
-                        ChatUtil.sendError(event.getPlayer(), "You can't drop that here.");
-                        event.setCancelled(true);
-                    }
-                    return;
-                }
+        Item item = event.getItemDrop();
+        if (contains(item)) {
+            int typeId = item.getItemStack().getTypeId();
+            if (typeId == BlockID.LOG || typeId == BlockID.SAPLING) {
+                event.setCancelled(true);
+                ChatUtil.sendError(event.getPlayer(), "You cannot drop that here.");
             }
         }
     }
@@ -430,18 +398,17 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
             final Block block = event.getBlockClicked();
 
-            map.put(block.getLocation(), new AbstractMap.SimpleEntry<>(System.currentTimeMillis(),
-                    new BaseBlock(block.getTypeId(), block.getData())));
+            generalMap.addItem(new BlockRecord(block));
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
 
-
-        if (contains(event.getBlockClicked())) {
+        Player player = event.getPlayer();
+        if (!adminComponent.isAdmin(player) && contains(event.getBlockClicked())) {
             event.setCancelled(true);
-            ChatUtil.sendNotice(event.getPlayer(), ChatColor.DARK_RED, "You don't have permission for this area.");
+            ChatUtil.sendNotice(player, ChatColor.DARK_RED, "You don't have permission for this area.");
         }
     }
 
@@ -450,5 +417,4 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         if (contains(event.getEgg())) event.setCancelled(true);
     }
-
 }

@@ -17,6 +17,7 @@ import com.skelril.aurora.economic.ImpersonalComponent;
 import com.skelril.aurora.jail.JailComponent;
 import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.restoration.RestorationUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -39,7 +40,7 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Arena", desc = "Arena Control.")
 @Depend(components = {
         AdminComponent.class, JailComponent.class, PrayerComponent.class, SacrificeComponent.class,
-        ImpersonalComponent.class
+        ImpersonalComponent.class, RestorationUtil.class
 }, plugins = {"WorldEdit", "WorldGuard"})
 public class ArenaComponent extends BukkitComponent implements Listener, Runnable {
 
@@ -55,6 +56,8 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     private PrayerComponent prayerComponent;
     @InjectComponent
     private ImpersonalComponent impersonalComponent;
+    @InjectComponent
+    private RestorationUtil restorationUtil;
 
     private final World world = Bukkit.getWorld("City");
     private LocalConfiguration config;
@@ -180,7 +183,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             for (String region : config.cursedMines) {
                 try {
                     ProtectedRegion pr = mgr.get(world).getRegion(region);
-                    arenas.add(new CursedMine(world, pr, adminComponent, prayerComponent));
+                    arenas.add(new CursedMine(world, pr, adminComponent, prayerComponent, restorationUtil));
                     log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");

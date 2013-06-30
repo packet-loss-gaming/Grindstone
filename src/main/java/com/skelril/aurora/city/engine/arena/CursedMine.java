@@ -3,7 +3,6 @@ package com.skelril.aurora.city.engine.arena;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.blocks.SkullBlock;
@@ -23,6 +22,9 @@ import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.BookUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.restoration.BlockRecord;
+import com.skelril.aurora.util.restoration.PlayerMappedBlockRecordIndex;
+import com.skelril.aurora.util.restoration.RestorationUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -33,19 +35,20 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -60,11 +63,13 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     private AdminComponent adminComponent;
     private PrayerComponent prayerComponent;
+    private RestorationUtil restorationUtil;
 
     private WorldGuardPlugin worldGuard;
 
-    private ConcurrentHashMap<Player, ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long,
-            BaseBlock>>> map = new ConcurrentHashMap<>();
+    //private ConcurrentHashMap<Player, ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long,
+    //        BaseBlock>>> map = new ConcurrentHashMap<>();
+    private PlayerMappedBlockRecordIndex recordSystem = new PlayerMappedBlockRecordIndex();
     private List<Player> daveHitList = new ArrayList<>();
 
     private final int[] items = new int[]{
@@ -77,11 +82,12 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     };
 
     public CursedMine(World world, ProtectedRegion region, AdminComponent adminComponent,
-                      PrayerComponent prayerComponent) {
+                      PrayerComponent prayerComponent, RestorationUtil restorationUtil) {
 
         super(world, region);
         this.adminComponent = adminComponent;
         this.prayerComponent = prayerComponent;
+        this.restorationUtil = restorationUtil;
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -92,15 +98,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     @Override
     public void forceRestoreBlocks() {
 
-        BaseBlock b;
-        for (ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e : map.values()) {
-            for (Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> se : e.entrySet()) {
-                b = se.getValue().getValue();
-                if (!se.getKey().getChunk().isLoaded()) se.getKey().getChunk().load();
-                se.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-            }
-        }
-        map.clear();
+        recordSystem.revertAll();
     }
 
     @Override
@@ -185,61 +183,12 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     public void randomRestore() {
 
-        int skipped;
-
-        int min;
-        BaseBlock b;
-        Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> se;
-
-        for (Map.Entry<Player, ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long,
-                BaseBlock>>> e : map.entrySet()) {
-
-            if (e.getValue().isEmpty()) {
-                map.remove(e.getKey());
-                continue;
-            }
-
-            skipped = 0;
-
-            min = ChanceUtil.getRangedRandom(9000, 60000);
-            Iterator<Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>>> it = e.getValue().entrySet()
-                    .iterator();
-
-            while (it.hasNext()) {
-                se = it.next();
-                if ((System.currentTimeMillis() - se.getValue().getKey()) > min) {
-                    b = se.getValue().getValue();
-                    if (!se.getKey().getChunk().isLoaded()) se.getKey().getChunk().load();
-                    se.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-                    e.getValue().remove(se.getKey());
-                    it.remove();
-                    if (!EnvironmentUtil.isOre(b.getType())) continue;
-                    for (int i = 0; i < 20; i++) getWorld().playEffect(se.getKey(), Effect.MOBSPAWNER_FLAMES, 0);
-                } else skipped++;
-            }
-
-            if (skipped == 0) map.remove(e.getKey());
-        }
+        recordSystem.revertByTime(ChanceUtil.getRangedRandom(9000, 60000));
     }
 
     public void revertPlayer(Player player) {
 
-        if (map.containsKey(player)) {
-            BaseBlock b;
-            Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e;
-            Iterator<Map.Entry<Location, AbstractMap.SimpleEntry<Long, BaseBlock>>> it = map.get(player).entrySet()
-                    .iterator();
-            while (it.hasNext()) {
-                e = it.next();
-                b = e.getValue().getValue();
-                if (!e.getKey().getChunk().isLoaded()) e.getKey().getChunk().load();
-                e.getKey().getBlock().setTypeIdAndData(b.getType(), (byte) b.getData(), true);
-                it.remove();
-                if (!EnvironmentUtil.isOre(b.getType())) continue;
-                for (int i = 0; i < 20; i++) getWorld().playEffect(e.getKey(), Effect.MOBSPAWNER_FLAMES, 0);
-            }
-            map.remove(player);
-        }
+        recordSystem.revertByPlayer(player.getName());
     }
 
     public void sweepFloor() {
@@ -493,28 +442,30 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                 && itemInHand != null
                 && ItemUtil.isPickAxe(itemInHand.getTypeId())) {
 
-            ItemStack rawDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch(itemInHand));
+            if (ChanceUtil.getChance(4)) {
+                ItemStack rawDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch(itemInHand));
 
-            if (inst.hasPermission(player, "aurora.mining.burningember") && !hasSilkTouch(itemInHand)) {
-                switch (typeId) {
-                    case BlockID.GOLD_ORE:
-                        rawDrop.setTypeId(ItemID.GOLD_BAR);
-                        break;
-                    case BlockID.IRON_ORE:
-                        rawDrop.setTypeId(ItemID.IRON_BAR);
-                        break;
+                if (inst.hasPermission(player, "aurora.mining.burningember") && !hasSilkTouch(itemInHand)) {
+                    switch (typeId) {
+                        case BlockID.GOLD_ORE:
+                            rawDrop.setTypeId(ItemID.GOLD_BAR);
+                            break;
+                        case BlockID.IRON_ORE:
+                            rawDrop.setTypeId(ItemID.IRON_BAR);
+                            break;
+                    }
                 }
-            }
 
-            if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(rawDrop.getTypeId())) {
-                rawDrop.setAmount(rawDrop.getAmount()
-                        * ChanceUtil.getRangedRandom(4, 8) * ItemUtil.fortuneMultiplier(itemInHand));
-            } else {
-                rawDrop.setAmount(rawDrop.getAmount() * ChanceUtil.getRangedRandom(4, 16));
-            }
+                if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(rawDrop.getTypeId())) {
+                    rawDrop.setAmount(rawDrop.getAmount()
+                            * ChanceUtil.getRangedRandom(4, 8) * ItemUtil.fortuneMultiplier(itemInHand));
+                } else {
+                    rawDrop.setAmount(rawDrop.getAmount() * ChanceUtil.getRangedRandom(4, 16));
+                }
 
+                player.getInventory().addItem(rawDrop);
+            }
             event.setExpToDrop((70 - player.getLocation().getBlockY()) / 2);
-            if (ChanceUtil.getChance(4)) player.getInventory().addItem(rawDrop);
 
             if (ChanceUtil.getChance(1000)) {
                 ChatUtil.sendNotice(player, "You feel as though a spirit is trying to tell you something...");
@@ -525,58 +476,11 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             poison(player, 6);
             ghost(player);
 
-            if (!map.containsKey(event.getPlayer())) {
-                map.put(event.getPlayer(), new ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>>());
-            }
-            map.get(event.getPlayer()).put(block.getLocation(),
-                    new AbstractMap.SimpleEntry<>(System.currentTimeMillis(),
-                            new BaseBlock(block.getTypeId(), block.getData())));
-
+            recordSystem.addItem(player.getName(), new BlockRecord(block));
+            restorationUtil.blockAndLogEvent(event);
         } else if (contains(block)) {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onItemSpawn(ItemSpawnEvent event) {
-
-        if (contains(event.getEntity())) {
-            for (ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e : map.values()) {
-                for (Location l : e.keySet()) {
-                    if (l.getBlock().equals(event.getEntity().getLocation().getBlock())) {
-                        int is = event.getEntity().getItemStack().getTypeId();
-
-                        for (int aItem : items) {
-                            if (is == aItem) event.setCancelled(true);
-                        }
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerDropItem(PlayerDropItemEvent event) {
-
-        if (contains(event.getItemDrop())) {
-            for (ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>> e : map.values()) {
-                for (Location l : e.keySet()) {
-                    if (event.getItemDrop().getLocation().getBlock().equals(l.getBlock())) {
-
-                        int is = event.getItemDrop().getItemStack().getTypeId();
-
-                        for (int aItem : items) {
-                            if (is == aItem) {
-                                ChatUtil.sendError(event.getPlayer(), "You can't drop that here.");
-                                event.setCancelled(true);
-                            }
-                        }
-                        return;
-                    }
-                }
-            }
         }
     }
 
@@ -585,8 +489,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         Player player = event.getPlayer();
 
-        if (!adminComponent.isAdmin(player) && contains(event.getBlock())
-                && !inst.hasPermission(player, "aurora.mine.builder")) {
+        if (!adminComponent.isAdmin(player) && contains(event.getBlock())) {
             event.setCancelled(true);
             ChatUtil.sendNotice(player, ChatColor.DARK_RED, "You don't have permission for this area.");
         }
@@ -603,7 +506,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         Player player = event.getPlayer();
 
-        if (map.containsKey(player) && !daveHitList.contains(player) && !accepted.contains(event.getCause())) {
+        if (recordSystem.hasRecordForPlayer(player.getName())
+                && !daveHitList.contains(player) && !accepted.contains(event.getCause())) {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You have been tele-blocked!");
         }
@@ -616,21 +520,17 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
             final Block block = event.getBlockClicked();
 
-            if (!map.containsKey(event.getPlayer())) {
-                map.put(event.getPlayer(), new ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long, BaseBlock>>());
-            }
-            map.get(event.getPlayer()).put(block.getLocation(),
-                    new AbstractMap.SimpleEntry<>(System.currentTimeMillis(),
-                            new BaseBlock(block.getTypeId(), block.getData())));
+            recordSystem.addItem(event.getPlayer().getName(), new BlockRecord(block));
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
 
-        if (contains(event.getBlockClicked())) {
+        Player player = event.getPlayer();
+        if (!adminComponent.isAdmin(player) && contains(event.getBlockClicked())) {
             event.setCancelled(true);
-            ChatUtil.sendNotice(event.getPlayer(), ChatColor.DARK_RED, "You don't have permission for this area.");
+            ChatUtil.sendNotice(player, ChatColor.DARK_RED, "You don't have permission for this area.");
         }
     }
 
