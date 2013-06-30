@@ -303,6 +303,15 @@ public class ItemUtil {
             return phantomGold;
         }
 
+        public static ItemStack phantomClock(int amount) {
+
+            ItemStack phantomClock = new ItemStack(ItemID.WATCH, amount);
+            ItemMeta phantomMeta = phantomClock.getItemMeta();
+            phantomMeta.setDisplayName(ChatColor.DARK_RED + "Phantom Clock");
+            phantomClock.setItemMeta(phantomMeta);
+            return phantomClock;
+        }
+
         public static ItemStack imbuedCrystal(int amount) {
 
             ItemStack gemOfDarkness = new ItemStack(ItemID.DIAMOND, amount);

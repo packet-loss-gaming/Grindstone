@@ -489,6 +489,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
                 }
 
+                if (ChanceUtil.getChance(15000)) {
+                    drops.add(ItemUtil.Misc.phantomClock(ChanceUtil.getRandom(3)));
+                }
+
                 if (ChanceUtil.getChance(10000)) {
                     drops.add(ItemUtil.Misc.imbuedCrystal(1));
                 }
@@ -532,6 +536,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     ItemStack stack = it.next();
 
                     if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
+                }
+
+                if (ChanceUtil.getChance(150)) {
+                    drops.add(ItemUtil.Misc.phantomClock(ChanceUtil.getRandom(3)));
                 }
 
                 if (ChanceUtil.getChance(100)) {
@@ -739,8 +747,13 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     @EventHandler(ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent event) {
 
+        final Player player = event.getPlayer();
+
         Block block = event.getClickedBlock();
         Location clickedLoc = block.getLocation();
+        ItemStack stack = player.getItemInHand();
+        Action action = event.getAction();
+
         if (isHostileTempleArea(clickedLoc)) {
             switch (block.getTypeId()) {
                 case BlockID.LEVER:
@@ -754,12 +767,33 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     }, 1);
                     break;
                 case BlockID.STONE_PRESSURE_PLATE:
-                    if ((isPressurePlateLocked || clickedLoc.getBlockY() < 57)
-                            && event.getAction().equals(Action.PHYSICAL)) {
+                    if ((isPressurePlateLocked || clickedLoc.getBlockY() < 57) && action.equals(Action.PHYSICAL)) {
                         throwSlashPotion(clickedLoc);
                     }
                     break;
             }
+        }
+
+        switch (action) {
+            case RIGHT_CLICK_BLOCK:
+                if (ItemUtil.matchesFilter(stack, ChatColor.DARK_RED + "Phantom Clock")) {
+
+                    player.teleport(new Location(getWorld(), -126, 42, -685), TeleportCause.UNKNOWN);
+
+                    final int amt = stack.getAmount() - 1;
+                    server.getScheduler().runTaskLater(inst, new Runnable() {
+                        @Override
+                        public void run() {
+
+                            ItemStack newStack = null;
+                            if (amt > 0) {
+                                newStack = ItemUtil.Misc.phantomClock(amt);
+                            }
+                            player.setItemInHand(newStack);
+                        }
+                    }, 1);
+                }
+                break;
         }
     }
 

@@ -1087,6 +1087,27 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     + player.getDisplayName() + " has been given " + stack.getAmount() + " Phantom Gold.");
         }
 
+        @Command(aliases = {"phantomclock"},
+                usage = "<player> [amount]", desc = "Give a player some Phantom Clocks",
+                flags = "", min = 1, max = 2)
+        @CommandPermissions({"aurora.lost.misc.phantomclock"})
+        public void lostPhantomClockCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            int amount = 1;
+            if (args.argsLength() > 1) {
+                amount = args.getInteger(1);
+            }
+
+            ItemStack stack = ItemUtil.Misc.phantomClock(Math.max(0, Math.min(64, amount)));
+            player.getInventory().addItem(stack);
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: "
+                    + player.getDisplayName() + " has been given " + stack.getAmount() + " Phantom Clocks.");
+        }
+
         @Command(aliases = {"gemoflife"},
                 usage = "<player> [amount]", desc = "Give a player some Gems of Life",
                 flags = "", min = 1, max = 2)
