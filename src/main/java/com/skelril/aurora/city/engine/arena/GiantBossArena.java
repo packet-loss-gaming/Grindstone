@@ -29,6 +29,7 @@ import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -43,6 +44,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -497,14 +499,25 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         if (attacker != null && !contains(attacker, 1) || !contains(defender, 1)) return;
 
-        Player[] contained = getContainedPlayers();
+        final Player[] contained = getContainedPlayers();
 
         if (defender instanceof Giant) {
-            Giant boss = (Giant) defender;
+            final Giant boss = (Giant) defender;
+
+            // Schedule a task to change the display name to show HP
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+                    if (getWorld().getTime() % 7 != 0 || boss == null || !boss.isValid()) return;
+                    String message = "Boss Health: " + boss.getHealth() + " / " + boss.getMaxHealth();
+                    ChatUtil.sendNotice(contained, ChatColor.DARK_AQUA, message);
+                }
+            }, 1);
+
             if (damageHeals) {
                 boss.setHealth(Math.min(boss.getMaxHealth(), (event.getDamage() * difficulty) + boss.getHealth()));
 
-                if (ChanceUtil.getChance(4)) {
+                if (ChanceUtil.getChance(4) && acceptedReasons.contains(event.getCause())) {
 
                     int affected = 0;
                     for (Entity e : boss.getNearbyEntities(8, 8, 8)) {
@@ -533,13 +546,18 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
             if (ChanceUtil.getChance(3) && acceptedReasons.contains(event.getCause())) {
 
+                ItemStack weapon = new ItemStack(ItemID.BONE);
+                ItemMeta weaponMeta = weapon.getItemMeta();
+                weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 1, true);
+                weapon.setItemMeta(weaponMeta);
+
                 for (Location spawnPt : spawnPts) {
                     if (ChanceUtil.getChance(11)) {
                         for (int i = 0; i < Math.max(3, contained.length); i++) {
                             Zombie z = (Zombie) getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
                             z.setBaby(true);
                             EntityEquipment equipment = z.getEquipment();
-                            equipment.setItemInHand(new ItemStack(ItemID.STONE_SWORD));
+                            equipment.setItemInHand(weapon.clone());
                             if (attacker != null && attacker instanceof LivingEntity) {
                                 z.setTarget((LivingEntity) attacker);
                             }
@@ -570,7 +588,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
-            if (ItemUtil.hasAncientArmour(player)) {
+            if (ItemUtil.hasAncientArmour(player) && difficulty >= Difficulty.HARD.getValue()) {
                 if (attacker != null) {
                     if (attacker instanceof Zombie) {
                         Zombie zombie = (Zombie) attacker;
@@ -584,7 +602,11 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         }
                     }
 
-                    if (ChanceUtil.getChance(difficulty * 3)) EffectUtil.Ancient.powerBurst(player, event.getDamage());
+                    int diff = player.getMaxHealth() - player.getHealth();
+                    if (ChanceUtil.getChance(Math.max(difficulty, player.getMaxHealth() - diff))) {
+
+                        EffectUtil.Ancient.powerBurst(player, event.getDamage());
+                    }
                 }
                 if (ChanceUtil.getChance(difficulty * 9) && defender.getFireTicks() > 0) {
                     ChatUtil.sendNotice((Player) defender, "Your armour extinguishes the fire.");
@@ -603,7 +625,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 60 * 3, 1),
             new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 60 * 3, 1)
     };
-    private static String BARBARIAN_BONES = ChatColor.DARK_RED + "Barbarian Bones";
+    private static String BARBARIAN_BONES = ChatColor.DARK_RED + "Barbarian Bone";
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
@@ -653,7 +675,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 // Remove the Barbarian Bones
                 if (player != null) {
-                    int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), BARBARIAN_BONES);
+                    int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), BARBARIAN_BONES) - 1;
                     ItemStack[] nc = ItemUtil.removeItemOfName(player.getInventory().getContents(), BARBARIAN_BONES);
                     player.getInventory().setContents(nc);
 
@@ -860,6 +882,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                         // Check Players
                         for (Player player : getContainedPlayers()) {
+                            if (inst.hasPermission(player, "aurora.prayer.intervention") && ChanceUtil.getChance(3)) {
+                                ChatUtil.sendNotice(player, "A divine wind hides you from the boss.");
+                                continue;
+                            }
                             if (player.getLocation().getBlock().getRelative(BlockFace.DOWN, 2).getTypeId()
                                     != BlockID.DIAMOND_BLOCK) {
                                 ChatUtil.sendWarning(player, ChatColor.DARK_RED + "You!");

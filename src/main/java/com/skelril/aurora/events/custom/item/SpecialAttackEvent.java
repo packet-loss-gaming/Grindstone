@@ -73,6 +73,7 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
         CURSE,
         WEAKEN,
         CONFUSE,
+        DECIMATE,
         SOUL_SMITE,
 
         DISARM,

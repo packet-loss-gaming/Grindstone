@@ -69,6 +69,12 @@ public class EffectUtil {
             ChatUtil.sendNotice(owner, "Your sword confuses its victim.");
         }
 
+        public static void decimate(Player owner, LivingEntity target) {
+
+            target.damage(ChanceUtil.getRandom(5) * 50);
+            ChatUtil.sendNotice(owner, "Your sword tears through the flesh of its victim.");
+        }
+
         public static void soulSmite(final Player owner, final LivingEntity target) {
 
             final double targetHP = (double) target.getHealth() / (double) target.getMaxHealth();

@@ -142,7 +142,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             Specs used;
             if (canFearSpec(owner.getName())) {
                 if (ItemUtil.hasFearSword(owner)) {
-                    used = callSpec(owner, target, 0, 5);
+                    used = callSpec(owner, target, 0, 6);
                     if (used == null) return;
                     fearSpec.put(owner.getName(), System.currentTimeMillis());
                     switch (used) {
@@ -158,12 +158,15 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                         case WEAKEN:
                             EffectUtil.Fear.weaken(owner, target);
                             break;
+                        case DECIMATE:
+                            EffectUtil.Fear.decimate(owner, target);
+                            break;
                         case SOUL_SMITE:
                             EffectUtil.Fear.soulSmite(owner, target);
                             break;
                     }
                 } else if (ItemUtil.hasFearBow(owner)) {
-                    used = callSpec(owner, target, 5, 10);
+                    used = callSpec(owner, target, 6, 11);
                     if (used == null) return;
                     fearSpec.put(owner.getName(), System.currentTimeMillis());
 
@@ -190,7 +193,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             if (canUnleashedSpec(owner.getName())) {
                 if (ItemUtil.hasUnleashedSword(owner)) {
-                    used = callSpec(owner, target, 10, 16);
+                    used = callSpec(owner, target, 11, 17);
                     if (used == null) return;
                     unleashedSpec.put(owner.getName(), System.currentTimeMillis());
                     switch (used) {
@@ -214,7 +217,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             break;
                     }
                 } else if (ItemUtil.hasUnleashedBow(owner)) {
-                    used = callSpec(owner, target, 17, 19);
+                    used = callSpec(owner, target, 18, 20);
                     if (used == null) return;
                     unleashedSpec.put(owner.getName(), System.currentTimeMillis());
                     switch (used) {
