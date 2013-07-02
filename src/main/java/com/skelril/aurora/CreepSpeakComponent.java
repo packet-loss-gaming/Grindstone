@@ -155,6 +155,9 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                     color = ChatColor.RED;
                     if (EnvironmentUtil.isServerTimeOdd(time)) {
                         message = "Brainz!!!";
+                    } else if (ChanceUtil.getChance(300)) {
+                        color = ChatColor.DARK_GREEN;
+                        message = "Graaaiiiinnnnsssss...";
                     } else {
                         message = "Ugh...";
                     }
