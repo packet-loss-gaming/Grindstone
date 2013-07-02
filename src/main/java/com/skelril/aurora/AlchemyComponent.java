@@ -1,4 +1,5 @@
 package com.skelril.aurora;
+
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -110,7 +111,7 @@ public class AlchemyComponent extends BukkitComponent implements Listener {
                 if (item.getData().getData() == 1) {
                     itemStack.add(new ItemStack(BlockID.GOLD_BLOCK, item.getAmount() * 8));
                 } else {
-                    itemStack.add(new ItemStack(ItemID.GOLD_NUGGET, item.getAmount() * 8));
+                    itemStack.add(new ItemStack(ItemID.GOLD_BAR, item.getAmount() * 8));
                 }
                 itemStack.add(new ItemStack(ItemID.RED_APPLE, item.getAmount()));
                 return itemStack;
