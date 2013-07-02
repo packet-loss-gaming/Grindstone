@@ -1077,7 +1077,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private ItemStack pickRandomItem() {
 
-        switch (ChanceUtil.getRandom(35)) {
+        switch (ChanceUtil.getRandom(39)) {
             case 1:
                 return ItemUtil.Misc.gemOfLife(6);
             case 3:
@@ -1132,6 +1132,14 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 return new ItemStack(ItemID.ENDER_PEARL, ChanceUtil.getRandom(16));
             case 26:
                 return new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(64), (short) 1);
+            case 28:
+                return new ItemStack(ItemID.SADDLE, ChanceUtil.getRandom(3));
+            case 29:
+                return new ItemStack(ItemID.HORSE_ARMOR_IRON);
+            case 30:
+                return new ItemStack(ItemID.HORSE_ARMOR_GOLD);
+            case 31:
+                return new ItemStack(ItemID.HORSE_ARMOR_DIAMOND);
             default:
                 return ItemUtil.Misc.barbarianBone(ChanceUtil.getRandom(5));
         }
