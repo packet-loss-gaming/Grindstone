@@ -45,27 +45,28 @@ public class EffectUtil {
 
         public static void fearBlaze(Player owner, LivingEntity target) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, target.getHealth() * 20, 0));
-            target.setFireTicks(owner.getHealth() * 20);
+            target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) (target.getHealth() * 20), 0));
+            target.setFireTicks((int) (owner.getHealth() * 20));
             ChatUtil.sendNotice(owner, "Your sword releases a deadly blaze.");
         }
 
         public static void curse(Player owner, LivingEntity target) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, owner.getHealth() * 24, 2));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, (int) (owner.getHealth() * 24), 2));
             ChatUtil.sendNotice(owner, "Your weapon curses its victim.");
         }
 
         public static void weaken(Player owner, LivingEntity target) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, owner.getHealth() * 18, 1));
-            owner.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, owner.getHealth() * 18, 1));
+            int newTime = (int) (owner.getHealth() * 18);
+            target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, newTime, 1));
+            owner.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, newTime, 1));
             ChatUtil.sendNotice(owner, "Your sword leaches strength from its victim.");
         }
 
         public static void confuse(Player owner, LivingEntity target) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, owner.getHealth() * 18, 1));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, (int) (owner.getHealth() * 18), 1));
             ChatUtil.sendNotice(owner, "Your sword confuses its victim.");
         }
 
@@ -77,23 +78,23 @@ public class EffectUtil {
 
         public static void soulSmite(final Player owner, final LivingEntity target) {
 
-            final double targetHP = (double) target.getHealth() / (double) target.getMaxHealth();
+            final double targetHP = target.getHealth() / target.getMaxHealth();
 
-            target.setHealth((int) Math.floor(((targetHP / 2) * target.getMaxHealth())));
+            target.setHealth((targetHP / 2) * target.getMaxHealth());
             server.getScheduler().runTaskLater(inst, new Runnable() {
 
                 @Override
                 public void run() {
 
                     if (target.isValid()) {
-                        double newTargetHP = (double) target.getHealth() / (double) target.getMaxHealth();
+                        double newTargetHP = target.getHealth() / target.getMaxHealth();
                         if (newTargetHP < targetHP) {
-                            target.setHealth((int) Math.floor(target.getMaxHealth() * targetHP));
+                            target.setHealth(target.getMaxHealth() * targetHP);
                         }
                     }
                     ChatUtil.sendNotice(owner, "Your sword releases its grasp on its victim.");
                 }
-            }, 20 * Math.min(20, target.getMaxHealth() / 5 + 1));
+            }, 20 * (int) Math.min(20, target.getMaxHealth() / 5 + 1));
             ChatUtil.sendNotice(owner, "Your sword steals its victims heal for a short time.");
         }
 
@@ -118,12 +119,12 @@ public class EffectUtil {
 
         public static void magicChain(Player owner, LivingEntity target) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, owner.getHealth() * 18, 2));
-            target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, owner.getHealth() * 18, 2));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (owner.getHealth() * 18), 2));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, (int) (owner.getHealth() * 18), 2));
             ChatUtil.sendNotice(owner, "Your bow slows its victim.");
         }
 
-        public static int fearStrike(Player owner, LivingEntity target, int x, WorldGuardPlugin WG) {
+        public static double fearStrike(Player owner, LivingEntity target, double x, WorldGuardPlugin WG) {
 
             server.getPluginManager().callEvent(new RapidHitEvent(owner));
 
@@ -266,30 +267,30 @@ public class EffectUtil {
 
         public static void regen(Player owner, LivingEntity target) {
 
-            owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, target.getHealth() * 10, 2));
+            owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) (target.getHealth() * 10), 2));
             ChatUtil.sendNotice(owner, "You gain a healing aura.");
         }
 
         public static void speed(Player owner, LivingEntity target) {
 
-            owner.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, owner.getHealth() * 18, 2));
-            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, owner.getHealth() * 18, 2));
+            owner.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, (int) (owner.getHealth() * 18), 2));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (owner.getHealth() * 18), 2));
             ChatUtil.sendNotice(owner, "You gain a agile advantage over your opponent.");
         }
 
         public static void lifeLeech(Player owner, LivingEntity target) {
 
-            final int ownerMax = owner.getMaxHealth();
+            final double ownerMax = owner.getMaxHealth();
 
-            final double ownerHP = (double) owner.getHealth() / (double) ownerMax;
-            final double targetHP = (double) target.getHealth() / (double) target.getMaxHealth();
+            final double ownerHP = owner.getHealth() / ownerMax;
+            final double targetHP = target.getHealth() / target.getMaxHealth();
 
             if (ownerHP > targetHP) {
-                owner.setHealth((int) Math.min(ownerMax, ownerMax * (ownerHP + .1)));
+                owner.setHealth(Math.min(ownerMax, ownerMax * (ownerHP + .1)));
                 ChatUtil.sendNotice(owner, "Your weapon heals you.");
             } else {
-                target.setHealth((int) Math.floor(target.getMaxHealth() * ownerHP));
-                owner.setHealth((int) Math.min(ownerMax, Math.floor(ownerMax * targetHP * 1.25)));
+                target.setHealth(target.getMaxHealth() * ownerHP);
+                owner.setHealth(Math.min(ownerMax, ownerMax * targetHP * 1.1));
                 ChatUtil.sendNotice(owner, "You leech the health of your foe.");
             }
         }
@@ -325,30 +326,30 @@ public class EffectUtil {
 
             RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
 
-            int dmgTotal = 0;
+            double dmgTotal = 0;
             List<Entity> entityList = target.getNearbyEntities(6, 4, 6);
             entityList.add(target);
             for (Entity e : entityList) {
                 if (e.isValid() && e instanceof LivingEntity) {
                     if (e.equals(owner)) continue;
-                    int maxHit = ChanceUtil.getRangedRandom(150, 350);
+                    double maxHit = ChanceUtil.getRangedRandom(150, 350);
                     if (e instanceof Player) {
                         if (mgr != null && !mgr.getApplicableRegions(e.getLocation()).allows(DefaultFlag.PVP)) {
                             continue;
                         }
-                        maxHit = (int) ((1.0 / 3.0) * maxHit);
+                        maxHit = (1.0 / 3.0) * maxHit;
                     }
                     ((LivingEntity) e).damage(maxHit, owner);
                     for (int i = 0; i < 20; i++) e.getWorld().playEffect(e.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
                     dmgTotal += maxHit;
                 }
             }
-            ChatUtil.sendNotice(owner, "Your sword dishes out an incredible " + dmgTotal + " damage!");
+            ChatUtil.sendNotice(owner, "Your sword dishes out an incredible " + (int) Math.ceil(dmgTotal) + " damage!");
         }
 
         public static void evilFocus(Player owner, final LivingEntity target, final FreezeComponent FZ) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * target.getHealth(), 9));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (20 * target.getHealth()), 9));
             if (target instanceof Player && !FZ.isFrozen((Player) target)) {
                 FZ.freezePlayer((Player) target);
                 server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -356,7 +357,7 @@ public class EffectUtil {
                     public void run() {
                         FZ.unfreezePlayer((Player) target);
                     }
-                }, 20 * target.getHealth());
+                }, (int) (20 * target.getHealth()));
             }
             ChatUtil.sendNotice(owner, "Your bow traps your foe in their own sins.");
         }
@@ -408,7 +409,7 @@ public class EffectUtil {
 
     public static class Ancient {
 
-        public static void powerBurst(LivingEntity entity, int attackDamage) {
+        public static void powerBurst(LivingEntity entity, double attackDamage) {
 
             if (entity instanceof Player) {
                 ChatUtil.sendNotice((Player) entity, "Your armour releases a burst of energy.");

@@ -1,4 +1,5 @@
 package com.skelril.aurora.util.player;
+
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 
@@ -7,13 +8,13 @@ import org.bukkit.inventory.ItemStack;
  */
 public class PlayerState extends GenericWealthStore {
 
-    int health = 20;
-    int hunger = 20;
-    float saturation = 5;
-    float exhaustion = 0;
-    int level = 0;
-    float experience = 0;
-    Location location = null;
+    private double health = 20;
+    private int hunger = 20;
+    private float saturation = 5;
+    private float exhaustion = 0;
+    private int level = 0;
+    private float experience = 0;
+    private Location location = null;
 
     public PlayerState(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents, int level,
                        float experience) {
@@ -23,7 +24,7 @@ public class PlayerState extends GenericWealthStore {
         this.experience = experience;
     }
 
-    public PlayerState(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents, int health,
+    public PlayerState(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents, double health,
                        int hunger, float saturation, float exhaustion, int level, float experience) {
 
         super(ownerName, inventoryContents, armourContents);
@@ -35,7 +36,7 @@ public class PlayerState extends GenericWealthStore {
         this.experience = experience;
     }
 
-    public PlayerState(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents, int health,
+    public PlayerState(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents, double health,
                        int hunger, float saturation, float exhaustion, Location location) {
 
         super(ownerName, inventoryContents, armourContents);
@@ -46,7 +47,7 @@ public class PlayerState extends GenericWealthStore {
         this.location = location == null ? null : location.clone();
     }
 
-    public PlayerState(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents, int health,
+    public PlayerState(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents, double health,
                        int hunger, float saturation, float exhaustion, int level, float experience, Location location) {
 
         super(ownerName, inventoryContents, armourContents);
@@ -60,12 +61,12 @@ public class PlayerState extends GenericWealthStore {
     }
 
 
-    public int getHealth() {
+    public double getHealth() {
 
         return health;
     }
 
-    public void setHealth(int health) {
+    public void setHealth(double health) {
 
         this.health = health;
     }

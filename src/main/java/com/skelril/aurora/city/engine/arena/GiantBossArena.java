@@ -514,7 +514,11 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 @Override
                 public void run() {
                     if (getWorld().getTime() % 7 != 0 || boss == null || !boss.isValid()) return;
-                    String message = "Boss Health: " + boss.getHealth() + " / " + boss.getMaxHealth();
+
+                    int current = (int) Math.ceil(boss.getHealth());
+                    int max = (int) Math.ceil(boss.getMaxHealth());
+
+                    String message = "Boss Health: " + current + " / " + max;
                     ChatUtil.sendNotice(contained, ChatColor.DARK_AQUA, message);
                 }
             }, 1);
@@ -607,8 +611,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         }
                     }
 
-                    int diff = player.getMaxHealth() - player.getHealth();
-                    if (ChanceUtil.getChance(Math.max(difficulty, player.getMaxHealth() - diff))) {
+                    double diff = player.getMaxHealth() - player.getHealth();
+                    if (ChanceUtil.getChance((int) Math.max(difficulty, Math.round(player.getMaxHealth() - diff)))) {
 
                         EffectUtil.Ancient.powerBurst(player, event.getDamage());
                     }

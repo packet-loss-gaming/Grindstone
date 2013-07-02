@@ -155,8 +155,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             case PLAYER:
                 player = (Player) target;
                 if (ItemUtil.hasAncientArmour(player) && checkEntity((LivingEntity) attacker)) {
-                    int diff = player.getMaxHealth() - player.getHealth();
-                    if (ChanceUtil.getChance(Math.max(3, player.getMaxHealth() - diff))) {
+                    double diff = player.getMaxHealth() - player.getHealth();
+                    if (ChanceUtil.getChance((int) Math.max(3, Math.round(player.getMaxHealth() - diff)))) {
 
                         EffectUtil.Ancient.powerBurst(player, event.getDamage());
                     }

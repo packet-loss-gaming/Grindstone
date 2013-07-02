@@ -212,11 +212,11 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         if (!(aDefender instanceof LivingEntity)) return;
         if (isHostileTempleArea(event.getEntity().getLocation())) {
 
-            int damage = event.getDamage();
+            double damage = event.getDamage();
             LivingEntity defender = (LivingEntity) aDefender;
             if (ItemUtil.hasAncientArmour(defender) && !(getWorld().isThundering() && defender instanceof Player)) {
-                int diff = defender.getMaxHealth() - defender.getHealth();
-                if (ChanceUtil.getChance(Math.max(3, defender.getMaxHealth() - diff))) {
+                double diff = defender.getMaxHealth() - defender.getHealth();
+                if (ChanceUtil.getChance((int) Math.max(3, Math.round(defender.getMaxHealth() - diff)))) {
                     EffectUtil.Ancient.powerBurst(defender, damage);
                 }
             }

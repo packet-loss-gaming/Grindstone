@@ -11,6 +11,8 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
+import net.h31ix.anticheat.api.AnticheatAPI;
+import net.h31ix.anticheat.manage.CheckType;
 import org.bukkit.Effect;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -18,17 +20,22 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
  * Author: Turtle9598
  */
-public class HotSpringArena extends AbstractRegionedArena implements GenericArena {
+public class HotSpringArena extends AbstractRegionedArena implements GenericArena, Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -36,10 +43,15 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
     private AdminComponent adminComponent;
 
+    List<Player> playerL = new ArrayList<>();
+
     public HotSpringArena(World world, ProtectedRegion region, AdminComponent adminComponent) {
 
         super(world, region);
         this.adminComponent = adminComponent;
+
+        //noinspection AccessStaticViaInstance
+        inst.registerEvents(this);
     }
 
     @Override
@@ -73,6 +85,14 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
         return ArenaType.GENERIC;
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerKick(PlayerKickEvent event) {
+
+        if (playerL.contains(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
     public void smoke() {
 
         try {
@@ -96,8 +116,9 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
                             if (EnvironmentUtil.isWater(block) && ChanceUtil.getChance(200)) {
                                 getWorld().playEffect(block.getLocation(), Effect.ENDER_SIGNAL, 1);
-                                if (getWorld().isThundering() && ChanceUtil.getChance(50))
+                                if (getWorld().isThundering() && ChanceUtil.getChance(50)) {
                                     getWorld().spawnEntity(block.getLocation(), EntityType.ZOMBIE);
+                                }
                                 break;
                             }
                         }
@@ -145,6 +166,14 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                     }
                 }
 
+                // TODO Fix this
+
+                playerL.add(player);
+
+                AnticheatAPI.exemptPlayer(player, CheckType.WATER_WALK);
+                AnticheatAPI.exemptPlayer(player, CheckType.FLY);
+                AnticheatAPI.exemptPlayer(player, CheckType.SNEAK);
+
                 IntegratedRunnable runnable = new IntegratedRunnable() {
                     @Override
                     public void run(int times) {
@@ -169,6 +198,16 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
                     @Override
                     public void end() {
+
+                        if (playerL.contains(player)) {
+                            playerL.remove(player);
+                        }
+
+                        if (player == null || !player.isValid()) return;
+
+                        AnticheatAPI.unexemptPlayer(player, CheckType.WATER_WALK);
+                        AnticheatAPI.unexemptPlayer(player, CheckType.FLY);
+                        AnticheatAPI.unexemptPlayer(player, CheckType.SNEAK);
                     }
                 };
 
