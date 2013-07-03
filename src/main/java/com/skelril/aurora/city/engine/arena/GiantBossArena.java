@@ -13,6 +13,7 @@ import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
+import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
@@ -426,6 +427,14 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
 
         if (generalBlacklistedSpecs.contains(spec)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGemOfLifeUsage(GemOfLifeUsageEvent event) {
+
+        if (contains(event.getPlayer())) {
             event.setCancelled(true);
         }
     }

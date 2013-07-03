@@ -9,6 +9,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PlayerSacrificeItemEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
+import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -153,10 +154,25 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         if (isHostileTempleArea(event.getPlayer().getLocation())) event.setCancelled(true);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    int blockedChanges = 0;
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onThunderChange(ThunderChangeEvent event) {
 
-        if (event.toThunderState() && !event.getWorld().isThundering()) {
+        if (!event.getWorld().equals(getWorld())) return;
+
+        /*
+        if (!event.toThunderState() && !isEmpty() && blockedChanges < 5) {
+            event.setCancelled(true);
+            blockedChanges++;
+            return;
+        } else {
+            blockedChanges = 0;
+        }
+        */
+
+        if (event.toThunderState()) {
+
             resetPressurePlateLock();
             isPressurePlateLocked = !checkPressurePlateLock();
             resetRewardChest();
@@ -808,24 +824,34 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
+        boolean contained = contains(player);
 
-        if (contains(player)) {
+        if (contained || player.getWorld().isThundering()) {
 
             List<ItemStack> drops = event.getDrops();
             ItemStack[] dropArray = ItemUtil.clone(drops.toArray(new ItemStack[drops.size()]));
             if (ItemUtil.findItemOfName(dropArray, GEM_OF_LIFE)) {
                 if (!playerState.containsKey(player.getName())) {
-                    playerState.put(player.getName(), new PlayerState(player.getName(),
-                            player.getInventory().getContents(),
-                            player.getInventory().getArmorContents(),
-                            player.getLevel(),
-                            player.getExp()));
-                    dropArray = null;
+                    GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
+                    server.getPluginManager().callEvent(aEvent);
+                    if (!aEvent.isCancelled()) {
+                        playerState.put(player.getName(), new PlayerState(player.getName(),
+                                player.getInventory().getContents(),
+                                player.getInventory().getArmorContents(),
+                                player.getLevel(),
+                                player.getExp()));
+                        if (contained) {
+                            dropArray = null;
+                        } else {
+                            drops.clear();
+                            return;
+                        }
+                    }
                 }
             }
 
             // Leave admin mode deaths out of this
-            if (adminComponent.isAdmin(player)) return;
+            if (!contained || adminComponent.isAdmin(player)) return;
 
             makeGrave(player.getName(), dropArray);
             drops.clear();

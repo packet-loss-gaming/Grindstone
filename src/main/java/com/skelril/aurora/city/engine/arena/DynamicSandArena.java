@@ -6,6 +6,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.LocationUtil;
@@ -204,6 +205,14 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
 
         if (blacklistedSpecs.contains(event.getSpec())) {
 
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGemOfLifeUsage(GemOfLifeUsageEvent event) {
+
+        if (contains(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
