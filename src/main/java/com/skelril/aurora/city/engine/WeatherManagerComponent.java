@@ -5,8 +5,10 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.WeatherType;
 import org.bukkit.command.CommandSender;
@@ -70,6 +72,12 @@ public class WeatherManagerComponent extends BukkitComponent implements Listener
         String state = event.toThunderState() ? "starting" : "ending";
         for (Player player : Collections.synchronizedList(enabledFor)) {
             if (player.getWorld().equals(event.getWorld())) {
+                if (!event.toThunderState()) {
+                    if (ItemUtil.hasAncientArmour(player)
+                            || ItemUtil.hasMasterBow(player) || ItemUtil.hasMasterSword(player)) {
+                        ChatUtil.sendWarning(player, ChatColor.DARK_RED + "===============[WARNING]===============");
+                    }
+                }
                 ChatUtil.sendNotice(player, "A thunder storm is " + state + " on your world.");
             }
         }
