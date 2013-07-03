@@ -70,6 +70,8 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
         public boolean enableAlonzo = true;
         @Setting("alonzo-creeper-chance")
         public int alonzoCreeperChance = 157;
+        @Setting("chance-of-message")
+        public int chance = 7;
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -84,6 +86,8 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
         final Player player = (Player) targetEntity;
         long time = player.getWorld().getTime();
 
+        if (!ChanceUtil.getChance(config.chance)) return;
+
         try {
             // Ninja Check
             if ((ninjaComponent.isNinja(player) && player.isSneaking()) || !rogueComponent.isVisible(player)
@@ -93,10 +97,6 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
             String message = "";
             if (entity instanceof Creeper) {
                 try {
-                    if (event.getReason().equals(TargetReason.FORGOT_TARGET)
-                            || event.getReason().equals(TargetReason.TARGET_ATTACKED_ENTITY)
-                            || event.getReason().equals(TargetReason.TARGET_ATTACKED_OWNER)) return;
-
                     // Alonzo Feature
                     if (config.enableAlonzo && ChanceUtil.getChance(config.alonzoCreeperChance)
                             && !inst.hasPermission(player, "aurora.alonzo.immune")
@@ -119,7 +119,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
 
                         color = ChatColor.DARK_RED;
                         message = "Alonzzzo ssssent ussss.";
-                    } else if (!ChanceUtil.getChance(5)) {
+                    } else {
                         color = ChatColor.DARK_GREEN;
                         message = "That'sssss a very niccce everything you have there.";
                     }
@@ -129,9 +129,6 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                 }
             } else if (entity instanceof IronGolem) {
                 try {
-                    if (event.getReason().equals(TargetReason.FORGOT_TARGET)
-                            || event.getReason().equals(TargetReason.TARGET_ATTACKED_OWNER)) return;
-
                     color = ChatColor.RED;
                     if (event.getReason().equals(TargetReason.TARGET_ATTACKED_ENTITY)) {
                         message = "Vengance!";
@@ -147,10 +144,6 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                 }
             } else if (entity instanceof Zombie && !(entity instanceof PigZombie)) {
                 try {
-                    if (!(event.getReason().equals(TargetReason.TARGET_DIED)
-                            || event.getReason().equals(TargetReason.CLOSEST_PLAYER)
-                            || event.getReason().equals(TargetReason.RANDOM_TARGET))) return;
-
                     if (apocalypse.checkEntity((LivingEntity) entity)) return;
                     color = ChatColor.RED;
                     if (EnvironmentUtil.isServerTimeOdd(time)) {
