@@ -49,7 +49,7 @@ public class EnvironmentUtil {
         return time == ((0 - 8 + 24) * 1000);
     }
 
-    private static final int[] cropBlocks = new int[] {
+    private static final int[] cropBlocks = new int[]{
             BlockID.CROPS, BlockID.MELON_STEM,
             BlockID.CARROTS, BlockID.POTATOES,
             BlockID.PUMPKIN_STEM
@@ -71,7 +71,7 @@ public class EnvironmentUtil {
         return false;
     }
 
-    private static final int[] shrubBlocks = new int[] {
+    private static final int[] shrubBlocks = new int[]{
             BlockID.LONG_GRASS, BlockID.RED_FLOWER, BlockID.YELLOW_FLOWER
     };
 
@@ -88,7 +88,7 @@ public class EnvironmentUtil {
         return false;
     }
 
-    private static final int[] shrubBlockDrops = new int[] {
+    private static final int[] shrubBlockDrops = new int[]{
             ItemID.SEEDS, BlockID.RED_FLOWER, BlockID.YELLOW_FLOWER
     };
 
@@ -100,7 +100,7 @@ public class EnvironmentUtil {
         return false;
     }
 
-    private static final int[] invaluableOres = new int[] {
+    private static final int[] invaluableOres = new int[]{
             BlockID.COAL_ORE
     };
 
@@ -132,7 +132,7 @@ public class EnvironmentUtil {
         return isValuableBlock(block.getTypeId());
     }
 
-    private static final int[] valuableBlocks = new int[] {
+    private static final int[] valuableBlocks = new int[]{
             BlockID.GOLD_BLOCK, BlockID.LAPIS_LAZULI_BLOCK,
             BlockID.IRON_BLOCK, BlockID.DIAMOND_BLOCK,
             BlockID.EMERALD_BLOCK, BlockID.BEACON,
@@ -149,7 +149,7 @@ public class EnvironmentUtil {
         return false;
     }
 
-    private static final int[] valuableOres = new int[] {
+    private static final int[] valuableOres = new int[]{
             BlockID.GOLD_ORE, BlockID.LAPIS_LAZULI_ORE,
             BlockID.IRON_ORE, BlockID.DIAMOND_ORE,
             BlockID.REDSTONE_ORE, BlockID.GLOWING_REDSTONE_ORE,
@@ -207,7 +207,7 @@ public class EnvironmentUtil {
         }
     }
 
-    private static final int[] containerBlocks = new int[] {
+    private static final int[] containerBlocks = new int[]{
             BlockID.BREWING_STAND, BlockID.CHEST,
             BlockID.DISPENSER, BlockID.DROPPER,
             BlockID.FURNACE, BlockID.BURNING_FURNACE,
@@ -230,7 +230,7 @@ public class EnvironmentUtil {
         return false;
     }
 
-    private static final int[] interactiveBlocks = new int[] {
+    private static final int[] interactiveBlocks = new int[]{
             BlockID.WORKBENCH, BlockID.ENCHANTMENT_TABLE,
             BlockID.BEACON, BlockID.ANVIL
     };
@@ -250,7 +250,7 @@ public class EnvironmentUtil {
         return isContainer(block);
     }
 
-    private static final int[] signBlocks = new int[] {
+    private static final int[] signBlocks = new int[]{
             BlockID.SIGN_POST, BlockID.WALL_SIGN
     };
 
@@ -269,7 +269,7 @@ public class EnvironmentUtil {
         return false;
     }
 
-    private static final int[] waterBlocks = new int[] {
+    private static final int[] waterBlocks = new int[]{
             BlockID.WATER, BlockID.STATIONARY_WATER
     };
 
@@ -288,7 +288,7 @@ public class EnvironmentUtil {
         return false;
     }
 
-    private static final int[] lavaBlocks = new int[] {
+    private static final int[] lavaBlocks = new int[]{
             BlockID.LAVA, BlockID.STATIONARY_LAVA
     };
 
@@ -312,7 +312,7 @@ public class EnvironmentUtil {
         return isWater(block) || isLava(block);
     }
 
-    private static final Biome[] frozenBiomes = new Biome[] {
+    private static final Biome[] frozenBiomes = new Biome[]{
             Biome.FROZEN_OCEAN, Biome.FROZEN_RIVER,
             Biome.ICE_MOUNTAINS, Biome.ICE_PLAINS
     };
@@ -359,7 +359,7 @@ public class EnvironmentUtil {
         return e != null && e.isValid() && e.getType() != null && hostileEntities.contains(e.getType());
     }
 
-    private static final BlockFace[] nearby = new BlockFace[] {
+    private static final BlockFace[] nearby = new BlockFace[]{
             BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.EAST, BlockFace.NORTH_WEST,
             BlockFace.SOUTH, BlockFace.SOUTH_EAST, BlockFace.WEST, BlockFace.SOUTH_WEST,
             BlockFace.SELF

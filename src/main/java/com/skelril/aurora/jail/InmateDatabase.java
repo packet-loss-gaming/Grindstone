@@ -1,4 +1,5 @@
 package com.skelril.aurora.jail;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -34,7 +35,6 @@ public interface InmateDatabase extends Iterable<Inmate> {
      * Checks if a player's name is jailed.
      *
      * @param name The name to check
-     *
      * @return Whether name is jailed
      */
     public boolean isJailedName(String name);
@@ -43,7 +43,6 @@ public interface InmateDatabase extends Iterable<Inmate> {
      * Gets the jail message for a jailed name.
      *
      * @param name The name to check
-     *
      * @return The jail message for the given name
      */
     public String getJailedNameMessage(String name);
@@ -92,7 +91,6 @@ public interface InmateDatabase extends Iterable<Inmate> {
      * Returns a Inmate with the given name
      *
      * @param name The name given to the ban.
-     *
      * @return The applicable Inmate
      */
     public Inmate getJailedName(String name);

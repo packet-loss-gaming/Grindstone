@@ -1,4 +1,5 @@
 package com.skelril.aurora.events.entity;
+
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityEvent;

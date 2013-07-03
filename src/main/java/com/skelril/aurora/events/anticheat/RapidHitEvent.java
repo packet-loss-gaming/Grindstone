@@ -29,7 +29,6 @@ public class RapidHitEvent extends PlayerEvent {
     }
 
     /**
-     *
      * @return the damage or -1 if not applicable
      */
     public int getDamage() {

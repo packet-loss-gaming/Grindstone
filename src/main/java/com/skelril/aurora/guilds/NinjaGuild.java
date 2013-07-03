@@ -20,7 +20,7 @@ import java.util.*;
  */
 public class NinjaGuild extends AbstractGuild implements Runnable, Listener {
 
-    private static final PotionEffect[] guildEffects = new PotionEffect[] {
+    private static final PotionEffect[] guildEffects = new PotionEffect[]{
             new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 2),
             new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 600, 2),
             new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 2)

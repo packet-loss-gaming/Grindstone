@@ -1,4 +1,5 @@
 package com.skelril.aurora.homes;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 

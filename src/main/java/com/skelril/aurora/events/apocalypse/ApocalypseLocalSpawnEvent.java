@@ -1,4 +1,5 @@
 package com.skelril.aurora.events.apocalypse;
+
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;

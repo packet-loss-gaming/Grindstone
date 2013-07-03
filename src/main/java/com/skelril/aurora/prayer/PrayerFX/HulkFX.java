@@ -10,10 +10,10 @@ import org.bukkit.potion.PotionEffectType;
  */
 public class HulkFX extends AbstractPrayer {
 
-    private static final AbstractPrayer[] subFX = new AbstractPrayer[] {
+    private static final AbstractPrayer[] subFX = new AbstractPrayer[]{
             new InfiniteHungerFX()
     };
-    private static PotionEffect[] effects = new PotionEffect[] {
+    private static PotionEffect[] effects = new PotionEffect[]{
             new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 30, 4),
             new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 30, 4)
     };

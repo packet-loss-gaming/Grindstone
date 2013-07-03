@@ -1,4 +1,5 @@
 package com.skelril.aurora.economic.lottery;
+
 import java.util.List;
 
 /**

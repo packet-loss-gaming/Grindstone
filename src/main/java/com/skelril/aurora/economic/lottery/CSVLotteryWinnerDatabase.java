@@ -88,7 +88,7 @@ public class CSVLotteryWinnerDatabase implements LotteryWinnerDatabase {
                 if (maxKept > 0) maxKept--;
                 else break;
 
-                line = new String[] {
+                line = new String[]{
                         winner.getName(),
                         String.valueOf(winner.getTime())
                 };

@@ -1,4 +1,5 @@
 package com.skelril.aurora.prayer.PrayerFX;
+
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 

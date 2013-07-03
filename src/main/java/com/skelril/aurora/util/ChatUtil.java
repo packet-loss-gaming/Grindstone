@@ -21,7 +21,8 @@ public class ChatUtil {
             builder.append(ChatColor.BLACK).append("] ");
             builder.append(ChatColor.GRAY).append(message);
             player.sendMessage(builder.toString());
-        } catch (CommandException ignored) {}
+        } catch (CommandException ignored) {
+        }
     }
 
     public static void sendNotice(CommandSender sender, String notice) {
@@ -34,7 +35,8 @@ public class ChatUtil {
         try {
             Player player = PlayerUtil.matchPlayerExactly(null, playerName);
             player.sendMessage(ChatColor.YELLOW + notice);
-        } catch (CommandException ignored) {}
+        } catch (CommandException ignored) {
+        }
     }
 
     public static void sendNotice(CommandSender[] senders, String notice) {

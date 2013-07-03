@@ -1,4 +1,5 @@
 package com.skelril.aurora;
+
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.zachsthings.libcomponents.ComponentInformation;

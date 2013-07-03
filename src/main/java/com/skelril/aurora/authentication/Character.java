@@ -1,4 +1,5 @@
 package com.skelril.aurora.authentication;
+
 /**
  * Author: Turtle9598
  */

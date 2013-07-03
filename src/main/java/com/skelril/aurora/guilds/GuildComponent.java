@@ -1,4 +1,5 @@
 package com.skelril.aurora.guilds;
+
 import com.zachsthings.libcomponents.ComponentInformation;
 
 /**

@@ -84,7 +84,7 @@ public class CSVLotteryTicketDatabase implements LotteryTicketDatabase {
             String[] line;
 
             for (GenericWealthStore lotteryTicket : tickets) {
-                line = new String[] {
+                line = new String[]{
                         lotteryTicket.getOwnerName().trim(),
                         String.valueOf(lotteryTicket.getValue())
                 };

@@ -188,7 +188,8 @@ public class EffectUtil {
                         }
 
                         loc = block.getLocation(loc);
-                        while (loc.getY() > 0 && BlockType.canPassThrough(loc.getBlock().getTypeId())) {
+
+                        while (loc.getY() > 0 && BlockType.canPassThrough(block.getTypeId(), block.getData())) {
                             loc.add(0, -1, 0);
                         }
 
@@ -215,7 +216,8 @@ public class EffectUtil {
                     for (Block block : blocks) {
 
                         loc = block.getLocation(loc);
-                        while (loc.getY() > 0 && BlockType.canPassThrough(loc.getBlock().getTypeId())) {
+
+                        while (loc.getY() > 0 && BlockType.canPassThrough(block.getTypeId(), block.getData())) {
                             loc.add(0, -1, 0);
                         }
 

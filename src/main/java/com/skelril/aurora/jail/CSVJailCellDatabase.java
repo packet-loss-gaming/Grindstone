@@ -1,4 +1,5 @@
 package com.skelril.aurora.jail;
+
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.sk89q.commandbook.CommandBook;
@@ -127,7 +128,7 @@ public class CSVJailCellDatabase implements JailCellDatabase {
             String[] line;
 
             for (JailCell jailCell : jailCells) {
-                line = new String[] {
+                line = new String[]{
                         jailCell.getCellName().trim().toLowerCase(),
                         jailCell.getPrisonName().trim().toLowerCase(),
                         jailCell.getWorldName().trim(),

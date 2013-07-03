@@ -347,7 +347,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             aBlock = ls.getBlock().getRelative(BlockFace.DOWN);
             // If the block is a half slab or it is wood, don't do this
             if (aBlock.getTypeId() != BlockID.STEP && aBlock.getTypeId() != BlockID.WOOD) {
-                if (BlockType.canPassThrough(aBlock.getRelative(BlockFace.DOWN, 2).getTypeId())) {
+                aBlock = aBlock.getRelative(BlockFace.DOWN, 2);
+                if (BlockType.canPassThrough(aBlock.getTypeId(), aBlock.getData())) {
                     ls.add(0, -3, 0);
                 }
             }
@@ -1178,7 +1179,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         Block block = location.getBlock();
         for (BlockFace face : EnvironmentUtil.getNearbyBlockFaces()) {
             Block aBlock = block.getRelative(face);
-            if (!BlockType.canPassThrough(aBlock.getRelative(BlockFace.DOWN).getTypeId())) continue;
+            Block bBlock = aBlock.getRelative(BlockFace.DOWN);
+            if (!BlockType.canPassThrough(bBlock.getTypeId(), bBlock.getData())) continue;
             BaseBlock aBB = new BaseBlock(aBlock.getTypeId(), aBlock.getData());
             if (ChanceUtil.getChance(chance) && accept(aBB, autoBreakable)) {
                 generalIndex.addItem(new BlockRecord(aBlock.getLocation(location), aBB));
@@ -1257,6 +1259,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     private boolean isEvilMode(Block block) {
 
         // Weather/Day Check
+        //noinspection SimplifiableIfStatement
         if (EnvironmentUtil.isNightTime(getWorld().getTime()) || getWorld().hasStorm()) return true;
 
         return isHostileTempleArea(block.getLocation()) || block.getLightLevel() == 0;

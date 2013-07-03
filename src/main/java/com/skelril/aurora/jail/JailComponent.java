@@ -301,7 +301,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         public void unjailCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             String message = args.argsLength() >= 2 ? args.getJoinedStrings(1)
-                                                    : "Unjailed!";
+                    : "Unjailed!";
 
             String inmateName = args.getString(0)
                     .replace("\r", "")

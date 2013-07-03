@@ -1,4 +1,5 @@
 package com.skelril.aurora.guilds;
+
 import com.sk89q.commandbook.CommandBook;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -93,7 +94,6 @@ public abstract class AbstractGuild {
      * This method returns all active flags for the player.
      *
      * @param player - The player who's flags you would like to receive
-     *
      * @return - null if the player has no flags, otherwise a flag list
      */
     public Character[] getActiveFlags(Player player) {
@@ -116,7 +116,6 @@ public abstract class AbstractGuild {
      * This method is used to determine whether a player is in the guild.
      *
      * @param player - The player to check
-     *
      * @return - true if the player is a member of this guild
      */
     public boolean isInGuild(Player player) {
@@ -128,7 +127,6 @@ public abstract class AbstractGuild {
      * This method is used to determine whether a player is in the guild and active.
      *
      * @param player - The player to check
-     *
      * @return - true if the player is a member of this guild
      */
     public boolean isActive(Player player) {
@@ -143,7 +141,6 @@ public abstract class AbstractGuild {
      * This method is used to add the player to the guild.
      *
      * @param player - The player to add
-     *
      * @return - true if successfully added
      */
     public boolean addToGuild(Player player) {
@@ -157,7 +154,6 @@ public abstract class AbstractGuild {
      * This method is used to remove the player from the guild.
      *
      * @param player - The player to remove
-     *
      * @return - true if successfully removed
      */
     public boolean removeFromGuild(Player player) {
@@ -171,7 +167,6 @@ public abstract class AbstractGuild {
      * This method is used to active a player's guild
      *
      * @param player - The player to activate
-     *
      * @return - true if the player was activated
      */
     public boolean activate(Player player, Character[] flags) {

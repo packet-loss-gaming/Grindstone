@@ -1,4 +1,5 @@
 package com.skelril.aurora.duel;
+
 import org.bukkit.entity.Player;
 
 import java.util.HashSet;

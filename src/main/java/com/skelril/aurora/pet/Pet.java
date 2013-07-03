@@ -1,4 +1,5 @@
 package com.skelril.aurora.pet;
+
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 

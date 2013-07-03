@@ -1,4 +1,5 @@
 package com.skelril.aurora.events.apocalypse;
+
 import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;

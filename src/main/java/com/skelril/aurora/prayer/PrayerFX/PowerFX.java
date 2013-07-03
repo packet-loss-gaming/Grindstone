@@ -10,17 +10,17 @@ import org.bukkit.potion.PotionEffectType;
  */
 public class PowerFX extends AbstractPrayer {
 
-    private static final AbstractPrayer[] subFX = new AbstractPrayer[] {
+    private static final AbstractPrayer[] subFX = new AbstractPrayer[]{
             new InfiniteHungerFX()
     };
-    private static PotionEffect[] effects = new PotionEffect[] {
+    private static PotionEffect[] effects = new PotionEffect[]{
             new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 2),
             new PotionEffect(PotionEffectType.REGENERATION, 20 * 600, 2),
             new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 2),
             new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 600, 2),
             new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 2)
     };
-    private static PotionEffectType[] removableEffects = new PotionEffectType[] {
+    private static PotionEffectType[] removableEffects = new PotionEffectType[]{
             PotionEffectType.CONFUSION, PotionEffectType.BLINDNESS, PotionEffectType.WEAKNESS,
             PotionEffectType.POISON, PotionEffectType.SLOW
     };

@@ -14,7 +14,7 @@ import java.util.Random;
 public class SlapFX extends AbstractPrayer {
 
     private final Random random = new Random();
-    private static final AbstractPrayer[] subFX = new AbstractPrayer[] {
+    private static final AbstractPrayer[] subFX = new AbstractPrayer[]{
             new ButterFingersFX()
     };
 

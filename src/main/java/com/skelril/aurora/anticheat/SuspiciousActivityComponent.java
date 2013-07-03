@@ -53,7 +53,7 @@ public class SuspiciousActivityComponent extends BukkitComponent implements List
                     jail.jail(profile.getPlayer(), TimeUnit.MINUTES.toMillis(15));
                     server.broadcastMessage(ChatColor.RED + profile.getPlayer() + " jailed for hacking!");
                     //noinspection StatementWithEmptyBody
-                    while (!profile.poll());
+                    while (!profile.poll()) ;
                 } else {
                     for (Player player : server.getOnlinePlayers()) {
 
@@ -121,7 +121,7 @@ public class SuspiciousActivityComponent extends BukkitComponent implements List
 
         private int lapis = 0;
 
-        public Profile(String player)  {
+        public Profile(String player) {
 
             this.player = player;
         }

@@ -1,4 +1,5 @@
 package com.skelril.aurora.homes;
+
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.sk89q.commandbook.CommandBook;
@@ -104,7 +105,7 @@ public class CSVHomeDatabase implements HomeDatabase {
             String[] line;
 
             for (Home home : homes) {
-                line = new String[] {
+                line = new String[]{
                         home.getPlayerName().toLowerCase(),
                         home.getWorldName(),
                         String.valueOf(home.getX()),

@@ -1,4 +1,5 @@
 package com.skelril.aurora;
+
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.aurora.events.entity.ProjectileTickEvent;
 import com.zachsthings.libcomponents.ComponentInformation;

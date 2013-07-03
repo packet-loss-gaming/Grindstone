@@ -123,7 +123,7 @@ public class CSVInmateDatabase implements InmateDatabase {
             String[] line;
 
             for (Inmate inmate : inmates) {
-                line = new String[] {
+                line = new String[]{
                         inmate.getName().trim().toLowerCase(),
                         inmate.getPrisonName().trim().toLowerCase(),
                         inmate.getReason().trim(),

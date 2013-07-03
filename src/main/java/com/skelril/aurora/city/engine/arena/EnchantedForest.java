@@ -276,7 +276,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                 v = v.add(0, 83, 0);
                                 if (getRegion().contains(v.getBlockX(), v.getBlockY(), v.getBlockZ())) {
                                     Block b = getWorld().getBlockAt(v.getBlockX(), v.getBlockY(), v.getBlockZ());
-                                    if (BlockType.canPassThrough(b.getTypeId())) {
+                                    if (BlockType.canPassThrough(b.getTypeId(), b.getData())) {
                                         Slime s = (Slime) getWorld().spawnEntity(b.getLocation(), EntityType.SLIME);
                                         s.setSize(16);
                                         s.setRemoveWhenFarAway(false);

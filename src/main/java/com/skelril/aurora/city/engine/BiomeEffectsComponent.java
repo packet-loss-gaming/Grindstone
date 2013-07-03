@@ -81,7 +81,7 @@ public class BiomeEffectsComponent extends BukkitComponent implements Listener, 
 
         public Location secretChestLocation = LocationUtil.parseLocation(secretChestLocationString);
         public String mainWorld = secretChestLocation.getWorld() != null
-                                  ? secretChestLocation.getWorld().getName() : "null";
+                ? secretChestLocation.getWorld().getName() : "null";
     }
 
     @Override

@@ -1,4 +1,5 @@
 package com.skelril.aurora.jail;
+
 import com.sk89q.commandbook.CommandBook;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

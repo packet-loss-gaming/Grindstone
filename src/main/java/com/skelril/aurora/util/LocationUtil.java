@@ -18,7 +18,7 @@ import java.util.List;
 
 public class LocationUtil {
 
-    private static final BlockFace[] surroundingBlockFaces = new BlockFace[] {
+    private static final BlockFace[] surroundingBlockFaces = new BlockFace[]{
             BlockFace.NORTH, BlockFace.EAST,
             BlockFace.SOUTH, BlockFace.WEST, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST, BlockFace.SOUTH_EAST,
             BlockFace.SOUTH_WEST
@@ -88,7 +88,7 @@ public class LocationUtil {
         int free = 0;
 
         // Look for ground
-        while (block.getY() > 1 && (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED)) {
+        while (block.getY() > 1 && (BlockType.canPassThrough(block.getTypeId(), block.getData()) || block.getTypeId() == BlockID.BED)) {
             free++;
             block = block.getRelative(0, -1, 0);
         }
@@ -114,7 +114,7 @@ public class LocationUtil {
         boolean foundGround = false;
 
         while (block.getY() + 1 < world.getMaxHeight()) {
-            if (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED) {
+            if (BlockType.canPassThrough(block.getTypeId(), block.getData()) || block.getTypeId() == BlockID.BED) {
                 free++;
             } else {
                 free = 0;
@@ -259,7 +259,7 @@ public class LocationUtil {
     public static Location[] getNearbyLocations(Location startLocation, int searchRadius, int vert) {
 
         if (searchRadius < 1) {
-            return new Location[] {startLocation};
+            return new Location[]{startLocation};
         }
 
         Location[] locations;

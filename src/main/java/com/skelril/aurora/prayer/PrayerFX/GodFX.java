@@ -11,18 +11,18 @@ import org.bukkit.potion.PotionEffectType;
  */
 public class GodFX extends AbstractTriggeredPrayer {
 
-    private static final AbstractPrayer[] subFX = new AbstractPrayer[] {
+    private static final AbstractPrayer[] subFX = new AbstractPrayer[]{
             new ThrownFireballFX(), new InfiniteHungerFX(),
             new InvisibilityFX()
     };
-    private static PotionEffect[] effects = new PotionEffect[] {
+    private static PotionEffect[] effects = new PotionEffect[]{
             new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 10),
             new PotionEffect(PotionEffectType.REGENERATION, 20 * 600, 10),
             new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 10),
             new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 600, 10),
             new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 10)
     };
-    private static PotionEffectType[] removableEffects = new PotionEffectType[] {
+    private static PotionEffectType[] removableEffects = new PotionEffectType[]{
             PotionEffectType.CONFUSION, PotionEffectType.BLINDNESS, PotionEffectType.WEAKNESS,
             PotionEffectType.POISON, PotionEffectType.SLOW
     };

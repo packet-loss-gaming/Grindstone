@@ -1,4 +1,5 @@
 package com.skelril.aurora.util.player;
+
 import org.bukkit.entity.Player;
 
 /**
@@ -11,7 +12,6 @@ public class GeneralPlayerUtil {
      *
      * @param player - The player to hide
      * @param to     - The player who can no longer see the player
-     *
      * @return - true if change occurred
      */
     public static boolean hide(Player player, Player to) {
@@ -28,7 +28,6 @@ public class GeneralPlayerUtil {
      *
      * @param player - The player to show
      * @param to     - The player who can now see the player
-     *
      * @return - true if change occurred
      */
     public static boolean show(Player player, Player to) {

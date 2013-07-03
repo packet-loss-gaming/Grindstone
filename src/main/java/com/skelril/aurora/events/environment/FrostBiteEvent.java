@@ -1,4 +1,5 @@
 package com.skelril.aurora.events.environment;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;

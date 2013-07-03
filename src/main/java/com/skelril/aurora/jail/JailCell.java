@@ -1,4 +1,5 @@
 package com.skelril.aurora.jail;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 

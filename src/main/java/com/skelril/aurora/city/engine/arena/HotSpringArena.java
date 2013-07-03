@@ -181,7 +181,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                         if (player == null || !player.isValid()) return;
 
                         Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-                        if (!BlockType.canPassThrough(downward.getTypeId()) && player.getLocation().getBlockY() > 70) {
+                        if (!BlockType.canPassThrough(downward.getTypeId(), downward.getData()) && player.getLocation().getBlockY() > 70) {
                             return;
                         }
 

@@ -1,4 +1,5 @@
 package com.skelril.aurora.homes;
+
 import org.bukkit.entity.Player;
 
 /**
@@ -24,7 +25,6 @@ public interface HomeDatabase {
      * Checks if a player has a house
      *
      * @param name The name to check
-     *
      * @return Whether the player has a house
      */
     public boolean houseExist(String name);
@@ -51,7 +51,6 @@ public interface HomeDatabase {
      * Returns the home with the given name
      *
      * @param name The name given to the ban.
-     *
      * @return The applicable player
      */
     public Home getHouse(String name);

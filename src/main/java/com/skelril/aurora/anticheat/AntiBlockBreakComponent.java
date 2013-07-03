@@ -32,8 +32,10 @@ public class AntiBlockBreakComponent extends BukkitComponent implements Listener
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    @InjectComponent AdminComponent adminComponent;
-    @InjectComponent JailComponent jailComponent;
+    @InjectComponent
+    AdminComponent adminComponent;
+    @InjectComponent
+    JailComponent jailComponent;
 
     ConcurrentHashMap<Player, AbstractMap.SimpleEntry<Long, Integer>> counter = new ConcurrentHashMap<>();
 
@@ -67,7 +69,8 @@ public class AntiBlockBreakComponent extends BukkitComponent implements Listener
                     Bukkit.broadcastMessage("The player:" + player.getName() + " has been jailed for "
                             + k.getValue() + " minutes because they attempted to break "
                             + k.getValue() + " blocks too quickly.");
-                } catch (CommandException ignored) {}
+                } catch (CommandException ignored) {
+                }
             } else if (counter.get(player).getValue() > 5) {
                 event.setCancelled(true);
             }

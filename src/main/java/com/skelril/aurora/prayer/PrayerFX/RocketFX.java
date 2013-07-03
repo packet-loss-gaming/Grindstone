@@ -10,7 +10,7 @@ import org.bukkit.util.Vector;
  */
 public class RocketFX extends AbstractPrayer {
 
-    private static final AbstractPrayer[] subFX = new AbstractPrayer[] {
+    private static final AbstractPrayer[] subFX = new AbstractPrayer[]{
             new ButterFingersFX()
     };
 

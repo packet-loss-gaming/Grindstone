@@ -1,4 +1,5 @@
 package com.skelril.aurora.city.engine.arena;
+
 import org.bukkit.entity.LivingEntity;
 
 /**

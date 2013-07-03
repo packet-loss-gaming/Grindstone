@@ -81,7 +81,7 @@ public class FactoryMech extends AbstractRegionedArena {
                 if (wanted.contains(workingStack.getTypeId())) {
                     total = workingStack.getAmount();
                     ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
-                    if (typeAmtHash.containsKey(workingStack.getTypeId()))  {
+                    if (typeAmtHash.containsKey(workingStack.getTypeId())) {
                         total += typeAmtHash.get(workingStack.getTypeId());
                     }
                     typeAmtHash.put(workingStack.getTypeId(), total);
@@ -113,10 +113,10 @@ public class FactoryMech extends AbstractRegionedArena {
         } else if (typeAmtHash.containsKey(ItemID.GHAST_TEAR)) {
             target = PotionType.REGEN;
             using.add(ItemID.GHAST_TEAR);
-        } else if (typeAmtHash.containsKey(ItemID.BLAZE_POWDER))  {
+        } else if (typeAmtHash.containsKey(ItemID.BLAZE_POWDER)) {
             target = PotionType.STRENGTH;
             using.add(ItemID.BLAZE_POWDER);
-        } else if (typeAmtHash.containsKey(ItemID.FERMENTED_SPIDER_EYE))  {
+        } else if (typeAmtHash.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
             target = PotionType.WEAKNESS;
             using.add(ItemID.FERMENTED_SPIDER_EYE);
         } else if (typeAmtHash.containsKey(ItemID.GOLDEN_CARROT)) {
@@ -192,7 +192,7 @@ public class FactoryMech extends AbstractRegionedArena {
 
     /**
      * Copied from the Bukkit potion class
-     *
+     * <p/>
      * Converts this potion to a valid potion damage short, usable for potion
      * item stacks.
      *
