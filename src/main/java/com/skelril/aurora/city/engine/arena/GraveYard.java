@@ -154,22 +154,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         if (isHostileTempleArea(event.getPlayer().getLocation())) event.setCancelled(true);
     }
 
-    int blockedChanges = 0;
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onThunderChange(ThunderChangeEvent event) {
 
         if (!event.getWorld().equals(getWorld())) return;
-
-        /*
-        if (!event.toThunderState() && !isEmpty() && blockedChanges < 5) {
-            event.setCancelled(true);
-            blockedChanges++;
-            return;
-        } else {
-            blockedChanges = 0;
-        }
-        */
 
         if (event.toThunderState()) {
 
@@ -189,6 +177,16 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 ChatUtil.sendNotice(player, ChatColor.DARK_RED + "Taste the wrath of thousands!");
                 for (int i = 0; i < 15; i++) {
                     localSpawn(player, true);
+                }
+            }
+        } else {
+
+            ChatUtil.sendNotice(getContainedPlayers(), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
+            for (Entity entity : getContainedEntities()) {
+
+                if (ChanceUtil.getChance(5)) continue;
+                if (entity != null && entity instanceof Zombie) {
+                    ((Zombie) entity).setHealth(0);
                 }
             }
         }
