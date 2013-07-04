@@ -10,7 +10,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.Repairable;
+import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 /**
  * Author: Turtle9598
@@ -280,6 +285,60 @@ public class ItemUtil {
             ((Repairable) fearMeta).setRepairCost(400);
             fearBow.setItemMeta(fearMeta);
             return fearBow;
+        }
+    }
+
+    public static class CPotion {
+
+        public static ItemStack divineCombatPotion() {
+
+            int time = 20 * 600;
+            int level = 5;
+
+            ItemStack divineCombatPotion = new Potion(PotionType.INSTANT_DAMAGE).toItemStack(1);
+            PotionMeta pMeta = (PotionMeta) divineCombatPotion.getItemMeta();
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.REGENERATION, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, time, level), false);
+            pMeta.setDisplayName(ChatColor.WHITE + "Divine Combat Potion");
+            divineCombatPotion.setItemMeta(pMeta);
+            return divineCombatPotion;
+        }
+
+        public static ItemStack holyCombatPotion() {
+
+            int time = 20 * 45;
+            int level = 5;
+
+            ItemStack holyCombatPotion = new Potion(PotionType.INSTANT_DAMAGE).toItemStack(1);
+            PotionMeta pMeta = (PotionMeta) holyCombatPotion.getItemMeta();
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.REGENERATION, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, time, level), false);
+            pMeta.setDisplayName(ChatColor.WHITE + "Holy Combat Potion");
+            holyCombatPotion.setItemMeta(pMeta);
+            return holyCombatPotion;
+        }
+
+        public static ItemStack extremeCombatPotion() {
+
+            int time = 20 * 600;
+            int level = 2;
+
+            ItemStack extremeCombatPotion = new Potion(PotionType.INSTANT_DAMAGE).toItemStack(1);
+            PotionMeta pMeta = (PotionMeta) extremeCombatPotion.getItemMeta();
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.REGENERATION, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, time, level), false);
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, time, level), false);
+            pMeta.setDisplayName(ChatColor.WHITE + "Extreme Combat Potion");
+            extremeCombatPotion.setItemMeta(pMeta);
+            return extremeCombatPotion;
         }
     }
 
