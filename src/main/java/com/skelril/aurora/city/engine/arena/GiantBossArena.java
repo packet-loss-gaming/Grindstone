@@ -233,7 +233,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         List<Zombie> que = new ArrayList<>();
         for (Entity entity : contained) {
-            if (entity.isValid() && entity instanceof Zombie && ((Zombie) entity).isBaby()) {
+            if (entity.isValid() && entity instanceof Zombie /*&& ((Zombie) entity).isBaby()*/) {
                 que.add((Zombie) entity);
             }
         }
@@ -267,7 +267,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     public void removeOutsideZombies(Entity[] contained) {
 
         for (Entity e : contained) {
-            if (e instanceof Zombie && ((Zombie) e).isBaby() && !contains(e)) {
+            if (e instanceof Zombie /*&& ((Zombie) e).isBaby()*/ && !contains(e)) {
                 for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
                 e.remove();
             }
@@ -566,16 +566,17 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 ItemStack weapon = new ItemStack(ItemID.BONE);
                 ItemMeta weaponMeta = weapon.getItemMeta();
-                weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 1, true);
+                weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
                 weapon.setItemMeta(weaponMeta);
 
                 for (Location spawnPt : spawnPts) {
                     if (ChanceUtil.getChance(11)) {
                         for (int i = 0; i < Math.max(3, contained.length); i++) {
                             Zombie z = (Zombie) getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
-                            z.setBaby(true);
+                            //z.setBaby(true);
                             EntityEquipment equipment = z.getEquipment();
                             equipment.setItemInHand(weapon.clone());
+                            equipment.setItemInHandDropChance(0F);
                             if (attacker != null && attacker instanceof LivingEntity) {
                                 z.setTarget((LivingEntity) attacker);
                             }
@@ -610,10 +611,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 if (attacker != null) {
                     if (attacker instanceof Zombie) {
                         Zombie zombie = (Zombie) attacker;
-                        if (zombie.isBaby() && ChanceUtil.getChance(difficulty * 5)) {
+                        if (/*zombie.isBaby() &&*/ ChanceUtil.getChance(difficulty * 5)) {
                             ChatUtil.sendNotice(player, "Your armour weakens the zombies.");
                             for (Entity e : player.getNearbyEntities(8, 8, 8)) {
-                                if (e.isValid() && e instanceof Zombie && ((Zombie) e).isBaby()) {
+                                if (e.isValid() && e instanceof Zombie /*&& ((Zombie) e).isBaby()*/) {
                                     ((Zombie) e).damage(18);
                                 }
                             }
@@ -743,7 +744,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 TimedRunnable timed = new TimedRunnable(normal, 60);
                 BukkitTask task = server.getScheduler().runTaskTimer(inst, timed, 0, 20);
                 timed.setTask(task);
-            } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
+            } else if (e instanceof Zombie /*&& ((Zombie) e).isBaby()*/) {
+                event.getDrops().clear();
                 if (ChanceUtil.getChance(28)) {
                     event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(3)));
                 }
