@@ -136,7 +136,7 @@ public class EnvironmentUtil {
             BlockID.GOLD_BLOCK, BlockID.LAPIS_LAZULI_BLOCK,
             BlockID.IRON_BLOCK, BlockID.DIAMOND_BLOCK,
             BlockID.EMERALD_BLOCK, BlockID.BEACON,
-            BlockID.COMMAND_BLOCK
+            BlockID.COMMAND_BLOCK, BlockID.COAL_BLOCK
     };
 
     public static boolean isValuableBlock(int block) {
