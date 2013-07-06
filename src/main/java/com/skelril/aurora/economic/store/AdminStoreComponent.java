@@ -3,14 +3,13 @@ package com.skelril.aurora.economic.store;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.blocks.ItemID;
-import com.sk89q.worldedit.blocks.ItemType;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.item.ItemType;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -153,7 +152,7 @@ public class AdminStoreComponent extends BukkitComponent {
             }
 
             ItemMeta stackMeta = stack.getItemMeta();
-            String itemName = String.valueOf(stack.getTypeId());
+            String itemName = stack.getTypeId() + ":" + stack.getDurability();
             if (stackMeta.hasDisplayName()) {
                 itemName = stackMeta.getDisplayName();
                 if (itemName.indexOf(ChatColor.COLOR_CHAR) == -1) {
@@ -163,14 +162,14 @@ public class AdminStoreComponent extends BukkitComponent {
             }
 
             double percentageSale = 1;
-            if (stack.getDurability() != 0 && (stack.getTypeId() != ItemID.POTION || !stackMeta.hasDisplayName())) {
-                if (ItemType.usesDamageValue(stack.getTypeId()) || stack.getAmount() > 1) {
+            if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
+                if (stack.getAmount() > 1) {
                     throw new CommandException(NOT_AVAILIBLE);
                 }
                 percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
             }
 
-            if (itemName.isEmpty() || !hasItemOfName(itemName)) {
+            if (!hasItemOfName(itemName)) {
                 ItemType type = ItemType.lookup(itemName);
                 if (type == null) {
                     throw new CommandException(NOT_AVAILIBLE);
@@ -254,7 +253,8 @@ public class AdminStoreComponent extends BukkitComponent {
                     throw new CommandException("That's not a valid item!");
                 }
 
-                itemName = String.valueOf(stack.getTypeId());
+
+                itemName = stack.getTypeId() + ":" + stack.getDurability();
                 ItemMeta stackMeta = stack.getItemMeta();
                 if (stackMeta.hasDisplayName()) {
                     itemName = stackMeta.getDisplayName();
@@ -264,15 +264,15 @@ public class AdminStoreComponent extends BukkitComponent {
                     itemName = ChatColor.stripColor(itemName);
                 }
 
-                if (stack.getDurability() != 0 && (stack.getTypeId() != ItemID.POTION || !stackMeta.hasDisplayName())) {
-                    if (ItemType.usesDamageValue(stack.getTypeId()) || stack.getAmount() > 1) {
+                if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
+                    if (stack.getAmount() > 1) {
                         throw new CommandException(NOT_AVAILIBLE);
                     }
                     percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
                 }
             }
 
-            if (itemName.isEmpty() || !hasItemOfName(itemName)) {
+            if (!hasItemOfName(itemName)) {
                 ItemType type = ItemType.lookup(itemName);
                 if (type == null) {
                     throw new CommandException(NOT_AVAILIBLE);
@@ -339,8 +339,7 @@ public class AdminStoreComponent extends BukkitComponent {
             // Notification
             String noticeString = oldItem == null ? " added with a price of " : " is now ";
             String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), " " + econ.currencyNamePlural());
-            itemName = itemName.toUpperCase();
-            ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName + ChatColor.YELLOW + noticeString + priceString + "!");
+            ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName.toUpperCase() + ChatColor.YELLOW + noticeString + priceString + "!");
         }
 
         @Command(aliases = {"remove"},
@@ -365,7 +364,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
             itemStoreDatabase.removeItem(itemName);
             itemStoreDatabase.save();
-            ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName + ChatColor.YELLOW + " has been removed from the database!");
+            ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName.toUpperCase() + ChatColor.YELLOW + " has been removed from the database!");
         }
     }
 
@@ -422,7 +421,7 @@ public class AdminStoreComponent extends BukkitComponent {
         return false;
     }
 
-    private ItemStack[] getItem(String name, int amount) throws CommandException {
+    private ItemStack[] getItem(String name, int amount) {
 
         name = name.toLowerCase();
 
@@ -515,7 +514,8 @@ public class AdminStoreComponent extends BukkitComponent {
                     itemStacks.add(ItemUtil.Ancient.makeBoots());
                     break;
                 default:
-                    itemStacks.add(inst.getCommandItem(name));
+                    ItemType type = ItemType.lookup(name);
+                    itemStacks.add(new ItemStack(type.getID(), 1, (short) type.getData()));
                     break;
             }
         }

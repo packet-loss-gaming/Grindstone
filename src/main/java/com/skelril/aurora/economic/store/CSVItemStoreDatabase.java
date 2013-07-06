@@ -33,6 +33,8 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase {
     @Override
     public synchronized boolean load() {
 
+        nameItemPrice.clear();
+
         FileInputStream input = null;
         boolean successful = true;
 
