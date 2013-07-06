@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 
 import java.io.*;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +87,9 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase {
             CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(output, "utf-8")));
             String[] line;
 
-            for (ItemPricePair itemPair : nameItemPrice.values()) {
+            List<ItemPricePair> items = getItemList();
+            Collections.sort(items);
+            for (ItemPricePair itemPair : items) {
                 line = new String[]{
                         itemPair.getName().trim().toLowerCase(),
                         String.valueOf(itemPair.getPrice()),
