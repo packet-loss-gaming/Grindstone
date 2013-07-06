@@ -162,8 +162,12 @@ public class AdminStoreComponent extends BukkitComponent {
                 itemName = ChatColor.stripColor(itemName);
             }
 
+            double percentageSale = 1;
             if (stack.getDurability() != 0 && (stack.getTypeId() != ItemID.POTION || !stackMeta.hasDisplayName())) {
-                throw new CommandException(NOT_AVAILIBLE);
+                if (ItemType.usesDamageValue(stack.getTypeId()) || stack.getAmount() > 1) {
+                    throw new CommandException(NOT_AVAILIBLE);
+                }
+                percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
             }
 
             if (itemName.isEmpty() || !hasItemOfName(itemName)) {
@@ -180,7 +184,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
-            double payment = itemPricePair.getSellPrice() * stack.getAmount();
+            double payment = itemPricePair.getSellPrice() * stack.getAmount() * percentageSale;
 
             server.getScheduler().runTaskLater(inst, new Runnable() {
                 @Override
@@ -241,6 +245,7 @@ public class AdminStoreComponent extends BukkitComponent {
             final Player player = (Player) sender;
 
             String itemName;
+            double percentageSale = 1;
             if (args.argsLength() > 0) {
                 itemName = args.getJoinedStrings(0).toLowerCase();
             } else {
@@ -260,7 +265,10 @@ public class AdminStoreComponent extends BukkitComponent {
                 }
 
                 if (stack.getDurability() != 0 && (stack.getTypeId() != ItemID.POTION || !stackMeta.hasDisplayName())) {
-                    throw new CommandException(NOT_AVAILIBLE);
+                    if (ItemType.usesDamageValue(stack.getTypeId()) || stack.getAmount() > 1) {
+                        throw new CommandException(NOT_AVAILIBLE);
+                    }
+                    percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
                 }
             }
 
@@ -278,13 +286,19 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
+            double paymentPrice = itemPricePair.getSellPrice() * percentageSale;
+
             String purchasePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getPrice()), " " + econ.currencyNamePlural());
-            String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getSellPrice()), " " + econ.currencyNamePlural());
+            String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), " " + econ.currencyNamePlural());
             ChatUtil.sendNotice(player, ChatColor.GOLD, "Price Information for: " + ChatColor.BLUE + itemName.toUpperCase());
             ChatUtil.sendNotice(player, "When you buy it you pay:");
             ChatUtil.sendNotice(player, " - " + purchasePrice + " each.");
             ChatUtil.sendNotice(player, "When you sell it you get:");
             ChatUtil.sendNotice(player, " - " + sellPrice + " each.");
+            if (percentageSale != 1.0) {
+                sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getSellPrice()), " " + econ.currencyNamePlural());
+                ChatUtil.sendNotice(player, " - " + sellPrice + " each when new.");
+            }
         }
 
         @Command(aliases = {"admin"}, desc = "Administrative Commands")
@@ -316,10 +330,17 @@ public class AdminStoreComponent extends BukkitComponent {
             if (args.hasFlag('p')) {
                 price = Math.max(1, args.getFlagDouble('p'));
             }
+
+            // Database operations
+            ItemPricePair oldItem = itemStoreDatabase.getItem(itemName);
             itemStoreDatabase.addItem(itemName, price);
             itemStoreDatabase.save();
+
+            // Notification
+            String noticeString = oldItem == null ? " added with a price of " : " is now ";
             String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), " " + econ.currencyNamePlural());
-            ChatUtil.sendNotice(sender, "Item by the name of: \'" + itemName + "\' added with a price of " + priceString + "!");
+            itemName = itemName.toUpperCase();
+            ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName + ChatColor.YELLOW + noticeString + priceString + "!");
         }
 
         @Command(aliases = {"remove"},
@@ -333,14 +354,18 @@ public class AdminStoreComponent extends BukkitComponent {
             if (!hasItemOfName(itemName)) {
                 ItemType type = ItemType.lookup(itemName);
                 if (type == null) {
-                    throw new CommandException("No item by that name was found.");
+                    throw new CommandException(NOT_AVAILIBLE);
                 }
                 itemName = type.getName();
             }
 
+            if (itemStoreDatabase.getItem(itemName) == null) {
+                throw new CommandException(NOT_AVAILIBLE);
+            }
+
             itemStoreDatabase.removeItem(itemName);
             itemStoreDatabase.save();
-            ChatUtil.sendNotice(sender, "Item by the name of: \'" + itemName + "\' removed!");
+            ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName + ChatColor.YELLOW + " has been removed from the database!");
         }
     }
 
