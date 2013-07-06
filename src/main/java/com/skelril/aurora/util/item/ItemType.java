@@ -59,7 +59,7 @@ public enum ItemType {
     BRICK(BlockID.BRICK, "Brick", "brick", "brickblock"),
     TNT(BlockID.TNT, "TNT", "tnt", "c4", "explosive"),
     BOOKCASE(BlockID.BOOKCASE, "Bookcase", "bookshelf", "bookshelves", "bookcase", "bookcases"),
-    MOSSY_COBBLESTONE(BlockID.MOSSY_COBBLESTONE, "Cobblestone (mossy)", "mossycobblestone", "mossstone", "mossystone", "mosscobble", "mossycobble", "moss", "mossy", "sossymobblecone"),
+    MOSSY_COBBLESTONE(BlockID.MOSSY_COBBLESTONE, "Mossy Cobblestone", "mossycobblestone", "mossstone", "mossystone", "mosscobble", "mossycobble", "moss", "mossy", "sossymobblecone"),
     OBSIDIAN(BlockID.OBSIDIAN, "Obsidian", "obsidian"),
     TORCH(BlockID.TORCH, "Torch", "torch", "light", "candle"),
     FIRE(BlockID.FIRE, "Fire", "fire", "flame", "flames"),
