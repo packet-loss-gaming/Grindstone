@@ -7,6 +7,7 @@ import com.skelril.aurora.events.entity.ProjectileTickEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
@@ -23,7 +24,6 @@ import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 /**
  * @author Turtle9598
@@ -246,9 +246,7 @@ public class FishingComponent extends BukkitComponent implements Listener {
         if (ChanceUtil.getChance(dropFish) && EnvironmentUtil.isWater(loc.getBlock())) {
             ItemStack fish = fishy.clone();
             if (ChanceUtil.getChance(250)) {
-                ItemMeta fishMeta = fish.getItemMeta();
-                fishMeta.setDisplayName(ChatColor.BLUE + "God Fish");
-                fish.setItemMeta(fishMeta);
+                fish = ItemUtil.Misc.godFish(1);
             }
             arrow.getWorld().dropItem(loc, fish);
         }

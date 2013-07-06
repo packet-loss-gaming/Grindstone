@@ -310,7 +310,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                             itemMeta.setDisplayName(ChatColor.RED + "God Bow");
                         } else {
                             itemStack.addEnchantment(Enchantment.ARROW_DAMAGE, 2);
-                            itemStack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
+                            itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
                             itemMeta = itemStack.getItemMeta();
                             itemMeta.setDisplayName(ChatColor.RED + "Overseer's Bow");
                         }

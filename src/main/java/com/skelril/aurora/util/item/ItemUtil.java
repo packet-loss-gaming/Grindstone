@@ -119,6 +119,20 @@ public class ItemUtil {
             return godSword;
         }
 
+        public static ItemStack makeBow() {
+
+            ItemStack godBow = new ItemStack(ItemID.BOW);
+            ItemMeta godMeta = godBow.getItemMeta();
+            godMeta.addEnchant(Enchantment.ARROW_DAMAGE, 5, true);
+            godMeta.addEnchant(Enchantment.ARROW_FIRE, 1, true);
+            godMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+            godMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 2, true);
+            godMeta.setDisplayName(ChatColor.RED + "God Bow");
+            ((Repairable) godMeta).setRepairCost(400);
+            godBow.setItemMeta(godMeta);
+            return godBow;
+        }
+
         public static ItemStack makeHelmet() {
 
             ItemStack godHelmet = new ItemStack(ItemID.DIAMOND_HELMET);
@@ -343,6 +357,27 @@ public class ItemUtil {
     }
 
     public static class Misc {
+
+        public static ItemStack overseerBow() {
+
+            ItemStack overseerBow = new ItemStack(ItemID.BOW);
+            ItemMeta overseerMeta = overseerBow.getItemMeta();
+            overseerMeta.addEnchant(Enchantment.ARROW_DAMAGE, 2, true);
+            overseerMeta.addEnchant(Enchantment.ARROW_FIRE, 1, true);
+            overseerMeta.setDisplayName(ChatColor.RED + "Overseer's Bow");
+            ((Repairable) overseerMeta).setRepairCost(400);
+            overseerBow.setItemMeta(overseerMeta);
+            return overseerBow;
+        }
+
+        public static ItemStack godFish(int amount) {
+
+            ItemStack godFish = new ItemStack(ItemID.RAW_FISH, amount);
+            ItemMeta fishMeta = godFish.getItemMeta();
+            fishMeta.setDisplayName(ChatColor.BLUE + "God Fish");
+            godFish.setItemMeta(fishMeta);
+            return godFish;
+        }
 
         public static ItemStack gemOfDarkness(int amount) {
 

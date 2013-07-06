@@ -43,6 +43,7 @@ public class BlockRecord implements Comparable<BlockRecord> {
     // Oldest to newest
     @Override
     public int compareTo(BlockRecord record) {
+
         if (record == null) return -1;
 
         if (this.getTime() == record.getTime()) return 0;
