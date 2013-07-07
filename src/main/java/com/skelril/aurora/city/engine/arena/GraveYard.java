@@ -806,8 +806,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     }
 
     private static final PotionType[] thrownTypes = new PotionType[]{
-            PotionType.INSTANT_DAMAGE, PotionType.POISON, PotionType.WEAKNESS,
-            PotionType.SLOWNESS
+            PotionType.INSTANT_DAMAGE, PotionType.INSTANT_DAMAGE,
+            PotionType.POISON, PotionType.WEAKNESS
     };
 
     private void throwSlashPotion(Location location) {
@@ -1166,7 +1166,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             case 26:
                 return new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(64), (short) 1);
             case 28:
-                return new ItemStack(ItemID.SADDLE, ChanceUtil.getRandom(3));
+                return new ItemStack(ItemID.SADDLE);
             case 29:
                 return new ItemStack(ItemID.HORSE_ARMOR_IRON);
             case 30:
@@ -1184,13 +1184,26 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         Block block = location.getBlock();
         for (BlockFace face : EnvironmentUtil.getNearbyBlockFaces()) {
-            Block aBlock = block.getRelative(face);
+            final Block aBlock = block.getRelative(face);
             Block bBlock = aBlock.getRelative(BlockFace.DOWN);
             if (!BlockType.canPassThrough(bBlock.getTypeId(), bBlock.getData())) continue;
             BaseBlock aBB = new BaseBlock(aBlock.getTypeId(), aBlock.getData());
             if (ChanceUtil.getChance(chance) && accept(aBB, autoBreakable)) {
-                generalIndex.addItem(new BlockRecord(aBlock.getLocation(location), aBB));
-                aBlock.setTypeId(0);
+
+                final BlockRecord record = new BlockRecord(aBlock.getLocation(location), aBB);
+                Runnable r = new Runnable() {
+                    @Override
+                    public void run() {
+                        generalIndex.addItem(record);
+                        aBlock.setTypeId(0);
+                    }
+                };
+
+                if (aBB.equals(new BaseBlock(BlockID.STONE_BRICK, 2))) {
+                    server.getScheduler().runTaskLater(inst, r, 17);
+                } else {
+                    r.run();
+                }
             }
         }
     }
