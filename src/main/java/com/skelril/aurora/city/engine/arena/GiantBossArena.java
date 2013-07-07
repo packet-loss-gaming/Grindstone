@@ -896,6 +896,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     @Override
                     public void run() {
 
+                        if (!isBossSpawned()) return;
+
                         // Set defaults
                         boolean baskInGlory = getContainedPlayers().length == 0;
                         damageHeals = true;

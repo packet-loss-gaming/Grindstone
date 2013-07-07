@@ -500,7 +500,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             }
             event.setExpToDrop((70 - player.getLocation().getBlockY()) / 2);
 
-            if (ChanceUtil.getChance(1000)) {
+            if (ChanceUtil.getChance(3000)) {
                 ChatUtil.sendNotice(player, "You feel as though a spirit is trying to tell you something...");
                 player.getInventory().addItem(BookUtil.Lore.Areas.theGreatMine());
             }
