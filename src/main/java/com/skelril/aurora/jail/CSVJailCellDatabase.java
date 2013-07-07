@@ -35,8 +35,7 @@ public class CSVJailCellDatabase implements JailCellDatabase {
      */
     protected final Set<JailCell> jailCells = new HashSet<>();
 
-    private static final SimpleDateFormat dateFormat =
-            new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
     public CSVJailCellDatabase(File cellStorageDir) {
 
@@ -53,15 +52,13 @@ public class CSVJailCellDatabase implements JailCellDatabase {
                 @Override
                 public String format(LogRecord record) {
 
-                    return "[" + dateFormat.format(new Date())
-                            + "] " + record.getMessage() + "\r\n";
+                    return "[" + dateFormat.format(new Date()) + "] " + record.getMessage() + "\r\n";
                 }
             });
 
             auditLogger.addHandler(handler);
         } catch (SecurityException | IOException e) {
-            log.warning("Failed to setup audit log for the "
-                    + "CSV cell database: " + e.getMessage());
+            log.warning("Failed to setup audit log for the CSV cell database: " + e.getMessage());
         }
     }
 
@@ -102,8 +99,7 @@ public class CSVJailCellDatabase implements JailCellDatabase {
         } catch (FileNotFoundException ignored) {
         } catch (IOException e) {
             nameJailCell = new HashMap<>();
-            log.warning("Failed to load " + cellFile.getAbsolutePath()
-                    + ": " + e.getMessage());
+            log.warning("Failed to load " + cellFile.getAbsolutePath() + ": " + e.getMessage());
             successful = false;
         } finally {
             if (input != null) {

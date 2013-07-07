@@ -9,6 +9,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.database.UnloadableDatabase;
 import com.skelril.aurora.util.item.ItemType;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -82,6 +83,14 @@ public class AdminStoreComponent extends BukkitComponent {
         itemStoreDatabase.load();
     }
 
+    @Override
+    public void disable() {
+
+        if (itemStoreDatabase instanceof UnloadableDatabase) {
+            ((UnloadableDatabase) itemStoreDatabase).unload();
+        }
+    }
+
     private final String NOT_AVAILIBLE = "No item by that name is currently available!";
 
     public class Commands {
@@ -134,6 +143,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
             // Charge the money and send the sender some feedback
             econ.withdrawPlayer(playerName, price);
+            itemStoreDatabase.logTransaction(playerName, itemName, amt);
             String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), " " + econ.currencyNamePlural());
             ChatUtil.sendNotice(sender, "Item(s) purchased for " + priceString + "!");
         }
@@ -183,7 +193,8 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
-            double payment = itemPricePair.getSellPrice() * stack.getAmount() * percentageSale;
+            int amt = stack.getAmount();
+            double payment = itemPricePair.getSellPrice() * amt * percentageSale;
 
             server.getScheduler().runTaskLater(inst, new Runnable() {
                 @Override
@@ -193,6 +204,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 }
             }, 1);
             econ.depositPlayer(playerName, payment);
+            itemStoreDatabase.logTransaction(playerName, itemName, amt * -1);
 
             String paymentString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(payment), " " + econ.currencyNamePlural());
             ChatUtil.sendNotice(player, "Item(s) sold for: " + paymentString + "!");
@@ -333,7 +345,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
             // Database operations
             ItemPricePair oldItem = itemStoreDatabase.getItem(itemName);
-            itemStoreDatabase.addItem(itemName, price);
+            itemStoreDatabase.addItem(sender.getName(), itemName, price);
             itemStoreDatabase.save();
 
             // Notification
@@ -362,7 +374,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
-            itemStoreDatabase.removeItem(itemName);
+            itemStoreDatabase.removeItem(sender.getName(), itemName);
             itemStoreDatabase.save();
             ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName.toUpperCase() + ChatColor.YELLOW + " has been removed from the database!");
         }

@@ -4,30 +4,78 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
+import com.skelril.aurora.util.database.UnloadableDatabase;
 
 import java.io.*;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.logging.*;
 
 /**
  * Author: Turtle9598
  */
-public class CSVItemStoreDatabase implements ItemStoreDatabase {
+public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDatabase {
 
     private final Logger log = CommandBook.inst().getLogger();
     protected final File itemFile;
+    protected final Logger storeLogger = Logger.getLogger("Minecraft.CommandBook.Store");
 
     /**
      * Used to lookup cells by name
      */
     protected Map<String, ItemPricePair> nameItemPrice = new HashMap<>();
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
-    public CSVItemStoreDatabase(File cellStorageDir) {
+    public CSVItemStoreDatabase(File storageDir) {
 
-        itemFile = new File(cellStorageDir, "store.csv");
+        itemFile = new File(storageDir, "store.csv");
+
+        // Set up the purchase logger
+        try {
+            FileHandler purchaseHandler = new FileHandler((new File(storageDir, "purchases.log")).getAbsolutePath().replace("\\", "/"), true);
+
+            purchaseHandler.setFormatter(new java.util.logging.Formatter() {
+
+                @Override
+                public String format(LogRecord record) {
+
+                    return "[" + dateFormat.format(new Date()) + "] " + record.getMessage() + "\r\n";
+                }
+            });
+
+            purchaseHandler.setFilter(new Filter() {
+                @Override
+                public boolean isLoggable(LogRecord record) {
+
+                    return record.getMessage().contains("purchased") || record.getMessage().contains("sold");
+                }
+            });
+
+            storeLogger.addHandler(purchaseHandler);
+
+            FileHandler changeHandler = new FileHandler((new File(storageDir, "store-db.log")).getAbsolutePath().replace("\\", "/"), true);
+
+            changeHandler.setFormatter(new java.util.logging.Formatter() {
+
+                @Override
+                public String format(LogRecord record) {
+
+                    return "[" + dateFormat.format(new Date()) + "] " + record.getMessage() + "\r\n";
+                }
+            });
+
+            changeHandler.setFilter(new Filter() {
+                @Override
+                public boolean isLoggable(LogRecord record) {
+
+                    return record.getMessage().contains("set") || record.getMessage().contains("removed");
+                }
+            });
+
+            storeLogger.addHandler(changeHandler);
+        } catch (SecurityException | IOException e) {
+            log.warning("Failed to setup audit log for the CSV cell database: " + e.getMessage());
+        }
     }
 
     @Override
@@ -115,18 +163,32 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase {
     }
 
     @Override
-    public void addItem(String name, double price) {
+    public void addItem(String playerName, String itemName, double price) {
 
-        if (name == null || name.isEmpty()) return;
-        name = name.trim().toLowerCase();
-        nameItemPrice.put(name, new ItemPricePair(name, price));
+        if (itemName == null || itemName.isEmpty()) return;
+        itemName = itemName.trim().toLowerCase();
+        nameItemPrice.put(itemName, new ItemPricePair(itemName, price));
+
+        // Log the change
+        storeLogger.info(playerName + " set the price of: " + itemName.toUpperCase() + " to " + price + ".");
     }
 
     @Override
-    public void removeItem(String name) {
+    public void removeItem(String playerName, String itemName) {
 
-        if (name == null || name.isEmpty()) return;
-        nameItemPrice.remove(name.toLowerCase());
+        if (itemName == null || itemName.isEmpty()) return;
+        nameItemPrice.remove(itemName.toLowerCase());
+
+        // Log the change
+        storeLogger.info(playerName + " removed: " + itemName.toUpperCase() + " from the database.");
+    }
+
+    @Override
+    public void logTransaction(String playerName, String itemName, int amount) {
+
+        int absoluteAmount = Math.abs(amount);
+        // Log the change
+        storeLogger.info(playerName + (amount < absoluteAmount ? " sold: " : " purchased: ") + absoluteAmount + " " + itemName.toUpperCase() + ".");
     }
 
     @Override
@@ -139,5 +201,19 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase {
     public List<ItemPricePair> getItemList() {
 
         return Lists.newArrayList(nameItemPrice.values());
+    }
+
+    @Override
+    public boolean unload() {
+
+        for (Handler handler : storeLogger.getHandlers()) {
+            if (handler instanceof FileHandler) {
+                handler.flush();
+                handler.close();
+                storeLogger.removeHandler(handler);
+                return true;
+            }
+        }
+        return false;
     }
 }
