@@ -29,6 +29,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -36,6 +37,9 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -425,6 +429,35 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         } catch (UnsupportedPrayerException ex) {
             ex.printStackTrace();
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerClick(InventoryClickEvent event) {
+
+        if (!(event.getWhoClicked() instanceof Player)) return;
+
+        Player player = (Player) event.getWhoClicked();
+
+        if (!contains(player)) return;
+
+        InventoryType.SlotType st = event.getSlotType();
+        if (st.equals(InventoryType.SlotType.CRAFTING)) {
+            event.setResult(Event.Result.DENY);
+            ChatUtil.sendWarning(player, "You cannot use that here.");
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDrag(InventoryDragEvent event) {
+
+        if (!(event.getWhoClicked() instanceof Player)) return;
+
+        Player player = (Player) event.getWhoClicked();
+
+        if (!contains(player)) return;
+
+        event.setResult(Event.Result.DENY);
+        ChatUtil.sendWarning(player, "You cannot do that here.");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
