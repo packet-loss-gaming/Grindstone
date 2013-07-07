@@ -209,7 +209,7 @@ public class BookUtil {
                         "horror would fall over the land.");
                 pages.add("King Milias ignored this warning and although at first nothing really happened " +
                         "within a short time everyone involved with the creation of the mine including" +
-                        " Merlin and Dave died");
+                        " Merlin and Dave died.");
                 pages.add("Some say their very souls are trapped in it trying to find a way out. Lord Milias" +
                         " disappeared shortly after never to be seen again.");
                 pages.add("Many great philosophers believe Milias was captured and killed by the Dark King. " +
