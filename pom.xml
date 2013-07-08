@@ -5,7 +5,7 @@
     <artifactId>Aurora</artifactId>
     <version>2.1-SNAPSHOT</version>
     <name>Aurora</name>
-    <description>The Aurora Project a unique and powerful set of Server Mods for Arrow Craft</description>
+    <description>The Aurora Project a unique and powerful set of Server Mods for Skelril</description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
