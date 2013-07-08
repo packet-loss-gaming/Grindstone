@@ -669,9 +669,11 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
 
                 // Sacrificial drops
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, 200000));
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 10, 2000));
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 32, 200));
+                int m = 1;
+                if (player != null) m = 3;
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m, 200000));
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 2000));
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 200));
 
                 // Gold drops
                 for (int i = 0; i < Math.sqrt(amt) + scalOffst; i++) {
@@ -679,16 +681,16 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
 
                 // Unique drops
-                if (ChanceUtil.getChance(25) || player != null && ChanceUtil.getChance(3)) {
+                if (ChanceUtil.getChance(25) || player != null && ChanceUtil.getChance(9)) {
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
-                if (ChanceUtil.getChance(138) || player != null && ChanceUtil.getChance(10)) {
+                if (ChanceUtil.getChance(138) || player != null && ChanceUtil.getChance(28)) {
                     event.getDrops().add(ItemUtil.Master.makeSword());
                 }
-                if (ChanceUtil.getChance(138) || player != null && ChanceUtil.getChance(10)) {
+                if (ChanceUtil.getChance(138) || player != null && ChanceUtil.getChance(28)) {
                     event.getDrops().add(ItemUtil.Master.makeBow());
                 }
-                if (ChanceUtil.getChance(200) || player != null && ChanceUtil.getChance(13)) {
+                if (ChanceUtil.getChance(200) || player != null && ChanceUtil.getChance(36)) {
                     event.getDrops().add(ItemUtil.Misc.magicBucket());
                 }
 
