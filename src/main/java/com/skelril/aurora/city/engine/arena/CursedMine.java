@@ -2,10 +2,13 @@ package com.skelril.aurora.city.engine.arena;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.blocks.SkullBlock;
+import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -28,7 +31,10 @@ import com.skelril.aurora.util.restoration.RestorationUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Blaze;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -313,7 +319,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
-    private void ghost(Player player) {
+    private void ghost(final Player player, int blockid) {
 
         try {
             if (ChanceUtil.getChance(player.getLocation().getBlockY())) {
@@ -411,19 +417,37 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             }
                             break;
                         case 10:
-                            ChatUtil.sendWarning(player, "Hell hounds appear out of the floor!");
-                            for (int i = 0; i < ChanceUtil.getRandom(30); i++) {
-                                Wolf wolf = getWorld().spawn(player.getLocation(), Wolf.class);
-                                wolf.setAngry(true);
-                                wolf.setTarget(player);
+                            if (blockid != BlockID.DIAMOND_ORE || !ChanceUtil.getChance(10)) break;
+                            ChatUtil.sendWarning(player, "You ignite fumes in the air!");
+                            EditSession ess = new EditSession(new BukkitWorld(player.getWorld()), -1);
+                            try {
+                                ess.fillXZ(BukkitUtil.toVector(player.getLocation()), new BaseBlock(BlockID.FIRE), 20, 20, true);
+                            } catch (MaxChangedBlocksException ignored) {
+
+                            }
+                            for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
+                                final boolean untele = i == 11;
+                                server.getScheduler().runTaskLater(inst, new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        if (untele) {
+                                            recordSystem.revertByPlayer(player.getName());
+                                        }
+
+                                        if (!contains(player)) return;
+
+                                        Location l = LocationUtil.findRandomLoc(player.getLocation().getBlock(), 3, true, false);
+                                        l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 3F, true, false);
+                                    }
+                                }, 12 * i);
                             }
                             break;
                         default:
                             break;
                     }
 
-                    if (modifiedLoc != null) player.teleport(modifiedLoc,
-                            PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
+                    if (modifiedLoc != null) player.teleport(modifiedLoc, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
                 }
             }
         } catch (UnsupportedPrayerException ex) {
@@ -507,7 +531,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
             eatFood(player);
             poison(player, 6);
-            ghost(player);
+            ghost(player, typeId);
 
             recordSystem.addItem(player.getName(), new BlockRecord(block));
             restorationUtil.blockAndLogEvent(event);
