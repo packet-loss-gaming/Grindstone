@@ -442,8 +442,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         boolean isInRewardsRoom = LocationUtil.isInRegion(getWorld(), rewards, origin);
         int c;
+        int o = 1;
         int m = item.getType().getMaxDurability();
         ItemStack[] i;
+
         if (ItemUtil.isPhantomGold(item)) {
             int amount = 250;
             if (isInRewardsRoom) {
@@ -452,13 +454,17 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             economy.depositPlayer(player.getName(), amount * item.getAmount());
             event.setItemStack(null);
         } else if (ItemUtil.isFearSword(item) || ItemUtil.isFearBow(item)) {
-            if (!isInRewardsRoom) return;
+
+            if (!isInRewardsRoom) {
+                o = 2;
+            }
+
             c = ItemUtil.countItemsOfName(player.getInventory().getContents(), DARKNESS);
             i = ItemUtil.removeItemOfName(player.getInventory().getContents(), DARKNESS);
             player.getInventory().setContents(i);
-            while (item.getDurability() > 0 && c > 0) {
+            while (item.getDurability() > 0 && c >= o) {
                 item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
-                c--;
+                c -= o;
             }
             player.getInventory().addItem(item);
             int amount = Math.min(c, 64);
@@ -470,13 +476,17 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             player.updateInventory();
             event.setItemStack(null);
         } else if (ItemUtil.isUnleashedSword(item) || ItemUtil.isUnleashedBow(item)) {
-            if (!isInRewardsRoom) return;
+
+            if (!isInRewardsRoom) {
+                o = 2;
+            }
+
             c = ItemUtil.countItemsOfName(player.getInventory().getContents(), IMBUED);
             i = ItemUtil.removeItemOfName(player.getInventory().getContents(), IMBUED);
             player.getInventory().setContents(i);
-            while (item.getDurability() > 0 && c > 0) {
+            while (item.getDurability() > 0 && c >= o) {
                 item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
-                c--;
+                c -= o;
             }
             player.getInventory().addItem(item);
             int amount = Math.min(c, 64);
