@@ -139,7 +139,13 @@ public class AdminStoreComponent extends BukkitComponent {
 
             // Get the items and add them to the inventory
             ItemStack[] itemStacks = getItem(itemPricePair.getName(), amt);
-            player.getInventory().addItem(itemStacks);
+            for (ItemStack itemStack : itemStacks) {
+                if (player.getInventory().firstEmpty() == -1) {
+                    player.getWorld().dropItem(player.getLocation(), itemStack);
+                    continue;
+                }
+                player.getInventory().addItem(itemStack);
+            }
 
             // Charge the money and send the sender some feedback
             econ.withdrawPlayer(playerName, price);
