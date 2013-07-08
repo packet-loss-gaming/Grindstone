@@ -346,7 +346,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             // If the block is a half slab or it is wood, don't do this
             if (aBlock.getTypeId() != BlockID.STEP && aBlock.getTypeId() != BlockID.WOOD) {
                 aBlock = aBlock.getRelative(BlockFace.DOWN, 2);
-                if (BlockType.canPassThrough(aBlock.getTypeId(), aBlock.getData())) {
+                if (BlockType.canPassThrough(aBlock.getTypeId())) {
                     ls.add(0, -3, 0);
                 }
             }
@@ -1196,7 +1196,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         for (BlockFace face : EnvironmentUtil.getNearbyBlockFaces()) {
             final Block aBlock = block.getRelative(face);
             Block bBlock = aBlock.getRelative(BlockFace.DOWN);
-            if (!BlockType.canPassThrough(bBlock.getTypeId(), bBlock.getData())) continue;
+            if (!BlockType.canPassThrough(bBlock.getTypeId())) continue;
             BaseBlock aBB = new BaseBlock(aBlock.getTypeId(), aBlock.getData());
             if (ChanceUtil.getChance(chance) && accept(aBB, autoBreakable)) {
 

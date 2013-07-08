@@ -72,7 +72,7 @@ public class DonationStoreComponent extends BukkitComponent implements Listener,
             final int type = loc.getBlock().getTypeId();
             final byte data = loc.getBlock().getData();
 
-            if (!BlockType.canPassThrough(type, data)) continue;
+            if (!BlockType.canPassThrough(type)) continue;
             for (Player aPlayer : players) {
 
                 aPlayer.sendBlockChange(loc, Material.FIRE, (byte) 0);
