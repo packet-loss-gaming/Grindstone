@@ -566,15 +566,15 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
                 }
 
-                if (ChanceUtil.getChance(35)) {
+                if (ChanceUtil.getChance(60)) {
                     drops.add(ItemUtil.CPotion.divineCombatPotion());
-                } else if (ChanceUtil.getChance(17)) {
+                } else if (ChanceUtil.getChance(40)) {
                     drops.add(ItemUtil.CPotion.holyCombatPotion());
-                } else if (ChanceUtil.getChance(5)) {
+                } else if (ChanceUtil.getChance(20)) {
                     drops.add(ItemUtil.CPotion.extremeCombatPotion());
                 }
 
-                if (ChanceUtil.getChance(150)) {
+                if (ChanceUtil.getChance(250)) {
                     drops.add(ItemUtil.Misc.phantomClock(ChanceUtil.getRandom(3)));
                 }
 
