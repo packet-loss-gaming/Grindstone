@@ -525,7 +525,10 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             }
         }
         if (!players.isEmpty()) {
-            lootSplit = ChanceUtil.getRangedRandom(64, 64 * 3) / players.size();
+            for (String player : players) {
+                lootSplit += Math.min(ChanceUtil.getRangedRandom(576, 1728), economy.getBalance(player) * .0015);
+            }
+            lootSplit /= players.size();
             if (ChanceUtil.getChance(35)) lootSplit *= 10;
             if (ChanceUtil.getChance(15)) lootSplit *= 2;
             start(); // Start if someone was teleported
@@ -675,13 +678,13 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             Sign sign = (Sign) state;
             if (sign.getLine(1).equals("Play Gold Rush")) {
 
+                String playerName = event.getPlayer().getName();
+
                 if (ItemUtil.countFilledSlots(event.getPlayer()) > 0) {
-                    ChatUtil.sendError(event.getPlayer(), "[Partner] Don't bring anything with ya kid,"
-                            + " it'll weigh you down.");
+                    ChatUtil.sendError(event.getPlayer(), "[Partner] Don't bring anything with ya kid, it'll weigh you down.");
                     return;
-                } else if (!economy.has(event.getPlayer().getName(), 5000)) {
-                    ChatUtil.sendError(event.getPlayer(), "[Partner] Kid you don't have enough cash, " +
-                            "your balance will never pay bail.");
+                } else if (!economy.has(playerName, Math.max(5000, economy.getBalance(playerName) * .005))) {
+                    ChatUtil.sendError(event.getPlayer(), "[Partner] Kid you don't have enough cash, your balance will never pay bail.");
                     return;
                 }
 
@@ -692,8 +695,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     location.setY(lobby.getMinimumPoint().getBlockY() + 1);
                 } while (location.getBlock().getTypeId() != BlockID.AIR);
                 event.getPlayer().teleport(location);
-                ChatUtil.sendNotice(event.getPlayer(), "[Partner] Ey there kid,"
-                        + " just press that button over there to start.");
+                ChatUtil.sendNotice(event.getPlayer(), "[Partner] Ey there kid, just press that button over there to start.");
             }
         } else if (state.getTypeId() == BlockID.LEVER && leverBlocks.containsKey(state.getLocation())) {
             server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -717,11 +719,14 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 players.remove(event.getPlayer().getName());
                 event.setUseInteractedBlock(Event.Result.DENY);
                 event.getPlayer().teleport(LocationUtil.grandBank(getWorld()));
-                event.getPlayer().getInventory().addItem(new ItemStack(ItemID.GOLD_BAR, lootSplit));
-                ChatUtil.sendNotice(event.getPlayer(), "You have successfully robbed the bank!");
 
-                //noinspection deprecation
-                event.getPlayer().updateInventory();
+                ChatUtil.sendNotice(event.getPlayer(), "You have successfully robbed the bank!\n");
+                ChatUtil.sendNotice(event.getPlayer(), "[Partner] I've put your split of the money in your account.");
+                ChatUtil.sendNotice(event.getPlayer(), "[Partner] Don't question my logic...\n");
+                ChatUtil.sendNotice(event.getPlayer(), "You obtain: "
+                        + ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(lootSplit), " as your split."));
+
+                economy.depositPlayer(event.getPlayer().getName(), lootSplit);
             }
         }
     }
@@ -756,22 +761,27 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
         String playerName = event.getEntity().getName();
         if (contains(event.getEntity()) && players.contains(playerName)) {
-            double amt = Math.min(economy.getBalance(playerName), 5000);
+            double amt = Math.min(economy.getBalance(playerName), Math.max(5000, economy.getBalance(playerName) * .005));
             economy.withdrawPlayer(playerName, amt);
-            ChatUtil.sendWarning(event.getEntity(), "You are forced to pay a fine of: "
-                    + economy.format(amt) + ' ' + economy.currencyNamePlural() + '.');
+            ChatUtil.sendWarning(event.getEntity(), "You are forced to pay a fine of: " + economy.format(amt) + ' ' + economy.currencyNamePlural() + '.');
             players.remove(playerName);
             String deathMessage;
-            switch (ChanceUtil.getRandom(4)) {
+            switch (ChanceUtil.getRandom(6)) {
                 case 1:
                     deathMessage = " needs to find a new profession";
                     break;
                 case 2:
+                    deathMessage = " judge alonzo says guilty";
+                    break;
+                case 3:
+                    deathMessage = " is now folding and hanging... though mostly hanging...";
+                    break;
+                case 4:
                     if (event.getDeathMessage().contains("drown")) {
                         deathMessage = " discovered H2O is not always good for ones health";
                         break;
                     }
-                case 3:
+                case 5:
                     if (event.getDeathMessage().contains("starved")) {
                         deathMessage = " should take note of the need to bring food with them";
                         break;
