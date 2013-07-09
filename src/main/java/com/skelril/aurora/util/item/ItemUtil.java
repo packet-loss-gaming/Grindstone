@@ -621,9 +621,14 @@ public class ItemUtil {
         return b[0] && b[1] && b[2] && b[3];
     }
 
-    private static boolean isNamed(ItemStack stack) {
+    public static boolean isNamed(ItemStack stack) {
 
         return stack != null && stack.hasItemMeta() && stack.getItemMeta().hasDisplayName();
+    }
+
+    public static boolean isAuthenticCustomItem(String itemName) {
+
+        return !(itemName.indexOf(ChatColor.COLOR_CHAR) == -1);
     }
 
     public static boolean matchesFilter(ItemStack stack, String filter) {

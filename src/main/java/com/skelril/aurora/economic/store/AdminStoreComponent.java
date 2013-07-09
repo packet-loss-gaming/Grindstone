@@ -171,7 +171,7 @@ public class AdminStoreComponent extends BukkitComponent {
             String itemName = stack.getTypeId() + ":" + stack.getDurability();
             if (stackMeta.hasDisplayName()) {
                 itemName = stackMeta.getDisplayName();
-                if (itemName.indexOf(ChatColor.COLOR_CHAR) == -1) {
+                if (!ItemUtil.isAuthenticCustomItem(itemName)) {
                     throw new CommandException("You cannot sell items that have been named here!");
                 }
                 itemName = ChatColor.stripColor(itemName);
@@ -276,7 +276,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 ItemMeta stackMeta = stack.getItemMeta();
                 if (stackMeta.hasDisplayName()) {
                     itemName = stackMeta.getDisplayName();
-                    if (itemName.indexOf(ChatColor.COLOR_CHAR) == -1) {
+                    if (!ItemUtil.isAuthenticCustomItem(itemName)) {
                         throw new CommandException(NOT_AVAILIBLE);
                     }
                     itemName = ChatColor.stripColor(itemName);

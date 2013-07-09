@@ -13,6 +13,7 @@ import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -427,7 +428,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     private static Set<InventoryType> accepted = new HashSet<>();
-    private static Set<InventoryAction> acceptedActions = new HashSet<>();
 
     static {
         accepted.add(InventoryType.PLAYER);
@@ -436,18 +436,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
         accepted.add(InventoryType.ENCHANTING);
         accepted.add(InventoryType.WORKBENCH);
         accepted.add(InventoryType.ANVIL);
-
-        acceptedActions.add(InventoryAction.SWAP_WITH_CURSOR);
-        acceptedActions.add(InventoryAction.CLONE_STACK);
-
-        acceptedActions.add(InventoryAction.PLACE_ALL);
-        acceptedActions.add(InventoryAction.PICKUP_SOME);
-        acceptedActions.add(InventoryAction.PLACE_ONE);
-
-        acceptedActions.add(InventoryAction.PICKUP_ALL);
-        acceptedActions.add(InventoryAction.PICKUP_HALF);
-        acceptedActions.add(InventoryAction.PICKUP_SOME);
-        acceptedActions.add(InventoryAction.PICKUP_ONE);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -463,7 +451,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         if (isAdmin(player) && !accepted.contains(event.getInventory().getType())) {
 
             if (event.getAction().equals(InventoryAction.NOTHING)) return;
-            if (acceptedActions.contains(event.getAction())) {
+            if (InventoryUtil.getAcceptedActions().contains(event.getAction())) {
                 if (event.getRawSlot() + 1 > event.getInventory().getSize()) {
                     return;
                 }

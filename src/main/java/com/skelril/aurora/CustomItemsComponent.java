@@ -15,6 +15,7 @@ import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.EffectUtil;
+import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -23,6 +24,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.h31ix.anticheat.manage.CheckType;
 import org.bukkit.*;
 import org.bukkit.entity.*;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -31,7 +33,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -428,6 +430,63 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     }
                 }
             }, 1);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onClick(InventoryClickEvent event) {
+
+        if (!(event.getWhoClicked() instanceof Player)) return;
+
+        Player player = (Player) event.getWhoClicked();
+
+        ItemStack currentItem = event.getCurrentItem();
+        ItemStack cursorItem = event.getCursor();
+        InventoryType type = event.getInventory().getType();
+        InventoryAction action = event.getAction();
+
+        if (type.equals(InventoryType.ANVIL)) {
+            if (action.equals(InventoryAction.NOTHING)) return;
+
+            int rawSlot = event.getRawSlot();
+
+            if (rawSlot < 2) {
+                if (InventoryUtil.getPlaceActions().contains(action) && ItemUtil.isNamed(cursorItem)) {
+                    boolean isCustomItem = ItemUtil.isAuthenticCustomItem(cursorItem.getItemMeta().getDisplayName());
+
+                    if (!isCustomItem) return;
+
+                    event.setResult(Event.Result.DENY);
+                    ChatUtil.sendError(player, "You cannot place that here.");
+                }
+            } else if (rawSlot == 2) {
+                if (InventoryUtil.getPickUpActions().contains(action) && ItemUtil.isNamed(currentItem)) {
+                    boolean isCustomItem = ItemUtil.isAuthenticCustomItem(currentItem.getItemMeta().getDisplayName());
+
+                    if (!isCustomItem) return;
+
+                    event.setResult(Event.Result.DENY);
+                    ChatUtil.sendError(player, "You cannot name this item that name.");
+                }
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDrag(InventoryDragEvent event) {
+
+        if (!(event.getWhoClicked() instanceof Player)) return;
+
+        Player player = (Player) event.getWhoClicked();
+
+        if (event.getInventory().getType().equals(InventoryType.ANVIL)) {
+
+            for (int i : event.getRawSlots()) {
+                if (i + 1 <= event.getInventory().getSize()) {
+                    event.setResult(Event.Result.DENY);
+                    return;
+                }
+            }
         }
     }
 
