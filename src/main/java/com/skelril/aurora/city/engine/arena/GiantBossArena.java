@@ -655,13 +655,14 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 Player[] players = getContainedPlayers();
                 Player player = null;
                 int amt = players != null ? players.length : 0;
+                int required = ChanceUtil.getRandom(5);
 
                 // Figure out if someone has Barbarian Bones
                 if (amt != 0) {
                     for (Player aPlayer : players) {
 
                         if (adminComponent.isAdmin(aPlayer)) continue;
-                        if (ItemUtil.findItemOfName(aPlayer.getInventory().getContents(), BARBARIAN_BONES)) {
+                        if (ItemUtil.countItemsOfName(aPlayer.getInventory().getContents(), BARBARIAN_BONES) >= required) {
                             player = aPlayer;
                             break;
                         }
@@ -669,8 +670,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
 
                 // Sacrificial drops
-                int m = 1;
-                if (player != null) m = 3;
+                int m = player != null ? 3 : 1;
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m, 200000));
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 2000));
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 200));
@@ -696,7 +696,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 // Remove the Barbarian Bones
                 if (player != null) {
-                    int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), BARBARIAN_BONES) - 1;
+                    int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), BARBARIAN_BONES) - required;
                     ItemStack[] nc = ItemUtil.removeItemOfName(player.getInventory().getContents(), BARBARIAN_BONES);
                     player.getInventory().setContents(nc);
 
