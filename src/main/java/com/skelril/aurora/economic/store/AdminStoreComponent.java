@@ -123,7 +123,7 @@ public class AdminStoreComponent extends BukkitComponent {
             }
             ItemPricePair itemPricePair = itemStoreDatabase.getItem(itemName);
 
-            if (itemPricePair == null) {
+            if (itemPricePair == null || !itemPricePair.isBuyable()) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
@@ -195,7 +195,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
             ItemPricePair itemPricePair = itemStoreDatabase.getItem(itemName);
 
-            if (itemPricePair == null) {
+            if (itemPricePair == null || !itemPricePair.isSellable()) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
@@ -246,8 +246,17 @@ public class AdminStoreComponent extends BukkitComponent {
             ChatUtil.sendNotice(sender, ChatColor.GOLD, "Item List - Page (" + (page + 1) + "/" + (maxPage + 1) + ")");
             for (int i = min; i < max; i++) {
                 ItemPricePair pair = itemPricePairCollection.get(i);
-                String buy = ChatColor.WHITE + econ.format(pair.getPrice()) + ChatColor.YELLOW;
-                String sell = ChatColor.WHITE + econ.format(pair.getSellPrice()) + ChatColor.YELLOW;
+                String buy, sell;
+                if (pair.isBuyable()) {
+                    buy = ChatColor.WHITE + econ.format(pair.getPrice()) + ChatColor.YELLOW;
+                } else {
+                    buy = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
+                }
+                if (pair.isSellable()) {
+                    sell = ChatColor.WHITE + econ.format(pair.getSellPrice()) + ChatColor.YELLOW;
+                } else {
+                    sell = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
+                }
                 ChatUtil.sendNotice(sender, ChatColor.BLUE + pair.getName().toUpperCase() + ChatColor.YELLOW + " (Quick Price: " + buy + " - " + sell + ")");
             }
         }
@@ -309,13 +318,21 @@ public class AdminStoreComponent extends BukkitComponent {
             String purchasePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getPrice()), " " + econ.currencyNamePlural());
             String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), " " + econ.currencyNamePlural());
             ChatUtil.sendNotice(player, ChatColor.GOLD, "Price Information for: " + ChatColor.BLUE + itemName.toUpperCase());
-            ChatUtil.sendNotice(player, "When you buy it you pay:");
-            ChatUtil.sendNotice(player, " - " + purchasePrice + " each.");
-            ChatUtil.sendNotice(player, "When you sell it you get:");
-            ChatUtil.sendNotice(player, " - " + sellPrice + " each.");
-            if (percentageSale != 1.0) {
-                sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getSellPrice()), " " + econ.currencyNamePlural());
-                ChatUtil.sendNotice(player, " - " + sellPrice + " each when new.");
+            if (itemPricePair.isBuyable()) {
+                ChatUtil.sendNotice(player, "When you buy it you pay:");
+                ChatUtil.sendNotice(player, " - " + purchasePrice + " each.");
+            } else {
+                ChatUtil.sendNotice(player, ChatColor.GRAY, "This item cannot be purchased.");
+            }
+            if (itemPricePair.isSellable()) {
+                ChatUtil.sendNotice(player, "When you sell it you get:");
+                ChatUtil.sendNotice(player, " - " + sellPrice + " each.");
+                if (percentageSale != 1.0) {
+                    sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getSellPrice()), " " + econ.currencyNamePlural());
+                    ChatUtil.sendNotice(player, " - " + sellPrice + " each when new.");
+                }
+            } else {
+                ChatUtil.sendNotice(player, ChatColor.GRAY, "This item cannot be sold.");
             }
         }
 
@@ -330,7 +347,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
         @Command(aliases = {"add"},
                 usage = "[-p price] <item name>", desc = "Add an item to the database",
-                flags = "p:", min = 1)
+                flags = "bsp:", min = 1)
         @CommandPermissions("aurora.admin.adminstore.add")
         public void addCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -344,6 +361,13 @@ public class AdminStoreComponent extends BukkitComponent {
                 itemName = type.getName();
             }
 
+            boolean disableBuy = args.hasFlag('b');
+            boolean disableSell = args.hasFlag('s');
+
+            if (disableBuy && disableSell) {
+                throw new CommandException("If you disable buying and selling, then what's the point in adding it dumb ass?");
+            }
+
             double price = 10;
             if (args.hasFlag('p')) {
                 price = Math.max(1, args.getFlagDouble('p'));
@@ -351,13 +375,18 @@ public class AdminStoreComponent extends BukkitComponent {
 
             // Database operations
             ItemPricePair oldItem = itemStoreDatabase.getItem(itemName);
-            itemStoreDatabase.addItem(sender.getName(), itemName, price);
+            itemStoreDatabase.addItem(sender.getName(), itemName, price, disableBuy, disableSell);
             itemStoreDatabase.save();
 
             // Notification
             String noticeString = oldItem == null ? " added with a price of " : " is now ";
             String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), " " + econ.currencyNamePlural());
             ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName.toUpperCase() + ChatColor.YELLOW + noticeString + priceString + "!");
+            if (disableBuy) {
+                ChatUtil.sendNotice(sender, " - It cannot be purchased.");
+            } else if (disableSell) {
+                ChatUtil.sendNotice(sender, " - It cannot be sold.");
+            }
         }
 
         @Command(aliases = {"remove"},

@@ -21,7 +21,7 @@ public interface ItemStoreDatabase {
     /**
      * Add/Set an item
      */
-    public void addItem(String playerName, String itemName, double price);
+    public void addItem(String playerName, String itemName, double price, boolean disableBuy, boolean disableSell);
 
     public void removeItem(String playerName, String itemName);
 

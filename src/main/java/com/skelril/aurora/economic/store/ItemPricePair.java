@@ -4,11 +4,14 @@ public class ItemPricePair implements Comparable<ItemPricePair> {
 
     private String name;
     private double price;
+    private boolean disableBuy, disableSell;
 
-    public ItemPricePair(String name, double price) {
+    public ItemPricePair(String name, double price, boolean disableBuy, boolean disableSell) {
 
         this.name = name;
         this.price = price;
+        this.disableBuy = disableBuy;
+        this.disableSell = disableSell;
     }
 
     public String getName() {
@@ -24,6 +27,16 @@ public class ItemPricePair implements Comparable<ItemPricePair> {
     public double getSellPrice() {
 
         return price > 100000 ? price * .92 : price * .80;
+    }
+
+    public boolean isBuyable() {
+
+        return !disableBuy;
+    }
+
+    public boolean isSellable() {
+
+        return !disableSell;
     }
 
     @Override

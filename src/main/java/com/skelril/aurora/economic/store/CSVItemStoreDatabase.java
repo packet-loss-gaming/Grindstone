@@ -93,20 +93,36 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
             String[] line;
 
             while ((line = reader.readNext()) != null) {
-                if (line.length < 2) {
-                    log.warning("A cell entry with < 2 fields was found!");
-                    continue;
-                }
                 try {
-                    String name = line[0].trim().toLowerCase();
-                    double price = Double.parseDouble(line[1]);
+                    String name = "null";
+                    double price = 0;
+                    boolean disableBuy = false;
+                    boolean disableSell = false;
+
+                    for (int i = 0; i < line.length; i++) {
+                        switch (i) {
+                            case 0:
+                                name = line[i].trim().toLowerCase();
+                                break;
+                            case 1:
+                                price = Double.parseDouble(line[i]);
+                                break;
+                            case 2:
+                                disableBuy = Boolean.parseBoolean(line[i]);
+                                break;
+                            case 3:
+                                disableSell = Boolean.parseBoolean(line[i]);
+                                break;
+                        }
+                    }
+
                     if (name.isEmpty() || "null".equals(name)) name = null;
-                    ItemPricePair itemPair = new ItemPricePair(name, price);
+                    ItemPricePair itemPair = new ItemPricePair(name, price, disableBuy, disableSell);
                     if (name != null) {
                         nameItemPrice.put(name, itemPair);
                     }
                 } catch (NumberFormatException e) {
-                    log.warning("Non-int int field found in store record!");
+                    log.warning("Non-numerical field found in numerical store record!");
                 }
             }
             log.info(nameItemPrice.size() + " item(s) loaded for the admin store.");
@@ -143,6 +159,8 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
                 line = new String[]{
                         itemPair.getName().trim().toLowerCase(),
                         String.valueOf(itemPair.getPrice()),
+                        String.valueOf(!itemPair.isBuyable()),
+                        String.valueOf(!itemPair.isSellable())
                 };
                 writer.writeNext(line);
             }
@@ -163,14 +181,16 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
     }
 
     @Override
-    public void addItem(String playerName, String itemName, double price) {
+    public void addItem(String playerName, String itemName, double price, boolean disableBuy, boolean disableSell) {
 
         if (itemName == null || itemName.isEmpty()) return;
         itemName = itemName.trim().toLowerCase();
-        nameItemPrice.put(itemName, new ItemPricePair(itemName, price));
+        nameItemPrice.put(itemName, new ItemPricePair(itemName, price, disableBuy, disableSell));
 
         // Log the change
-        storeLogger.info(playerName + " set the price of: " + itemName.toUpperCase() + " to " + price + ".");
+        String buyingState = "purchase is " + (disableBuy ? "enabled" : "disabled");
+        String sellState = "sale is " + (disableSell ? "enabled" : "disabled");
+        storeLogger.info(playerName + " set the price of: " + itemName.toUpperCase() + " to " + price + ", " + buyingState + " and " + sellState + ".");
     }
 
     @Override
