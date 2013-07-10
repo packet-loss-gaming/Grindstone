@@ -402,20 +402,27 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         if (ItemUtil.matchesFilter(itemStack, ChatColor.DARK_PURPLE + "Magic Bucket")) {
             player.setAllowFlight(!player.getAllowFlight());
             if (player.getAllowFlight()) {
+                player.setFlySpeed(.4F);
                 antiCheat.exempt(player, CheckType.FLY);
                 ChatUtil.sendNotice(player, "The bucket glows brightly.");
             } else {
+                player.setFlySpeed(.1F);
                 antiCheat.unexempt(player, CheckType.FLY);
                 ChatUtil.sendNotice(player, "The power of the bucket fades.");
             }
             return true;
         } else if (ItemUtil.matchesFilter(itemStack, ChatColor.GOLD + "Pixie Dust")) {
+            if (player.getAllowFlight()) return false;
             player.setAllowFlight(true);
+            player.setFlySpeed(1);
+            antiCheat.exempt(player, CheckType.FLY);
+            ChatUtil.sendNotice(player, "You use the Pixie Dust to gain flight.");
             IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
                 @Override
                 public boolean run(int times) {
 
-                    if (player.isValid() && player.isFlying()) {
+                    //noinspection deprecation
+                    if (player.isValid() && !player.isOnGround()) {
                         int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), ChatColor.GOLD + "Pixie Dust") - 1;
 
                         if (c >= 0) {
@@ -431,6 +438,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                             //noinspection deprecation
                             player.updateInventory();
+
+                            ChatUtil.sendNotice(player, "You use some more Pixie Dust to keep flying.");
                             return false;
                         }
                     }
@@ -442,13 +451,17 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                     if (player.isValid()) {
                         player.setAllowFlight(false);
+                        player.setFlySpeed(.1F);
+                        antiCheat.unexempt(player, CheckType.FLY);
+                        ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
                     }
                 }
             };
 
             TimedRunnable runnable = new TimedRunnable(integratedRunnable, 2);
-            BukkitTask task = server.getScheduler().runTaskTimer(inst, runnable, 0, 20 * 60);
+            BukkitTask task = server.getScheduler().runTaskTimer(inst, runnable, 0, 20 * 15);
             runnable.setTask(task);
+            return true;
         }
         return false;
     }
