@@ -208,7 +208,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 targetStack.setAmount(ChanceUtil.getRandom(3));
 
                 if (ChanceUtil.getChance(300)) {
-                    inventory.addItem(ItemUtil.Misc.pixieDust(ChanceUtil.getRandom(64)));
+                    inventory.addItem(ItemUtil.Misc.pixieDust(ChanceUtil.getRandom(12)));
                 }
                 if (ChanceUtil.getChance(1000)) {
                     targetStack = ItemUtil.Misc.phantomGold(ChanceUtil.getRandom(6));
@@ -536,8 +536,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             }
         }
         if (!players.isEmpty()) {
+            lootSplit = 0;
             for (String player : players) {
-                lootSplit += Math.min(ChanceUtil.getRangedRandom(576, 1728), economy.getBalance(player) * .0015);
+                lootSplit += Math.max(ChanceUtil.getRangedRandom(576, 1728), economy.getBalance(player) * .0015);
             }
             lootSplit /= players.size();
             if (ChanceUtil.getChance(35)) lootSplit *= 10;

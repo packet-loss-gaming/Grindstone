@@ -95,7 +95,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
     public class Commands {
 
-        @Command(aliases = {"market", "ge"}, desc = "Admin Store commands")
+        @Command(aliases = {"market", "mk", "ge"}, desc = "Admin Store commands")
         @NestedCommand({StoreCommands.class})
         public void storeCommands(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -104,7 +104,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
     public class StoreCommands {
 
-        @Command(aliases = {"buy"},
+        @Command(aliases = {"buy", "b"},
                 usage = "[-a amount] <item name>", desc = "Buy an item",
                 flags = "a:", min = 1)
         public void buyCmd(CommandContext args, CommandSender sender) throws CommandException {
@@ -154,7 +154,7 @@ public class AdminStoreComponent extends BukkitComponent {
             ChatUtil.sendNotice(sender, "Item(s) purchased for " + priceString + "!");
         }
 
-        @Command(aliases = {"sell"},
+        @Command(aliases = {"sell", "s"},
                 usage = "", desc = "Sell an item",
                 flags = "", min = 0, max = 0)
         public void sellCmd(CommandContext args, CommandSender sender) throws CommandException {
@@ -216,7 +216,7 @@ public class AdminStoreComponent extends BukkitComponent {
             ChatUtil.sendNotice(player, "Item(s) sold for: " + paymentString + "!");
         }
 
-        @Command(aliases = {"list"},
+        @Command(aliases = {"list", "l"},
                 usage = "[-p page]", desc = "Get a list of items and their prices",
                 flags = "p:", min = 0, max = 0
         )
