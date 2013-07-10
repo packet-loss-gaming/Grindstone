@@ -17,6 +17,8 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.timer.IntegratedRunnable;
+import com.skelril.aurora.util.timer.TimedRunnable;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -37,6 +39,7 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Arrays;
 import java.util.List;
@@ -394,7 +397,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         player.updateInventory();
     }
 
-    public boolean handleRightClick(Player player, Location location, ItemStack itemStack) {
+    public boolean handleRightClick(final Player player, Location location, ItemStack itemStack) {
 
         if (ItemUtil.matchesFilter(itemStack, ChatColor.DARK_PURPLE + "Magic Bucket")) {
             player.setAllowFlight(!player.getAllowFlight());
@@ -406,6 +409,46 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 ChatUtil.sendNotice(player, "The power of the bucket fades.");
             }
             return true;
+        } else if (ItemUtil.matchesFilter(itemStack, ChatColor.GOLD + "Pixie Dust")) {
+            player.setAllowFlight(true);
+            IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
+                @Override
+                public boolean run(int times) {
+
+                    if (player.isValid() && player.isFlying()) {
+                        int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), ChatColor.GOLD + "Pixie Dust") - 1;
+
+                        if (c >= 0) {
+                            ItemStack[] itemStacks = ItemUtil.removeItemOfName(player.getInventory().getContents(), ChatColor.GOLD + "Pixie Dust");
+                            player.getInventory().setContents(itemStacks);
+
+                            int amount = Math.min(c, 64);
+                            while (amount > 0) {
+                                player.getInventory().addItem(ItemUtil.Misc.pixieDust(amount));
+                                c -= amount;
+                                amount = Math.min(c, 64);
+                            }
+
+                            //noinspection deprecation
+                            player.updateInventory();
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
+                @Override
+                public void end() {
+
+                    if (player.isValid()) {
+                        player.setAllowFlight(false);
+                    }
+                }
+            };
+
+            TimedRunnable runnable = new TimedRunnable(integratedRunnable, 2);
+            BukkitTask task = server.getScheduler().runTaskTimer(inst, runnable, 0, 20 * 60);
+            runnable.setTask(task);
         }
         return false;
     }

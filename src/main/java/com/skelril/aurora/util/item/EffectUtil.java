@@ -176,7 +176,7 @@ public class EffectUtil {
             IntegratedRunnable bomb = new IntegratedRunnable() {
 
                 @Override
-                public void run(int times) {
+                public boolean run(int times) {
 
                     Location loc = new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
                     List<Player> players = null;
@@ -205,6 +205,7 @@ public class EffectUtil {
                             }
                         }
                     }
+                    return true;
                 }
 
                 @Override

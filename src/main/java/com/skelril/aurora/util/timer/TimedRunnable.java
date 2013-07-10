@@ -15,6 +15,11 @@ public class TimedRunnable implements Runnable {
         this.times = times + 1;
     }
 
+    public void addTime(int times) {
+
+        this.times += times;
+    }
+
     public void setTask(BukkitTask task) {
 
         this.task = task;
@@ -26,7 +31,9 @@ public class TimedRunnable implements Runnable {
         times = times - 1;
 
         if (times > 0) {
-            action.run(times);
+            if (!action.run(times)) {
+                times++;
+            }
         } else {
             cancel(true);
         }

@@ -203,7 +203,18 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             chestState = (Chest) chest.getBlock().getState();
             Inventory inventory = chestState.getBlockInventory();
             for (int i = 0; i < ChanceUtil.getRandom(9 * 3); i++) {
-                inventory.setItem(ChanceUtil.getRandom(chestState.getBlockInventory().getSize() - 1), goldBar);
+
+                ItemStack targetStack = goldBar.clone();
+                targetStack.setAmount(ChanceUtil.getRandom(3));
+
+                if (ChanceUtil.getChance(300)) {
+                    inventory.addItem(ItemUtil.Misc.pixieDust(ChanceUtil.getRandom(64)));
+                }
+                if (ChanceUtil.getChance(1000)) {
+                    targetStack = ItemUtil.Misc.phantomGold(ChanceUtil.getRandom(6));
+                }
+
+                inventory.setItem(ChanceUtil.getRandom(chestState.getBlockInventory().getSize() - 1), targetStack);
             }
             chestState.update(true);
         }
@@ -212,7 +223,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             Block block = chestBlocks.get(ChanceUtil.getRandom(chestBlocks.size() - 1)).getBlock();
             if (!block.getChunk().isLoaded()) block.getChunk().load();
             Chest chest = (Chest) block.getState();
-            chest.getInventory().setItem(0, keys[i]);
+            chest.getInventory().setItem(ChanceUtil.getRandom(chest.getBlockInventory().getSize() - 1), keys[i]);
             chest.update(true);
         }
     }

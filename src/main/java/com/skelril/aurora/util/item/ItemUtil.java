@@ -388,6 +388,15 @@ public class ItemUtil {
             return gemOfDarkness;
         }
 
+        public static ItemStack pixieDust(int amount) {
+
+            ItemStack phantomGold = new ItemStack(ItemID.SUGAR, amount);
+            ItemMeta goldMeta = phantomGold.getItemMeta();
+            goldMeta.setDisplayName(ChatColor.GOLD + "Pixie Dust");
+            phantomGold.setItemMeta(goldMeta);
+            return phantomGold;
+        }
+
         public static ItemStack phantomGold(int amount) {
 
             ItemStack phantomGold = new ItemStack(ItemID.GOLD_BAR, amount);

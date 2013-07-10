@@ -176,13 +176,13 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
                 IntegratedRunnable runnable = new IntegratedRunnable() {
                     @Override
-                    public void run(int times) {
+                    public boolean run(int times) {
 
-                        if (player == null || !player.isValid()) return;
+                        if (player == null || !player.isValid()) return true;
 
                         Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
                         if (!BlockType.canPassThrough(downward.getTypeId()) && player.getLocation().getBlockY() > 70) {
-                            return;
+                            return true;
                         }
 
                         player.setFlying(false);
@@ -194,6 +194,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                         player.setVelocity(vector);
 
                         player.setFallDistance(0);
+                        return true;
                     }
 
                     @Override

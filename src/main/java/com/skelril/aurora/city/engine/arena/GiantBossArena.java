@@ -723,11 +723,12 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 IntegratedRunnable normal = new IntegratedRunnable() {
 
                     @Override
-                    public void run(int times) {
+                    public boolean run(int times) {
 
-                        if (!TimerUtil.matchesFilter(times, 10, 5)) return;
-                        ChatUtil.sendWarning(getContainedPlayers(1), "Clearing chest contents in: "
-                                + times + " seconds.");
+                        if (TimerUtil.matchesFilter(times, 10, 5)) {
+                            ChatUtil.sendWarning(getContainedPlayers(1), "Clearing chest contents in: " + times + " seconds.");
+                        }
+                        return true;
                     }
 
                     @Override
