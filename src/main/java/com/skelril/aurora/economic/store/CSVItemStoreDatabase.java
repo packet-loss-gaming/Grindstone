@@ -188,8 +188,8 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
         nameItemPrice.put(itemName, new ItemPricePair(itemName, price, disableBuy, disableSell));
 
         // Log the change
-        String buyingState = "purchase is " + (disableBuy ? "enabled" : "disabled");
-        String sellState = "sale is " + (disableSell ? "enabled" : "disabled");
+        String buyingState = "purchase is " + (!disableBuy ? "enabled" : "disabled");
+        String sellState = "sale is " + (!disableSell ? "enabled" : "disabled");
         storeLogger.info(playerName + " set the price of: " + itemName.toUpperCase() + " to " + price + ", " + buyingState + " and " + sellState + ".");
     }
 
