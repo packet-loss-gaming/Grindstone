@@ -4,6 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -71,30 +72,18 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
     @EventHandler
     public void onEntityDamagedByEntity(EntityDamageByEntityEvent event) {
 
-        if (!(event.getEntity() instanceof Tameable || event.getEntity() instanceof Horse)) return;
+        if (!(event.getEntity() instanceof Tameable)) return;
 
         Entity e = event.getDamager();
         if (e instanceof Projectile) e = ((Projectile) e).getShooter();
         if (e != null && e instanceof Player) {
             Player player = (Player) e;
-
-            if (event.getEntity() instanceof Horse) {
-
-                Horse horse = (Horse) event.getEntity();
-
-                if (isSafe(horse)) {
-                    event.setCancelled(true);
-                    ChatUtil.sendError(player, "You cannot hurt that horse at the moment.");
-                }
-                return;
-            }
-
             Tameable tameable = (Tameable) event.getEntity();
 
-            if (isSafe(event.getEntity()) && !tameable.getOwner().getName().equals(player.getName())) {
+            if (isSafe(event.getEntity()) && (tameable.getOwner() == null || !tameable.getOwner().getName().equals(player.getName()))) {
 
                 event.setCancelled(true);
-                ChatUtil.sendError(player, "That is not your " + event.getEntityType().toString().toLowerCase() + ".");
+                ChatUtil.sendError(player, "You cannot currently hurt that " + event.getEntityType().toString().toLowerCase() + ".");
             }
         }
     }
@@ -107,11 +96,17 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         Tameable tameable = (Tameable) event.getRightClicked();
 
-        if (isSafe(event.getRightClicked()) && !tameable.getOwner().getName().equals(player.getName())) {
+        if (event.getRightClicked() instanceof Horse && tameable.getOwner() == null && player.getItemInHand().getTypeId() == ItemID.RED_APPLE) {
+            tameable.setOwner(player);
+            event.setCancelled(true);
+            ChatUtil.sendNotice(player, "You have gained possession of this horse.");
+            return;
+        }
+
+        if (isSafe(event.getRightClicked()) && (tameable.getOwner() == null || !tameable.getOwner().getName().equals(player.getName()))) {
 
             event.setCancelled(true);
-            ChatUtil.sendError(player, "That is not your "
-                    + event.getRightClicked().getType().toString().toLowerCase() + ".");
+            ChatUtil.sendError(player, "You cannot currently interact with that " + event.getRightClicked().getType().toString().toLowerCase() + ".");
         }
     }
 
@@ -123,25 +118,9 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
             if (passenger != null) {
                 return true;
             }
-
-            org.bukkit.Location loc = entity.getLocation();
-            RegionManager mgr = worldGuard.getGlobalRegionManager().get(loc.getWorld());
-            ApplicableRegionSet applicable = mgr.getApplicableRegions(new Vector(loc.getX(), loc.getY(), loc.getZ()));
-
-            ProtectedRegion r = null;
-            for (ProtectedRegion region : applicable) {
-
-                if (r == null || region.getPriority() > r.getPriority()) {
-                    r = region;
-                }
-            }
-
-            if (r != null && r.getId().endsWith("-house")) {
-                return true;
-            }
         }
 
-        if (!(entity instanceof Tameable) || !((Tameable) entity).isTamed()) return false;
+        if (!(entity instanceof Tameable) || !((Tameable) entity).isTamed() || ((Tameable) entity).getOwner() == null) return false;
 
         org.bukkit.Location loc = entity.getLocation();
         RegionManager mgr = worldGuard.getGlobalRegionManager().get(loc.getWorld());
