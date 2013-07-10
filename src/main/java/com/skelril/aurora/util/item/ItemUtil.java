@@ -2,6 +2,7 @@ package com.skelril.aurora.util.item;
 
 import com.sk89q.worldedit.blocks.ItemID;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -502,6 +503,30 @@ public class ItemUtil {
             if (matchesFilter(itemStack, name)) return true;
         }
         return false;
+    }
+
+    public static boolean removeItemOfType(Player player, int typeId, int quantity) {
+
+        int c = ItemUtil.countItemsOfType(player.getInventory().getContents(), typeId);
+
+        if (c < quantity) return false;
+
+        c -= quantity;
+
+        ItemStack[] stacks = ItemUtil.removeItemOfType(player.getInventory().getContents(), typeId);
+
+        player.getInventory().setContents(stacks);
+
+        int amount = Math.min(c, Material.getMaterial(typeId).getMaxStackSize());
+        while (amount > 0) {
+            player.getInventory().addItem(new ItemStack(typeId, amount));
+            c -= amount;
+            amount = Math.min(c, 64);
+        }
+
+        //noinspection deprecation
+        player.updateInventory();
+        return true;
     }
 
     public static ItemStack[] removeItemOfType(ItemStack[] itemStacks, int typeId) {

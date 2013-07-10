@@ -10,6 +10,7 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -96,11 +97,27 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         Tameable tameable = (Tameable) event.getRightClicked();
 
-        if (event.getRightClicked() instanceof Horse && tameable.getOwner() == null && player.getItemInHand().getTypeId() == ItemID.RED_APPLE) {
-            tameable.setOwner(player);
-            event.setCancelled(true);
-            ChatUtil.sendNotice(player, "You have gained possession of this horse.");
-            return;
+        if (event.getRightClicked() instanceof Horse && tameable.isTamed() && player.getItemInHand().getTypeId() == ItemID.RED_APPLE) {
+            if (tameable.getOwner() == null) {
+
+                tameable.setOwner(player);
+                event.setCancelled(true);
+
+                ItemUtil.removeItemOfType(player, ItemID.RED_APPLE, 1);
+
+                ChatUtil.sendNotice(player, "You have gained possession of this horse.");
+                return;
+            } else if (player.isSneaking() && tameable.getOwner().getName().equals(player.getName())) {
+
+                tameable.setOwner(null);
+                tameable.setTamed(true);
+                event.setCancelled(true);
+
+                ItemUtil.removeItemOfType(player, ItemID.RED_APPLE, 1);
+
+                ChatUtil.sendNotice(player, "You have lost possession of this horse.");
+                return;
+            }
         }
 
         if (isSafe(event.getRightClicked()) && (tameable.getOwner() == null || !tameable.getOwner().getName().equals(player.getName()))) {
