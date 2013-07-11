@@ -295,7 +295,7 @@ public enum ItemType {
     BED_ITEM(ItemID.BED_ITEM, "Bed", "bed"),
     REDSTONE_REPEATER(ItemID.REDSTONE_REPEATER, "Redstone repeater", "redstonerepeater", "diode", "delayer", "repeater"),
     COOKIE(ItemID.COOKIE, "Cookie", "cookie"),
-    MAP(ItemID.MAP, 0, "Map", "map"),
+    MAP(ItemID.MAP, 0, "City Map", "citymap", "map"),
     SHEARS(ItemID.SHEARS, "Shears", "shears", "scissors"),
     MELON(ItemID.MELON, "Melon Slice", "melon", "melonslice"),
     PUMPKIN_SEEDS(ItemID.PUMPKIN_SEEDS, "Pumpkin seeds", "pumpkinseed", "pumpkinseeds"),
