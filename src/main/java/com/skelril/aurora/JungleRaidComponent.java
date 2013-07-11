@@ -216,6 +216,9 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
             Location battleLoc = new Location(Bukkit.getWorld(config.worldName), config.x, config.y, config.z);
 
+            if (player.getVehicle() != null) {
+                player.getVehicle().eject();
+            }
             player.teleport(battleLoc);
 
             prayerComponent.influencePlayer(player, getPrayers(player));
@@ -566,6 +569,11 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             teamPlayer.setExhaustion(identity.getExhaustion());
             teamPlayer.setLevel(identity.getLevel());
             teamPlayer.setExp(identity.getExperience());
+
+            if (teamPlayer.getVehicle() != null) {
+                teamPlayer.getVehicle().eject();
+            }
+
             teamPlayer.teleport(identity.getLocation());
 
             playerState.remove(teamPlayer.getName());
