@@ -132,6 +132,11 @@ public class AdminStoreComponent extends BukkitComponent {
                 amt = Math.max(1, args.getFlagInteger('a'));
             }
             double price = itemPricePair.getPrice() * amt;
+            double rebate = 0;
+
+            if (inst.hasPermission(sender, "aurora.market.rebate.onepointseven")) {
+                rebate = price * .017;
+            }
 
             if (!econ.has(playerName, price)) {
                 throw new CommandException("You do not have enough money to purchase that item(s).");
@@ -148,10 +153,14 @@ public class AdminStoreComponent extends BukkitComponent {
             }
 
             // Charge the money and send the sender some feedback
-            econ.withdrawPlayer(playerName, price);
+            econ.withdrawPlayer(playerName, price - rebate);
             itemStoreDatabase.logTransaction(playerName, itemName, amt);
             String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), " " + econ.currencyNamePlural());
             ChatUtil.sendNotice(sender, "Item(s) purchased for " + priceString + "!");
+            if (rebate != 0) {
+                String rebateString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(rebate), " " + econ.currencyNamePlural());
+                ChatUtil.sendNotice(sender, "You get " + rebateString + " back.");
+            }
         }
 
         @Command(aliases = {"sell", "s"},
