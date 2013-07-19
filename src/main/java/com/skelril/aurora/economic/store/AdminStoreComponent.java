@@ -225,14 +225,15 @@ public class AdminStoreComponent extends BukkitComponent {
         }
 
         @Command(aliases = {"list", "l"},
-                usage = "[-p page]", desc = "Get a list of items and their prices",
-                flags = "p:", min = 0, max = 0
+                usage = "[-p page] [filter...]", desc = "Get a list of items and their prices",
+                flags = "p:", min = 0
         )
         public void listCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             checkPlayer(sender, true);
 
-            List<ItemPricePair> itemPricePairCollection = itemStoreDatabase.getItemList();
+            String filterString = args.argsLength() > 0 ? args.getJoinedStrings(0) : null;
+            List<ItemPricePair> itemPricePairCollection = itemStoreDatabase.getItemList(filterString);
             Collections.sort(itemPricePairCollection);
 
             final int entryToShow = 9;

@@ -224,6 +224,24 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
     }
 
     @Override
+    public List<ItemPricePair> getItemList(String filter) {
+
+        if (filter == null || filter.isEmpty()) {
+            return getItemList();
+        }
+
+        filter = filter.toLowerCase();
+
+        List<ItemPricePair> items = new ArrayList<>();
+        for (ItemPricePair itemPricePair : nameItemPrice.values()) {
+            if (itemPricePair.getName().startsWith(filter)) {
+                items.add(itemPricePair);
+            }
+        }
+        return items;
+    }
+
+    @Override
     public boolean unload() {
 
         for (Handler handler : storeLogger.getHandlers()) {

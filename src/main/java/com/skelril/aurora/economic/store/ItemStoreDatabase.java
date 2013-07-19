@@ -36,9 +36,18 @@ public interface ItemStoreDatabase {
     public ItemPricePair getItem(String name);
 
     /**
-     * Returns a list of inmates
+     * Returns a list of items
      *
-     * @return A list of inmates
+     * @param filter the item name must start with this to be returned
+     * @return A list of items
      */
     public List<ItemPricePair> getItemList();
+
+    /**
+     * Returns a list of items
+     *
+     * @param filter the item name must start with this to be returned
+     * @return A list of items
+     */
+    public List<ItemPricePair> getItemList(String filter);
 }
