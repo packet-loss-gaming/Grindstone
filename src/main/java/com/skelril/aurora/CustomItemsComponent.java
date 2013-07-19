@@ -422,7 +422,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 public boolean run(int times) {
 
                     //noinspection deprecation
-                    if (player.isValid() && !player.isOnGround()) {
+                    if (player.isValid() && player.getAllowFlight() && !player.isOnGround()) {
                         int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), ChatColor.GOLD + "Pixie Dust") - 1;
 
                         if (c >= 0) {
@@ -450,10 +450,12 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 public void end() {
 
                     if (player.isValid()) {
+                        if (player.getAllowFlight()) {
+                            ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
+                            antiCheat.unexempt(player, CheckType.FLY);
+                        }
                         player.setAllowFlight(false);
                         player.setFlySpeed(.1F);
-                        antiCheat.unexempt(player, CheckType.FLY);
-                        ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
                     }
                 }
             };
@@ -464,6 +466,21 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             return true;
         }
         return false;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerSneak(PlayerToggleSneakEvent event) {
+
+        Player player = event.getPlayer();
+
+        if (event.isSneaking() && player.getAllowFlight() && player.isOnGround() && player.getGameMode() != GameMode.CREATIVE) {
+
+            if (!ItemUtil.findItemOfName(player.getInventory().getContents(), ChatColor.GOLD + "Pixie Dust")) return;
+
+            player.setAllowFlight(false);
+            antiCheat.unexempt(player, CheckType.FLY);
+            ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
