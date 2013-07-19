@@ -3,6 +3,7 @@ package com.skelril.aurora.economic.store;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -28,9 +29,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Admin Store", desc = "Admin Store system.")
@@ -581,6 +580,35 @@ public class AdminStoreComponent extends BukkitComponent {
             }
         }
         return itemStacks.toArray(new ItemStack[itemStacks.size()]);
+    }
+
+    private static Set<Integer> ignored = new HashSet<>();
+
+    static {
+        ignored.add(BlockID.AIR);
+        ignored.add(BlockID.WATER);
+        ignored.add(BlockID.STATIONARY_WATER);
+        ignored.add(BlockID.LAVA);
+        ignored.add(BlockID.STATIONARY_LAVA);
+        ignored.add(BlockID.GRASS);
+        ignored.add(BlockID.DIRT);
+        ignored.add(BlockID.STONE);
+        ignored.add(BlockID.BEDROCK);
+    }
+
+    public double priceCheck(int blockID, int data) {
+
+        if (ignored.contains(blockID)) return 0;
+
+        ItemType type = ItemType.lookup(blockID + ":" + data);
+
+        if (type == null) return 0;
+
+        ItemPricePair itemPricePair = itemStoreDatabase.getItem(type.getName());
+
+        if (itemPricePair == null) return 0;
+
+        return itemPricePair.getPrice();
     }
 
     public String checkPlayer(CommandSender sender) throws CommandException {

@@ -4,10 +4,14 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldedit.LocalWorld;
+import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
 import com.sk89q.worldedit.bukkit.selections.Polygonal2DSelection;
 import com.sk89q.worldedit.bukkit.selections.Selection;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.databases.RegionDBUtil;
@@ -19,11 +23,14 @@ import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.District;
+import com.skelril.aurora.economic.store.AdminStoreComponent;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.BookUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -31,6 +38,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.logging.Logger;
 
@@ -38,22 +46,27 @@ import java.util.logging.Logger;
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Home Manager", desc = "Home ECS")
-@Depend(plugins = {"WorldEdit", "WorldGuard"})
+@Depend(plugins = {"WorldEdit", "WorldGuard"}, components = AdminStoreComponent.class)
 public class HomeManagerComponent extends BukkitComponent {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    @InjectComponent
+    private AdminStoreComponent store;
+
     private WorldEditPlugin WE;
     private WorldGuardPlugin WG;
+    private Economy econ;
 
     @Override
     public void enable() {
 
         registerCommands(Commands.class);
         setUpWorldEdit();
-        setUpWorldGauard();
+        setUpWorldGuard();
+        setUpEconomy();
     }
 
     private void setUpWorldEdit() {
@@ -68,7 +81,7 @@ public class HomeManagerComponent extends BukkitComponent {
         this.WE = (WorldEditPlugin) plugin;
     }
 
-    private void setUpWorldGauard() {
+    private void setUpWorldGuard() {
 
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
@@ -78,6 +91,15 @@ public class HomeManagerComponent extends BukkitComponent {
         }
 
         this.WG = (WorldGuardPlugin) plugin;
+    }
+
+    private void setUpEconomy() {
+
+        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
+                .vault.economy.Economy.class);
+        if (economyProvider != null) {
+            econ = economyProvider.getProvider();
+        }
     }
 
     public class Commands {
@@ -313,6 +335,86 @@ public class HomeManagerComponent extends BukkitComponent {
                         + player + " in the district: " + district + ".");
                 ChatUtil.sendNotice(player, "A home has been created for you by: " + admin.getDisplayName() + ".");
                 log.info(admin.getName() + " created a home for: " + player + " in the district: " + district + ".");
+            } else {
+                throw new CommandException("You must be a player to use this command.");
+            }
+        }
+
+        @Command(aliases = {"pc"}, desc = "Price Checker",
+                usage = "[player]",
+                flags = "c", min = 0, max = 1)
+        @CommandPermissions({"aurora.home.admin.pc"})
+        public void priceCheckHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            if (sender instanceof Player) {
+                Selection selection = WE.getSelection((Player) sender);
+
+                if (selection == null) throw new CommandException("Select a region with WorldEdit first.");
+
+                if (!(selection instanceof Polygonal2DSelection || selection instanceof CuboidSelection)) {
+                    throw new CommandException("The type of region selected in WorldEdit is unsupported.");
+                }
+
+                Player player = args.argsLength() == 0 ? null : PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+                int size = (selection.getLength() * selection.getWidth()) / (16 * 16);
+
+                CommandSender[] target = new CommandSender[]{
+                        sender, player
+                };
+
+                ChatUtil.sendNotice(target, "Chunks: " + size);
+
+                double p1 = size <= 4 ? size * 3750 : (size * 10000) + (size * (size / 2) * 10000);
+
+                String chunkPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p1), " " + econ.currencyNamePlural());
+                ChatUtil.sendNotice(target, "Chunk Price: " + chunkPrice + ".");
+
+                // Block Price
+                double p2 = 0;
+
+                Region region = selection.getRegionSelector().getIncompleteRegion();
+                LocalWorld world = region.getWorld();
+
+                if (region instanceof CuboidRegion) {
+
+                    // Doing this for speed
+                    Vector min = region.getMinimumPoint();
+                    Vector max = region.getMaximumPoint();
+
+                    int minX = min.getBlockX();
+                    int minY = min.getBlockY();
+                    int minZ = min.getBlockZ();
+                    int maxX = max.getBlockX();
+                    int maxY = max.getBlockY();
+                    int maxZ = max.getBlockZ();
+
+                    for (int x = minX; x <= maxX; ++x) {
+                        for (int y = minY; y <= maxY; ++y) {
+                            for (int z = minZ; z <= maxZ; ++z) {
+                                Vector pt = new Vector(x, y, z);
+
+                                p2 += store.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
+                            }
+                        }
+                    }
+                } else {
+                    throw new CommandException("Not yet supported.");
+                }
+
+                String housePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p2), " " + econ.currencyNamePlural());
+                ChatUtil.sendNotice(target, "Block Price: " + housePrice + ".");
+
+                double total = p1 + p2;
+                if (args.hasFlag('c')) {
+                    String commission = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total * .1), " " + econ.currencyNamePlural());
+
+                    ChatUtil.sendNotice(target, "Commission change: " + commission);
+                    total += total * .1;
+                }
+
+                String totalPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total), " " + econ.currencyNamePlural());
+                ChatUtil.sendNotice(target, "Total Price: " + totalPrice + ".");
             } else {
                 throw new CommandException("You must be a player to use this command.");
             }

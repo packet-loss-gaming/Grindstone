@@ -43,6 +43,7 @@ public class ChatUtil {
 
         for (CommandSender sender : senders) {
 
+            if (sender == null) continue;
             sendNotice(sender, notice);
         }
     }
@@ -56,6 +57,7 @@ public class ChatUtil {
 
         for (CommandSender sender : senders) {
 
+            if (sender == null) continue;
             sendNotice(sender, chatColor, notice);
         }
     }
