@@ -247,7 +247,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     public void check(Player player, String to) {
 
-        if (to.contains(config.wildernessWorld)) {
+        if (to.contains(config.wildernessWorld) && adminComponent.isAdmin(player)) {
 
             adminComponent.deadmin(player);
         }
@@ -259,7 +259,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Player player = event.getPlayer();
 
-        if (player.getWorld().getName().contains(config.wildernessWorld)) adminComponent.deadmin(player);
+        if (player.getWorld().getName().contains(config.wildernessWorld) && adminComponent.isAdmin(player)) {
+
+            adminComponent.deadmin(player);
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -319,8 +322,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Player player = event.getPlayer();
 
-        if (player.getWorld().getName().contains(config.wildernessWorld) && isEffectedOre(event.getBlock().getTypeId
-                ())) {
+        if (player.getWorld().getName().contains(config.wildernessWorld) && isEffectedOre(event.getBlock().getTypeId())) {
             event.setCancelled(true);
             ChatUtil.sendError(player, "You find yourself unable to place that ore.");
         }
