@@ -25,7 +25,6 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -350,9 +349,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
 
         final Player player = event.getPlayer();
+        boolean isOfflineAdmin = offlinePlayerState.containsKey(player.getName());
 
-        if (!((Entity) player).isOnGround() && (isAdmin(player) || offlinePlayerState.containsKey(player.getName()))) {
-            if (offlinePlayerState.containsKey(player.getName())) {
+        // If someone lies about this, big deal
+        // noinspection deprecation
+        if (!player.isOnGround() && (isAdmin(player) || isOfflineAdmin || player.getAllowFlight())) {
+            if (isOfflineAdmin) {
 
                 AdminPlayerState identity = offlinePlayerState.get(player.getName());
 
@@ -378,6 +380,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 public void run() {
 
                     LocationUtil.toGround(player);
+                    player.setAllowFlight(false);
+                    player.setFlySpeed(.1F);
                 }
             }, 1);
         }
