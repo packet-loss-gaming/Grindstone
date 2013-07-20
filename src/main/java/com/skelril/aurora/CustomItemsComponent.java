@@ -8,6 +8,7 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.entity.ProjectileTickEvent;
@@ -41,6 +42,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,18 +53,22 @@ import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Custom Items Component", desc = "Custom Items")
-@Depend(components = {AntiCheatCompatibilityComponent.class, FreezeComponent.class})
+@Depend(components = {AdminComponent.class, AntiCheatCompatibilityComponent.class, FreezeComponent.class})
 public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Server server = CommandBook.server();
 
     @InjectComponent
+    private AdminComponent admin;
+    @InjectComponent
     private AntiCheatCompatibilityComponent antiCheat;
     @InjectComponent
     private FreezeComponent freeze;
 
     private WorldGuardPlugin WG;
+
+    private List<String> players = new ArrayList<>();
 
     @Override
     public void enable() {
@@ -372,8 +378,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         ItemStack itemStack = event.getItem();
 
-        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
-            event.setCancelled(handleRightClick(player, event.getClickedBlock().getLocation(), itemStack));
+        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && handleRightClick(player, event.getClickedBlock().getLocation(), itemStack)) {
+            event.setCancelled(true);
         }
     }
 
@@ -383,7 +389,9 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         ItemStack itemStack = player.getItemInHand();
 
-        event.setCancelled(handleRightClick(player, event.getRightClicked().getLocation(), itemStack));
+        if (handleRightClick(player, event.getRightClicked().getLocation(), itemStack)) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -392,12 +400,16 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         ItemStack itemStack = player.getItemInHand();
 
-        event.setCancelled(handleRightClick(player, event.getBlockClicked().getLocation(), itemStack));
+        if (handleRightClick(player, event.getBlockClicked().getLocation(), itemStack)) {
+            event.setCancelled(true);
+        }
         //noinspection deprecation
         player.updateInventory();
     }
 
     public boolean handleRightClick(final Player player, Location location, ItemStack itemStack) {
+
+        final long currentTime = System.currentTimeMillis();
 
         if (ItemUtil.matchesFilter(itemStack, ChatColor.DARK_PURPLE + "Magic Bucket")) {
             player.setAllowFlight(!player.getAllowFlight());
@@ -412,17 +424,29 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
             return true;
         } else if (ItemUtil.matchesFilter(itemStack, ChatColor.GOLD + "Pixie Dust")) {
+
             if (player.getAllowFlight()) return false;
+
+            if (players.contains(player.getName())) {
+
+                ChatUtil.sendError(player, "You need to wait to regain your faith, and trust.");
+                return false;
+            }
+
             player.setAllowFlight(true);
             player.setFlySpeed(1);
             antiCheat.exempt(player, CheckType.FLY);
+
             ChatUtil.sendNotice(player, "You use the Pixie Dust to gain flight.");
+
             IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
                 @Override
                 public boolean run(int times) {
 
-                    //noinspection deprecation
-                    if (player.isValid() && player.getAllowFlight() && !player.isOnGround()) {
+                    // Just get out of here you stupid players who don't exist!
+                    if (!player.isValid()) return true;
+
+                    if (player.getAllowFlight()) {
                         int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), ChatColor.GOLD + "Pixie Dust") - 1;
 
                         if (c >= 0) {
@@ -439,9 +463,12 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             //noinspection deprecation
                             player.updateInventory();
 
-                            ChatUtil.sendNotice(player, "You use some more Pixie Dust to keep flying.");
+                            if (System.currentTimeMillis() >= currentTime + 13000) {
+                                ChatUtil.sendNotice(player, "You use some more Pixie Dust to keep flying.");
+                            }
                             return false;
                         }
+                        ChatUtil.sendWarning(player, "The effects of the Pixie Dust are about to wear off!");
                     }
                     return true;
                 }
@@ -454,13 +481,14 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
                             antiCheat.unexempt(player, CheckType.FLY);
                         }
+                        player.setFallDistance(0);
                         player.setAllowFlight(false);
                         player.setFlySpeed(.1F);
                     }
                 }
             };
 
-            TimedRunnable runnable = new TimedRunnable(integratedRunnable, 2);
+            TimedRunnable runnable = new TimedRunnable(integratedRunnable, 1);
             BukkitTask task = server.getScheduler().runTaskTimer(inst, runnable, 0, 20 * 15);
             runnable.setTask(task);
             return true;
@@ -473,13 +501,25 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         Player player = event.getPlayer();
 
-        if (event.isSneaking() && player.getAllowFlight() && player.isOnGround() && player.getGameMode() != GameMode.CREATIVE) {
+        if (event.isSneaking() && player.getAllowFlight() && player.isOnGround() && !admin.isAdmin(player)) {
 
             if (!ItemUtil.findItemOfName(player.getInventory().getContents(), ChatColor.GOLD + "Pixie Dust")) return;
 
             player.setAllowFlight(false);
             antiCheat.unexempt(player, CheckType.FLY);
             ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
+
+            final String playerName = player.getName();
+
+            players.add(playerName);
+
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+
+                    players.remove(playerName);
+                }
+            }, 20 * 30);
         }
     }
 
