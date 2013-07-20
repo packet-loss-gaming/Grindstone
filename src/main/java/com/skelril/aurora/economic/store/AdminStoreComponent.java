@@ -10,6 +10,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.database.UnloadableDatabase;
 import com.skelril.aurora.util.item.ItemType;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -599,7 +600,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
     public double priceCheck(int blockID, int data) {
 
-        if (ignored.contains(blockID)) return 0;
+        if (ignored.contains(blockID) || EnvironmentUtil.isValuableBlock(blockID)) return 0;
 
         ItemType type = ItemType.lookup(blockID + ":" + data);
 
@@ -609,7 +610,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
         if (itemPricePair == null) return 0;
 
-        return itemPricePair.getPrice();
+        return itemPricePair.isBuyable() ? itemPricePair.getPrice() : 0;
     }
 
     public String checkPlayer(CommandSender sender) throws CommandException {
