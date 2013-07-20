@@ -91,7 +91,9 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
 
     public boolean shouldKick(long time) {
 
-        return System.currentTimeMillis() - time >= TimeUnit.MINUTES.toMillis(config.afkKickMinutes);
+        int fraction = ((server.getMaxPlayers() - server.getOnlinePlayers().length) / server.getMaxPlayers());
+        int duration = Math.max(config.afkMinutes + 2, config.afkKickMinutes * fraction);
+        return System.currentTimeMillis() - time >= TimeUnit.MINUTES.toMillis(duration);
     }
 
     @Override
@@ -110,7 +112,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
                         @Override
                         public void run() {
 
-                            entry.getKey().kickPlayer("Inactivity - 60 Minutes");
+                            entry.getKey().kickPlayer("Inactivity - " + (System.currentTimeMillis() - entry.getValue()) / 60000 + " Minutes");
                         }
                     }, 1);
                 } else if (!entry.getKey().isSleepingIgnored()) {
