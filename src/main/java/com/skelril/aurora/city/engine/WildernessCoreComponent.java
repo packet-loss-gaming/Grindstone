@@ -27,7 +27,10 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
@@ -257,15 +260,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         Player player = event.getPlayer();
 
         if (player.getWorld().getName().contains(config.wildernessWorld)) adminComponent.deadmin(player);
-    }
-
-    @EventHandler
-    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
-
-        Player player = event.getPlayer();
-
-        if (adminComponent.isAdmin(player)) return;
-        if (player.getWorld().getName().contains(config.wildernessWorld) && event.isFlying()) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
