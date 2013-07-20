@@ -25,7 +25,7 @@ public class AlchemyComponent extends BukkitComponent implements Listener {
     @Override
     public void enable() {
 
-        registerCommands(Commands.class);
+        //registerCommands(Commands.class);
     }
 
     public class Commands {
