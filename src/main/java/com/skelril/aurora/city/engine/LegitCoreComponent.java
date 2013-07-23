@@ -198,7 +198,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
 
         if (event.getTo().getWorld() != event.getFrom().getWorld()) {
@@ -253,8 +253,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
             overWritten = homeDatabase.save();
         }
 
-        homeDatabase.saveHouse(player, bedLoc.getWorld().getName(), bedLoc.getBlockX(), bedLoc.getBlockY(),
-                bedLoc.getBlockZ());
+        homeDatabase.saveHouse(player, bedLoc.getWorld().getName(), bedLoc.getBlockX(), bedLoc.getBlockY(), bedLoc.getBlockZ());
         if (homeDatabase.save()) {
             if (!overWritten) ChatUtil.sendNotice(player, "Your bed location has been set.");
             else ChatUtil.sendNotice(player, "Your bed location has been changed.");
@@ -265,9 +264,9 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     public void check(final Player player, String from, String to) {
 
+        boolean result = false;
         if (to.contains(config.legitWorld) && !from.contains(config.legitWorld)) {
 
-            adminComponent.standardizePlayer(player);
             if (!playerList.contains(player)) {
                 ChatUtil.sendNotice(player, "You have entered legit world.");
 
@@ -283,10 +282,12 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
                 }
             }
             playerList.add(player);
+            result = true;
         } else if (from.contains(config.legitWorld) && !to.contains(config.legitWorld)) {
 
             if (!playerList.contains(player)) ChatUtil.sendNotice(player, "You have left legit world.");
             playerList.add(player);
+            result = true;
         }
 
         server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -300,6 +301,8 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
                 }
             }
         }, 40);
+
+        if (result) adminComponent.standardizePlayer(player, true);
     }
 
     // Catch possible escapes
