@@ -54,7 +54,7 @@ public class FlightComponent extends BukkitComponent implements Listener {
 
         player.setAllowFlight(false);
         player.setFallDistance(0F);
-        ChatUtil.sendWarning(player, "You loose your wings and can no longer fly.");
+        ChatUtil.sendWarning(player, "You lose your wings and can no longer fly.");
     }
 
     public class Commands {
