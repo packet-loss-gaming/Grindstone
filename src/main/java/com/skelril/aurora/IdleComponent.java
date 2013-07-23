@@ -91,8 +91,8 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
 
     public boolean shouldKick(long time) {
 
-        int fraction = ((server.getMaxPlayers() - server.getOnlinePlayers().length) / server.getMaxPlayers());
-        int duration = Math.max(config.afkMinutes + 2, config.afkKickMinutes * fraction);
+        double fraction = (server.getMaxPlayers() - server.getOnlinePlayers().length) / (double) server.getMaxPlayers();
+        int duration = (int) Math.max(config.afkMinutes + 2, config.afkKickMinutes * fraction);
         return System.currentTimeMillis() - time >= TimeUnit.MINUTES.toMillis(duration);
     }
 
