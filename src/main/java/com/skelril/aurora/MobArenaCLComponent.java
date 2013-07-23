@@ -3,10 +3,11 @@ package com.skelril.aurora;
 import com.garbagemule.MobArena.events.ArenaPlayerJoinEvent;
 import com.garbagemule.MobArena.events.ArenaPlayerLeaveEvent;
 import com.sk89q.commandbook.CommandBook;
+import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
-import com.skelril.aurora.prayer.PrayerComponent;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -21,12 +22,15 @@ import java.util.logging.Logger;
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "MACL", desc = "Mob Arena Compatibility Layer")
-@Depend(plugins = {"MobArena"}, components = {PrayerComponent.class})
+@Depend(plugins = {"MobArena"}, components = {AdminComponent.class})
 public class MobArenaCLComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
+
+    @InjectComponent
+    private AdminComponent admin;
 
     Set<Player> playerList = new HashSet<>();
 
@@ -42,6 +46,7 @@ public class MobArenaCLComponent extends BukkitComponent implements Listener {
 
         Player player = event.getPlayer();
 
+        admin.deadmin(player, true);
         if (!playerList.contains(player)) playerList.add(player);
     }
 
