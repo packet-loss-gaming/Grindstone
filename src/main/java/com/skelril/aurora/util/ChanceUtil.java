@@ -1,16 +1,17 @@
 package com.skelril.aurora.util;
 
+import java.util.Random;
+
 /**
  * @author Turtle9598
  */
 public class ChanceUtil {
 
+    private static Random r = new Random(8888);
+
     public static int getRandom(int highestValue) {
 
-        if (highestValue < 0) {
-            return (int) ((Math.random() * (highestValue * -1) + 1) * -1);
-        }
-        return (int) ((Math.random() * highestValue) + 1);
+        return highestValue < 0 ? (r.nextInt(highestValue * -1) + 1) * -1 : r.nextInt(highestValue) + 1;
     }
 
     public static int getRangedRandom(int lowestValue, int highestValue) {
@@ -22,9 +23,9 @@ public class ChanceUtil {
     public static double getRandom(double highestValue) {
 
         if (highestValue < 0) {
-            return (Math.random() * (highestValue * -1) + 1) * -1;
+            return (r.nextDouble() * (highestValue * -1) + 1) * -1;
         }
-        return (Math.random() * highestValue) + 1;
+        return (r.nextDouble() * highestValue) + 1;
     }
 
     public static double getRangedRandom(double lowestValue, double highestValue) {

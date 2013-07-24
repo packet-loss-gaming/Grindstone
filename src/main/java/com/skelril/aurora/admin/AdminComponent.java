@@ -10,6 +10,7 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.skelril.aurora.NinjaComponent;
 import com.skelril.aurora.RogueComponent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
+import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
@@ -556,6 +557,21 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     public class Commands {
+
+        @Command(aliases = {"randomnumber"}, desc = "Simulate damage on the currently held item",
+                usage = "[number]", min = 0, max = 1)
+        public void randomCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            int random = 100;
+            if (args.argsLength() > 0) {
+                random = args.getInteger(0);
+            }
+
+            final int origin = random;
+            random = ChanceUtil.getRandom(random);
+
+            ChatUtil.sendNotice(sender, "Number: " + random + " / " + origin);
+        }
 
         @Command(aliases = {"simulatedamage"}, desc = "Simulate damage on the currently held item")
         @CommandPermissions("aurora.admin.simulation.damage")
