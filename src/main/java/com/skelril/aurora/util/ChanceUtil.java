@@ -7,7 +7,7 @@ import java.util.Random;
  */
 public class ChanceUtil {
 
-    private static Random r = new Random(8888);
+    private static Random r = new Random(1374633257);
 
     public static int getRandom(int highestValue) {
 
