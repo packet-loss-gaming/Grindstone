@@ -95,9 +95,10 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         public String jailMessage = "You have been jailed";
         @Setting("broadcast-jails")
         public boolean broadcastJails = true;
-
         @Setting("move-threshold")
         public int moveThreshold = 8;
+        @Setting("free-spots-held")
+        public int freeSpotsHeld = 2;
     }
 
     /**
@@ -158,9 +159,12 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
                     Location loc = player.getLocation();
                     Location cellLoc = cell.get(player).getLocation();
-                    if (player.getWorld() != cellLoc.getWorld()
-                            || loc.distanceSquared(cellLoc) > (config.moveThreshold * config.moveThreshold)) {
+                    if (player.getWorld() != cellLoc.getWorld() || loc.distanceSquared(cellLoc) > (config.moveThreshold * config.moveThreshold)) {
                         player.teleport(cell.get(player).getLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                    }
+
+                    if (player.isOnline() && server.getMaxPlayers() - server.getOnlinePlayers().length <= config.freeSpotsHeld) {
+                        player.kickPlayer("You are not currently permitted to be online!");
                     }
                 }
             } catch (Exception e) {
