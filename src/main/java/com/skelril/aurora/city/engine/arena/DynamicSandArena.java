@@ -102,8 +102,8 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
                 }
 
             } catch (Exception e) {
-                log.warning("An error has occurred while attempting to drop sand in the region: "
-                        + getRegion().getId() + ".");
+                log.warning("An error has occurred while attempting to drop sand in the region: " + getRegion().getId() + ".");
+                e.printStackTrace();
             }
         }
     }
@@ -149,8 +149,8 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
                 }
             }
         } catch (Exception e) {
-            log.warning("An error has occurred while attempting to remove sand in the region: "
-                    + getRegion().getId() + ".");
+            log.warning("An error has occurred while attempting to remove sand in the region: " + getRegion().getId() + ".");
+            e.printStackTrace();
         }
     }
 
