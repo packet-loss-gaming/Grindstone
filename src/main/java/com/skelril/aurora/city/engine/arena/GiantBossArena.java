@@ -823,9 +823,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     // Call this event to notify AntiCheat
                     server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
                     player.setVelocity(new Vector(
-                            random.nextDouble() * 1.7 - 1.5,
-                            random.nextDouble() * 2,
-                            random.nextDouble() * 1.7 - 1.5
+                            random.nextDouble() * 3 - 1.5,
+                            random.nextDouble() * 1 + 1.3,
+                            random.nextDouble() * 3 - 1.5
                     ));
                     player.setFireTicks(difficulty * 18);
                 }
