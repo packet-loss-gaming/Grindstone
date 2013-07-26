@@ -586,7 +586,8 @@ public class ItemUtil {
 
     private static final int[] axes = new int[]{
             ItemID.WOOD_AXE, ItemID.STONE_AXE,
-            ItemID.IRON_AXE, ItemID.DIAMOND_AXE
+            ItemID.IRON_AXE, ItemID.GOLD_AXE,
+            ItemID.DIAMOND_AXE
     };
 
     public static boolean isAxe(int itemId) {
@@ -601,7 +602,8 @@ public class ItemUtil {
 
     private static final int[] pickAxes = new int[]{
             ItemID.WOOD_PICKAXE, ItemID.STONE_PICKAXE,
-            ItemID.IRON_PICK, ItemID.DIAMOND_PICKAXE
+            ItemID.IRON_PICK, ItemID.GOLD_PICKAXE,
+            ItemID.DIAMOND_PICKAXE
     };
 
     public static boolean isPickAxe(int itemId) {
