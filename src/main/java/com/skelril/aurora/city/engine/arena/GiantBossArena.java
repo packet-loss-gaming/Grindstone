@@ -868,6 +868,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                                 ChatUtil.sendNotice(player, "Fine... No tango this time...");
                             }
                         }
+                        ChatUtil.sendNotice(getContainedPlayers(1), "Now wasn't that fun?");
                     }
                 }, 20 * (difficulty == 1 ? 14 : 7));
                 break;
