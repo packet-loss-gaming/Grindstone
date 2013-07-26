@@ -11,7 +11,7 @@ public class ChanceUtil {
 
     public static int getRandom(int highestValue) {
 
-        return highestValue < 0 ? (r.nextInt(highestValue * -1) + 1) * -1 : r.nextInt(highestValue) + 1;
+        return highestValue == 0 ? 1 : highestValue < 0 ? (r.nextInt(highestValue * -1) + 1) * -1 : r.nextInt(highestValue) + 1;
     }
 
     public static int getRangedRandom(int lowestValue, int highestValue) {
