@@ -180,6 +180,10 @@ public class BookUtil {
                 pages.add("Ghastly Wrath\n\nAvoid this attack at all cost. This attack has cost us many lives. " +
                         "Hiding behind pillars seems to help with the survival rate however.");
 
+                pages.add("Unholy Prayer\n\nThe monster appears to call out to it's own demonic lord " +
+                        "prior to unleashing an attack, which is so unholy I cannot even begin to describe it. " +
+                        "When faced with this attack, hiding behind the pillars may be the only way to survive.");
+
                 pages.add("Also it may be of importance that you know of this monsters origins. " +
                         "It appears to have been created by the Dark King" + ChatColor.ITALIC +
                         " ...the rest of the pages have been torn out of the book and the " +

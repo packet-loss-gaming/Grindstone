@@ -16,6 +16,9 @@ import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
+import com.skelril.aurora.exceptions.UnsupportedPrayerException;
+import com.skelril.aurora.prayer.PrayerComponent;
+import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -64,6 +67,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    private PrayerComponent prayerComponent;
     private AdminComponent adminComponent;
 
     private static final int groundLevel = 82;
@@ -81,10 +85,11 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     private List<Location> chestPts = new ArrayList<>();
     private final HashMap<String, PlayerState> playerState = new HashMap<>();
 
-    public GiantBossArena(World world, ProtectedRegion region, AdminComponent adminComponent) {
+    public GiantBossArena(World world, ProtectedRegion region, AdminComponent adminComponent, PrayerComponent prayerComponent) {
 
         super(world, region);
         this.adminComponent = adminComponent;
+        this.prayerComponent = prayerComponent;
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -528,7 +533,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     int max = (int) Math.ceil(boss.getMaxHealth());
 
                     String message = "Boss Health: " + current + " / " + max;
-                    ChatUtil.sendNotice(contained, ChatColor.DARK_AQUA, message);
+                    ChatUtil.sendNotice(getContainedPlayers(1), ChatColor.DARK_AQUA, message);
                 }
             }, 1);
 
@@ -798,7 +803,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     }
 
-    private final int OPTION_COUNT = 7;
+    private final int OPTION_COUNT = 8;
 
     private void runAttack(int attackCase) {
 
@@ -940,6 +945,30 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         }
                         // Notify if avoided
                         ChatUtil.sendNotice(getContainedPlayers(1), "Gah... Afraid are you friends?");
+                    }
+                }, 20 * (difficulty == 1 ? 14 : 7));
+                break;
+            case 8:
+                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "I ask thy father and thy friend for aid in this all mighty battle...");
+                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Heed thy warning, or parish!");
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                    @Override
+                    public void run() {
+
+                        if (!isBossSpawned()) return;
+
+                        ChatUtil.sendWarning(getContainedPlayers(1), "May those who appose me die a death like no other...");
+                        for (Player player : getContainedPlayers()) {
+                            if (player.getLocation().getBlock().getRelative(BlockFace.DOWN, 2).getTypeId() != BlockID.DIAMOND_BLOCK) {
+                                ChatUtil.sendWarning(getContainedPlayers(1), "Parish " + player.getName() + "!");
+                                try {
+                                    prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
+                                } catch (UnsupportedPrayerException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
                     }
                 }, 20 * (difficulty == 1 ? 14 : 7));
                 break;

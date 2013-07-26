@@ -265,7 +265,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             for (String region : config.zombieBosses) {
                 try {
                     ProtectedRegion pr = mgr.get(world).getRegion(region);
-                    arenas.add(new GiantBossArena(world, pr, adminComponent));
+                    arenas.add(new GiantBossArena(world, pr, adminComponent, prayerComponent));
                     if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
