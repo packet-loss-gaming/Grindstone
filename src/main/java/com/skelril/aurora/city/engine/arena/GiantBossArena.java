@@ -345,7 +345,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @EventHandler(ignoreCancelled = true)
     public void onPrayerApplication(PrayerApplicationEvent event) {
 
-        if (contains(event.getPlayer())) event.setCancelled(true);
+        if (contains(event.getPlayer()) && event.getCause().getEffect().getType().isHoly()) event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -949,7 +949,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }, 20 * (difficulty == 1 ? 14 : 7));
                 break;
             case 8:
-                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "I ask thy father and thy friend for aid in this all mighty battle...");
+                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "I ask thy lord for aid in this all mighty battle...");
                 ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Heed thy warning, or parish!");
                 server.getScheduler().runTaskLater(inst, new Runnable() {
 
