@@ -362,19 +362,46 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
                     switch (ChanceUtil.getRandom(10)) {
                         case 1:
-                            ChatUtil.sendWarning(player, "Dave decides to play racket ball...");
-                            ChatUtil.sendWarning(player, "Using you as the ball!");
-                            daveHitList.add(player);
-                            modifiedLoc = new Location(player.getWorld(), player.getLocation().getX(), 100,
-                                    player.getLocation().getZ());
-                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
-                                    PrayerType.ROCKET, TimeUnit.MINUTES.toMillis(30)));
-                            break;
+                            if (ChanceUtil.getChance(4)) {
+                                if (blockid == BlockID.DIAMOND_ORE) {
+                                    ChatUtil.sendWarning(player, "You ignite fumes in the air!");
+                                    EditSession ess = new EditSession(new BukkitWorld(player.getWorld()), -1);
+                                    try {
+                                        ess.fillXZ(BukkitUtil.toVector(player.getLocation()), new BaseBlock(BlockID.FIRE), 20, 20, true);
+                                    } catch (MaxChangedBlocksException ignored) {
+
+                                    }
+                                    for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
+                                        final boolean untele = i == 11;
+                                        server.getScheduler().runTaskLater(inst, new Runnable() {
+                                            @Override
+                                            public void run() {
+
+                                                if (untele) {
+                                                    recordSystem.revertByPlayer(player.getName());
+                                                }
+
+                                                if (!contains(player)) return;
+
+                                                Location l = LocationUtil.findRandomLoc(player.getLocation().getBlock(), 3, true, false);
+                                                l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 3F, true, false);
+                                            }
+                                        }, 12 * i);
+                                    }
+                                } else {
+                                    player.chat("Who's a good ghost?!?!");
+                                    player.chat("Don't hurt me!!!");
+                                    player.chat("Nooooooooooo!!!");
+
+                                    prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                            PrayerType.CANNON, TimeUnit.MINUTES.toMillis(2)));
+                                }
+                                break;
+                            }
                         case 2:
-                            ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
+                            ChatUtil.sendWarning(player, "You find yourself falling from the sky...");
                             daveHitList.add(player);
-                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
-                                    PrayerType.SLAP, TimeUnit.MINUTES.toMillis(30)));
+                            modifiedLoc = new Location(player.getWorld(), player.getLocation().getX(), 350, player.getLocation().getZ());
                             break;
                         case 3:
                             ChatUtil.sendWarning(player, "George plays with fire, sadly too close to you.");
@@ -417,37 +444,16 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             }
                             break;
                         case 10:
-                            if (blockid != BlockID.DIAMOND_ORE || !ChanceUtil.getChance(10)) break;
-                            ChatUtil.sendWarning(player, "You ignite fumes in the air!");
-                            EditSession ess = new EditSession(new BukkitWorld(player.getWorld()), -1);
-                            try {
-                                ess.fillXZ(BukkitUtil.toVector(player.getLocation()), new BaseBlock(BlockID.FIRE), 20, 20, true);
-                            } catch (MaxChangedBlocksException ignored) {
-
-                            }
-                            for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
-                                final boolean untele = i == 11;
-                                server.getScheduler().runTaskLater(inst, new Runnable() {
-                                    @Override
-                                    public void run() {
-
-                                        if (untele) {
-                                            recordSystem.revertByPlayer(player.getName());
-                                        }
-
-                                        if (!contains(player)) return;
-
-                                        Location l = LocationUtil.findRandomLoc(player.getLocation().getBlock(), 3, true, false);
-                                        l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 3F, true, false);
-                                    }
-                                }, 12 * i);
-                            }
+                            ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
+                            daveHitList.add(player);
+                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                    PrayerType.SLAP, TimeUnit.MINUTES.toMillis(30)));
                             break;
                         default:
                             break;
                     }
 
-                    if (modifiedLoc != null) player.teleport(modifiedLoc, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
+                    if (modifiedLoc != null) player.teleport(modifiedLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
                 }
             }
         } catch (UnsupportedPrayerException ex) {
