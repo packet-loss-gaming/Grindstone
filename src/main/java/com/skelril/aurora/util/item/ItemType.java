@@ -490,7 +490,7 @@ public enum ItemType {
      */
     public static ItemType lookup(String name) {
 
-        return lookup(name, true);
+        return lookup(name, false);
     }
 
     /**
@@ -511,7 +511,7 @@ public enum ItemType {
             }
             return fromNumberic(id, data);
         } catch (NumberFormatException e) {
-            return StringUtil.lookup(lookup, name, fuzzy);
+            return lookup(lookup, name, fuzzy);
         }
     }
 
@@ -698,5 +698,40 @@ public enum ItemType {
     public static boolean usesDamageValue(int id) {
 
         return usesDamageValue.contains(id);
+    }
+
+    public static <T extends Enum<?>> T lookup(Map<String, T> lookup, String name, boolean fuzzy) {
+        String testName = name.replaceAll("[^A-Za-z0-9]", "").toLowerCase();
+
+        T type = lookup.get(testName);
+        if (type != null) {
+            return type;
+        }
+
+        if (!fuzzy) {
+            return null;
+        }
+
+        int minDist = Integer.MAX_VALUE;
+
+        for (Map.Entry<String, T> entry : lookup.entrySet()) {
+            final String key = entry.getKey();
+            if (key.charAt(0) != testName.charAt(0)) {
+                continue;
+            }
+
+            int dist = StringUtil.getLevenshteinDistance(key, testName);
+
+            if (dist >= minDist) {
+                minDist = dist;
+                type = entry.getValue();
+            }
+        }
+
+        if (minDist > 1) {
+            return null;
+        }
+
+        return type;
     }
 }
