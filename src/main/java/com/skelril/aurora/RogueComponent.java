@@ -20,6 +20,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -311,8 +312,17 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             if (inst.hasPermission(player, "aurora.rogue.guild")) {
                 player.removePotionEffect(PotionEffectType.SPEED);
                 player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
-                player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 1));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 600, 6));
+
+                Entity vehicle = player.getVehicle();
+                if (vehicle != null && vehicle instanceof Horse) {
+                    ((Horse) vehicle).removePotionEffect(PotionEffectType.SPEED);
+                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 60, 2));
+
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 3));
+                } else {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 1));
+                }
             }
         }
     }

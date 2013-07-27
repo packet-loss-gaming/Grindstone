@@ -17,11 +17,13 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.HorseJumpEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -101,6 +103,15 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onHorseJump(HorseJumpEvent event) {
+
+        Entity passenger = event.getEntity().getPassenger();
+        if (passenger != null && passenger instanceof Player && isNinja((Player) passenger)) {
+            event.setPower(event.getPower() * 1.37F);
+        }
+    }
+
     // Stop Mobs from targeting ninja
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityTarget(EntityTargetEvent event) {
@@ -169,6 +180,14 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 2));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 600, 2));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 2));
+
+                Entity vehicle = player.getVehicle();
+                if (vehicle != null && vehicle instanceof Horse) {
+                    ((Horse) vehicle).removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+                    ((Horse) vehicle).removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
+                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 60, 2));
+                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 60, 2));
+                }
             }
 
             Set<Player> invisibleNewCount = new HashSet<>();

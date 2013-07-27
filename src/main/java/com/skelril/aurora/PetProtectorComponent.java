@@ -129,8 +129,8 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
 
     private boolean isSafe(Entity entity) {
 
-        if (entity instanceof Horse) {
-            Horse horse = (Horse) entity;
+        if (entity instanceof LivingEntity && entity instanceof Vehicle) {
+            Vehicle horse = (Vehicle) entity;
             Entity passenger = horse.getPassenger();
             if (passenger != null) {
                 return true;

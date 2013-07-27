@@ -721,7 +721,15 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                     smokeLocation[2] = newLoc;
                     smokeLocation[3] = newLoc.getBlock().getRelative(BlockFace.UP).getLocation();
 
+                    Entity vehicle = player.getVehicle();
+                    if (vehicle != null) {
+                        vehicle.eject();
+                    }
                     player.teleport(newLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                    if (vehicle != null) {
+                        vehicle.teleport(player, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                        vehicle.setPassenger(player);
+                    }
                     EnvironmentUtil.generateRadialEffect(smokeLocation, Effect.SMOKE);
                 } catch (Exception e) {
                     log.warning("Could not find a location to teleport the player: " + player.getName() + " to.");
