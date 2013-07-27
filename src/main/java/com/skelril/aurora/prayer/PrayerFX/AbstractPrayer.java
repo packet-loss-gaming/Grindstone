@@ -56,4 +56,9 @@ public abstract class AbstractPrayer {
             player.removePotionEffect(effect.getType());
         }
     }
+
+    public void kill(Player player) {
+
+        // Do nothing unless implemented
+    }
 }

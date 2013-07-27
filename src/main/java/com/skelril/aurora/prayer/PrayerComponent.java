@@ -448,7 +448,10 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 PrayerApplicationEvent event = new PrayerApplicationEvent(player, prayer);
                 server.getPluginManager().callEvent(event);
 
-                if (event.isCancelled()) continue;
+                if (event.isCancelled()) {
+                    prayer.getEffect().kill(player);
+                    continue;
+                }
 
                 prayer.getEffect().add(player);
             }

@@ -563,7 +563,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             // Restore the contents
             teamPlayer.getInventory().setArmorContents(identity.getArmourContents());
             teamPlayer.getInventory().setContents(identity.getInventoryContents());
-            teamPlayer.setHealth(identity.getHealth());
+            teamPlayer.setHealth(Math.min(teamPlayer.getMaxHealth(), identity.getHealth()));
             teamPlayer.setFoodLevel(identity.getHunger());
             teamPlayer.setSaturation(identity.getSaturation());
             teamPlayer.setExhaustion(identity.getExhaustion());

@@ -222,7 +222,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     // Restore the contents
                     player.getInventory().setArmorContents(identity.getArmourContents());
                     player.getInventory().setContents(identity.getInventoryContents());
-                    player.setHealth(identity.getHealth());
+                    player.setHealth(Math.min(player.getMaxHealth(), identity.getHealth()));
                     player.setFoodLevel(identity.getHunger());
                     player.setSaturation(identity.getSaturation());
                     player.setExhaustion(identity.getExhaustion());

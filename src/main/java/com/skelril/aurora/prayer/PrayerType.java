@@ -31,8 +31,6 @@ public enum PrayerType {
     ALONZO(1016, AlonzoFX.class),
     ROCKET(1017, RocketFX.class),
     GLASSBOX(1018, GlassBoxFX.class),
-    HEALTHBOOST(1019, HealthBoostFX.class),
-    ABSORPTION(1020, AbsorptionFX.class),
 
     FIREBALL(2000, ThrownFireballFX.class),
     HEALTH(2001, HealthFX.class),
@@ -45,7 +43,9 @@ public enum PrayerType {
     INVISIBILITY(2008, InvisibilityFX.class),
     DEADLYDEFENSE(2009, DeadlyDefenseFX.class),
     DIGGYDIGGY(2010, DiggyDiggyFX.class),
-    HULK(2011, HulkFX.class);
+    HULK(2011, HulkFX.class),
+    HEALTHBOOST(2012, HealthBoostFX.class),
+    ABSORPTION(2013, AbsorptionFX.class);
 
     private final int id;
     private final Class FXClass;
