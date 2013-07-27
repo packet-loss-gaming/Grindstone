@@ -594,6 +594,11 @@ public class AdminStoreComponent extends BukkitComponent {
         ignored.add(BlockID.STATIONARY_LAVA);
         ignored.add(BlockID.GRASS);
         ignored.add(BlockID.DIRT);
+        ignored.add(BlockID.GRAVEL);
+        ignored.add(BlockID.SAND);
+        ignored.add(BlockID.SANDSTONE);
+        ignored.add(BlockID.SNOW);
+        ignored.add(BlockID.SNOW_BLOCK);
         ignored.add(BlockID.STONE);
         ignored.add(BlockID.BEDROCK);
     }
