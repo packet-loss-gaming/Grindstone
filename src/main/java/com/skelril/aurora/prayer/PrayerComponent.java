@@ -119,6 +119,9 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
         switch (type) {
 
+            case ABSORPTION:
+                prayerEffects = new AbsorptionFX();
+                break;
             case ALONZO:
                 prayerEffects = new AlonzoFX();
                 break;
@@ -127,9 +130,6 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 break;
             case ARROW:
                 prayerEffects = new ArrowFX();
-                break;
-            case BEDROCKBOX:
-                prayerEffects = new BedrockBoxFX();
                 break;
             case BLINDNESS:
                 prayerEffects = new BlindnessFX();
@@ -155,11 +155,17 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
             case FLASH:
                 prayerEffects = new FlashFX();
                 break;
+            case GLASSBOX:
+                prayerEffects = new GlassBoxFX();
+                break;
             case SLAP:
                 prayerEffects = new SlapFX();
                 break;
             case GOD:
                 prayerEffects = new GodFX();
+                break;
+            case HEALTHBOOST:
+                prayerEffects = new HealthBoostFX();
                 break;
             case HEALTH:
                 prayerEffects = new HealthFX();

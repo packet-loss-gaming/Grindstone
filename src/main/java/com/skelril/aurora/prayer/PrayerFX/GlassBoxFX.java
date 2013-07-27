@@ -10,12 +10,12 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BedrockBoxFX extends AbstractPrayer {
+public class GlassBoxFX extends AbstractPrayer {
 
     @Override
     public PrayerType getType() {
 
-        return PrayerType.BEDROCKBOX;
+        return PrayerType.GLASSBOX;
     }
 
     @Override
