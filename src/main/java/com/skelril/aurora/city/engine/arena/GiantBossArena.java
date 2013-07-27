@@ -660,7 +660,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 Player[] players = getContainedPlayers();
                 Player player = null;
                 int amt = players != null ? players.length : 0;
-                int required = ChanceUtil.getRandom(5);
+                int required = ChanceUtil.getRandom(13) + 3;
 
                 // Figure out if someone has Barbarian Bones
                 if (amt != 0) {
