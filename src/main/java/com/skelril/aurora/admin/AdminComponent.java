@@ -508,6 +508,19 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+
+        Player player = event.getPlayer();
+
+        if (isSysop(player)) return;
+
+        if (isAdmin(player) && player.getItemInHand().getTypeId() == ItemID.SPAWN_EGG) {
+            event.setCancelled(true);
+            ChatUtil.sendWarning(player, "You cannot use this while in admin mode.");
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
 
