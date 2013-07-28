@@ -103,7 +103,7 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
                 tameable.setOwner(player);
                 event.setCancelled(true);
 
-                ItemUtil.removeItemOfType(player, ItemID.RED_APPLE, 1);
+                ItemUtil.removeItemOfType(player, ItemID.RED_APPLE, 1, true);
 
                 ChatUtil.sendNotice(player, "You have gained possession of this horse.");
                 return;
@@ -113,7 +113,7 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
                 tameable.setTamed(true);
                 event.setCancelled(true);
 
-                ItemUtil.removeItemOfType(player, ItemID.RED_APPLE, 1);
+                ItemUtil.removeItemOfType(player, ItemID.RED_APPLE, 1, true);
 
                 ChatUtil.sendNotice(player, "You have lost possession of this horse.");
                 return;

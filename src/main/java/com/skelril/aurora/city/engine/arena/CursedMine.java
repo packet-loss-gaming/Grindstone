@@ -244,10 +244,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     eInventory.removeItem(new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(8)));
 
                     // Gold
-                    eInventory.removeItem(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRandom(2)));
-                    eInventory.removeItem(new ItemStack(BlockID.GOLD_ORE, ChanceUtil.getRandom(4)));
-                    eInventory.removeItem(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(10)));
-                    eInventory.removeItem(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(80)));
+                    ItemUtil.removeItemOfName((InventoryHolder) e, ItemUtil.Misc.cursedGold(1, true), ChanceUtil.getRandom(4), true);
+                    ItemUtil.removeItemOfName((InventoryHolder) e, ItemUtil.Misc.cursedGold(1, false), ChanceUtil.getRandom(10), true);
 
                     // Redstone
                     eInventory.removeItem(new ItemStack(BlockID.REDSTONE_ORE, ChanceUtil.getRandom(2)));
@@ -354,7 +352,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                 } else {
 
                     if (ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(2)) {
-                        ChatUtil.sendNotice(player, "Your armour blocks an incoming ghost attack.");
+                        ChatUtil.sendNotice(player, ChatColor.AQUA, "Your armour blocks an incoming ghost attack.");
                         return;
                     }
 
@@ -406,11 +404,11 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 3:
                             ChatUtil.sendWarning(player, "George plays with fire, sadly too close to you.");
                             prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
-                                    PrayerType.FIRE, TimeUnit.MINUTES.toMillis(2)));
+                                    PrayerType.FIRE, TimeUnit.SECONDS.toMillis(45)));
                             break;
                         case 4:
                             ChatUtil.sendWarning(player, "Simon says pick up sticks.");
-                            for (int i = 0; i < player.getInventory().getContents().length; i++) {
+                            for (int i = 0; i < player.getInventory().getContents().length * 1.5; i++) {
                                 player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.STICK, 64));
                             }
                             break;
@@ -432,15 +430,15 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 8:
                             ChatUtil.sendWarning(player, "Dave likes your food.");
                             daveHitList.add(player);
-                            prayerComponent.uninfluencePlayer(player);
                             prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
                                     PrayerType.STARVATION, TimeUnit.MINUTES.toMillis(15)));
                             break;
                         case 9:
                             ChatUtil.sendWarning(player, "1alonzo4 declares war on YOU!");
-                            for (int i = 0; i < ChanceUtil.getRandom(30); i++) {
+                            for (int i = 0; i < ChanceUtil.getRangedRandom(10, 30); i++) {
                                 Blaze blaze = getWorld().spawn(player.getLocation(), Blaze.class);
                                 blaze.setTarget(player);
+                                blaze.setRemoveWhenFarAway(false);
                             }
                             break;
                         case 10:
@@ -448,6 +446,10 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             daveHitList.add(player);
                             prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
                                     PrayerType.SLAP, TimeUnit.MINUTES.toMillis(30)));
+                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                    PrayerType.BUTTERFINGERS, TimeUnit.MINUTES.toMillis(30)));
+                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                    PrayerType.FIRE, TimeUnit.MINUTES.toMillis(30)));
                             break;
                         default:
                             break;
@@ -511,7 +513,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                 if (inst.hasPermission(player, "aurora.mining.burningember") && !hasSilkTouch(itemInHand)) {
                     switch (typeId) {
                         case BlockID.GOLD_ORE:
-                            rawDrop.setTypeId(ItemID.GOLD_BAR);
+                            rawDrop = ItemUtil.Misc.cursedGold(1, false);
                             break;
                         case BlockID.IRON_ORE:
                             rawDrop.setTypeId(ItemID.IRON_BAR);
@@ -519,9 +521,12 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     }
                 }
 
+                if (rawDrop.getTypeId() == BlockID.GOLD_ORE) {
+                    rawDrop = ItemUtil.Misc.cursedGold(1, true);
+                }
+
                 if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(rawDrop.getTypeId())) {
-                    rawDrop.setAmount(rawDrop.getAmount()
-                            * ChanceUtil.getRangedRandom(4, 8) * ItemUtil.fortuneMultiplier(itemInHand));
+                    rawDrop.setAmount(rawDrop.getAmount() * ChanceUtil.getRangedRandom(4, 8) * ItemUtil.fortuneMultiplier(itemInHand));
                 } else {
                     rawDrop.setAmount(rawDrop.getAmount() * ChanceUtil.getRangedRandom(4, 16));
                 }
@@ -569,8 +574,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         Player player = event.getPlayer();
 
-        if (recordSystem.hasRecordForPlayer(player.getName())
-                && !daveHitList.contains(player) && !accepted.contains(event.getCause())) {
+        if ((recordSystem.hasRecordForPlayer(player.getName()) || daveHitList.contains(player)) && !accepted.contains(event.getCause())) {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You have been tele-blocked!");
         }

@@ -428,6 +428,9 @@ public class AdminStoreComponent extends BukkitComponent {
     private static List<String> names = new ArrayList<>();
 
     static {
+        names.add("cursed gold ore");
+        names.add("cursed gold bar");
+
         names.add("pixie dust");
 
         names.add("god fish");
@@ -488,6 +491,12 @@ public class AdminStoreComponent extends BukkitComponent {
 
         for (int i = 0; i < amount; i++) {
             switch (name) {
+                case "cursed gold ore":
+                    itemStacks.add(ItemUtil.Misc.cursedGold(1, true));
+                    break;
+                case "cursed gold bar":
+                    itemStacks.add(ItemUtil.Misc.cursedGold(1, false));
+                    break;
                 case "pixie dust":
                     itemStacks.add(ItemUtil.Misc.pixieDust(1));
                     break;

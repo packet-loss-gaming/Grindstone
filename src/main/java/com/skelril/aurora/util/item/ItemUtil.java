@@ -1,5 +1,6 @@
 package com.skelril.aurora.util.item;
 
+import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -7,6 +8,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BookMeta;
@@ -471,6 +473,15 @@ public class ItemUtil {
             magicBucket.setItemMeta(magicMeta);
             return magicBucket;
         }
+
+        public static ItemStack cursedGold(int amount, boolean ore) {
+
+            ItemStack cursedGold = new ItemStack(ore ? BlockID.GOLD_ORE : ItemID.GOLD_BAR, amount);
+            ItemMeta goldMeta = cursedGold.getItemMeta();
+            goldMeta.setDisplayName(ChatColor.GOLD + "Cursed Gold" + (ore ? "" : " Bar"));
+            cursedGold.setItemMeta(goldMeta);
+            return cursedGold;
+        }
     }
 
     public static ItemStack[] clone(ItemStack[] stacks) {
@@ -505,27 +516,29 @@ public class ItemUtil {
         return false;
     }
 
-    public static boolean removeItemOfType(Player player, int typeId, int quantity) {
+    public static boolean removeItemOfType(InventoryHolder inventoryHolder, int typeId, int quantity, boolean ignoreToSmall) {
 
-        int c = ItemUtil.countItemsOfType(player.getInventory().getContents(), typeId);
+        int c = ItemUtil.countItemsOfType(inventoryHolder.getInventory().getContents(), typeId);
 
-        if (c < quantity) return false;
+        if (c < quantity && !ignoreToSmall) return false;
 
-        c -= quantity;
+        c -= Math.min(c, quantity);
 
-        ItemStack[] stacks = ItemUtil.removeItemOfType(player.getInventory().getContents(), typeId);
+        ItemStack[] stacks = ItemUtil.removeItemOfType(inventoryHolder.getInventory().getContents(), typeId);
 
-        player.getInventory().setContents(stacks);
+        inventoryHolder.getInventory().setContents(stacks);
 
         int amount = Math.min(c, Material.getMaterial(typeId).getMaxStackSize());
         while (amount > 0) {
-            player.getInventory().addItem(new ItemStack(typeId, amount));
+            inventoryHolder.getInventory().addItem(new ItemStack(typeId, amount));
             c -= amount;
             amount = Math.min(c, 64);
         }
 
-        //noinspection deprecation
-        player.updateInventory();
+        if (inventoryHolder instanceof Player) {
+            //noinspection deprecation
+            ((Player) inventoryHolder).updateInventory();
+        }
         return true;
     }
 
@@ -548,6 +561,41 @@ public class ItemUtil {
             }
         }
         return itemStacks;
+    }
+
+    public static boolean removeItemOfName(InventoryHolder inventoryHolder, ItemStack stack, int quantity, boolean ignoreToSmall) {
+
+        // Force to 1
+        stack.setAmount(1);
+
+        // Get name
+        String itemName = stack.getItemMeta().getDisplayName();
+
+        int c = ItemUtil.countItemsOfName(inventoryHolder.getInventory().getContents(), itemName);
+
+        if (c < quantity && !ignoreToSmall) return false;
+
+        c -= Math.min(c, quantity);
+
+        ItemStack[] stacks = ItemUtil.removeItemOfName(inventoryHolder.getInventory().getContents(), itemName);
+
+        inventoryHolder.getInventory().setContents(stacks);
+
+        int amount = Math.min(c, Material.getMaterial(stack.getTypeId()).getMaxStackSize());
+        while (amount > 0) {
+            // Clone the item and add it
+            ItemStack aStack = stack.clone();
+            aStack.setAmount(amount);
+            inventoryHolder.getInventory().addItem(aStack);
+            c -= amount;
+            amount = Math.min(c, 64);
+        }
+
+        if (inventoryHolder instanceof Player) {
+            //noinspection deprecation
+            ((Player) inventoryHolder).updateInventory();
+        }
+        return true;
     }
 
     public static int countItemsOfName(ItemStack[] itemStacks, String name) {
@@ -669,7 +717,7 @@ public class ItemUtil {
 
     public static boolean matchesFilter(ItemStack stack, String filter) {
 
-        return isNamed(stack) && stack.getItemMeta().getDisplayName().startsWith(filter);
+        return isNamed(stack) && stack.getItemMeta().getDisplayName().equals(filter);
     }
 
     public static boolean hasBatBow(Player player) {
