@@ -556,7 +556,7 @@ public class ItemUtil {
     public static ItemStack[] removeItemOfName(ItemStack[] itemStacks, String name) {
 
         for (int i = 0; i < itemStacks.length; i++) {
-            if (matchesFilter(itemStacks[i], name)) {
+            if (matchesFilter(itemStacks[i], name, false)) {
                 itemStacks[i] = null;
             }
         }
@@ -602,7 +602,7 @@ public class ItemUtil {
 
         int count = 0;
         for (ItemStack itemStack : itemStacks) {
-            if (matchesFilter(itemStack, name)) count += itemStack.getAmount();
+            if (matchesFilter(itemStack, name, false)) count += itemStack.getAmount();
         }
         return count;
     }
@@ -717,7 +717,12 @@ public class ItemUtil {
 
     public static boolean matchesFilter(ItemStack stack, String filter) {
 
-        return isNamed(stack) && stack.getItemMeta().getDisplayName().equals(filter);
+        return matchesFilter(stack, filter, true);
+    }
+
+    public static boolean matchesFilter(ItemStack stack, String filter, boolean loose) {
+
+        return isNamed(stack) && (loose ? stack.getItemMeta().getDisplayName().startsWith(filter) : stack.getItemMeta().getDisplayName().equals(filter));
     }
 
     public static boolean hasBatBow(Player player) {
