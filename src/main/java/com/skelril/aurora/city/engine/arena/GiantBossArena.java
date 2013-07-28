@@ -22,6 +22,7 @@ import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.database.InventoryAuditLogger;
 import com.skelril.aurora.util.item.BookUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -284,6 +285,22 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         removeMobs();
         if (mobDestroyer != null) mobDestroyer.cancel();
+
+        dumpInventories();
+    }
+
+    private void dumpInventories() {
+
+        InventoryAuditLogger auditor = adminComponent.getInventoryDumpLogger();
+        for (PlayerState state : playerState.values()) {
+            String ownerName = state.getOwnerName();
+            for (ItemStack stack : state.getArmourContents()) {
+                auditor.log(ownerName, stack);
+            }
+            for (ItemStack stack : state.getInventoryContents()) {
+                auditor.log(ownerName, stack);
+            }
+        }
     }
 
     @Override

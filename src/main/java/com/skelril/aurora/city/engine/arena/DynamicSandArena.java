@@ -10,19 +10,16 @@ import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.LocationUtil;
-import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.database.InventoryAuditLogger;
 import com.skelril.aurora.util.player.PlayerState;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
@@ -194,7 +191,16 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
     @Override
     public void disable() {
 
-        // No disable code
+        InventoryAuditLogger auditor = adminComponent.getInventoryDumpLogger();
+        for (PlayerState state : playerState.values()) {
+            String ownerName = state.getOwnerName();
+            for (ItemStack stack : state.getArmourContents()) {
+                auditor.log(ownerName, stack);
+            }
+            for (ItemStack stack : state.getInventoryContents()) {
+                auditor.log(ownerName, stack);
+            }
+        }
     }
 
     private static Set<SpecialAttackEvent.Specs> blacklistedSpecs = new HashSet<>();
@@ -222,16 +228,34 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
         }
     }
 
+    /*
     @EventHandler(ignoreCancelled = true)
-    public void onDamage(EntityDamageByEntityEvent event) {
+    public void onBowFire(EntityShootBowEvent event) {
+
+        final Entity entity = event.getEntity();
+
+        if (contains(entity) && entity instanceof Player) {
+
+            final ItemStack weapon = ((Player) entity).getItemInHand().clone();
+
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @SuppressWarnings("deprecation")
+                @Override
+                public void run() {
+                    ((Player) entity).getInventory().setItemInHand(weapon);
+                    ((Player) entity).updateInventory();
+                }
+            }, 1);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onDamageByEntity(EntityDamageByEntityEvent event) {
 
         Entity attacker = event.getDamager();
         final Entity defender = event.getEntity();
 
         if (contains(attacker) && contains(defender)) {
-            if (attacker instanceof Projectile && ((Projectile) attacker).getShooter() != null) {
-                attacker = ((Projectile) attacker).getShooter();
-            }
             if (attacker instanceof Player) {
 
                 final ItemStack weapon = ((Player) attacker).getItemInHand().clone();
@@ -261,6 +285,28 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
             }
         }
     }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onDamage(EntityDamageEvent event) {
+
+        final Entity defender = event.getEntity();
+
+        if (contains(defender) && !(event instanceof EntityDamageByEntityEvent)) {
+            if (defender instanceof Player) {
+                final ItemStack[] armor = ItemUtil.clone(((Player) defender).getInventory().getArmorContents());
+
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+                    @SuppressWarnings("deprecation")
+                    @Override
+                    public void run() {
+                        ((Player) defender).getInventory().setArmorContents(armor);
+                        ((Player) defender).updateInventory();
+                    }
+                }, 1);
+            }
+        }
+    }
+    */
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {

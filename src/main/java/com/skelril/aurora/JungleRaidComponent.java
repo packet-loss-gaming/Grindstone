@@ -38,6 +38,7 @@ import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.database.InventoryAuditLogger;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -335,6 +336,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         stopRestore();
         saveInventories();
+        dumpInventories();
     }
 
     @Override
@@ -538,6 +540,20 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         for (Player player : server.getOnlinePlayers()) {
             restorePlayer(player, 0);
+        }
+    }
+
+    private void dumpInventories() {
+
+        InventoryAuditLogger auditor = adminComponent.getInventoryDumpLogger();
+        for (PlayerState state : playerState.values()) {
+            String ownerName = state.getOwnerName();
+            for (ItemStack stack : state.getArmourContents()) {
+                auditor.log(ownerName, stack);
+            }
+            for (ItemStack stack : state.getInventoryContents()) {
+                auditor.log(ownerName, stack);
+            }
         }
     }
 

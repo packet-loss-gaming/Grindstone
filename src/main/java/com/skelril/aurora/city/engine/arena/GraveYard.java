@@ -15,6 +15,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.database.InventoryAuditLogger;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
@@ -1239,6 +1240,20 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         generalIndex.revertByTime(1000 * 27);
     }
 
+    private void dumpInventories() {
+
+        InventoryAuditLogger auditor = adminComponent.getInventoryDumpLogger();
+        for (PlayerState state : playerState.values()) {
+            String ownerName = state.getOwnerName();
+            for (ItemStack stack : state.getArmourContents()) {
+                auditor.log(ownerName, stack);
+            }
+            for (ItemStack stack : state.getInventoryContents()) {
+                auditor.log(ownerName, stack);
+            }
+        }
+    }
+
     @Override
     public void run() {
 
@@ -1311,6 +1326,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     public void disable() {
 
         forceRestoreBlocks();
+        dumpInventories();
     }
 
     @Override

@@ -14,6 +14,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.database.InventoryAuditLogger;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
@@ -46,6 +47,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -67,6 +69,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private GodComponent godComponent;
 
+    private InventoryAuditLogger auditor;
+
     private static Permission permission = null;
     private final List<String> sysops = new ArrayList<>();
     private final HashMap<String, PlayerState> playerState = new HashMap<>();
@@ -74,6 +78,10 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     @Override
     public void enable() {
+
+        File auditorDirectory = new File(inst.getDataFolder().getPath() + "/admin");
+        if (!auditorDirectory.exists()) auditorDirectory.mkdir();
+        auditor = new InventoryAuditLogger(auditorDirectory);
 
         registerCommands(Commands.class);
         //noinspection AccessStaticViaInstance
@@ -85,6 +93,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     public void disable() {
 
         saveInventories();
+        dumpInventories();
     }
 
     private WorldEditPlugin worldEdit() {
@@ -125,6 +134,24 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             if (playerState.containsKey(player.getName())) deadmin(player, true);
         }
+    }
+
+    private void dumpInventories() {
+
+        for (PlayerState state : playerState.values()) {
+            String ownerName = state.getOwnerName();
+            for (ItemStack stack : state.getArmourContents()) {
+                auditor.log(ownerName, stack);
+            }
+            for (ItemStack stack : state.getInventoryContents()) {
+                auditor.log(ownerName, stack);
+            }
+        }
+    }
+
+    public InventoryAuditLogger getInventoryDumpLogger() {
+
+        return auditor;
     }
 
     /**
