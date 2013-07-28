@@ -74,7 +74,7 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
 
             storeLogger.addHandler(changeHandler);
         } catch (SecurityException | IOException e) {
-            log.warning("Failed to setup audit log for the CSV cell database: " + e.getMessage());
+            log.warning("Failed to setup audit log for the CSV admin store database: " + e.getMessage());
         }
     }
 
