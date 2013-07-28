@@ -1,7 +1,6 @@
 package com.skelril.aurora.prayer.PrayerFX;
 
 import com.skelril.aurora.prayer.PrayerType;
-import com.skelril.aurora.util.ChatUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -34,7 +33,6 @@ public class SlapFX extends AbstractPrayer {
                     random.nextDouble() * 5.0 - 2.5,
                     random.nextDouble() * 4,
                     random.nextDouble() * 5.0 - 2.5));
-            ChatUtil.sendWarning(player, "SLAP!");
         }
     }
 
