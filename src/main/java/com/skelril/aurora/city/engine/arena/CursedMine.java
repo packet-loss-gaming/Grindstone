@@ -334,12 +334,14 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             break;
                         case 3:
                             ChatUtil.sendNotice(player, "Caspher the friendly ghost appears.");
-                            player.getWorld().dropItemNaturally(player.getLocation(),
-                                    new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(512)));
-                            player.getWorld().dropItemNaturally(player.getLocation(),
-                                    new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(512)));
-                            player.getWorld().dropItemNaturally(player.getLocation(),
-                                    new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(512)));
+                            for (int i = 0; i < 8; i++) {
+                                player.getWorld().dropItemNaturally(player.getLocation(),
+                                        new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(64)));
+                                player.getWorld().dropItemNaturally(player.getLocation(),
+                                        ItemUtil.Misc.cursedGold(ChanceUtil.getRandom(64), false));
+                                player.getWorld().dropItemNaturally(player.getLocation(),
+                                        new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(64)));
+                            }
                             break;
                         case 4:
                             ChatUtil.sendNotice(player, "John gives you a new jacket.");
