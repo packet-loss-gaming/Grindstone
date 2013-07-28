@@ -388,11 +388,26 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                     }
                                 } else {
                                     player.chat("Who's a good ghost?!?!");
-                                    player.chat("Don't hurt me!!!");
-                                    player.chat("Nooooooooooo!!!");
+                                    daveHitList.add(player);
+                                    server.getScheduler().runTaskLater(inst, new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            player.chat("Don't hurt me!!!");
+                                            server.getScheduler().runTaskLater(inst, new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    player.chat("Nooooooooooo!!!");
 
-                                    prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
-                                            PrayerType.CANNON, TimeUnit.MINUTES.toMillis(2)));
+                                                    try {
+                                                        prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                                                PrayerType.CANNON, TimeUnit.MINUTES.toMillis(2)));
+                                                    } catch (UnsupportedPrayerException ex) {
+                                                        ex.printStackTrace();
+                                                    }
+                                                }
+                                            }, 20);
+                                        }
+                                    }, 20);
                                 }
                                 break;
                             }
