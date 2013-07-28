@@ -520,7 +520,7 @@ public class ItemUtil {
 
         int c = ItemUtil.countItemsOfType(inventoryHolder.getInventory().getContents(), typeId);
 
-        if (c < quantity && !ignoreToSmall) return false;
+        if (c == 0 || (c < quantity && !ignoreToSmall)) return false;
 
         c -= Math.min(c, quantity);
 
@@ -573,7 +573,7 @@ public class ItemUtil {
 
         int c = ItemUtil.countItemsOfName(inventoryHolder.getInventory().getContents(), itemName);
 
-        if (c < quantity && !ignoreToSmall) return false;
+        if (c == 0 || (c < quantity && !ignoreToSmall)) return false;
 
         c -= Math.min(c, quantity);
 

@@ -239,28 +239,28 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     }
 
                     // Iron
-                    eInventory.removeItem(new ItemStack(BlockID.IRON_BLOCK, ChanceUtil.getRandom(2)));
-                    eInventory.removeItem(new ItemStack(BlockID.IRON_ORE, ChanceUtil.getRandom(4)));
-                    eInventory.removeItem(new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(8)));
+                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.IRON_BLOCK, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.IRON_ORE, ChanceUtil.getRandom(4), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.IRON_BAR, ChanceUtil.getRandom(8), true);
 
                     // Gold
                     ItemUtil.removeItemOfName((InventoryHolder) e, ItemUtil.Misc.cursedGold(1, true), ChanceUtil.getRandom(4), true);
                     ItemUtil.removeItemOfName((InventoryHolder) e, ItemUtil.Misc.cursedGold(1, false), ChanceUtil.getRandom(10), true);
 
                     // Redstone
-                    eInventory.removeItem(new ItemStack(BlockID.REDSTONE_ORE, ChanceUtil.getRandom(2)));
-                    eInventory.removeItem(new ItemStack(BlockID.GLOWING_REDSTONE_ORE, ChanceUtil.getRandom(2)));
-                    eInventory.removeItem(new ItemStack(ItemID.REDSTONE_DUST, ChanceUtil.getRandom(34)));
+                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.REDSTONE_ORE, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.GLOWING_REDSTONE_ORE, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.REDSTONE_DUST, ChanceUtil.getRandom(34), true);
 
                     // Lap
-                    eInventory.removeItem(new ItemStack(BlockID.LAPIS_LAZULI_BLOCK, ChanceUtil.getRandom(2)));
-                    eInventory.removeItem(new ItemStack(BlockID.LAPIS_LAZULI_ORE, ChanceUtil.getRandom(4)));
+                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.LAPIS_LAZULI_BLOCK, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.LAPIS_LAZULI_ORE, ChanceUtil.getRandom(4), true);
                     eInventory.removeItem(new ItemStack(ItemID.INK_SACK, ChanceUtil.getRandom(34), (short) 4));
 
                     // Diamond
-                    eInventory.removeItem(new ItemStack(BlockID.DIAMOND_BLOCK, ChanceUtil.getRandom(2)));
-                    eInventory.removeItem(new ItemStack(BlockID.DIAMOND_ORE, ChanceUtil.getRandom(4)));
-                    eInventory.removeItem(new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(16)));
+                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.DIAMOND_BLOCK, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.DIAMOND_ORE, ChanceUtil.getRandom(4), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.DIAMOND, ChanceUtil.getRandom(16), true);
 
                     // Emerald
                     //pInventory.removeItem(new ItemStack(BlockID.EMERALD_BLOCK, ChanceUtil.getRandom(2)));
