@@ -44,6 +44,23 @@ public class ItemUtil {
 
     public static class Ancient {
 
+        public static ItemStack makeCrown() {
+
+            ItemStack ancientHelmet = new ItemStack(ItemID.GOLD_HELMET);
+            ItemMeta ancientMeta = ancientHelmet.getItemMeta();
+            ancientMeta.addEnchant(Enchantment.DURABILITY, 3, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            ancientMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            ancientMeta.addEnchant(Enchantment.OXYGEN, 3, true);
+            ancientMeta.addEnchant(Enchantment.WATER_WORKER, 1, true);
+            ancientMeta.setDisplayName(ChatColor.GOLD + "Ancient Crown");
+            ((Repairable) ancientMeta).setRepairCost(400);
+            ancientHelmet.setItemMeta(ancientMeta);
+            return ancientHelmet;
+        }
+
         public static ItemStack makeHelmet() {
 
             ItemStack ancientHelmet = new ItemStack(ItemID.CHAINMAIL_HELMET);

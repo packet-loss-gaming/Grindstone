@@ -655,10 +655,16 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         Player player = event.getPlayer();
 
+        boolean hasCrown = ItemUtil.matchesFilter(player.getInventory().getHelmet(), ChatColor.GOLD + "Ancient Crown");
+
+        int exp = event.getAmount();
+        if (hasCrown) {
+            exp *= 2;
+        }
+
         if (ItemUtil.hasAncientArmour(player)) {
             ItemStack[] armour = player.getInventory().getArmorContents();
             ItemStack is = armour[ChanceUtil.getRandom(armour.length) - 1];
-            int exp = event.getAmount();
             if (exp > is.getDurability()) {
                 exp -= is.getDurability();
                 is.setDurability((short) 0);
@@ -667,6 +673,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 exp = 0;
             }
             player.getInventory().setArmorContents(armour);
+            event.setAmount(exp);
+        } else if (hasCrown) {
             event.setAmount(exp);
         }
     }
@@ -679,7 +687,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         if (itemStack.getTypeId() == ItemID.GOLD_BAR || itemStack.getTypeId() == ItemID.GOLD_NUGGET) {
 
-            if (!ItemUtil.findItemOfName(player.getInventory().getContents(), ChatColor.AQUA + "Imbued Crystal")) {
+            ItemStack[] inventoryContents = player.getInventory().getContents();
+            ItemStack[] armorContents = player.getInventory().getArmorContents();
+            if (!(ItemUtil.findItemOfName(inventoryContents, ChatColor.AQUA + "Imbued Crystal")
+                    || ItemUtil.findItemOfName(armorContents, ChatColor.GOLD + "Ancient Crown"))) {
                 return;
             }
             server.getScheduler().runTaskLater(inst, new Runnable() {

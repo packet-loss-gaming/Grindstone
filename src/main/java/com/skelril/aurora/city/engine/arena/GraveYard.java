@@ -1223,7 +1223,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         if (ItemUtil.hasFearHelmet(player)) return;
         ItemStack[] inventoryContents = player.getInventory().getContents();
-        if (ItemUtil.findItemOfName(inventoryContents, ChatColor.DARK_RED + "Gem of Darkness")) return;
+        ItemStack[] armorContents = player.getInventory().getArmorContents();
+        if (ItemUtil.findItemOfName(inventoryContents, DARKNESS) || ItemUtil.findItemOfName(armorContents, ChatColor.GOLD + "Ancient Crown")) return;
         player.removePotionEffect(PotionEffectType.BLINDNESS);
         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 6, 1));
     }

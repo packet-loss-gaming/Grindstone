@@ -469,6 +469,7 @@ public class AdminStoreComponent extends BukkitComponent {
         names.add("god leggings");
         names.add("god boots");
 
+        names.add("ancient crown");
         names.add("ancient helmet");
         names.add("ancient chestplate");
         names.add("ancient leggings");
@@ -571,6 +572,9 @@ public class AdminStoreComponent extends BukkitComponent {
                     break;
                 case "god boots":
                     itemStacks.add(ItemUtil.God.makeBoots());
+                    break;
+                case "ancient crown":
+                    itemStacks.add(ItemUtil.Ancient.makeCrown());
                     break;
                 case "ancient helmet":
                     itemStacks.add(ItemUtil.Ancient.makeHelmet());
