@@ -76,6 +76,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     private Giant boss = null;
     private long lastAttack = 0;
+    private int lastAttackNumber = -1;
     private long lastDeath = 0;
     private boolean damageHeals = false;
     private BukkitTask mobDestroyer;
@@ -808,6 +809,40 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             event.getDrops().clear();
             // event.setDroppedExp(0);
             // event.setKeepLevel(true);
+
+            int number = System.currentTimeMillis() - lastAttack <= 13000 ? lastAttackNumber : -1;
+            String deathMessage;
+            switch (number) {
+                case 1:
+                    deathMessage = " discovered how tasty the boss's wrath is";
+                    break;
+                case 2:
+                    deathMessage = " embraced the boss's corruption";
+                    break;
+                case 3:
+                    deathMessage = " did not die with his sight";
+                    break;
+                case 4:
+                    deathMessage = " found out the boss has two left feet";
+                    break;
+                case 5:
+                    deathMessage = " needs not pester invincible overlords";
+                    break;
+                case 6:
+                    deathMessage = " died to his new friend fire";
+                    break;
+                case 7:
+                    deathMessage = " basked in the glory of the boss";
+                    break;
+                case 8:
+                    deathMessage = " was the victim of a devastating prayer";
+                    break;
+                default:
+                    deathMessage = " died while attempting to slay the boss";
+                    break;
+            }
+
+            event.setDeathMessage(player.getName() + deathMessage);
         }
     }
 
@@ -1007,5 +1042,6 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 break;
         }
         lastAttack = System.currentTimeMillis();
+        lastAttackNumber = attackCase;
     }
 }
