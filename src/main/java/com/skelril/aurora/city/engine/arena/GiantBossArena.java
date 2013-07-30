@@ -253,9 +253,14 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     public void removeXP(Entity[] contained) {
 
+        removeXP(contained, false);
+    }
+
+    public void removeXP(Entity[] contained, boolean force) {
+
         for (Entity e : contained) {
 
-            if (e.isValid() && e instanceof ExperienceOrb && e.getTicksLived() > 20 * 13) e.remove();
+            if (e.isValid() && e instanceof ExperienceOrb && (force || e.getTicksLived() > 20 * 13)) e.remove();
         }
     }
 
@@ -671,7 +676,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
 
-        if (contains(event.getEntity())) {
+        if (contains(event.getEntity()) && boss != null) {
             Entity e = event.getEntity();
             if (e instanceof Giant) {
                 Player[] players = getContainedPlayers();
@@ -699,7 +704,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 // Gold drops
                 for (int i = 0; i < Math.sqrt(amt) + scalOffst; i++) {
-                    event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRangedRandom(32, 64)));
+                    event.getDrops().add(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRangedRandom(32, 64)));
                 }
 
                 // Unique drops
@@ -715,6 +720,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 if (ChanceUtil.getChance(200) || player != null && ChanceUtil.getChance(36)) {
                     event.getDrops().add(ItemUtil.Misc.magicBucket());
                 }
+
+                // Add a few Barbarian Bones to the drop list
+                event.getDrops().add(ItemUtil.Misc.barbarianBone(ChanceUtil.getRandom(Math.max(1, amt * 2))));
 
                 // Remove the Barbarian Bones
                 if (player != null) {
@@ -732,15 +740,22 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     player.updateInventory();
                 }
 
+                // Reset respawn mechanics
                 lastDeath = System.currentTimeMillis();
                 boss = null;
-                for (Entity entity : getContainedEntities()) {
-                    if (entity instanceof Zombie) ((Zombie) entity).addPotionEffects(Lists.newArrayList(effects));
-                }
 
+                Entity[] containedEntities = getContainedEntities();
+                // Remove remaining XP and que new xp
+                removeXP(containedEntities, true);
                 for (int i = 0; i < 7; i++) {
                     server.getScheduler().runTaskLater(inst, spawnXP, i * 2 * 20);
                 }
+
+                // Buff babies
+                for (Entity entity : containedEntities) {
+                    if (entity instanceof Zombie) ((Zombie) entity).addPotionEffects(Lists.newArrayList(effects));
+                }
+
 
                 IntegratedRunnable normal = new IntegratedRunnable() {
 
