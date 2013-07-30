@@ -11,6 +11,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.WeatherType;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -69,17 +70,22 @@ public class WeatherManagerComponent extends BukkitComponent implements Listener
     @EventHandler(ignoreCancelled = true)
     public void onThunderChange(ThunderChangeEvent event) {
 
+        World world = event.getWorld();
         String state = event.toThunderState() ? "starting" : "ending";
         for (Player player : Collections.synchronizedList(enabledFor)) {
             if (player.getWorld().equals(event.getWorld())) {
                 if (!event.toThunderState()) {
-                    if (ItemUtil.hasAncientArmour(player)
-                            || ItemUtil.hasMasterBow(player) || ItemUtil.hasMasterSword(player)) {
+                    if (ItemUtil.hasAncientArmour(player) || ItemUtil.hasMasterBow(player) || ItemUtil.hasMasterSword(player)) {
                         ChatUtil.sendWarning(player, ChatColor.DARK_RED + "===============[WARNING]===============");
                     }
                 }
                 ChatUtil.sendNotice(player, "A thunder storm is " + state + " on your world.");
             }
+        }
+
+        if (event.toThunderState() && world.getWeatherDuration() < world.getThunderDuration()) {
+            world.setStorm(true);
+            world.setWeatherDuration(world.getThunderDuration());
         }
     }
 
