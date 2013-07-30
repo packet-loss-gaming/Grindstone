@@ -5,13 +5,13 @@ import com.skelril.aurora.prayer.PrayerType;
 /**
  * Author: Turtle9598
  */
-public class AlonzoFX extends AbstractPrayer {
+public class MerlinFX extends AbstractPrayer {
 
     private static final AbstractPrayer[] subFX = new AbstractPrayer[]{
             new FireFX(), new BlindnessFX(), new SmokeFX(), new MushroomFX(), new ButterFingersFX()
     };
 
-    public AlonzoFX() {
+    public MerlinFX() {
 
         super(subFX);
     }
@@ -19,6 +19,6 @@ public class AlonzoFX extends AbstractPrayer {
     @Override
     public PrayerType getType() {
 
-        return PrayerType.ALONZO;
+        return PrayerType.MERLIN;
     }
 }

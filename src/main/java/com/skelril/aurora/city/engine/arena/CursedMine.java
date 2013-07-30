@@ -437,7 +437,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 6:
                             ChatUtil.sendWarning(player, "Merlin attacks with a mighty rage!");
                             prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
-                                    PrayerType.ALONZO, TimeUnit.SECONDS.toMillis(20)));
+                                    PrayerType.MERLIN, TimeUnit.SECONDS.toMillis(20)));
                             break;
                         case 7:
                             ChatUtil.sendWarning(player, "Dave tells everyone that your mining!");
@@ -451,7 +451,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                     PrayerType.STARVATION, TimeUnit.MINUTES.toMillis(15)));
                             break;
                         case 9:
-                            ChatUtil.sendWarning(player, "1alonzo4 declares war on YOU!");
+                            ChatUtil.sendWarning(player, "Hallow declares war on YOU!");
                             for (int i = 0; i < ChanceUtil.getRangedRandom(10, 30); i++) {
                                 Blaze blaze = getWorld().spawn(player.getLocation(), Blaze.class);
                                 blaze.setTarget(player);

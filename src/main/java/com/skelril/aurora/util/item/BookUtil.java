@@ -82,13 +82,13 @@ public class BookUtil {
             public static ItemStack glaciesMare() {
 
                 List<String> rules = new ArrayList<>();
-                rules.add("Building height cannot exceed layer 100");
+                rules.add("Building height cannot exceed layer 96");
                 rules.add("Alteration of the building's exterior will be subject of approval by admin");
                 rules.add("Infringement upon the street by the player or his/her belongings is forbidden");
-                rules.add("Shops outside of a designated area must be approved by admins");
                 rules.add("Any redstone or craftbook devices are not to expand over the players plot boundaries");
+                rules.add("Gardens/farms should be kept out of sight unless it is permitted by admin");
                 rules.add("No single column towers");
-                rules.add("No fortifications, trench systems, or other things which may or may not harm alonzo");
+                rules.add("Symbols should not be visible from the external locations unless it is permitted by admin");
 
                 return generateRuleBook("Glacies Mare", rules);
             }

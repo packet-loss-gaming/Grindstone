@@ -46,7 +46,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private RogueComponent rogueComponent;
 
-    private HashSet<Player> alonzoCreepersActive = new HashSet<>();
+    private HashSet<Player> hallowCreepersActive = new HashSet<>();
     private LocalConfiguration config;
 
     @Override
@@ -66,10 +66,8 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
 
     private static class LocalConfiguration extends ConfigurationBase {
 
-        @Setting("enable-alonzo")
-        public boolean enableAlonzo = true;
-        @Setting("alonzo-creeper-chance")
-        public int alonzoCreeperChance = 157;
+        @Setting("hallow-creeper-chance")
+        public int hallowCreeperChance = 157;
         @Setting("chance-of-message")
         public int chance = 7;
     }
@@ -97,28 +95,28 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
             String message = "";
             if (entity instanceof Creeper) {
                 try {
-                    // Alonzo Feature
-                    if (config.enableAlonzo && ChanceUtil.getChance(config.alonzoCreeperChance)
-                            && !inst.hasPermission(player, "aurora.alonzo.immune")
-                            && !alonzoCreepersActive.contains(player)) {
+                    // Hallow Feature
+                    if (config.hallowCreeperChance != -1 && ChanceUtil.getChance(config.hallowCreeperChance)
+                            && !inst.hasPermission(player, "aurora.hallow.immune")
+                            && !hallowCreepersActive.contains(player)) {
                         Location loc = entity.getLocation();
 
                         for (int i = 0; i < ((ChanceUtil.getRandom(12) * ChanceUtil.getRandom(12)) + 6); i++) {
                             entity.getWorld().spawn(loc, Creeper.class);
                         }
 
-                        alonzoCreepersActive.add(player);
+                        hallowCreepersActive.add(player);
                         server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
 
                             @Override
                             public void run() {
 
-                                alonzoCreepersActive.remove(player);
+                                hallowCreepersActive.remove(player);
                             }
                         }, 20 * 30);
 
                         color = ChatColor.DARK_RED;
-                        message = "Alonzzzo ssssent ussss.";
+                        message = "Haaaallooowwwww ssssent ussss.";
                     } else {
                         color = ChatColor.DARK_GREEN;
                         message = "That'sssss a very niccce everything you have there.";

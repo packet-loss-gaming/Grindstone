@@ -157,7 +157,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
                 checkTypes.add(CheckType.SPEED);
                 checkTypes.add(CheckType.SNEAK);
                 checkTypes.add(CheckType.SPIDER);
-            case ALONZO:
+            case MERLIN:
             case BUTTERFINGERS:
                 checkTypes.add(CheckType.ITEM_SPAM);
                 break;

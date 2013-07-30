@@ -783,7 +783,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     deathMessage = " needs to find a new profession";
                     break;
                 case 2:
-                    deathMessage = " judge alonzo says guilty";
+                    deathMessage = " is now at the mercy of Hallow";
                     break;
                 case 3:
                     deathMessage = " is now folding and hanging... though mostly hanging...";

@@ -7,7 +7,7 @@ public enum District {
 
     GLOBAL("City", new String[]{"Dark_Arc", "RichRick18", "digilue"}),
     CARPE_DIEM("Carpe Diem", new String[]{"darkkrai13", "XxSerionAllorxX"}),
-    GLACIES_MARE("Glacies Mare", new String[]{"1alonzo4"}),
+    GLACIES_MARE("Glacies Mare", new String[]{"Nyghtstarr"}),
     OBLITUS("Oblitus", new String[]{"Dark_Arc"}),
     VINEAM("Vineam", new String[]{"RichRick18"});
 

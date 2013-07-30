@@ -28,7 +28,7 @@ public enum PrayerType {
     BLINDNESS(1013, BlindnessFX.class),
     MUSHROOM(1014, MushroomFX.class),
     CANNON(1015, CannonFX.class),
-    ALONZO(1016, AlonzoFX.class),
+    MERLIN(1016, MerlinFX.class),
     ROCKET(1017, RocketFX.class),
     GLASSBOX(1018, GlassBoxFX.class),
 

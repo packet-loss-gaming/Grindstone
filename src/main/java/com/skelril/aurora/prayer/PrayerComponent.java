@@ -122,8 +122,8 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
             case ABSORPTION:
                 prayerEffects = new AbsorptionFX();
                 break;
-            case ALONZO:
-                prayerEffects = new AlonzoFX();
+            case MERLIN:
+                prayerEffects = new MerlinFX();
                 break;
             case ANTIFIRE:
                 prayerEffects = new AntifireFX();
@@ -343,8 +343,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                             }
                         }
                         if (quantity > 0) sb.append(ChatColor.YELLOW + ", ");
-                        sb.append(prayer.isHoly() ? ChatColor.BLUE
-                                : ChatColor.RED).append(prayer.toString().toLowerCase());
+                        sb.append(prayer.isHoly() ? ChatColor.BLUE : ChatColor.RED).append(prayer.toString().toLowerCase());
                         quantity++;
                     }
                     sb.append(ChatColor.YELLOW + ".");
