@@ -243,6 +243,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                 for (int i = 0; i < (ItemUtil.countFilledSlots(eInventory.getContents()) / 2) - 2 || i < 1; i++) {
 
                     if (e instanceof Player) {
+                        if (adminComponent.isAdmin((Player) e)) continue;
                         if (ChanceUtil.getChance(15) && checkInventory((Player) e, eInventory.getContents())) {
                             ChatUtil.sendNotice((Player) e, "Divine intervention protects some of your items.");
                             continue;
