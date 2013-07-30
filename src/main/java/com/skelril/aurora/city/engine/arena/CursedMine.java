@@ -39,6 +39,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -46,10 +47,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerBucketFillEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -58,7 +56,9 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -71,14 +71,18 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    private ProtectedRegion floodGate;
+
     private AdminComponent adminComponent;
     private PrayerComponent prayerComponent;
     private RestorationUtil restorationUtil;
 
     private WorldGuardPlugin worldGuard;
 
+
     //private ConcurrentHashMap<Player, ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long,
     //        BaseBlock>>> map = new ConcurrentHashMap<>();
+    private long lastActivation = 0;
     private PlayerMappedBlockRecordIndex recordSystem = new PlayerMappedBlockRecordIndex();
     private List<Player> daveHitList = new ArrayList<>();
 
@@ -91,10 +95,13 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             BlockID.EMERALD_BLOCK, BlockID.EMERALD_ORE, ItemID.EMERALD
     };
 
-    public CursedMine(World world, ProtectedRegion region, AdminComponent adminComponent,
+    public CursedMine(World world, ProtectedRegion[] regions, AdminComponent adminComponent,
                       PrayerComponent prayerComponent, RestorationUtil restorationUtil) {
 
-        super(world, region);
+        super(world, regions[0]);
+
+        this.floodGate = regions[1];
+
         this.adminComponent = adminComponent;
         this.prayerComponent = prayerComponent;
         this.restorationUtil = restorationUtil;
@@ -114,10 +121,14 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     @Override
     public void run() {
 
-        equalize();
         drain();
         sweepFloor();
         randomRestore();
+
+        if (!isEmpty()) {
+            equalize();
+            changeWater();
+        }
     }
 
     @Override
@@ -298,6 +309,43 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         return item.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS);
     }
 
+    private static Set<Integer> replaceableTypes = new HashSet<>();
+
+    static {
+        replaceableTypes.add(BlockID.WATER);
+        replaceableTypes.add(BlockID.STATIONARY_WATER);
+        replaceableTypes.add(BlockID.WOOD);
+        replaceableTypes.add(BlockID.AIR);
+    }
+
+    private void changeWater() {
+
+        int id = 0;
+        if (lastActivation == 0 || System.currentTimeMillis() - lastActivation >= 18000) {
+            id = BlockID.WOOD;
+        }
+        com.sk89q.worldedit.Vector min = floodGate.getMinimumPoint();
+        com.sk89q.worldedit.Vector max = floodGate.getMaximumPoint();
+
+        int minX = min.getBlockX();
+        int minZ = min.getBlockZ();
+        int blockY = min.getBlockY();
+        int maxX = max.getBlockX();
+        int maxZ = max.getBlockZ();
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                Block block = getWorld().getBlockAt(x, blockY, z);
+
+                if (!block.getChunk().isLoaded()) continue;
+
+                if (replaceableTypes.contains(block.getTypeId())) {
+                    block.setTypeId(id);
+                }
+            }
+        }
+    }
+
     private void eatFood(Player player) {
 
         if (player.getSaturation() - 1 >= 0) {
@@ -345,8 +393,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             break;
                         case 4:
                             ChatUtil.sendNotice(player, "John gives you a new jacket.");
-                            player.getWorld().dropItemNaturally(player.getLocation(),
-                                    new ItemStack(ItemID.LEATHER_CHEST));
+                            player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(ItemID.LEATHER_CHEST));
                             break;
                         default:
                             break;
@@ -507,6 +554,27 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         event.setResult(Event.Result.DENY);
         ChatUtil.sendWarning(player, "You cannot do that here.");
+    }
+
+    private static Set<Integer> triggerBlocks = new HashSet<>();
+    private static Set<Action> triggerInteractions = new HashSet<>();
+
+    static {
+        triggerBlocks.add(BlockID.STONE_BUTTON);
+        triggerBlocks.add(BlockID.TRIPWIRE);
+
+        triggerInteractions.add(Action.PHYSICAL);
+        triggerInteractions.add(Action.RIGHT_CLICK_BLOCK);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+
+        final Block block = event.getClickedBlock();
+
+        if (contains(block) && triggerBlocks.contains(block.getTypeId()) && triggerInteractions.contains(event.getAction())) {
+            lastActivation = System.currentTimeMillis();
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

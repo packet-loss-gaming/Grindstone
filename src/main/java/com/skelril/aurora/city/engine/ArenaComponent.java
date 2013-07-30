@@ -186,9 +186,11 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Cursed Mines
             for (String region : config.cursedMines) {
                 try {
-                    ProtectedRegion pr = mgr.get(world).getRegion(region);
-                    arenas.add(new CursedMine(world, pr, adminComponent, prayerComponent, restorationUtil));
-                    if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
+                    ProtectedRegion[] PRs = new ProtectedRegion[2];
+                    PRs[0] = mgr.get(world).getRegion(region);
+                    PRs[1] = mgr.get(world).getRegion(region + "-flood-gate");
+                    arenas.add(new CursedMine(world, PRs, adminComponent, prayerComponent, restorationUtil));
+                    if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
                     e.printStackTrace();
