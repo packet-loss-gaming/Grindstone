@@ -72,8 +72,9 @@ public class MySQLInmateDatbase implements InmateDatabase {
                 String reason = resultSet.getString(4);
                 int startDate = resultSet.getInt(5);
                 int endDate = resultSet.getInt(6);
+                boolean isMuted = resultSet.getBoolean(7);
 
-                Inmate inmate = new Inmate(inmateName, prisonName, reason, startDate, endDate);
+                Inmate inmate = new Inmate(inmateName, prisonName, reason, startDate, endDate, isMuted);
                 if (inmateName != null)
                     nameInmate.put(inmateName, inmate);
                 inmates.add(inmate);
@@ -169,12 +170,12 @@ public class MySQLInmateDatbase implements InmateDatabase {
     }
 
     @Override
-    public void jail(Player player, String prison, CommandSender source, String reason, long end) {
+    public void jail(Player player, String prison, CommandSender source, String reason, long end, boolean mute) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    public void jail(String name, String prison, CommandSender source, String reason, long end) {
+    public void jail(String name, String prison, CommandSender source, String reason, long end, boolean mute) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 

@@ -5,6 +5,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.PlayerUtil;
 import com.skelril.aurora.util.ChatUtil;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -79,16 +80,38 @@ public class CSVInmateDatabase implements InmateDatabase {
                     continue;
                 }
                 try {
-                    String name = line[0].trim().toLowerCase();
-                    String prisonName = line[1].trim().toLowerCase();
-                    String reason = line[2].trim().toLowerCase();
-                    long startDate = Long.parseLong(line[3]);
-                    long endDate = Long.parseLong(line[4]);
-                    if ("".equals(name) || "null".equals(name))
-                        name = null;
-                    Inmate inmate = new Inmate(name, prisonName, reason, startDate, endDate);
-                    if (name != null)
-                        nameInmate.put(name, inmate);
+                    String name = "null";
+                    String prisonName = "lava-flow";
+                    String reason = "Jailed!";
+                    long startDate = 0;
+                    long endDate = 0;
+                    boolean isMuted = false;
+
+                    for (int i = 0; i < line.length; i++) {
+                        switch (i) {
+                            case 0:
+                                name = line[i].trim().toLowerCase();
+                                break;
+                            case 1:
+                                prisonName = line[i].trim().toLowerCase();
+                                break;
+                            case 2:
+                                reason = line[i].trim().toLowerCase();
+                                break;
+                            case 3:
+                                startDate = Long.parseLong(line[i]);
+                                break;
+                            case 4:
+                                endDate = Long.parseLong(line[i]);
+                                break;
+                            case 5:
+                                isMuted = Boolean.parseBoolean(line[i]);
+                                break;
+                        }
+                    }
+                    if ("".equals(name) || "null".equals(name)) name = null;
+                    Inmate inmate = new Inmate(name, prisonName, reason, startDate, endDate, isMuted);
+                    if (name != null) nameInmate.put(name, inmate);
                     inmates.add(inmate);
                 } catch (NumberFormatException e) {
                     log.warning("Non-long long field found in inmate!");
@@ -98,8 +121,7 @@ public class CSVInmateDatabase implements InmateDatabase {
         } catch (FileNotFoundException ignored) {
         } catch (IOException e) {
             nameInmate = new HashMap<>();
-            log.warning("Failed to load " + inmateFile.getAbsolutePath()
-                    + ": " + e.getMessage());
+            log.warning("Failed to load " + inmateFile.getAbsolutePath() + ": " + e.getMessage());
             successful = false;
         } finally {
             if (input != null) {
@@ -128,7 +150,8 @@ public class CSVInmateDatabase implements InmateDatabase {
                         inmate.getPrisonName().trim().toLowerCase(),
                         inmate.getReason().trim(),
                         String.valueOf(inmate.getStart()),
-                        String.valueOf(inmate.getEnd())
+                        String.valueOf(inmate.getEnd()),
+                        String.valueOf(inmate.isMuted())
                 };
                 writer.writeNext(line);
             }
@@ -177,26 +200,23 @@ public class CSVInmateDatabase implements InmateDatabase {
         return false;
     }
 
-    public void jail(Player player, String prisonName, CommandSender source, String reason, long end) {
+    public void jail(Player player, String prisonName, CommandSender source, String reason, long end, boolean isMuted) {
 
-        jail(player.getName(), prisonName, source, reason, end);
+        jail(player.getName(), prisonName, source, reason, end, isMuted);
     }
 
-    public void jail(String name, String prisonName, CommandSender source, String reason, long end) {
+    public void jail(String name, String prisonName, CommandSender source, String reason, long end, boolean isMuted) {
 
-        Inmate inmate = new Inmate(name.trim().toLowerCase(), prisonName.trim().toLowerCase(),
-                reason.trim(), System.currentTimeMillis(), end);
-        String jailedName;
-        if (name != null) {
-            name = name.trim().toLowerCase();
-            nameInmate.put(name, inmate);
-            jailedName = name;
-            inmates.add(inmate);
-            auditLogger.info(String.format("JAIL: %s jailed %s: %s",
-                    source == null ? "Plugin" : PlayerUtil.toUniqueName(source),
-                    jailedName,
-                    reason.trim()));
-        }
+        Validate.notNull(name);
+        Validate.notNull(prisonName);
+
+        name = name.trim().toLowerCase();
+        prisonName = prisonName.trim().toLowerCase();
+
+        Inmate inmate = new Inmate(name, prisonName, reason.trim(), System.currentTimeMillis(), end, isMuted);
+        nameInmate.put(name, inmate);
+        inmates.add(inmate);
+        auditLogger.info(String.format("JAIL: %s jailed %s: %s", source == null ? "Plugin" : PlayerUtil.toUniqueName(source), name, reason.trim()));
     }
 
     public boolean unjail(Player player, CommandSender source, String reason) {

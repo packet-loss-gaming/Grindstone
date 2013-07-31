@@ -55,8 +55,9 @@ public interface InmateDatabase extends Iterable<Inmate> {
      * @param source
      * @param reason
      * @param end
+     * @param mute
      */
-    public void jail(Player player, String prison, CommandSender source, String reason, long end);
+    public void jail(Player player, String prison, CommandSender source, String reason, long end, boolean mute);
 
     /**
      * Jails a player by name
@@ -66,8 +67,9 @@ public interface InmateDatabase extends Iterable<Inmate> {
      * @param source
      * @param reason
      * @param end
+     * @param mute
      */
-    public void jail(String name, String prison, CommandSender source, String reason, long end);
+    public void jail(String name, String prison, CommandSender source, String reason, long end, boolean mute);
 
     /**
      * Unjails a player

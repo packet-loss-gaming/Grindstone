@@ -64,8 +64,7 @@ public class AntiBlockBreakComponent extends BukkitComponent implements Listener
                 event.setCancelled(true);
                 try {
                     long duration = CommandBookUtil.matchFutureDate(k.getValue() + "m");
-                    jailComponent.getInmateDatabase().jail(player.getName(), "lava-flow", server.getConsoleSender(),
-                            "Breaking " + k.getValue() + " blocks", duration);
+                    jailComponent.jail(player.getName(), duration);
                     Bukkit.broadcastMessage("The player:" + player.getName() + " has been jailed for "
                             + k.getValue() + " minutes because they attempted to break "
                             + k.getValue() + " blocks too quickly.");

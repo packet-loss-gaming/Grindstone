@@ -10,14 +10,16 @@ public class Inmate {
     private final String reason;
     private final long start;
     private final long end;
+    private final boolean isMuted;
 
-    public Inmate(String name, String prisonName, String reason, long start, long end) {
+    public Inmate(String name, String prisonName, String reason, long start, long end, boolean isMuted) {
 
         this.name = name;
         this.prisonName = prisonName;
         this.reason = reason;
         this.start = start;
         this.end = end;
+        this.isMuted = isMuted;
     }
 
     public String getName() {
@@ -43,6 +45,11 @@ public class Inmate {
     public long getEnd() {
 
         return end;
+    }
+
+    public boolean isMuted() {
+
+        return isMuted;
     }
 
     @Override
