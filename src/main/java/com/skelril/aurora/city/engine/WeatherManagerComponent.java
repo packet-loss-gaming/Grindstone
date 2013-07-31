@@ -18,6 +18,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
+import org.bukkit.event.weather.WeatherChangeEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,6 +65,14 @@ public class WeatherManagerComponent extends BukkitComponent implements Listener
                 ChatUtil.sendNotice(sender, "Storms are now hidden.");
                 ChatUtil.sendNotice(sender, "To show storms again please use /stopweather -r.");
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onStormChange(WeatherChangeEvent event) {
+
+        if (!event.toWeatherState()) {
+            event.getWorld().setThundering(false);
         }
     }
 
