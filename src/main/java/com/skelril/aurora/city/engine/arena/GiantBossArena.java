@@ -82,6 +82,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     private BukkitTask mobDestroyer;
     private Random random = new Random();
 
+    private double toHeal = 0;
     private int difficulty = Difficulty.HARD.getValue();
     private List<Location> spawnPts = new ArrayList<>();
     private List<Location> chestPts = new ArrayList<>();
@@ -158,6 +159,15 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         boss.setRemoveWhenFarAway(false);
 
         for (Player player : getContainedPlayers(1)) ChatUtil.sendWarning(player, "I live again!");
+    }
+
+    public void printBossHealth() {
+
+        int current = (int) Math.ceil(boss.getHealth());
+        int max = (int) Math.ceil(boss.getMaxHealth());
+
+        String message = "Boss Health: " + current + " / " + max;
+        ChatUtil.sendNotice(getContainedPlayers(1), ChatColor.DARK_AQUA, message);
     }
 
     public void probeArea() {
@@ -483,8 +493,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         Entity attacker = null;
         Projectile projectile = null;
 
-        if (event.getCause().equals(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION)
-                && !contains(defender) && contains(defender, 1)) {
+        if (event.getCause().equals(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION) && !contains(defender) && contains(defender, 1)) {
             event.setCancelled(true);
             return;
         } else if (!contains(defender, 1)) return;
@@ -510,9 +519,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 ((Player) attacker).damage(difficulty * 32, boss);
                 server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) attacker));
                 attacker.setVelocity(new Vector(
-                        random.nextDouble() * 1.7 - 1.5,
+                        random.nextDouble() * 3 - 1.5,
                         random.nextDouble() * 2,
-                        random.nextDouble() * 1.7 - 1.5
+                        random.nextDouble() * 3 - 1.5
                 ));
             }
 
@@ -552,11 +561,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 public void run() {
                     if (getWorld().getTime() % 7 != 0 || boss == null || !boss.isValid()) return;
 
-                    int current = (int) Math.ceil(boss.getHealth());
-                    int max = (int) Math.ceil(boss.getMaxHealth());
-
-                    String message = "Boss Health: " + current + " / " + max;
-                    ChatUtil.sendNotice(getContainedPlayers(1), ChatColor.DARK_AQUA, message);
+                    printBossHealth();
                 }
             }, 1);
 
@@ -660,8 +665,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     defender.setFireTicks(0);
                 }
                 if (damageHeals && ChanceUtil.getChance(difficulty * 3 + 1)) {
-                    ChatUtil.sendNotice(getContainedPlayers(), ChatColor.AQUA,
-                            player.getDisplayName() + " has broken the giant's spell.");
+                    ChatUtil.sendNotice(getContainedPlayers(), ChatColor.AQUA, player.getDisplayName() + " has broken the giant's spell.");
                     damageHeals = false;
                 }
             }
@@ -782,7 +786,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         }
                     }
                 };
-                TimedRunnable timed = new TimedRunnable(normal, 60);
+                TimedRunnable timed = new TimedRunnable(normal, 30);
                 BukkitTask task = server.getScheduler().runTaskTimer(inst, timed, 0, 20);
                 timed.setTask(task);
             } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
@@ -820,7 +824,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     deathMessage = " embraced the boss's corruption";
                     break;
                 case 3:
-                    deathMessage = " did not die with his sight";
+                    deathMessage = " did not die seeing";
                     break;
                 case 4:
                     deathMessage = " found out the boss has two left feet";
@@ -829,13 +833,16 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     deathMessage = " needs not pester invincible overlords";
                     break;
                 case 6:
-                    deathMessage = " died to his new friend fire";
+                    deathMessage = " died to a terrible inferno";
                     break;
                 case 7:
                     deathMessage = " basked in the glory of the boss";
                     break;
                 case 8:
                     deathMessage = " was the victim of a devastating prayer";
+                    break;
+                case 9:
+                    deathMessage = " has been consumed by the boss";
                     break;
                 default:
                     deathMessage = " died while attempting to slay the boss";
@@ -870,18 +877,41 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     }
 
-    private final int OPTION_COUNT = 8;
+    private final int OPTION_COUNT = 9;
 
     private void runAttack(int attackCase) {
 
         int delay = ChanceUtil.getRangedRandom(13000, 17000);
         if (lastAttack != 0 && System.currentTimeMillis() - lastAttack <= delay) return;
 
+        Entity[] containedE = getContainedEntities();
         Player[] containedP = getContainedPlayers(1);
         Player[] contained = getContainedPlayers();
         if (contained == null || contained.length <= 0) return;
 
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
+        // AI system
+        if (attackCase != 4) {
+            if (attackCase == 5 && boss.getHealth() > boss.getMaxHealth() * .9) {
+                attackCase = ChanceUtil.getChance(2) ? 8 : 2;
+            }
+            if (containedE.length > 90 && ChanceUtil.getChance(2)) {
+                attackCase = ChanceUtil.getChance(2) ? 4 : 7;
+            }
+            for (Player player : contained) {
+                if (player.getHealth() < 4) {
+                    attackCase = 2;
+                    break;
+                }
+            }
+            if (boss.getHealth() < boss.getMaxHealth() * .3 && ChanceUtil.getChance(2)) {
+                attackCase = 9;
+            }
+            if (((attackCase == 3 || attackCase == 6) && boss.getHealth() < boss.getMaxHealth() * .3) || (attackCase == 7 && contained.length < 2)) {
+                runAttack(ChanceUtil.getRandom(OPTION_COUNT));
+                return;
+            }
+        }
         switch (attackCase) {
             case 1:
                 ChatUtil.sendWarning(containedP, "Taste my wrath!");
@@ -984,8 +1014,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                                 ChatUtil.sendNotice(player, "A divine wind hides you from the boss.");
                                 continue;
                             }
-                            if (player.getLocation().getBlock().getRelative(BlockFace.DOWN, 2).getTypeId()
-                                    != BlockID.DIAMOND_BLOCK) {
+                            if (player.getLocation().getBlock().getRelative(BlockFace.DOWN, 2).getTypeId() != BlockID.DIAMOND_BLOCK) {
                                 ChatUtil.sendWarning(player, ChatColor.DARK_RED + "You!");
                                 baskInGlory = true;
                             }
@@ -1040,6 +1069,45 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     }
                 }, 20 * (difficulty == 1 ? 14 : 7));
                 break;
+            case 9:
+                ChatUtil.sendNotice(containedP, ChatColor.DARK_RED, "My minions our time is now!");
+
+                final int dmgTimeAmt = 1;
+                IntegratedRunnable minionEater = new IntegratedRunnable() {
+                    @Override
+                    public boolean run(int times) {
+
+                        if (!isBossSpawned()) return true;
+
+                        for (Entity entity : getContainedEntities()) {
+                            if (!(entity instanceof LivingEntity) || !ChanceUtil.getChance(5)) continue;
+                            ((LivingEntity) entity).damage(dmgTimeAmt, boss);
+                            toHeal += dmgTimeAmt;
+                        }
+                        if (TimerUtil.matchesFilter(times + 1, -1, 2)) {
+                            ChatUtil.sendNotice(getContainedPlayers(1), ChatColor.DARK_AQUA, "The boss has drawn in: " + (int) toHeal + " health.");
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    public void end() {
+
+                        if (!isBossSpawned()) return;
+
+                        boss.setHealth(Math.min(toHeal + boss.getHealth(), boss.getMaxHealth()));
+                        toHeal = 0;
+
+                        ChatUtil.sendNotice(getContainedPlayers(1), "Thank you my minions!");
+
+                        printBossHealth();
+                    }
+                };
+                TimedRunnable minonEatingTask = new TimedRunnable(minionEater, 20);
+                BukkitTask minionEatingTaskExecutor = server.getScheduler().runTaskTimer(inst, minonEatingTask, 0, 10);
+                minonEatingTask.setTask(minionEatingTaskExecutor);
+                break;
+
         }
         lastAttack = System.currentTimeMillis();
         lastAttackNumber = attackCase;
