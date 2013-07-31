@@ -678,8 +678,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                     if ((blockTypeId == config.sacrificialBlockId) && (blockData == config.sacrificialBlockData)) {
                         try {
                             // Create the event here
-                            PlayerSacrificeItemEvent sacrificeItemEvent =
-                                    new PlayerSacrificeItemEvent(player, searchBlock, item.getItemStack());
+                            PlayerSacrificeItemEvent sacrificeItemEvent = new PlayerSacrificeItemEvent(player, searchBlock, item.getItemStack());
                             server.getPluginManager().callEvent(sacrificeItemEvent);
                             if (sacrificeItemEvent.isCancelled()) return;
                             createFire(searchBlock);
@@ -750,6 +749,10 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         } else if (ItemUtil.isMasterBow(item)) {
             pInventory.addItem(ItemUtil.Master.makeBow());
             return;
+        } else if (ItemUtil.isNamed(item)) {
+            pInventory.addItem(item);
+            ChatUtil.sendError(player, "The gods reject your offer.");
+            return;
         }
 
         for (ItemStack aItemStack : getCalculatedLoot(player, item)) {
@@ -812,8 +815,10 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
             if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
 
-            int value = calculateValue(((Player) sender).getInventory().getItemInHand());
-            if (value == -1) throw new CommandException("You can't sacrifice that!");
+            ItemStack questioned = ((Player) sender).getInventory().getItemInHand();
+
+            int value = calculateValue(questioned);
+            if (value == -1 || ItemUtil.isNamed(questioned)) throw new CommandException("You can't sacrifice that!");
             ChatUtil.sendNotice(sender, "That item has a value of: " + value + " in the sacrificial pit.");
         }
     }
