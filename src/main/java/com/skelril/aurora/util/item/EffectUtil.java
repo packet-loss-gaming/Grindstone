@@ -72,7 +72,7 @@ public class EffectUtil {
 
         public static void decimate(Player owner, LivingEntity target) {
 
-            target.damage(ChanceUtil.getRandom(5) * 50);
+            target.damage(ChanceUtil.getRandom(target instanceof Player ? 3 : 10) * 50);
             ChatUtil.sendNotice(owner, "Your sword tears through the flesh of its victim.");
         }
 
