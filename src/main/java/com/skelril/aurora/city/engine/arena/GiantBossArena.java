@@ -39,10 +39,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -81,6 +78,8 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     private boolean damageHeals = false;
     private BukkitTask mobDestroyer;
     private Random random = new Random();
+
+    private boolean flagged = false;
 
     private double toHeal = 0;
     private int difficulty = Difficulty.HARD.getValue();
@@ -255,7 +254,16 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             }
         }
 
-        if (que.size() < 400) return;
+        if (que.size() < 45) {
+            flagged = false;
+            return;
+        }
+
+        flagged = true;
+
+        if (que.size() < 250) {
+            return;
+        }
 
         for (Zombie zombie : que) {
             zombie.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 20, 3));
@@ -491,6 +499,17 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     public void onGemOfLifeUsage(GemOfLifeUsageEvent event) {
 
         if (contains(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityTarget(EntityTargetLivingEntityEvent event) {
+
+        Entity entity = event.getEntity();
+        LivingEntity target = event.getTarget();
+
+        if (contains(entity) && !contains(target)) {
             event.setCancelled(true);
         }
     }
@@ -902,7 +921,6 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         int delay = ChanceUtil.getRangedRandom(13000, 17000);
         if (lastAttack != 0 && System.currentTimeMillis() - lastAttack <= delay) return;
 
-        Entity[] containedE = getContainedEntities();
         Player[] containedP = getContainedPlayers(1);
         Player[] contained = getContainedPlayers();
         if (contained == null || contained.length <= 0) return;
@@ -913,7 +931,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             if (attackCase == 5 && boss.getHealth() > boss.getMaxHealth() * .9) {
                 attackCase = ChanceUtil.getChance(2) ? 8 : 2;
             }
-            if (containedE.length > 90 && ChanceUtil.getChance(2)) {
+            if (flagged && ChanceUtil.getChance(2)) {
                 attackCase = ChanceUtil.getChance(2) ? 4 : 7;
             }
             for (Player player : contained) {
@@ -1098,6 +1116,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         if (!isBossSpawned()) return true;
 
                         for (Entity entity : getContainedEntities()) {
+                            if (entity.equals(boss)) continue;
                             if (!(entity instanceof LivingEntity) || !ChanceUtil.getChance(5)) continue;
                             ((LivingEntity) entity).damage(dmgTimeAmt, boss);
                             toHeal += dmgTimeAmt;
