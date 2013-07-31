@@ -441,6 +441,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     private static Set<SpecialAttackEvent.Specs> generalBlacklistedSpecs = new HashSet<>();
     private static Set<SpecialAttackEvent.Specs> bossBlacklistedSpecs = new HashSet<>();
+    private static Set<SpecialAttackEvent.Specs> ultimateBlacklistedSpecs = new HashSet<>();
 
     static {
         generalBlacklistedSpecs.add(SpecialAttackEvent.Specs.DISARM);
@@ -449,7 +450,12 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         bossBlacklistedSpecs.add(SpecialAttackEvent.Specs.LIFE_LEECH);
         bossBlacklistedSpecs.add(SpecialAttackEvent.Specs.SOUL_SMITE);
+
+        ultimateBlacklistedSpecs.add(SpecialAttackEvent.Specs.DECIMATE);
+        ultimateBlacklistedSpecs.add(SpecialAttackEvent.Specs.DOOM_BLADE);
     }
+
+    private long lastUltimateAttack = 0;
 
     @EventHandler(ignoreCancelled = true)
     public void onSpecialAttack(SpecialAttackEvent event) {
@@ -459,9 +465,21 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         SpecialAttackEvent.Specs spec = event.getSpec();
         LivingEntity target = event.getTarget();
 
-        if (target != null && target instanceof Giant && bossBlacklistedSpecs.contains(spec)) {
-            event.setCancelled(true);
-            return;
+        if (target != null && target instanceof Giant) {
+            if (bossBlacklistedSpecs.contains(spec)) {
+                event.setCancelled(true);
+                return;
+            }
+            if (ultimateBlacklistedSpecs.contains(spec)) {
+                if (lastUltimateAttack == 0) {
+                    lastUltimateAttack = System.currentTimeMillis();
+                } else if (System.currentTimeMillis() - lastUltimateAttack >= 15000) {
+                    lastUltimateAttack = System.currentTimeMillis();
+                } else {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
         }
 
         if (generalBlacklistedSpecs.contains(spec)) {
