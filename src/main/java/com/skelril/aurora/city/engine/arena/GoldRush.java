@@ -602,9 +602,12 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
 
-        if (players.contains(event.getPlayer().getName())) {
+        if (players.contains(event.getPlayer().getName()) || (contains(event.getTo()) && !(contains(event.getFrom())))) {
+
+            if (event.getCause().equals(PlayerTeleportEvent.TeleportCause.UNKNOWN)) return;
+
             event.setCancelled(true);
-            ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport here.");
+            ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport to that location.");
         }
     }
 
