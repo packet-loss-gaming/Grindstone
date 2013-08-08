@@ -71,7 +71,7 @@ public class WeatherManagerComponent extends BukkitComponent implements Listener
     @EventHandler(ignoreCancelled = true)
     public void onStormChange(WeatherChangeEvent event) {
 
-        if (!event.toWeatherState()) {
+        if (!event.toWeatherState() && event.getWorld().isThundering()) {
             event.getWorld().setThundering(false);
         }
     }
