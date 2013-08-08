@@ -70,14 +70,16 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
     private static class LocalConfiguration extends ConfigurationBase {
 
         @Setting("min-profit")
-        public double minProfit = 20000;
-        @Setting("operator-loss-scale")
-        public int operatorLossScale = 10;
+        public double minProfit = -1;
+        @Setting("operator-loss-percent")
+        public double operatorLossScale = .5;
 
-        @Setting("slot-chance")
-        public int slotChance = 20;
-        @Setting("roulette-chance")
-        public int rouletteChance = 35;
+        @Setting("slot-payback-rate")
+        public double slotPaybackRate = .75;
+        @Setting("slot-winning-percentage")
+        public double slotMultipler = 2770;
+        @Setting("roulette-multiplier")
+        public double rouletteMultiplier = 2;
     }
 
     @Override
@@ -183,16 +185,37 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
 
     private void operateSlots(String operator, Player player, double bet) {
 
-        double loot = bet * config.slotChance;
+        double loot = bet * ChanceUtil.getRangedRandom(config.slotMultipler / 5, config.slotMultipler);
 
         if (!operatorHasMoney(operator, player, loot)) return;
 
-        String one = ChatUtil.loonyCharacter();
-        String two = ChatUtil.loonyCharacter();
-        String three = ChatUtil.loonyCharacter();
+        char jackPotChar = ChatUtil.loonyCharacter();
 
-        if (profit < 0) {
-            while (two.equals(one)) {
+        boolean boolOne = ChanceUtil.getChance(64);
+        boolean boolTwo = ChanceUtil.getChance(64);
+        boolean boolThree = ChanceUtil.getChance(64);
+
+        char one = boolOne ? jackPotChar : ChatUtil.loonyCharacter();
+        char two = boolTwo ? jackPotChar : ChatUtil.loonyCharacter();
+        char three = boolThree ? jackPotChar : ChatUtil.loonyCharacter();
+
+        boolean solved = (boolOne && boolTwo && boolThree) || (one != jackPotChar || two != jackPotChar || three != jackPotChar);
+        while (!solved) {
+            if (!boolOne) {
+                one = ChatUtil.loonyCharacter();
+            }
+            if (!boolTwo) {
+                two = ChatUtil.loonyCharacter();
+            }
+            if (!boolThree) {
+                three = ChatUtil.loonyCharacter();
+            }
+
+            solved = (one != jackPotChar || two != jackPotChar || three != jackPotChar);
+        }
+
+        if (config.minProfit != -1 && profit < 0) {
+            while (two == one) {
                 one = ChatUtil.loonyCharacter();
             }
         }
@@ -205,26 +228,28 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
                     + ChatUtil.makeCountString(economy.format(bet), " " + economy.currencyNameSingular() + "."));
         }
 
+        ChatUtil.sendNotice(player, "Jack pot on: " + jackPotChar + ".");
         ChatUtil.sendNotice(player, one + " - " + two + " - " + three);
 
-        if (one.equals(two) && two.equals(three)) {
+        if (one == two && two == three && three == jackPotChar) {
             profit -= loot;
             economy.depositPlayer(player.getName(), loot);
-            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot / config.operatorLossScale);
+            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot * config.operatorLossScale);
             ChatUtil.sendNotice(player, ChatColor.GOLD, "Jackpot!");
             ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot),
                     " " + economy.currencyNamePlural() + "."));
         } else {
+            bet = bet - (bet * config.slotPaybackRate);
             profit += bet;
             economy.withdrawPlayer(player.getName(), bet);
-            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet / config.operatorLossScale);
+            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet * config.operatorLossScale);
             ChatUtil.sendNotice(player, "Better luck next time.");
         }
     }
 
     private void operateRoulette(String operator, Player player, double bet) {
 
-        double loot = bet * config.rouletteChance;
+        double loot = bet * config.rouletteMultiplier;
 
         if (!operatorHasMoney(operator, player, loot)) return;
 
@@ -236,16 +261,16 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
                     + ChatUtil.makeCountString(economy.format(bet), " " + economy.currencyNameSingular() + "."));
         }
 
-        if (ChanceUtil.getChance(38) && profit > 0) {
+        if (ChanceUtil.getChance(18, 37) && (config.minProfit == -1 || profit > 0)) {
             profit -= loot;
             economy.depositPlayer(player.getName(), loot);
-            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot / config.operatorLossScale);
+            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot * config.operatorLossScale);
             ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot),
                     " " + economy.currencyNamePlural() + "."));
         } else {
             profit += bet;
             economy.withdrawPlayer(player.getName(), bet);
-            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet / config.operatorLossScale);
+            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet * config.operatorLossScale);
             ChatUtil.sendNotice(player, "Better luck next time.");
         }
     }
@@ -264,7 +289,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
         if (!operatorHasMoney(operator, player, loot)) return;
 
         int roll = ChanceUtil.getRandom(100);
-        if (profit < 0) roll = ChanceUtil.getRandom(54);
+        if (config.minProfit != -1 && profit < 0) roll = ChanceUtil.getRandom(54);
 
         if (bet != 1) {
             ChatUtil.sendNotice(player, "You deposit: "
@@ -282,13 +307,13 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
 
             profit -= loot;
             economy.depositPlayer(player.getName(), loot);
-            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot / config.operatorLossScale);
+            if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot * config.operatorLossScale);
             ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot),
                     " " + economy.currencyNamePlural() + "."));
         } else {
             profit += bet;
             economy.withdrawPlayer(player.getName(), bet);
-            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet / config.operatorLossScale);
+            if (!operatorIsInf(operator)) economy.depositPlayer(operator, bet * config.operatorLossScale);
             ChatUtil.sendNotice(player, "Better luck next time.");
         }
     }
@@ -314,7 +339,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
         } else if (!economy.hasAccount(operator)) {
             ChatUtil.sendError(better, "The Operator: " + operator + " does not exist.");
             return false;
-        } else if (!economy.has(operator, loot / config.operatorLossScale)) {
+        } else if (!economy.has(operator, loot * config.operatorLossScale)) {
             ChatUtil.sendError(better, "The Operator: " + operator + " does not have sufficient funds.");
             return false;
         } else {
