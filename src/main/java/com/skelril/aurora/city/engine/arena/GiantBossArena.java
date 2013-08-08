@@ -122,14 +122,29 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     public boolean isBossSpawned() {
 
         if (!isArenaLoaded()) return true;
-        boolean found = false;
-        for (Entity e : getContainedEntities()) {
 
+        boolean found = false;
+        boolean second = false;
+
+        for (Entity e : getContainedEntities()) {
             if (e.isValid() && e instanceof Giant) {
                 if (!found) {
                     boss = (Giant) e;
                     found = true;
-                } else e.remove();
+                } else if (((Giant) e).getHealth() < boss.getHealth()) {
+                    boss = (Giant) e;
+                    second = true;
+                } else {
+                    e.remove();
+                }
+            }
+        }
+
+        if (second) {
+            for (Entity e : getContainedEntities()) {
+                if (e.isValid() && e instanceof Giant && !e.equals(boss)) {
+                    e.remove();
+                }
             }
         }
         return boss != null && boss.isValid();
@@ -407,7 +422,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 difficulty = diff;
             }
 
-            if (isBossSpawned()) {
+            if (isArenaLoaded() && isBossSpawned()) {
                 int newHealth = 510 + (difficulty * 80);
                 boss.setHealth(Math.min(boss.getHealth(), newHealth));
                 boss.setMaxHealth(newHealth);
@@ -1108,7 +1123,6 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             case 9:
                 ChatUtil.sendNotice(containedP, ChatColor.DARK_RED, "My minions our time is now!");
 
-                final int dmgTimeAmt = 1;
                 IntegratedRunnable minionEater = new IntegratedRunnable() {
                     @Override
                     public boolean run(int times) {
@@ -1116,10 +1130,18 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         if (!isBossSpawned()) return true;
 
                         for (Entity entity : getContainedEntities()) {
-                            if (entity.equals(boss)) continue;
+
+                            if (entity instanceof Giant) continue;
                             if (!(entity instanceof LivingEntity) || !ChanceUtil.getChance(5)) continue;
-                            ((LivingEntity) entity).damage(dmgTimeAmt, boss);
-                            toHeal += dmgTimeAmt;
+
+                            double realDamage = ((LivingEntity) entity).getHealth();
+
+                            if (entity instanceof Zombie && ((Zombie) entity).isBaby()) {
+                                ((Zombie) entity).setHealth(0);
+                            } else {
+                                ((LivingEntity) entity).damage(realDamage, boss);
+                            }
+                            toHeal += realDamage * .27;
                         }
                         if (TimerUtil.matchesFilter(times + 1, -1, 2)) {
                             ChatUtil.sendNotice(getContainedPlayers(1), ChatColor.DARK_AQUA, "The boss has drawn in: " + (int) toHeal + " health.");
