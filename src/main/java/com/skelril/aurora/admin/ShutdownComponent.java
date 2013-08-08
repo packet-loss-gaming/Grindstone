@@ -38,7 +38,7 @@ public class ShutdownComponent extends BukkitComponent {
 
     public class Commands {
 
-        @Command(aliases = {"restart"}, usage = "[time]", desc = "Used to restart the server", min = 0, max = 1)
+        @Command(aliases = {"restart", "kds"}, usage = "[time]", desc = "Used to restart the server", min = 0, max = 1)
         @CommandPermissions({"aurora.admin.server.shutdown"})
         public void shutdownCmd(CommandContext args, CommandSender sender) throws CommandException {
 
