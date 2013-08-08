@@ -117,23 +117,23 @@ public class ChatUtil {
         return ChatColor.WHITE + value + color + currencyName;
     }
 
-    public static String loonyCharacter() {
+    public static char loonyCharacter() {
 
-        switch (ChanceUtil.getRandom(6)) {
+        switch (ChanceUtil.getRandom(7)) {
+            case 7:
+                return '?';
             case 6:
-                return "&";
+                return '&';
             case 5:
-                return "!";
+                return '!';
             case 4:
-                return "#";
+                return '#';
             case 3:
-                return "@";
+                return '@';
             case 2:
-                return "%";
-            case 1:
-                return "$";
+                return '%';
             default:
-                return "";
+                return '$';
         }
     }
 
