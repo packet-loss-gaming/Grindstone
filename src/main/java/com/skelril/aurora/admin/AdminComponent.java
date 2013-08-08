@@ -94,6 +94,9 @@ public class AdminComponent extends BukkitComponent implements Listener {
     @Override
     public void disable() {
 
+        if (!lockAdminMode) {
+            saveInventories();
+        }
         dumpInventories();
     }
 
