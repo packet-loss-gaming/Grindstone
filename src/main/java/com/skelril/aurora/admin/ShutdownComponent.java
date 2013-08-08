@@ -6,6 +6,7 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.aurora.JungleRaidComponent;
+import com.skelril.aurora.events.ServerShutdownEvent;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -77,6 +78,7 @@ public class ShutdownComponent extends BukkitComponent {
 
                 if (jungleRaid != null) jungleRaid.disable();
 
+                server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
                 if (seconds > 0 && seconds % 5 == 0 || seconds <= 10 && seconds > 0) {
                     Bukkit.broadcastMessage(ChatColor.RED + "Restarting in " + seconds + " seconds!");
                 } else if (seconds < 1) {

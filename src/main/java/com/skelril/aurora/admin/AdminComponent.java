@@ -10,6 +10,7 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.skelril.aurora.NinjaComponent;
 import com.skelril.aurora.RogueComponent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
+import com.skelril.aurora.events.ServerShutdownEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -71,6 +72,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     private InventoryAuditLogger auditor;
 
+    private boolean lockAdminMode = false;
     private static Permission permission = null;
     private final List<String> sysops = new ArrayList<>();
     private final HashMap<String, PlayerState> playerState = new HashMap<>();
@@ -92,7 +94,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
     @Override
     public void disable() {
 
-        saveInventories();
         dumpInventories();
     }
 
@@ -374,6 +375,15 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
+    public void onShutDownEvent(ServerShutdownEvent event) {
+
+        if (event.getSecondsLeft() <= 3 && !lockAdminMode) {
+            saveInventories();
+            lockAdminMode = true;
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
 
         final Player player = event.getPlayer();
@@ -556,7 +566,13 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         if (EnvironmentUtil.isValuableBlock(block) || isAdmin(player) && isDisabledBlock(block)
                 || block.getTypeId() == BlockID.STONE_BRICK && block.getData() == 3) {
-            block.breakNaturally(null);
+            // Temporary work around
+            if (isAdmin(player) && block.getTypeId() == BlockID.TNT) {
+                block.setTypeId(0);
+                event.setCancelled(true);
+            } else {
+                block.breakNaturally(null);
+            }
         }
     }
 
@@ -642,6 +658,9 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             Player player = (Player) sender;
 
+            if (lockAdminMode) {
+                throw new CommandException("Admin mode is currently locked for shutdown!");
+            }
             if (!isAdmin(player)) {
                 boolean admin;
                 if (args.hasFlag('e') && inst.hasPermission(player, "aurora.admin.adminmode.sysop")) {
