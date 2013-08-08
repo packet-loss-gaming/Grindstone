@@ -23,7 +23,9 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class Prison extends AbstractRegionedArena implements GenericArena, Listener {
@@ -116,6 +118,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         return ArenaType.MONITORED;
     }
 
+    private Set<String> players = new HashSet<>();
     private static List<PlayerTeleportEvent.TeleportCause> accepted = new ArrayList<>();
 
     static {
@@ -127,6 +130,21 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
 
         if (contains(event.getTo()) && !accepted.contains(event.getCause())) {
             event.setCancelled(true);
+
+            final String name = event.getPlayer().getName();
+            if (players.contains(name)) {
+                return;
+            } else {
+                players.add(name);
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+                    @Override
+                    public void run() {
+                        if (players.contains(name)) {
+                            players.remove(name);
+                        }
+                    }
+                }, 1);
+            }
             ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport to that location.");
         }
     }
