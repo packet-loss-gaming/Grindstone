@@ -1377,7 +1377,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         @Command(aliases = {"start", "s"},
                 usage = "", desc = "Jungle Raid start command",
-                flags = "sdajbtfmxghpST", min = 0, max = 0)
+                flags = "sdajbtfmxghpqST", min = 0, max = 0)
         @CommandPermissions({"aurora.jr.start"})
         public void startJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -1477,8 +1477,11 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 if (gameFlags.contains('m')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No mining");
                 if (gameFlags.contains('b')) ChatUtil.sendNotice(players, ChatColor.AQUA, "No block break");
 
+                if (gameFlags.contains('q')) ChatUtil.sendNotice(players, ChatColor.GOLD, "Quick start");
                 if (gameFlags.contains('S')) ChatUtil.sendNotice(players, ChatColor.GOLD, "Sudden death disabled");
             }
+
+            final int modifier = gameFlags.contains('q') ? 1 : 5;
 
 
             inst.getServer().getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
@@ -1498,9 +1501,9 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                             gameHasStarted = true;
                             start = System.currentTimeMillis();
                         }
-                    }, 20 * 15);
+                    }, 20 * 3 * modifier);
                 }
-            }, (20 * 45)); // Multiply seconds by 20 to convert to ticks
+            }, (20 * 9 * modifier)); // Multiply seconds by 20 to convert to ticks
         }
     }
 
