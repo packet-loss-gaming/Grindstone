@@ -214,9 +214,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
         Player player = event.getPlayer();
         double distanceSQ = from.distanceSquared(to);
 
-        ChatUtil.sendDebug("Value: " + distanceSQ);
-
-        if (distanceSQ > config.movementThreshold || player.isSneaking() && distanceSQ > config.sneakMovementThreshold) update(event.getPlayer());
+        if (player.isSneaking() ? distanceSQ > config.sneakMovementThreshold : distanceSQ > config.movementThreshold) update(player);
     }
 
     @EventHandler
