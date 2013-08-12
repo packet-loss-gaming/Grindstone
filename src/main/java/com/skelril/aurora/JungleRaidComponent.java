@@ -472,6 +472,34 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 if (amt < 100 && ChanceUtil.getChance(gameFlags.contains('s') ? 9 : 25)) amt++;
             }
 
+            // Random Rockets
+            if (gameFlags.contains('r')) {
+                for (final Player player : getContainedPlayers()) {
+                    if (!ChanceUtil.getChance(30)) continue;
+                    for (int i = 0; i < 5; i++) {
+                        server.getScheduler().runTaskLater(inst, new Runnable() {
+
+                            @Override
+                            public void run() {
+
+                                Location targetLocation = player.getLocation();
+                                Firework firework = (Firework) targetLocation.getWorld().spawnEntity(targetLocation, EntityType.FIREWORK);
+                                FireworkMeta meta = firework.getFireworkMeta();
+                                FireworkEffect.Builder builder = FireworkEffect.builder();
+                                builder.flicker(ChanceUtil.getChance(2));
+                                builder.trail(ChanceUtil.getChance(2));
+                                builder.withColor(Arrays.asList(Color.RED));
+                                builder.withFade(Arrays.asList(Color.YELLOW));
+                                builder.with(FireworkEffect.Type.BURST);
+                                meta.addEffect(builder.build());
+                                meta.setPower(ChanceUtil.getRangedRandom(2, 5));
+                                firework.setFireworkMeta(meta);
+                            }
+                        }, i * 4);
+                    }
+                }
+            }
+
             // Team Counter
             int teamZero = 0;
             int teamOne = 0;
@@ -1377,7 +1405,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
         @Command(aliases = {"start", "s"},
                 usage = "", desc = "Jungle Raid start command",
-                flags = "sdajbtfmxghpqST", min = 0, max = 0)
+                flags = "sdajbtfmxghpqrST", min = 0, max = 0)
         @CommandPermissions({"aurora.jr.start"})
         public void startJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -1435,6 +1463,9 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                     } catch (Exception ex) {
                         ChatUtil.sendNotice(players, ChatColor.RED, "[ERROR] Cannot find titan.");
                     }
+                }
+                if (gameFlags.contains('r')) {
+                    ChatUtil.sendWarning(players, "Random Rockets");
                 }
                 if (gameFlags.contains('h')) {
                     ChatUtil.sendWarning(players, "Survival Mode");
