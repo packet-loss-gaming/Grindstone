@@ -431,7 +431,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 BlockVector bvMax = region.getMaximumPoint();
                 BlockVector bvMin = region.getMinimumPoint();
 
-                for (int i = 0; i < ChanceUtil.getRandom(amt); i++) {
+                for (int i = 0; i < ChanceUtil.getRangedRandom(amt / 3, amt); i++) {
 
                     Vector v = LocationUtil.pickLocation(bvMin.getX(), bvMax.getX(),
                             bvMin.getZ(), bvMax.getZ()).add(0, bvMax.getY(), 0);
@@ -469,7 +469,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                         testLoc.getWorld().dropItem(testLoc, new ItemStack(ItemID.SNOWBALL, ChanceUtil.getRandom(3)));
                     }
                 }
-                if (amt < 100 && ChanceUtil.getChance(gameFlags.contains('s') ? 9 : 25)) amt++;
+                if (amt < 150 && ChanceUtil.getChance(gameFlags.contains('s') ? 9 : 25)) amt++;
             }
 
             // Random Rockets
