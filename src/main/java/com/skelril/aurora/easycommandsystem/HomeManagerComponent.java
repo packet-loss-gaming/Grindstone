@@ -342,7 +342,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
         @Command(aliases = {"pc"}, desc = "Price Checker",
                 usage = "[player]",
-                flags = "c", min = 0, max = 1)
+                flags = "cf", min = 0, max = 1)
         @CommandPermissions({"aurora.home.admin.pc"})
         public void priceCheckHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -373,33 +373,35 @@ public class HomeManagerComponent extends BukkitComponent {
                 // Block Price
                 double p2 = 0;
 
-                Region region = selection.getRegionSelector().getIncompleteRegion();
-                LocalWorld world = region.getWorld();
+                if (!args.hasFlag('f')) {
+                    Region region = selection.getRegionSelector().getIncompleteRegion();
+                    LocalWorld world = region.getWorld();
 
-                if (region instanceof CuboidRegion) {
+                    if (region instanceof CuboidRegion) {
 
-                    // Doing this for speed
-                    Vector min = region.getMinimumPoint();
-                    Vector max = region.getMaximumPoint();
+                        // Doing this for speed
+                        Vector min = region.getMinimumPoint();
+                        Vector max = region.getMaximumPoint();
 
-                    int minX = min.getBlockX();
-                    int minY = min.getBlockY();
-                    int minZ = min.getBlockZ();
-                    int maxX = max.getBlockX();
-                    int maxY = max.getBlockY();
-                    int maxZ = max.getBlockZ();
+                        int minX = min.getBlockX();
+                        int minY = min.getBlockY();
+                        int minZ = min.getBlockZ();
+                        int maxX = max.getBlockX();
+                        int maxY = max.getBlockY();
+                        int maxZ = max.getBlockZ();
 
-                    for (int x = minX; x <= maxX; ++x) {
-                        for (int y = minY; y <= maxY; ++y) {
-                            for (int z = minZ; z <= maxZ; ++z) {
-                                Vector pt = new Vector(x, y, z);
+                        for (int x = minX; x <= maxX; ++x) {
+                            for (int y = minY; y <= maxY; ++y) {
+                                for (int z = minZ; z <= maxZ; ++z) {
+                                    Vector pt = new Vector(x, y, z);
 
-                                p2 += store.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
+                                    p2 += store.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
+                                }
                             }
                         }
+                    } else {
+                        throw new CommandException("Not yet supported.");
                     }
-                } else {
-                    throw new CommandException("Not yet supported.");
                 }
 
                 String housePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p2), " " + econ.currencyNamePlural());
