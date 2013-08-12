@@ -68,6 +68,8 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
 
         @Setting("movement-threshold")
         public double movementThreshold = .04;
+        @Setting("sneak-movement-threshold")
+        public double sneakMovementThreshold = .004;
         @Setting("afk-minutes")
         public int afkMinutes = 3;
         @Setting("afk-kick-minutes")
@@ -209,7 +211,12 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
         from.setY(0);
         to.setY(0);
 
-        if (from.distanceSquared(to) > config.movementThreshold) update(event.getPlayer());
+        Player player = event.getPlayer();
+        double distanceSQ = from.distanceSquared(to);
+
+        ChatUtil.sendDebug("Value: " + distanceSQ);
+
+        if (distanceSQ > config.movementThreshold || player.isSneaking() && distanceSQ > config.sneakMovementThreshold) update(event.getPlayer());
     }
 
     @EventHandler
