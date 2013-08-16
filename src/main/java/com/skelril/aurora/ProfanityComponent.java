@@ -17,7 +17,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -95,25 +94,21 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
             if (inBlackListedWord(signLine)) {
 
                 // Get rid of that sign!
-                BlockBreakEvent blockBreakEvent = new BlockBreakEvent(block, player);
-                server.getPluginManager().callEvent(blockBreakEvent);
-                if (!blockBreakEvent.isCancelled()) {
-                    block.getWorld().createExplosion(blockLoc, 0);
-                    blockLoc.getBlock().breakNaturally(new ItemStack(ItemID.SIGN, 1));
+                block.getWorld().createExplosion(blockLoc, 0);
+                blockLoc.getBlock().breakNaturally(new ItemStack(ItemID.SIGN, 1));
 
-                    // Mess with the player
-                    player.setHealth(0);
-                    player.playEffect(EntityEffect.DEATH);
-                    ChatUtil.sendWarning(player, "Let that be a lesson to you to not use profanity.");
+                // Mess with the player
+                player.setHealth(0);
+                player.playEffect(EntityEffect.DEATH);
+                ChatUtil.sendWarning(player, "Let that be a lesson to you to not use profanity.");
 
-                    // Public Embarrassment? :P
-                    for (final Player otherPlayer : server.getOnlinePlayers()) {
-                        // Don't tell the player we are sending this message
-                        if (otherPlayer != player) {
-                            ChatUtil.sendNotice(otherPlayer, "The player: "
-                                    + player.getDisplayName() + " attempted "
-                                    + "to place a sign containing one or more blacklisted word(s).");
-                        }
+                // Public Embarrassment? :P
+                for (final Player otherPlayer : server.getOnlinePlayers()) {
+                    // Don't tell the player we are sending this message
+                    if (otherPlayer != player) {
+                        ChatUtil.sendNotice(otherPlayer, "The player: "
+                                + player.getDisplayName() + " attempted "
+                                + "to place a sign containing one or more blacklisted word(s).");
                     }
                 }
             }
