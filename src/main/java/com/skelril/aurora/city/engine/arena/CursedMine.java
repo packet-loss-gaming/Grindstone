@@ -31,10 +31,7 @@ import com.skelril.aurora.util.restoration.RestorationUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Blaze;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -82,6 +79,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     //private ConcurrentHashMap<Player, ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long,
     //        BaseBlock>>> map = new ConcurrentHashMap<>();
+    private final long lastActivationTime = 18000;
     private long lastActivation = 0;
     private PlayerMappedBlockRecordIndex recordSystem = new PlayerMappedBlockRecordIndex();
     private List<Player> daveHitList = new ArrayList<>();
@@ -235,15 +233,40 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     public void drain() {
 
+        Location modifiable = new Location(getWorld(), 0, 0, 0);
+        Location previousLoc;
+
         for (Entity e : getContainedEntities()) {
             if (!(e instanceof InventoryHolder)) continue;
             try {
                 Inventory eInventory = ((InventoryHolder) e).getInventory();
 
+                if (e instanceof Player) {
+
+                    if (adminComponent.isAdmin((Player) e)) continue;
+
+                    modifiable = e.getLocation(modifiable);
+
+                    // Emerald
+                    long diff = System.currentTimeMillis() - lastActivation;
+                    if (modifiable.getY() < 30 && (lastActivation == 0 || diff <= lastActivationTime * .35 || diff >= lastActivationTime * 5)) {
+                        for (int i = 0; i < ChanceUtil.getRangedRandom(2, 5); i++) {
+
+                            previousLoc = modifiable.clone();
+                            modifiable = LocationUtil.findRandomLoc(previousLoc, 5, true, false);
+
+                            if (modifiable.getBlock().getTypeId() != BlockID.AIR) {
+                                modifiable = previousLoc;
+                            }
+
+                            getWorld().spawnEntity(modifiable, EntityType.BLAZE);
+                        }
+                    }
+                }
+
                 for (int i = 0; i < (ItemUtil.countFilledSlots(eInventory.getContents()) / 2) - 2 || i < 1; i++) {
 
                     if (e instanceof Player) {
-                        if (adminComponent.isAdmin((Player) e)) continue;
                         if (ChanceUtil.getChance(15) && checkInventory((Player) e, eInventory.getContents())) {
                             ChatUtil.sendNotice((Player) e, "Divine intervention protects some of your items.");
                             continue;
@@ -273,11 +296,6 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.DIAMOND_BLOCK, ChanceUtil.getRandom(2), true);
                     ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.DIAMOND_ORE, ChanceUtil.getRandom(4), true);
                     ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.DIAMOND, ChanceUtil.getRandom(16), true);
-
-                    // Emerald
-                    //pInventory.removeItem(new ItemStack(BlockID.EMERALD_BLOCK, ChanceUtil.getRandom(2)));
-                    //pInventory.removeItem(new ItemStack(BlockID.EMERALD_ORE, ChanceUtil.getRandom(4)));
-                    //pInventory.removeItem(new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(12)));
                 }
             } catch (Exception ex) {
                 log.warning("=== Cursed Mine Drain System Error ===");
@@ -322,7 +340,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     private void changeWater() {
 
         int id = 0;
-        if (lastActivation == 0 || System.currentTimeMillis() - lastActivation >= 18000) {
+        if (lastActivation == 0 || System.currentTimeMillis() - lastActivation >= lastActivationTime) {
             id = BlockID.WOOD;
         }
         com.sk89q.worldedit.Vector min = floodGate.getMinimumPoint();

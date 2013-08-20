@@ -293,7 +293,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         if (worldEdit().getSession(player).hasSuperPickAxe()) worldEdit().getSession(player).disableSuperPickAxe();
         if (godComponent.hasGodMode(player)) godComponent.disableGodMode(player);
-        if (player.getGameMode().equals(GameMode.CREATIVE)) player.setGameMode(GameMode.SURVIVAL);
         if (player.getAllowFlight()) {
             player.setAllowFlight(false);
             player.setFallDistance(0F);
@@ -324,6 +323,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 }
             }, 1);
         }
+        if (player.getGameMode().equals(GameMode.CREATIVE)) player.setGameMode(GameMode.SURVIVAL);
         return true;
     }
 
@@ -343,7 +343,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         //noinspection SimplifiableIfStatement
         if (sysops.contains(player.getName()) && !force) return false;
-        return depermission(player) && depowerPlayer(player);
+        return depowerPlayer(player) && depermission(player);
     }
 
     /**

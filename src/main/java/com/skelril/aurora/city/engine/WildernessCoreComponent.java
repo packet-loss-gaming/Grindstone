@@ -19,6 +19,8 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -61,7 +63,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20 * 30);
+        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20 * 2);
     }
 
     @Override
@@ -114,6 +116,37 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             if (wilderness.getThunderDuration() != city.getThunderDuration()) {
                 wilderness.setThunderDuration(city.getThunderDuration());
             }
+
+            for (Entity horse : city.getEntitiesByClasses(Horse.class)) {
+
+                tryTeleport(horse);
+            }
+
+            for (Entity horse : wilderness.getEntitiesByClasses(Horse.class)) {
+
+                tryTeleport(horse);
+            }
+        }
+    }
+
+    private void tryTeleport(final Entity vehicle) {
+
+        final Entity passenger = vehicle == null ? null : vehicle.getPassenger();
+
+        if (passenger != null && vehicle.getLocation().getBlock().getTypeId() == BlockID.END_PORTAL) {
+            vehicle.eject();
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+                    if (!vehicle.isValid() || !passenger.isValid()) return;
+                    vehicle.teleport(passenger);
+                    vehicle.setPassenger(passenger);
+
+                    if (passenger instanceof Player) {
+                        ((Player) passenger).kickPlayer("Please Reconnect");
+                    }
+                }
+            }, 20);
         }
     }
 
