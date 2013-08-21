@@ -7,13 +7,17 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -40,6 +44,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
     private final Server server = CommandBook.server();
     private final Logger log = inst.getLogger();
 
+    private static Permission permission = null;
     private LocalConfiguration config;
     private ConcurrentHashMap<String, Character> characters = new ConcurrentHashMap<>();
 
@@ -50,8 +55,14 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         config = configure(new LocalConfiguration());
 
         registerCommands(Commands.class);
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        if (config.whitelist) {
+            //noinspection AccessStaticViaInstance
+            inst.registerEvents(new WhiteList());
+        } else {
+            //noinspection AccessStaticViaInstance
+            inst.registerEvents(new GreyList());
+            setupPermissions();
+        }
         if (config.updateFrequency < 30) {
             config.updateFrequency = 30;
             log.warning("The update frequency was set at: " + config.updateFrequency + " minutes"
@@ -69,14 +80,14 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
 
     private static class LocalConfiguration extends ConfigurationBase {
 
+        @Setting("white-list")
+        public boolean whitelist = true;
         @Setting("website-url")
         public String websiteUrl = "http://example.shivtr.com/";
         @Setting("update-frequency")
         public int updateFrequency = 30;
-        @Setting("prompt-when-offline-mode")
-        public boolean offlineEnabled = false;
-        @Setting("kick-on-failed-prompt")
-        public boolean kickOnFailedPrompt = true;
+        @Setting("grey-list-group")
+        public String greyListGroup = "Member";
     }
 
     @Override
@@ -102,28 +113,52 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW)
-    public void onPlayerLogin(AsyncPlayerPreLoginEvent event) {
+    private boolean setupPermissions() {
 
-        try {
-            if (!canJoin(event.getName()) && event.getLoginResult().equals(Result.ALLOWED)) {
-                event.disallow(Result.KICK_WHITELIST, "You must register on " +
-                        "your account on " + config.websiteUrl + ".");
+        RegisteredServiceProvider<Permission> permissionProvider = server.getServicesManager().getRegistration(net
+                .milkbowl.vault.permission.Permission.class);
+        if (permissionProvider != null) permission = permissionProvider.getProvider();
+
+        return (permission != null);
+    }
+
+    public class WhiteList implements Listener {
+
+        @EventHandler(priority = EventPriority.LOW)
+        public void onPlayerLogin(AsyncPlayerPreLoginEvent event) {
+
+            try {
+                if (!isListed(event.getName()) && event.getLoginResult().equals(Result.ALLOWED)) {
+                    event.disallow(Result.KICK_WHITELIST, "You must register on " +
+                            "your account on " + config.websiteUrl + ".");
+                }
+            } catch (Exception e) {
+                event.disallow(Result.KICK_WHITELIST, "An error has occurred please try again in a few minutes.");
             }
-        } catch (Exception e) {
-            event.disallow(Result.KICK_WHITELIST, "An error has occurred please try again in a few minutes.");
         }
     }
 
-    /*
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
+    public class GreyList implements Listener {
 
-        if (!server.getOnlineMode() && config.offlineEnabled) {
-            promotedPlayers.add(event.getPlayer());
+        @EventHandler(priority = EventPriority.HIGHEST)
+        public void onPlayerLogin(PlayerJoinEvent event) {
+
+            Player player = event.getPlayer();
+            try {
+                if (permission == null || inst.hasPermission(player, "aurora.auth.member")) return;
+
+                if (isListed(player.getName())) {
+                    permission.playerAddGroup((World) null, player.getName(), config.greyListGroup);
+                    ChatUtil.sendNotice(player, "Thank you for registering your account.");
+                } else {
+                    ChatUtil.sendWarning(player, "You are currently a probationary player.");
+                    ChatUtil.sendWarning(player, "To get full access please register your account at: " + config.websiteUrl + ".");
+                }
+            } catch (Exception e) {
+                player.kickPlayer("An error has occurred please try again in a few minutes.");
+            }
         }
     }
-    */
 
     public class Commands {
 
@@ -174,7 +209,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         }
     }
 
-    public synchronized boolean canJoin(String playerName) {
+    public synchronized boolean isListed(String playerName) {
 
         return characters.keySet().contains(playerName.trim().toLowerCase());
     }
