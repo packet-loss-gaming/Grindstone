@@ -96,17 +96,17 @@ public class ConversionComponent extends BukkitComponent implements Listener {
                     }
 
                     flexAmount = amount;
-                    while (flexAmount / 81 > 0 && player.getInventory().contains(BlockID.GOLD_BLOCK)) {
+                    while (flexAmount / 81 > 0 && ItemUtil.countItemsOfType(player.getInventory().getContents(), BlockID.GOLD_BLOCK) > 0) {
                         flexAmount -= 81;
                         player.getInventory().removeItem(new ItemStack(BlockID.GOLD_BLOCK));
                     }
 
-                    while (flexAmount / 9 > 0 && player.getInventory().contains(ItemID.GOLD_BAR)) {
+                    while (flexAmount / 9 > 0 && ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_BAR) > 0) {
                         flexAmount -= 9;
                         player.getInventory().removeItem(new ItemStack(ItemID.GOLD_BAR));
                     }
 
-                    while (flexAmount > 0 && player.getInventory().contains(ItemID.GOLD_NUGGET)) {
+                    while (flexAmount > 0 && ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_NUGGET) > 0) {
                         flexAmount--;
                         player.getInventory().removeItem(new ItemStack(ItemID.GOLD_NUGGET));
                     }
