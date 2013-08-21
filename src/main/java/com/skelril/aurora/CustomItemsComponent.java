@@ -409,6 +409,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     public boolean handleRightClick(final Player player, Location location, ItemStack itemStack) {
 
+        if (admin.isAdmin(player)) return false;
+
         final long currentTime = System.currentTimeMillis();
 
         if (ItemUtil.matchesFilter(itemStack, ChatColor.DARK_PURPLE + "Magic Bucket")) {
