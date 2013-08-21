@@ -43,7 +43,6 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -351,6 +350,19 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @Override
     public void equalize() {
 
+        // Equalize Boss
+        int diff = getWorld().getDifficulty().getValue();
+        if (getWorld().isThundering()) {
+            difficulty = diff + diff;
+        } else {
+            difficulty = diff;
+        }
+
+        int newHealth = 510 + (difficulty * 80);
+        boss.setHealth(Math.min(boss.getHealth(), newHealth));
+        boss.setMaxHealth(newHealth);
+
+        // Equalize Players
         for (Player player : getContainedPlayers()) {
             try {
                 adminComponent.standardizePlayer(player);
@@ -408,26 +420,6 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     public void onCreepSpeak(CreepSpeakEvent event) {
 
         if (contains(event.getPlayer(), 1) || contains(event.getTargeter(), 1)) event.setCancelled(true);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onThunderChange(ThunderChangeEvent event) {
-
-        if (event.getWorld().equals(getWorld())) {
-
-            int diff = getWorld().getDifficulty().getValue();
-            if (event.toThunderState()) {
-                difficulty = diff + diff;
-            } else {
-                difficulty = diff;
-            }
-
-            if (isArenaLoaded() && isBossSpawned()) {
-                int newHealth = 510 + (difficulty * 80);
-                boss.setHealth(Math.min(boss.getHealth(), newHealth));
-                boss.setMaxHealth(newHealth);
-            }
-        }
     }
 
     /*
@@ -754,27 +746,28 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 }
 
                 // Sacrificial drops
-                int m = player != null ? 3 : 1;
+                int m = getWorld().isThundering() ? 3 : 1;
+                m *= player != null ? 3 : 1;
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m, 200000));
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 2000));
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 200));
 
                 // Gold drops
-                for (int i = 0; i < Math.sqrt(amt) + scalOffst; i++) {
+                for (int i = 0; i < Math.sqrt(amt + m) + scalOffst; i++) {
                     event.getDrops().add(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRangedRandom(32, 64)));
                 }
 
                 // Unique drops
-                if (ChanceUtil.getChance(25) || player != null && ChanceUtil.getChance(9)) {
+                if (ChanceUtil.getChance(25) || m > 1 && ChanceUtil.getChance(27 / m)) {
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
-                if (ChanceUtil.getChance(138) || player != null && ChanceUtil.getChance(28)) {
+                if (ChanceUtil.getChance(138) || m > 1 && ChanceUtil.getChance(84 / m)) {
                     event.getDrops().add(ItemUtil.Master.makeSword());
                 }
-                if (ChanceUtil.getChance(138) || player != null && ChanceUtil.getChance(28)) {
+                if (ChanceUtil.getChance(138) || m > 1 && ChanceUtil.getChance(84 / m)) {
                     event.getDrops().add(ItemUtil.Master.makeBow());
                 }
-                if (ChanceUtil.getChance(200) || player != null && ChanceUtil.getChance(36)) {
+                if (ChanceUtil.getChance(200) || m > 1 && ChanceUtil.getChance(108 / m)) {
                     event.getDrops().add(ItemUtil.Misc.magicBucket());
                 }
 
