@@ -133,6 +133,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
                     new ItemStack(ItemID.STONE_SWORD),
                     new ItemStack(ItemID.STONE_HOE),
                     new ItemStack(ItemID.MAP),
+                    new ItemStack(ItemID.BED_ITEM),
                     ItemUtil.Misc.gemOfLife(3)
             };
 
