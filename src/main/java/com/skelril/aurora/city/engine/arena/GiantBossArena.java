@@ -358,9 +358,16 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             difficulty = diff;
         }
 
-        int newHealth = 510 + (difficulty * 80);
-        boss.setHealth(Math.min(boss.getHealth(), newHealth));
-        boss.setMaxHealth(newHealth);
+        double oldMaxHealth = boss.getMaxHealth();
+        double newMaxHealth = 510 + (difficulty * 80);
+
+        if (newMaxHealth > oldMaxHealth) {
+            boss.setMaxHealth(newMaxHealth);
+            boss.setHealth(Math.min(boss.getHealth() + (newMaxHealth - oldMaxHealth), newMaxHealth));
+        } else if (newMaxHealth != oldMaxHealth) {
+            boss.setHealth(Math.min(boss.getHealth() + (oldMaxHealth - newMaxHealth), newMaxHealth));
+            boss.setMaxHealth(newMaxHealth);
+        }
 
         // Equalize Players
         for (Player player : getContainedPlayers()) {
@@ -849,7 +856,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         Player player = event.getEntity();
         if (contains(player, 1) && !adminComponent.isAdmin(player) && !playerState.containsKey(player.getName())) {
-            if (isBossSpawned()) boss.setHealth(Math.min(boss.getMaxHealth(), boss.getHealth() + 250));
+            if (contains(player) && isBossSpawned()) {
+                boss.setHealth(Math.min(boss.getMaxHealth(), boss.getHealth() + (boss.getMaxHealth() / 3)));
+            }
             playerState.put(player.getName(), new PlayerState(player.getName(),
                     player.getInventory().getContents(),
                     player.getInventory().getArmorContents(),
@@ -936,7 +945,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
         // AI system
         if (attackCase != 4) {
-            if (attackCase == 5 && boss.getHealth() > boss.getMaxHealth() * .9) {
+            if ((attackCase == 5 || attackCase == 9) && boss.getHealth() > boss.getMaxHealth() * .9) {
                 attackCase = ChanceUtil.getChance(2) ? 8 : 2;
             }
             if (flagged && ChanceUtil.getChance(2)) {
