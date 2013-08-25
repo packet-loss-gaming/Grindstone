@@ -1143,7 +1143,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                             } else {
                                 ((LivingEntity) entity).damage(realDamage, boss);
                             }
-                            toHeal += realDamage * .27;
+                            toHeal += realDamage * difficulty * .09;
                         }
                         if (TimerUtil.matchesFilter(times + 1, -1, 2)) {
                             ChatUtil.sendNotice(getContainedPlayers(1), ChatColor.DARK_AQUA, "The boss has drawn in: " + (int) toHeal + " health.");
