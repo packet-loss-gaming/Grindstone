@@ -74,7 +74,7 @@ public class BlockDropsComponent extends BukkitComponent implements Listener {
 
         switch (block.getTypeId()) {
             case BlockID.GRAVEL:
-                int item = config.gravelDrops.get(ChanceUtil.getRandom(config.gravelDrops.size() - 1));
+                int item = config.gravelDrops.get(ChanceUtil.getRandom(config.gravelDrops.size()) - 1);
                 block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(item, ChanceUtil.getRandom(6)));
                 break;
         }
@@ -83,7 +83,7 @@ public class BlockDropsComponent extends BukkitComponent implements Listener {
 
         switch (block.getTypeId()) {
             case BlockID.GRAVEL:
-                int item = config.rareGravelDrops.get(ChanceUtil.getRandom(config.rareGravelDrops.size() - 1));
+                int item = config.rareGravelDrops.get(ChanceUtil.getRandom(config.rareGravelDrops.size()) - 1);
                 block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(item, ChanceUtil.getRandom(6)));
                 break;
         }
