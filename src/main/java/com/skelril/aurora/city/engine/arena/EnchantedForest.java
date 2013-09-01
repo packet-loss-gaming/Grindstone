@@ -247,7 +247,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                                 || EnvironmentUtil.isShrubBlock(b.getTypeId())) {
                                             Slime s = (Slime) getWorld().spawnEntity(b.getLocation(), EntityType.SLIME);
                                             s.setSize(ChanceUtil.getRandom(8));
-                                            s.setRemoveWhenFarAway(false);
+                                            // s.setRemoveWhenFarAway(false); This is overly annoying to players
                                             continue;
                                         }
                                     }
