@@ -44,6 +44,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     private List<ItemStack> drops;
     private BukkitTask task = null;
     private long lastDropPulse = 0;
+    private double dropPartyPulses = 0;
 
     public DropPartyArena(World world, ProtectedRegion region) {
 
@@ -100,6 +101,8 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             }
         }
 
+        dropPartyPulses = drops.size() * 1.5;
+
         if (task != null) server.getScheduler().cancelTask(task.getTaskId());
 
         task = server.getScheduler().runTaskTimer(inst, new Runnable() {
@@ -143,10 +146,12 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                     if (drops.contains(drop)) drops.remove(drop);
                 }
 
-                if (drops.size() < 1) {
+                if (drops.size() < 1 || dropPartyPulses <= 0) {
                     server.getScheduler().cancelTask(task.getTaskId());
                     task = null;
                 }
+
+                dropPartyPulses--;
             }
         }, 20 * 60, 20 * 3);
     }
