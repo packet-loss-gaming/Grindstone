@@ -12,7 +12,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -106,32 +105,6 @@ public class PetComponent extends BukkitComponent implements Listener, Runnable 
     }
 
     @EventHandler
-    public void onWorldChange(PlayerChangedWorldEvent event) {
-
-        for (Map.Entry<String, Pet> entry : namePet.entrySet()) {
-            try {
-                Player player = Bukkit.getPlayerExact(entry.getKey());
-
-                if (!event.getPlayer().equals(player)) continue;
-
-                Pet petEntry = entry.getValue();
-                LivingEntity e = petEntry.getPet();
-
-                if (e != null && !e.isDead() && e.isValid()) {
-
-                    e.remove();
-                    Entity newPet = player.getWorld().spawnEntity(player.getLocation(), petEntry.getType());
-                    petEntry.setPet((LivingEntity) newPet);
-                }
-
-
-            } catch (Exception ignored) {
-
-            }
-        }
-    }
-
-    @EventHandler
     public void onEntityTarget(EntityTargetEvent event) {
 
         for (Pet petEntry : namePet.values()) {
@@ -176,22 +149,22 @@ public class PetComponent extends BukkitComponent implements Listener, Runnable 
 
                         Entity newPet = player.getWorld().spawnEntity(player.getLocation(), petEntry.getType());
                         petEntry.setPet((LivingEntity) newPet);
+                        continue;
                     }
 
-                    if (pet.getWorld() != null && player.getWorld() != null && !pet.getWorld().equals(player.getWorld
-                            ())) {
+                    if (!pet.getWorld().equals(player.getWorld())) {
                         pet.remove();
                         Entity newPet = player.getWorld().spawnEntity(player.getLocation(), petEntry.getType());
                         petEntry.setPet((LivingEntity) newPet);
-                    } else if (pet.getLocation().distanceSquared(player.getLocation()) > (22 * 22)) {
+                    } else if (pet.getLocation().distanceSquared(player.getLocation()) > (14 * 14)) {
                         pet.teleport(LocationUtil.findRandomLoc(player.getLocation(), 7, true));
                     } else if (pet.getLocation().distanceSquared(player.getLocation()) < (4 * 4)) {
                         pet.teleport(LocationUtil.findRandomLoc(player.getLocation(), 7, true));
                     }
                 }
 
-            } catch (Exception ignored) {
-
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
     }
