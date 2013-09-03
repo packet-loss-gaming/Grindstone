@@ -3,6 +3,7 @@ package com.skelril.aurora.city.engine;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
+import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
@@ -21,14 +22,14 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityPortalEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -298,6 +299,57 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         }
     }
 
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onMobSpawn(CreatureSpawnEvent event) {
+
+        Location location = event.getLocation();
+        int level = getLevel(location);
+        if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
+            double max = event.getEntity().getMaxHealth();
+
+            level--;
+
+            event.getEntity().setMaxHealth(max * 2 * level);
+            event.getEntity().setHealth(max * 2 * level);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onEntityDamage(EntityDamageEvent event) {
+
+        Entity entity = event.getEntity();
+
+        if (!(entity instanceof Player)) return;
+
+        Location location = entity.getLocation();
+        int level = getLevel(location);
+        if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
+
+            event.setDamage(event.getDamage() * level);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onMobDeath(EntityDeathEvent event) {
+
+        Entity entity = event.getEntity();
+
+        if (!(entity instanceof Monster)) return;
+
+        Location location = entity.getLocation();
+        int level = getLevel(location);
+        if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
+            event.getDrops().addAll(
+                    SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, level * level * 64)
+            );
+        }
+    }
+
+    public int getLevel(Location location) {
+
+        return Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ())) / 500 + 1;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
 
@@ -308,7 +360,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         if (isEffectedOre(block.getTypeId())) {
 
-            addPool(new BaseBlock(block.getTypeId()), block.getLocation());
+            for (int i = 0; i < Math.max(1, getLevel(block.getLocation()) / 2); i++) {
+                addPool(new BaseBlock(block.getTypeId()), block.getLocation());
+            }
         }
 
         /*
