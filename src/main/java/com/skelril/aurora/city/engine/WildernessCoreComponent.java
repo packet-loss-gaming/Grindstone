@@ -340,14 +340,14 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         int level = getLevel(location);
         if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
             event.getDrops().addAll(
-                    SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, level * level * 64)
+                    SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, level * level * 32)
             );
         }
     }
 
     public int getLevel(Location location) {
 
-        return Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ())) / 500 + 1;
+        return Math.max(0, Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ())) - 500) / 500 + 1;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -360,7 +360,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         if (isEffectedOre(block.getTypeId())) {
 
-            for (int i = 0; i < Math.max(1, getLevel(block.getLocation()) / 2); i++) {
+            for (int i = 0; i < getLevel(block.getLocation()); i++) {
                 addPool(new BaseBlock(block.getTypeId()), block.getLocation());
             }
         }
