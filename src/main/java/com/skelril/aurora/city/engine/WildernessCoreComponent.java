@@ -360,7 +360,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     public int getLevel(Location location) {
 
-        return Math.max(0, Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ())) - 500) / 500 + 1;
+        return Math.max(0, Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ()) - 500) / 500) + 1;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
