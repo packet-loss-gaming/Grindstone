@@ -38,6 +38,8 @@ import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -314,12 +316,23 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         }
     }
 
+    private static Set<EntityDamageEvent.DamageCause> ignoredDamage = new HashSet<>();
+
+    static {
+        ignoredDamage.add(EntityDamageEvent.DamageCause.CONTACT);
+        ignoredDamage.add(EntityDamageEvent.DamageCause.DROWNING);
+        ignoredDamage.add(EntityDamageEvent.DamageCause.FALL);
+        ignoredDamage.add(EntityDamageEvent.DamageCause.STARVATION);
+        ignoredDamage.add(EntityDamageEvent.DamageCause.SUFFOCATION);
+        ignoredDamage.add(EntityDamageEvent.DamageCause.VOID);
+    }
+
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
 
         Entity entity = event.getEntity();
 
-        if (!(entity instanceof Player)) return;
+        if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
 
         Location location = entity.getLocation();
         int level = getLevel(location);
