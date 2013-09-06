@@ -1,7 +1,6 @@
 package com.skelril.aurora.city.engine;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
@@ -9,7 +8,11 @@ import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.timer.IntegratedRunnable;
+import com.skelril.aurora.util.timer.TimedRunnable;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -20,6 +23,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -37,7 +41,6 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -55,7 +58,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private AdminComponent adminComponent;
 
     private LocalConfiguration config;
-    private ConcurrentHashMap<Location, TaskPool> taskPool = new ConcurrentHashMap<>();
 
     @Override
     public void enable() {
@@ -326,6 +328,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         ignoredDamage.add(EntityDamageEvent.DamageCause.STARVATION);
         ignoredDamage.add(EntityDamageEvent.DamageCause.SUFFOCATION);
         ignoredDamage.add(EntityDamageEvent.DamageCause.VOID);
+        ignoredDamage.add(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION);
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -374,9 +377,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         if (isEffectedOre(block.getTypeId())) {
 
-            for (int i = 0; i < getLevel(block.getLocation()); i++) {
-                addPool(new BaseBlock(block.getTypeId()), block.getLocation());
-            }
+            ItemStack stack = player.getItemInHand();
+
+            addPool(block, ItemUtil.fortuneMultiplier(stack), stack.containsEnchantment(Enchantment.SILK_TOUCH));
         }
 
         /*
@@ -406,14 +409,31 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         return false;
     }
 
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onExplosionPrime(ExplosionPrimeEvent event) {
+
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Creeper || entity instanceof Fireball)) return;
+
+        Location loc = entity.getLocation();
+        if (!loc.getWorld().getName().contains(config.wildernessWorld)) return;
+
+        event.setRadius(Math.min(9, event.getRadius() * getLevel(loc)));
+
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityExplosion(EntityExplodeEvent event) {
 
+        if (!event.getLocation().getWorld().getName().contains(config.wildernessWorld)) return;
+
+        event.setYield(.1F);
+
         for (Block block : event.blockList()) {
 
-            if (block.getWorld().getName().contains(config.wildernessWorld) && isEffectedOre(block.getTypeId())) {
+            if (isEffectedOre(block.getTypeId())) {
 
-                addPool(new BaseBlock(block.getTypeId()), event.getLocation());
+                addPool(block.getState(), 0, false);
             }
         }
     }
@@ -429,96 +449,52 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         }
     }
 
-    private void addPool(final BaseBlock block, final Location altLoc) {
+    private void addPool(final BlockState block, final int fortuneLevel, final boolean hasSilkTouch) {
 
-        TaskPool aNewTaskPool = new TaskPool(altLoc, ChanceUtil.getRangedRandom(10, 26));
+        final Location location = block.getLocation();
+        final World world = location.getWorld();
 
-        if (taskPool.containsKey(altLoc)) {
-            taskPool.get(altLoc).addAmount(aNewTaskPool.amount);
-            return;
-        }
+        ItemStack generalDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch);
+        final int modifier = hasSilkTouch ? 1 : EnvironmentUtil.isOre(generalDrop.getTypeId()) ? 1 : fortuneLevel;
+        final int times = ChanceUtil.getRangedRandom(3, 3 * getLevel(location));
+        IntegratedRunnable dropper = new IntegratedRunnable() {
+            @Override
+            public boolean run(int times) {
 
-        BukkitTask task = server.getScheduler().runTaskTimer(inst, new Runnable() {
+
+                for (int i = 0; i < modifier; i++) {
+                    world.dropItem(location, EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch));
+                }
+                return true;
+            }
 
             @Override
-            public void run() {
+            public void end() {
 
-                int amount = 0;
-                if (taskPool.containsKey(altLoc)) {
-                    amount = taskPool.get(altLoc).subAmount(1);
-                }
-
-                if (amount > 0) {
-                    altLoc.getWorld().dropItemNaturally(altLoc, new ItemStack(block.getType()));
-                } else {
-                    altLoc.getWorld().dropItemNaturally(altLoc, new ItemStack(block.getType()));
-
-                    // Shut down
-                    if (taskPool.containsKey(altLoc)) {
-                        taskPool.get(altLoc).getBukkitTask().cancel();
-                        taskPool.remove(altLoc);
-                    }
-                }
+                world.playEffect(location, Effect.EXTINGUISH, 0);
             }
-        }, 20, 20);
-        aNewTaskPool.setBukkitTask(task);
-        taskPool.put(altLoc, aNewTaskPool);
+        };
+
+        TimedRunnable runnable = new TimedRunnable(dropper, times);
+
+        BukkitTask task = server.getScheduler().runTaskTimer(inst, runnable, 20, 20);
+
+        runnable.setTask(task);
     }
 
+    /*
     private static final int[] ores = {
             BlockID.GOLD_ORE
     };
+    */
 
     private boolean isEffectedOre(int typeId) {
 
+        /*
         for (int ore : ores) {
             if (ore == typeId) return true;
         }
-        return false;
-    }
-
-    private class TaskPool {
-
-        private final Location location;
-        private BukkitTask bukkitTask = null;
-        private int amount;
-
-        public TaskPool(Location location, int amount) {
-
-            this.location = location;
-            this.amount = amount;
-        }
-
-        public BukkitTask getBukkitTask() {
-
-            return bukkitTask;
-        }
-
-        public void setBukkitTask(BukkitTask task) {
-
-            this.bukkitTask = task;
-        }
-
-        public Location getLocation() {
-
-            return location;
-        }
-
-        public void setAmount(int amount) {
-
-            this.amount = amount;
-        }
-
-        public int addAmount(int amount) {
-
-            this.amount += amount;
-            return this.amount;
-        }
-
-        public int subAmount(int amount) {
-
-            this.amount -= amount;
-            return this.amount;
-        }
+        */
+        return EnvironmentUtil.isOre(typeId);
     }
 }
