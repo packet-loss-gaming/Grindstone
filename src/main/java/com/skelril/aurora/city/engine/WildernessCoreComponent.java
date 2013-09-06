@@ -20,10 +20,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -304,15 +301,19 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onMobSpawn(CreatureSpawnEvent event) {
 
+        LivingEntity entity = event.getEntity();
+
+        if (!(entity instanceof Monster)) return;
+
         Location location = event.getLocation();
         int level = getLevel(location);
         if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
-            double max = event.getEntity().getMaxHealth();
+            double max = entity.getMaxHealth();
 
             level--;
 
-            event.getEntity().setMaxHealth(max * 2 * level);
-            event.getEntity().setHealth(max * 2 * level);
+            entity.setMaxHealth(max * 2 * level);
+            entity.setHealth(max * 2 * level);
         }
     }
 
