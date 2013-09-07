@@ -338,6 +338,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
 
+        if (event instanceof EntityDamageByEntityEvent) {
+            if (((EntityDamageByEntityEvent) event).getDamager() instanceof Player) return;
+        }
         Location location = entity.getLocation();
         int level = getLevel(location);
         if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
@@ -418,7 +421,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         Location loc = entity.getLocation();
         if (!loc.getWorld().getName().contains(config.wildernessWorld)) return;
 
-        event.setRadius(Math.min(9, event.getRadius() * getLevel(loc)));
+        event.setRadius(Math.min(entity instanceof Fireball ? 4 : 9, event.getRadius() * getLevel(loc)));
 
     }
 
