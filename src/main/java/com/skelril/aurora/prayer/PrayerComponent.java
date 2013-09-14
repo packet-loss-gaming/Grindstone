@@ -21,7 +21,6 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.BlockCommandSender;
@@ -330,7 +329,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 if (args.hasFlag('l')) {
                     int quantity = 0;
                     StringBuilder sb = new StringBuilder();
-                    sb.append(ChatColor.YELLOW + "Valid prayers: ");
+                    sb.append(ChatColor.YELLOW).append("Valid prayers: ");
                     for (PrayerType prayer : PrayerType.values()) {
                         if (disabledPrayers.contains(prayer)) continue;
                         if (prayer.isHoly()) {
@@ -342,11 +341,15 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                                 continue;
                             }
                         }
-                        if (quantity > 0) sb.append(ChatColor.YELLOW + ", ");
-                        sb.append(prayer.isHoly() ? ChatColor.BLUE : ChatColor.RED).append(prayer.toString().toLowerCase());
+                        if (quantity > 0) sb.append(ChatColor.GRAY).append(", ");
+                        sb.append(prayer.isHoly() ? ChatColor.BLUE : ChatColor.RED);
+                        sb.append(prayer.toString().toLowerCase());
+                        sb.append(ChatColor.DARK_GRAY).append(" (");
+                        sb.append(ChatColor.DARK_AQUA).append(prayer.getLevelCost());
+                        sb.append(ChatColor.DARK_GRAY).append(")");
                         quantity++;
                     }
-                    sb.append(ChatColor.YELLOW + ".");
+                    sb.append(ChatColor.YELLOW).append(".");
                     ChatUtil.sendNotice(sender, sb.toString());
                     return;
                 } else {
@@ -366,10 +369,8 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                     return;
                 }
 
-                if (player.getName().equals(sender.getName()) && adminComponent.standardizePlayer(player)) {
-                    uninfluencePlayer(player);
+                if (player.getName().equals(sender.getName()) && !adminComponent.isSysop(player)) {
                     player.getWorld().strikeLightningEffect(player.getLocation());
-                    player.setFireTicks(20 * 60);
                     throw new CommandException("The gods don't take kindly to using their power on yourself.");
                 }
 
@@ -386,16 +387,20 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 }
 
                 if (args.hasFlag('c')) uninfluencePlayer(player);
-                Prayer prayer = constructPrayer(player, getPrayerByString(prayerString), TimeUnit.MINUTES.toMillis(30));
+                PrayerType prayerType = getPrayerByString(prayerString);
+                if (sender instanceof Player && !adminComponent.isAdmin((Player) sender)) {
+                    Player senderP = (Player) sender;
+                    int newL = senderP.getLevel() - prayerType.getLevelCost();
+
+                    if (newL < 0) {
+                        throw new CommandException("You do not have enough levels to use that prayer.");
+                    }
+                    senderP.setLevel(newL);
+                }
+
+                Prayer prayer = constructPrayer(player, prayerType, TimeUnit.MINUTES.toMillis(30));
                 influencePlayer(player, prayer);
 
-                if (args.hasFlag('s')) return;
-                if (prayer.getEffect().getType().equals(PrayerType.GOD)) {
-                    Bukkit.broadcastMessage(ChatColor.GOLD + "A god has taken the form of " + player.getName() + "!");
-                } else if (prayer.getEffect().getType().equals(PrayerType.POWER)) {
-                    Bukkit.broadcastMessage(ChatColor.GOLD + "The true power of " + player.getName() + " has been " +
-                            "awakened!");
-                }
             } catch (InvalidPrayerException | UnsupportedPrayerException ex) {
                 throw new CommandException("That is not a valid prayer!");
             }
