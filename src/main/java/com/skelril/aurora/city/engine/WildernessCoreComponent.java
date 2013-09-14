@@ -463,21 +463,23 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         ItemStack generalDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch);
         final int modifier = hasSilkTouch ? 1 : EnvironmentUtil.isOre(generalDrop.getTypeId()) ? 1 : fortuneLevel;
         final int times = ChanceUtil.getRangedRandom(3, 3 * getLevel(location));
+        final float volumeInt = ((float) 1 / times);
         IntegratedRunnable dropper = new IntegratedRunnable() {
             @Override
-            public boolean run(int times) {
+            public boolean run(int timesL) {
 
 
                 for (int i = 0; i < modifier; i++) {
                     world.dropItem(location, EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch));
                 }
+                world.playSound(location, Sound.BLAZE_BREATH, Math.min(1, ((float) timesL / times) + volumeInt), 0);
                 return true;
             }
 
             @Override
             public void end() {
 
-                world.playEffect(location, Effect.EXTINGUISH, 0);
+                world.playSound(location, Sound.BLAZE_DEATH, .2F, 0);
             }
         };
 
