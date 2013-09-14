@@ -84,10 +84,16 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         session.uninfluence();
     }
 
-    public void uninfluencePlayer(Player player, Prayer prayer) {
+    public void uninfluencePlayer(Player player, PrayerType prayer) {
 
         InfluenceState session = sessions.getSession(InfluenceState.class, player);
         session.uninfluence(prayer);
+    }
+
+    @Deprecated
+    public void uninfluencePlayer(Player player, Prayer prayer) {
+
+        uninfluencePlayer(player, prayer.getEffect().getType());
     }
 
     public PrayerType getPrayerByString(String prayer) throws InvalidPrayerException {
@@ -399,6 +405,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                 }
 
                 Prayer prayer = constructPrayer(player, prayerType, TimeUnit.MINUTES.toMillis(30));
+                uninfluencePlayer(player, prayerType);
                 influencePlayer(player, prayer);
 
             } catch (InvalidPrayerException | UnsupportedPrayerException ex) {
@@ -472,7 +479,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
         public static final long MAX_AGE = TimeUnit.MINUTES.toMillis(30);
 
-        private List<Prayer> prayers = new ArrayList<>();
+        private HashMap<PrayerType, Prayer> prayers = new HashMap<>();
 
         protected InfluenceState() {
 
@@ -486,23 +493,26 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
         public Prayer[] getInfluences() {
 
-            return prayers.toArray(new Prayer[prayers.size()]);
+            return prayers.values().toArray(new Prayer[prayers.size()]);
         }
 
         public void influence(Prayer prayer) {
 
-            prayers.add(prayer);
+            prayers.put(prayer.getEffect().getType(), prayer);
         }
 
-        public void uninfluence(Prayer prayer) {
+        public void uninfluence(PrayerType prayerType) {
 
-            if (prayers.contains(prayer)) prayers.remove(prayer);
-            prayer.getEffect().clean(getPlayer());
+            if (prayers.containsKey(prayerType)) {
+                Prayer prayer = prayers.get(prayerType);
+                prayer.getEffect().clean(getPlayer());
+                prayers.remove(prayerType);
+            }
         }
 
         public void uninfluence() {
 
-            for (Prayer prayer : prayers) {
+            for (Prayer prayer : getInfluences()) {
                 prayer.getEffect().clean(getPlayer());
             }
 
