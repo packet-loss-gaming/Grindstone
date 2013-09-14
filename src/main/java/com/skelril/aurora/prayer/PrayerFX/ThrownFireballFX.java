@@ -11,6 +11,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
  */
 public class ThrownFireballFX extends AbstractTriggeredPrayer {
 
+    private long nextTime = -1;
+
     public ThrownFireballFX() {
 
         super(PlayerInteractEvent.class);
@@ -19,9 +21,13 @@ public class ThrownFireballFX extends AbstractTriggeredPrayer {
     @Override
     public void trigger(Player player) {
 
+        if (nextTime != -1 && System.currentTimeMillis() < nextTime) return;
+
         Location loc = player.getEyeLocation().toVector().add(player.getLocation().getDirection().multiply(2))
                 .toLocation(player.getWorld(), player.getLocation().getYaw(), player.getLocation().getPitch());
         player.getWorld().spawn(loc, Fireball.class);
+
+        nextTime = System.currentTimeMillis() + 750;
     }
 
     @Override
