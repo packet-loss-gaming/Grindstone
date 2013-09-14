@@ -362,6 +362,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             event.getDrops().addAll(
                     SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, level * level * 32)
             );
+            event.setDroppedExp(event.getDroppedExp() * level);
         }
     }
 
@@ -384,6 +385,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
             addPool(block, ItemUtil.fortuneMultiplier(stack), stack.containsEnchantment(Enchantment.SILK_TOUCH));
         }
+
+        event.setExpToDrop(event.getExpToDrop() * getLevel(block.getLocation()));
 
         /*
         if (isTree(block)) {
@@ -436,7 +439,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
             if (isEffectedOre(block.getTypeId())) {
 
-                addPool(block.getState(), 0, false);
+                addPool(block.getState(), 1, false);
             }
         }
     }
