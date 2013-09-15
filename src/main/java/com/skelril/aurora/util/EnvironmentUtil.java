@@ -181,7 +181,12 @@ public class EnvironmentUtil {
         if (!isOre(block)) {
             return null;
         } else if (hasSilkTouch) {
-            return new ItemStack(block);
+            switch (block) {
+                case BlockID.GLOWING_REDSTONE_ORE:
+                    return new ItemStack(BlockID.REDSTONE_ORE);
+                default:
+                    return new ItemStack(block);
+            }
         } else {
             switch (block) {
                 case BlockID.IRON_ORE:
