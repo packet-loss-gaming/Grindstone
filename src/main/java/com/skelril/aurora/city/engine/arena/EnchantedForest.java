@@ -21,16 +21,14 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Slime;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
@@ -44,10 +42,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -411,6 +406,22 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             ChatUtil.sendNotice(player, ChatColor.DARK_RED, "You don't have permission for this area.");
         }
     }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDeath(EntityDeathEvent event) {
+
+        Entity ent = event.getEntity();
+
+        if (ent instanceof Slime && contains(ent)) {
+
+            Iterator<ItemStack> dropIterator = event.getDrops().iterator();
+            while (dropIterator.hasNext()) {
+                ItemStack next = dropIterator.next();
+                if (next != null && next.getTypeId() == ItemID.SLIME_BALL) dropIterator.remove();
+            }
+        }
+    }
+
 
     @EventHandler(ignoreCancelled = true)
     public void onEggHatch(EggHatchEvent event) {
