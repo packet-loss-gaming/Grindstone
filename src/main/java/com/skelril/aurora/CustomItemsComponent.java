@@ -32,10 +32,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -135,6 +132,21 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         server.getPluginManager().callEvent(event);
 
         return event.isCancelled() ? null : event.getSpec();
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityRegainHealth(EntityRegainHealthEvent event) {
+
+        Entity healed = event.getEntity();
+
+        if (healed instanceof Player) {
+
+            Player player = (Player) healed;
+
+            if (ItemUtil.matchesFilter(player.getInventory().getHelmet(), ChatColor.DARK_PURPLE + "Ancient Crown")) {
+                event.setAmount(event.getAmount() * 2.5);
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
