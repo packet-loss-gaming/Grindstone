@@ -101,6 +101,21 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 wilderness.setTime(city.getTime());
             }
 
+            if (wilderness.getTime() % 7 == 0) {
+                for (Entity item : wilderness.getEntitiesByClasses(Item.class)) {
+
+                    ItemStack stack = ((Item) item).getItemStack();
+
+                    if (stack.getAmount() > 1) continue;
+
+                    if (item.getTicksLived() > 20 * 60 && stack.getTypeId() == BlockID.SAPLING) {
+                        item.getLocation().getBlock().setTypeIdAndData(stack.getTypeId(),
+                                stack.getData().getData(), true);
+                        item.remove();
+                    }
+                }
+            }
+
             // Storm - General
             if (wilderness.hasStorm() != city.hasStorm()) {
                 wilderness.setStorm(city.hasStorm());
@@ -384,33 +399,44 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             ItemStack stack = player.getItemInHand();
 
             addPool(block, ItemUtil.fortuneMultiplier(stack), stack.containsEnchantment(Enchantment.SILK_TOUCH));
+        }  /* else if (block.getTypeId() == BlockID.SAPLING) {
+            event.setCancelled(true);
+            ChatUtil.sendError(player, "You cannot break that here.");
         }
+        */
 
         event.setExpToDrop(event.getExpToDrop() * getLevel(block.getLocation()));
 
         /*
         if (isTree(block)) {
 
-            Block treeBase = LocationUtil.getGround(block.getLocation()).getBlock();
-            int testId = treeBase.getRelative(BlockFace.DOWN).getTypeId();
-
-            if (testId == BlockID.GRASS || testId == BlockID.DIRT) {
-                treeBase.setTypeIdAndData(block.getTypeId(), block.getData().getData(), true);
+            Block treeBase = block.getBlock();
+            while (treeBase.getTypeId() != BlockID.GRASS && treeBase.getTypeId() != BlockID.DIRT) {
+                treeBase = treeBase.getRelative(BlockFace.DOWN);
+                if (treeBase.getY() < 3) break;
             }
+
+            treeBase = treeBase.getRelative(BlockFace.UP);
+
+            treeBase.breakNaturally();
+            treeBase.setTypeIdAndData(BlockID.SAPLING, block.getData().getData(), true);
         }
         */
     }
 
     private boolean isTree(BlockState block) {
 
+        int worldHeightLimit = block.getWorld().getMaxHeight();
         if (block.getTypeId() == BlockID.LOG) {
 
             Block testBlock = block.getBlock();
             do {
                 testBlock = testBlock.getRelative(BlockFace.UP);
-                if (testBlock.getTypeId() == BlockID.LEAVES) return true;
-
-            } while (testBlock.getY() < block.getWorld().getHighestBlockYAt(block.getLocation()));
+                Location[] nearbyLocs = LocationUtil.getNearbyLocations(testBlock.getLocation(), 1);
+                for (Location aLocation : nearbyLocs) {
+                    if (aLocation.getBlock().getTypeId() == BlockID.LEAVES) return true;
+                }
+            } while (testBlock.getY() < Math.min(worldHeightLimit, testBlock.getY() + 20));
         }
         return false;
     }
@@ -449,9 +475,16 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Player player = event.getPlayer();
 
-        if (player.getWorld().getName().contains(config.wildernessWorld) && isEffectedOre(event.getBlock().getTypeId())) {
-            event.setCancelled(true);
-            ChatUtil.sendError(player, "You find yourself unable to place that ore.");
+        if (player.getWorld().getName().contains(config.wildernessWorld)) {
+            int typeId = event.getBlock().getTypeId();
+            if (isEffectedOre(typeId)) {
+                event.setCancelled(true);
+                ChatUtil.sendError(player, "You find yourself unable to place that ore.");
+            } /* else if (typeId == BlockID.SAPLING) {
+                event.setCancelled(true);
+                ChatUtil.sendError(player, "You cannot plant that here.");
+            }
+            */
         }
     }
 
