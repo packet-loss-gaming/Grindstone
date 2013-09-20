@@ -143,7 +143,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             Player player = (Player) healed;
 
-            if (ItemUtil.matchesFilter(player.getInventory().getHelmet(), ChatColor.DARK_PURPLE + "Ancient Crown")) {
+            if (ItemUtil.matchesFilter(player.getInventory().getHelmet(), ChatColor.GOLD + "Ancient Crown")) {
                 event.setAmount(event.getAmount() * 2.5);
             }
         }
