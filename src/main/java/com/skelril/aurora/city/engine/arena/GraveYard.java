@@ -1008,30 +1008,21 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 @Override
                 public void run() {
 
-                    Location location = new Location(getWorld(), 0, 0, 0);
-
-                    for (int x = 0; x < 16; x++) {
-                        for (int z = 0; z < 16; z++) {
-                            if (!checkHeadStone(aChunk.getBlock(x, 81, z).getLocation(location))) {
-                                checkHeadStone(aChunk.getBlock(x, 82, z).getLocation(location));
-                            }
-                        }
+                    for (BlockState aSign : aChunk.getTileEntities()) {
+                        if (!(aSign instanceof Sign)) continue;
+                        checkHeadStone((Sign) aSign);
                     }
                 }
             }, chunkList.indexOf(aChunk) * 20);
         }
     }
 
-    private boolean checkHeadStone(Location location) {
+    private boolean checkHeadStone(Sign sign) {
 
-        if (!contains(location)) return false;
-        BlockState block = location.getBlock().getState();
-        if (!block.getChunk().isLoaded()) block.getChunk().load();
-        if (block.getTypeId() == BlockID.WALL_SIGN) {
-            headStones.add(block.getLocation());
-            return true;
-        }
-        return false;
+        Location l = sign.getLocation();
+        if ((l.getBlockY() != 81 && l.getBlockY() != 82) || !contains(l)) return false;
+        headStones.add(sign.getLocation());
+        return true;
     }
 
     private void findPressurePlateLockLevers() {
