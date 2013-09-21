@@ -10,6 +10,7 @@ import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.TimeUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -53,6 +54,9 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+
+        long ticks = TimeUtil.getTicksTill(20, 7);
+        server.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, ticks, 20 * 60 * 60 * 24 * 7);
     }
 
     @Override

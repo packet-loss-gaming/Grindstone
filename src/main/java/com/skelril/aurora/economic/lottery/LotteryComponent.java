@@ -8,6 +8,7 @@ import com.skelril.aurora.exceptions.NotFoundException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.TimeUtil;
 import com.skelril.aurora.util.player.GenericWealthStore;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -43,7 +44,7 @@ import java.util.logging.Logger;
  */
 @ComponentInformation(friendlyName = "Lottery", desc = "Can you win it big?")
 @Depend(plugins = {"Vault"}, components = {ImpersonalComponent.class})
-public class LotteryComponent extends BukkitComponent implements Listener, Runnable {
+public class LotteryComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
@@ -79,8 +80,9 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
 
         setupEconomy();
 
-        //server.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 60 * 60 * 24,
-        // 20 * 60 * 60 * 24);
+        long ticks = TimeUtil.getTicksTill(17), nextHour = TimeUtil.getTicksTillHour();
+        server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24);
+        server.getScheduler().scheduleSyncRepeatingTask(inst, broadcastLottery, nextHour, 20 * 60 * 60);
     }
 
     @Override
@@ -90,11 +92,22 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
         configure(config);
     }
 
-    @Override
-    public void run() {
+    private Runnable runLottery = new Runnable() {
+        @Override
+        public void run() {
 
-        completeLottery();
-    }
+            completeLottery();
+        }
+    };
+
+    private Runnable broadcastLottery = new Runnable() {
+        @Override
+        public void run() {
+
+            broadcastLottery(server.getOnlinePlayers());
+        }
+    };
+
 
     private static class LocalConfiguration extends ConfigurationBase {
 
@@ -162,12 +175,7 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
                 Collections.addAll(que, server.getOnlinePlayers());
             }
 
-            for (CommandSender receiver : que) {
-                ChatUtil.sendNotice(receiver, "The lottery currently has: "
-                        + ChatUtil.makeCountString(getCount(), " tickets and is worth: ")
-                        + ChatUtil.makeCountString(economy.format(getWinnerCash()),
-                        " " + economy.currencyNamePlural() + "."));
-            }
+            broadcastLottery(que.toArray(new CommandSender[que.size()]));
         }
 
         @Command(aliases = {"recent", "last", "previous"},
@@ -345,6 +353,16 @@ public class LotteryComponent extends BukkitComponent implements Listener, Runna
         lotteryWinnerDatabase.save(config.recentLength);
         lotteryTicketDatabase.clearTickets();
         lotteryTicketDatabase.save();
+    }
+
+    public void broadcastLottery(CommandSender... senders) {
+
+        for (CommandSender receiver : senders) {
+            ChatUtil.sendNotice(receiver, "The lottery currently has: "
+                    + ChatUtil.makeCountString(getCount(), " tickets and is worth: ")
+                    + ChatUtil.makeCountString(economy.format(getWinnerCash()),
+                    " " + economy.currencyNamePlural() + "."));
+        }
     }
 
     public double getWinnerCash() {
