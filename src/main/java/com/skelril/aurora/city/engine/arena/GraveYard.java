@@ -983,26 +983,49 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void findHeadStones() {
 
+        final List<Chunk> chunkList = new ArrayList<>();
+
         com.sk89q.worldedit.Vector min = getRegion().getMinimumPoint();
         com.sk89q.worldedit.Vector max = getRegion().getMaximumPoint();
 
-        int minX = min.getBlockX();
-        int minZ = min.getBlockZ();
-        int maxX = max.getBlockX();
-        int maxZ = max.getBlockZ();
+        final int minX = min.getBlockX();
+        final int minZ = min.getBlockZ();
+        final int minY = min.getBlockY();
+        final int maxX = max.getBlockX();
+        final int maxZ = max.getBlockZ();
 
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                if (!checkHeadStone(x, 81, z)) {
-                    checkHeadStone(x, 82, z);
-                }
+        Chunk c;
+        for (int x = minX; x <= maxX; x += 16) {
+            for (int z = minZ; z <= maxZ; z += 16) {
+                c = getWorld().getBlockAt(x, minY, z).getChunk();
+                if (!chunkList.contains(c)) chunkList.add(c);
             }
+        }
+
+        for (final Chunk aChunk : chunkList) {
+
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+
+                    Location location = new Location(getWorld(), 0, 0, 0);
+
+                    for (int x = 0; x < 16; x++) {
+                        for (int z = 0; z < 16; z++) {
+                            if (!checkHeadStone(aChunk.getBlock(x, 81, z).getLocation(location))) {
+                                checkHeadStone(aChunk.getBlock(x, 82, z).getLocation(location));
+                            }
+                        }
+                    }
+                }
+            }, chunkList.indexOf(aChunk) * 20);
         }
     }
 
-    private boolean checkHeadStone(int x, int y, int z) {
+    private boolean checkHeadStone(Location location) {
 
-        BlockState block = getWorld().getBlockAt(x, y, z).getState();
+        if (!contains(location)) return false;
+        BlockState block = location.getBlock().getState();
         if (!block.getChunk().isLoaded()) block.getChunk().load();
         if (block.getTypeId() == BlockID.WALL_SIGN) {
             headStones.add(block.getLocation());
@@ -1224,7 +1247,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         if (ItemUtil.hasFearHelmet(player)) return;
         ItemStack[] inventoryContents = player.getInventory().getContents();
         ItemStack[] armorContents = player.getInventory().getArmorContents();
-        if (ItemUtil.findItemOfName(inventoryContents, DARKNESS) || ItemUtil.findItemOfName(armorContents, ChatColor.GOLD + "Ancient Crown")) return;
+        if (ItemUtil.findItemOfName(inventoryContents, DARKNESS) || ItemUtil.findItemOfName(armorContents, ChatColor.GOLD + "Ancient Crown"))
+            return;
         player.removePotionEffect(PotionEffectType.BLINDNESS);
         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 6, 1));
     }
