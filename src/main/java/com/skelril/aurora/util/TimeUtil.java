@@ -34,6 +34,8 @@ public class TimeUtil {
         Calendar localCalendar = Calendar.getInstance();
         long returnValue;
 
+        localCalendar.set(Calendar.MINUTE, 0);
+
         while (localCalendar.get(Calendar.HOUR_OF_DAY) != hour) {
             localCalendar.add(Calendar.HOUR_OF_DAY, 1);
         }
