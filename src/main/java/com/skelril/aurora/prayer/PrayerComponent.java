@@ -90,12 +90,6 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         session.uninfluence(prayer);
     }
 
-    @Deprecated
-    public void uninfluencePlayer(Player player, Prayer prayer) {
-
-        uninfluencePlayer(player, prayer.getEffect().getType());
-    }
-
     public PrayerType getPrayerByString(String prayer) throws InvalidPrayerException {
 
         try {
@@ -112,6 +106,12 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         } catch (Exception e) {
             throw new InvalidPrayerException();
         }
+    }
+
+    public Prayer constructPrayer(Player player, PrayerType type) throws UnsupportedPrayerException {
+
+        Validate.notNull(type);
+        return constructPrayer(player, type, type.getDefaultTime());
     }
 
     public Prayer constructPrayer(Player player, PrayerType type, long maxDuration) throws UnsupportedPrayerException {
@@ -251,10 +251,6 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
     private static class LocalConfiguration extends ConfigurationBase {
 
-        @Setting("enable-unholy-nameType")
-        public boolean enableUnholy = true;
-        @Setting("enable-holy-nameType")
-        public boolean enableHoly = true;
         @Setting("disabled-prayers")
         public Set<String> disabled = new HashSet<>(Arrays.asList(
                 "god", "mushroom"
@@ -380,33 +376,31 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                     throw new CommandException("The gods don't take kindly to using their power on yourself.");
                 }
 
-                if (getPrayerByString(prayerString).isUnholy()) {
+                PrayerType prayerType = getPrayerByString(prayerString);
+
+                if (prayerType.isUnholy()) {
                     inst.checkPermission(sender, "aurora.pray.unholy." + prayerString);
-                    if (!config.enableUnholy) throw new CommandException("Unholy prayers are not currently enabled.");
                     ChatUtil.sendNotice(sender, ChatColor.DARK_RED + "The player: " + player.getDisplayName()
                             + " has been smited!");
                 } else {
                     inst.checkPermission(sender, "aurora.pray.holy." + prayerString);
-                    if (!config.enableHoly) throw new CommandException("Holy prayers are not currently enabled.");
                     ChatUtil.sendNotice(sender, ChatColor.GOLD + "The player: " + player.getDisplayName()
                             + " has been blessed!");
                 }
 
-                if (args.hasFlag('c')) uninfluencePlayer(player);
-                PrayerType prayerType = getPrayerByString(prayerString);
                 if (sender instanceof Player && !adminComponent.isAdmin((Player) sender)) {
                     Player senderP = (Player) sender;
-                    int newL = senderP.getLevel() - prayerType.getLevelCost();
 
+                    int newL = senderP.getLevel() - prayerType.getLevelCost();
                     if (newL < 0) {
                         throw new CommandException("You do not have enough levels to use that prayer.");
                     }
                     senderP.setLevel(newL);
                 }
 
-                Prayer prayer = constructPrayer(player, prayerType, TimeUnit.MINUTES.toMillis(30));
-                uninfluencePlayer(player, prayerType);
-                influencePlayer(player, prayer);
+                if (args.hasFlag('c') && inst.hasPermission(sender, "aurora.pray.clear")) uninfluencePlayer(player);
+
+                influencePlayer(player, constructPrayer(player, prayerType));
 
             } catch (InvalidPrayerException | UnsupportedPrayerException ex) {
                 throw new CommandException("That is not a valid prayer!");
@@ -424,16 +418,12 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         // Continue if the prayer is out of date
         if (System.currentTimeMillis() - prayer.getStartTime() >= prayer.getMaxDuration()) {
 
-            uninfluencePlayer(player, prayer);
+            uninfluencePlayer(player, prayer.getEffect().getType());
             return false;
-        } else if ((prayer.getEffect().getType().isUnholy() && !config.enableUnholy)
-                || (prayer.getEffect().getType().isHoly() && !config.enableHoly)) {
+        } else if (prayer.getEffect().getType().isUnholy() && !adminComponent.standardizePlayer(player)) {
 
-            uninfluencePlayer(player, prayer);
+            uninfluencePlayer(player);
             return false;
-        } else if (prayer.getEffect().getType().isUnholy()) {
-
-            if (!adminComponent.standardizePlayer(player)) uninfluencePlayer(player);
         }
 
         return true;

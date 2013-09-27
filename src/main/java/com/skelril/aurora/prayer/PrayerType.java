@@ -4,6 +4,7 @@ import com.skelril.aurora.prayer.PrayerFX.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Author: Turtle9598
@@ -49,6 +50,7 @@ public enum PrayerType {
 
     private final int id;
     private final int cost;
+    private final long defaultTime;
     private final Class FXClass;
     private final static Map<Integer, PrayerType> BY_ID = new HashMap<>();
 
@@ -56,6 +58,15 @@ public enum PrayerType {
 
         this.id = id;
         this.cost = cost;
+        this.defaultTime = TimeUnit.MINUTES.toMillis(15);
+        this.FXClass = FXClass;
+    }
+
+    private PrayerType(int id, int cost, int defaultTime, Class FXClass) {
+
+        this.id = id;
+        this.cost = cost;
+        this.defaultTime = TimeUnit.MINUTES.toMillis(defaultTime);
         this.FXClass = FXClass;
     }
 
@@ -67,6 +78,11 @@ public enum PrayerType {
     public int getLevelCost() {
 
         return cost;
+    }
+
+    public long getDefaultTime() {
+
+        return defaultTime;
     }
 
     public Class getFXClass() {
