@@ -30,7 +30,7 @@ public enum PrayerType {
     MUSHROOM(1014, 35, MushroomFX.class),
     CANNON(1015, 35, CannonFX.class),
     MERLIN(1016, 35, MerlinFX.class),
-    ROCKET(1017, 35, RocketFX.class),
+    ROCKET(1017, 35, 1, RocketFX.class),
     GLASSBOX(1018, 35, GlassBoxFX.class),
 
     FIREBALL(2000, 75, ThrownFireballFX.class),
