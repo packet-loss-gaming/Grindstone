@@ -1,6 +1,9 @@
 package com.skelril.aurora.city.engine;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
@@ -23,6 +26,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -66,6 +70,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20 * 2);
+
+        registerCommands(Commands.class);
     }
 
     @Override
@@ -337,6 +343,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private static Set<EntityDamageEvent.DamageCause> ignoredDamage = new HashSet<>();
 
     static {
+        ignoredDamage.add(EntityDamageEvent.DamageCause.FIRE_TICK);
+        ignoredDamage.add(EntityDamageEvent.DamageCause.POISON);
         ignoredDamage.add(EntityDamageEvent.DamageCause.CONTACT);
         ignoredDamage.add(EntityDamageEvent.DamageCause.DROWNING);
         ignoredDamage.add(EntityDamageEvent.DamageCause.FALL);
@@ -374,6 +382,12 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         Location location = entity.getLocation();
         int level = getLevel(location);
         if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
+
+            double diffLevel = Math.max(1, level * .63);
+            for (int i = 0; i < diffLevel * diffLevel * diffLevel; i++) {
+                if (ChanceUtil.getChance(2000)) event.getDrops().add(ItemUtil.MPotion.potionOfRestitution());
+            }
+
             event.getDrops().addAll(
                     SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, level * level * 32)
             );
@@ -485,6 +499,21 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 ChatUtil.sendError(player, "You cannot plant that here.");
             }
             */
+        }
+    }
+
+    public class Commands {
+
+        @Command(aliases = {"wlevel", "wl"},
+                usage = "", desc = "Get current wilderness level",
+                flags = "", min = 0, max = 0)
+        public void lostPotionOfRestitutionCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            if (!(sender instanceof Player)) {
+                throw new CommandException("You must be a player to use this command.");
+            }
+
+            ChatUtil.sendNotice(sender, "Wilderness Level: " + getLevel(((Player) sender).getLocation()) + ".");
         }
     }
 

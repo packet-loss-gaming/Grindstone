@@ -646,6 +646,27 @@ public class AdminComponent extends BukkitComponent implements Listener {
             ChatUtil.sendNotice(player, "Damage simulated!");
         }
 
+        /*
+        @Command(aliases = {"boom"},
+                usage = "<size>", desc = "Create a bomb of any size",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions("aurora.admin.boom")
+        public void boomCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+
+            Player player = (Player) sender;
+
+            try {
+                float size = Float.parseFloat(args.getString(0));
+                player.getWorld().createExplosion(player.getLocation(), size);
+                ChatUtil.sendNotice(player, "Boom!");
+            } catch (NumberFormatException ex) {
+                throw new CommandException("Please enter a valid number");
+            }
+        }
+        */
+
         @Command(aliases = {"user"}, desc = "User Management Commands")
         @NestedCommand({NestedAdminCommands.class})
         public void userManagementCommands(CommandContext args, CommandSender sender) throws CommandException {
@@ -1129,6 +1150,20 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     public class LostMiscItem {
+
+        @Command(aliases = {"potionofrestitution"},
+                usage = "<player>", desc = "Give a player a Potion of Restitution",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.misc.potionofrestitution"})
+        public void lostPotionOfRestitutionCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            player.getInventory().addItem(ItemUtil.MPotion.potionOfRestitution());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: "
+                    + player.getDisplayName() + " has been given a Potion of Restitution.");
+        }
 
         @Command(aliases = {"gemofdarkness"},
                 usage = "<player> [amount]", desc = "Give a player some Gems of Darkness",

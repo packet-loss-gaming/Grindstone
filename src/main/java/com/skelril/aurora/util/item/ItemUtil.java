@@ -376,6 +376,18 @@ public class ItemUtil {
         }
     }
 
+    public static class MPotion {
+
+        public static ItemStack potionOfRestitution() {
+
+            ItemStack restitutionPotion = new Potion(PotionType.POISON).toItemStack(1);
+            PotionMeta pMeta = (PotionMeta) restitutionPotion.getItemMeta();
+            pMeta.setDisplayName(ChatColor.DARK_RED + "Potion of Restitution");
+            restitutionPotion.setItemMeta(pMeta);
+            return restitutionPotion;
+        }
+    }
+
     public static class Misc {
 
         public static ItemStack overseerBow() {

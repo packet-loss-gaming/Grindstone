@@ -456,6 +456,8 @@ public class AdminStoreComponent extends BukkitComponent {
         names.add("holy combat potion");
         names.add("extreme combat potion");
 
+        names.add("potion of restitution");
+
         names.add("god sword");
         names.add("god bow");
 
@@ -545,6 +547,9 @@ public class AdminStoreComponent extends BukkitComponent {
                     break;
                 case "extreme combat potion":
                     itemStacks.add(ItemUtil.CPotion.extremeCombatPotion());
+                    break;
+                case "potion of restitution":
+                    itemStacks.add(ItemUtil.MPotion.potionOfRestitution());
                     break;
                 case "god sword":
                     itemStacks.add(ItemUtil.God.makeSword());

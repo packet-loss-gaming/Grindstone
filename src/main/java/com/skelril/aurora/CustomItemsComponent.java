@@ -2,6 +2,8 @@ package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.FreezeComponent;
+import com.sk89q.commandbook.session.PersistentSession;
+import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
@@ -39,10 +41,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
 
@@ -50,12 +50,15 @@ import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Custom Items Component", desc = "Custom Items")
-@Depend(components = {AdminComponent.class, AntiCheatCompatibilityComponent.class, FreezeComponent.class})
+@Depend(components = {SessionComponent.class, AdminComponent.class,
+        AntiCheatCompatibilityComponent.class, FreezeComponent.class})
 public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Server server = CommandBook.server();
 
+    @InjectComponent
+    private SessionComponent sessions;
     @InjectComponent
     private AdminComponent admin;
     @InjectComponent
@@ -77,23 +80,9 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         WG = plugin != null && plugin instanceof WorldGuardPlugin ? (WorldGuardPlugin) plugin : null;
     }
 
-    private ConcurrentHashMap<String, Long> fearSpec = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, Long> unleashedSpec = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, Long> animalSpec = new ConcurrentHashMap<>();
+    public CustomItemSession getSession(Player player) {
 
-    private boolean canFearSpec(String name) {
-
-        return !fearSpec.containsKey(name) || System.currentTimeMillis() - fearSpec.get(name) >= 3800;
-    }
-
-    private boolean canUnleashedSpec(String name) {
-
-        return !unleashedSpec.containsKey(name) || System.currentTimeMillis() - unleashedSpec.get(name) >= 3800;
-    }
-
-    private boolean canAnimalSpec(String name) {
-
-        return !animalSpec.containsKey(name) || System.currentTimeMillis() - animalSpec.get(name) >= 15000;
+        return sessions.getSession(CustomItemSession.class, player);
     }
 
     private Specs callSpec(Player owner, Object target, Specs spec) {
@@ -162,12 +151,14 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         if (owner != null && target != null) {
 
+            CustomItemSession session = getSession(owner);
+
             Specs used;
-            if (canFearSpec(owner.getName())) {
+            if (session.canSpec(SpecType.FEAR)) {
                 if (ItemUtil.hasFearSword(owner)) {
                     used = callSpec(owner, target, 0, 6);
                     if (used == null) return;
-                    fearSpec.put(owner.getName(), System.currentTimeMillis());
+                    session.updateSpec(SpecType.FEAR);
                     switch (used) {
                         case CONFUSE:
                             EffectUtil.Fear.confuse(owner, target);
@@ -191,8 +182,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 } else if (ItemUtil.hasFearBow(owner)) {
                     used = callSpec(owner, target, 6, 11);
                     if (used == null) return;
-                    fearSpec.put(owner.getName(), System.currentTimeMillis());
-
+                    session.updateSpec(SpecType.FEAR);
                     switch (used) {
                         case DISARM:
                             if (EffectUtil.Fear.disarm(owner, target)) {
@@ -214,11 +204,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 }
             }
 
-            if (canUnleashedSpec(owner.getName())) {
+            if (session.canSpec(SpecType.UNLEASHED)) {
                 if (ItemUtil.hasUnleashedSword(owner)) {
                     used = callSpec(owner, target, 11, 17);
                     if (used == null) return;
-                    unleashedSpec.put(owner.getName(), System.currentTimeMillis());
+                    session.updateSpec(SpecType.UNLEASHED);
                     switch (used) {
                         case BLIND:
                             EffectUtil.Unleashed.blind(owner, target);
@@ -242,7 +232,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 } else if (ItemUtil.hasUnleashedBow(owner)) {
                     used = callSpec(owner, target, 18, 20);
                     if (used == null) return;
-                    unleashedSpec.put(owner.getName(), System.currentTimeMillis());
+                    session.updateSpec(SpecType.UNLEASHED);
                     switch (used) {
                         case HEALING_LIFE_LEECH:
                             EffectUtil.Unleashed.lifeLeech(owner, target);
@@ -265,16 +255,17 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         if (shooter != null && shooter instanceof Player) {
 
             Player owner = (Player) shooter;
+            CustomItemSession session = getSession(owner);
             Location targetLoc = event.getEntity().getLocation();
 
             RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
 
-            if (canAnimalSpec(owner.getName())) {
+            if (session.canSpec(SpecType.ANIMAL_BOW)) {
                 Specs used;
                 if (ItemUtil.hasBatBow(owner)) {
                     used = callSpec(owner, targetLoc, Specs.MOB_ATTACK);
                     if (used == null) return;
-                    animalSpec.put(owner.getName(), System.currentTimeMillis());
+                    session.updateSpec(SpecType.ANIMAL_BOW);
                     switch (used) {
                         case MOB_ATTACK:
                             EffectUtil.Strange.mobBarrage(owner, targetLoc, EntityType.BAT);
@@ -283,7 +274,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 } else if (ItemUtil.hasChickenBow(owner)) {
                     used = callSpec(owner, targetLoc, Specs.MOB_ATTACK);
                     if (used == null) return;
-                    animalSpec.put(owner.getName(), System.currentTimeMillis());
+                    session.updateSpec(SpecType.ANIMAL_BOW);
                     switch (used) {
                         case MOB_ATTACK:
                             EffectUtil.Strange.mobBarrage(owner, targetLoc, EntityType.CHICKEN);
@@ -292,7 +283,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 }
             }
 
-            if (!canFearSpec(owner.getName())) {
+            if (!session.canSpec(SpecType.FEAR)) {
 
                 if (ItemUtil.hasFearBow(owner)) {
                     if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
@@ -604,8 +595,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         if (!(event.getWhoClicked() instanceof Player)) return;
 
-        Player player = (Player) event.getWhoClicked();
-
         if (event.getInventory().getType().equals(InventoryType.ANVIL)) {
 
             for (int i : event.getRawSlots()) {
@@ -650,17 +639,27 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             player.setAllowFlight(false);
             antiCheat.unexempt(player, CheckType.FLY);
         }
+
+        getSession(player).addDeathPoint(player.getLocation());
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onConsume(PlayerItemConsumeEvent event) {
 
+        Player player = event.getPlayer();
         ItemStack stack = event.getItem();
+
         if (ItemUtil.matchesFilter(stack, ChatColor.BLUE + "God Fish")) {
 
-            Player player = event.getPlayer();
+
             player.chat("The fish flow within me!");
             new HulkFX().add(player);
+        } else if (ItemUtil.matchesFilter(stack, ChatColor.DARK_RED + "Potion of Restitution")) {
+
+            Location lastLoc = getSession(player).getRecentDeathPoint();
+            if (lastLoc != null) {
+                player.teleport(lastLoc);
+            }
         }
     }
 
@@ -759,12 +758,57 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
+    public static class CustomItemSession extends PersistentSession {
 
-        String name = event.getPlayer().getName();
-        if (fearSpec.containsKey(name)) fearSpec.remove(name);
-        if (unleashedSpec.containsKey(name)) unleashedSpec.remove(name);
-        if (animalSpec.containsKey(name)) animalSpec.remove(name);
+        private static final long MAX_AGE = TimeUnit.DAYS.toMillis(3);
+
+        private HashMap<SpecType, Long> specMap = new HashMap<>();
+        private LinkedList<Location> recentDeathLocations = new LinkedList<>();
+
+        protected CustomItemSession() {
+            super(MAX_AGE);
+        }
+
+        public void updateSpec(SpecType type) {
+
+            specMap.put(type, System.currentTimeMillis());
+        }
+
+        public boolean canSpec(SpecType type) {
+
+            return !specMap.containsKey(type) || System.currentTimeMillis() - specMap.get(type) >= type.getDelay();
+        }
+
+        public void addDeathPoint(Location deathPoint) {
+
+            recentDeathLocations.add(0, deathPoint.clone());
+            while (recentDeathLocations.size() > 5) {
+                recentDeathLocations.pollLast();
+            }
+        }
+
+        public Location getRecentDeathPoint() {
+
+            return recentDeathLocations.poll();
+        }
+    }
+
+    public enum SpecType {
+
+        FEAR(3800),
+        UNLEASHED(3800),
+        ANIMAL_BOW(15000);
+
+        private final long delay;
+
+        private SpecType(long delay) {
+
+            this.delay = delay;
+        }
+
+        public long getDelay() {
+
+            return delay;
+        }
     }
 }
