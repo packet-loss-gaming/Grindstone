@@ -44,6 +44,7 @@ import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.text.DecimalFormat;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -379,7 +380,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Entity entity = event.getEntity();
 
-        if (!(entity instanceof Monster)) return;
+        if (!(entity instanceof Monster) || ((Monster) entity).getKiller() == null) return;
 
         Location location = entity.getLocation();
         int level = getLevel(location);
@@ -399,6 +400,12 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     public int getLevel(Location location) {
 
+        // Not in Wilderness
+        if (!location.getWorld().getName().startsWith(config.wildernessWorld)) {
+            return 0;
+        }
+
+        // In Wilderness
         return Math.max(0, Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ()) - 500) / 500) + 1;
     }
 
@@ -514,15 +521,25 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     public class Commands {
 
         @Command(aliases = {"wlevel", "wl"},
-                usage = "", desc = "Get current wilderness level",
-                flags = "", min = 0, max = 0)
+                usage = "[target level]", desc = "Get current wilderness level",
+                flags = "", min = 0, max = 1)
         public void lostPotionOfRestitutionCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) {
                 throw new CommandException("You must be a player to use this command.");
             }
 
-            ChatUtil.sendNotice(sender, "Wilderness Level: " + getLevel(((Player) sender).getLocation()) + ".");
+            int level = getLevel(((Player) sender).getLocation());
+            double targetLevel = args.argsLength() > 0 ? args.getInteger(0) : Math.max(1, level);
+            ChatUtil.sendNotice(sender, "Current Level: " + (level == 0 ? ChatColor.RED + "Not available" : level)
+                    + ChatColor.YELLOW + ", Target Level: " + (int) targetLevel + ".\n");
+
+            DecimalFormat df = new DecimalFormat("#.#");
+
+            ChatUtil.sendNotice(sender, "Damage Modifier: " + df.format(targetLevel) + "x");
+            ChatUtil.sendNotice(sender, "Ore Pool Modifier: " + df.format(Math.max(1, (targetLevel * 1.2) / 3)) + "x");
+            ChatUtil.sendNotice(sender, "Mob Health Modifier: "
+                    + df.format(targetLevel > 1 ? 2 * (targetLevel - 1) : 1) + "x");
         }
     }
 
@@ -533,7 +550,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         ItemStack generalDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch);
         final int fortune = EnvironmentUtil.isOre(generalDrop.getTypeId()) ? 0 : fortuneLevel;
-        final int times = ChanceUtil.getRangedRandom(3, 3 * getLevel(location));
+        final int times = (int) ChanceUtil.getRangedRandom(3, Math.max(3, getLevel(location) * 1.2));
         final float vol = ((float) 1 / times);
         IntegratedRunnable dropper = new IntegratedRunnable() {
             @Override
