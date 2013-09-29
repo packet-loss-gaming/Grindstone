@@ -139,7 +139,7 @@ public class EffectUtil {
                         if (mgr != null && !mgr.getApplicableRegions(e.getLocation()).allows(DefaultFlag.PVP)) {
                             continue;
                         }
-                        server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) target));
+                        server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
                     }
 
                     Vector velocity = owner.getLocation().getDirection().multiply(2);
@@ -188,8 +188,9 @@ public class EffectUtil {
                         }
 
                         loc = block.getLocation(loc);
+                        World world = loc.getWorld();
 
-                        while (loc.getY() > 0 && BlockType.canPassThrough(block.getTypeId())) {
+                        while (loc.getY() > 0 && BlockType.canPassThrough(world.getBlockTypeIdAt(loc))) {
                             loc.add(0, -1, 0);
                         }
 
@@ -217,8 +218,9 @@ public class EffectUtil {
                     for (Block block : blocks) {
 
                         loc = block.getLocation(loc);
+                        World world = loc.getWorld();
 
-                        while (loc.getY() > 0 && BlockType.canPassThrough(block.getTypeId())) {
+                        while (loc.getY() > 0 && BlockType.canPassThrough(world.getBlockTypeIdAt(loc))) {
                             loc.add(0, -1, 0);
                         }
 

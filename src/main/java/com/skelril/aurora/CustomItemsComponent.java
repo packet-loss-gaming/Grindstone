@@ -12,6 +12,7 @@ import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
+import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.entity.ProjectileTickEvent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
@@ -287,6 +288,9 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                 if (ItemUtil.hasFearBow(owner)) {
                     if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
+
+                        server.getPluginManager().callEvent(new RapidHitEvent(owner));
+
                         // Simulate a lightning strike
                         targetLoc.getWorld().strikeLightningEffect(targetLoc);
                         for (Entity e : projectile.getNearbyEntities(2, 4, 2)) {
@@ -307,7 +311,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                                 if (!app.allows(DefaultFlag.PVP)) continue;
                             }
 
-                            ((LivingEntity) e).damage(5);
+                            ((LivingEntity) e).damage(5, owner);
                         }
                     }
                 }
