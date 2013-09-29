@@ -2,6 +2,7 @@ package com.skelril.aurora.util.item;
 
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.skelril.aurora.util.ChanceUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -857,9 +858,49 @@ public class ItemUtil {
                 && ((BookMeta) item.getItemMeta()).getAuthor().equals("The Forge Knights");
     }
 
-    public static int fortuneMultiplier(ItemStack pickaxe) {
+    public static int fortuneLevel(ItemStack pickaxe) {
 
-        if (!pickaxe.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS)) return 1;
-        return pickaxe.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS) + 1;
+        if (!pickaxe.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS)) return 0;
+        return pickaxe.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
+    }
+
+    public static int fortuneModifier(int typeId, int fortuneLevel) {
+
+        int returnValue = 1;
+        switch (typeId) {
+            case BlockID.IRON_ORE:
+            case BlockID.COAL_ORE:
+            case BlockID.GOLD_ORE:
+            case BlockID.LAPIS_LAZULI_ORE:
+            case BlockID.REDSTONE_ORE:
+            case BlockID.GLOWING_REDSTONE_ORE:
+            case BlockID.DIAMOND_ORE:
+            case BlockID.EMERALD_ORE:
+            case BlockID.QUARTZ_ORE:
+                switch (fortuneLevel) {
+                    case 1:
+                        if (ChanceUtil.getChance(3)) {
+                            returnValue *= 2;
+                        }
+                        break;
+                    case 2:
+                        if (ChanceUtil.getChance(4)) {
+                            returnValue *= 3;
+                        } else if (ChanceUtil.getChance(4)) {
+                            returnValue *= 2;
+                        }
+                        break;
+                    case 3:
+                        if (ChanceUtil.getChance(5)) {
+                            returnValue *= 4;
+                        } else if (ChanceUtil.getChance(5)) {
+                            returnValue *= 3;
+                        } else if (ChanceUtil.getChance(5)) {
+                            returnValue *= 2;
+                        }
+                        break;
+                }
+        }
+        return returnValue;
     }
 }

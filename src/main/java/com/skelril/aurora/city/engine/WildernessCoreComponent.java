@@ -412,7 +412,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
             ItemStack stack = player.getItemInHand();
 
-            addPool(block, ItemUtil.fortuneMultiplier(stack), stack.containsEnchantment(Enchantment.SILK_TOUCH));
+            addPool(block, ItemUtil.fortuneLevel(stack), stack.containsEnchantment(Enchantment.SILK_TOUCH));
         }  /* else if (block.getTypeId() == BlockID.SAPLING) {
             event.setCancelled(true);
             ChatUtil.sendError(player, "You cannot break that here.");
@@ -479,7 +479,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
             if (isEffectedOre(block.getTypeId())) {
 
-                addPool(block.getState(), 1, false);
+                addPool(block.getState(), 0, false);
             }
         }
     }
@@ -523,15 +523,14 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         final World world = location.getWorld();
 
         ItemStack generalDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch);
-        final int modifier = hasSilkTouch ? 1 : EnvironmentUtil.isOre(generalDrop.getTypeId()) ? 1 : fortuneLevel;
+        final int fortune = EnvironmentUtil.isOre(generalDrop.getTypeId()) ? 0 : fortuneLevel;
         final int times = ChanceUtil.getRangedRandom(3, 3 * getLevel(location));
         final float vol = ((float) 1 / times);
         IntegratedRunnable dropper = new IntegratedRunnable() {
             @Override
             public boolean run(int timesL) {
 
-
-                for (int i = 0; i < modifier; i++) {
+                for (int i = 0; i < ItemUtil.fortuneModifier(block.getTypeId(), fortune); i++) {
                     world.dropItem(location, EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch));
                 }
                 world.playSound(location, Sound.BLAZE_BREATH, Math.min(1, (((float) timesL / times) * .6F) + vol), 0);
