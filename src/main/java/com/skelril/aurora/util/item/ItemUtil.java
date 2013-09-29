@@ -383,6 +383,7 @@ public class ItemUtil {
             ItemStack restitutionPotion = new Potion(PotionType.POISON).toItemStack(1);
             PotionMeta pMeta = (PotionMeta) restitutionPotion.getItemMeta();
             pMeta.setDisplayName(ChatColor.DARK_RED + "Potion of Restitution");
+            pMeta.addCustomEffect(new PotionEffect(PotionEffectType.POISON, 20 * 10, 1), true);
             restitutionPotion.setItemMeta(pMeta);
             return restitutionPotion;
         }
