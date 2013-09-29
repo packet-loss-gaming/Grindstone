@@ -25,6 +25,7 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
+import com.skelril.aurora.events.ServerShutdownEvent;
 import com.skelril.aurora.events.anticheat.FallBlockerEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
@@ -859,6 +860,12 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
                 event.setCancelled(true);
             }
         }
+    }
+
+    @EventHandler
+    public void onShutDownEvent(ServerShutdownEvent event) {
+
+        disable();
     }
 
     @EventHandler(ignoreCancelled = true)

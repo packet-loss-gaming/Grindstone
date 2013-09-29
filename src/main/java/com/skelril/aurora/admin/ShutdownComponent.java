@@ -76,8 +76,6 @@ public class ShutdownComponent extends BukkitComponent {
             @Override
             public void run() {
 
-                if (jungleRaid != null) jungleRaid.disable();
-
                 server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
                 if (seconds > 0 && seconds % 5 == 0 || seconds <= 10 && seconds > 0) {
                     Bukkit.broadcastMessage(ChatColor.RED + "Restarting in " + seconds + " seconds!");
