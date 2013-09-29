@@ -9,6 +9,7 @@ import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
+import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -61,6 +62,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     @InjectComponent
     private AdminComponent adminComponent;
 
+    private long nextDropTime = 0;
     private LocalConfiguration config;
 
     @Override
@@ -242,7 +244,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                     event.setPortalTravelAgent(agent);
                     event.setTo(agent.findOrCreate(pLoc));
                     return;
-                } else if (from.getWorld().getName().contains(config.wildernessWorld)) {
+                } else if (from.getWorld().getName().startsWith(config.wildernessWorld)) {
                     pLoc.setWorld(wilderness);
                     pLoc.setX(pLoc.getBlockX() * 8);
                     pLoc.setZ(pLoc.getBlockZ() * 8);
@@ -253,11 +255,11 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 }
 
                 // City Code
-                if (from.getWorld().getName().contains(config.cityWorld)) {
+                if (from.getWorld().getName().startsWith(config.cityWorld)) {
                     event.setTo(LocationUtil.grandBank(city));
                     agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);
-                } else if (to.getWorld().getName().contains(config.cityWorld)) {
+                } else if (to.getWorld().getName().startsWith(config.cityWorld)) {
                     event.setTo(city.getSpawnLocation());
                     agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);
@@ -270,7 +272,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     public void onPortalForm(PortalCreateEvent event) {
 
         if (event.getReason().equals(PortalCreateEvent.CreateReason.FIRE)) return;
-        if (event.getWorld().getName().contains(config.cityWorld)) event.setCancelled(true);
+        if (event.getWorld().getName().startsWith(config.cityWorld)) event.setCancelled(true);
     }
 
     @EventHandler
@@ -279,7 +281,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         World world = event.getPlayer().getWorld();
 
         if (event.getNewAdminState().equals(AdminState.SYSOP)) return;
-        if (!event.getNewAdminState().equals(AdminState.MEMBER) && world.getName().contains(config.wildernessWorld)) {
+        if (!event.getNewAdminState().equals(AdminState.MEMBER) && world.getName().startsWith(config.wildernessWorld)) {
             event.setCancelled(true);
         }
     }
@@ -303,7 +305,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     public void check(Player player, String to) {
 
-        if (to.contains(config.wildernessWorld) && adminComponent.isAdmin(player)) {
+        if (to.startsWith(config.wildernessWorld) && adminComponent.isAdmin(player)) {
 
             adminComponent.deadmin(player);
         }
@@ -315,7 +317,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Player player = event.getPlayer();
 
-        if (player.getWorld().getName().contains(config.wildernessWorld) && adminComponent.isAdmin(player)) {
+        if (player.getWorld().getName().startsWith(config.wildernessWorld) && adminComponent.isAdmin(player)) {
 
             adminComponent.deadmin(player);
         }
@@ -406,7 +408,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         Player player = event.getPlayer();
         final BlockState block = event.getBlock().getState();
 
-        if (!player.getWorld().getName().contains(config.wildernessWorld)) return;
+        if (!player.getWorld().getName().startsWith(config.wildernessWorld)) return;
 
         if (isEffectedOre(block.getTypeId())) {
 
@@ -462,7 +464,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         if (!(entity instanceof Creeper || entity instanceof Fireball)) return;
 
         Location loc = entity.getLocation();
-        if (!loc.getWorld().getName().contains(config.wildernessWorld)) return;
+        if (!loc.getWorld().getName().startsWith(config.wildernessWorld)) return;
 
         event.setRadius(Math.min(entity instanceof Fireball ? 4 : 9, event.getRadius() * getLevel(loc)));
 
@@ -471,7 +473,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityExplosion(EntityExplodeEvent event) {
 
-        if (!event.getLocation().getWorld().getName().contains(config.wildernessWorld)) return;
+        if (!event.getLocation().getWorld().getName().startsWith(config.wildernessWorld)) return;
 
         event.setYield(.1F);
 
@@ -485,11 +487,18 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     }
 
     @EventHandler
+    public void onDropClearPulse(DropClearPulseEvent event) {
+
+        if (!event.getWorld().getName().startsWith(config.wildernessWorld)) return;
+        nextDropTime = System.currentTimeMillis() + (event.getSecondsLeft() * 1000);
+    }
+
+    @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
 
         Player player = event.getPlayer();
 
-        if (player.getWorld().getName().contains(config.wildernessWorld)) {
+        if (player.getWorld().getName().startsWith(config.wildernessWorld)) {
             int typeId = event.getBlock().getTypeId();
             if (isEffectedOre(typeId)) {
                 event.setCancelled(true);
@@ -529,6 +538,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         IntegratedRunnable dropper = new IntegratedRunnable() {
             @Override
             public boolean run(int timesL) {
+
+                if (nextDropTime != 0 && System.currentTimeMillis() < nextDropTime) return false;
 
                 for (int i = 0; i < ItemUtil.fortuneModifier(block.getTypeId(), fortune); i++) {
                     world.dropItem(location, EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch));
