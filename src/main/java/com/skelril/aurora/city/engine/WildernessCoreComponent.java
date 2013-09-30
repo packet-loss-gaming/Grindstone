@@ -354,7 +354,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         ignoredDamage.add(EntityDamageEvent.DamageCause.STARVATION);
         ignoredDamage.add(EntityDamageEvent.DamageCause.SUFFOCATION);
         ignoredDamage.add(EntityDamageEvent.DamageCause.VOID);
-        ignoredDamage.add(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION);
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -369,6 +368,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         }
         Location location = entity.getLocation();
         int level = getLevel(location);
+
         if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
 
             event.setDamage(event.getDamage() * level);
@@ -473,7 +473,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         Location loc = entity.getLocation();
         if (!loc.getWorld().getName().startsWith(config.wildernessWorld)) return;
 
-        event.setRadius(Math.min(entity instanceof Fireball ? 4 : 9, event.getRadius() * getLevel(loc)));
+        float min = event.getRadius();
+        event.setRadius(Math.min(entity instanceof Fireball ? 4 : 9, Math.max(min, (min + getLevel(loc)) / 2)));
 
     }
 
