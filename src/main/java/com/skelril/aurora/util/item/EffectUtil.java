@@ -153,7 +153,7 @@ public class EffectUtil {
             return x * ChanceUtil.getRangedRandom(2, 3);
         }
 
-        public static void fearBomb(Player owner, LivingEntity target, WorldGuardPlugin WG) {
+        public static void fearBomb(final Player owner, LivingEntity target, WorldGuardPlugin WG) {
 
             final List<Block> blocks = new ArrayList<>();
             Block block = target.getLocation().getBlock();
@@ -215,6 +215,8 @@ public class EffectUtil {
                     Location loc = new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
                     List<Chunk> chunks = new ArrayList<>();
 
+                    server.getPluginManager().callEvent(new RapidHitEvent(owner));
+
                     for (Block block : blocks) {
 
                         loc = block.getLocation(loc);
@@ -235,7 +237,7 @@ public class EffectUtil {
                                 }
                             }
                             if (entity.getLocation().distanceSquared(loc) <= 4) {
-                                ((LivingEntity) entity).damage(10000);
+                                ((LivingEntity) entity).damage(10000, owner);
                             }
                         }
 
