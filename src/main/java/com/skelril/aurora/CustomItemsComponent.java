@@ -143,8 +143,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         Entity damager = event.getDamager();
+        boolean wasProjectile = false;
         if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
             damager = ((Projectile) damager).getShooter();
+            wasProjectile = true;
         }
 
         Player owner = damager instanceof Player ? (Player) damager : null;
@@ -180,7 +182,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Fear.soulSmite(owner, target);
                             break;
                     }
-                } else if (ItemUtil.hasFearBow(owner)) {
+                } else if (ItemUtil.hasFearBow(owner) && wasProjectile) {
                     used = callSpec(owner, target, 6, 11);
                     if (used == null) return;
                     session.updateSpec(SpecType.FEAR);
@@ -230,7 +232,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Unleashed.lifeLeech(owner, target);
                             break;
                     }
-                } else if (ItemUtil.hasUnleashedBow(owner)) {
+                } else if (ItemUtil.hasUnleashedBow(owner) && wasProjectile) {
                     used = callSpec(owner, target, 18, 20);
                     if (used == null) return;
                     session.updateSpec(SpecType.UNLEASHED);
