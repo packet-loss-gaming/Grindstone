@@ -158,7 +158,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             Specs used;
             if (session.canSpec(SpecType.FEAR)) {
-                if (ItemUtil.hasFearSword(owner)) {
+                if (ItemUtil.hasFearSword(owner) && !wasProjectile) {
                     used = callSpec(owner, target, 0, 6);
                     if (used == null) return;
                     session.updateSpec(SpecType.FEAR);
@@ -208,7 +208,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
 
             if (session.canSpec(SpecType.UNLEASHED)) {
-                if (ItemUtil.hasUnleashedSword(owner)) {
+                if (ItemUtil.hasUnleashedSword(owner) && !wasProjectile) {
                     used = callSpec(owner, target, 11, 17);
                     if (used == null) return;
                     session.updateSpec(SpecType.UNLEASHED);
