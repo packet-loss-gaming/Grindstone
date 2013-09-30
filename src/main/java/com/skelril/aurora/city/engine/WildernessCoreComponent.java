@@ -338,8 +338,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
             level--;
 
-            entity.setMaxHealth(max * 2 * level);
-            entity.setHealth(max * 2 * level);
+            entity.setMaxHealth(max * 5 * level);
+            entity.setHealth(max * 5 * level);
         }
     }
 
@@ -354,6 +354,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         ignoredDamage.add(EntityDamageEvent.DamageCause.STARVATION);
         ignoredDamage.add(EntityDamageEvent.DamageCause.SUFFOCATION);
         ignoredDamage.add(EntityDamageEvent.DamageCause.VOID);
+        ignoredDamage.add(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION);
+        ignoredDamage.add(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION);
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -406,7 +408,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         }
 
         // In Wilderness
-        return Math.max(0, Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ()) - 500) / 500) + 1;
+        return Math.max(0, Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ())) / 1000) + 1;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -540,7 +542,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             ChatUtil.sendNotice(sender, "Damage Modifier: " + df.format(targetLevel) + "x");
             ChatUtil.sendNotice(sender, "Ore Pool Modifier: " + df.format(Math.max(1, (targetLevel * 1.2) / 3)) + "x");
             ChatUtil.sendNotice(sender, "Mob Health Modifier: "
-                    + df.format(targetLevel > 1 ? 2 * (targetLevel - 1) : 1) + "x");
+                    + df.format(targetLevel > 1 ? 5 * (targetLevel - 1) : 1) + "x");
         }
     }
 
