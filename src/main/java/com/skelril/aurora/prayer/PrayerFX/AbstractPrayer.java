@@ -34,6 +34,11 @@ public abstract class AbstractPrayer {
 
     public abstract PrayerType getType();
 
+    public Set<PotionEffect> getPotionEffects() {
+
+        return effects;
+    }
+
     public void add(Player player) {
 
         if (subFX != null) {

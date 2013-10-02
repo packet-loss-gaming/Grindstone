@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  * @author Turtle9598
  */
 @ComponentInformation(friendlyName = "Creep Speak", desc = "Make mobs talk.")
-@Depend(components = {ApocalypseComponent.class, SessionComponent.class, NinjaComponent.class, RogueComponent.class})
+@Depend(components = {ApocalypseComponent.class, SessionComponent.class})
 public class CreepSpeakComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -41,10 +41,6 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
     private ApocalypseComponent apocalypse;
     @InjectComponent
     private SessionComponent sessions;
-    @InjectComponent
-    private NinjaComponent ninjaComponent;
-    @InjectComponent
-    private RogueComponent rogueComponent;
 
     private HashSet<Player> hallowCreepersActive = new HashSet<>();
     private LocalConfiguration config;
@@ -87,10 +83,6 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
         if (!ChanceUtil.getChance(config.chance)) return;
 
         try {
-            // Ninja Check
-            if ((ninjaComponent.isNinja(player) && player.isSneaking()) || !rogueComponent.isVisible(player)
-                    || (rogueComponent.isRogue(player) && inst.hasPermission(player, "aurora.rouge.guild"))) return;
-
             ChatColor color = ChatColor.RED;
             String message = "";
             if (entity instanceof Creeper) {

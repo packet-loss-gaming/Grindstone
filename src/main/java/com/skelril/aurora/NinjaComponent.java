@@ -8,7 +8,7 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
-import com.skelril.aurora.events.PrayerApplicationEvent;
+import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -16,20 +16,17 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.HorseJumpEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -45,6 +42,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     private SessionComponent sessions;
     @InjectComponent
     private RogueComponent rogueComponent;
+
+    private Map<Arrow, Float> arrowForce = new HashMap<>();
 
     private final int WATCH_DISTANCE = 10;
     private final int WATCH_DISTANCE_SQ = WATCH_DISTANCE * WATCH_DISTANCE;
@@ -71,19 +70,34 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).isNinja();
     }
 
-    public void showToGuild(Player player) {
+    public void showToGuild(Player player, boolean showToGuild) {
 
-        sessions.getSession(NinjaState.class, player).showToGuild(true);
+        sessions.getSession(NinjaState.class, player).showToGuild(showToGuild);
     }
 
-    public boolean isShownToGuild(Player player) {
+    public boolean guildCanSee(Player player) {
 
         return sessions.getSession(NinjaState.class, player).guildCanSee();
     }
 
-    public void hideFromGuild(Player player) {
+    public void useExplosiveArrows(Player player, boolean explosiveArrows) {
 
-        sessions.getSession(NinjaState.class, player).showToGuild(false);
+        sessions.getSession(NinjaState.class, player).useExplosiveArrows(explosiveArrows);
+    }
+
+    public boolean hasExplosiveArrows(Player player) {
+
+        return sessions.getSession(NinjaState.class, player).hasExplosiveArrows();
+    }
+
+    public boolean allowsConflictingPotions(Player player) {
+
+        return sessions.getSession(NinjaState.class, player).allowsConflictingPotions();
+    }
+
+    public void allowConflictingPotions(Player player, boolean allowConflictingPotions) {
+
+        sessions.getSession(NinjaState.class, player).allowConflictingPotions(allowConflictingPotions);
     }
 
     public void unninjaPlayer(Player player) {
@@ -92,7 +106,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         session.setIsNinja(false);
         session.showToGuild(false);
 
-        player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
         player.removePotionEffect(PotionEffectType.WATER_BREATHING);
         player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
 
@@ -103,28 +116,42 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
+    @EventHandler
+    public void onProjectileLaunch(EntityShootBowEvent event) {
+
+        Entity e = event.getProjectile();
+        Projectile p = e instanceof Projectile ? (Projectile) e : null;
+        if (p == null || p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
+
+        Player player = (Player) p.getShooter();
+        if (isNinja(player) && hasExplosiveArrows(player) && inst.hasPermission(player, "aurora.ninja.guild")) {
+
+            if (p instanceof Arrow) {
+                arrowForce.put((Arrow) p, event.getForce());
+            }
+        }
+    }
+
+    @EventHandler
+    public void onProjectileLand(ProjectileHitEvent event) {
+
+        Projectile p = event.getEntity();
+        if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
+        if (isNinja((Player) p.getShooter())) {
+
+            if (p instanceof Arrow && arrowForce.containsKey(p)) {
+                p.getWorld().createExplosion(p.getLocation(), 3F * arrowForce.get(p), true);
+                arrowForce.remove(p);
+            }
+        }
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onHorseJump(HorseJumpEvent event) {
 
         Entity passenger = event.getEntity().getPassenger();
         if (passenger != null && passenger instanceof Player && isNinja((Player) passenger)) {
             event.setPower(event.getPower() * 1.37F);
-        }
-    }
-
-    // Stop Mobs from targeting ninja
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onEntityTarget(EntityTargetEvent event) {
-
-        Entity entity = event.getEntity();
-        Entity targetEntity = event.getTarget();
-
-        if (entity instanceof Player || !(targetEntity instanceof Player)) return;
-
-        Player player = (Player) targetEntity;
-
-        if (isNinja(player) && player.isSneaking() && !player.getWorld().isThundering()) {
-            event.setCancelled(true);
         }
     }
 
@@ -152,11 +179,29 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPrayerApplication(PrayerApplicationEvent event) {
+    private static Set<Integer> blockedEffects = new HashSet<>();
 
-        if (isNinja(event.getPlayer())) {
-            event.setCancelled(true);
+    static {
+        blockedEffects.add(PotionEffectType.FIRE_RESISTANCE.getId());
+        blockedEffects.add(PotionEffectType.WATER_BREATHING.getId());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPrayerApplication(PrePrayerApplicationEvent event) {
+
+        Player player = event.getPlayer();
+        if (isNinja(player)) {
+            Iterator<PotionEffect> it = event.getCause().getEffect().getPotionEffects().iterator();
+            while (it.hasNext()) {
+                if (blockedEffects.contains(it.next().getType().getId())) {
+                    if (!allowsConflictingPotions(player)) {
+                        it.remove();
+                    } else {
+                        event.setCancelled(true);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -174,19 +219,15 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             if (player == null || !player.isOnline() || player.isDead()) continue;
 
             if (inst.hasPermission(player, "aurora.ninja.guild")) {
-                player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-                player.removePotionEffect(PotionEffectType.WATER_BREATHING);
-                player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
-                player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 2));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 600, 2));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 2));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 45, 0), true);
+                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 45, 1), true);
 
                 Entity vehicle = player.getVehicle();
                 if (vehicle != null && vehicle instanceof Horse) {
                     ((Horse) vehicle).removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
                     ((Horse) vehicle).removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
-                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 60, 2));
-                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 60, 2));
+                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 60, 1));
+                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 60, 1));
                 }
             }
 
@@ -201,7 +242,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                                 SNEAK_WATCH_DISTANCE_SQ
                                 && player.isSneaking())) {
                             if (otherPlayer.canSee(player)
-                                    && !(isShownToGuild(player) && otherPlayer.hasPermission("aurora.ninja.guild"))
+                                    && !(guildCanSee(player) && otherPlayer.hasPermission("aurora.ninja.guild"))
                                     && !inst.hasPermission(otherPlayer, "aurora.ninja.guild.master")) {
                                 otherPlayer.hidePlayer(player);
                                 invisibleNewCount.add(otherPlayer);
@@ -248,7 +289,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"ninja"}, desc = "Give a player the Ninja power",
-                flags = "g", min = 0, max = 0)
+                flags = "gxp", min = 0, max = 0)
         @CommandPermissions({"aurora.ninja"})
         public void ninja(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -258,12 +299,12 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             }
 
             ninjaPlayer((Player) sender);
-            if (args.hasFlag('g') && inst.hasPermission(sender, "aurora.ninja.guild")) {
-                showToGuild((Player) sender);
-            } else if (!args.hasFlag('g')) {
-                hideFromGuild((Player) sender);
-            } else {
-                ChatUtil.sendError(sender, "You must be a member of the ninja guild to use this flag.");
+            if (inst.hasPermission(sender, "aurora.ninja.guild")) {
+                showToGuild((Player) sender, args.hasFlag('g'));
+                useExplosiveArrows((Player) sender, !args.hasFlag('x'));
+                allowConflictingPotions((Player) sender, !args.hasFlag('p'));
+            } else if (args.getFlags().size() > 0) {
+                ChatUtil.sendError(sender, "You must be a member of the ninja guild to use flags.");
             }
             ChatUtil.sendNotice(sender, "You are inspired and become a ninja!");
         }
@@ -274,8 +315,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         public void unninja(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
-            if (inst.hasPermission(sender, "aurora.rogue.guild")) {
-                throw new CommandException("You are a rogue not a ninja!");
+            if (!isNinja((Player) sender)) {
+                throw new CommandException("You are not a ninja!");
             }
 
             unninjaPlayer((Player) sender);
@@ -291,6 +332,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         private boolean isNinja = false;
         private boolean showToGuild = false;
+        private boolean explosiveArrows = true;
+        private boolean allowConflictingPotions = true;
 
         protected NinjaState() {
 
@@ -315,6 +358,26 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         public void showToGuild(boolean showToGuild) {
 
             this.showToGuild = showToGuild;
+        }
+
+        public boolean hasExplosiveArrows() {
+
+            return explosiveArrows;
+        }
+
+        public void useExplosiveArrows(boolean explosiveArrows) {
+
+            this.explosiveArrows = explosiveArrows;
+        }
+
+        public boolean allowsConflictingPotions() {
+
+            return allowConflictingPotions;
+        }
+
+        public void allowConflictingPotions(boolean allowConflictingPotions) {
+
+            this.allowConflictingPotions = allowConflictingPotions;
         }
 
         public Player getPlayer() {

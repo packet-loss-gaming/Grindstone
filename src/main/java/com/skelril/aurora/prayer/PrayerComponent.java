@@ -10,6 +10,8 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandUsageException;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
+import com.skelril.aurora.events.PrayerEvent;
+import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.exceptions.InvalidPrayerException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.PrayerFX.*;
@@ -431,10 +433,16 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
                 if (!integrityTest(player, prayer)) continue;
 
+                // Run our event
+                PrayerEvent event = new PrePrayerApplicationEvent(player, prayer);
+                server.getPluginManager().callEvent(event);
+
+                if (event.isCancelled()) continue;
+
                 prayer.getEffect().clean(player);
 
                 // Run our event
-                PrayerApplicationEvent event = new PrayerApplicationEvent(player, prayer);
+                event = new PrayerApplicationEvent(player, prayer);
                 server.getPluginManager().callEvent(event);
 
                 if (event.isCancelled()) {
