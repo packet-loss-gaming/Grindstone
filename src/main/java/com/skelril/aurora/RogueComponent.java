@@ -238,7 +238,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public void onPrayerApplication(PrePrayerApplicationEvent event) {
 
         Player player = event.getPlayer();
-        if (isRogue(player)) {
+        if (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")) {
             Iterator<PotionEffect> it = event.getCause().getEffect().getPotionEffects().iterator();
             while (it.hasNext()) {
                 if (blockedEffects.contains(it.next().getType().getId())) {

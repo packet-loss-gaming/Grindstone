@@ -190,7 +190,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     public void onPrayerApplication(PrePrayerApplicationEvent event) {
 
         Player player = event.getPlayer();
-        if (isNinja(player)) {
+        if (isNinja(player) && inst.hasPermission(player, "aurora.ninja.guild")) {
             Iterator<PotionEffect> it = event.getCause().getEffect().getPotionEffects().iterator();
             while (it.hasNext()) {
                 if (blockedEffects.contains(it.next().getType().getId())) {
