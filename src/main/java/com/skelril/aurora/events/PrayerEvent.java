@@ -3,7 +3,6 @@ package com.skelril.aurora.events;
 import com.skelril.aurora.prayer.Prayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
 /**
@@ -11,10 +10,8 @@ import org.bukkit.event.player.PlayerEvent;
  */
 public abstract class PrayerEvent extends PlayerEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
     private final Prayer prayer;
-
 
     public PrayerEvent(final Player player, Prayer prayer) {
 
@@ -25,16 +22,6 @@ public abstract class PrayerEvent extends PlayerEvent implements Cancellable {
     public Prayer getCause() {
 
         return prayer;
-    }
-
-    public HandlerList getHandlers() {
-
-        return handlers;
-    }
-
-    public static HandlerList getHandlerList() {
-
-        return handlers;
     }
 
     public boolean isCancelled() {
