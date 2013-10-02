@@ -184,7 +184,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                         @Override
                         public void run() {
                             if (canBlip(player)) {
-                                blip(player, 2);
+                                blip(player, inst.hasPermission(player, "aurora.rogue.guild") ? 2 : 1);
                             }
                         }
                     }, 1);
