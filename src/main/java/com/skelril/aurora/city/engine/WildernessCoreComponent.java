@@ -9,6 +9,7 @@ import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
+import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -503,7 +504,20 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         nextDropTime = System.currentTimeMillis() + (event.getSecondsLeft() * 1000);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
+    public void onLocalSpawn(ApocalypseLocalSpawnEvent event) {
+
+        Location location = event.getLocation();
+
+        if (!location.getWorld().getName().startsWith(config.wildernessWorld)) return;
+
+        int level = getLevel(location);
+        if (!ChanceUtil.getChance(level * level)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
 
         Player player = event.getPlayer();
