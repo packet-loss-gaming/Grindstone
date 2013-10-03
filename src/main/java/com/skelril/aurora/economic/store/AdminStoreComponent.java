@@ -133,6 +133,7 @@ public class AdminStoreComponent extends BukkitComponent {
             }
             double price = itemPricePair.getPrice() * amt;
             double rebate = 0;
+            double lottery = price * .03;
 
             if (inst.hasPermission(sender, "aurora.market.rebate.onepointseven")) {
                 rebate = price * .017;
@@ -151,6 +152,9 @@ public class AdminStoreComponent extends BukkitComponent {
                 }
                 player.getInventory().addItem(itemStack);
             }
+
+            // Deposit into the lottery account
+            econ.bankDeposit("Lottery", lottery);
 
             // Charge the money and send the sender some feedback
             econ.withdrawPlayer(playerName, price - rebate);

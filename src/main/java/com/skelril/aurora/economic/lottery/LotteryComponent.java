@@ -17,6 +17,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -55,6 +56,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
     private LocalConfiguration config;
 
+    private static String LOTTERY_BANK_ACCOUNT = "Lottery";
     private static double MIN_WINNING;
     private List<Player> recentList = new ArrayList<>();
     private LotteryTicketDatabase lotteryTicketDatabase;
@@ -344,6 +346,10 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
         double cash = getWinnerCash();
 
+        try {
+            economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
+        } catch (Throwable t) {
+        }
         economy.depositPlayer(name, cash);
         Bukkit.broadcastMessage(ChatColor.YELLOW + name + " has won: " +
                 ChatUtil.makeCountString(economy.format(cash),
@@ -367,7 +373,13 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
     public double getWinnerCash() {
 
-        return Math.round(getCount(lotteryTicketDatabase.getTickets()) * config.ticketPrice) * .75;
+        double amt = Math.round(getCount(lotteryTicketDatabase.getTickets()) * config.ticketPrice) * .75;
+
+        EconomyResponse response = economy.bankBalance(LOTTERY_BANK_ACCOUNT);
+        if (response.transactionSuccess()) {
+            amt += response.balance;
+        }
+        return amt;
     }
 
     public int getCount() {
