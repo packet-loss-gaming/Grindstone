@@ -356,7 +356,7 @@ public class EffectUtil {
 
         public static void evilFocus(Player owner, final LivingEntity target, final FreezeComponent FZ) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (20 * target.getHealth()), 9));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (10 * target.getHealth()), 9));
             if (target instanceof Player && !FZ.isFrozen((Player) target)) {
                 FZ.freezePlayer((Player) target);
                 server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -364,7 +364,7 @@ public class EffectUtil {
                     public void run() {
                         FZ.unfreezePlayer((Player) target);
                     }
-                }, (int) (20 * target.getHealth()));
+                }, (int) (7 * target.getHealth()));
             }
             ChatUtil.sendNotice(owner, "Your bow traps your foe in their own sins.");
         }
