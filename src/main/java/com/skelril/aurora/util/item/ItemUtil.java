@@ -663,6 +663,23 @@ public class ItemUtil {
         return count;
     }
 
+    private static final int[] swords = new int[]{
+            ItemID.WOOD_SWORD, ItemID.STONE_SWORD,
+            ItemID.IRON_SWORD, ItemID.GOLD_SWORD,
+            ItemID.DIAMOND_SWORD
+    };
+
+    public static boolean isSword(int itemId) {
+
+        for (int sword : swords) {
+            if (itemId == sword) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     private static final int[] axes = new int[]{
             ItemID.WOOD_AXE, ItemID.STONE_AXE,
             ItemID.IRON_AXE, ItemID.GOLD_AXE,
