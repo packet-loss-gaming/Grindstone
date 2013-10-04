@@ -139,6 +139,67 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamage(EntityDamageEvent event) {
+
+        Entity entity = event.getEntity();
+
+        if (entity instanceof Player && !true) {
+
+            Player player = (Player) entity;
+            ItemStack[] contents = player.getInventory().getContents();
+
+            if (ItemUtil.findItemOfName(contents, ChatColor.DARK_RED + "Red Feather")) {
+
+                final int redQD = ItemUtil.countItemsOfType(contents, ItemID.REDSTONE_DUST);
+                final int redQB = 9 * ItemUtil.countItemsOfType(contents, BlockID.REDSTONE_BLOCK);
+
+                int redQ = redQD + redQB;
+
+                if (redQ > 0) {
+
+                    contents = ItemUtil.removeItemOfType(contents, ItemID.REDSTONE_DUST);
+                    contents = ItemUtil.removeItemOfType(contents, BlockID.REDSTONE_BLOCK);
+
+                    player.getInventory().setContents(contents);
+
+                    final double dmg = event.getDamage();
+                    final int k = (dmg > 80 ? 16 : dmg > 40 ? 8 : dmg > 20 ? 4 : 2);
+                    final double result = dmg - (redQ * k);
+                    redQ = result > 0 ? 0 : (int) (Math.abs(result) / k);
+
+                    World w = player.getWorld();
+
+                    while (redQ / 9 > 0) {
+                        ItemStack is = new ItemStack(BlockID.REDSTONE_BLOCK);
+                        if (player.getInventory().firstEmpty() != -1) {
+                            player.getInventory().addItem(is);
+                        } else {
+                            w.dropItem(player.getLocation(), is);
+                        }
+                        redQ -= 9;
+                    }
+
+                    while (redQ > 0) {
+                        int r = Math.min(64, redQ);
+                        ItemStack is = new ItemStack(ItemID.REDSTONE_DUST, r);
+                        if (player.getInventory().firstEmpty() != -1) {
+                            player.getInventory().addItem(is);
+                        } else {
+                            w.dropItem(player.getLocation(), is);
+                        }
+                        redQ -= r;
+                    }
+
+                    //noinspection deprecation
+                    player.updateInventory();
+
+                    event.setDamage(Math.max(0, result));
+                }
+            }
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 

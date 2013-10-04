@@ -323,6 +323,18 @@ public class ItemUtil {
         }
     }
 
+    public static class Red {
+
+        public static ItemStack makeFeather() {
+
+            ItemStack redFeather = new ItemStack(ItemID.FEATHER);
+            ItemMeta redMeta = redFeather.getItemMeta();
+            redMeta.setDisplayName(ChatColor.DARK_RED + "Red Feather");
+            redFeather.setItemMeta(redMeta);
+            return redFeather;
+        }
+    }
+
     public static class CPotion {
 
         public static ItemStack divineCombatPotion() {

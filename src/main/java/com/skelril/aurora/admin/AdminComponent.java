@@ -863,6 +863,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         }
 
+        @Command(aliases = {"red"}, desc = "Lost Red items")
+        @NestedCommand({LostRedItem.class})
+        public void lostRedCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+
         @Command(aliases = {"misc"}, desc = "Lost Grave Yard items")
         @NestedCommand({LostMiscItem.class})
         public void lostMiscCommands(CommandContext args, CommandSender sender) throws CommandException {
@@ -1146,6 +1152,24 @@ public class AdminComponent extends BukkitComponent implements Listener {
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given a new unleashed bow.");
+        }
+    }
+
+    public class LostRedItem {
+
+        @Command(aliases = {"feather"},
+                usage = "<player>", desc = "Return a player's Red Feather",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.red.feather"})
+        public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.Red.makeFeather());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new red feather.");
         }
     }
 
