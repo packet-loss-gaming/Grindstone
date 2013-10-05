@@ -64,8 +64,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     private AdminComponent admin;
     @InjectComponent
     private AntiCheatCompatibilityComponent antiCheat;
-    @InjectComponent
-    private FreezeComponent freeze;
 
     private WorldGuardPlugin WG;
 
@@ -302,7 +300,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Unleashed.lifeLeech(owner, target);
                             break;
                         case EVIL_FOCUS:
-                            EffectUtil.Unleashed.evilFocus(owner, target, freeze);
+                            EffectUtil.Unleashed.evilFocus(owner, target);
                             break;
                     }
                 }

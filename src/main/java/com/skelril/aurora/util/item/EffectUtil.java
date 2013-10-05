@@ -1,7 +1,6 @@
 package com.skelril.aurora.util.item;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.FreezeComponent;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ClothColor;
@@ -45,28 +44,27 @@ public class EffectUtil {
 
         public static void fearBlaze(Player owner, LivingEntity target) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) (target.getHealth() * 20), 0));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) (target.getHealth() * 20), 0), true);
             target.setFireTicks((int) (owner.getHealth() * 20));
             ChatUtil.sendNotice(owner, "Your sword releases a deadly blaze.");
         }
 
         public static void curse(Player owner, LivingEntity target) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, (int) (owner.getHealth() * 24), 2));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, (int) (owner.getHealth() * 24), 2), true);
             ChatUtil.sendNotice(owner, "Your weapon curses its victim.");
         }
 
         public static void weaken(Player owner, LivingEntity target) {
 
-            int newTime = (int) (owner.getHealth() * 18);
-            target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, newTime, 1));
-            owner.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, newTime, 1));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, (int) (owner.getHealth() * 18), 1), true);
+            owner.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, (int) (owner.getHealth() * 18), 1), true);
             ChatUtil.sendNotice(owner, "Your sword leaches strength from its victim.");
         }
 
         public static void confuse(Player owner, LivingEntity target) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, (int) (owner.getHealth() * 18), 1));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, (int) (owner.getHealth() * 18), 1), true);
             ChatUtil.sendNotice(owner, "Your sword confuses its victim.");
         }
 
@@ -119,8 +117,8 @@ public class EffectUtil {
 
         public static void magicChain(Player owner, LivingEntity target) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (owner.getHealth() * 18), 2));
-            target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, (int) (owner.getHealth() * 18), 2));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (owner.getHealth() * 18), 2), true);
+            target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, (int) (owner.getHealth() * 18), 2), true);
             ChatUtil.sendNotice(owner, "Your bow slows its victim.");
         }
 
@@ -274,14 +272,15 @@ public class EffectUtil {
 
         public static void regen(Player owner, LivingEntity target) {
 
-            owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) (target.getHealth() * 10), 2));
+            owner.addPotionEffect(
+                    new PotionEffect(PotionEffectType.REGENERATION, (int) (target.getHealth() * 10), 2), true);
             ChatUtil.sendNotice(owner, "You gain a healing aura.");
         }
 
         public static void speed(Player owner, LivingEntity target) {
 
-            owner.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, (int) (owner.getHealth() * 18), 2));
-            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (owner.getHealth() * 18), 2));
+            owner.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, (int) (owner.getHealth() * 18), 2), true);
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (owner.getHealth() * 18), 2), true);
             ChatUtil.sendNotice(owner, "You gain a agile advantage over your opponent.");
         }
 
@@ -305,7 +304,7 @@ public class EffectUtil {
         public static void blind(Player owner, LivingEntity target) {
 
             if (target instanceof Player) {
-                target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0));
+                target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0), true);
                 ChatUtil.sendNotice(owner, "Your weapon blinds your victim.");
             } else {
                 healingLight(owner, target);
@@ -354,17 +353,11 @@ public class EffectUtil {
             ChatUtil.sendNotice(owner, "Your sword dishes out an incredible " + (int) Math.ceil(dmgTotal) + " damage!");
         }
 
-        public static void evilFocus(Player owner, final LivingEntity target, final FreezeComponent FZ) {
+        public static void evilFocus(Player owner, final LivingEntity target) {
 
-            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (10 * target.getHealth()), 9));
-            if (target instanceof Player && !FZ.isFrozen((Player) target)) {
-                FZ.freezePlayer((Player) target);
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-                    @Override
-                    public void run() {
-                        FZ.unfreezePlayer((Player) target);
-                    }
-                }, (int) (7 * target.getHealth()));
+            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (10 * target.getHealth()), 9), true);
+            if (target instanceof Player) {
+                target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0), true);
             }
             ChatUtil.sendNotice(owner, "Your bow traps your foe in their own sins.");
         }
@@ -375,7 +368,7 @@ public class EffectUtil {
         public static void blind(Player owner, LivingEntity target) {
 
             if (target instanceof Player) {
-                target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0));
+                target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0), true);
                 ChatUtil.sendNotice(owner, "Your weapon blinds your victim.");
             } else {
                 healingLight(owner, target);
