@@ -367,7 +367,11 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
 
         if (event instanceof EntityDamageByEntityEvent) {
-            if (((EntityDamageByEntityEvent) event).getDamager() instanceof Player) return;
+            Entity damager = ((EntityDamageByEntityEvent) event).getDamager();
+            if (damager instanceof Player) return;
+            if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
+                if (((Projectile) damager).getShooter() instanceof Player) return;
+            }
         }
         Location location = entity.getLocation();
         int level = getLevel(location);
