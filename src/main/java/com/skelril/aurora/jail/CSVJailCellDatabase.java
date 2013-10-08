@@ -4,6 +4,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.PlayerUtil;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
@@ -28,7 +29,7 @@ public class CSVJailCellDatabase implements JailCellDatabase {
     /**
      * Used to lookup cells by name
      */
-    protected Map<String, JailCell> nameJailCell = new HashMap<>();
+    protected Map<String, Map<String, JailCell>> nameJailCell = new HashMap<>();
 
     /**
      * A set of all cells
@@ -86,10 +87,15 @@ public class CSVJailCellDatabase implements JailCellDatabase {
                     int x = Integer.parseInt(line[3]);
                     int y = Integer.parseInt(line[4]);
                     int z = Integer.parseInt(line[5]);
-                    if ("".equals(name) || "null".equals(name))
-                        name = null;
+                    if ("".equals(name) || "null".equals(name)) name = null;
+                    if (name == null) continue;
                     JailCell jailCell = new JailCell(name, prison, world, x, y, z);
-                    if (name != null) nameJailCell.put(name, jailCell);
+                    Map<String, JailCell> map = nameJailCell.get(prison);
+                    if (map == null) {
+                        map = new HashMap<>();
+                        nameJailCell.put(prison, map);
+                    }
+                    map.put(name, jailCell);
                     jailCells.add(jailCell);
                 } catch (NumberFormatException e) {
                     log.warning("Non-int int field found in cell!");
@@ -165,39 +171,55 @@ public class CSVJailCellDatabase implements JailCellDatabase {
     }
 
     @Override
-    public boolean cellExist(String name) {
+    public boolean cellExist(String prison, String name) {
 
-        JailCell jailCell = nameJailCell.get(name.trim().toLowerCase());
-        return jailCell != null;
+        Map<String, JailCell> map = nameJailCell.get(prison.trim().toLowerCase());
+        return map != null && map.get(name.trim().toLowerCase()) != null;
     }
 
     @Override
-    public void createJailCell(String jailCellName, String prisonName, CommandSender source, Location location) {
+    public void createJailCell(String prisonName, String cellName, CommandSender source, Location location) {
 
-        JailCell jailCell = new JailCell(jailCellName.trim().toLowerCase(), prisonName.trim().toLowerCase(),
+        prisonName = prisonName.trim().toLowerCase();
+        cellName = cellName.trim().toLowerCase();
+
+        JailCell jailCell = new JailCell(cellName, prisonName,
                 location.getWorld().getName().trim(), location.getBlockX(), location.getBlockY(),
                 location.getBlockZ());
-        jailCellName = jailCellName.trim().toLowerCase();
-        nameJailCell.put(jailCellName, jailCell);
+
+        Map<String, JailCell> map = nameJailCell.get(prisonName);
+        if (map == null) {
+            map = new HashMap<>();
+            nameJailCell.put(prisonName, map);
+        }
+        map.put(cellName, jailCell);
         jailCells.add(jailCell);
         auditLogger.info(String.format("CELL: %s created cell: %s",
                 source == null ? "Plugin" : PlayerUtil.toUniqueName(source),
-                jailCellName));
+                cellName));
     }
 
     @Override
-    public boolean deleteJailCell(String jailCellName, CommandSender source) {
+    public boolean deleteJailCell(String prisonName, String cellName, CommandSender source) {
 
-        JailCell jailCell = null;
-        String cellName = null;
-        if (jailCellName != null) {
-            jailCellName = jailCellName.trim().toLowerCase();
-            jailCell = nameJailCell.remove(jailCellName);
-            if (jailCell != null) {
-                cellName = jailCellName;
-            }
-        }
+        Validate.notNull(prisonName);
+        Validate.notNull(cellName);
+
+        prisonName = prisonName.trim().toLowerCase();
+        cellName = cellName.trim().toLowerCase();
+
+        JailCell jailCell;
+
+        Map<String, JailCell> map = nameJailCell.get(prisonName);
+        if (map == null) return false; // No prison
+
+        jailCell = map.remove(cellName);
         if (jailCell != null) {
+
+            if (map.size() < 1) {
+                nameJailCell.remove(prisonName);
+            }
+
             jailCells.remove(jailCell);
             auditLogger.info(String.format("CELL: %s removed cell: %s",
                     source == null ? "Plugin" : PlayerUtil.toUniqueName(source),
@@ -208,15 +230,34 @@ public class CSVJailCellDatabase implements JailCellDatabase {
     }
 
     @Override
-    public JailCell getJailCell(String name) {
+    public JailCell getJailCell(String prisonName, String cellName) {
 
-        return nameJailCell.get(name.trim().toLowerCase());
+        Map<String, JailCell> map = nameJailCell.get(prisonName.trim().toLowerCase());
+        return map == null ? null : map.get(cellName.trim().toLowerCase());
     }
 
     @Override
-    public List<JailCell> getJailCells() {
+    public boolean prisonExist(String prisonName) {
 
-        return new ArrayList<>(jailCells);
+        return nameJailCell.containsKey(prisonName.trim().toLowerCase());
+    }
+
+    @Override
+    public Map<String, JailCell> getPrison(String prisonName) {
+
+        return Collections.unmodifiableMap(nameJailCell.get(prisonName.trim().toLowerCase()));
+    }
+
+    @Override
+    public Set<String> getPrisons() {
+
+        return Collections.unmodifiableSet(nameJailCell.keySet());
+    }
+
+    @Override
+    public Set<JailCell> getJailCells() {
+
+        return Collections.unmodifiableSet(jailCells);
     }
 
     @Override
@@ -239,7 +280,7 @@ public class CSVJailCellDatabase implements JailCellDatabase {
 
             public void remove() {
 
-                deleteJailCell(next.getCellName(), null);
+                deleteJailCell(next.getPrisonName(), next.getCellName(), null);
             }
         };
     }

@@ -3,7 +3,8 @@ package com.skelril.aurora.jail;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Author: Turtle9598
@@ -32,40 +33,69 @@ public interface JailCellDatabase extends Iterable<JailCell> {
     public boolean unload();
 
     /**
-     * Checks if a player's name is jailed.
+     * Checks if a cell exist.
      *
-     * @param name The name to check
-     * @return Whether name is jailed
+     * @param prisonName The name of the prison which contains the cell
+     * @param cellName   The name of the cell
+     * @return Whether cell exist
      */
-    public boolean cellExist(String name);
+    public boolean cellExist(String prisonName, String cellName);
 
     /**
      * Jails a player
      *
-     * @param jailCellName
+     * @param prisonName
+     * @param cellName
+     * @param source
      * @param location
      */
-    public void createJailCell(String jailCellName, String prisonName, CommandSender source, Location location);
+    public void createJailCell(String prisonName, String cellName, CommandSender source, Location location);
 
     /**
      * Unjails a player by name
      *
-     * @param jailCellName
+     * @param prisonName
+     * @param cellName
+     * @param source
      */
-    public boolean deleteJailCell(String jailCellName, CommandSender source);
+    public boolean deleteJailCell(String prisonName, String cellName, CommandSender source);
 
     /**
-     * Returns a jailcell with the given name
+     * Returns a JailCell with the given name
      *
-     * @param name The name given to the ban.
+     * @param prisonName The name of the prison which contains the cel
+     * @param cellName   The name of the cell to retrieve
      * @return The applicable Inmate
      */
-    public JailCell getJailCell(String name);
+    public JailCell getJailCell(String prisonName, String cellName);
 
     /**
-     * Returns a list of jail cells
+     * Checks if a prison exist.
+     *
+     * @param prisonName The name of the prison to check for
+     * @return Whether the prison exist
+     */
+    public boolean prisonExist(String prisonName);
+
+    /**
+     * Returns an unmodifiable map of the cells for that prison
+     *
+     * @param prisonName The name of the prison to get
+     * @return A map of the prison's cells
+     */
+    public Map<String, JailCell> getPrison(String prisonName);
+
+    /**
+     * Returns an unmodifiable list of prison names
+     *
+     * @return A list of prison names
+     */
+    public Set<String> getPrisons();
+
+    /**
+     * Returns an unmodifiable list of jail cells
      *
      * @return A list of jail cells
      */
-    public List<JailCell> getJailCells();
+    public Set<JailCell> getJailCells();
 }

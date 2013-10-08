@@ -14,7 +14,6 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -27,9 +26,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.*;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -50,7 +47,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     private InmateDatabase inmates;
     private JailCellDatabase jailCells;
     private LocalConfiguration config;
-    private Map<Player, JailCell> cell = new HashMap<>();
+    private Map<Player, JailCell> cells = new HashMap<>();
 
     @Override
     public void enable() {
@@ -158,12 +155,12 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
                 if (getInmateDatabase().isJailedName(player.getName())) {
 
-                    if (!player.isOnline() && cell.containsKey(player)) {
-                        cell.remove(player);
+                    if (!player.isOnline() && cells.containsKey(player)) {
+                        cells.remove(player);
                         continue;
                     }
 
-                    if (player.isOnline() && !cell.containsKey(player)) {
+                    if (player.isOnline() && !cells.containsKey(player)) {
                         Inmate inmate = getInmateDatabase().getJailedName(player.getName());
                         assignCell(player, inmate.getPrisonName());
                     }
@@ -171,10 +168,16 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                     adminComponent.standardizePlayer(player, true);
                     player.setFoodLevel(5);
 
+                    JailCell cell = cells.get(player);
+                    if (cell == null) {
+                        player.kickPlayer("Unable to find a jail cell...");
+                        continue;
+                    }
+
                     Location loc = player.getLocation();
-                    Location cellLoc = cell.get(player).getLocation();
+                    Location cellLoc = cell.getLocation();
                     if (player.getWorld() != cellLoc.getWorld() || loc.distanceSquared(cellLoc) > (config.moveThreshold * config.moveThreshold)) {
-                        player.teleport(cell.get(player).getLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                        player.teleport(cell.getLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     }
 
                     if (player.isOnline() && server.getMaxPlayers() - server.getOnlinePlayers().length <= config.freeSpotsHeld) {
@@ -294,7 +297,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                 }
             }
 
-            if (!prisonExist(prisonName)) throw new CommandException("No such prison exists.");
+            if (!getJailCellDatabase().prisonExist(prisonName)) throw new CommandException("No such prison exists.");
 
 
             // Jail the player
@@ -304,8 +307,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
             ChatUtil.sendNotice(sender, "The player: " + inmateName + " has been jailed!");
 
             if (!getInmateDatabase().save()) {
-                ChatUtil.sendError(sender, "Inmate database failed to save. See console.");
-                return;
+                throw new CommandException("Inmate database failed to save. See console.");
             }
 
             // Broadcast the Message
@@ -326,7 +328,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                 ChatUtil.sendNotice(sender, inmateName + " unjailed.");
 
                 if (!getInmateDatabase().save()) {
-                    sender.sendMessage(ChatColor.RED + "Inmate database failed to save. See console.");
+                    throw new CommandException("Inmate database failed to save. See console.");
                 }
             } else {
                 ChatUtil.sendError(sender, inmateName + " was not jailed.");
@@ -342,66 +344,55 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     public class ManagementCommands {
 
-        @Command(aliases = {"addcell"}, usage = "<name> <prison>", desc = "Create a cell", min = 2, max = 2)
+        @Command(aliases = {"addcell"}, usage = "<prison> <name>", desc = "Create a cell", min = 2, max = 2)
         @CommandPermissions({"aurora.jail.cells.add"})
         public void addCellCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (sender instanceof Player) {
-                String cellName = args.getString(0);
-                String prisonName = args.getString(1);
+                String prisonName = args.getString(0);
+                String cellName = args.getString(1);
                 Player player = (Player) sender;
                 Location loc = player.getLocation();
 
-                if (getJailCellDatabase().cellExist(cellName)) {
+                if (getJailCellDatabase().cellExist(prisonName, cellName)) {
                     throw new CommandException("Cell already exists!");
                 }
 
-                getJailCellDatabase().createJailCell(cellName, prisonName, player, loc);
+                getJailCellDatabase().createJailCell(prisonName, cellName, player, loc);
 
-                sender.sendMessage(ChatColor.YELLOW + "Cell '" + cellName + "' created.");
+                ChatUtil.sendNotice(sender, "Cell '" + cellName + "' created.");
 
                 if (!getJailCellDatabase().save()) {
-                    ChatUtil.sendError(sender, "Inmate database failed to save. See console.");
+                    throw new CommandException("Inmate database failed to save. See console.");
                 }
             } else {
                 throw new CommandException("You must be a player to use this command.");
             }
         }
 
-        @Command(aliases = {"del", "delete", "remove", "rem"}, usage = "<name>",
-                desc = "Remove a cell", min = 1, max = 2)
+        @Command(aliases = {"del", "delete", "remove", "rem"}, usage = "<prison> <cell>",
+                desc = "Remove a cell", min = 2, max = 2)
         @CommandPermissions({"aurora.jail.cells.remove"})
         public void removeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            String cellName = args.getString(0);
-            getJailCellDatabase().deleteJailCell(cellName, sender);
-            sender.sendMessage(ChatColor.YELLOW + "Cell '" + cellName + "' deleted.");
+            String prisonName = args.getString(0);
+            String cellName = args.getString(1);
+
+            if (!getJailCellDatabase().deleteJailCell(prisonName, cellName, sender) || !getJailCellDatabase().save()) {
+                throw new CommandException("No such cell could be successfully found/removed in that prison!");
+            }
+            ChatUtil.sendNotice(sender, "Cell '" + cellName + "' deleted.");
         }
     }
 
     private void assignCell(Player player, String prisonName) {
 
-        List<JailCell> prison = new ArrayList<>();
-        for (JailCell jailCell : getJailCellDatabase().getJailCells()) {
-            if (jailCell.getPrisonName().equalsIgnoreCase(prisonName)) prison.add(jailCell);
-        }
+        Map<String, JailCell> prison = getJailCellDatabase().getPrison(prisonName);
 
         if (prison.size() > 1) {
-            JailCell cell = prison.get(ChanceUtil.getRandom(prison.size() - 1));
-            this.cell.put(player, cell);
+            cells.put(player, prison.values().toArray(new JailCell[prison.size()])[ChanceUtil.getRandom(prison.size() - 1)]);
         } else {
-            JailCell cell = prison.get(0);
-            this.cell.put(player, cell);
+            cells.put(player, null);
         }
-    }
-
-    private boolean prisonExist(String prisonName) {
-
-        for (JailCell jailCell : getJailCellDatabase().getJailCells()) {
-            if (jailCell.getPrisonName().equalsIgnoreCase(prisonName)) {
-                return true;
-            }
-        }
-        return false;
     }
 }
