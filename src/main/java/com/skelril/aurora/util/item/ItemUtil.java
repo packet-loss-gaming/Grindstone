@@ -3,6 +3,7 @@ package com.skelril.aurora.util.item;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.item.itemstack.SerializableItemStack;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -532,6 +533,24 @@ public class ItemUtil {
         ItemStack[] returnStack = new ItemStack[stacks.length];
         for (int i = 0; i < stacks.length; i++) {
             returnStack[i] = stacks[i] == null ? null : stacks[i].clone();
+        }
+        return returnStack;
+    }
+
+    public static SerializableItemStack[] serialize(ItemStack[] stacks) {
+
+        SerializableItemStack[] returnStack = new SerializableItemStack[stacks.length];
+        for (int i = 0; i < stacks.length; i++) {
+            returnStack[i] = stacks[i] == null ? null : new SerializableItemStack(stacks[i]);
+        }
+        return returnStack;
+    }
+
+    public static ItemStack[] unSerialize(SerializableItemStack[] stacks) {
+
+        ItemStack[] returnStack = new ItemStack[stacks.length];
+        for (int i = 0; i < stacks.length; i++) {
+            returnStack[i] = stacks[i] == null ? null : stacks[i].bukkitRestore();
         }
         return returnStack;
     }

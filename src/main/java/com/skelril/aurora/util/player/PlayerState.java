@@ -3,10 +3,12 @@ package com.skelril.aurora.util.player;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.Serializable;
+
 /**
  * Author: Turtle9598
  */
-public class PlayerState extends GenericWealthStore {
+public class PlayerState extends GenericWealthStore implements Serializable {
 
     private double health = 20;
     private int hunger = 20;
@@ -14,7 +16,7 @@ public class PlayerState extends GenericWealthStore {
     private float exhaustion = 0;
     private int level = 0;
     private float experience = 0;
-    private Location location = null;
+    private transient Location location = null;
 
     public PlayerState(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents, int level,
                        float experience) {

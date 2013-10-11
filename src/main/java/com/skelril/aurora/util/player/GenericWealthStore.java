@@ -1,33 +1,45 @@
 package com.skelril.aurora.util.player;
 
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.itemstack.SerializableItemStack;
+import org.apache.commons.lang.Validate;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Author: Turtle9598
  */
-public abstract class GenericWealthStore {
+public abstract class GenericWealthStore implements Serializable {
 
     private String ownerName;
-    private ItemStack[] armourContents = null;
-    private ItemStack[] inventoryContents = null;
-    private List<ItemStack> itemStacks = new ArrayList<>();
+    // For Serialization
+    private SerializableItemStack[] armourContents = null;
+    private SerializableItemStack[] inventoryContents = null;
+    // For Usage
+    private transient ItemStack[] cacheArmourContents = null;
+    private transient ItemStack[] cacheInventoryContents = null;
+    private transient List<ItemStack> itemStacks = new ArrayList<>();
     private int value = 0;
 
     public GenericWealthStore(String ownerName, ItemStack[] inventoryContents) {
 
+        Validate.notNull(inventoryContents);
+
         this.ownerName = ownerName;
-        this.inventoryContents = ItemUtil.clone(inventoryContents);
+        this.inventoryContents = ItemUtil.serialize(inventoryContents);
     }
 
     public GenericWealthStore(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents) {
 
+        Validate.notNull(inventoryContents);
+        Validate.notNull(armourContents);
+
         this.ownerName = ownerName;
-        this.inventoryContents = ItemUtil.clone(inventoryContents);
-        this.armourContents = ItemUtil.clone(armourContents);
+        this.inventoryContents = ItemUtil.serialize(inventoryContents);
+        this.armourContents = ItemUtil.serialize(armourContents);
     }
 
     public GenericWealthStore(String ownerName, List<ItemStack> itemStacks) {
@@ -61,22 +73,32 @@ public abstract class GenericWealthStore {
 
     public ItemStack[] getArmourContents() {
 
-        return armourContents;
+        if (cacheArmourContents == null) {
+            cacheArmourContents = ItemUtil.unSerialize(armourContents);
+        }
+        return ItemUtil.clone(cacheArmourContents);
     }
 
     public void setArmourContents(ItemStack[] armourContents) {
 
-        this.armourContents = ItemUtil.clone(armourContents);
+        Validate.notNull(armourContents);
+
+        this.armourContents = ItemUtil.serialize(armourContents);
     }
 
     public ItemStack[] getInventoryContents() {
 
-        return inventoryContents;
+        if (cacheInventoryContents == null) {
+            cacheInventoryContents = ItemUtil.unSerialize(inventoryContents);
+        }
+        return ItemUtil.clone(cacheInventoryContents);
     }
 
     public void setInventoryContents(ItemStack[] inventoryContents) {
 
-        this.inventoryContents = ItemUtil.clone(inventoryContents);
+        Validate.notNull(inventoryContents);
+
+        this.inventoryContents = ItemUtil.serialize(inventoryContents);
     }
 
     public List<ItemStack> getItemStacks() {

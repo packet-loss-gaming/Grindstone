@@ -10,7 +10,6 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.skelril.aurora.NinjaComponent;
 import com.skelril.aurora.RogueComponent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
-import com.skelril.aurora.events.ServerShutdownEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -42,14 +41,21 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.io.File;
-import java.util.*;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -72,11 +78,18 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     private InventoryAuditLogger auditor;
 
-    private boolean lockAdminMode = false;
+    private final String stateDir = inst.getDataFolder().getPath() + "/admin/states/";
+    private final FilenameFilter stateFilter = new FilenameFilter() {
+        @Override
+        public boolean accept(File dir, String name) {
+
+            return !name.startsWith("old-") && name.endsWith(".dat");
+        }
+    };
+
     private static Permission permission = null;
     private final List<String> sysops = new ArrayList<>();
-    private final HashMap<String, PlayerState> playerState = new HashMap<>();
-    private final HashMap<String, AdminPlayerState> offlinePlayerState = new HashMap<>();
+    private final ConcurrentHashMap<String, PlayerState> playerState = new ConcurrentHashMap<>();
 
     @Override
     public void enable() {
@@ -89,15 +102,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         setupPermissions();
-    }
 
-    @Override
-    public void disable() {
-
-        if (!lockAdminMode) {
-            saveInventories();
-        }
-        dumpInventories();
+        loadInventories();
     }
 
     private WorldEditPlugin worldEdit() {
@@ -132,25 +138,104 @@ public class AdminComponent extends BukkitComponent implements Listener {
         return false;
     }
 
-    private void saveInventories() {
+    public void loadInventories() {
 
-        for (Player player : server.getOnlinePlayers()) {
+        server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
+            @Override
+            public void run() {
 
-            if (playerState.containsKey(player.getName())) deadmin(player, true);
+                File workingDir = new File(stateDir);
+
+                if (!workingDir.exists()) return;
+
+                File[] files = workingDir.listFiles(stateFilter);
+
+                for (File file : files) {
+
+                    FileInputStream fis;
+                    try {
+                        fis = new FileInputStream(file);
+                        ObjectInputStream ois = new ObjectInputStream(fis);
+
+                        PlayerState aPlayerState = (PlayerState) ois.readObject();
+                        playerState.put(aPlayerState.getOwnerName(), aPlayerState);
+
+                        ois.close();
+                    } catch (FileNotFoundException e) {
+                        log.warning("Failed to find an admin state file!");
+                    } catch (ClassNotFoundException e) {
+                        log.warning("Couldn't find a handling class for the admin state file!");
+                    } catch (IOException e) {
+                        log.warning("Failed to read an admin state file!");
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
+    public void writeInventories() {
+
+        for (PlayerState state : playerState.values()) {
+            writeInventory(state);
         }
     }
 
-    private void dumpInventories() {
+    public void writeInventory(String playerName) {
 
-        for (PlayerState state : playerState.values()) {
-            String ownerName = state.getOwnerName();
-            for (ItemStack stack : state.getArmourContents()) {
-                auditor.log(ownerName, stack);
+        if (!playerState.containsKey(playerName)) return;
+
+        writeInventory(playerState.get(playerName));
+    }
+
+    public void writeInventory(final PlayerState state) {
+
+
+        server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
+            @Override
+            public void run() {
+
+                String fileName = state.getOwnerName() + ".dat";
+
+                File file = new File(stateDir + fileName);
+
+                if (file.exists()) {
+                    File oldFile = new File(stateDir + "old-" + fileName);
+                    if (!oldFile.exists() || oldFile.delete()) {
+                        if (!file.renameTo(oldFile)) {
+                            log.warning("Failed to rename admin state file: " + fileName + "!");
+                            return;
+                        }
+                    }
+                }
+
+                try {
+                    File workingDir = file.getParentFile();
+                    if (!workingDir.exists() && !workingDir.mkdirs()) {
+                        log.warning("Failed to create admin state file: " + fileName + "!");
+                        return;
+                    }
+
+                    file.createNewFile();
+                } catch (IOException e) {
+                    log.warning("Failed to create admin state file: " + fileName + "!");
+                    return;
+                }
+
+                FileOutputStream fos;
+                try {
+                    fos = new FileOutputStream(file);
+                    ObjectOutputStream oss = new ObjectOutputStream(fos);
+                    oss.writeObject(state);
+                    oss.close();
+                } catch (FileNotFoundException e) {
+                    log.warning("Failed to find admin state file: " + fileName + "!");
+                } catch (IOException e) {
+                    log.warning("Failed to write admin state file: " + fileName + "!");
+                    e.printStackTrace();
+                }
             }
-            for (ItemStack stack : state.getInventoryContents()) {
-                auditor.log(ownerName, stack);
-            }
-        }
+        });
     }
 
     public InventoryAuditLogger getInventoryDumpLogger() {
@@ -228,6 +313,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     default:
                         break;
                 }
+
+                writeInventory(player.getName());
             }
         }
         return isAdmin(player);
@@ -375,78 +462,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
     public boolean standardizePlayer(Player player, boolean force) {
 
         return deadmin(player, force) && deguildPlayer(player);
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onShutDownEvent(ServerShutdownEvent event) {
-
-        if (event.getSecondsLeft() <= 3 && !lockAdminMode) {
-            saveInventories();
-            lockAdminMode = true;
-        }
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerJoin(PlayerJoinEvent event) {
-
-        final Player player = event.getPlayer();
-        boolean isOfflineAdmin = offlinePlayerState.containsKey(player.getName());
-
-        // If someone lies about this, big deal
-        // noinspection deprecation
-        if (!player.isOnGround() && (isAdmin(player) || isOfflineAdmin || player.getAllowFlight())) {
-            if (isOfflineAdmin) {
-
-                AdminPlayerState identity = offlinePlayerState.get(player.getName());
-
-                // Restore Admin State
-                admin(player, identity.getAdminState());
-
-                // Restore the contents
-                player.getInventory().setArmorContents(identity.getArmourContents());
-                player.getInventory().setContents(identity.getInventoryContents());
-                player.setHealth(identity.getHealth());
-                player.setFoodLevel(identity.getHunger());
-                player.setSaturation(identity.getSaturation());
-                player.setExhaustion(identity.getExhaustion());
-                player.setLevel(identity.getLevel());
-                player.setExp(identity.getExperience());
-
-                offlinePlayerState.remove(player.getName());
-            }
-
-            server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    LocationUtil.toGround(player);
-                    player.setAllowFlight(false);
-                    player.setFlySpeed(.1F);
-                }
-            }, 1);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerQuit(PlayerQuitEvent event) {
-
-        Player player = event.getPlayer();
-
-        if (playerState.containsKey(player.getName())) {
-
-            offlinePlayerState.put(player.getName(), new AdminPlayerState(player.getName(),
-                    player.getInventory().getContents(),
-                    player.getInventory().getArmorContents(),
-                    getAdminState(player),
-                    player.getHealth(),
-                    player.getFoodLevel(),
-                    player.getSaturation(),
-                    player.getExhaustion(),
-                    player.getLevel(),
-                    player.getExp()));
-            deadmin(player, true);
-        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -682,9 +697,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             Player player = (Player) sender;
 
-            if (lockAdminMode) {
-                throw new CommandException("Admin mode is currently locked for shutdown!");
-            }
             if (!isAdmin(player)) {
                 boolean admin;
                 if (args.hasFlag('e') && inst.hasPermission(player, "aurora.admin.adminmode.sysop")) {
