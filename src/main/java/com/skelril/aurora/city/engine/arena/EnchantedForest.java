@@ -461,7 +461,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                 treeMap = (BaseBlockRecordIndex) treeFileO;
                 log.info("Loaded: " + treeMap.size() + " tree records for: " + getId() + ".");
             } else {
-                log.warning("Invalid block record file encountered: " + generalFile.getName() + "!");
+                log.warning("Invalid block record file encountered: " + treeFile.getName() + "!");
                 log.warning("Attempting to use backup file...");
 
                 treeFile = new File(getWorkingDir().getPath() + "/old-" + treeFile.getName());
