@@ -1,12 +1,12 @@
 package com.skelril.aurora.util.restoration;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.Iterator;
-import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class BaseBlockRecordIndex extends BlockRecordIndex {
+public class BaseBlockRecordIndex extends BlockRecordIndex implements Serializable {
 
-    private List<BlockRecord> recordList = new ArrayList<>();
+    private ConcurrentLinkedQueue<BlockRecord> recordList = new ConcurrentLinkedQueue<>();
 
     public void addItem(BlockRecord record) {
 
@@ -38,5 +38,11 @@ public class BaseBlockRecordIndex extends BlockRecordIndex {
             active.revert();
             it.remove();
         }
+    }
+
+    @Override
+    public int size() {
+
+        return recordList.size();
     }
 }

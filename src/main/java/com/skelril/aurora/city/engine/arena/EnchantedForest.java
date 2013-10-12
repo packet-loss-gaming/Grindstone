@@ -14,6 +14,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.restoration.BaseBlockRecordIndex;
 import com.skelril.aurora.util.restoration.BlockRecord;
 import org.bukkit.ChatColor;
@@ -42,13 +43,14 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
+import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 
 /**
  * Author: Turtle9598
  */
-public class EnchantedForest extends AbstractRegionedArena implements MonitoredArena, Listener {
+public class EnchantedForest extends AbstractRegionedArena implements MonitoredArena, PersistentArena, Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -67,6 +69,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+
+        reloadData();
     }
 
     @Override
@@ -86,7 +90,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     @Override
     public void disable() {
 
-        forceRestoreBlocks();
+        writeData();
     }
 
     @Override
@@ -120,6 +124,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         treeMap.revertByTime(mainMin);
         generalMap.revertByTime(secMin);
+
+        writeData();
     }
 
     private List<ItemStack> getRandomDropSet(CommandSender player) {
@@ -427,5 +433,79 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     public void onEggHatch(EggHatchEvent event) {
 
         if (contains(event.getEgg())) event.setCancelled(true);
+    }
+
+    @Override
+    public void writeData() {
+
+        server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
+            @Override
+            public void run() {
+
+                IOUtil.toBinaryFile(getWorkingDir(), "trees", treeMap);
+                IOUtil.toBinaryFile(getWorkingDir(), "general", generalMap);
+            }
+        });
+    }
+
+    @Override
+    public void reloadData() {
+
+        File treeFile = new File(getWorkingDir().getPath() + "/trees.dat");
+        File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
+
+        if (treeFile.exists()) {
+            Object treeFileO = IOUtil.readBinaryFile(treeFile);
+
+            if (treeFileO instanceof BaseBlockRecordIndex) {
+                treeMap = (BaseBlockRecordIndex) treeFileO;
+                log.info("Loaded: " + treeMap.size() + " tree records for: " + getId() + ".");
+            } else {
+                log.warning("Invalid block record file encountered: " + generalFile.getName() + "!");
+                log.warning("Attempting to use backup file...");
+
+                treeFile = new File(getWorkingDir().getPath() + "/old-" + treeFile.getName());
+
+                if (treeFile.exists()) {
+
+                    treeFileO = IOUtil.readBinaryFile(treeFile);
+
+                    if (treeFileO instanceof BaseBlockRecordIndex) {
+                        treeMap = (BaseBlockRecordIndex) treeFileO;
+                        log.info("Backup file loaded successfully!");
+                        log.info("Loaded: " + treeMap.size() + " tree records for: " + getId() + ".");
+                    } else {
+                        log.warning("Backup file failed to load!");
+                    }
+                }
+            }
+        }
+
+        if (generalFile.exists()) {
+            Object generalFileO = IOUtil.readBinaryFile(generalFile);
+
+            if (generalFileO instanceof BaseBlockRecordIndex) {
+                generalMap = (BaseBlockRecordIndex) generalFileO;
+                log.info("Loaded: " + generalMap.size() + " general records for: " + getId() + ".");
+            } else {
+                log.warning("Invalid block record file encountered: " + generalFile.getName() + "!");
+                log.warning("Attempting to use backup file...");
+
+                generalFile = new File(getWorkingDir().getPath() + "/old-" + generalFile.getName());
+
+                if (generalFile.exists()) {
+
+                    generalFileO = IOUtil.readBinaryFile(generalFile);
+
+                    if (generalFileO instanceof BaseBlockRecordIndex) {
+                        generalMap = (BaseBlockRecordIndex) generalFileO;
+                        log.info("Backup file loaded successfully!");
+                        log.info("Loaded: " + generalMap.size() + " general records for: " + getId() + ".");
+                    } else {
+                        log.warning("Backup file failed to load!");
+                    }
+                }
+            }
+        }
     }
 }

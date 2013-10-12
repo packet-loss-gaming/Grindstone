@@ -14,6 +14,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.database.InventoryAuditLogger;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -50,7 +51,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.io.*;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -152,22 +154,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
                 for (File file : files) {
 
-                    FileInputStream fis;
-                    try {
-                        fis = new FileInputStream(file);
-                        ObjectInputStream ois = new ObjectInputStream(fis);
-
-                        PlayerState aPlayerState = (PlayerState) ois.readObject();
+                    Object o = IOUtil.readBinaryFile(file);
+                    if (o instanceof PlayerState) {
+                        PlayerState aPlayerState = (PlayerState) o;
                         playerState.put(aPlayerState.getOwnerName(), aPlayerState);
-
-                        ois.close();
-                    } catch (FileNotFoundException e) {
-                        log.warning("Failed to find an admin state file!");
-                    } catch (ClassNotFoundException e) {
-                        log.warning("Couldn't find a handling class for the admin state file!");
-                    } catch (IOException e) {
-                        log.warning("Failed to read an admin state file!");
-                        e.printStackTrace();
+                    } else {
+                        log.warning("Invalid player state file encountered: " + file.getName() + "!");
                     }
                 }
             }
@@ -195,45 +187,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
             @Override
             public void run() {
 
-                String fileName = state.getOwnerName() + ".dat";
-
-                File file = new File(stateDir + fileName);
-
-                if (file.exists()) {
-                    File oldFile = new File(stateDir + "old-" + fileName);
-                    if (!oldFile.exists() || oldFile.delete()) {
-                        if (!file.renameTo(oldFile)) {
-                            log.warning("Failed to rename admin state file: " + fileName + "!");
-                            return;
-                        }
-                    }
-                }
-
-                try {
-                    File workingDir = file.getParentFile();
-                    if (!workingDir.exists() && !workingDir.mkdirs()) {
-                        log.warning("Failed to create admin state file: " + fileName + "!");
-                        return;
-                    }
-
-                    file.createNewFile();
-                } catch (IOException e) {
-                    log.warning("Failed to create admin state file: " + fileName + "!");
-                    return;
-                }
-
-                FileOutputStream fos;
-                try {
-                    fos = new FileOutputStream(file);
-                    ObjectOutputStream oss = new ObjectOutputStream(fos);
-                    oss.writeObject(state);
-                    oss.close();
-                } catch (FileNotFoundException e) {
-                    log.warning("Failed to find admin state file: " + fileName + "!");
-                } catch (IOException e) {
-                    log.warning("Failed to write admin state file: " + fileName + "!");
-                    e.printStackTrace();
-                }
+                IOUtil.toBinaryFile(new File(stateDir), state.getOwnerName(), state);
             }
         });
     }

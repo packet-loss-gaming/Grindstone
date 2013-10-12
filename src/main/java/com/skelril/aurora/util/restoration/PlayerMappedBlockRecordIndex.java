@@ -89,4 +89,10 @@ public class PlayerMappedBlockRecordIndex extends BlockRecordIndex {
             }
         }
     }
+
+    @Override
+    public int size() {
+
+        return recordMap.size();
+    }
 }

@@ -1,27 +1,52 @@
 package com.skelril.aurora.util.restoration;
 
 import com.sk89q.worldedit.blocks.BaseBlock;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 
-public class BlockRecord implements Comparable<BlockRecord> {
+import java.io.Serializable;
 
-    final Location location;
-    final BaseBlock blockData;
+public class BlockRecord implements Comparable<BlockRecord>, Serializable {
+
+    // Location information
+    transient World world = null;
+    final String worldName;
+    final int x, y, z;
+
+    // Block Information
+    final int type, data;
+
+    // Time Information
     final long time;
 
     public BlockRecord(Block block) {
 
-        this.location = block.getLocation();
-        this.blockData = new BaseBlock(block.getTypeId(), block.getData());
+        this.world = block.getWorld();
+        this.worldName = world.getName();
+
+        this.x = block.getX();
+        this.y = block.getY();
+        this.z = block.getZ();
+
+        this.type = block.getTypeId();
+        this.data = block.getData();
         this.time = System.currentTimeMillis();
     }
 
     public BlockRecord(Location location, BaseBlock blockData) {
 
-        this.location = location.clone();
-        this.blockData = blockData;
+        this.world = location.getWorld();
+        this.worldName = world.getName();
+
+        this.x = location.getBlockX();
+        this.y = location.getBlockY();
+        this.z = location.getBlockZ();
+
+        this.type = blockData.getType();
+        this.data = blockData.getData();
         this.time = System.currentTimeMillis();
     }
 
@@ -32,12 +57,17 @@ public class BlockRecord implements Comparable<BlockRecord> {
 
     public void revert() {
 
-        Chunk chunk = location.getChunk();
+        if (world == null) {
+            world = Bukkit.getWorld(worldName);
+        }
+
+        Block block = world.getBlockAt(x, y, z);
+        Chunk chunk = block.getChunk();
         if (!chunk.isLoaded()) {
             chunk.load();
         }
 
-        location.getBlock().setTypeIdAndData(blockData.getType(), (byte) blockData.getData(), true);
+        block.setTypeIdAndData(type, (byte) data, true);
     }
 
     // Oldest to newest

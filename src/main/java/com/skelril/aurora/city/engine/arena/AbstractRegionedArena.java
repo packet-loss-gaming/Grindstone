@@ -10,6 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -122,5 +123,10 @@ public abstract class AbstractRegionedArena {
     public World getWorld() {
 
         return world;
+    }
+
+    public File getWorkingDir() {
+
+        return new File(inst.getDataFolder() + "/area/" + region.getId() + "/");
     }
 }
