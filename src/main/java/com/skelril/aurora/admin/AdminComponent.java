@@ -42,10 +42,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
@@ -104,8 +101,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         setupPermissions();
-
-        loadInventories();
     }
 
     private WorldEditPlugin worldEdit() {
@@ -140,30 +135,54 @@ public class AdminComponent extends BukkitComponent implements Listener {
         return false;
     }
 
+    public boolean hasInventoryLoaded(String player) {
+
+        return playerState.containsKey(player) && playerState.get(player) != null;
+    }
+
     public void loadInventories() {
 
-        server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
-            @Override
-            public void run() {
+        File workingDir = new File(stateDir);
 
-                File workingDir = new File(stateDir);
+        if (!workingDir.exists()) return;
 
-                if (!workingDir.exists()) return;
+        for (File file : workingDir.listFiles(stateFilter)) {
 
-                File[] files = workingDir.listFiles(stateFilter);
-
-                for (File file : files) {
-
-                    Object o = IOUtil.readBinaryFile(file);
-                    if (o instanceof PlayerState) {
-                        PlayerState aPlayerState = (PlayerState) o;
-                        playerState.put(aPlayerState.getOwnerName(), aPlayerState);
-                    } else {
-                        log.warning("Invalid player state file encountered: " + file.getName() + "!");
-                    }
-                }
+            Object o = IOUtil.readBinaryFile(file);
+            if (o instanceof PlayerState) {
+                PlayerState aPlayerState = (PlayerState) o;
+                playerState.put(aPlayerState.getOwnerName(), aPlayerState);
+            } else {
+                log.warning("Invalid player state file encountered: " + file.getName() + "!");
             }
-        });
+        }
+    }
+
+    /**
+     * A thread safe method to load an inventory into the system
+     *
+     * @param playerName - The player who should be loaded
+     */
+    public void loadInventory(final String playerName) {
+
+        File file = new File(stateDir + "/" + playerName + ".dat");
+
+        if (!file.exists()) return;
+
+        Object o = IOUtil.readBinaryFile(file);
+        if (o instanceof PlayerState) {
+            PlayerState aPlayerState = (PlayerState) o;
+            playerState.put(aPlayerState.getOwnerName(), aPlayerState);
+        } else {
+            log.warning("Invalid player state file encountered: " + file.getName() + "!");
+        }
+    }
+
+    public void unloadInventory(final String playerName) {
+
+        if (playerState.containsKey(playerName)) {
+            playerState.remove(playerName);
+        }
     }
 
     public void writeInventories() {
@@ -180,6 +199,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
         writeInventory(playerState.get(playerName));
     }
 
+    /**
+     * Writes a player's inventory on a seperate thread
+     *
+     * @param state - The player state to write
+     */
     public void writeInventory(final PlayerState state) {
 
 
@@ -416,6 +440,18 @@ public class AdminComponent extends BukkitComponent implements Listener {
     public boolean standardizePlayer(Player player, boolean force) {
 
         return deadmin(player, force) && deguildPlayer(player);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPreLogin(AsyncPlayerPreLoginEvent event) {
+
+        loadInventory(event.getName());
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+
+        unloadInventory(event.getPlayer().getName());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -671,16 +707,16 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 } else if (admin) {
                     ChatUtil.sendNotice(sender, "You have entered admin mode.");
                 } else {
-                    ChatUtil.sendWarning(sender, "You fail to enter admin mode.");
+                    throw new CommandException("You fail to enter admin mode.");
                 }
             } else {
-                ChatUtil.sendError(sender, "You were already in admin mode!");
+                throw new CommandException("You were already in admin mode!");
             }
         }
 
         @Command(aliases = {"deadmin"},
                 usage = "", desc = "Leave Admin Mode",
-                flags = "", min = 0, max = 0)
+                flags = "k", min = 0, max = 0)
         public void deadminModeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
@@ -688,13 +724,17 @@ public class AdminComponent extends BukkitComponent implements Listener {
             Player player = (Player) sender;
 
             if (isAdmin(player)) {
+                if (!args.hasFlag('k') && !hasInventoryLoaded(player.getName())) {
+                    throw new CommandException("Your inventory is not loaded! \nLeaving admin mode will result in item loss! " +
+                            "\nUse \"/deadmin -k\" to ignore this warning and continue anyways.");
+                }
                 if (deadmin(player, true)) {
                     ChatUtil.sendNotice(sender, "You have left admin mode.");
                 } else {
-                    ChatUtil.sendWarning(sender, "You fail to leave admin mode.");
+                    throw new CommandException("You fail to leave admin mode.");
                 }
             } else {
-                ChatUtil.sendError(sender, "You were not in admin mode!");
+                throw new CommandException("You were not in admin mode!");
             }
         }
     }
