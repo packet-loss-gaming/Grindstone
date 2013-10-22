@@ -196,7 +196,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     .add(0, r.getMinimumPoint().getY(), 0);
             BukkitWorld world = new BukkitWorld(getWorld());
             EditSession skullEditor = new EditSession(world, 1);
-            skullEditor.rawSetBlock(v, new SkullBlock(3, b, player.getName()));
+            skullEditor.rawSetBlock(v, new SkullBlock(0x1, b, player.getName()));
         }
     }
 
