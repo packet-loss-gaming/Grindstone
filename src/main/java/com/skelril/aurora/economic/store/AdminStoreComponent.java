@@ -169,61 +169,136 @@ public class AdminStoreComponent extends BukkitComponent {
 
         @Command(aliases = {"sell", "s"},
                 usage = "", desc = "Sell an item",
-                flags = "", min = 0, max = 0)
+                flags = "hau", min = 0, max = 0)
         public void sellCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             String playerName = checkPlayer(sender);
             final Player player = (Player) sender;
 
-            ItemStack stack = player.getInventory().getItemInHand();
-            if (stack == null || stack.getTypeId() == 0) {
-                throw new CommandException("That's not a valid item!");
+            ItemStack[] itemStacks = player.getInventory().getContents();
+
+            HashMap<String, Integer> transactions = new HashMap<>();
+            double payment = 0;
+
+            ItemStack filter = null;
+
+            boolean singleItem = false;
+            int min, max;
+
+            if (args.hasFlag('a')) {
+                min = 0;
+                max = itemStacks.length;
+            } else if (args.hasFlag('h')) {
+                min = 0;
+                max = 9;
+            } else {
+                min = player.getInventory().getHeldItemSlot();
+                max = min + 1;
+
+                singleItem = true;
             }
 
-            ItemMeta stackMeta = stack.getItemMeta();
-            String itemName = stack.getTypeId() + ":" + stack.getDurability();
-            if (stackMeta.hasDisplayName()) {
-                itemName = stackMeta.getDisplayName();
-                if (!ItemUtil.isAuthenticCustomItem(itemName)) {
-                    throw new CommandException("You cannot sell items that have been named here!");
+            if (!singleItem && !args.hasFlag('u')) {
+                filter = player.getItemInHand().clone();
+                if (!ItemType.usesDamageValue(filter.getTypeId())) {
+                    filter.setDurability((short) 0);
                 }
-                itemName = ChatColor.stripColor(itemName);
             }
 
-            double percentageSale = 1;
-            if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
-                if (stack.getAmount() > 1) {
-                    throw new CommandException(NOT_AVAILIBLE);
+            for (int i = min; i < max; i++) {
+
+                ItemStack stack = itemStacks[i];
+
+                if (stack == null || stack.getTypeId() == 0) {
+                    if (singleItem) {
+                        throw new CommandException("That's not a valid item!");
+                    } else {
+                        continue;
+                    }
                 }
-                percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
-            }
 
-            if (!hasItemOfName(itemName)) {
-                ItemType type = ItemType.lookup(itemName);
-                if (type == null) {
-                    throw new CommandException(NOT_AVAILIBLE);
+                if (filter != null) {
+                    ItemStack testStack = stack.clone();
+                    if (!ItemType.usesDamageValue(testStack.getTypeId())) {
+                        testStack.setDurability((short) 0);
+                    }
+
+                    if (!filter.isSimilar(testStack)) continue;
                 }
-                itemName = type.getName();
-            }
 
-            ItemPricePair itemPricePair = itemStoreDatabase.getItem(itemName);
-
-            if (itemPricePair == null || !itemPricePair.isSellable()) {
-                throw new CommandException(NOT_AVAILIBLE);
-            }
-
-            int amt = stack.getAmount();
-            double payment = itemPricePair.getSellPrice() * amt * percentageSale;
-
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-                @Override
-                public void run() {
-                    player.getInventory().setItemInHand(null);
-
+                ItemMeta stackMeta = stack.getItemMeta();
+                String itemName = stack.getTypeId() + ":" + stack.getDurability();
+                if (stackMeta.hasDisplayName()) {
+                    itemName = stackMeta.getDisplayName();
+                    if (!ItemUtil.isAuthenticCustomItem(itemName)) {
+                        if (singleItem) {
+                            throw new CommandException("You cannot sell items that have been renamed here!");
+                        } else {
+                            continue;
+                        }
+                    }
+                    itemName = ChatColor.stripColor(itemName);
                 }
-            }, 1);
+
+                double percentageSale = 1;
+                if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
+                    if (stack.getAmount() > 1) {
+                        if (singleItem) {
+                            throw new CommandException(NOT_AVAILIBLE);
+                        } else {
+                            continue;
+                        }
+                    }
+                    percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
+                }
+
+                if (!hasItemOfName(itemName)) {
+                    ItemType type = ItemType.lookup(itemName);
+                    if (type == null) {
+                        if (singleItem) {
+                            throw new CommandException(NOT_AVAILIBLE);
+                        } else {
+                            continue;
+                        }
+                    }
+                    itemName = type.getName();
+                }
+
+                ItemPricePair itemPricePair = itemStoreDatabase.getItem(itemName);
+
+                if (itemPricePair == null || !itemPricePair.isSellable()) {
+                    if (singleItem) {
+                        throw new CommandException(NOT_AVAILIBLE);
+                    } else {
+                        continue;
+                    }
+                }
+
+                int amt = stack.getAmount();
+                payment += itemPricePair.getSellPrice() * amt * percentageSale;
+
+                // Multiply the amount by -1 since this is selling
+                amt *= -1;
+
+                if (transactions.containsKey(itemName)) {
+                    amt += transactions.get(itemName);
+                }
+                transactions.put(itemName, amt);
+
+                itemStacks[i] = null;
+            }
+
+            if (!(payment > 0)) {
+                throw new CommandException("No sellable items found" + (filter != null ? " that matched the filter" : "") + "!");
+            }
+
+            for (Map.Entry<String, Integer> entry : transactions.entrySet()) {
+
+                itemStoreDatabase.logTransaction(playerName, entry.getKey(), entry.getValue());
+            }
+
             econ.depositPlayer(playerName, payment);
-            itemStoreDatabase.logTransaction(playerName, itemName, amt * -1);
+            player.getInventory().setContents(itemStacks);
 
             String paymentString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(payment), " " + econ.currencyNamePlural());
             ChatUtil.sendNotice(player, "Item(s) sold for: " + paymentString + "!");
