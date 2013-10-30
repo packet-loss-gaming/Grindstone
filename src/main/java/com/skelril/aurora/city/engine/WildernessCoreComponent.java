@@ -387,7 +387,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Entity entity = event.getEntity();
 
-        if (!(entity instanceof Monster) || ((Monster) entity).getKiller() == null) return;
+        if (!(entity instanceof Monster) || event.getDroppedExp() < 1) return;
 
         Location location = entity.getLocation();
         int level = getLevel(location);
