@@ -9,6 +9,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.events.PrePrayerApplicationEvent;
+import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -19,9 +20,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityShootBowEvent;
-import org.bukkit.event.entity.HorseJumpEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -45,9 +44,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
     private Map<Arrow, Float> arrowForce = new HashMap<>();
 
-    private final int WATCH_DISTANCE = 10;
+    private final int WATCH_DISTANCE = 14;
     private final int WATCH_DISTANCE_SQ = WATCH_DISTANCE * WATCH_DISTANCE;
-    private final int SNEAK_WATCH_DISTANCE = 3;
+    private final int SNEAK_WATCH_DISTANCE = 6;
     private final int SNEAK_WATCH_DISTANCE_SQ = SNEAK_WATCH_DISTANCE * SNEAK_WATCH_DISTANCE;
 
     @Override
@@ -80,14 +79,14 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).guildCanSee();
     }
 
-    public void useExplosiveArrows(Player player, boolean explosiveArrows) {
+    public void usePoisonArrows(Player player, boolean poisonArrows) {
 
-        sessions.getSession(NinjaState.class, player).useExplosiveArrows(explosiveArrows);
+        sessions.getSession(NinjaState.class, player).usePoisonArrows(poisonArrows);
     }
 
-    public boolean hasExplosiveArrows(Player player) {
+    public boolean hasPoisonArrows(Player player) {
 
-        return sessions.getSession(NinjaState.class, player).hasExplosiveArrows();
+        return sessions.getSession(NinjaState.class, player).hasPoisonArrows();
     }
 
     public boolean allowsConflictingPotions(Player player) {
@@ -124,11 +123,52 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         if (p == null || p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
 
         Player player = (Player) p.getShooter();
-        if (isNinja(player) && hasExplosiveArrows(player) && inst.hasPermission(player, "aurora.ninja.guild")) {
+        if (isNinja(player) && hasPoisonArrows(player) && inst.hasPermission(player, "aurora.ninja.guild")) {
 
             if (p instanceof Arrow) {
                 arrowForce.put((Arrow) p, event.getForce());
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamage(EntityDamageEvent event) {
+
+        if (!(event.getEntity() instanceof Player)) return;
+
+        Player player = (Player) event.getEntity();
+
+        if (!isNinja(player)) return;
+
+        switch (event.getCause()) {
+            case FALL:
+                event.setDamage(event.getDamage() * .5);
+                break;
+            case PROJECTILE:
+            case ENTITY_ATTACK:
+                event.setDamage(event.getDamage() * Math.min(1, ChanceUtil.getRandom(2.0) - .4));
+                break;
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamageEntityEvent(EntityDamageByEntityEvent event) {
+
+        Projectile p = null;
+
+        if (event.getDamager() instanceof Arrow) {
+            p = (Projectile) event.getDamager();
+        }
+
+        if (p == null) return;
+        Entity shooter = p.getShooter();
+        if (shooter == null || !(shooter instanceof Player)) return;
+        if (p instanceof Arrow && arrowForce.containsKey(p)) {
+            poisonArrow((Arrow) p, arrowForce.get(p));
+            arrowForce.remove(p);
+
+            double diff = (((Player) shooter).getMaxHealth() - ((Player) shooter).getHealth());
+            event.setDamage(Math.max(event.getDamage(), event.getDamage() * diff * .35));
         }
     }
 
@@ -137,11 +177,21 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (isNinja((Player) p.getShooter())) {
+        if (p instanceof Arrow && arrowForce.containsKey(p)) {
+            poisonArrow((Arrow) p, arrowForce.get(p));
+            arrowForce.remove(p);
+        }
+    }
 
-            if (p instanceof Arrow && arrowForce.containsKey(p)) {
-                p.getWorld().createExplosion(p.getLocation(), 3F * arrowForce.get(p), true);
-                arrowForce.remove(p);
+    private void poisonArrow(Arrow arrow, float force) {
+        int duration = (int) (20 * ((7 * force) + 3));
+        for (Entity entity : arrow.getNearbyEntities(4, 2, 4)) {
+            if (!ChanceUtil.getChance(3) || entity.equals(arrow.getShooter())) continue;
+            if (entity instanceof LivingEntity) {
+                ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, duration, 1), true);
+                if (entity instanceof Player) {
+                    ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, duration, 4), true);
+                }
             }
         }
     }
@@ -289,7 +339,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"ninja"}, desc = "Give a player the Ninja power",
-                flags = "gxp", min = 0, max = 0)
+                flags = "gtp", min = 0, max = 0)
         @CommandPermissions({"aurora.ninja"})
         public void ninja(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -301,7 +351,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             ninjaPlayer((Player) sender);
             if (inst.hasPermission(sender, "aurora.ninja.guild")) {
                 showToGuild((Player) sender, args.hasFlag('g'));
-                useExplosiveArrows((Player) sender, !args.hasFlag('x'));
+                usePoisonArrows((Player) sender, !args.hasFlag('t'));
                 allowConflictingPotions((Player) sender, !args.hasFlag('p'));
             } else if (args.getFlags().size() > 0) {
                 ChatUtil.sendError(sender, "You must be a member of the ninja guild to use flags.");
@@ -332,7 +382,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         private boolean isNinja = false;
         private boolean showToGuild = false;
-        private boolean explosiveArrows = true;
+        private boolean toxicArrows = true;
         private boolean allowConflictingPotions = true;
 
         protected NinjaState() {
@@ -360,14 +410,14 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             this.showToGuild = showToGuild;
         }
 
-        public boolean hasExplosiveArrows() {
+        public boolean hasPoisonArrows() {
 
-            return explosiveArrows;
+            return toxicArrows;
         }
 
-        public void useExplosiveArrows(boolean explosiveArrows) {
+        public void usePoisonArrows(boolean explosiveArrows) {
 
-            this.explosiveArrows = explosiveArrows;
+            this.toxicArrows = explosiveArrows;
         }
 
         public boolean allowsConflictingPotions() {

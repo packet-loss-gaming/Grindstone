@@ -19,7 +19,6 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
-import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -96,13 +95,11 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         vel.multiply(3 * modifier);
         vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
         player.setVelocity(vel);
-
-        player.getWorld().playSound(player.getLocation(), Sound.GHAST_SCREAM, .2F, 0);
     }
 
     public void fakeBlip(Player player) {
 
-        sessions.getSession(RogueState.class, player).blip();
+        sessions.getSession(RogueState.class, player).blip(3250);
     }
 
     public boolean canGrenade(Player player) {
@@ -110,13 +107,13 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(RogueState.class, player).canGrenade();
     }
 
-    public void grendade(Player player) {
+    public void grenade(Player player) {
 
         sessions.getSession(RogueState.class, player).grenade();
 
         for (int i = 0; i < ChanceUtil.getRandom(5) + 4; i++) {
             Snowball snowball = player.launchProjectile(Snowball.class);
-            Vector vector = new Vector(ChanceUtil.getRandom(2), 1, ChanceUtil.getRandom(2));
+            Vector vector = new Vector(ChanceUtil.getRandom(2.0), 1, ChanceUtil.getRandom(2.0));
             snowball.setVelocity(snowball.getVelocity().multiply(vector));
             snowBalls.add(snowball);
         }
@@ -137,9 +134,12 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         Entity damager = event.getDamager();
         boolean wasArrow = false;
 
-        if (event.getDamager() instanceof Arrow) {
+        if (damager instanceof Arrow) {
             damager = ((Arrow) event.getDamager()).getShooter();
             wasArrow = true;
+        } else if (damager instanceof Snowball && snowBalls.contains(damager)) {
+            damager.getWorld().createExplosion(damager.getLocation(), 2.75F);
+            snowBalls.remove(damager);
         }
 
         if (event.getEntity() instanceof Player && wasArrow && ChanceUtil.getChance(3)) {
@@ -162,12 +162,9 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (isRogue((Player) p.getShooter())) {
-
-            if (p instanceof Snowball && snowBalls.contains(p)) {
-                p.getWorld().createExplosion(p.getLocation(), 2.75F);
-                snowBalls.remove(p);
-            }
+        if (p instanceof Snowball && snowBalls.contains(p)) {
+            p.getWorld().createExplosion(p.getLocation(), 1.75F);
+            snowBalls.remove(p);
         }
     }
 
@@ -183,7 +180,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                     server.getScheduler().runTaskLater(inst, new Runnable() {
                         @Override
                         public void run() {
-                            if (canBlip(player)) {
+                            if (canBlip(player) && !player.isSneaking()) {
                                 blip(player, inst.hasPermission(player, "aurora.rogue.guild") ? 2 : 1);
                             }
                         }
@@ -191,7 +188,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                     break;
                 case RIGHT_CLICK_AIR:
                     if (canGrenade(player) && inst.hasPermission(player, "aurora.rogue.guild")) {
-                        grendade(player);
+                        grenade(player);
                     }
                     break;
             }
@@ -206,7 +203,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             if (isRogue(player)) {
                 Entity p = event.getProjectile();
-                p.setVelocity(p.getVelocity().multiply(new Vector(1, .25, 1)));
+                p.setVelocity(p.getVelocity().multiply(new Vector(.35, .25, .35)));
             }
         }
     }
@@ -353,7 +350,12 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         public void blip() {
 
-            nextBlip = System.currentTimeMillis() + 1500;
+            blip(2250);
+        }
+
+        public void blip(long time) {
+
+            nextBlip = System.currentTimeMillis() + time;
         }
 
         public boolean canGrenade() {
