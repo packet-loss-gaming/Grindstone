@@ -6,7 +6,6 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -60,8 +59,6 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
             String name = player.getName();
             if (name.equals("darkkrai13")) {
                 event.getDrops().add(new ItemStack(ItemID.RAW_BEEF));
-            } else if (name.equals("Nyghtstarr")) {
-                event.getDrops().add(new ItemStack(BlockID.RED_FLOWER));
             }
         }
     }

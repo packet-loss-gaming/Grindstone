@@ -7,7 +7,7 @@ public enum District {
 
     GLOBAL("City", new String[]{"Dark_Arc", "RichRick18", "digilue"}),
     CARPE_DIEM("Carpe Diem", new String[]{"darkkrai13", "XxSerionAllorxX"}),
-    GLACIES_MARE("Glacies Mare", new String[]{"Nyghtstarr"}),
+    GLACIES_MARE("Glacies Mare", new String[]{}),
     OBLITUS("Oblitus", new String[]{"Dark_Arc"}),
     VINEAM("Vineam", new String[]{"RichRick18"});
 
@@ -31,6 +31,11 @@ public enum District {
     }
 
     public String getManagersFriendly() {
+
+        if (managers.length < 1) {
+
+            return "UNKNOWN";
+        }
 
         String managersString = "";
         for (int i = 0; i < managers.length; i++) {
