@@ -217,15 +217,15 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
                 if (isJailed(player)) {
 
-                    if (!cells.containsKey(player)) {
-                        Inmate inmate = inmates.getJailedName(player.getName());
-                        assignCell(player, inmate.getPrisonName());
+                    JailCell cell = cells.get(player);
+                    Inmate inmate = inmates.getJailedName(player.getName());
+                    if (cell == null || !cell.getPrisonName().equals(inmate.getPrisonName())) {
+                        cell = assignCell(player, inmate.getPrisonName());
                     }
 
                     adminComponent.standardizePlayer(player, true);
                     player.setFoodLevel(5);
 
-                    JailCell cell = cells.get(player);
                     if (cell == null) {
                         player.kickPlayer("Unable to find a jail cell...");
                         log.warning("Could not find a cell for the player: " + player.getName() + ".");
@@ -507,16 +507,21 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         }
     }
 
-    private void assignCell(Player player, String prisonName) {
+    private JailCell assignCell(Player player, String prisonName) {
 
+        JailCell jailCell;
         List<JailCell> prison = jailCells.getPrison(prisonName);
 
         prison = prison == null ? jailCells.getPrison(config.defaultJail) : prison;
 
         if (prison != null && prison.size() > 0) {
-            cells.put(player, prison.get(ChanceUtil.getRandom(prison.size()) - 1));
+            jailCell = prison.get(ChanceUtil.getRandom(prison.size()) - 1);
         } else {
-            cells.put(player, null);
+            jailCell = null;
         }
+
+        cells.put(player, jailCell);
+
+        return jailCell;
     }
 }
