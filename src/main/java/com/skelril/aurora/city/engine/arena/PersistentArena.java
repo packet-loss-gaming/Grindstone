@@ -6,7 +6,7 @@ package com.skelril.aurora.city.engine.arena;
  */
 public interface PersistentArena {
 
-    public void writeData();
+    public void writeData(boolean doAsync);
 
     public void reloadData();
 }

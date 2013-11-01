@@ -90,7 +90,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     @Override
     public void disable() {
 
-        writeData();
+        writeData(false);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         treeMap.revertByTime(mainMin);
         generalMap.revertByTime(secMin);
 
-        writeData();
+        writeData(true);
     }
 
     private List<ItemStack> getRandomDropSet(CommandSender player) {
@@ -436,16 +436,22 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     }
 
     @Override
-    public void writeData() {
+    public void writeData(boolean doAsync) {
 
-        server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
+        Runnable run = new Runnable() {
             @Override
             public void run() {
 
                 IOUtil.toBinaryFile(getWorkingDir(), "trees", treeMap);
                 IOUtil.toBinaryFile(getWorkingDir(), "general", generalMap);
             }
-        });
+        };
+
+        if (doAsync) {
+            server.getScheduler().runTaskAsynchronously(inst, run);
+        } else {
+            run.run();
+        }
     }
 
     @Override

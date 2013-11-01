@@ -16,7 +16,6 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.database.IOUtil;
-import com.skelril.aurora.util.database.InventoryAuditLogger;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
@@ -111,7 +110,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     // Block Restoration
     private BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
     // Respawn Inventory Map
-    private final HashMap<String, PlayerState> playerState = new HashMap<>();
+    private HashMap<String, PlayerState> playerState = new HashMap<>();
 
     public GraveYard(World world, ProtectedRegion[] regions, AdminComponent adminComponent) {
 
@@ -1263,21 +1262,29 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     }
 
     @Override
-    public void writeData() {
+    public void writeData(boolean doAsync) {
 
-        server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
+        Runnable run = new Runnable() {
             @Override
             public void run() {
 
                 IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
+                IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
             }
-        });
+        };
+
+        if (doAsync) {
+            server.getScheduler().runTaskAsynchronously(inst, run);
+        } else {
+            run.run();
+        }
     }
 
     @Override
     public void reloadData() {
 
         File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
+        File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
 
         if (generalFile.exists()) {
             Object generalFileO = IOUtil.readBinaryFile(generalFile);
@@ -1305,36 +1312,52 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 }
             }
         }
+
+        if (playerStateFile.exists()) {
+            Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
+
+            if (playerStateFileO instanceof HashMap) {
+                //noinspection unchecked
+                playerState = (HashMap<String, PlayerState>) playerStateFileO;
+                log.info("Loaded: " + playerState.size() + " respawn records for: " + getId() + ".");
+            } else {
+                log.warning("Invalid block record file encountered: " + playerStateFile.getName() + "!");
+                log.warning("Attempting to use backup file...");
+
+                playerStateFile = new File(getWorkingDir().getPath() + "/old-" + playerStateFile.getName());
+
+                if (playerStateFile.exists()) {
+
+                    playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
+
+                    if (playerStateFileO instanceof BaseBlockRecordIndex) {
+                        //noinspection unchecked
+                        playerState = (HashMap<String, PlayerState>) playerStateFileO;
+                        log.info("Backup file loaded successfully!");
+                        log.info("Loaded: " + playerState.size() + " respawn records for: " + getId() + ".");
+                    } else {
+                        log.warning("Backup file failed to load!");
+                    }
+                }
+            }
+        }
     }
 
     public void restoreBlocks() {
 
         generalIndex.revertByTime(1000 * 27);
 
-        writeData();
-    }
-
-    private void dumpInventories() {
-
-        InventoryAuditLogger auditor = adminComponent.getInventoryDumpLogger();
-        for (PlayerState state : playerState.values()) {
-            String ownerName = state.getOwnerName();
-            for (ItemStack stack : state.getArmourContents()) {
-                auditor.log(ownerName, stack);
-            }
-            for (ItemStack stack : state.getInventoryContents()) {
-                auditor.log(ownerName, stack);
-            }
-        }
+        writeData(true);
     }
 
     @Override
     public void run() {
 
+        restoreBlocks();
+
         if (isEmpty()) return;
 
         equalize();
-        restoreBlocks();
 
         Entity[] contained = getContainedEntities();
         for (Entity entity : contained) {
@@ -1399,8 +1422,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     @Override
     public void disable() {
 
-        writeData();
-        dumpInventories();
+        writeData(false);
     }
 
     @Override
