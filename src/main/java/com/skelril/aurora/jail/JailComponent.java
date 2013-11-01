@@ -131,7 +131,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     public boolean checkSentence(Player player) {
 
-        Inmate inmate = inmates.getJailedName(player.getName());
+        Inmate inmate = inmates.getInmate(player.getName());
 
         if (inmate != null) {
             if (inmate.getEnd() == 0L || inmate.getEnd() - System.currentTimeMillis() > 0) {
@@ -157,7 +157,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     public boolean isJailed(String name) {
 
-        return inmates.isJailedName(name);
+        return inmates.isInmate(name);
     }
 
     public boolean isJailMuted(Player player) {
@@ -167,14 +167,14 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     public boolean isJailMuted(String name) {
 
-        return isJailed(name) && inmates.getJailedName(name).isMuted();
+        return isJailed(name) && inmates.getInmate(name).isMuted();
     }
 
     public void notify(Player player) {
 
         ChatUtil.sendWarning(player, config.jailMessage);
 
-        Inmate inmate = inmates.getJailedName(player.getName());
+        Inmate inmate = inmates.getInmate(player.getName());
         String reason = inmate.getReason();
 
         StringBuilder builder = new StringBuilder();
@@ -218,7 +218,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                 if (isJailed(player)) {
 
                     JailCell cell = cells.get(player);
-                    Inmate inmate = inmates.getJailedName(player.getName());
+                    Inmate inmate = inmates.getInmate(player.getName());
                     if (cell == null || !cell.getPrisonName().equals(inmate.getPrisonName())) {
                         cell = assignCell(player, inmate.getPrisonName());
                     }

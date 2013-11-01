@@ -183,7 +183,7 @@ public class CSVInmateDatabase implements InmateDatabase {
         return false;
     }
 
-    public boolean isJailedName(String name) {
+    public boolean isInmate(String name) {
 
         name = name.trim().toLowerCase();
 
@@ -207,7 +207,7 @@ public class CSVInmateDatabase implements InmateDatabase {
 
         long start = System.currentTimeMillis();
 
-        if (isJailedName(name)) {
+        if (isInmate(name)) {
             Inmate inmate = nameInmate.remove(name);
             start = inmate.getStart();
             inmates.remove(inmate);
@@ -276,7 +276,7 @@ public class CSVInmateDatabase implements InmateDatabase {
         };
     }
 
-    public Inmate getJailedName(String name) {
+    public Inmate getInmate(String name) {
 
         return nameInmate.get(name.trim().toLowerCase());
     }

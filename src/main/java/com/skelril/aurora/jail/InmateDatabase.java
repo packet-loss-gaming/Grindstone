@@ -37,15 +37,15 @@ public interface InmateDatabase extends Iterable<Inmate> {
      * @param name The name to check
      * @return Whether name is jailed
      */
-    public boolean isJailedName(String name);
+    public boolean isInmate(String name);
 
     /**
-     * Gets the jail message for a jailed name.
+     * Returns a Inmate with the given name
      *
-     * @param name The name to check
-     * @return The jail message for the given name null if none was given
+     * @param name The name given to the ban.
+     * @return The applicable Inmate
      */
-    public String getJailedNameMessage(String name);
+    public Inmate getInmate(String name);
 
     /**
      * Jails a player
@@ -88,14 +88,6 @@ public interface InmateDatabase extends Iterable<Inmate> {
      * @param reason
      */
     public boolean unjail(String name, CommandSender source, String reason);
-
-    /**
-     * Returns a Inmate with the given name
-     *
-     * @param name The name given to the ban.
-     * @return The applicable Inmate
-     */
-    public Inmate getJailedName(String name);
 
     /**
      * Returns a list of inmates
