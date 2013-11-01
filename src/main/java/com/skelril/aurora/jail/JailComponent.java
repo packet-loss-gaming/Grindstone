@@ -415,13 +415,13 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     public class ManagementCommands {
 
-        @Command(aliases = {"addcell"}, usage = "<prison> <name>", desc = "Create a cell", min = 2, max = 2)
+        @Command(aliases = {"add"}, usage = "<prison> [name]", desc = "Create a cell", min = 1, max = 2)
         @CommandPermissions({"aurora.jail.cells.add"})
         public void addCellCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (sender instanceof Player) {
                 String prisonName = args.getString(0);
-                String cellName = args.getString(1);
+                String cellName = args.argsLength() > 1 ? args.getString(1) : String.valueOf(System.currentTimeMillis());
                 Player player = (Player) sender;
                 Location loc = player.getLocation();
 
