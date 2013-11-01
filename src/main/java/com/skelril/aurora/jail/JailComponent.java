@@ -87,6 +87,8 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     private static class LocalConfiguration extends ConfigurationBase {
 
+        @Setting("default-jail")
+        public String defaultJail = "lava-flow";
         @Setting("message")
         public String jailMessage = "You have been jailed";
         @Setting("broadcast-jails")
@@ -124,7 +126,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     public void jail(String name, long time, boolean mute) {
 
-        getInmateDatabase().jail(name, "lava-flow", server.getConsoleSender(), "", System.currentTimeMillis() + time, mute);
+        getInmateDatabase().jail(name, config.defaultJail, server.getConsoleSender(), "", System.currentTimeMillis() + time, mute);
     }
 
     public boolean isJailed(Player player) {
@@ -250,14 +252,14 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     public class Commands {
 
-        @Command(aliases = {"jail"}, usage = "[-t end] <target> <prison> [reason...]",
-                desc = "Jail a player", flags = "mset:o", min = 2, max = -1)
+        @Command(aliases = {"jail"}, usage = "[-t end] <target> [prison] [reason...]",
+                desc = "Jail a player", flags = "mset:o", min = 1, max = -1)
         @CommandPermissions({"aurora.jail.jail"})
         public void jailCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player inmate = null;
             String inmateName = "";
-            String prisonName = args.getString(1);
+            String prisonName = args.argsLength() >= 2 ? args.getString(1) : config.defaultJail;
             long endDate = args.hasFlag('t') ? CommandBookUtil.matchFutureDate(args.getFlag('t')) : 0L;
             String message = args.argsLength() >= 3 ? args.getJoinedStrings(1) : "Jailed!";
 
