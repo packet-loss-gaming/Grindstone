@@ -43,7 +43,7 @@ public interface InmateDatabase extends Iterable<Inmate> {
      * Gets the jail message for a jailed name.
      *
      * @param name The name to check
-     * @return The jail message for the given name
+     * @return The jail message for the given name null if none was given
      */
     public String getJailedNameMessage(String name);
 

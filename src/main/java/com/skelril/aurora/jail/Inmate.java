@@ -14,9 +14,9 @@ public class Inmate {
 
     public Inmate(String name, String prisonName, String reason, long start, long end, boolean isMuted) {
 
-        this.name = name;
-        this.prisonName = prisonName;
-        this.reason = reason;
+        this.name = name.trim();
+        this.prisonName = prisonName.trim();
+        this.reason = reason.trim();
         this.start = start;
         this.end = end;
         this.isMuted = isMuted;
@@ -34,7 +34,7 @@ public class Inmate {
 
     public String getReason() {
 
-        return reason;
+        return reason.isEmpty() ? null : reason;
     }
 
     public long getStart() {

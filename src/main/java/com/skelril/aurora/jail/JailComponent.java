@@ -126,27 +126,87 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     public void jail(String name, long time, boolean mute) {
 
-        getInmateDatabase().jail(name, config.defaultJail, server.getConsoleSender(), "", System.currentTimeMillis() + time, mute);
+        inmates.jail(name, config.defaultJail, server.getConsoleSender(), "", System.currentTimeMillis() + time, mute);
+    }
+
+    public boolean checkSentence(Player player) {
+
+        Inmate inmate = inmates.getJailedName(player.getName());
+
+        if (inmate != null) {
+            if (inmate.getEnd() == 0L || inmate.getEnd() - System.currentTimeMillis() > 0) {
+                return true;
+            }
+            inmates.unjail(player.getName(), null, "Temp-jail expired");
+            inmates.save();
+        }
+
+        if (cells.containsKey(player)) {
+            cells.remove(player);
+
+            player.teleport(player.getWorld().getSpawnLocation());
+            ChatUtil.sendNotice(player, "You have been unjailed.");
+        }
+        return false;
     }
 
     public boolean isJailed(Player player) {
 
-        return isJailed(player.getName());
+        return checkSentence(player);
     }
 
     public boolean isJailed(String name) {
 
-        return getInmateDatabase().isJailedName(name);
+        return inmates.isJailedName(name);
     }
 
     public boolean isJailMuted(Player player) {
 
-        return isJailMuted(player.getName());
+        return checkSentence(player) && isJailMuted(player.getName());
     }
 
     public boolean isJailMuted(String name) {
 
-        return isJailed(name) && getInmateDatabase().getJailedName(name).isMuted();
+        return isJailed(name) && inmates.getJailedName(name).isMuted();
+    }
+
+    public void notify(Player player) {
+
+        ChatUtil.sendWarning(player, "Your jail sentence does not permit this action!");
+
+        Inmate inmate = inmates.getJailedName(player.getName());
+        String reason = inmate.getReason();
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("Jailed ");
+
+        // Date
+        if (inmate.getEnd() != 0) {
+            builder.append("till: ");
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(inmate.getEnd());
+
+            builder.append(calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US));
+            builder.append(" ");
+            builder.append(calendar.get(Calendar.DAY_OF_MONTH));
+            builder.append(" ");
+            builder.append(calendar.get(Calendar.YEAR));
+            builder.append(" at ");
+            builder.append(calendar.get(Calendar.HOUR));
+            builder.append(":");
+            builder.append(calendar.get(Calendar.MINUTE));
+            builder.append(calendar.get(Calendar.AM_PM) == 0 ? "AM" : "PM");
+        } else {
+            builder.append("indefinitely");
+        }
+
+        if (reason != null) {
+            builder.append(" for: ").append(reason);
+        }
+        builder.append(".");
+
+        ChatUtil.sendWarning(player, builder.toString());
     }
 
     @Override
@@ -155,15 +215,10 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         for (Player player : server.getOnlinePlayers()) {
             try {
 
-                if (getInmateDatabase().isJailedName(player.getName())) {
+                if (isJailed(player)) {
 
-                    if (!player.isOnline() && cells.containsKey(player)) {
-                        cells.remove(player);
-                        continue;
-                    }
-
-                    if (player.isOnline() && !cells.containsKey(player)) {
-                        Inmate inmate = getInmateDatabase().getJailedName(player.getName());
+                    if (!cells.containsKey(player)) {
+                        Inmate inmate = inmates.getJailedName(player.getName());
                         assignCell(player, inmate.getPrisonName());
                     }
 
@@ -182,7 +237,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                         player.teleport(cell.getLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     }
 
-                    if (player.isOnline() && server.getMaxPlayers() - server.getOnlinePlayers().length <= config.freeSpotsHeld) {
+                    if (server.getMaxPlayers() - server.getOnlinePlayers().length <= config.freeSpotsHeld) {
                         player.kickPlayer("You are not currently permitted to be online!");
                     }
                 }
@@ -193,12 +248,22 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         }
     }
 
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+
+        Player player = event.getPlayer();
+
+        if (cells.containsKey(player)) {
+            cells.remove(player);
+        }
+    }
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onPlayerInteractEvent(PlayerInteractEvent event) {
 
         Player player = event.getPlayer();
         if (isJailed(player)) {
-            ChatUtil.sendWarning(player, "Your jail sentence does not permit this action!");
+            notify(player);
             event.setCancelled(true);
         }
     }
@@ -208,7 +273,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
         Player player = event.getPlayer();
         if (isJailed(player)) {
-            ChatUtil.sendWarning(player, "Your jail sentence does not permit this action!");
+            notify(player);
             event.setCancelled(true);
         }
     }
@@ -227,7 +292,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
         Player player = event.getPlayer();
         if (isJailed(player)) {
-            ChatUtil.sendWarning(player, "Your jail sentence does not permit this action!");
+            notify(player);
             event.setCancelled(true);
         }
     }
@@ -237,7 +302,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
         Player player = event.getPlayer();
         if (isJailMuted(player)) {
-            ChatUtil.sendWarning(player, "Your jail sentence does not permit this action!");
+            notify(player);
             event.setCancelled(true);
         }
     }
@@ -261,7 +326,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
             String inmateName = "";
             String prisonName = args.argsLength() >= 2 ? args.getString(1) : config.defaultJail;
             long endDate = args.hasFlag('t') ? CommandBookUtil.matchFutureDate(args.getFlag('t')) : 0L;
-            String message = args.argsLength() >= 3 ? args.getJoinedStrings(1) : "Jailed!";
+            String message = args.argsLength() >= 3 ? args.getJoinedStrings(2) : "";
 
             final boolean hasExemptOverride = args.hasFlag('o') && inst.hasPermission(sender, "aurora.jail.exempt.override");
 
@@ -299,22 +364,23 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                 }
             }
 
-            if (!getJailCellDatabase().prisonExist(prisonName)) throw new CommandException("No such prison exists.");
+            if (!jailCells.prisonExist(prisonName)) throw new CommandException("No such prison exists.");
 
 
             // Jail the player
-            getInmateDatabase().jail(inmateName, prisonName, sender, message, endDate, args.hasFlag('m'));
+            inmates.jail(inmateName, prisonName, sender, message, endDate, args.hasFlag('m'));
 
             // Tell the sender of their success
             ChatUtil.sendNotice(sender, "The player: " + inmateName + " has been jailed!");
 
-            if (!getInmateDatabase().save()) {
+            if (!inmates.save()) {
                 throw new CommandException("Inmate database failed to save. See console.");
             }
 
             // Broadcast the Message
             if (config.broadcastJails && !args.hasFlag('s')) {
-                ChatUtil.sendNotice(server.getOnlinePlayers(), sender.getName() + " has jailed " + inmateName + " - " + message);
+                ChatUtil.sendNotice(server.getOnlinePlayers(), sender.getName() + " has jailed "
+                        + inmateName + (message.isEmpty() ? "!" : " - " + message + "."));
             }
         }
 
@@ -322,14 +388,14 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         @CommandPermissions({"aurora.jail.unjail"})
         public void unjailCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            String message = args.argsLength() >= 2 ? args.getJoinedStrings(1) : "Unjailed!";
+            String message = args.argsLength() >= 2 ? args.getJoinedStrings(1) : "";
 
             String inmateName = args.getString(0).replace("\r", "").replace("\n", "").replace("\0", "").replace("\b", "");
 
-            if (getInmateDatabase().unjail(inmateName, sender, message)) {
+            if (inmates.unjail(inmateName, sender, message)) {
                 ChatUtil.sendNotice(sender, inmateName + " unjailed.");
 
-                if (!getInmateDatabase().save()) {
+                if (!inmates.save()) {
                     throw new CommandException("Inmate database failed to save. See console.");
                 }
             } else {
@@ -356,15 +422,15 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                 Player player = (Player) sender;
                 Location loc = player.getLocation();
 
-                if (getJailCellDatabase().cellExist(prisonName, cellName)) {
+                if (jailCells.cellExist(prisonName, cellName)) {
                     throw new CommandException("Cell already exists!");
                 }
 
-                getJailCellDatabase().createJailCell(prisonName, cellName, player, loc);
+                jailCells.createJailCell(prisonName, cellName, player, loc);
 
                 ChatUtil.sendNotice(sender, "Cell '" + cellName + "' created.");
 
-                if (!getJailCellDatabase().save()) {
+                if (!jailCells.save()) {
                     throw new CommandException("Inmate database failed to save. See console.");
                 }
             } else {
@@ -381,9 +447,9 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
             List<String> items;
             if (prison == null) {
-                items = getJailCellDatabase().getPrisons();
+                items = jailCells.getPrisons();
             } else {
-                List<JailCell> prisonCells = getJailCellDatabase().getPrison(prison);
+                List<JailCell> prisonCells = jailCells.getPrison(prison);
 
                 if (prisonCells == null) {
                     throw new CommandException("No such prison exist!");
@@ -431,7 +497,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
             String prisonName = args.getString(0);
             String cellName = args.getString(1);
 
-            if (!getJailCellDatabase().deleteJailCell(prisonName, cellName, sender) || !getJailCellDatabase().save()) {
+            if (!jailCells.deleteJailCell(prisonName, cellName, sender) || !jailCells.save()) {
                 throw new CommandException("No such cell could be successfully found/removed in that prison!");
             }
             ChatUtil.sendNotice(sender, "Cell '" + cellName + "' deleted.");
@@ -440,7 +506,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     private void assignCell(Player player, String prisonName) {
 
-        List<JailCell> prison = getJailCellDatabase().getPrison(prisonName);
+        List<JailCell> prison = jailCells.getPrison(prisonName);
 
         if (prison.size() > 1) {
             cells.put(player, prison.get(ChanceUtil.getRandom(prison.size() - 1)));

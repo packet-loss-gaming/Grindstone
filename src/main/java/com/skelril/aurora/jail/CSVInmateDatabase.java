@@ -4,9 +4,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.PlayerUtil;
-import com.skelril.aurora.util.ChatUtil;
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -82,7 +80,7 @@ public class CSVInmateDatabase implements InmateDatabase {
                 try {
                     String name = "null";
                     String prisonName = "lava-flow";
-                    String reason = "Jailed!";
+                    String reason = "";
                     long startDate = 0;
                     long endDate = 0;
                     boolean isMuted = false;
@@ -148,7 +146,7 @@ public class CSVInmateDatabase implements InmateDatabase {
                 line = new String[]{
                         inmate.getName().trim().toLowerCase(),
                         inmate.getPrisonName().trim().toLowerCase(),
-                        inmate.getReason().trim(),
+                        inmate.getReason() == null ? "" : inmate.getReason(),
                         String.valueOf(inmate.getStart()),
                         String.valueOf(inmate.getEnd()),
                         String.valueOf(inmate.isMuted())
@@ -188,16 +186,8 @@ public class CSVInmateDatabase implements InmateDatabase {
     public boolean isJailedName(String name) {
 
         name = name.trim().toLowerCase();
-        Inmate inmate = nameInmate.get(name);
-        if (inmate != null) {
-            if (inmate.getEnd() != 0L && inmate.getEnd() - System.currentTimeMillis() <= 0) {
-                unjail(name, null, "Temp-jail expired");
-                save();
-                return false;
-            }
-            return true;
-        }
-        return false;
+
+        return nameInmate.get(name) != null;
     }
 
     public void jail(Player player, String prisonName, CommandSender source, String reason, long end, boolean isMuted) {
@@ -209,11 +199,17 @@ public class CSVInmateDatabase implements InmateDatabase {
 
         Validate.notNull(name);
         Validate.notNull(prisonName);
+        Validate.notNull(reason);
 
         name = name.trim().toLowerCase();
         prisonName = prisonName.trim().toLowerCase();
+        reason = reason.trim();
 
-        Inmate inmate = new Inmate(name, prisonName, reason.trim(), System.currentTimeMillis(), end, isMuted);
+        if (isJailedName(name)) {
+            inmates.remove(nameInmate.remove(name));
+        }
+
+        Inmate inmate = new Inmate(name, prisonName, reason, System.currentTimeMillis(), end, isMuted);
         nameInmate.put(name, inmate);
         inmates.add(inmate);
         auditLogger.info(String.format("JAIL: %s jailed %s: %s", source == null ? "Plugin" : PlayerUtil.toUniqueName(source), name, reason.trim()));
@@ -241,12 +237,6 @@ public class CSVInmateDatabase implements InmateDatabase {
                     source == null ? "Plugin" : PlayerUtil.toUniqueName(source),
                     jailedName,
                     reason.trim()));
-            try {
-                Player player = Bukkit.getPlayerExact(name);
-                player.teleport(player.getWorld().getSpawnLocation());
-                ChatUtil.sendNotice(player, "You have been unjailed.");
-            } catch (Exception ignored) {
-            }
             return true;
         }
         return false;
@@ -255,8 +245,7 @@ public class CSVInmateDatabase implements InmateDatabase {
     public String getJailedNameMessage(String name) {
 
         Inmate inmate = nameInmate.get(name.trim().toLowerCase());
-        if (inmate == null || inmate.getReason() == null) return "You are jailed.";
-        return inmate.getReason().trim();
+        return inmate.getReason() == null ? null : inmate.getReason().trim();
     }
 
     public Iterator<Inmate> iterator() {
