@@ -508,8 +508,8 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
         List<JailCell> prison = jailCells.getPrison(prisonName);
 
-        if (prison.size() > 1) {
-            cells.put(player, prison.get(ChanceUtil.getRandom(prison.size() - 1)));
+        if (prison != null && prison.size() > 0) {
+            cells.put(player, prison.get(ChanceUtil.getRandom(prison.size()) - 1));
         } else {
             cells.put(player, null);
         }
