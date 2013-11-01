@@ -244,9 +244,10 @@ public class CSVJailCellDatabase implements JailCellDatabase {
     }
 
     @Override
-    public Map<String, JailCell> getPrison(String prisonName) {
+    public List<JailCell> getPrison(String prisonName) {
 
-        return Collections.unmodifiableMap(nameJailCell.get(prisonName.trim().toLowerCase()));
+        Map<String, JailCell> map = nameJailCell.get(prisonName.trim().toLowerCase());
+        return map == null ? null : Lists.newArrayList(map.values());
     }
 
     @Override

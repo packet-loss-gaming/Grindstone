@@ -4,7 +4,6 @@ import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Author: Turtle9598
@@ -78,12 +77,12 @@ public interface JailCellDatabase extends Iterable<JailCell> {
     public boolean prisonExist(String prisonName);
 
     /**
-     * Returns an unmodifiable map of the cells for that prison
+     * Returns an unmodifiable list of the cells for that prison
      *
      * @param prisonName The name of the prison to get
      * @return A map of the prison's cells
      */
-    public Map<String, JailCell> getPrison(String prisonName);
+    public List<JailCell> getPrison(String prisonName);
 
     /**
      * Returns an unmodifiable list of prison names

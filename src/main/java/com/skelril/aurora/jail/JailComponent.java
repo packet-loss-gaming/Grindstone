@@ -381,7 +381,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
             if (prison == null) {
                 items = getJailCellDatabase().getPrisons();
             } else {
-                Map<String, JailCell> prisonCells = getJailCellDatabase().getPrison(prison);
+                List<JailCell> prisonCells = getJailCellDatabase().getPrison(prison);
 
                 if (prisonCells == null) {
                     throw new CommandException("No such prison exist!");
@@ -389,7 +389,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
                 items = new ArrayList<>();
 
-                for (JailCell cell : prisonCells.values()) {
+                for (JailCell cell : prisonCells) {
                     items.add(cell.getCellName()
                             + " (" + cell.getWorldName() + "; " + cell.getX() + ", " + cell.getY() + ", " + cell.getZ() + ")");
                 }
@@ -438,10 +438,10 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     private void assignCell(Player player, String prisonName) {
 
-        Map<String, JailCell> prison = getJailCellDatabase().getPrison(prisonName);
+        List<JailCell> prison = getJailCellDatabase().getPrison(prisonName);
 
         if (prison.size() > 1) {
-            cells.put(player, prison.values().toArray(new JailCell[prison.size()])[ChanceUtil.getRandom(prison.size() - 1)]);
+            cells.put(player, prison.get(ChanceUtil.getRandom(prison.size() - 1)));
         } else {
             cells.put(player, null);
         }
