@@ -89,8 +89,8 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
         @Setting("default-jail")
         public String defaultJail = "lava-flow";
-        @Setting("message")
-        public String jailMessage = "You have been jailed";
+        @Setting("jailed-message")
+        public String jailMessage = "Your jail sentence does not permit this action!";
         @Setting("broadcast-jails")
         public boolean broadcastJails = true;
         @Setting("move-threshold")
@@ -172,7 +172,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
     public void notify(Player player) {
 
-        ChatUtil.sendWarning(player, "Your jail sentence does not permit this action!");
+        ChatUtil.sendWarning(player, config.jailMessage);
 
         Inmate inmate = inmates.getJailedName(player.getName());
         String reason = inmate.getReason();
@@ -228,6 +228,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                     JailCell cell = cells.get(player);
                     if (cell == null) {
                         player.kickPlayer("Unable to find a jail cell...");
+                        log.warning("Could not find a cell for the player: " + player.getName() + ".");
                         continue;
                     }
 
@@ -242,8 +243,10 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                     }
                 }
             } catch (Exception e) {
-                log.warning("Could not find a cell for the player: " + player.getName() + ".");
-                player.kickPlayer("Kicked!");
+                player.kickPlayer("An error has occurred!");
+                log.warning("The Jail could not process the player: " + player.getName() + ".");
+                log.warning("Printing stack trace...");
+                e.printStackTrace();
             }
         }
     }
@@ -507,6 +510,8 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     private void assignCell(Player player, String prisonName) {
 
         List<JailCell> prison = jailCells.getPrison(prisonName);
+
+        prison = prison == null ? jailCells.getPrison(config.defaultJail) : prison;
 
         if (prison != null && prison.size() > 0) {
             cells.put(player, prison.get(ChanceUtil.getRandom(prison.size()) - 1));
