@@ -67,10 +67,10 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         super(world, region);
         this.adminComponent = adminComponent;
 
+        reloadData();
+
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-
-        reloadData();
     }
 
     @Override

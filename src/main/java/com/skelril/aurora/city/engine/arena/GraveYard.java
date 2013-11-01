@@ -15,6 +15,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.database.InventoryAuditLogger;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -49,13 +50,14 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
-public class GraveYard extends AbstractRegionedArena implements MonitoredArena, Listener {
+public class GraveYard extends AbstractRegionedArena implements MonitoredArena, PersistentArena, Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -126,10 +128,11 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         resetRewardChest();
 
+        reloadData();
+        setupEconomy();
+
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-
-        setupEconomy();
     }
 
     public Player[] getTempleContained() {
@@ -983,6 +986,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void findHeadStones() {
 
+        headStones.clear();
+
         final List<Chunk> chunkList = new ArrayList<>();
 
         com.sk89q.worldedit.Vector min = getRegion().getMinimumPoint();
@@ -1004,16 +1009,22 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         for (final Chunk aChunk : chunkList) {
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-                @Override
-                public void run() {
+            try {
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+                    @Override
+                    public void run() {
 
-                    for (BlockState aSign : aChunk.getTileEntities()) {
-                        if (!(aSign instanceof Sign)) continue;
-                        checkHeadStone((Sign) aSign);
+                        for (BlockState aSign : aChunk.getTileEntities()) {
+                            if (!(aSign instanceof Sign)) continue;
+                            checkHeadStone((Sign) aSign);
+                        }
                     }
-                }
-            }, chunkList.indexOf(aChunk) * 20);
+                }, chunkList.indexOf(aChunk) * 20);
+            } catch (NullPointerException ex) {
+                findHeadStones();
+                log.info("Failed to get head stones for Chunk: " + aChunk.getX() + ", " + aChunk.getZ() + ".");
+                return;
+            }
         }
     }
 
@@ -1251,9 +1262,56 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         generalIndex.revertAll();
     }
 
+    @Override
+    public void writeData() {
+
+        server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
+            @Override
+            public void run() {
+
+                IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
+            }
+        });
+    }
+
+    @Override
+    public void reloadData() {
+
+        File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
+
+        if (generalFile.exists()) {
+            Object generalFileO = IOUtil.readBinaryFile(generalFile);
+
+            if (generalFileO instanceof BaseBlockRecordIndex) {
+                generalIndex = (BaseBlockRecordIndex) generalFileO;
+                log.info("Loaded: " + generalIndex.size() + " general records for: " + getId() + ".");
+            } else {
+                log.warning("Invalid block record file encountered: " + generalFile.getName() + "!");
+                log.warning("Attempting to use backup file...");
+
+                generalFile = new File(getWorkingDir().getPath() + "/old-" + generalFile.getName());
+
+                if (generalFile.exists()) {
+
+                    generalFileO = IOUtil.readBinaryFile(generalFile);
+
+                    if (generalFileO instanceof BaseBlockRecordIndex) {
+                        generalIndex = (BaseBlockRecordIndex) generalFileO;
+                        log.info("Backup file loaded successfully!");
+                        log.info("Loaded: " + generalIndex.size() + " general records for: " + getId() + ".");
+                    } else {
+                        log.warning("Backup file failed to load!");
+                    }
+                }
+            }
+        }
+    }
+
     public void restoreBlocks() {
 
         generalIndex.revertByTime(1000 * 27);
+
+        writeData();
     }
 
     private void dumpInventories() {
@@ -1341,7 +1399,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     @Override
     public void disable() {
 
-        forceRestoreBlocks();
+        writeData();
         dumpInventories();
     }
 
