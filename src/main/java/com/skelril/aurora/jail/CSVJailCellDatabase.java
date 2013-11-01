@@ -2,6 +2,7 @@ package com.skelril.aurora.jail;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.PlayerUtil;
 import org.apache.commons.lang.Validate;
@@ -249,15 +250,15 @@ public class CSVJailCellDatabase implements JailCellDatabase {
     }
 
     @Override
-    public Set<String> getPrisons() {
+    public List<String> getPrisons() {
 
-        return Collections.unmodifiableSet(nameJailCell.keySet());
+        return Lists.newArrayList(nameJailCell.keySet());
     }
 
     @Override
-    public Set<JailCell> getJailCells() {
+    public List<JailCell> getJailCells() {
 
-        return Collections.unmodifiableSet(jailCells);
+        return Lists.newArrayList(jailCells);
     }
 
     @Override

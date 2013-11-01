@@ -14,6 +14,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -26,8 +27,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.*;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -367,6 +367,57 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                 }
             } else {
                 throw new CommandException("You must be a player to use this command.");
+            }
+        }
+
+        @Command(aliases = "list", usage = "[prison]", desc = "List cells",
+                flags = "p:", min = 0, max = 1)
+        @CommandPermissions("aurora.jail.cells.list")
+        public void listCellCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            String prison = args.argsLength() < 1 ? null : args.getString(0);
+
+            List<String> items;
+            if (prison == null) {
+                items = getJailCellDatabase().getPrisons();
+            } else {
+                Map<String, JailCell> prisonCells = getJailCellDatabase().getPrison(prison);
+
+                if (prisonCells == null) {
+                    throw new CommandException("No such prison exist!");
+                }
+
+                items = new ArrayList<>();
+
+                for (JailCell cell : prisonCells.values()) {
+                    items.add(cell.getCellName()
+                            + " (" + cell.getWorldName() + " - " + cell.getX() + ", " + cell.getY() + ", " + cell.getZ() + ")");
+                }
+            }
+
+            Collections.sort(items);
+
+            final int entryToShow = 9;
+            final int listSize = items.size();
+
+            // Page info
+            int page = 0;
+            int maxPage = listSize / entryToShow;
+
+            if (args.hasFlag('p')) {
+                page = Math.min(maxPage, Math.max(0, args.getFlagInteger('p') - 1));
+            }
+
+            // Viewable record info
+            int min = entryToShow * page;
+            int max = Math.min(listSize, min + entryToShow);
+
+            String type = prison == null ? "Prison" : "Cell";
+            ChatUtil.sendNotice(sender, ChatColor.GOLD,
+                    type + " List - Page (" + Math.min(maxPage + 1, page + 1) + "/" + (maxPage + 1) + ")");
+
+            for (int i = min; i < max; i++) {
+                ChatUtil.sendNotice(sender, items.get(i));
             }
         }
 

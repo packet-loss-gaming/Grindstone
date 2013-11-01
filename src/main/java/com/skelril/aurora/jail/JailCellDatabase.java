@@ -3,8 +3,8 @@ package com.skelril.aurora.jail;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Author: Turtle9598
@@ -90,12 +90,12 @@ public interface JailCellDatabase extends Iterable<JailCell> {
      *
      * @return A list of prison names
      */
-    public Set<String> getPrisons();
+    public List<String> getPrisons();
 
     /**
      * Returns an unmodifiable list of jail cells
      *
      * @return A list of jail cells
      */
-    public Set<JailCell> getJailCells();
+    public List<JailCell> getJailCells();
 }

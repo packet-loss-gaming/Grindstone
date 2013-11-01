@@ -310,8 +310,6 @@ public class AdminStoreComponent extends BukkitComponent {
         )
         public void listCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            checkPlayer(sender, true);
-
             String filterString = args.argsLength() > 0 ? args.getJoinedStrings(0) : null;
             List<ItemPricePair> itemPricePairCollection = itemStoreDatabase.getItemList(filterString);
             Collections.sort(itemPricePairCollection);
@@ -332,7 +330,7 @@ public class AdminStoreComponent extends BukkitComponent {
             int max = Math.min(listSize, min + entryToShow);
 
             // Result display
-            ChatUtil.sendNotice(sender, ChatColor.GOLD, "Item List - Page (" + (page + 1) + "/" + (maxPage + 1) + ")");
+            ChatUtil.sendNotice(sender, ChatColor.GOLD, "Item List - Page (" + Math.min(maxPage + 1, page + 1) + "/" + (maxPage + 1) + ")");
             for (int i = min; i < max; i++) {
                 ItemPricePair pair = itemPricePairCollection.get(i);
                 String buy, sell;
