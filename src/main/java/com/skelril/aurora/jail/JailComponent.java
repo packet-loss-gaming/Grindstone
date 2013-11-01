@@ -391,7 +391,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
                 for (JailCell cell : prisonCells.values()) {
                     items.add(cell.getCellName()
-                            + " (" + cell.getWorldName() + " - " + cell.getX() + ", " + cell.getY() + ", " + cell.getZ() + ")");
+                            + " (" + cell.getWorldName() + "; " + cell.getX() + ", " + cell.getY() + ", " + cell.getZ() + ")");
                 }
             }
 
