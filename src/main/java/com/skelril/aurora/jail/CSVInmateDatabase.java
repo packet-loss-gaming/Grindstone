@@ -205,11 +205,15 @@ public class CSVInmateDatabase implements InmateDatabase {
         prisonName = prisonName.trim().toLowerCase();
         reason = reason.trim();
 
+        long start = System.currentTimeMillis();
+
         if (isJailedName(name)) {
-            inmates.remove(nameInmate.remove(name));
+            Inmate inmate = nameInmate.remove(name);
+            start = inmate.getStart();
+            inmates.remove(inmate);
         }
 
-        Inmate inmate = new Inmate(name, prisonName, reason, System.currentTimeMillis(), end, isMuted);
+        Inmate inmate = new Inmate(name, prisonName, reason, start, end, isMuted);
         nameInmate.put(name, inmate);
         inmates.add(inmate);
         auditLogger.info(String.format("JAIL: %s jailed %s: %s", source == null ? "Plugin" : PlayerUtil.toUniqueName(source), name, reason.trim()));
