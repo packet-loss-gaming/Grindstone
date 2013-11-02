@@ -79,7 +79,7 @@ public abstract class AbstractRegionedArena {
 
         for (Entity entity : world.getEntitiesByClasses(classes)) {
 
-            if (entity.isValid() && LocationUtil.isInRegion(world, r, entity)) returnedList.add(entity);
+            if (entity.isValid() && LocationUtil.isInRegion(r, entity)) returnedList.add(entity);
         }
         return returnedList.toArray(new Entity[returnedList.size()]);
     }
