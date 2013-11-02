@@ -88,7 +88,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
             for (Item item : world.getEntitiesByClass(Item.class)) {
 
                 ItemStack itemStack = item.getItemStack();
-                if (itemStack.getTypeId() != ItemID.SPAWN_EGG || item.getTicksLived() < 720) continue;
+                if (itemStack.getTypeId() != ItemID.SPAWN_EGG || item.getTicksLived() < 300) continue;
 
                 // Attempt to hatch the egg
                 hatchEgg(item);
