@@ -185,12 +185,9 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         } else {
 
             ChatUtil.sendNotice(getContainedPlayers(), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
-            for (Entity entity : getContainedEntities()) {
+            for (Entity entity : getContainedEntities(Zombie.class)) {
 
-                if (ChanceUtil.getChance(5)) continue;
-                if (entity != null && entity instanceof Zombie) {
-                    ((Zombie) entity).setHealth(0);
-                }
+                if (!ChanceUtil.getChance(5)) ((Zombie) entity).setHealth(0);
             }
         }
     }
@@ -1359,8 +1356,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         equalize();
 
-        Entity[] contained = getContainedEntities();
-        for (Entity entity : contained) {
+        for (Entity entity : getContainedEntities(LivingEntity.class)) {
 
             if (!entity.isValid()) continue;
 

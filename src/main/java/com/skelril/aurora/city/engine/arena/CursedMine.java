@@ -236,8 +236,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         Location modifiable = new Location(getWorld(), 0, 0, 0);
         Location previousLoc;
 
-        for (Entity e : getContainedEntities()) {
-            if (!(e instanceof InventoryHolder)) continue;
+        for (Entity e : getContainedEntities(InventoryHolder.class)) {
             try {
                 Inventory eInventory = ((InventoryHolder) e).getInventory();
 

@@ -101,7 +101,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             @Override
             public void run() {
 
-                Entity[] contained = getContainedEntities(1);
+                Entity[] contained = getContainedEntities(1, Zombie.class, ExperienceOrb.class);
                 if (!getWorld().isThundering()) removeOutsideZombies(contained);
                 if (isBossSpawned()) {
                     buffBabies(contained);
@@ -125,7 +125,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         boolean found = false;
         boolean second = false;
 
-        for (Entity e : getContainedEntities()) {
+        for (Entity e : getContainedEntities(Giant.class)) {
             if (e.isValid() && e instanceof Giant) {
                 if (!found) {
                     boss = (Giant) e;
@@ -140,7 +140,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
 
         if (second) {
-            for (Entity e : getContainedEntities()) {
+            for (Entity e : getContainedEntities(Giant.class)) {
                 if (e.isValid() && e instanceof Giant && !e.equals(boss)) {
                     e.remove();
                 }
@@ -299,12 +299,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     public void removeMobs() {
 
-        for (Entity e : getContainedEntities(1)) {
+        for (Entity e : getContainedEntities(1, Monster.class)) {
 
-            if (e.isValid() && EnvironmentUtil.isHostileEntity(e)) {
-                for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
-                e.remove();
-            }
+            for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
+            e.remove();
         }
     }
 
@@ -801,7 +799,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 lastDeath = System.currentTimeMillis();
                 boss = null;
 
-                Entity[] containedEntities = getContainedEntities();
+                Entity[] containedEntities = getContainedEntities(Zombie.class, ExperienceOrb.class);
                 // Remove remaining XP and que new xp
                 removeXP(containedEntities, true);
                 for (int i = 0; i < 7; i++) {
@@ -1131,10 +1129,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                         if (!isBossSpawned()) return true;
 
-                        for (Entity entity : getContainedEntities()) {
+                        for (Entity entity : getContainedEntities(LivingEntity.class)) {
 
-                            if (entity instanceof Giant) continue;
-                            if (!(entity instanceof LivingEntity) || !ChanceUtil.getChance(5)) continue;
+                            if (entity instanceof Giant || !ChanceUtil.getChance(5)) continue;
 
                             double realDamage = ((LivingEntity) entity).getHealth();
 

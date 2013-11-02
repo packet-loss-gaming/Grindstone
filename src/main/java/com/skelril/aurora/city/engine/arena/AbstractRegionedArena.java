@@ -55,18 +55,29 @@ public abstract class AbstractRegionedArena {
 
     public Entity[] getContainedEntities() {
 
-
-        return getContainedEntities(0);
+        //noinspection unchecked
+        return getContainedEntities(Entity.class);
     }
 
     public Entity[] getContainedEntities(int parentsUp) {
+
+        //noinspection unchecked
+        return getContainedEntities(parentsUp, Entity.class);
+    }
+
+    public Entity[] getContainedEntities(Class<?>... classes) {
+
+        return getContainedEntities(0, classes);
+    }
+
+    public Entity[] getContainedEntities(int parentsUp, Class<?>... classes) {
 
         List<Entity> returnedList = new ArrayList<>();
 
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
 
-        for (Entity entity : world.getEntities()) {
+        for (Entity entity : world.getEntitiesByClasses(classes)) {
 
             if (entity.isValid() && LocationUtil.isInRegion(world, r, entity)) returnedList.add(entity);
         }

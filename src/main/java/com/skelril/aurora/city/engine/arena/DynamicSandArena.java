@@ -167,7 +167,7 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
 
         for (Player player : getContainedPlayers()) {
             try {
-                adminComponent.standardizePlayer(player);
+                adminComponent.deadmin(player);
             } catch (Exception e) {
                 log.warning("The player: " + player.getName() + " may have an unfair advantage.");
             }
