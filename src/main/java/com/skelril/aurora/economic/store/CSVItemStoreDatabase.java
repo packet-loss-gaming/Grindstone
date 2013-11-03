@@ -242,6 +242,30 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
     }
 
     @Override
+    public Iterator<ItemPricePair> iterator() {
+
+        return new Iterator<ItemPricePair>() {
+
+            private final Iterator<Map.Entry<String, ItemPricePair>> setIter = nameItemPrice.entrySet().iterator();
+
+            public boolean hasNext() {
+
+                return setIter.hasNext();
+            }
+
+            public ItemPricePair next() {
+
+                return setIter.next().getValue();
+            }
+
+            public void remove() {
+
+                setIter.remove();
+            }
+        };
+    }
+
+    @Override
     public boolean unload() {
 
         for (Handler handler : storeLogger.getHandlers()) {

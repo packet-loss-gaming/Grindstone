@@ -432,6 +432,26 @@ public class AdminStoreComponent extends BukkitComponent {
 
     public class AdminStoreCommands {
 
+        @Command(aliases = {"scale"},
+                usage = "<amount>", desc = "Scale the item database",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions("aurora.admin.adminstore.scale")
+        public void scaleCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            double factor = args.getDouble(0);
+
+            Iterator<ItemPricePair> it = itemStoreDatabase.iterator();
+
+            while (it.hasNext()) {
+                ItemPricePair pair = it.next();
+                pair.setPrice(pair.getPrice() * factor);
+            }
+
+            itemStoreDatabase.save();
+
+            ChatUtil.sendNotice(sender, "Market Scaled by: " + factor + ".");
+        }
+
         @Command(aliases = {"add"},
                 usage = "[-p price] <item name>", desc = "Add an item to the database",
                 flags = "bsp:", min = 1)

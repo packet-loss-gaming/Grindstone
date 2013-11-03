@@ -19,6 +19,11 @@ public class ItemPricePair implements Comparable<ItemPricePair> {
         return name;
     }
 
+    public void setPrice(double price) {
+
+        this.price = price;
+    }
+
     public double getPrice() {
 
         return price;
