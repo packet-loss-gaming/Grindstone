@@ -538,7 +538,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         if (!players.isEmpty()) {
             lootSplit = 0;
             for (String player : players) {
-                lootSplit += Math.max(ChanceUtil.getRangedRandom(5.76, 17.28), economy.getBalance(player) * .0015);
+                lootSplit += Math.max(ChanceUtil.getRangedRandom(11.52, 34.56), economy.getBalance(player) * .0015);
             }
             lootSplit /= players.size();
             if (ChanceUtil.getChance(35)) lootSplit *= 10;

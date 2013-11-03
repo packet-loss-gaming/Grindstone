@@ -447,9 +447,9 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         ItemStack[] i;
 
         if (ItemUtil.isPhantomGold(item)) {
-            int amount = 25;
+            int amount = 50;
             if (isInRewardsRoom) {
-                amount = 50;
+                amount = 100;
             }
             economy.depositPlayer(player.getName(), amount * item.getAmount());
             event.setItemStack(null);

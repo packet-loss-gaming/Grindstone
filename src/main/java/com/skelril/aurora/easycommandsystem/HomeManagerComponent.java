@@ -501,7 +501,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
                 Player player = args.argsLength() == 0 ? null : PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
-                int size = (selection.getLength() * selection.getWidth()) / (16 * 16);
+                double size = (selection.getLength() * selection.getWidth()) / (16D * 16D);
 
                 CommandSender[] target = new CommandSender[]{
                         sender, player
@@ -509,7 +509,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
                 ChatUtil.sendNotice(target, "Chunks: " + size);
 
-                double p1 = size <= 4 ? size * 37.50 : (size * 100) + (size * (size / 2) * 100);
+                double p1 = size <= 4 ? size * 75 : (size * 200) + (size * (size / 2) * 200);
 
                 String chunkPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p1), " " + econ.currencyNamePlural());
                 ChatUtil.sendNotice(target, "Chunk Price: " + chunkPrice + ".");

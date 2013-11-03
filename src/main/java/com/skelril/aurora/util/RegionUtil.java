@@ -16,7 +16,7 @@ public class RegionUtil {
     public static double getPrice(AdminStoreComponent store, ProtectedRegion region, LocalWorld world,
                                   boolean commission) {
 
-        int size, length, width;
+        double size, length, width;
         if (region instanceof ProtectedCuboidRegion) {
             Vector min = region.getMinimumPoint();
             Vector max = region.getMaximumPoint();
@@ -33,7 +33,7 @@ public class RegionUtil {
         } else {
             return -1;
         }
-        double p1 = size <= 4 ? size * 37.50 : (size * 100) + (size * (size / 2) * 100);
+        double p1 = size <= 4 ? size * 75 : (size * 200) + (size * (size / 2) * 200);
 
         // Block Price
         double p2 = 0;
