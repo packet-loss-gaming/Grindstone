@@ -68,7 +68,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     private AdminComponent adminComponent;
 
     private static final int groundLevel = 82;
-    private static final double scalOffst = 4;
+    private static final double scalOffst = 3;
 
     private Giant boss = null;
     private long lastAttack = 0;
@@ -759,7 +759,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 // Gold drops
                 for (int i = 0; i < Math.sqrt(amt + m) + scalOffst; i++) {
-                    event.getDrops().add(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRangedRandom(32, 64)));
+                    event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRangedRandom(32, 64)));
                 }
 
                 // Unique drops
