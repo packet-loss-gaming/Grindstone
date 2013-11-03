@@ -509,7 +509,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
                 ChatUtil.sendNotice(target, "Chunks: " + size);
 
-                double p1 = size <= 4 ? size * 3750 : (size * 10000) + (size * (size / 2) * 10000);
+                double p1 = size <= 4 ? size * 37.50 : (size * 100) + (size * (size / 2) * 100);
 
                 String chunkPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p1), " " + econ.currencyNamePlural());
                 ChatUtil.sendNotice(target, "Chunk Price: " + chunkPrice + ".");

@@ -90,11 +90,11 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         public Set<String> goodSacrifices = new HashSet<>(Arrays.asList(
                 BlockID.DIAMOND_BLOCK + ":0" + "#81",
                 BlockID.EMERALD_BLOCK + ":0" + "#100",
-                //BlockID.GOLD_BLOCK + ":0" + "#64",
+                // BlockID.GOLD_BLOCK + ":0" + "#64",
                 ItemID.GOLD_APPLE + ":1" + "#64",
                 ItemID.GOLD_APPLE + ":0" + "#8",
                 ItemID.GOLD_AXE + ":0" + "#24",
-                //ItemID.GOLD_BAR + ":0" + "#8",
+                // ItemID.GOLD_BAR + ":0" + "#8",
                 ItemID.GOLD_BOOTS + ":0" + "#32",
                 ItemID.GOLD_CHEST + ":0" + "#64",
                 ItemID.GOLD_HELMET + ":0" + "#40",

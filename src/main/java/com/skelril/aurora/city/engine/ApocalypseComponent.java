@@ -241,7 +241,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
             if (ent.getType().equals(entType) && ChanceUtil.getChance(5)) {
                 event.setDroppedExp(event.getDroppedExp() * 3);
-                event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(8)));
+                event.getDrops().add(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(4)));
             } else event.setDroppedExp(event.getDroppedExp() * 2);
         }
     }

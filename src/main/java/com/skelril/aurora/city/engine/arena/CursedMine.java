@@ -52,10 +52,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -82,7 +79,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     private final long lastActivationTime = 18000;
     private long lastActivation = 0;
     private PlayerMappedBlockRecordIndex recordSystem = new PlayerMappedBlockRecordIndex();
-    private List<Player> daveHitList = new ArrayList<>();
+    private Map<String, Long> daveHitList = new HashMap<>();
 
     private final int[] items = new int[]{
             BlockID.IRON_BLOCK, BlockID.IRON_ORE, ItemID.IRON_BAR,
@@ -118,6 +115,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     @Override
     public void run() {
+
+        checkHitList();
 
         drain();
         sweepFloor();
@@ -169,6 +168,20 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
 
         this.worldGuard = (WorldGuardPlugin) plugin;
+    }
+
+    public void addToHitList(String name) {
+
+        daveHitList.put(name, System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10));
+    }
+
+    public void checkHitList() {
+
+        Iterator<Map.Entry<String, Long>> it = daveHitList.entrySet().iterator();
+        while (it.hasNext()) {
+
+            if (it.next().getValue() >= System.currentTimeMillis()) it.remove();
+        }
     }
 
     public void addSkull(Player player) {
@@ -278,8 +291,10 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.IRON_BAR, ChanceUtil.getRandom(8), true);
 
                     // Gold
-                    ItemUtil.removeItemOfName((InventoryHolder) e, ItemUtil.Misc.cursedGold(1, true), ChanceUtil.getRandom(4), true);
-                    ItemUtil.removeItemOfName((InventoryHolder) e, ItemUtil.Misc.cursedGold(1, false), ChanceUtil.getRandom(10), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.GOLD_BLOCK, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.GOLD_ORE, ChanceUtil.getRandom(4), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_BAR, ChanceUtil.getRandom(12), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_BAR, ChanceUtil.getRandom(36), true);
 
                     // Redstone
                     ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.REDSTONE_ORE, ChanceUtil.getRandom(2), true);
@@ -404,7 +419,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                 player.getWorld().dropItemNaturally(player.getLocation(),
                                         new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(64)));
                                 player.getWorld().dropItemNaturally(player.getLocation(),
-                                        ItemUtil.Misc.cursedGold(ChanceUtil.getRandom(64), false));
+                                        new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(64)));
                                 player.getWorld().dropItemNaturally(player.getLocation(),
                                         new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(64)));
                             }
@@ -429,6 +444,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 1:
                             if (ChanceUtil.getChance(4)) {
                                 if (blockid == BlockID.DIAMOND_ORE) {
+                                    addToHitList(player.getName());
                                     ChatUtil.sendWarning(player, "You ignite fumes in the air!");
                                     EditSession ess = new EditSession(new BukkitWorld(player.getWorld()), -1);
                                     try {
@@ -444,6 +460,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
                                                 if (untele) {
                                                     recordSystem.revertByPlayer(player.getName());
+                                                    daveHitList.remove(player.getName());
                                                 }
 
                                                 if (!contains(player)) return;
@@ -454,8 +471,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                         }, 12 * i);
                                     }
                                 } else {
+                                    addToHitList(player.getName());
                                     player.chat("Who's a good ghost?!?!");
-                                    daveHitList.add(player);
                                     server.getScheduler().runTaskLater(inst, new Runnable() {
                                         @Override
                                         public void run() {
@@ -480,7 +497,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             }
                         case 2:
                             ChatUtil.sendWarning(player, "You find yourself falling from the sky...");
-                            daveHitList.add(player);
+                            addToHitList(player.getName());
                             modifiedLoc = new Location(player.getWorld(), player.getLocation().getX(), 350, player.getLocation().getZ());
                             break;
                         case 3:
@@ -511,7 +528,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             break;
                         case 8:
                             ChatUtil.sendWarning(player, "Dave likes your food.");
-                            daveHitList.add(player);
+                            addToHitList(player.getName());
                             prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
                                     PrayerType.STARVATION, TimeUnit.MINUTES.toMillis(15)));
                             break;
@@ -525,7 +542,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             break;
                         case 10:
                             ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
-                            daveHitList.add(player);
+                            addToHitList(player.getName());
                             prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
                                     PrayerType.SLAP, TimeUnit.MINUTES.toMillis(30)));
                             prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
@@ -616,16 +633,12 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                 if (inst.hasPermission(player, "aurora.mining.burningember") && !hasSilkTouch(itemInHand)) {
                     switch (typeId) {
                         case BlockID.GOLD_ORE:
-                            rawDrop = ItemUtil.Misc.cursedGold(1, false);
+                            rawDrop.setTypeId(ItemID.GOLD_BAR);
                             break;
                         case BlockID.IRON_ORE:
                             rawDrop.setTypeId(ItemID.IRON_BAR);
                             break;
                     }
-                }
-
-                if (rawDrop.getTypeId() == BlockID.GOLD_ORE) {
-                    rawDrop = ItemUtil.Misc.cursedGold(1, true);
                 }
 
                 if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(rawDrop.getTypeId())) {
@@ -678,7 +691,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         Player player = event.getPlayer();
 
-        if ((recordSystem.hasRecordForPlayer(player.getName()) || daveHitList.contains(player)) && !accepted.contains(event.getCause())) {
+        if ((recordSystem.hasRecordForPlayer(player.getName())
+                || daveHitList.containsKey(player.getName())) && !accepted.contains(event.getCause())) {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You have been tele-blocked!");
         }
@@ -739,16 +753,17 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity().getPlayer();
+        String playerName = player.getName();
         revertPlayer(player);
 
-        if (daveHitList.contains(player) || contains(player)) {
+        if (daveHitList.containsKey(playerName) || contains(player)) {
 
             if (contains(player) && ChanceUtil.getChance(500)) {
                 ChatUtil.sendNotice(player, "You feel as though a spirit is trying to tell you something...");
                 event.getDrops().add(BookUtil.Lore.Areas.theGreatMine());
             }
 
-            if (daveHitList.contains(player)) daveHitList.remove(player);
+            if (daveHitList.containsKey(playerName)) daveHitList.remove(playerName);
             switch (ChanceUtil.getRandom(11)) {
                 case 1:
                     event.setDeathMessage(player.getName() + " was killed by Dave");
@@ -785,6 +800,16 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     break;
             }
             addSkull(player);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+
+        Player player = event.getPlayer();
+        String playerName = player.getName();
+        if (daveHitList.containsKey(playerName) && daveHitList.get(playerName) < System.currentTimeMillis()) {
+            player.setHealth(0);
         }
     }
 }

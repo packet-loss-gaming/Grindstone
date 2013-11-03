@@ -517,15 +517,6 @@ public class ItemUtil {
             magicBucket.setItemMeta(magicMeta);
             return magicBucket;
         }
-
-        public static ItemStack cursedGold(int amount, boolean ore) {
-
-            ItemStack cursedGold = new ItemStack(ore ? BlockID.GOLD_ORE : ItemID.GOLD_BAR, amount);
-            ItemMeta goldMeta = cursedGold.getItemMeta();
-            goldMeta.setDisplayName(ChatColor.GOLD + "Cursed Gold" + (ore ? "" : " Bar"));
-            cursedGold.setItemMeta(goldMeta);
-            return cursedGold;
-        }
     }
 
     public static ItemStack[] clone(ItemStack[] stacks) {

@@ -759,7 +759,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 // Gold drops
                 for (int i = 0; i < Math.sqrt(amt + m) + scalOffst; i++) {
-                    event.getDrops().add(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRangedRandom(32, 64)));
+                    event.getDrops().add(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRangedRandom(32, 64)));
                 }
 
                 // Unique drops
@@ -842,7 +842,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
                 event.getDrops().clear();
                 if (ChanceUtil.getChance(28)) {
-                    event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(3)));
+                    event.getDrops().add(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(3)));
                 }
                 event.setDroppedExp(14);
             }

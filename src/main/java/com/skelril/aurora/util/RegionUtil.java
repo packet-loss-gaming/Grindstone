@@ -33,7 +33,7 @@ public class RegionUtil {
         } else {
             return -1;
         }
-        double p1 = size <= 4 ? size * 3750 : (size * 10000) + (size * (size / 2) * 10000);
+        double p1 = size <= 4 ? size * 37.50 : (size * 100) + (size * (size / 2) * 100);
 
         // Block Price
         double p2 = 0;

@@ -126,6 +126,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
 
             // Declare Item Stacks
             ItemStack[] startKit = new ItemStack[]{
+                    // BookUtil.Tutorial.newbieBook(),
                     new ItemStack(ItemID.COOKED_BEEF, 32),
                     new ItemStack(ItemID.STONE_PICKAXE),
                     new ItemStack(ItemID.STONE_AXE),
