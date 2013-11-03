@@ -440,6 +440,10 @@ public class AdminStoreComponent extends BukkitComponent {
 
             double factor = args.getDouble(0);
 
+            if (factor == 0) {
+                throw new CommandException("Cannot scale by 0.");
+            }
+
             Iterator<ItemPricePair> it = itemStoreDatabase.iterator();
 
             while (it.hasNext()) {
