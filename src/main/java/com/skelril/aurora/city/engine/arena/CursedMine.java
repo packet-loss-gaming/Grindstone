@@ -293,8 +293,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     // Gold
                     ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.GOLD_BLOCK, ChanceUtil.getRandom(2), true);
                     ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.GOLD_ORE, ChanceUtil.getRandom(4), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_BAR, ChanceUtil.getRandom(12), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_BAR, ChanceUtil.getRandom(36), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_BAR, ChanceUtil.getRandom(10), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_BAR, ChanceUtil.getRandom(80), true);
 
                     // Redstone
                     ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.REDSTONE_ORE, ChanceUtil.getRandom(2), true);
@@ -808,7 +808,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         Player player = event.getPlayer();
         String playerName = player.getName();
-        if (daveHitList.containsKey(playerName) && daveHitList.get(playerName) < System.currentTimeMillis()) {
+        if (daveHitList.containsKey(playerName) && daveHitList.get(playerName) > System.currentTimeMillis()) {
             player.setHealth(0);
         }
     }
