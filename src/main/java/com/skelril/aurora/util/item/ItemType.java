@@ -48,6 +48,8 @@ public enum ItemType {
     LAPIS_LAZULI_BLOCK(BlockID.LAPIS_LAZULI_BLOCK, "Lapis lazuli block", "lapislazuliblock", "bluerock"),
     DISPENSER(BlockID.DISPENSER, "Dispenser", "dispenser"),
     SANDSTONE(BlockID.SANDSTONE, 0, "Sandstone", "sandstone"),
+    SANDSTONE_CHISELED(BlockID.SANDSTONE, 1, "Chiseled Sandstone", "chiseledsandstone"),
+    SANDSTONE_SMOOTH(BlockID.SANDSTONE, 2, "Smooth Sandstone", "smoothsandstone"),
     NOTE_BLOCK(BlockID.NOTE_BLOCK, "Note block", "musicblock", "noteblock", "note", "music", "instrument"),
     BED(BlockID.BED, "Bed", "bed"),
     POWERED_RAIL(BlockID.POWERED_RAIL, "Powered Rail", "poweredrail", "boosterrail", "poweredtrack", "boostertrack", "booster"),
