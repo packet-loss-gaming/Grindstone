@@ -479,9 +479,9 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException("If you disable buying and selling, then what's the point in adding it dumb ass?");
             }
 
-            double price = 10;
+            double price = .1;
             if (args.hasFlag('p')) {
-                price = Math.max(1, args.getFlagDouble('p'));
+                price = Math.max(.01, args.getFlagDouble('p'));
             }
 
             // Database operations
