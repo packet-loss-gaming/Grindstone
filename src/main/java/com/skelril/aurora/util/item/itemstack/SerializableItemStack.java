@@ -27,20 +27,6 @@ public class SerializableItemStack implements Serializable {
             Map<String, Object> aMetaMap = new HashMap<>();
             aMetaMap.put("==", ConfigurationSerialization.getAlias(itemStack.getItemMeta().getClass()));
             for (Map.Entry<String, Object> entry : itemStack.getItemMeta().serialize().entrySet()) {
-                /* Object deathMachine = ;
-
-                System.out.println(entry.getKey() + ":" + entry.getValue().getClass().getName());
-                if (deathMachine instanceof ConfigurationSerializable) {
-                    Map<String, Object> deathMap = new HashMap<>();
-                    deathMap.put("==", ConfigurationSerialization.getAlias(itemStack.getItemMeta().getClass()));
-                    for (Map.Entry<String, Object> aEntry : ((ConfigurationSerializable) deathMachine).serialize().entrySet()) {
-                        deathMap.put(aEntry.getKey(), aEntry.getValue());
-                        System.out.println(aEntry.getKey() + ":" + aEntry.getValue().getClass().getName());
-                    }
-                    deathMachine = deathMap;
-                }
-                */
-
                 aMetaMap.put(entry.getKey(), entry.getValue());
             }
 
@@ -49,9 +35,7 @@ public class SerializableItemStack implements Serializable {
                 for (PotionEffect effect : (List<PotionEffect>) aMetaMap.get("custom-effects")) {
                     Map<String, Object> aMap = new HashMap<>();
                     aMap.put("==", ConfigurationSerialization.getAlias(effect.getClass()));
-
                     for (Map.Entry<String, Object> entry : effect.serialize().entrySet()) {
-
                         aMap.put(entry.getKey(), entry.getValue());
                     }
                     potionEffects.add(aMap);
