@@ -294,7 +294,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.GOLD_BLOCK, ChanceUtil.getRandom(2), true);
                     ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.GOLD_ORE, ChanceUtil.getRandom(4), true);
                     ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_BAR, ChanceUtil.getRandom(10), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_BAR, ChanceUtil.getRandom(80), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_NUGGET, ChanceUtil.getRandom(80), true);
 
                     // Redstone
                     ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.REDSTONE_ORE, ChanceUtil.getRandom(2), true);
