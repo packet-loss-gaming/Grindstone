@@ -50,9 +50,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -87,7 +85,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
     };
 
     private static Permission permission = null;
-    private final List<String> sysops = new ArrayList<>();
     private final ConcurrentHashMap<String, PlayerState> playerState = new ConcurrentHashMap<>();
 
     @Override
@@ -245,7 +242,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
      */
     public AdminState getAdminState(Player player) {
 
-        if (sysops.contains(player.getName())) {
+        if (permission.has((World) null, player.getName(), "aurora.admin.adminmode.sysop.active")) {
             return AdminState.SYSOP;
         } else if (permission.playerInGroup((World) null, player.getName(), "Admin")) {
             return AdminState.ADMIN;
@@ -281,7 +278,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                         player.getExp()));
                 switch (adminState) {
                     case SYSOP:
-                        sysops.add(player.getName());
+                        permission.playerAdd((World) null, player.getName(), "aurora.admin.adminmode.sysop.active");
                     case ADMIN:
                         permission.playerAddGroup((World) null, player.getName(), "Admin");
                         break;
@@ -332,7 +329,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 do {
                     switch (getAdminState(player)) {
                         case SYSOP:
-                            sysops.remove(player.getName());
+                            permission.playerRemove((World) null, player.getName(), "aurora.admin.adminmode.sysop.active");
                         case ADMIN:
                             permission.playerRemoveGroup((World) null, player.getName(), "Admin");
                             break;
@@ -407,7 +404,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     public boolean deadmin(Player player, boolean force) {
 
         //noinspection SimplifiableIfStatement
-        if (sysops.contains(player.getName()) && !force) return false;
+        if (isSysop(player) && !force) return false;
         return depowerPlayer(player) && depermission(player);
     }
 
