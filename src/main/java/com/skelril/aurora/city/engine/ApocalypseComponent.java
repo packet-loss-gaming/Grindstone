@@ -285,7 +285,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
             // Change Multiplier
             if (ChanceUtil.getChance(7)) {
-                multiplier = (config.multiplier * ChanceUtil.getRandom(6));
+                multiplier *= ChanceUtil.getRandom(6);
             }
 
             for (Player player : server.getOnlinePlayers()) {
