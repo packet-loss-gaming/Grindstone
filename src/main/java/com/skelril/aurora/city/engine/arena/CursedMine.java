@@ -16,7 +16,9 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
+import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
+import com.skelril.aurora.prayer.PrayerFX.InventoryFX;
 import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -403,7 +405,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         try {
             if (ChanceUtil.getChance(player.getLocation().getBlockY())) {
                 if (ChanceUtil.getChance(2)) {
-                    switch (ChanceUtil.getRandom(4)) {
+                    switch (ChanceUtil.getRandom(6)) {
                         case 1:
                             ChatUtil.sendNotice(player, "Caspher the friendly ghost drops some bread.");
                             player.getWorld().dropItemNaturally(player.getLocation(),
@@ -427,6 +429,38 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 4:
                             ChatUtil.sendNotice(player, "John gives you a new jacket.");
                             player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(ItemID.LEATHER_CHEST));
+                            break;
+                        case 5:
+                            ChatUtil.sendNotice(player, "Tim teleports items to you.");
+                            for (Entity e : getContainedEntities(Item.class)) {
+                                e.teleport(player);
+                            }
+
+                            // Add in some extra drops just in case the loot wasn't very juicy
+                            player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(64)));
+                            player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(64)));
+                            player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(64)));
+                            break;
+                        case 6:
+                            ChatUtil.sendNotice(player, "Dan gives you a sparkling touch.");
+
+                            int id;
+                            switch (ChanceUtil.getRandom(3)) {
+                                case 1:
+                                    id = ItemID.IRON_BAR;
+                                    break;
+                                case 2:
+                                    id = ItemID.GOLD_BAR;
+                                    break;
+                                case 3:
+                                    id = ItemID.DIAMOND;
+                                    break;
+                                default:
+                                    id = ItemID.REDSTONE_DUST;
+                                    break;
+                            }
+
+                            prayerComponent.influencePlayer(player, new Prayer(player, new InventoryFX(id, 64), 1000 * 5));
                             break;
                         default:
                             break;
