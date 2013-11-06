@@ -65,6 +65,11 @@ public class LocationUtil {
         return matchLocationFromId(getLocationId(name));
     }
 
+    public static double distanceSquared2D(Location a, Location b) {
+
+        return Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getZ() - b.getZ(), 2);
+    }
+
     public static Location grandBank(World world) {
 
         if (!world.getName().equals("City")) return null;

@@ -13,7 +13,6 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -203,16 +202,8 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
     @EventHandler
     public void onMoveChange(PlayerMoveEvent event) {
 
-        // Get the locations
-        Location from = event.getFrom().clone();
-        Location to = event.getTo().clone();
-
-        // Ignore vertical shift
-        from.setY(0);
-        to.setY(0);
-
         Player player = event.getPlayer();
-        double distanceSQ = from.distanceSquared(to);
+        double distanceSQ = LocationUtil.distanceSquared2D(event.getFrom(), event.getTo());
 
         if (player.isSneaking() ? distanceSQ > config.sneakMovementThreshold : distanceSQ > config.movementThreshold) update(player);
     }
