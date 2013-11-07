@@ -232,7 +232,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
 
                 try {
                     // Establish the connection
-                    URL url = new URL(config.websiteUrl + subAddress + "?page=" + i);
+                    URL url = new URL(config.websiteUrl + subAddress + "?game_id=11?page=" + i);
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setConnectTimeout(1500);
                     connection.setReadTimeout(1500);
