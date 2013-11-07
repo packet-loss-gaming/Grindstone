@@ -27,6 +27,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -93,24 +94,27 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
     @Override
     public synchronized void run() {
 
-        JSONArray[] objects = getFrom("characters.json");
+        JSONArray characters = getFrom("characters.json");
 
         log.info("Testing the connection to " + config.websiteUrl + "...");
-        if (objects != null) {
+        if (characters != null) {
             log.info("Connection test successful.");
-            if (objects.length > 0) {
-                updateWhiteList(objects);
+            if (characters.size() > 0) {
+                updateWhiteList(characters);
             } else {
-                log.warning("No characters could be found!");
+                log.warning("No characters could be downloaded!");
                 log.info("Your website could be under maintenance or contain no characters.");
             }
         } else {
             log.warning("Connection test failed!");
-            if (characters.size() == 0) {
-                log.info("Attempting to load offline files...");
-                loadBackupWhiteList();
-            }
         }
+
+        if (this.characters.size() == 0) {
+            log.info("Attempting to load offline files...");
+            loadBackupWhiteList();
+        }
+
+        log.info(this.characters.size() + " characters have been loaded.");
     }
 
     private boolean setupPermissions() {
@@ -214,15 +218,15 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         return characters.keySet().contains(playerName.trim().toLowerCase());
     }
 
-    public synchronized JSONArray[] getFrom(String subAddress) {
+    public synchronized JSONArray getFrom(String subAddress) {
 
-        JSONArray objective[] = null;
+        JSONArray objective = null;
         HttpURLConnection connection = null;
         BufferedReader reader = null;
 
         try {
 
-            List<JSONArray> objects = new ArrayList<>();
+            List<JSONObject> objects = new ArrayList<>();
             JSONParser parser = new JSONParser();
             for (int i = 1; true; i++) {
 
@@ -245,15 +249,17 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
                     }
 
                     // Parse Data
-                    JSONArray o = (JSONArray) parser.parse(builder.toString());
-                    if (o.isEmpty()) break;
-                    objects.add(o);
+                    JSONObject o = (JSONObject) parser.parse(builder.toString());
+                    JSONArray ao = (JSONArray) o.get("characters");
+                    if (ao.isEmpty()) break;
+                    Collections.addAll(objects, (JSONObject[]) ao.toArray(new JSONObject[ao.size()]));
 
                 } catch (ParseException e) {
                     break;
                 }
             }
-            objective = objects.toArray(new JSONArray[objects.size()]);
+            objective = new JSONArray();
+            objective.addAll(objects);
         } catch (IOException e) {
             return null;
         } finally {
@@ -279,44 +285,40 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         }
     };
 
-    public synchronized void updateWhiteList(JSONArray[] object) {
+    public synchronized void updateWhiteList(JSONArray object) {
 
         // Load the storage directory
         File charactersDirectory = new File(inst.getDataFolder().getPath() + "/characters");
         if (!charactersDirectory.exists()) charactersDirectory.mkdir();
-        log.info("Updating white list.");
+        log.info("Updating white list...");
 
         // Remove outdated JSON backup files
         for (File file : charactersDirectory.listFiles(filenameFilter)) {
-            log.info("Removed file: " + file.getName() + ".");
             file.delete();
         }
 
-        // Create new JSON backup files
-        int fileNumber = 1;
-        for (JSONArray aJSONArray : object) {
+        // Create new JSON backup file
+        BufferedWriter out = null;
 
-            BufferedWriter out = null;
-
-            File f = new File(charactersDirectory, "character-list-" + fileNumber + ".json");
-            try {
-                if (f.createNewFile()) {
-                    out = new BufferedWriter(new FileWriter(f));
-                    out.write(aJSONArray.toJSONString());
-                }
-            } catch (IOException ignored) {
-            } finally {
-                if (out != null) {
-                    try {
-                        out.close();
-                    } catch (IOException ignored) {
-                    }
+        File characterList = new File(charactersDirectory, "character-list.json");
+        try {
+            if (characterList.createNewFile()) {
+                out = new BufferedWriter(new FileWriter(characterList));
+                out.write(object.toJSONString());
+            } else {
+                log.warning("Could not create the new character list offline file!");
+            }
+        } catch (IOException ignored) {
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ignored) {
                 }
             }
-            fileNumber++;
-
-            addCharacters(aJSONArray);
         }
+
+        loadCharacters((JSONObject[]) object.toArray(new JSONObject[object.size()]));
 
         log.info("The white list has updated successfully.");
     }
@@ -324,52 +326,50 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
     private synchronized void loadBackupWhiteList() {
 
         File charactersDirectory = new File(inst.getDataFolder().getPath() + "/characters");
-        if (!charactersDirectory.exists()) {
-            log.warning("No offline files found!");
+        File characterFile = new File(charactersDirectory, "character-list.json");
+        if (!characterFile.exists()) {
+            log.warning("No offline file found!");
             return;
         }
 
         BufferedReader reader = null;
         JSONParser parser = new JSONParser();
 
-        for (File file : charactersDirectory.listFiles(filenameFilter)) {
-            try {
-                log.info("Found file: " + file.getName() + ".");
-                reader = new BufferedReader(new FileReader(file));
-                StringBuilder builder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    builder.append(line);
-                }
+        try {
+            reader = new BufferedReader(new FileReader(characterFile));
+            StringBuilder builder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+            }
 
-                addCharacters((JSONArray) parser.parse(builder.toString()));
-            } catch (IOException e) {
-                log.warning("Could not read file: " + file.getName() + ".");
-            } catch (ParseException p) {
-                log.warning("Could not parse file: " + file.getName() + ".");
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (IOException ignored) {
-                    }
+            JSONArray characterArray = ((JSONArray) parser.parse(builder.toString()));
+            loadCharacters((JSONObject[]) characterArray.toArray(new JSONObject[characterArray.size()]));
+        } catch (IOException e) {
+            log.warning("Could not read file: " + characterFile.getName() + ".");
+        } catch (ParseException p) {
+            log.warning("Could not parse file: " + characterFile.getName() + ".");
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignored) {
                 }
             }
         }
 
-        log.info("All found offline files have been loaded.");
+        log.info("The offline file has been loaded.");
     }
 
-    public synchronized void addCharacters(JSONArray aJSONArray) {
+    public synchronized void loadCharacters(JSONObject[] characters) {
 
         // Remove Old Characters
-        characters.clear();
+        this.characters.clear();
 
         // Add all new Characters
-        for (Object aCharacterObject : aJSONArray) {
-            JSONObject aJSONCharacterObject = (JSONObject) aCharacterObject;
-            characters.put(aJSONCharacterObject.get("name").toString().trim().toLowerCase(),
-                    new Character(aJSONCharacterObject.get("name").toString()));
+        for (JSONObject aCharacter : characters) {
+            this.characters.put(aCharacter.get("name").toString().trim().toLowerCase(),
+                    new Character(aCharacter.get("name").toString()));
         }
     }
 }
