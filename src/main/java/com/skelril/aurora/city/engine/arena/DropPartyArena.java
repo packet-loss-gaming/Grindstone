@@ -62,7 +62,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     @Override
     public void run() {
 
-        drop(1216);
+        drop(ChanceUtil.getRangedRandom(609, 2432));
     }
 
     @Override
@@ -105,7 +105,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             }
         }
 
-        dropPartyPulses = drops.size() * 1.5;
+        dropPartyPulses = drops.size() * .15;
 
         if (task != null) server.getScheduler().cancelTask(task.getTaskId());
 
