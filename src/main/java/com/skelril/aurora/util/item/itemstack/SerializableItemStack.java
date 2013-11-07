@@ -98,6 +98,11 @@ public class SerializableItemStack implements Serializable {
                     aMetaMap.put(entry.getKey(), entry.getValue());
                 }
 
+                // Maintain compatibility with older versions of the class
+                if (!aMetaMap.containsKey("==")) {
+                    aMetaMap.put("==", "ItemMeta");
+                }
+
                 if (aMetaMap.containsKey("custom-effects")) {
                     List<PotionEffect> potionEffects = new ArrayList<>();
                     for (Map<String, Object> entry : (List<Map<String, Object>>) aMetaMap.get("custom-effects")) {
