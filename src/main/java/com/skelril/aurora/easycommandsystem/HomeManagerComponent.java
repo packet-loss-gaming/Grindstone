@@ -284,7 +284,13 @@ public class HomeManagerComponent extends BukkitComponent {
 
                 RegionManager manager = WG.getRegionManager(player.getWorld());
                 ProtectedRegion region = manager.getRegionExact(getHome(player));
-                if (region != null) throw new CommandException("You already have a home in this world!");
+                if (region != null) {
+                    if (args.hasFlag('y')) {
+                        throw new CommandException("You already have a home in this world!");
+                    } else {
+                        region = null;
+                    }
+                }
 
                 ApplicableRegionSet applicable = manager.getApplicableRegions(player.getLocation());
 
@@ -556,7 +562,7 @@ public class HomeManagerComponent extends BukkitComponent {
                     String commission = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total * .1), " " + econ.currencyNamePlural());
 
                     ChatUtil.sendNotice(target, "Commission change: " + commission);
-                    total += total * .1;
+                    total *= 1.1;
                 }
 
                 String totalPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total), " " + econ.currencyNamePlural());
