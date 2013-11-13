@@ -246,7 +246,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
             return AdminState.SYSOP;
         } else if (permission.playerInGroup((World) null, player.getName(), "Admin")) {
             return AdminState.ADMIN;
-        } else if (permission.playerInGroup((World) null, player.getName(), "Moderator")) {
+        } else if (permission.playerInGroup((World) null, player.getName(), "Mod")) {
             return AdminState.MODERATOR;
         } else {
             return AdminState.MEMBER;
@@ -283,7 +283,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                         permission.playerAddGroup((World) null, player.getName(), "Admin");
                         break;
                     case MODERATOR:
-                        permission.playerAddGroup((World) null, player.getName(), "Moderator");
+                        permission.playerAddGroup((World) null, player.getName(), "Mod");
                         break;
                     default:
                         break;
@@ -334,7 +334,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                             permission.playerRemoveGroup((World) null, player.getName(), "Admin");
                             break;
                         case MODERATOR:
-                            permission.playerRemoveGroup((World) null, player.getName(), "Moderator");
+                            permission.playerRemoveGroup((World) null, player.getName(), "Mod");
                             break;
                         default:
                             return false;
