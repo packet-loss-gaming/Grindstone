@@ -42,11 +42,11 @@ public class IOUtil {
             return;
         }
 
-        FileOutputStream fos;
-        ObjectOutputStream oss = null;
-        try {
-            fos = new FileOutputStream(file);
-            oss = new ObjectOutputStream(fos);
+
+        try (
+                FileOutputStream fos = new FileOutputStream(file);
+                ObjectOutputStream oss = new ObjectOutputStream(fos)
+        ) {
             oss.writeObject(object);
         } catch (FileNotFoundException e) {
             log.warning("Failed to find binary file: " + fileName + "!");
@@ -54,27 +54,16 @@ public class IOUtil {
         } catch (IOException e) {
             log.warning("Failed to write binary file: " + fileName + "!");
             log.warning(e.getMessage());
-        } finally {
-            if (oss != null) {
-                try {
-                    oss.close();
-                } catch (IOException e) {
-                    log.warning("Could not close the Object Output Stream for binary file: " + fileName + "!");
-                    log.warning(e.getMessage());
-                }
-            }
         }
     }
 
     public static Object readBinaryFile(File file) {
 
         Object object = null;
-        FileInputStream fis;
-        ObjectInputStream ois = null;
-        try {
-            fis = new FileInputStream(file);
-            ois = new ObjectInputStream(fis);
-
+        try (
+                FileInputStream fis = new FileInputStream(file);
+                ObjectInputStream ois = new ObjectInputStream(fis)
+        ) {
             object = ois.readObject();
         } catch (FileNotFoundException e) {
             log.warning("Failed to find a binary file!");
@@ -85,15 +74,6 @@ public class IOUtil {
         } catch (IOException e) {
             log.warning("Failed to read a binary file!");
             log.warning(e.getMessage());
-        } finally {
-            if (ois != null) {
-                try {
-                    ois.close();
-                } catch (IOException e) {
-                    log.warning("Could not close the Object Input Stream for the binary file!");
-                    log.warning(e.getMessage());
-                }
-            }
         }
 
         return object;
