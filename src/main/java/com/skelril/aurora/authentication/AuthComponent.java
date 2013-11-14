@@ -26,10 +26,7 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
@@ -47,7 +44,8 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
 
     private static Permission permission = null;
     private LocalConfiguration config;
-    private ConcurrentHashMap<String, Character> characters = new ConcurrentHashMap<>();
+    //private ConcurrentHashMap<String, Character> characters = new ConcurrentHashMap<>();
+    private Set<String> characters = new HashSet<>();
 
 
     @Override
@@ -93,6 +91,11 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
 
     @Override
     public synchronized void run() {
+
+        if (Runtime.getRuntime().freeMemory() / 1024.0 / 1024.0 < 100) {
+            log.warning("Did not attempt a character list update due to low system memory...");
+            return;
+        }
 
         JSONArray characters = getFrom("characters.json");
 
@@ -215,12 +218,12 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
 
     public synchronized boolean isListed(String playerName) {
 
-        return characters.keySet().contains(playerName.trim().toLowerCase());
+        return characters.contains(playerName.trim().toLowerCase());
     }
 
     public synchronized JSONArray getFrom(String subAddress) {
 
-        JSONArray objective = null;
+        JSONArray objective;
         HttpURLConnection connection = null;
         BufferedReader reader = null;
 
@@ -232,7 +235,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
 
                 try {
                     // Establish the connection
-                    URL url = new URL(config.websiteUrl + subAddress + "?game_id=11?page=" + i);
+                    URL url = new URL(config.websiteUrl + subAddress + "?page=" + i);
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setConnectTimeout(1500);
                     connection.setReadTimeout(1500);
@@ -256,21 +259,21 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
 
                 } catch (ParseException e) {
                     break;
+                } finally {
+                    if (connection != null) connection.disconnect();
+
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException ignored) {
+                        }
+                    }
                 }
             }
             objective = new JSONArray();
             objective.addAll(objects);
         } catch (IOException e) {
             return null;
-        } finally {
-            if (connection != null) connection.disconnect();
-
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
 
         return objective;
@@ -368,8 +371,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
 
         // Add all new Characters
         for (JSONObject aCharacter : characters) {
-            this.characters.put(aCharacter.get("name").toString().trim().toLowerCase(),
-                    new Character(aCharacter.get("name").toString()));
+            this.characters.add(aCharacter.get("name").toString().trim().toLowerCase());
         }
     }
 }
