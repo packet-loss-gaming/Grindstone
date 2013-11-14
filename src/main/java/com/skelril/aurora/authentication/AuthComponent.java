@@ -26,7 +26,9 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
@@ -223,13 +225,11 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
 
     public synchronized JSONArray getFrom(String subAddress) {
 
-        JSONArray objective;
+        JSONArray objective = new JSONArray();
         HttpURLConnection connection = null;
         BufferedReader reader = null;
 
         try {
-
-            List<JSONObject> objects = new ArrayList<>();
             JSONParser parser = new JSONParser();
             for (int i = 1; true; i++) {
 
@@ -255,8 +255,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
                     JSONObject o = (JSONObject) parser.parse(builder.toString());
                     JSONArray ao = (JSONArray) o.get("characters");
                     if (ao.isEmpty()) break;
-                    Collections.addAll(objects, (JSONObject[]) ao.toArray(new JSONObject[ao.size()]));
-
+                    Collections.addAll(objective, (JSONObject[]) ao.toArray(new JSONObject[ao.size()]));
                 } catch (ParseException e) {
                     break;
                 } finally {
@@ -270,8 +269,6 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
                     }
                 }
             }
-            objective = new JSONArray();
-            objective.addAll(objects);
         } catch (IOException e) {
             return null;
         }
