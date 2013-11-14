@@ -27,8 +27,8 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
@@ -47,7 +47,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
     private static Permission permission = null;
     private LocalConfiguration config;
     //private ConcurrentHashMap<String, Character> characters = new ConcurrentHashMap<>();
-    private Set<String> characters = new HashSet<>();
+    private Set<String> characters = new CopyOnWriteArraySet<>();
 
 
     @Override
