@@ -7,7 +7,7 @@ import java.util.Random;
  */
 public class ChanceUtil {
 
-    private static Random r = new Random(1374633257);
+    private static Random r = new Random(System.currentTimeMillis());
 
     public static int getRandom(int highestValue) {
 
@@ -17,21 +17,21 @@ public class ChanceUtil {
     public static int getRangedRandom(int lowestValue, int highestValue) {
 
         if (lowestValue == highestValue) return lowestValue;
-        return lowestValue + getRandom(highestValue - lowestValue) - 1;
+        return lowestValue + getRandom((highestValue + 1) - lowestValue) - 1;
     }
 
     public static double getRandom(double highestValue) {
 
         if (highestValue < 0) {
-            return (r.nextDouble() * (highestValue * -1) + 1) * -1;
+            return (r.nextDouble() * (highestValue * -1)) * -1;
         }
-        return (r.nextDouble() * highestValue) + 1;
+        return (r.nextDouble() * (highestValue - 1)) + 1;
     }
 
     public static double getRangedRandom(double lowestValue, double highestValue) {
 
         if (lowestValue == highestValue) return lowestValue;
-        return lowestValue + getRandom(highestValue - lowestValue) - 1;
+        return lowestValue + getRandom((highestValue + 1) - lowestValue) - 1;
     }
 
     public static boolean getChance(int outOf) {
