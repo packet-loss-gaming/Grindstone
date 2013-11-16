@@ -1,10 +1,10 @@
 package com.skelril.aurora.util.restoration;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerMappedBlockRecordIndex extends BlockRecordIndex implements Serializable {
@@ -14,7 +14,7 @@ public class PlayerMappedBlockRecordIndex extends BlockRecordIndex implements Se
     public void addItem(String player, BlockRecord record) {
 
         if (!recordMap.containsKey(player)) {
-            recordMap.put(player, new ArrayList<BlockRecord>());
+            recordMap.put(player, new Vector<BlockRecord>());
         }
         recordMap.get(player).add(record);
     }
