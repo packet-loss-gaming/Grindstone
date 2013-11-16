@@ -2,11 +2,12 @@ package com.skelril.aurora.util.restoration;
 
 import java.io.Serializable;
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.List;
+import java.util.Vector;
 
 public class BaseBlockRecordIndex extends BlockRecordIndex implements Serializable {
 
-    private ConcurrentLinkedQueue<BlockRecord> recordList = new ConcurrentLinkedQueue<>();
+    private List<BlockRecord> recordList = new Vector<>();
 
     public void addItem(BlockRecord record) {
 

@@ -12,15 +12,15 @@ import java.io.Serializable;
 public class BlockRecord implements Comparable<BlockRecord>, Serializable {
 
     // Location information
-    transient World world = null;
-    final String worldName;
-    final int x, y, z;
+    private transient World world = null;
+    private final String worldName;
+    private final int x, y, z;
 
     // Block Information
-    final int type, data;
+    private final int type, data;
 
     // Time Information
-    final long time;
+    private final long time;
 
     public BlockRecord(Block block) {
 
