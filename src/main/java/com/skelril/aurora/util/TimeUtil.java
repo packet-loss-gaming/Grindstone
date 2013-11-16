@@ -10,6 +10,11 @@ public class TimeUtil {
 
     private static Calendar calendar = Calendar.getInstance();
 
+    /**
+     * Gets the ticks till the start of the next hour
+     *
+     * @return the number of ticks till the next hour
+     */
     public static long getTicksTillHour() {
 
         Calendar localCalendar = Calendar.getInstance();
@@ -24,11 +29,24 @@ public class TimeUtil {
         return returnValue;
     }
 
+    /**
+     * Gets the ticks till a given base 24 hour
+     *
+     * @param hour The hour, for example 13 is 1 P.M.
+     * @return the number of ticks till the given time
+     */
     public static long getTicksTill(int hour) {
 
         return getTicksTill(hour, -1);
     }
 
+    /**
+     * Gets the ticks till a given base 24 hour on a day of the week
+     *
+     * @param hour      The hour, for example 13 is 1 P.M.
+     * @param dayofweek The day, for example 7 is Saturday
+     * @return the number of ticks till the given time
+     */
     public static long getTicksTill(int hour, int dayofweek) {
 
         Calendar localCalendar = Calendar.getInstance();
