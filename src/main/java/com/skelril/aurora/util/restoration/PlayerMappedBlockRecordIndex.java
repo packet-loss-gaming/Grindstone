@@ -1,13 +1,15 @@
 package com.skelril.aurora.util.restoration;
 
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class PlayerMappedBlockRecordIndex extends BlockRecordIndex {
+public class PlayerMappedBlockRecordIndex extends BlockRecordIndex implements Serializable {
 
-    private HashMap<String, List<BlockRecord>> recordMap = new HashMap<>();
+    private Map<String, List<BlockRecord>> recordMap = new ConcurrentHashMap<>();
 
     public void addItem(String player, BlockRecord record) {
 
