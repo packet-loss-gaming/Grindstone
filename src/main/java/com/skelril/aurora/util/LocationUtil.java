@@ -81,7 +81,26 @@ public class LocationUtil {
         return player.teleport(findFreePosition(player.getLocation()));
     }
 
-    public static Location findFreePosition(Location pos) {
+    public static Location findFreePosition(final Location pos) {
+
+        // Find the raw safe position
+        Location mPos = findRawFreePosition(pos);
+
+        // Null safety check
+        if (mPos == null) {
+            return mPos;
+        }
+
+        // Add the offset to the location
+        mPos.add(pos.getX() - pos.getBlockX(), 0, pos.getZ() - pos.getBlockZ());
+
+        // Move to the center of the block if undefined
+        if (mPos.getX() == mPos.getBlockX()) mPos.add(.5, 0, 0);
+        if (mPos.getZ() == mPos.getBlockZ()) mPos.add(0, 0, .5);
+        return mPos;
+    }
+
+    public static Location findRawFreePosition(final Location pos) {
 
         World world = pos.getWorld();
 
@@ -107,7 +126,7 @@ public class LocationUtil {
 
             Block tb = block.getRelative(0, 1, 0);
             Location l = tb.getLocation();
-            l.add(new Vector(.5, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), .5));
+            l.add(new Vector(0, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0));
             l.setPitch(pos.getPitch());
             l.setYaw(pos.getYaw());
             return l;
@@ -129,7 +148,7 @@ public class LocationUtil {
             if (foundGround && free == 2) {
                 Block tb = block.getRelative(0, -1, 0);
                 Location l = tb.getLocation();
-                l.add(new Vector(.5, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), .5));
+                l.add(new Vector(0, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0));
                 l.setPitch(pos.getPitch());
                 l.setYaw(pos.getYaw());
                 return l;
