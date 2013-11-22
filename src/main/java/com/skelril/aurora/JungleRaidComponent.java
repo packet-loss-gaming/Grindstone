@@ -1346,8 +1346,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
             removeFromJungleRaidTeam(targetPlayer, true);
             restorePlayer(targetPlayer, 0);
 
-            prayerComponent.uninfluencePlayer(targetPlayer, PrayerType.BLINDNESS);
-            prayerComponent.uninfluencePlayer(targetPlayer, PrayerType.WALK);
+            prayerComponent.uninfluencePlayer(targetPlayer, PrayerType.BLINDNESS, PrayerType.WALK);
 
             for (Player player : getContainedPlayers()) {
                 if (!player.isValid() || targetPlayer.equals(player)) continue;

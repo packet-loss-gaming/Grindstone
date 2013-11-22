@@ -85,10 +85,12 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         session.uninfluence();
     }
 
-    public void uninfluencePlayer(Player player, PrayerType prayer) {
+    public void uninfluencePlayer(Player player, PrayerType... prayers) {
 
         InfluenceState session = sessions.getSession(InfluenceState.class, player);
-        session.uninfluence(prayer);
+        for (PrayerType prayer : prayers) {
+            session.uninfluence(prayer);
+        }
     }
 
     public PrayerType getPrayerByString(String prayer) throws InvalidPrayerException {
