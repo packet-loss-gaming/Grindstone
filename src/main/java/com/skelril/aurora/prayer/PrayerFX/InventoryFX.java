@@ -12,7 +12,7 @@ import org.bukkit.inventory.ItemStack;
  */
 public class InventoryFX extends AbstractPrayer {
 
-    int type, amount;
+    private int type, amount;
 
     public InventoryFX() {
         super();
