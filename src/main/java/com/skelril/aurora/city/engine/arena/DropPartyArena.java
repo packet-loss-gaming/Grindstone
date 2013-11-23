@@ -3,7 +3,6 @@ package com.skelril.aurora.city.engine.arena;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
@@ -17,10 +16,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.ExperienceOrb;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -178,11 +174,11 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         if (task != null) {
             lastDropPulse = System.currentTimeMillis();
             ChatUtil.sendNotice(getContainedPlayers(1), "Drop Party temporarily suspended for: Drop Clear.");
-            for (Item item : getWorld().getEntitiesByClass(Item.class)) {
-                if (getRegion().getParent().contains(BukkitUtil.toVector(item.getLocation()))) {
-                    drops.add(item.getItemStack());
-                    item.remove();
+            for (Entity entity : getContainedEntities(1, Item.class, ExperienceOrb.class)) {
+                if (entity instanceof Item) {
+                    drops.add(((Item) entity).getItemStack());
                 }
+                entity.remove();
             }
         }
     }
