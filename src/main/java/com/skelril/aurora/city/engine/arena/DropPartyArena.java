@@ -11,6 +11,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.TimeUtil;
+import com.skelril.aurora.util.item.ItemUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -95,14 +96,18 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
     public void drop(int populatorValue, int modifier) {
 
+        int playerCount = server.getOnlinePlayers().length;
+
+        if (playerCount < 1) return;
+
         final boolean populate = populatorValue > 0;
         Bukkit.broadcastMessage(ChatColor.GOLD + "Drop party in 60 seconds!");
 
         if (populate) {
-            for (int i = 0; i < server.getOnlinePlayers().length * modifier; i++) {
-                // Stack of Blaze Rod equivalent
+            for (int i = 0; i < playerCount * modifier; i++) {
                 drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
             }
+            drops.add(ItemUtil.makeSkull(server.getOnlinePlayers()[ChanceUtil.getRandom(playerCount) - 1].getName()));
         }
 
         dropPartyPulses = drops.size() * .15;

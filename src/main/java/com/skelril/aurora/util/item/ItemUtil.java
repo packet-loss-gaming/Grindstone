@@ -13,10 +13,7 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.BookMeta;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.inventory.meta.Repairable;
+import org.bukkit.inventory.meta.*;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -517,6 +514,15 @@ public class ItemUtil {
             magicBucket.setItemMeta(magicMeta);
             return magicBucket;
         }
+    }
+
+    public static ItemStack makeSkull(String name) {
+
+        ItemStack skull = new ItemStack(ItemID.HEAD);
+        SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
+        skullMeta.setOwner(name);
+        skull.setItemMeta(skullMeta);
+        return skull;
     }
 
     public static ItemStack[] clone(ItemStack[] stacks) {
