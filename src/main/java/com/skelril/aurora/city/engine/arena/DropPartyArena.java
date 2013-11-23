@@ -4,6 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
+import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
@@ -30,6 +31,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -63,7 +65,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     @Override
     public void run() {
 
-        drop(ChanceUtil.getRangedRandom(609, 2432));
+        drop(ChanceUtil.getRangedRandom(730, 2918));
     }
 
     @Override
@@ -96,13 +98,19 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
     public void drop(int populatorValue, int modifier) {
 
-        int playerCount = server.getOnlinePlayers().length;
+        // Check for online players
+        final int playerCount = server.getOnlinePlayers().length;
 
         if (playerCount < 1) return;
 
-        final boolean populate = populatorValue > 0;
+        // Notify online players
         Bukkit.broadcastMessage(ChatColor.GOLD + "Drop party in 60 seconds!");
 
+        // Setup region variable
+        final CuboidRegion rg = new CuboidRegion(getRegion().getMinimumPoint(), getRegion().getMaximumPoint());
+
+        // Use the SacrificeComponent to populate the drop party if a populator value is given
+        final boolean populate = populatorValue > 0;
         if (populate) {
             for (int i = 0; i < playerCount * modifier; i++) {
                 drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
@@ -110,9 +118,14 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             drops.add(ItemUtil.makeSkull(server.getOnlinePlayers()[ChanceUtil.getRandom(playerCount) - 1].getName()));
         }
 
+        // Remove null drops and shuffle all other drops
+        drops.removeAll(Collections.singleton(null));
+        Collections.shuffle(drops);
+
+        // Set a maximum drop count
         dropPartyPulses = drops.size() * .15;
 
-        if (task != null) server.getScheduler().cancelTask(task.getTaskId());
+        if (task != null) task.cancel();
 
         task = server.getScheduler().runTaskTimer(inst, new Runnable() {
 
@@ -123,25 +136,20 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                     return;
                 }
 
-                List<ItemStack> dropped = new ArrayList<>();
+                Iterator<ItemStack> it = drops.iterator();
 
-                Vector min = getRegion().getMinimumPoint();
-                Vector max = getRegion().getMaximumPoint();
+                int k = 10;
+                while (it.hasNext() && k > 0) {
 
-                // Remove null drops and shuffle all other drops
-                drops.removeAll(Collections.singleton(null));
-                Collections.shuffle(drops);
-
-                for (ItemStack drop : drops) {
-
-                    if (dropped.size() > 10) break;
-
-                    Vector v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ());
-                    Location l = new Location(getWorld(), v.getX(), v.getY(), v.getZ()).add(0, max.getBlockY(), 0);
+                    // Pick a random Location
+                    Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), rg);
                     if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
-                    getWorld().dropItem(l, drop);
-                    dropped.add(drop);
+                    getWorld().dropItem(l, it.next());
 
+                    // Remove the drop
+                    it.remove();
+
+                    // Drop the xp
                     if (populate) {
                         // Throw in some xp cause why not
                         for (short s = (short) ChanceUtil.getRandom(5); s > 0; s--) {
@@ -149,14 +157,13 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                             e.setExperience(8);
                         }
                     }
+
+                    k--;
                 }
 
-                for (ItemStack drop : dropped) {
-                    if (drops.contains(drop)) drops.remove(drop);
-                }
-
+                // Cancel if we've ran out of drop party pulses or if there is nothing more to drop
                 if (drops.size() < 1 || dropPartyPulses <= 0) {
-                    server.getScheduler().cancelTask(task.getTaskId());
+                    task.cancel();
                     task = null;
                 }
 
