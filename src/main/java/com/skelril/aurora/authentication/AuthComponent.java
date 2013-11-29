@@ -94,13 +94,13 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
     @Override
     public synchronized void run() {
 
-        JSONArray characters = getFrom("characters.json");
+        JSONArray charactersL = getFrom("characters.json");
 
         log.info("Testing the connection to " + config.websiteUrl + "...");
-        if (characters != null) {
+        if (charactersL != null) {
             log.info("Connection test successful.");
-            if (characters.size() > 0) {
-                updateWhiteList(characters);
+            if (!charactersL.isEmpty()) {
+                updateWhiteList(charactersL);
             } else {
                 log.warning("No characters could be downloaded!");
                 log.info("Your website could be under maintenance or contain no characters.");
@@ -109,12 +109,12 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
             log.warning("Connection test failed!");
         }
 
-        if (this.characters.size() == 0) {
+        if (characters.isEmpty()) {
             log.info("Attempting to load offline files...");
             loadBackupWhiteList();
         }
 
-        log.info(this.characters.size() + " characters have been loaded.");
+        log.info(characters.size() + " characters have been loaded.");
     }
 
     private boolean setupPermissions() {
