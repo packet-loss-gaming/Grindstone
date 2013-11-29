@@ -94,11 +94,6 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
     @Override
     public synchronized void run() {
 
-        if (Runtime.getRuntime().freeMemory() / 1024.0 / 1024.0 < 100) {
-            log.warning("Did not attempt a character list update due to low system memory...");
-            return;
-        }
-
         JSONArray characters = getFrom("characters.json");
 
         log.info("Testing the connection to " + config.websiteUrl + "...");
