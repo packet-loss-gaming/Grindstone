@@ -134,8 +134,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
                 Iterator<ItemStack> it = drops.iterator();
 
-                int k = 10;
-                while (it.hasNext() && k > 0) {
+                for (int k = 10; it.hasNext() && k > 0; k--) {
 
                     // Pick a random Location
                     Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), rg);
@@ -153,8 +152,6 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                             e.setExperience(8);
                         }
                     }
-
-                    k--;
                 }
 
                 // Cancel if we've ran out of drop party pulses or if there is nothing more to drop
