@@ -7,6 +7,7 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.util.ChanceUtil;
@@ -21,7 +22,9 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -192,6 +195,21 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 if (entity instanceof Player) {
                     ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, duration, 4), true);
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onClick(PlayerInteractEvent event) {
+
+        final Player player = event.getPlayer();
+        ItemStack stack = player.getItemInHand();
+
+        if (isNinja(player) && stack != null && stack.getTypeId() == ItemID.BOW) {
+            switch (event.getAction()) {
+                case LEFT_CLICK_AIR:
+                    player.launchProjectile(EnderPearl.class);
+                    break;
             }
         }
     }

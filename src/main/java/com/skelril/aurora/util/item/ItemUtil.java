@@ -518,7 +518,7 @@ public class ItemUtil {
 
     public static ItemStack makeSkull(String name) {
 
-        ItemStack skull = new ItemStack(ItemID.HEAD);
+        ItemStack skull = new ItemStack(ItemID.HEAD, 1, (short) 3);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
         skullMeta.setOwner(name);
         skull.setItemMeta(skullMeta);

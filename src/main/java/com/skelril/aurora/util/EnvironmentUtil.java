@@ -12,15 +12,12 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 
 /**
  * @author Turtle9598
  */
 public class EnvironmentUtil {
-
-    private final static Random random = new Random();
 
     public static boolean isNightTime(long time) {
 
@@ -333,7 +330,7 @@ public class EnvironmentUtil {
     public static void generateRadialEffect(Location location, Effect effect) {
 
         for (int i = 0; i < 100; i++) {
-            location.getWorld().playEffect(location, effect, random.nextInt(9));
+            location.getWorld().playEffect(location, effect, ChanceUtil.getRandom(9) - 1);
         }
     }
 

@@ -39,7 +39,8 @@ public class BookUtil {
                 // Creating
                 guide.add("Creating a House\n\nTo to create the house do the following." +
                         "\n1.) Select the region for the house" +
-                        "\n2.) Run the command /home admin create <player> <district[-district]>" +
+                        "\n2.) Run the command /home admin create [player] <district[-district]>" +
+                        "\n    If a player is not specified it will be purchasable" +
                         "\n3.) Done!");
 
                 // Moving
@@ -55,6 +56,30 @@ public class BookUtil {
 
                 return General.generateBook("Admin Housing Guide", "Dark_Arc", guide);
             }
+        }
+    }
+
+    public static class Tutorial {
+
+        public static ItemStack newbieBook() {
+
+            List<String> guide = new ArrayList<>();
+            guide.add(
+                    "Registering Your Account" +
+                            "\nTo take full advantage of the server you must register your account." +
+                            " This is a fairly strait forward process, and requires a very simple application." +
+                            " To complete the application, go to skelril.com, and click the creeper."
+            );
+
+            guide.add(
+                    "Buying A House" +
+                            "\nThe system has been made fully automatic and is very easy to use." +
+                            " To purchase a house all you must do is find a house for sale, stand" +
+                            " in its lawn, and then type /home buy. More instructions will be" +
+                            " given after the command is used about how to confirm your purchase."
+            );
+
+            return General.generateBook("Newbie Book", "Admin Council", guide);
         }
     }
 

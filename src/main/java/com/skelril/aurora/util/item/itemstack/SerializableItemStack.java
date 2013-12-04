@@ -19,6 +19,7 @@ import java.util.Map;
  * User: Wyatt Childers
  * Date: 10/11/13
  */
+@SuppressWarnings("unchecked")
 public class SerializableItemStack implements Serializable {
 
     Map<String, Object> map;
