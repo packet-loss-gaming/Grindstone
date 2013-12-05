@@ -362,17 +362,51 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
 
-        Entity entity = event.getEntity();
-
-        if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
+        final Entity entity = event.getEntity();
 
         if (event instanceof EntityDamageByEntityEvent) {
             Entity damager = ((EntityDamageByEntityEvent) event).getDamager();
-            if (damager instanceof Player) return;
+
             if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
-                if (((Projectile) damager).getShooter() instanceof Player) return;
+                damager = ((Projectile) damager).getShooter();
+            }
+
+            if (damager instanceof Player) {
+
+                if (entity instanceof Player) {
+                    return;
+                }
+
+                final Entity finalDamager = damager;
+                final int oldCurrent = (int) Math.ceil(((LivingEntity) entity).getHealth());
+
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+                    @Override
+                    public void run() {
+
+                        int current = (int) Math.ceil(((LivingEntity) entity).getHealth());
+
+                        if (oldCurrent == current) return;
+
+                        int max = (int) Math.ceil(((LivingEntity) entity).getMaxHealth());
+
+                        String message;
+
+                        if (current > 0) {
+                            message = ChatColor.DARK_AQUA + "Entity Health: " + current + " / " + max;
+                        } else {
+                            message = ChatColor.GOLD + "" + ChatColor.BOLD + "KO!";
+                        }
+
+                        ChatUtil.sendNotice((Player) finalDamager, message);
+                    }
+                }, 1);
+                return;
             }
         }
+
+        if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
+
         Location location = entity.getLocation();
         int level = getLevel(location);
 
