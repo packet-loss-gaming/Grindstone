@@ -364,6 +364,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         final Entity entity = event.getEntity();
 
+        Location location = entity.getLocation();
+        if (!location.getWorld().getName().startsWith(config.wildernessWorld)) return;
+
         if (event instanceof EntityDamageByEntityEvent) {
             Entity damager = ((EntityDamageByEntityEvent) event).getDamager();
 
@@ -407,10 +410,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
 
-        Location location = entity.getLocation();
         int level = getLevel(location);
 
-        if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
+        if (level > 1) {
 
             event.setDamage(event.getDamage() * level);
         }
