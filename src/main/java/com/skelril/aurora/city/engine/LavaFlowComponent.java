@@ -58,11 +58,16 @@ public class LavaFlowComponent extends BukkitComponent implements Listener {
     public void onBlockFromTo(BlockFromToEvent event) {
 
         if (EnvironmentUtil.isLava(event.getBlock())) {
-            WorldConfiguration wcfg = worldGuard.getGlobalStateManager().get(event.getBlock().getWorld());
-            if (wcfg.preventWaterDamage.size() > 0) {
-                if (wcfg.preventWaterDamage.contains(event.getToBlock().getTypeId())) {
-                    event.setCancelled(true);
+            try {
+                WorldConfiguration wcfg = worldGuard.getGlobalStateManager().get(event.getBlock().getWorld());
+                if (wcfg.preventWaterDamage.size() > 0) {
+                    if (wcfg.preventWaterDamage.contains(event.getToBlock().getTypeId())) {
+                        event.setCancelled(true);
+                    }
                 }
+            } catch (NullPointerException ex) {
+                log.warning("Blocking lava flow, configuration error!");
+                event.setCancelled(true);
             }
         }
     }
