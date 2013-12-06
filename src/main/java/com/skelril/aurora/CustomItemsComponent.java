@@ -211,7 +211,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Player owner = damager instanceof Player ? (Player) damager : null;
         LivingEntity target = event.getEntity() instanceof LivingEntity ? (LivingEntity) event.getEntity() : null;
 
-        if (owner != null && target != null) {
+        if (owner != null && target != null && owner != target) {
 
             CustomItemSession session = getSession(owner);
 
