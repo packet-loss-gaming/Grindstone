@@ -347,6 +347,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private static Set<EntityDamageEvent.DamageCause> ignoredDamage = new HashSet<>();
 
     static {
+        ignoredDamage.add(EntityDamageEvent.DamageCause.WITHER);
         ignoredDamage.add(EntityDamageEvent.DamageCause.FIRE_TICK);
         ignoredDamage.add(EntityDamageEvent.DamageCause.POISON);
         ignoredDamage.add(EntityDamageEvent.DamageCause.CONTACT);
