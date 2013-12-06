@@ -564,6 +564,9 @@ public class AdminStoreComponent extends BukkitComponent {
         names.add("god pickaxe");
         names.add("legendary god pickaxe");
 
+        names.add("god axe");
+        names.add("legendary god axe");
+
         names.add("god helmet");
         names.add("god chestplate");
         names.add("god leggings");
@@ -657,6 +660,12 @@ public class AdminStoreComponent extends BukkitComponent {
                     break;
                 case "legendary god pickaxe":
                     itemStacks.add(ItemUtil.God.makePickaxe(true));
+                    break;
+                case "god axe":
+                    itemStacks.add(ItemUtil.God.makeAxe(false));
+                    break;
+                case "legendary god axe":
+                    itemStacks.add(ItemUtil.God.makeAxe(true));
                     break;
                 case "god helmet":
                     itemStacks.add(ItemUtil.God.makeHelmet());

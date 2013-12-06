@@ -214,21 +214,44 @@ public class ItemUtil {
         public static ItemStack makePickaxe(boolean legendary) {
 
             ItemStack pickaxe = new ItemStack(ItemID.DIAMOND_PICKAXE);
+            ItemMeta godMeta = pickaxe.getItemMeta();
+
             if (legendary) {
-                pickaxe.addEnchantment(Enchantment.DIG_SPEED, 5);
-                pickaxe.addEnchantment(Enchantment.DURABILITY, 3);
-                pickaxe.addEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 3);
-                ItemMeta godMeta = pickaxe.getItemMeta();
+                godMeta.addEnchant(Enchantment.DIG_SPEED, 5, true);
+                godMeta.addEnchant(Enchantment.DURABILITY, 3, true);
+                godMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 3, true);
                 godMeta.setDisplayName(ChatColor.GREEN + "Legendary God Pickaxe");
-                pickaxe.setItemMeta(godMeta);
             } else {
-                pickaxe.addEnchantment(Enchantment.DIG_SPEED, 4);
-                pickaxe.addEnchantment(Enchantment.SILK_TOUCH, 1);
-                ItemMeta godMeta = pickaxe.getItemMeta();
+                godMeta.addEnchant(Enchantment.DIG_SPEED, 4, true);
+                godMeta.addEnchant(Enchantment.SILK_TOUCH, 1, true);
                 godMeta.setDisplayName(ChatColor.GREEN + "God Pickaxe");
-                pickaxe.setItemMeta(godMeta);
             }
+
+            pickaxe.setItemMeta(godMeta);
+
             return pickaxe;
+        }
+
+        public static ItemStack makeAxe(boolean legendary) {
+
+            ItemStack axe = new ItemStack(ItemID.DIAMOND_AXE);
+            ItemMeta godMeta = axe.getItemMeta();
+
+            if (legendary) {
+                godMeta.addEnchant(Enchantment.DAMAGE_ALL, 5, true);
+                godMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 5, true);
+                godMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 5, true);
+                godMeta.addEnchant(Enchantment.DIG_SPEED, 5, true);
+                godMeta.addEnchant(Enchantment.DURABILITY, 3, true);
+                godMeta.setDisplayName(ChatColor.GREEN + "Legendary God Axe");
+            } else {
+                godMeta.addEnchant(Enchantment.DIG_SPEED, 4, true);
+                godMeta.setDisplayName(ChatColor.GREEN + "God Axe");
+            }
+
+            axe.setItemMeta(godMeta);
+
+            return axe;
         }
     }
 

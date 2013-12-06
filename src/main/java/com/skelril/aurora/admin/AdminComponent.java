@@ -991,6 +991,21 @@ public class AdminComponent extends BukkitComponent implements Listener {
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given a new god pickaxe.");
         }
+
+        @Command(aliases = {"axe"},
+                usage = "<player>", desc = "Return a player's God Axe",
+                flags = "l", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.god.axe"})
+        public void lostAxeCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.God.makeAxe(args.hasFlag('l')));
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new god axe.");
+        }
     }
 
     public class LostAncientItem {

@@ -285,7 +285,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 } else {
                     if (!ChanceUtil.getChance(Math.max(1, 125 - modifier))) continue;
                 }
-                switch (ChanceUtil.getRandom(25)) {
+                switch (ChanceUtil.getRandom(26)) {
                     case 1:
                         itemStack = new ItemStack(ItemID.DIAMOND_SWORD);
                         if (Util.getChance(sender, modifier, 1.2)) {
@@ -511,6 +511,22 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         break;
                     case 25:
                         itemStack = new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(3));
+                        break;
+                    case 26:
+                        itemStack = new ItemStack(ItemID.DIAMOND_AXE);
+                        if (Util.getChance(sender, modifier, 2.5)) {
+                            itemStack.addEnchantment(Enchantment.DAMAGE_ALL, 5);
+                            itemStack.addEnchantment(Enchantment.DAMAGE_ARTHROPODS, 5);
+                            itemStack.addEnchantment(Enchantment.DAMAGE_UNDEAD, 5);
+                            itemStack.addEnchantment(Enchantment.DIG_SPEED, 5);
+                            itemStack.addEnchantment(Enchantment.DURABILITY, 3);
+                            itemMeta = itemStack.getItemMeta();
+                            itemMeta.setDisplayName(ChatColor.GREEN + "Legendary God Axe");
+                        } else if (Util.getChance(sender, modifier, .37)) {
+                            itemStack.addEnchantment(Enchantment.DIG_SPEED, 4);
+                            itemMeta = itemStack.getItemMeta();
+                            itemMeta.setDisplayName(ChatColor.GREEN + "God Axe");
+                        }
                         break;
                 }
 
