@@ -202,10 +202,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         Entity damager = event.getDamager();
-        boolean wasProjectile = false;
-        if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
+        boolean wasArrow = false;
+        if (damager instanceof Arrow && ((Projectile) damager).getShooter() != null) {
             damager = ((Projectile) damager).getShooter();
-            wasProjectile = true;
+            wasArrow = true;
         }
 
         Player owner = damager instanceof Player ? (Player) damager : null;
@@ -217,7 +217,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             Specs used;
             if (session.canSpec(SpecType.FEAR)) {
-                if (ItemUtil.hasFearSword(owner) && !wasProjectile) {
+                if (ItemUtil.hasFearSword(owner) && !wasArrow) {
                     used = callSpec(owner, target, 0, 6);
                     if (used == null) return;
                     session.updateSpec(SpecType.FEAR);
@@ -241,7 +241,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Fear.soulSmite(owner, target);
                             break;
                     }
-                } else if (ItemUtil.hasFearBow(owner) && wasProjectile) {
+                } else if (ItemUtil.hasFearBow(owner) && wasArrow) {
                     used = callSpec(owner, target, 6, 11);
                     if (used == null) return;
                     session.updateSpec(SpecType.FEAR);
@@ -267,7 +267,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
 
             if (session.canSpec(SpecType.UNLEASHED)) {
-                if (ItemUtil.hasUnleashedSword(owner) && !wasProjectile) {
+                if (ItemUtil.hasUnleashedSword(owner) && !wasArrow) {
                     used = callSpec(owner, target, 11, 17);
                     if (used == null) return;
                     session.updateSpec(SpecType.UNLEASHED);
@@ -291,7 +291,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Unleashed.lifeLeech(owner, target);
                             break;
                     }
-                } else if (ItemUtil.hasUnleashedBow(owner) && wasProjectile) {
+                } else if (ItemUtil.hasUnleashedBow(owner) && wasArrow) {
                     used = callSpec(owner, target, 18, 20);
                     if (used == null) return;
                     session.updateSpec(SpecType.UNLEASHED);
@@ -314,7 +314,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Projectile projectile = event.getEntity();
         Entity shooter = projectile.getShooter();
 
-        if (shooter != null && shooter instanceof Player) {
+        if (shooter != null && shooter instanceof Player && projectile instanceof Arrow) {
 
             Player owner = (Player) shooter;
             CustomItemSession session = getSession(owner);
@@ -383,11 +383,12 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     @EventHandler
     public void onArrowTick(ProjectileTickEvent event) {
 
-        Entity shooter = event.getEntity().getShooter();
+        Projectile projectile = event.getEntity();
+        Entity shooter = projectile.getShooter();
 
-        if (shooter != null && shooter instanceof Player) {
+        if (shooter != null && shooter instanceof Player && projectile instanceof Arrow) {
 
-            final Location location = event.getEntity().getLocation();
+            final Location location = projectile.getLocation();
             if (ItemUtil.hasBatBow((Player) shooter)) {
 
                 if (!ChanceUtil.getChance(5)) return;
