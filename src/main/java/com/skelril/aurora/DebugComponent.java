@@ -20,7 +20,7 @@ import org.bukkit.inventory.ItemStack;
 /**
  * Author: Turtle9598
  */
-@ComponentInformation(friendlyName = "Debug", desc = "Debug tools")
+@ComponentInformation(friendlyName = "ADebug", desc = "Debug tools")
 public class DebugComponent extends BukkitComponent {
 
     private final CommandBook inst = CommandBook.inst();
