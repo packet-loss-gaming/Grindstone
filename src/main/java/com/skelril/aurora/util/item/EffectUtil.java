@@ -103,6 +103,8 @@ public class EffectUtil {
                 held = ((Player) target).getItemInHand();
                 if (held != null) held = held.clone();
                 ((Player) target).setItemInHand(null);
+            } else if (target instanceof Skeleton) {
+                held = null;
             } else {
                 held = target.getEquipment().getItemInHand();
                 if (held != null) held = held.clone();
