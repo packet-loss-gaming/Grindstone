@@ -55,8 +55,8 @@ import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
         AntiCheatCompatibilityComponent.class, FreezeComponent.class})
 public class CustomItemsComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Server server = CommandBook.server();
+    private static final CommandBook inst = CommandBook.inst();
+    private static final Server server = CommandBook.server();
 
     @InjectComponent
     private SessionComponent sessions;
@@ -137,17 +137,30 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
 
         Entity entity = event.getEntity();
 
-        if (entity instanceof Player && !true) {
+        if (entity instanceof Player) {
 
             Player player = (Player) entity;
+            CustomItemSession session = getSession(player);
             ItemStack[] contents = player.getInventory().getContents();
 
-            if (ItemUtil.findItemOfName(contents, ChatColor.DARK_RED + "Red Feather")) {
+            // WORK AROUND (This is really stupid that I have to do this)
+            Entity damager = null;
+            if (event instanceof EntityDamageByEntityEvent) {
+                damager = ((EntityDamageByEntityEvent) event).getDamager();
+            }
+
+            if (session.isProtectedAgainst(damager)) {
+                event.setCancelled(true);
+                return;
+            }
+            // END WORK AROUND
+
+            if (session.canSpec(SpecType.RED) && ItemUtil.findItemOfName(contents, ChatColor.DARK_RED + "Red Feather")) {
 
                 final int redQD = ItemUtil.countItemsOfType(contents, ItemID.REDSTONE_DUST);
                 final int redQB = 9 * ItemUtil.countItemsOfType(contents, BlockID.REDSTONE_BLOCK);
@@ -163,8 +176,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                     final double dmg = event.getDamage();
                     final int k = (dmg > 80 ? 16 : dmg > 40 ? 8 : dmg > 20 ? 4 : 2);
-                    final double result = dmg - (redQ * k);
-                    redQ = result > 0 ? 0 : (int) (Math.abs(result) / k);
+
+                    final double blockable = redQ * k;
+                    final double blocked = blockable - (blockable - dmg);
+
+                    redQ = (int) ((blockable - blocked) / k);
 
                     World w = player.getWorld();
 
@@ -192,7 +208,16 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     //noinspection deprecation
                     player.updateInventory();
 
-                    event.setDamage(Math.max(0, result));
+                    event.setDamage(Math.max(0, dmg - blocked));
+
+                    // Update the session
+                    session.updateSpec(SpecType.RED, (long) (blocked * 150));
+
+                    // WORK AROUND
+                    if (damager != null) {
+                        session.protectAgainst(damager);
+                    }
+                    // END WORK AROUND
                 }
             }
         }
@@ -828,6 +853,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         private static final long MAX_AGE = TimeUnit.DAYS.toMillis(3);
 
+        private Set<Entity> protectedAgainst = new HashSet<>();
         private HashMap<SpecType, Long> specMap = new HashMap<>();
         private LinkedList<Location> recentDeathLocations = new LinkedList<>();
 
@@ -835,9 +861,31 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             super(MAX_AGE);
         }
 
+        public boolean isProtectedAgainst(Entity entity) {
+
+            return protectedAgainst.contains(entity);
+        }
+
+        public void protectAgainst(final Entity entity) {
+
+            protectedAgainst.add(entity);
+
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+                    protectedAgainst.remove(entity);
+                }
+            }, 5);
+        }
+
         public void updateSpec(SpecType type) {
 
             specMap.put(type, System.currentTimeMillis());
+        }
+
+        public void updateSpec(SpecType type, long additionalDelay) {
+
+            specMap.put(type, System.currentTimeMillis() + additionalDelay);
         }
 
         public boolean canSpec(SpecType type) {
@@ -861,6 +909,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     public enum SpecType {
 
+        RED(1000),
         FEAR(3800),
         UNLEASHED(3800),
         ANIMAL_BOW(15000);

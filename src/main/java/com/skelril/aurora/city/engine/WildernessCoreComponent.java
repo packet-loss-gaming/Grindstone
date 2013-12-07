@@ -432,6 +432,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
             double diffLevel = Math.max(1, level * .63);
             for (int i = 0; i < diffLevel * diffLevel * diffLevel; i++) {
+                if (ChanceUtil.getChance(100000)) event.getDrops().add(ItemUtil.Red.makeFeather());
                 if (ChanceUtil.getChance(2000)) event.getDrops().add(ItemUtil.MPotion.potionOfRestitution());
             }
 
