@@ -15,7 +15,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 
 /**
  * Author: Turtle9598
@@ -33,6 +35,8 @@ public class DebugComponent extends BukkitComponent {
         //inst.registerEvents(new InventoryCorruptionFixer());
         //noinspection AccessStaticViaInstance
         //inst.registerEvents(new BlockDebug());
+        //noinspection AccessStaticViaInstance
+        inst.registerEvents(new PotionDeathFix());
     }
 
     private class InventoryCorruptionFixer implements Listener {
@@ -64,6 +68,24 @@ public class DebugComponent extends BukkitComponent {
                 );
                 event.setUseInteractedBlock(Event.Result.DENY);
             }
+        }
+    }
+
+    private class PotionDeathFix implements Listener {
+
+        @EventHandler
+        public void onRespawn(final PlayerRespawnEvent event) {
+
+            server.getScheduler().runTaskLater(inst, new Runnable() {
+                @Override
+                public void run() {
+                    Player player = event.getPlayer();
+
+                    for (PotionEffect next : player.getActivePotionEffects()) {
+                        player.addPotionEffect(new PotionEffect(next.getType(), 0, 0), true);
+                    }
+                }
+            }, 1);
         }
     }
 }
