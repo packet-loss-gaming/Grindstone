@@ -82,6 +82,17 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).guildCanSee();
     }
 
+    public void useVanish(Player player, boolean vanish) {
+
+        sessions.getSession(NinjaState.class, player).useVanish(vanish);
+    }
+
+    public boolean canVanish(Player player) {
+
+        return sessions.getSession(NinjaState.class, player).canVanish();
+    }
+
+
     public void usePoisonArrows(Player player, boolean poisonArrows) {
 
         sessions.getSession(NinjaState.class, player).usePoisonArrows(poisonArrows);
@@ -299,6 +310,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 }
             }
 
+            if (!canVanish(player)) continue;
+
             Set<Player> invisibleNewCount = new HashSet<>();
             Set<Player> visibleNewCount = new HashSet<>();
 
@@ -357,7 +370,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"ninja"}, desc = "Give a player the Ninja power",
-                flags = "gtp", min = 0, max = 0)
+                flags = "gtpi", min = 0, max = 0)
         @CommandPermissions({"aurora.ninja"})
         public void ninja(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -369,6 +382,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             ninjaPlayer((Player) sender);
             if (inst.hasPermission(sender, "aurora.ninja.guild")) {
                 showToGuild((Player) sender, args.hasFlag('g'));
+                useVanish((Player) sender, !args.hasFlag('i'));
                 usePoisonArrows((Player) sender, !args.hasFlag('t'));
                 allowConflictingPotions((Player) sender, !args.hasFlag('p'));
             } else if (args.getFlags().size() > 0) {
@@ -399,6 +413,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
 
         private boolean isNinja = false;
+        private boolean useVanish = true;
         private boolean showToGuild = false;
         private boolean toxicArrows = true;
         private boolean allowConflictingPotions = true;
@@ -426,6 +441,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         public void showToGuild(boolean showToGuild) {
 
             this.showToGuild = showToGuild;
+        }
+
+        public boolean canVanish() {
+
+            return useVanish;
+        }
+
+        public void useVanish(boolean useVanish) {
+
+            this.useVanish = useVanish;
         }
 
         public boolean hasPoisonArrows() {
