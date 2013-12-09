@@ -85,7 +85,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(RogueState.class, player).canBlip();
     }
 
-    public void blip(Player player, double modifier) {
+    public void blip(Player player, double modifier, boolean auto) {
 
         sessions.getSession(RogueState.class, player).blip();
 
@@ -93,7 +93,11 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         Vector vel = player.getLocation().getDirection();
         vel.multiply(3 * modifier);
-        vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
+        if (auto) {
+            vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
+        } else {
+            vel.setY(Math.min(1.4, Math.max(.175, vel.getY())));
+        }
         player.setVelocity(vel);
     }
 
@@ -144,10 +148,17 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         if (event.getEntity() instanceof Player && wasArrow && ChanceUtil.getChance(3)) {
 
-            Player defender = (Player) event.getEntity();
+            final Player defender = (Player) event.getEntity();
             if (isRogue(defender) && canBlip(defender) && inst.hasPermission(defender, "aurora.rogue.guild")) {
-                defender.teleport(damager, PlayerTeleportEvent.TeleportCause.UNKNOWN);
-                blip(defender, -1);
+                final Entity finalDamager = damager;
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+                    @Override
+                    public void run() {
+
+                        defender.teleport(finalDamager, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                        blip(defender, -.5, true);
+                    }
+                }, 1);
             }
         }
 
@@ -181,7 +192,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                         @Override
                         public void run() {
                             if (canBlip(player) && !player.isSneaking()) {
-                                blip(player, inst.hasPermission(player, "aurora.rogue.guild") ? 2 : 1);
+                                blip(player, inst.hasPermission(player, "aurora.rogue.guild") ? 2 : 1, false);
                             }
                         }
                     }, 1);
@@ -219,7 +230,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             if (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")) {
 
-                blip(player, 1);
+                blip(player, 1, true);
             }
         }
     }
