@@ -74,7 +74,7 @@ public class GlobalPvPComponent extends BukkitComponent implements Listener {
 
         @Command(aliases = {"pvp"},
                 usage = "", desc = "Toggle PvP",
-                flags = "csl", min = 0, max = 0)
+                flags = "s", min = 0, max = 0)
         public void prayerCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) {
@@ -83,9 +83,23 @@ public class GlobalPvPComponent extends BukkitComponent implements Listener {
 
             PvPSession session = sessions.getSession(PvPSession.class, sender);
 
-            session.setPvP(!session.hasPvPOn());
+            if (!args.hasFlag('s') || !session.hasPvPOn()) {
+                session.setPvP(!session.hasPvPOn());
+                ChatUtil.sendNotice(sender, "Global PvP has been: " + (session.hasPvPOn() ? "enabled" : "disabled") + ".");
 
-            ChatUtil.sendNotice(sender, "Global PvP has been: " + (session.hasPvPOn() ? "enabled" : "disabled") + ".");
+                session.useSafeSpots(!args.hasFlag('s'));
+            } else {
+                if (session.useSafeSpots()) {
+                    session.useSafeSpots(!args.hasFlag('s'));
+                } else {
+                    session.useSafeSpots(args.hasFlag('s'));
+                }
+            }
+
+
+            if (session.hasPvPOn()) {
+                ChatUtil.sendNotice(sender, "Safe spots are: " + (session.useSafeSpots() ? "enabled" : "disabled") + ".");
+            }
         }
     }
 
@@ -108,6 +122,9 @@ public class GlobalPvPComponent extends BukkitComponent implements Listener {
 
             String attackerHome = getHome(attacker);
             String defenderHome = getHome(defender);
+
+            if (!attackerSession.useSafeSpots()) attackerHome = "";
+            if (!defenderSession.useSafeSpots()) defenderHome = "";
 
             RegionManager manager = WG.getRegionManager(attacker.getWorld());
             ApplicableRegionSet attackerApplicable = manager.getApplicableRegions(attacker.getLocation());
@@ -147,6 +164,7 @@ public class GlobalPvPComponent extends BukkitComponent implements Listener {
         public static final long MAX_AGE = TimeUnit.MINUTES.toMillis(30);
 
         private boolean hasPvPOn = false;
+        private boolean useSafeSpots = true;
 
         protected PvPSession() {
 
@@ -167,6 +185,16 @@ public class GlobalPvPComponent extends BukkitComponent implements Listener {
         public void setPvP(boolean hasPvPOn) {
 
             this.hasPvPOn = hasPvPOn;
+        }
+
+        public boolean useSafeSpots() {
+
+            return useSafeSpots;
+        }
+
+        public void useSafeSpots(boolean useSafeSpots) {
+
+            this.useSafeSpots = useSafeSpots;
         }
     }
 }
