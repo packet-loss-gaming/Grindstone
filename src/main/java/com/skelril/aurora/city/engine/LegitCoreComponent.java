@@ -17,6 +17,8 @@ import com.skelril.aurora.homes.EnderPearlHomesComponent;
 import com.skelril.aurora.homes.HomeDatabase;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.database.IOUtil;
+import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -32,8 +34,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.*;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -52,6 +52,9 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     private AdminComponent adminComponent;
     @InjectComponent
     private EnderPearlHomesComponent mainHomeDatabase;
+
+    private final File legitFileDir = new File(inst.getDataFolder().getPath() + "/legit/legit");
+    private final File normalFileDir = new File(inst.getDataFolder().getPath() + "/legit/main");
 
     private LocalConfiguration config;
     private HomeDatabase homeDatabase;
@@ -198,15 +201,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-
-        if (event.getTo().getWorld() != event.getFrom().getWorld()) {
-
-            check(event.getPlayer(), event.getFrom().getWorld().getName(), event.getTo().getWorld().getName());
-        }
-    }
-
     @EventHandler(ignoreCancelled = true)
     public void onWorldChange(PlayerChangedWorldEvent event) {
 
@@ -260,48 +254,80 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         }
     }
 
-    private Set<Player> playerList = new HashSet<>();
-
     public void check(final Player player, String from, String to) {
 
         boolean result = false;
+        boolean fromMain = false;
         if (to.contains(config.legitWorld) && !from.contains(config.legitWorld)) {
 
-            if (!playerList.contains(player)) {
-                ChatUtil.sendNotice(player, "You have entered legit world.");
+            ChatUtil.sendNotice(player, "You have entered legit world.");
 
-                World fromW = Bukkit.getWorld(from);
-                if (fromW != null && fromW.isThundering()) {
+            World fromW = Bukkit.getWorld(from);
+            if (fromW != null && fromW.isThundering()) {
 
-                    World toW = Bukkit.getWorld(to);
-                    if (toW != null) {
-                        toW.setThundering(true);
-                        toW.setThunderDuration(fromW.getThunderDuration());
-                    }
+                World toW = Bukkit.getWorld(to);
+                if (toW != null) {
+                    toW.setThundering(true);
+                    toW.setThunderDuration(fromW.getThunderDuration());
                 }
             }
-            playerList.add(player);
+
             result = true;
+            fromMain = true;
         } else if (from.contains(config.legitWorld) && !to.contains(config.legitWorld)) {
 
-            if (!playerList.contains(player)) ChatUtil.sendNotice(player, "You have left legit world.");
-            playerList.add(player);
+            ChatUtil.sendNotice(player, "You have left legit world.");
+
             result = true;
         }
 
-        server.getScheduler().runTaskLater(inst, new Runnable() {
+        if (result) {
+            adminComponent.standardizePlayer(player, true);
 
-            @Override
-            public void run() {
+            final File fromDir = fromMain ? normalFileDir : legitFileDir;
+            final File toDir = fromMain ? legitFileDir : normalFileDir;
 
-                if (playerList.contains(player)) {
+            final PlayerState unlegitState = new PlayerState(player.getName(),
+                    player.getInventory().getContents(),
+                    player.getInventory().getArmorContents(),
+                    player.getHealth(),
+                    player.getFoodLevel(),
+                    player.getSaturation(),
+                    player.getExhaustion(),
+                    player.getLevel(),
+                    player.getExp());
 
-                    playerList.remove(player);
+            server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
+                @Override
+                public void run() {
+                    IOUtil.toBinaryFile(fromDir, unlegitState.getOwnerName(), unlegitState);
                 }
-            }
-        }, 40);
+            });
 
-        if (result) adminComponent.standardizePlayer(player, true);
+            File target = new File(toDir.getPath() + "/" + unlegitState.getOwnerName() + ".dat");
+
+            if (target.exists()) {
+                PlayerState identity = (PlayerState) IOUtil.readBinaryFile(target);
+
+                player.getInventory().setArmorContents(identity.getArmourContents());
+                player.getInventory().setContents(identity.getInventoryContents());
+                player.setHealth(Math.min(player.getMaxHealth(), identity.getHealth()));
+                player.setFoodLevel(identity.getHunger());
+                player.setSaturation(identity.getSaturation());
+                player.setExhaustion(identity.getExhaustion());
+                player.setLevel(identity.getLevel());
+                player.setExp(identity.getExperience());
+            } else {
+                player.getInventory().setArmorContents(null);
+                player.getInventory().clear();
+                player.setHealth(player.getMaxHealth());
+                player.setFoodLevel(20);
+                player.setSaturation(5);
+                player.setExhaustion(0);
+                player.setLevel(0);
+                player.setExp(0);
+            }
+        }
     }
 
     // Catch possible escapes
