@@ -721,10 +721,10 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
 
                             // Restore snapshot
                             if (!chunk.isLoaded()) chunk.load();
-                            SnapshotRestore restore = new SnapshotRestore(chunkStore, r);
+                            SnapshotRestore restore = new SnapshotRestore(chunkStore, fakeEditor, r);
 
                             try {
-                                restore.restore(fakeEditor);
+                                restore.restore();
                             } catch (MaxChangedBlocksException e) {
                                 log.warning("Congratulations! You got an error which makes no sense!");
                                 e.printStackTrace();
