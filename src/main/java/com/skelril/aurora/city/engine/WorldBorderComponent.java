@@ -13,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.logging.Logger;
@@ -84,7 +85,15 @@ public class WorldBorderComponent extends BukkitComponent implements Runnable {
             }
 
             if (!pLoc.equals(origin)) {
-                player.teleport(pLoc);
+                Entity v = player.getVehicle();
+                if (v == null) {
+                    player.teleport(pLoc);
+                } else {
+                    v.eject();
+                    v.teleport(pLoc);
+                    player.teleport(v);
+                    v.setPassenger(player);
+                }
                 ChatUtil.sendNotice(player, "You have reached the end of the accessible area of this world.");
             }
         }
