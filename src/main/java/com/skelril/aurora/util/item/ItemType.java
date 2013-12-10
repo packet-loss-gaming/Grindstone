@@ -14,34 +14,40 @@ public enum ItemType {
     AIR(BlockID.AIR, "Air", "air"),
     STONE(BlockID.STONE, "Stone", "stone", "rock"),
     GRASS(BlockID.GRASS, "Grass", "grass"),
-    DIRT(BlockID.DIRT, "Dirt", "dirt"),
+    DIRT(BlockID.DIRT, 0, "Dirt", "dirt"),
+    PODZOL(BlockID.DIRT, 2, "Podzol", "podzol"),
     COBBLESTONE(BlockID.COBBLESTONE, "Cobblestone", "cobblestone", "cobble"),
-    WOOD(BlockID.WOOD, 0, "Wood", "wood", "woodplank", "plank", "woodplanks", "planks"),
+    WOOD(BlockID.WOOD, 0, "Oak Wood", "oakwood", "oakwoodplank", "oakwoodplanks", "oakplanks"),
     SPRUCE_WOOD(BlockID.WOOD, 1, "Spruce Wood", "sprucewood", "sprucewoodplank", "sprucewoodplanks", "spruceplanks"),
     BIRCH_WOOD(BlockID.WOOD, 2, "Birch Wood", "birchwood", "bitchwoodplank", "birchwoodplanks", "birchplanks"),
     JUNGLE_WOOD(BlockID.WOOD, 3, "Jungle Wood", "junglewood", "junglewoodplank", "junglewoodplanks", "jungleplanks"),
-    SAPLING(BlockID.SAPLING, 0, "Sapling", "sapling", "seedling"),
+    ACACIA_WOOD(BlockID.WOOD, 4, "Acacia Wood", "acaciawood", "acaciawoodplank", "acaciawoodplanks", "acaciaplanks"),
+    DARK_OAK_WOOD(BlockID.WOOD, 5, "Dark Oak Wood", "darkoakwood", "darkoakwoodplank", "darkoakwoodplanks", "darkoakplanks"),
+    SAPLING(BlockID.SAPLING, 0, "Oak Sapling", "oaksapling", "oakseedling"),
     SPRUCE_SAPLING(BlockID.SAPLING, 1, "Spruce Sapling", "sprucesapling", "spruceseedling"),
     BIRCH_SAPLING(BlockID.SAPLING, 2, "Birch Sapling", "birchsapling", "birchseedling"),
     JUNGLE_SAPLING(BlockID.SAPLING, 3, "Jungle Sapling", "junglesapling", "jungleseedling"),
+    ACACIA_SAPLING(BlockID.SAPLING, 4, "Acacia Sapling", "acaciasapling", "acaciaseedling"),
+    DARK_OAK_SAPLING(BlockID.SAPLING, 5, "Dark Oak Sapling", "darkoaksapling", "darkoakseedling"),
     BEDROCK(BlockID.BEDROCK, "Bedrock", "adminium", "bedrock"),
     WATER(BlockID.WATER, "Water", "watermoving", "movingwater", "flowingwater", "waterflowing"),
     STATIONARY_WATER(BlockID.STATIONARY_WATER, "Water (stationary)", "water", "waterstationary", "stationarywater", "stillwater"),
     LAVA(BlockID.LAVA, "Lava", "lavamoving", "movinglava", "flowinglava", "lavaflowing"),
     STATIONARY_LAVA(BlockID.STATIONARY_LAVA, "Lava (stationary)", "lava", "lavastationary", "stationarylava", "stilllava"),
-    SAND(BlockID.SAND, "Sand", "sand"),
+    SAND(BlockID.SAND, 0, "Sand", "sand"),
+    RED_SAND(BlockID.SAND, 1, "Red Sand", "redsand"),
     GRAVEL(BlockID.GRAVEL, "Gravel", "gravel"),
     GOLD_ORE(BlockID.GOLD_ORE, "Gold ore", "goldore"),
     IRON_ORE(BlockID.IRON_ORE, "Iron ore", "ironore"),
     COAL_ORE(BlockID.COAL_ORE, "Coal ore", "coalore"),
-    LOG(BlockID.LOG, 0, "Log", "log", "logs"),
+    LOG(BlockID.LOG, 0, "Oak Log", "oaklog", "oaklogs"),
     SPRUCE_LOG(BlockID.LOG, 1, "Spruce Log", "sprucelog", "sprucelogs"),
     BIRCH_LOG(BlockID.LOG, 2, "Birch Log", "birchlog", "birchlogs"),
     JUNGLE_LOG(BlockID.LOG, 3, "Jungle Log", "junglelog", "junglelogs"),
-    LEAVES(BlockID.LEAVES, 0, "Leaves", "leaves", "leaf"),
-    SPRUCE_LEAVES(BlockID.LEAVES, 1, "Spruce Leaves", "spruceleaves", "spruceleaves"),
-    BIRCH_LEAVES(BlockID.LEAVES, 2, "Birch Leaves", "birchleaves", "birchleaves"),
-    JUNGLE_LEAVES(BlockID.LEAVES, 3, "Jungle Leaves", "jungleleaves", "jungleleaves"),
+    LEAVES(BlockID.LEAVES, 0, "Oak Leaves", "oakleaves"),
+    SPRUCE_LEAVES(BlockID.LEAVES, 1, "Spruce Leaves", "spruceleaves"),
+    BIRCH_LEAVES(BlockID.LEAVES, 2, "Birch Leaves", "birchleaves"),
+    JUNGLE_LEAVES(BlockID.LEAVES, 3, "Jungle Leaves", "jungleleaves"),
     SPONGE(BlockID.SPONGE, "Sponge", "sponge"),
     GLASS(BlockID.GLASS, "Glass", "glass"),
     LAPIS_LAZULI_ORE(BlockID.LAPIS_LAZULI_ORE, "Lapis lazuli ore", "lapislazuliore", "blueore", "lapisore"),
@@ -62,8 +68,16 @@ public enum ItemType {
     PISTON_EXTENSION(BlockID.PISTON_EXTENSION, "Piston extension", "pistonextension", "pistonhead"),
     CLOTH(BlockID.CLOTH, 0, "Wool", "cloth", "wool"),
     PISTON_MOVING_PIECE(BlockID.PISTON_MOVING_PIECE, "Piston moving piece", "pistonmovingpiece", "movingpiston"),
-    YELLOW_FLOWER(BlockID.YELLOW_FLOWER, "Yellow flower", "yellowflower", "flower"),
-    RED_FLOWER(BlockID.RED_FLOWER, "Red rose", "redflower", "redrose", "rose"),
+    DANDELION(BlockID.YELLOW_FLOWER, "Dandelion", "dandeion"),
+    POPPY(BlockID.RED_FLOWER, 0, "Poppy", "poppy"),
+    BLUE_ORCHID(BlockID.RED_FLOWER, 1, "Blue Orchid", "blueorchid"),
+    ALLIUM(BlockID.RED_FLOWER, 2, "Allium", "allium"),
+    AZURE_BLUET(BlockID.RED_FLOWER, 3, "Azure Bluet", "azure bluet"),
+    RED_TULIP(BlockID.RED_FLOWER, 4, "Red Tulip", "redtulip"),
+    ORANGE_TULIP(BlockID.RED_FLOWER, 5, "Orange Tulip", "orangetulip"),
+    WHITE_TULIP(BlockID.RED_FLOWER, 6, "White Tulip", "whitetulip"),
+    PINK_TULIP(BlockID.RED_FLOWER, 7, "Pink Tulip", "pinktulip"),
+    OXEYE_DAISY(BlockID.RED_FLOWER, 8, "Oxeye Daisy", "oxeyedaisy"),
     BROWN_MUSHROOM(BlockID.BROWN_MUSHROOM, "Brown mushroom", "brownmushroom", "mushroom"),
     RED_MUSHROOM(BlockID.RED_MUSHROOM, "Red mushroom", "redmushroom"),
     GOLD_BLOCK(BlockID.GOLD_BLOCK, "Gold block", "gold", "goldblock"),
@@ -85,7 +99,7 @@ public enum ItemType {
     TORCH(BlockID.TORCH, "Torch", "torch", "light", "candle"),
     FIRE(BlockID.FIRE, "Fire", "fire", "flame", "flames"),
     MOB_SPAWNER(BlockID.MOB_SPAWNER, "Mob spawner", "mobspawner", "spawner"),
-    WOODEN_STAIRS(BlockID.WOODEN_STAIRS, "Wooden stairs", "woodstair", "woodstairs", "woodenstair", "woodenstairs"),
+    WOODEN_STAIRS(BlockID.OAK_WOOD_STAIRS, "Wooden stairs", "woodstair", "woodstairs", "woodenstair", "woodenstairs"),
     CHEST(BlockID.CHEST, "Chest", "chest", "storage", "storagechest"),
     REDSTONE_WIRE(BlockID.REDSTONE_WIRE, "Redstone wire", "redstonewire", "redstone", "redstoneblock"),
     DIAMOND_ORE(BlockID.DIAMOND_ORE, "Diamond ore", "diamondore"),
@@ -127,7 +141,7 @@ public enum ItemType {
     CAKE(BlockID.CAKE_BLOCK, "Cake", "cake", "cakeblock"),
     REDSTONE_REPEATER_OFF(BlockID.REDSTONE_REPEATER_OFF, "Redstone repeater", "diodeoff", "redstonerepeater", "repeateroff", "delayeroff"),
     REDSTONE_REPEATER_ON(BlockID.REDSTONE_REPEATER_ON, "Redstone repeater (on)", "diodeon", "redstonerepeateron", "repeateron", "delayeron"),
-    LOCKED_CHEST(BlockID.LOCKED_CHEST, "Locked chest", "lockedchest", "steveco", "supplycrate", "valveneedstoworkonep3nottf2kthx"),
+    STAINED_GLASS(BlockID.STAINED_GLASS, 0, "White Stained Glass", "whitestainedglass"),
     TRAP_DOOR(BlockID.TRAP_DOOR, "Trap door", "trapdoor", "hatch", "floordoor"),
     SILVERFISH_BLOCK(BlockID.SILVERFISH_BLOCK, 0, "Silverfish block", "silverfishblock", "silverfish", "silver"),
     COBBLE_SILVERFISH_BLOCK(BlockID.SILVERFISH_BLOCK, 1, "Cobblestone Silverfish block", "cobblestonesilverfish", "cobblesilver"),
@@ -173,9 +187,9 @@ public enum ItemType {
     TRIPWIRE_HOOK(BlockID.TRIPWIRE_HOOK, "Tripwire hook", "tripwirehook"),
     TRIPWIRE(BlockID.TRIPWIRE, "Tripwire", "tripwire", "string"),
     EMERALD_BLOCK(BlockID.EMERALD_BLOCK, "Emerald block", "emeraldblock", "emerald"),
-    SPRUCE_WOOD_STAIRS(BlockID.SPRUCE_WOOD_STAIRS, "Spruce wood stairs", "sprucestairs", "sprucewoodstairs"),
-    BIRCH_WOOD_STAIRS(BlockID.BIRCH_WOOD_STAIRS, "Birch wood stairs", "birchstairs", "birchwoodstairs"),
-    JUNGLE_WOOD_STAIRS(BlockID.JUNGLE_WOOD_STAIRS, "Jungle wood stairs", "junglestairs", "junglewoodstairs"),
+    SPRUCE_WOOD_STAIRS(BlockID.SPRUCE_WOOD_STAIRS, "Spruce Wood stairs", "sprucestairs", "sprucewoodstairs"),
+    BIRCH_WOOD_STAIRS(BlockID.BIRCH_WOOD_STAIRS, "Birch Wood stairs", "birchstairs", "birchwoodstairs"),
+    JUNGLE_WOOD_STAIRS(BlockID.JUNGLE_WOOD_STAIRS, "Jungle Wood stairs", "junglestairs", "junglewoodstairs"),
     COMMAND_BLOCK(BlockID.COMMAND_BLOCK, "Command block", "commandblock", "cmdblock", "command", "cmd"),
     BEACON(BlockID.BEACON, "Beacon", "beacon", "beaconblock"),
     COBBLESTONE_WALL(BlockID.COBBLESTONE_WALL, 0, "Cobblestone wall", "cobblestonewall", "cobblewall"),
@@ -199,11 +213,25 @@ public enum ItemType {
     QUARTZ_STAIRS(BlockID.QUARTZ_STAIRS, "Quartz Stairs", "quartzstairs"),
     ACTIVATOR_RAIL(BlockID.ACTIVATOR_RAIL, "Activator Rail", "activatorrail", "tntrail", "activatortrack"),
     DROPPER(BlockID.DROPPER, "Dropper", "dropper"),
-    STAINED_CLAY(BlockID.STAINED_CLAY, 0, "Stained clay", "stainedclay"),
+    STAINED_CLAY(BlockID.STAINED_CLAY, 0, "White Stained clay", "whitestainedclay"),
+    STAINED_GLASS_PANE(BlockID.STAINED_GLASS_PANE, 0, "White Stained Glass Pane", "whitestainedglasspane"),
+    ACACIA_LEAVES(BlockID.LEAVES2, 0, "Acacia Leaves", "acacialeaves"),
+    DARK_OAK_LEAVES(BlockID.LEAVES2, 1, "Dark Oak Leaves", "darkoakleaves"),
+    ACACIA_LOG(BlockID.LOG2, 0, "Acacia Log", "acacialog", "acacialogs"),
+    DARK_OAK_LOG(BlockID.LOG2, 1, "Dark Oak Log", "darkoaklog", "darkoaklogs"),
+    ACACIA_STAIRS(BlockID.ACACIA_STAIRS, "Acacia Wood Stairs", "acaciawoodstairs", "acaciastairs"),
+    DARK_OAK_STAIRS(BlockID.DARK_OAK_STAIRS, "Dark Oak Wood Stairs", "darkoakwoodstairs", "darkoakstairs"),
     HAY_BLOCK(BlockID.HAY_BLOCK, "Hay Block", "hayblock", "haybale", "wheatbale"),
     CARPET(BlockID.CARPET, 0, "Carpet", "carpet"),
     HARDENED_CLAY(BlockID.HARDENED_CLAY, "Hardened Clay", "hardenedclay", "hardclay"),
     COAL_BLOCK(BlockID.COAL_BLOCK, "Block of Coal", "coalblock", "blockofcoal"),
+    PACKED_ICE(BlockID.PACKED_ICE, "Packed Ice", "packedice", "hardice"),
+    SUN_FLOWER(BlockID.DOUBLE_PLANT, 0, "Sun Flower", "sunflower"),
+    LILAC(BlockID.DOUBLE_PLANT, 1, "Lilac", "lilac"),
+    DOUBLE_TALL_GRASS(BlockID.DOUBLE_PLANT, 2, "Double Tallgrass", "doubletallgrass"),
+    LARGE_FERN(BlockID.DOUBLE_PLANT, 3, "Large Fern", "largefern"),
+    ROSE_BUSH(BlockID.DOUBLE_PLANT, 4, "Rose Bush", "rosebush"),
+    PEONY(BlockID.DOUBLE_PLANT, 5, "Peony", "peony"),
 
     // Items
     IRON_SHOVEL(ItemID.IRON_SHOVEL, "Iron shovel", "ironshovel"),
@@ -301,8 +329,12 @@ public enum ItemType {
     FISHING_ROD(ItemID.FISHING_ROD, "Fishing rod", "fishingrod", "fishingpole"),
     CLOCK(ItemID.WATCH, "Clock", "watch", "clock", "timer"),
     GLOWSTONE_DUST(ItemID.LIGHTSTONE_DUST, "Glowstone dust", "lightstonedust", "glowstonedone", "brightstonedust", "brittlegolddust", "brimstonedust"),
-    RAW_FISH(ItemID.RAW_FISH, "Raw fish", "rawfish"),
-    COOKED_FISH(ItemID.COOKED_FISH, "Cooked fish", "cookedfish", "fish"),
+    RAW_FISH(ItemID.RAW_FISH, 0, "Raw fish", "rawfish"),
+    RAW_SALMON(ItemID.RAW_FISH, 1, "Raw Salmon", "rawsalmon"),
+    CLOWNFISH(ItemID.RAW_FISH, 2, "Clownfish", "clownfish"),
+    PUFFERFISH(ItemID.RAW_FISH, 3, "Pufferfish", "pufferfish"),
+    COOKED_FISH(ItemID.COOKED_FISH, 0, "Cooked fish", "cookedfish"),
+    COOKED_SALMON(ItemID.COOKED_FISH, 1, "Cooked Salmon", "cookedsalmon"),
     INK_SACK(ItemID.INK_SACK, 0, "Ink sac", "inksac", "ink", "blackdye", "inksack"),
     LAPIS_LAZULI(ItemID.INK_SACK, 4, "Lapis lazuli", "lapislazuli", "bluedye"),
     BONE_MEAL(ItemID.INK_SACK, 15, "Bone Meal", "bonemeal", "whitedye"),
@@ -557,116 +589,19 @@ public enum ItemType {
         return lookupKeys;
     }
 
-    private static final Set<Integer> shouldNotStack = new HashSet<Integer>();
-
-    static {
-        shouldNotStack.add(ItemID.IRON_SHOVEL);
-        shouldNotStack.add(ItemID.IRON_PICK);
-        shouldNotStack.add(ItemID.IRON_AXE);
-        shouldNotStack.add(ItemID.FLINT_AND_TINDER);
-        shouldNotStack.add(ItemID.BOW);
-        shouldNotStack.add(ItemID.IRON_SWORD);
-        shouldNotStack.add(ItemID.WOOD_SWORD);
-        shouldNotStack.add(ItemID.WOOD_SHOVEL);
-        shouldNotStack.add(ItemID.WOOD_PICKAXE);
-        shouldNotStack.add(ItemID.WOOD_AXE);
-        shouldNotStack.add(ItemID.STONE_SWORD);
-        shouldNotStack.add(ItemID.STONE_SHOVEL);
-        shouldNotStack.add(ItemID.STONE_PICKAXE);
-        shouldNotStack.add(ItemID.STONE_AXE);
-        shouldNotStack.add(ItemID.DIAMOND_SWORD);
-        shouldNotStack.add(ItemID.DIAMOND_SHOVEL);
-        shouldNotStack.add(ItemID.DIAMOND_PICKAXE);
-        shouldNotStack.add(ItemID.DIAMOND_AXE);
-        shouldNotStack.add(ItemID.BOWL);
-        shouldNotStack.add(ItemID.GOLD_SWORD);
-        shouldNotStack.add(ItemID.GOLD_SHOVEL);
-        shouldNotStack.add(ItemID.GOLD_PICKAXE);
-        shouldNotStack.add(ItemID.GOLD_AXE);
-        shouldNotStack.add(ItemID.WOOD_HOE);
-        shouldNotStack.add(ItemID.STONE_HOE);
-        shouldNotStack.add(ItemID.IRON_HOE);
-        shouldNotStack.add(ItemID.DIAMOND_HOE);
-        shouldNotStack.add(ItemID.GOLD_HOE);
-        shouldNotStack.add(ItemID.LEATHER_HELMET);
-        shouldNotStack.add(ItemID.LEATHER_CHEST);
-        shouldNotStack.add(ItemID.LEATHER_PANTS);
-        shouldNotStack.add(ItemID.LEATHER_BOOTS);
-        shouldNotStack.add(ItemID.CHAINMAIL_CHEST);
-        shouldNotStack.add(ItemID.CHAINMAIL_HELMET);
-        shouldNotStack.add(ItemID.CHAINMAIL_BOOTS);
-        shouldNotStack.add(ItemID.CHAINMAIL_PANTS);
-        shouldNotStack.add(ItemID.IRON_HELMET);
-        shouldNotStack.add(ItemID.IRON_CHEST);
-        shouldNotStack.add(ItemID.IRON_PANTS);
-        shouldNotStack.add(ItemID.IRON_BOOTS);
-        shouldNotStack.add(ItemID.DIAMOND_HELMET);
-        shouldNotStack.add(ItemID.DIAMOND_PANTS);
-        shouldNotStack.add(ItemID.DIAMOND_CHEST);
-        shouldNotStack.add(ItemID.DIAMOND_BOOTS);
-        shouldNotStack.add(ItemID.GOLD_HELMET);
-        shouldNotStack.add(ItemID.GOLD_CHEST);
-        shouldNotStack.add(ItemID.GOLD_PANTS);
-        shouldNotStack.add(ItemID.GOLD_BOOTS);
-        shouldNotStack.add(ItemID.WOODEN_DOOR_ITEM);
-        shouldNotStack.add(ItemID.WATER_BUCKET);
-        shouldNotStack.add(ItemID.LAVA_BUCKET);
-        shouldNotStack.add(ItemID.MINECART);
-        shouldNotStack.add(ItemID.SADDLE);
-        shouldNotStack.add(ItemID.IRON_DOOR_ITEM);
-        shouldNotStack.add(ItemID.WOOD_BOAT);
-        shouldNotStack.add(ItemID.MILK_BUCKET);
-        shouldNotStack.add(ItemID.STORAGE_MINECART);
-        shouldNotStack.add(ItemID.POWERED_MINECART);
-        shouldNotStack.add(ItemID.WATCH);
-        shouldNotStack.add(ItemID.CAKE_ITEM);
-        shouldNotStack.add(ItemID.BED_ITEM);
-        shouldNotStack.add(ItemID.MAP);
-        shouldNotStack.add(ItemID.SHEARS);
-        shouldNotStack.add(ItemID.HEAD);
-        shouldNotStack.add(ItemID.FIREWORK_ROCKET);
-        shouldNotStack.add(ItemID.FIREWORK_STAR);
-        shouldNotStack.add(ItemID.ENCHANTED_BOOK);
-        shouldNotStack.add(ItemID.TNT_MINECART);
-        shouldNotStack.add(ItemID.HOPPER_MINECART);
-        shouldNotStack.add(ItemID.HORSE_ARMOR_IRON);
-        shouldNotStack.add(ItemID.HORSE_ARMOR_GOLD);
-        shouldNotStack.add(ItemID.HORSE_ARMOR_DIAMOND);
-        shouldNotStack.add(ItemID.DISC_13);
-        shouldNotStack.add(ItemID.DISC_CAT);
-        shouldNotStack.add(ItemID.DISC_BLOCKS);
-        shouldNotStack.add(ItemID.DISC_CHIRP);
-        shouldNotStack.add(ItemID.DISC_FAR);
-        shouldNotStack.add(ItemID.DISC_MALL);
-        shouldNotStack.add(ItemID.DISC_MELLOHI);
-        shouldNotStack.add(ItemID.DISC_STAL);
-        shouldNotStack.add(ItemID.DISC_STRAD);
-        shouldNotStack.add(ItemID.DISC_WARD);
-        shouldNotStack.add(ItemID.DISC_11);
-        shouldNotStack.add(ItemID.DISC_WAIT);
-    }
-
-    /**
-     * Returns true if an item should not be stacked.
-     *
-     * @param id
-     * @return
-     */
-    public static boolean shouldNotStack(int id) {
-
-        return shouldNotStack.contains(id);
-    }
-
     private static final Set<Integer> usesDamageValue = new HashSet<>();
 
     static {
+        usesDamageValue.add(BlockID.DIRT);
         usesDamageValue.add(BlockID.WOOD);
         usesDamageValue.add(BlockID.SAPLING);
+        usesDamageValue.add(BlockID.SAND);
         usesDamageValue.add(BlockID.LOG);
         usesDamageValue.add(BlockID.LEAVES);
         usesDamageValue.add(BlockID.SANDSTONE);
         usesDamageValue.add(BlockID.LONG_GRASS);
         usesDamageValue.add(BlockID.CLOTH);
+        usesDamageValue.add(BlockID.RED_FLOWER);
         usesDamageValue.add(BlockID.DOUBLE_STEP);
         usesDamageValue.add(BlockID.STEP);
         usesDamageValue.add(BlockID.SILVERFISH_BLOCK);
@@ -688,6 +623,8 @@ public enum ItemType {
         usesDamageValue.add(ItemID.MAP);
         usesDamageValue.add(ItemID.HEAD);
         usesDamageValue.add(ItemID.GOLD_APPLE);
+        usesDamageValue.add(ItemID.RAW_FISH);
+        usesDamageValue.add(ItemID.COOKED_FISH);
     }
 
     /**

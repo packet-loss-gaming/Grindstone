@@ -529,6 +529,8 @@ public class AdminStoreComponent extends BukkitComponent {
     private static List<String> names = new ArrayList<>();
 
     static {
+        names.add("red feather");
+
         names.add("pixie dust");
 
         names.add("god fish");
@@ -595,6 +597,9 @@ public class AdminStoreComponent extends BukkitComponent {
 
         for (int i = 0; i < amount; i++) {
             switch (name) {
+                case "red feather":
+                    itemStacks.add(ItemUtil.Red.makeFeather());
+                    break;
                 case "pixie dust":
                     itemStacks.add(ItemUtil.Misc.pixieDust(1));
                     break;
