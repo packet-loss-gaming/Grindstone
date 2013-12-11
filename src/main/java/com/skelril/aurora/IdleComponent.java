@@ -125,8 +125,6 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
                     if (!godComponent.hasGodMode(target)) {
                         godComponent.enableGodMode(target);
                         session.setAppliedGodMode(true);
-                    } else {
-                        session.setAppliedGodMode(false);
                     }
                     ChatUtil.sendNotice(target, "You are now marked as AFK.");
                 }
@@ -135,9 +133,6 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
 
                 target.setPlayerListName(target.getName());
                 target.setSleepingIgnored(false);
-                if (session.appliedGodMode()) {
-                    godComponent.disableGodMode(target);
-                }
                 ChatUtil.sendNotice(target, "You are no longer marked as AFK.");
             }
         }
@@ -229,6 +224,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
 
         if (godComponent.hasGodMode(player) && session.appliedGodMode()) {
             godComponent.disableGodMode(player);
+            session.setAppliedGodMode(false);
         }
     }
 
@@ -238,7 +234,7 @@ public class IdleComponent extends BukkitComponent implements Runnable, Listener
         public static final long MAX_AGE = TimeUnit.MINUTES.toMillis(30);
 
         private long lastUpdate = 0;
-        private boolean appliedGodMode = true;
+        private boolean appliedGodMode = false;
 
         protected AFKSession() {
 
