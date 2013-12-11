@@ -235,6 +235,10 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                     Location loc = player.getLocation();
                     Location cellLoc = cell.getLocation();
                     if (player.getWorld() != cellLoc.getWorld() || loc.distanceSquared(cellLoc) > (config.moveThreshold * config.moveThreshold)) {
+                        Entity v = player.getVehicle();
+                        if (v != null) {
+                            v.eject();
+                        }
                         player.teleport(cell.getLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     }
 
