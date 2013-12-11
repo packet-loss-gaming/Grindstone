@@ -921,7 +921,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void makeGraveRec(String name, ItemStack[] itemStacks, int tries) {
 
-        if (tries < 0) {
+        if (tries <= 0) {
             log.warning("Failed to make a grave for: " + name + "!");
             for (ItemStack stack : itemStacks) {
                 getWorld().dropItem(getWorld().getSpawnLocation(), stack);
