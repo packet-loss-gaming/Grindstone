@@ -1,64 +1,46 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.PlayerUtil;
-import com.sk89q.minecraft.util.commands.CommandException;
-import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.ItemID;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.plugin.Plugin;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Pet Protector", desc = "Protectin dem petz.")
-@Depend(plugins = {"WorldGuard"})
+@Depend(components = {AdminComponent.class})
 public class PetProtectorComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private WorldGuardPlugin worldGuard;
+    @InjectComponent
+    private AdminComponent admin;
 
     @Override
     public void enable() {
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-
-        setUpWorldGuard();
-    }
-
-    private void setUpWorldGuard() {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
-            worldGuard = null;
-        }
-
-        //noinspection ConstantConditions
-        worldGuard = (WorldGuardPlugin) plugin;
     }
 
     @EventHandler
@@ -70,22 +52,30 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         }
     }
 
+    private static Set<EntityDamageEvent.DamageCause> ignored = new HashSet<>();
+
+    static {
+        ignored.add(EntityDamageEvent.DamageCause.FALL);
+    }
+
     @EventHandler
-    public void onEntityDamagedByEntity(EntityDamageByEntityEvent event) {
+    public void onEntityDamage(EntityDamageEvent event) {
 
         if (!(event.getEntity() instanceof Tameable)) return;
 
-        Entity e = event.getDamager();
-        if (e instanceof Projectile) e = ((Projectile) e).getShooter();
-        if (e != null && e instanceof Player) {
-            Player player = (Player) e;
-            Tameable tameable = (Tameable) event.getEntity();
-
-            if (isSafe(event.getEntity()) && (tameable.getOwner() == null || !tameable.getOwner().getName().equals(player.getName()))) {
-
-                event.setCancelled(true);
-                ChatUtil.sendError(player, "You cannot currently hurt that " + event.getEntityType().toString().toLowerCase() + ".");
+        Entity e = null;
+        if (event instanceof EntityDamageByEntityEvent) {
+            e = ((EntityDamageByEntityEvent) event).getDamager();
+        }
+        if (isSafe(event.getEntity()) && !ignored.contains(event.getCause())) {
+            if (e != null) {
+                if (e instanceof Projectile) e = ((Projectile) e).getShooter();
+                if (e != null && e instanceof Player) {
+                    if (admin.isSysop((Player) e)) return;
+                    ChatUtil.sendError((Player) e, "You cannot currently hurt that " + event.getEntityType().toString().toLowerCase() + ".");
+                }
             }
+            event.setCancelled(true);
         }
     }
 
@@ -137,22 +127,6 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
             }
         }
 
-        if (!(entity instanceof Tameable) || !((Tameable) entity).isTamed() || ((Tameable) entity).getOwner() == null) return false;
-
-        org.bukkit.Location loc = entity.getLocation();
-        RegionManager mgr = worldGuard.getGlobalRegionManager().get(loc.getWorld());
-        ApplicableRegionSet applicable = mgr.getApplicableRegions(new Vector(loc.getX(), loc.getY(), loc.getZ()));
-
-        for (ProtectedRegion region : applicable) {
-
-            if (region.getOwners().contains(((Tameable) entity).getOwner().getName())) return true;
-        }
-
-        try {
-            PlayerUtil.matchPlayerExactly(Bukkit.getConsoleSender(), ((Tameable) entity).getOwner().getName());
-        } catch (CommandException e) {
-            return false;
-        }
-        return true;
+        return entity instanceof Tameable && ((Tameable) entity).isTamed() && ((Tameable) entity).getOwner() != null;
     }
 }
