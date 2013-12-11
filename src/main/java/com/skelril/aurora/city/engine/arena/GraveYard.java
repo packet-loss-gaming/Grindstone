@@ -916,7 +916,21 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void makeGrave(String name, ItemStack[] itemStacks) {
 
-        if (headStones.size() < 1) return;
+        makeGraveRec(name, itemStacks, headStones.size());
+    }
+
+    private void makeGraveRec(String name, ItemStack[] itemStacks, int tries) {
+
+        if (tries < 0) {
+            log.warning("Failed to make a grave for: " + name + "!");
+            for (ItemStack stack : itemStacks) {
+                getWorld().dropItem(getWorld().getSpawnLocation(), stack);
+            }
+            return;
+        }
+
+        tries--;
+
         Location headStone = headStones.get(ChanceUtil.getRandom(headStones.size()) - 1).clone();
         BlockState signState = headStone.getBlock().getState();
 
@@ -931,9 +945,11 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             ((Sign) signState).setLine(0, month + "/" + day + "/" + year);
             ((Sign) signState).setLine(1, "RIP");
             ((Sign) signState).setLine(2, name);
-            signState.update();
 
-            if (itemStacks == null) return;
+            if (itemStacks == null) {
+                signState.update();
+                return;
+            }
 
             headStone.add(0, -2, 0);
 
@@ -970,13 +986,16 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                             ((Chest) chestState).getInventory().clear();
                             ((Chest) chestState).getInventory().addItem(itemStacks);
                         } else {
-                            for (ItemStack stack : itemStacks) {
-                                getWorld().dropItem(signState.getLocation(), stack);
-                            }
+                            makeGraveRec(name, itemStacks, tries);
+                            return;
                         }
                     }
                 }
             }
+            signState.update();
+            log.info("Made a Grave for: " + name + " at: " + headStone.getBlockX() + ", " + headStone.getBlockY() + ", " + headStone.getBlockZ());
+        } else {
+            makeGraveRec(name, itemStacks, tries);
         }
     }
 
