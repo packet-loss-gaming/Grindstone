@@ -1,6 +1,8 @@
 package com.skelril.aurora.city.engine;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.session.PersistentSession;
+import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -48,13 +50,15 @@ import org.bukkit.scheduler.BukkitTask;
 import java.text.DecimalFormat;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Wilderness Core", desc = "Operate the wilderness.")
-@Depend(components = {AdminComponent.class})
+@Depend(components = {AdminComponent.class, SessionComponent.class})
 public class WildernessCoreComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
@@ -63,6 +67,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     @InjectComponent
     private AdminComponent adminComponent;
+    @InjectComponent
+    private SessionComponent sessions;
 
     private long nextDropTime = 0;
     private LocalConfiguration config;
@@ -392,14 +398,18 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
                         if (oldCurrent == current) return;
 
+                        WildernessSession session = sessions.getSession(WildernessSession.class, (CommandSender) finalDamager);
+
                         int max = (int) Math.ceil(((LivingEntity) entity).getMaxHealth());
 
                         String message;
 
                         if (current > 0) {
-                            message = ChatColor.DARK_AQUA + "Entity Health: " + current + " / " + max;
+                            message = ChatColor.DARK_AQUA
+                                    + String.valueOf(session.checkLast(entity.getUniqueId()) ? ChatColor.ITALIC : "")
+                                    + "Entity Health: " + current + " / " + max;
                         } else {
-                            message = ChatColor.GOLD + "" + ChatColor.BOLD + "KO!";
+                            message = ChatColor.GOLD + String.valueOf(ChatColor.BOLD) + "KO!";
                         }
 
                         ChatUtil.sendNotice((Player) finalDamager, message);
@@ -652,5 +662,27 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         }
         */
         return EnvironmentUtil.isOre(typeId);
+    }
+
+    private static class WildernessSession extends PersistentSession {
+
+        public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
+
+        private UUID lastAttacked = null;
+
+        protected WildernessSession() {
+            super(MAX_AGE);
+        }
+
+        public boolean checkLast(UUID lastAttacked) {
+
+            if (this.lastAttacked == lastAttacked) {
+                return true;
+            }
+
+            this.lastAttacked = lastAttacked;
+
+            return false;
+        }
     }
 }
