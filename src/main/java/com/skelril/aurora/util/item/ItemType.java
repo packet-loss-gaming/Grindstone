@@ -304,7 +304,7 @@ public enum ItemType {
     GOLD_APPLE(ItemID.GOLD_APPLE, 0, "Golden apple", "goldapple", "goldenapple"),
     ENHANCED_GOLD_APPLE(ItemID.GOLD_APPLE, 1, "Enhanced Golden apple", "enhancedgoldenapple", "enhancedgoldapple", "notchapple"),
     SIGN(ItemID.SIGN, "Wooden sign", "sign", "woodensign"),
-    WOODEN_DOOR_ITEM(ItemID.WOODEN_DOOR_ITEM, "Wooden door", "wooddoor", "door"),
+    WOODEN_DOOR_ITEM(ItemID.WOODEN_DOOR_ITEM, "Wooden door", "woodendoor", "wooddoor", "door"),
     BUCKET(ItemID.BUCKET, "Bucket", "bucket", "bukkit"),
     WATER_BUCKET(ItemID.WATER_BUCKET, "Water bucket", "waterbucket", "waterbukkit"),
     LAVA_BUCKET(ItemID.LAVA_BUCKET, "Lava bucket", "lavabucket", "lavabukkit"),
