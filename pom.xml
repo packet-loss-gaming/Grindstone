@@ -18,14 +18,17 @@
 
     <repositories>
         <repository>
-            <id>bukkit-repo</id>
+            <id>sk89q-repo</id>
+            <url>http://maven.sk89q.com/repo</url>
+        </repository>
+        <repository>
+        <id>bukkit-repo</id>
             <url>http://repo.bukkit.org/content/groups/public</url>
         </repository>
         <repository>
             <id>vault-repo</id>
             <url>http://ci.herocraftonline.com/plugin/repository/everything</url>
         </repository>
-
     </repositories>
 
     <dependencies>
@@ -75,6 +78,12 @@
             <groupId>net.milkbowl.vault</groupId>
             <artifactId>Vault</artifactId>
             <version>1.2.19-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
