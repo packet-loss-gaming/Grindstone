@@ -16,6 +16,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import com.zachsthings.libcomponents.config.Setting;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
@@ -412,10 +413,15 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
 
+        @Setting("ninja-enabled")
         private boolean isNinja = false;
+        @Setting("ninja-vanish")
         private boolean useVanish = true;
+        @Setting("ninja-show-to-guild")
         private boolean showToGuild = false;
+        @Setting("ninja-toxic-arrows")
         private boolean toxicArrows = true;
+        @Setting("ninja-conflicting-potions")
         private boolean allowConflictingPotions = true;
 
         protected NinjaState() {
