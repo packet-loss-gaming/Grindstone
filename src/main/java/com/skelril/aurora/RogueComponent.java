@@ -18,6 +18,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import com.zachsthings.libcomponents.config.Setting;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
@@ -80,6 +81,16 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         sessions.getSession(RogueState.class, player).allowConflictingPotions(allowConflictingPotions);
     }
 
+    public boolean isYLimited(Player player) {
+
+        return sessions.getSession(RogueState.class, player).isYLimited();
+    }
+
+    public void limitYVelocity(Player player, boolean limitYVelocity) {
+
+        sessions.getSession(RogueState.class, player).limitYVelocity(limitYVelocity);
+    }
+
     public boolean canBlip(Player player) {
 
         return sessions.getSession(RogueState.class, player).canBlip();
@@ -93,7 +104,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         Vector vel = player.getLocation().getDirection();
         vel.multiply(3 * modifier);
-        if (auto) {
+        if (auto || isYLimited(player)) {
             vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
         } else {
             vel.setY(Math.min(1.4, Math.max(.175, vel.getY())));
@@ -295,7 +306,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"rogue"}, desc = "Give a player the Rogue power",
-                flags = "p", min = 0, max = 0)
+                flags = "pl", min = 0, max = 0)
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -306,8 +317,9 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             if (inst.hasPermission(sender, "aurora.rogue.guild")) {
                 allowConflictingPotions((Player) sender, !args.hasFlag('p'));
+                limitYVelocity((Player) sender, !args.hasFlag('l'));
             } else if (args.getFlags().size() > 0) {
-                ChatUtil.sendError(sender, "You must be a member of the ninja guild to use flags.");
+                ChatUtil.sendError(sender, "You must be a member of the rogue guild to use flags.");
             }
 
             roguePlayer(PlayerUtil.matchSinglePlayer(sender, sender.getName()));
@@ -334,9 +346,13 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
 
+        @Setting("rogue-enabled")
         private boolean isRogue = false;
         private long nextBlip = 0;
         private long nextGrenade = 0;
+        @Setting("rogue-y-limited")
+        private boolean limitYVelocity = false;
+        @Setting("rogue-conflicting-potions")
         private boolean allowConflictingPotions = true;
 
         protected RogueState() {
@@ -389,6 +405,15 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             this.allowConflictingPotions = allowConflictingPotions;
         }
 
+        public boolean isYLimited() {
+
+            return limitYVelocity;
+        }
+
+        public void limitYVelocity(boolean limitYVelocity) {
+
+            this.limitYVelocity = limitYVelocity;
+        }
 
         public Player getPlayer() {
 
