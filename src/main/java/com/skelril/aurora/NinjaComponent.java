@@ -125,8 +125,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         for (final Player otherPlayer : server.getOnlinePlayers()) {
             // Show Yourself!
-            if (otherPlayer != player)
-                otherPlayer.showPlayer(player);
+            if (otherPlayer != player) otherPlayer.showPlayer(player);
         }
     }
 
@@ -311,14 +310,12 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 }
             }
 
-            if (!canVanish(player)) continue;
-
             Set<Player> invisibleNewCount = new HashSet<>();
             Set<Player> visibleNewCount = new HashSet<>();
 
             for (Player otherPlayer : server.getOnlinePlayers()) {
                 if (otherPlayer != player) {
-                    if (otherPlayer.getWorld().equals(player.getWorld())) {
+                    if (otherPlayer.getWorld().equals(player.getWorld()) && canVanish(player)) {
                         if (player.getLocation().distanceSquared(otherPlayer.getLocation()) >= WATCH_DISTANCE_SQ
                                 || (player.getLocation().distanceSquared(otherPlayer.getLocation()) >=
                                 SNEAK_WATCH_DISTANCE_SQ
@@ -394,7 +391,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         @Command(aliases = {"unninja"}, desc = "Revoke a player's Ninja power",
                 flags = "", min = 0, max = 0)
-        @CommandPermissions({"aurora.ninja"})
         public void unninja(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
