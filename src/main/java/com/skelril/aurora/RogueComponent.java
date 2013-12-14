@@ -328,7 +328,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         @Command(aliases = {"derogue"}, desc = "Revoke a player's Rogue power",
                 flags = "", min = 0, max = 0)
-        @CommandPermissions({"aurora.rogue"})
         public void derogue(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
