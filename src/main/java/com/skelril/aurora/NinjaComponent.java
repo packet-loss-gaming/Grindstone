@@ -13,6 +13,7 @@ import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EntityDistanceComparator;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -141,7 +142,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         List<Entity> entities = player.getNearbyEntities(4, 4, 4);
         if (entities.isEmpty()) return;
 
-        Collections.shuffle(entities);
+        Collections.sort(entities, new EntityDistanceComparator(player.getLocation()));
 
         Location oldLoc = null;
         Location k = null;
