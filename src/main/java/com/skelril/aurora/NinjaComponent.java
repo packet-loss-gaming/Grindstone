@@ -10,14 +10,19 @@ import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.events.PrePrayerApplicationEvent;
+import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.Setting;
+import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -25,9 +30,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -114,16 +121,86 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         sessions.getSession(NinjaState.class, player).allowConflictingPotions(allowConflictingPotions);
     }
 
+    public boolean canSmokeBomb(Player player) {
+
+        return sessions.getSession(NinjaState.class, player).canSmokeBomb();
+    }
+
+    public void smokeBomb(Player player) {
+
+        sessions.getSession(NinjaState.class, player).smokeBomb();
+
+        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+
+        Location[] locations = new Location[]{
+                player.getLocation(),
+                player.getEyeLocation()
+        };
+        EnvironmentUtil.generateRadialEffect(locations, org.bukkit.Effect.SMOKE);
+
+        List<Entity> entities = player.getNearbyEntities(4, 4, 4);
+        if (entities.isEmpty()) return;
+
+        Collections.shuffle(entities);
+
+        Location oldLoc = null;
+        Location k = null;
+        for (Entity entity : entities) {
+            if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
+
+            oldLoc = entity.getLocation();
+
+            k = player.getLocation();
+            k.setPitch((float) (ChanceUtil.getRandom(3.0) - 2));
+            k.setYaw((float) (ChanceUtil.getRandom(3.0) - 2));
+
+            if (entity instanceof Player) {
+                ChatUtil.sendWarning((Player) entity, "You hear a strange ticking sound...");
+            }
+
+            entity.teleport(k, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        }
+
+        if (oldLoc == null || k == null) return;
+
+        final Location finalK = k;
+        server.getScheduler().runTaskLater(inst, new Runnable() {
+            @Override
+            public void run() {
+                finalK.getWorld().createExplosion(finalK, 3, false);
+            }
+        }, 30);
+
+        oldLoc.setDirection(player.getLocation().getDirection());
+        player.teleport(oldLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+    }
+
+    public boolean canGrapple(Player player) {
+
+        return sessions.getSession(NinjaState.class, player).canGrapple();
+    }
+
+    public void grapple(Player player, double modifier) {
+
+        sessions.getSession(NinjaState.class, player).grapple();
+
+        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+
+        Vector vel = player.getLocation().getDirection();
+        vel.multiply(.5);
+        vel.setY(modifier);
+        player.setVelocity(vel);
+    }
+
     public void unninjaPlayer(Player player) {
 
         NinjaState session = sessions.getSession(NinjaState.class, player);
         session.setIsNinja(false);
-        session.showToGuild(false);
 
         player.removePotionEffect(PotionEffectType.WATER_BREATHING);
         player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
 
-        for (final Player otherPlayer : server.getOnlinePlayers()) {
+        for (Player otherPlayer : server.getOnlinePlayers()) {
             // Show Yourself!
             if (otherPlayer != player) otherPlayer.showPlayer(player);
         }
@@ -216,10 +293,25 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         final Player player = event.getPlayer();
         ItemStack stack = player.getItemInHand();
 
-        if (isNinja(player) && stack != null && stack.getTypeId() == ItemID.BOW) {
+        if (isNinja(player)) {
+
+            Block clicked = event.getClickedBlock();
+            if (clicked == null) return;
+            BlockFace face = event.getBlockFace();
             switch (event.getAction()) {
-                case LEFT_CLICK_AIR:
-                    player.launchProjectile(EnderPearl.class);
+                case LEFT_CLICK_BLOCK:
+                    if (!canSmokeBomb(player)) break;
+                    if (stack != null && stack.getTypeId() == ItemID.BOW) {
+                        smokeBomb(player);
+                    }
+                    break;
+                case RIGHT_CLICK_BLOCK:
+                    if (!canGrapple(player)) break;
+                    if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN)) {
+                        if (clicked.getLocation().distanceSquared(player.getLocation()) <= 4) {
+                            grapple(player, player.isSneaking() ? 1.5 : 1);
+                        }
+                    }
                     break;
             }
         }
@@ -420,6 +512,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         @Setting("ninja-conflicting-potions")
         private boolean allowConflictingPotions = true;
 
+        private long nextGrapple = 0;
+        private long nextSmokeBomb = 0;
+
         protected NinjaState() {
 
             super(MAX_AGE);
@@ -473,6 +568,26 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         public void allowConflictingPotions(boolean allowConflictingPotions) {
 
             this.allowConflictingPotions = allowConflictingPotions;
+        }
+
+        public boolean canGrapple() {
+
+            return nextGrapple == 0 || System.currentTimeMillis() >= nextGrapple;
+        }
+
+        public void grapple() {
+
+            nextGrapple = System.currentTimeMillis() + 1200;
+        }
+
+        public boolean canSmokeBomb() {
+
+            return nextSmokeBomb == 0 || System.currentTimeMillis() >= nextSmokeBomb;
+        }
+
+        public void smokeBomb() {
+
+            nextSmokeBomb = System.currentTimeMillis() + 2750;
         }
 
         public Player getPlayer() {
