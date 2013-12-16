@@ -22,7 +22,7 @@
             <url>http://maven.sk89q.com/repo</url>
         </repository>
         <repository>
-        <id>bukkit-repo</id>
+            <id>bukkit-repo</id>
             <url>http://repo.bukkit.org/content/groups/public</url>
         </repository>
         <repository>
@@ -60,6 +60,12 @@
             <groupId>com.sk89q</groupId>
             <artifactId>commandbook</artifactId>
             <version>2.2-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sk89q</groupId>
+            <artifactId>craftbook</artifactId>
+            <version>3.8-SNAPSHOT</version>
         </dependency>
 
         <dependency>

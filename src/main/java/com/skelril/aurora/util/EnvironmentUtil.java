@@ -234,7 +234,9 @@ public class EnvironmentUtil {
 
     private static final int[] interactiveBlocks = new int[]{
             BlockID.WORKBENCH, BlockID.ENCHANTMENT_TABLE,
-            BlockID.BEACON, BlockID.ANVIL
+            BlockID.BEACON, BlockID.ANVIL, BlockID.LEVER,
+            BlockID.STONE_BUTTON, BlockID.WOODEN_BUTTON,
+            BlockID.WOODEN_DOOR
     };
 
     public static boolean isInteractiveBlock(Block block) {
@@ -245,6 +247,11 @@ public class EnvironmentUtil {
     public static boolean isInteractiveBlock(int block) {
 
         for (int interactiveBlock : interactiveBlocks) {
+            if (interactiveBlock == block) {
+                return true;
+            }
+        }
+        for (int interactiveBlock : containerBlocks) {
             if (interactiveBlock == block) {
                 return true;
             }

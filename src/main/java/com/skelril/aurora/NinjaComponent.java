@@ -15,17 +15,18 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EntityDistanceComparator;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.Location;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
@@ -152,8 +153,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             oldLoc = entity.getLocation();
 
             k = player.getLocation();
-            k.setPitch((float) (ChanceUtil.getRandom(3.0) - 2));
-            k.setYaw((float) (ChanceUtil.getRandom(3.0) - 2));
+            k.setPitch((float) (ChanceUtil.getRandom(361.0) - 181));
+            k.setYaw((float) (ChanceUtil.getRandom(361.0) - 181));
 
             if (entity instanceof Player) {
                 ChatUtil.sendWarning((Player) entity, "You hear a strange ticking sound...");
@@ -163,6 +164,11 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
 
         if (oldLoc == null || k == null) return;
+
+        // Offset by 1 so that the bomb is not messed up by blocks
+        if (k.getBlock().getType() != Material.AIR) {
+            k.add(0, 1, 0);
+        }
 
         final Location finalK = k;
         server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -191,6 +197,18 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         vel.multiply(.5);
         vel.setY(modifier);
         player.setVelocity(vel);
+    }
+
+    public void teleport(Player player) {
+
+        Location[] locations = new Location[]{
+                player.getLocation(),
+                player.getEyeLocation()
+        };
+        EnvironmentUtil.generateRadialEffect(locations, org.bukkit.Effect.SMOKE);
+
+        ItemUtil.removeItemOfName(player, ItemUtil.Guild.Ninja.makeStar(1), 1, false);
+        player.teleport(new Location(Bukkit.getWorld("City"), 150.0001, 45, -443.0001, -180, 0));
     }
 
     public void unninjaPlayer(Player player) {
@@ -295,7 +313,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         ItemStack stack = player.getItemInHand();
 
         if (isNinja(player)) {
-
             Block clicked = event.getClickedBlock();
             if (clicked == null) return;
             BlockFace face = event.getBlockFace();
@@ -307,8 +324,13 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                     }
                     break;
                 case RIGHT_CLICK_BLOCK:
-                    if (!canGrapple(player)) break;
-                    if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN)) {
+                    if (stack != null && ItemUtil.matchesFilter(stack, ChatColor.BLACK + "Ninja Star")) {
+                        teleport(player);
+                        event.setUseInteractedBlock(Event.Result.DENY);
+                        break;
+                    }
+                    if (!canGrapple(player) || EnvironmentUtil.isInteractiveBlock(clicked)) break;
+                    if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN) && (stack == null || !stack.getType().isBlock())) {
                         if (clicked.getLocation().distanceSquared(player.getLocation()) <= 4) {
                             grapple(player, player.isSneaking() ? 1.5 : 1);
                         }
@@ -470,16 +492,19 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 throw new CommandException("You are a rogue not a ninja!");
             }
 
+            final boolean isNinja = isNinja((Player) sender);
+
             ninjaPlayer((Player) sender);
-            if (inst.hasPermission(sender, "aurora.ninja.guild")) {
-                showToGuild((Player) sender, args.hasFlag('g'));
-                useVanish((Player) sender, !args.hasFlag('i'));
-                usePoisonArrows((Player) sender, !args.hasFlag('t'));
-                allowConflictingPotions((Player) sender, !args.hasFlag('p'));
-            } else if (args.getFlags().size() > 0) {
-                ChatUtil.sendError(sender, "You must be a member of the ninja guild to use flags.");
+            showToGuild((Player) sender, args.hasFlag('g'));
+            useVanish((Player) sender, !args.hasFlag('i'));
+            usePoisonArrows((Player) sender, !args.hasFlag('t'));
+            allowConflictingPotions((Player) sender, !args.hasFlag('p'));
+
+            if (!isNinja) {
+                ChatUtil.sendNotice(sender, "You are inspired and become a ninja!");
+            } else {
+                ChatUtil.sendNotice(sender, "Ninja flags updated!");
             }
-            ChatUtil.sendNotice(sender, "You are inspired and become a ninja!");
         }
 
         @Command(aliases = {"unninja"}, desc = "Revoke a player's Ninja power",

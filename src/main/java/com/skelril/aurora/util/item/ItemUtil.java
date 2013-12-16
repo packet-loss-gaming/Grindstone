@@ -423,6 +423,21 @@ public class ItemUtil {
         }
     }
 
+    public static class Guild {
+
+        public static class Ninja {
+
+            public static ItemStack makeStar(int amount) {
+
+                ItemStack ninjaStar = new ItemStack(ItemID.NETHER_STAR, amount);
+                ItemMeta starMeta = ninjaStar.getItemMeta();
+                starMeta.setDisplayName(ChatColor.BLACK + "Ninja Star");
+                ninjaStar.setItemMeta(starMeta);
+                return ninjaStar;
+            }
+        }
+    }
+
     public static class Misc {
 
         public static ItemStack overseerBow() {
