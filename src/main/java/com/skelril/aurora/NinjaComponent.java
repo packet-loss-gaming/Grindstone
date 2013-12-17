@@ -330,7 +330,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                         break;
                     }
                     if (!canGrapple(player) || EnvironmentUtil.isInteractiveBlock(clicked)) break;
-                    if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN) && (stack == null || !stack.getType().isBlock())) {
+                    if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN)
+                            && (stack == null || stack.getType().equals(Material.AIR) || !stack.getType().isBlock())) {
                         if (clicked.getLocation().distanceSquared(player.getLocation()) <= 4) {
                             grapple(player, player.isSneaking() ? 1.5 : 1);
                         }
