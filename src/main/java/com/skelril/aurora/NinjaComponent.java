@@ -324,12 +324,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                     }
                     break;
                 case RIGHT_CLICK_BLOCK:
-                    if (stack != null && ItemUtil.matchesFilter(stack, ChatColor.BLACK + "Ninja Star")) {
-                        teleport(player);
-                        event.setUseInteractedBlock(Event.Result.DENY);
-                        break;
-                    }
-                    if (!canGrapple(player) || EnvironmentUtil.isInteractiveBlock(clicked)) break;
+                    // Check cool down
+                    if (!canGrapple(player)) break;
+                    if (EnvironmentUtil.isInteractiveBlock(clicked) || !clicked.getType().isSolid()) break;
                     if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN)
                             && (stack == null || stack.getType().equals(Material.AIR) || !stack.getType().isBlock())) {
                         if (clicked.getLocation().distanceSquared(player.getLocation()) <= 4) {
@@ -338,6 +335,15 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                     }
                     break;
             }
+        }
+
+        switch (event.getAction()) {
+            case RIGHT_CLICK_BLOCK:
+                if (stack != null && ItemUtil.matchesFilter(stack, ChatColor.BLACK + "Ninja Star")) {
+                    teleport(player);
+                    event.setUseInteractedBlock(Event.Result.DENY);
+                    break;
+                }
         }
     }
 
@@ -419,40 +425,44 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
                 Entity vehicle = player.getVehicle();
                 if (vehicle != null && vehicle instanceof Horse) {
-                    ((Horse) vehicle).removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-                    ((Horse) vehicle).removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
-                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 60, 1));
-                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 60, 1));
+                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 20, 1), true);
+                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 20, 1), true);
                 }
             }
 
             Set<Player> invisibleNewCount = new HashSet<>();
             Set<Player> visibleNewCount = new HashSet<>();
 
+            Location pLoc = player.getLocation();
+            Location k = player.getLocation();
+
             for (Player otherPlayer : server.getOnlinePlayers()) {
-                if (otherPlayer != player) {
-                    if (otherPlayer.getWorld().equals(player.getWorld()) && canVanish(player)) {
-                        if (player.getLocation().distanceSquared(otherPlayer.getLocation()) >= WATCH_DISTANCE_SQ
-                                || (player.getLocation().distanceSquared(otherPlayer.getLocation()) >=
-                                SNEAK_WATCH_DISTANCE_SQ
-                                && player.isSneaking())) {
-                            if (otherPlayer.canSee(player)
-                                    && !(guildCanSee(player) && otherPlayer.hasPermission("aurora.ninja.guild"))
-                                    && !inst.hasPermission(otherPlayer, "aurora.ninja.guild.master")) {
-                                otherPlayer.hidePlayer(player);
-                                invisibleNewCount.add(otherPlayer);
-                            }
-                        } else {
-                            if (!otherPlayer.canSee(player)) {
-                                otherPlayer.showPlayer(player);
-                                visibleNewCount.add(otherPlayer);
-                            }
+                if (otherPlayer.equals(player)) continue;
+
+                if (otherPlayer.getWorld().equals(player.getWorld()) && canVanish(player)) {
+
+                    // Sets k to the otherPlayer's current location
+                    otherPlayer.getLocation(k);
+
+                    if (pLoc.distanceSquared(k) >= WATCH_DISTANCE_SQ
+                            || (player.isSneaking() && pLoc.distanceSquared(k) >= SNEAK_WATCH_DISTANCE_SQ)) {
+                        if (otherPlayer.canSee(player)
+                                && !(guildCanSee(player) && inst.hasPermission(otherPlayer, "aurora.ninja.guild"))
+                                && !inst.hasPermission(otherPlayer, "aurora.ninja.guild.master")) {
+                            otherPlayer.hidePlayer(player);
+                            invisibleNewCount.add(otherPlayer);
                         }
                     } else {
                         if (!otherPlayer.canSee(player)) {
                             otherPlayer.showPlayer(player);
                             visibleNewCount.add(otherPlayer);
                         }
+                    }
+
+                } else {
+                    if (!otherPlayer.canSee(player)) {
+                        otherPlayer.showPlayer(player);
+                        visibleNewCount.add(otherPlayer);
                     }
                 }
             }
@@ -461,9 +471,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 if (invisibleNewCount.size() > 3) {
                     ChatUtil.sendNotice(player, "You are now invisible to multiple players.");
                 } else {
-                    for (Player playerThatCanNotSeePlayer : invisibleNewCount) {
-                        ChatUtil.sendNotice(player, "You are now invisible to "
-                                + playerThatCanNotSeePlayer.getDisplayName() + ".");
+                    for (Player aPlayer : invisibleNewCount) {
+                        ChatUtil.sendNotice(player, "You are now invisible to " + aPlayer.getDisplayName() + ".");
                     }
                 }
             }
@@ -472,9 +481,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 if (visibleNewCount.size() > 3) {
                     ChatUtil.sendNotice(player, "You are now visible to multiple players.");
                 } else {
-                    for (Player playerThatCanSeePlayer : visibleNewCount) {
-                        ChatUtil.sendNotice(player, "You are now visible to "
-                                + playerThatCanSeePlayer.getDisplayName() + ".");
+                    for (Player aPlayer : visibleNewCount) {
+                        ChatUtil.sendNotice(player, "You are now visible to " + aPlayer.getDisplayName() + ".");
                     }
                 }
             }
@@ -495,7 +503,10 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
             final boolean isNinja = isNinja((Player) sender);
 
+            // Enter Ninja Mode
             ninjaPlayer((Player) sender);
+
+            // Set flags
             showToGuild((Player) sender, args.hasFlag('g'));
             useVanish((Player) sender, !args.hasFlag('i'));
             usePoisonArrows((Player) sender, !args.hasFlag('t'));
