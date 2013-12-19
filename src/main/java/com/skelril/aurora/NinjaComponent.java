@@ -444,8 +444,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                     // Sets k to the otherPlayer's current location
                     otherPlayer.getLocation(k);
 
-                    if (pLoc.distanceSquared(k) >= WATCH_DISTANCE_SQ
-                            || (player.isSneaking() && pLoc.distanceSquared(k) >= SNEAK_WATCH_DISTANCE_SQ)) {
+                    double dist = pLoc.distanceSquared(k);
+
+                    if ((player.isSneaking() && dist >= SNEAK_WATCH_DISTANCE_SQ) || dist >= WATCH_DISTANCE_SQ) {
                         if (otherPlayer.canSee(player)
                                 && !(guildCanSee(player) && inst.hasPermission(otherPlayer, "aurora.ninja.guild"))
                                 && !inst.hasPermission(otherPlayer, "aurora.ninja.guild.master")) {
