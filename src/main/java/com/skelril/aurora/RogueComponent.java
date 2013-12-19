@@ -315,15 +315,20 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                 throw new CommandException("You are a ninja not a rogue!");
             }
 
-            if (inst.hasPermission(sender, "aurora.rogue.guild")) {
-                allowConflictingPotions((Player) sender, !args.hasFlag('p'));
-                limitYVelocity((Player) sender, !args.hasFlag('l'));
-            } else if (args.getFlags().size() > 0) {
-                ChatUtil.sendError(sender, "You must be a member of the rogue guild to use flags.");
-            }
+            final boolean isRogue = isRogue((Player) sender);
 
-            roguePlayer(PlayerUtil.matchSinglePlayer(sender, sender.getName()));
-            ChatUtil.sendNotice(sender, "You gain the power of a rogue warrior!");
+            // Enter Rogue Mode
+            roguePlayer((Player) sender);
+
+            // Set flags
+            allowConflictingPotions((Player) sender, !args.hasFlag('p'));
+            limitYVelocity((Player) sender, args.hasFlag('l'));
+
+            if (!isRogue) {
+                ChatUtil.sendNotice(sender, "You gain the power of a rogue warrior!");
+            } else {
+                ChatUtil.sendNotice(sender, "Rogue flags updated!");
+            }
         }
 
         @Command(aliases = {"derogue"}, desc = "Revoke a player's Rogue power",
@@ -347,12 +352,13 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         @Setting("rogue-enabled")
         private boolean isRogue = false;
-        private long nextBlip = 0;
-        private long nextGrenade = 0;
         @Setting("rogue-y-limited")
         private boolean limitYVelocity = false;
         @Setting("rogue-conflicting-potions")
         private boolean allowConflictingPotions = true;
+
+        private long nextBlip = 0;
+        private long nextGrenade = 0;
 
         protected RogueState() {
 
