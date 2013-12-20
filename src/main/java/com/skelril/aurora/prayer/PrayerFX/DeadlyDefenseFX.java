@@ -26,6 +26,10 @@ public class DeadlyDefenseFX extends AbstractPrayer {
 
             if (arrow > 10) break;
             if (EnvironmentUtil.isHostileEntity(entity)) {
+                if (!player.hasLineOfSight(entity)) {
+                    arrow--;
+                    continue;
+                }
                 ArrowUtil.shootArrow(player, (LivingEntity) entity, 1.6F, 0F);
             }
         }
