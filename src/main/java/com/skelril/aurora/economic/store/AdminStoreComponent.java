@@ -44,7 +44,7 @@ public class AdminStoreComponent extends BukkitComponent {
     @InjectComponent
     private AdminComponent adminComponent;
 
-    private ItemStoreDatabase itemStoreDatabase;
+    private static ItemStoreDatabase itemStoreDatabase;
 
     private ProtectedRegion region = null;
     private Economy econ;
@@ -581,7 +581,7 @@ public class AdminStoreComponent extends BukkitComponent {
         names.add("ancient boots");
     }
 
-    private boolean hasItemOfName(String name) {
+    private static boolean hasItemOfName(String name) {
 
         for (String aName : names) {
             if (name.equalsIgnoreCase(aName)) return true;
@@ -589,7 +589,7 @@ public class AdminStoreComponent extends BukkitComponent {
         return false;
     }
 
-    private ItemStack[] getItem(String name, int amount) {
+    private static ItemStack[] getItem(String name, int amount) {
 
         name = name.toLowerCase();
 
@@ -727,11 +727,11 @@ public class AdminStoreComponent extends BukkitComponent {
         ignored.add(BlockID.BEDROCK);
     }
 
-    public double priceCheck(int blockID, int data) {
+    public static double priceCheck(int blockID, int data) {
 
         if (ignored.contains(blockID) || EnvironmentUtil.isValuableBlock(blockID)) return 0;
 
-        ItemType type = ItemType.lookup(blockID + ":" + data);
+        ItemType type = ItemType.fromNumberic(blockID, data);
 
         if (type == null) return 0;
 
@@ -740,6 +740,56 @@ public class AdminStoreComponent extends BukkitComponent {
         if (itemPricePair == null) return 0;
 
         return itemPricePair.isBuyable() ? itemPricePair.getPrice() : 0;
+    }
+
+    /**
+     * Price checks an item stack
+     *
+     * @param stack the item stack to be price checked
+     * @return -1 if invalid, otherwise returns the price scaled to item stack quantity
+     */
+    public static double priceCheck(ItemStack stack) {
+
+        String itemName;
+        double percentageSale = 1;
+
+        if (stack == null || stack.getTypeId() == 0) {
+            return -1;
+        }
+
+
+        itemName = stack.getTypeId() + ":" + stack.getDurability();
+        ItemMeta stackMeta = stack.getItemMeta();
+        if (stackMeta.hasDisplayName()) {
+            itemName = stackMeta.getDisplayName();
+            if (!ItemUtil.isAuthenticCustomItem(itemName)) {
+                return -1;
+            }
+            itemName = ChatColor.stripColor(itemName);
+        }
+
+        if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
+            if (stack.getAmount() > 1) {
+                return -1;
+            }
+            percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
+        }
+
+        if (!hasItemOfName(itemName)) {
+            ItemType type = ItemType.lookup(itemName);
+            if (type == null) {
+                return -1;
+            }
+            itemName = type.getName();
+        }
+
+        ItemPricePair itemPricePair = itemStoreDatabase.getItem(itemName);
+
+        if (itemPricePair == null) {
+            return -1;
+        }
+
+        return itemPricePair.getSellPrice() * percentageSale * stack.getAmount();
     }
 
     public String checkPlayer(CommandSender sender) throws CommandException {

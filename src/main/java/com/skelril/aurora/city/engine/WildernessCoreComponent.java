@@ -447,7 +447,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             }
 
             event.getDrops().addAll(
-                    SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, level * level * 32)
+                    SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, Math.pow(level, 2) * 64)
             );
             event.setDroppedExp(event.getDroppedExp() * level);
         }

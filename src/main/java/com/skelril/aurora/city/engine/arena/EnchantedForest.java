@@ -134,10 +134,10 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         int amt, value;
         if (ChanceUtil.getChance(59)) {
             amt = 64;
-            value = 5248;
+            value = 10496;
         } else {
             amt = 8;
-            value = 88;
+            value = 176;
         }
 
         // Sacrifice and make loot list

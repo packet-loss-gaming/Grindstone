@@ -507,7 +507,7 @@ public enum ItemType {
      * @param id
      * @return
      */
-    public static ItemType fromNumberic(int id, short data) {
+    public static ItemType fromNumberic(int id, int data) {
 
         BaseItem i = new BaseItem(id, data);
         for (Map.Entry<BaseItem, ItemType> entry : ids.entrySet()) {

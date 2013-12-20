@@ -165,7 +165,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         BlockState state = event.getClickedBlock().getLocation().getBlock().getState();
         if (state.getTypeId() == BlockID.CHEST && rewardChest.equals(state.getLocation())) {
 
-            List<ItemStack> loot = SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 10, 2000);
+            List<ItemStack> loot = SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 10, 4000);
             int lootSplit = ChanceUtil.getRangedRandom(64 * 2, 64 * 4);
             if (ChanceUtil.getChance(135)) lootSplit *= 10;
             else if (ChanceUtil.getChance(65)) lootSplit *= 2;

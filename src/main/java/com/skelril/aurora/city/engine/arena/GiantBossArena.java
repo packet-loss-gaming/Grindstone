@@ -752,9 +752,9 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 // Sacrificial drops
                 int m = getWorld().isThundering() ? 3 : 1;
                 m *= player != null ? 3 : 1;
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m, 200000));
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 2000));
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 200));
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m, 400000));
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 4000));
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 400));
 
                 // Gold drops
                 for (int i = 0; i < Math.sqrt(amt + m) + scalOffst; i++) {

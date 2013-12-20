@@ -61,7 +61,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     @Override
     public void run() {
 
-        drop(ChanceUtil.getRangedRandom(730, 2918));
+        drop(ChanceUtil.getRangedRandom(1460, 5836));
     }
 
     @Override
@@ -89,7 +89,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
     public void drop(int populatorValue) {
 
-        drop(populatorValue, 12);
+        drop(populatorValue, 24);
     }
 
     public void drop(int populatorValue, int modifier) {

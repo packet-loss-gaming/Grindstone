@@ -31,7 +31,6 @@ import com.skelril.aurora.util.RegionUtil;
 import com.skelril.aurora.util.item.BookUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
-import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -56,9 +55,6 @@ public class HomeManagerComponent extends BukkitComponent {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
-
-    @InjectComponent
-    private AdminStoreComponent store;
 
     private WorldEditPlugin WE;
     private WorldGuardPlugin WG;
@@ -363,7 +359,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 if (region == null) throw new CommandException("You do not have a home in this world!");
 
                 // Get the price and send it to the player
-                double price = RegionUtil.getPrice(store, region, new BukkitWorld(player.getWorld()), false);
+                double price = RegionUtil.getPrice(region, new BukkitWorld(player.getWorld()), false);
 
                 if (price < 1) {
                     throw new CommandException("Your house cannot currently be sold.");
@@ -456,7 +452,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
                 if (player == null) {
                     region.setFlag(DefaultFlag.PRICE,
-                            RegionUtil.getPrice(store, region, new BukkitWorld(admin.getWorld()), true));
+                            RegionUtil.getPrice(region, new BukkitWorld(admin.getWorld()), true));
                 } else {
                     region.getOwners().addPlayer(player);
                 }
@@ -545,7 +541,7 @@ public class HomeManagerComponent extends BukkitComponent {
                                 for (int z = minZ; z <= maxZ; ++z) {
                                     Vector pt = new Vector(x, y, z);
 
-                                    p2 += store.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
+                                    p2 += AdminStoreComponent.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
                                 }
                             }
                         }

@@ -13,8 +13,7 @@ import com.skelril.aurora.economic.store.AdminStoreComponent;
 public class RegionUtil {
 
     // TODO Some more optimization
-    public static double getPrice(AdminStoreComponent store, ProtectedRegion region, LocalWorld world,
-                                  boolean commission) {
+    public static double getPrice(ProtectedRegion region, LocalWorld world, boolean commission) {
 
         double size, length, width;
         if (region instanceof ProtectedCuboidRegion) {
@@ -57,7 +56,7 @@ public class RegionUtil {
                     for (int z = minZ; z <= maxZ; ++z) {
                         Vector pt = new Vector(x, y, z);
 
-                        p2 += store.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
+                        p2 += AdminStoreComponent.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
                     }
                 }
             }

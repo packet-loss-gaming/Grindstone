@@ -7,6 +7,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.skelril.aurora.economic.store.AdminStoreComponent;
 import com.skelril.aurora.events.PlayerSacrificeItemEvent;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
@@ -54,7 +55,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Sacrifice", desc = "Sacrifice! Sacrifice! Sacrifice!")
-@Depend(plugins = "Pitfall", components = PrayerComponent.class)
+@Depend(components = {AdminStoreComponent.class, PrayerComponent.class})
 public class SacrificeComponent extends BukkitComponent implements Listener, Runnable {
 
     private static final CommandBook inst = CommandBook.inst();
@@ -86,68 +87,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
     private static class LocalConfiguration extends ConfigurationBase {
 
-        @Setting("good-sacrifices")
-        public Set<String> goodSacrifices = new HashSet<>(Arrays.asList(
-                BlockID.DIAMOND_BLOCK + ":0" + "#81",
-                BlockID.EMERALD_BLOCK + ":0" + "#100",
-                // BlockID.GOLD_BLOCK + ":0" + "#64",
-                ItemID.GOLD_APPLE + ":1" + "#64",
-                ItemID.GOLD_APPLE + ":0" + "#8",
-                ItemID.GOLD_AXE + ":0" + "#24",
-                // ItemID.GOLD_BAR + ":0" + "#8",
-                ItemID.GOLD_BOOTS + ":0" + "#32",
-                ItemID.GOLD_CHEST + ":0" + "#64",
-                ItemID.GOLD_HELMET + ":0" + "#40",
-                ItemID.GOLD_HOE + ":0" + "#16",
-                ItemID.GOLD_PANTS + ":0" + "#56",
-                ItemID.GOLD_PICKAXE + ":0" + "#24",
-                ItemID.GOLD_SHOVEL + ":0" + "#8",
-                ItemID.GOLD_SWORD + ":0" + "#16",
-                ItemID.SPAWN_EGG + ":*" + "#3",
-                BlockID.ENCHANTMENT_TABLE + ":0" + "#100",
-                BlockID.ENDER_CHEST + ":0" + "#100",
-                ItemID.CHAINMAIL_BOOTS + ":0" + "#12000",
-                ItemID.CHAINMAIL_PANTS + ":0" + "#12000",
-                ItemID.CHAINMAIL_CHEST + ":0" + "#12000",
-                ItemID.CHAINMAIL_HELMET + ":0" + "#12000",
-                ItemID.DIAMOND + ":0" + "#9",
-                ItemID.DIAMOND_AXE + ":0" + "#27",
-                ItemID.DIAMOND_BOOTS + ":0" + "#36",
-                ItemID.DIAMOND_PANTS + ":0" + "#63",
-                ItemID.DIAMOND_CHEST + ":0" + "#72",
-                ItemID.DIAMOND_HELMET + ":0" + "#45",
-                ItemID.DIAMOND_HOE + ":0" + "#18",
-                ItemID.DIAMOND_PICKAXE + ":0" + "#27",
-                ItemID.DIAMOND_SHOVEL + ":0" + "#9",
-                ItemID.DIAMOND_SWORD + ":0" + "#18",
-                ItemID.DISC_11 + ":0" + "#12000",
-                ItemID.DISC_13 + ":0" + "#12000",
-                ItemID.DISC_BLOCKS + ":0" + "#12000",
-                ItemID.DISC_CAT + ":0" + "#12000",
-                ItemID.DISC_CHIRP + ":0" + "#12000",
-                ItemID.DISC_FAR + ":0" + "#12000",
-                ItemID.DISC_MALL + ":0" + "#12000",
-                ItemID.DISC_MELLOHI + ":0" + "#12000",
-                ItemID.DISC_STAL + ":0" + "#12000",
-                ItemID.DISC_STRAD + ":0" + "#12000",
-                ItemID.DISC_WARD + ":0" + "#12000",
-                ItemID.BLAZE_POWDER + ":0" + "#3",
-                ItemID.BLAZE_ROD + ":0" + "#18",
-                ItemID.GHAST_TEAR + ":0" + "#18",
-                ItemID.BOTTLE_O_ENCHANTING + ":0" + "#3",
-                ItemID.FERMENTED_SPIDER_EYE + ":0" + "#4",
-                ItemID.GLISTERING_MELON + ":0" + "#4",
-                ItemID.ENDER_PEARL + ":0" + "#3",
-                ItemID.EYE_OF_ENDER + ":0" + "#32",
-                ItemID.LIGHTSTONE_DUST + ":0" + "#4",
-                ItemID.MAGMA_CREAM + ":0" + "#32",
-                ItemID.POTION + ":*" + "#2",
-                ItemID.PAINTING + ":0" + "#5",
-                ItemID.EMERALD + ":0" + "#14",
-                BlockID.LIGHTSTONE + ":0" + "#7",
-                BlockID.TNT + ":0" + "#5",
-                BlockID.END_STONE + ":0" + "#2",
-                ItemID.NETHER_STAR + ":0" + "#81"));
+        @Setting("sacrificial-increment")
+        public int increment = 2000;
+
         @Setting("sacrificial-block")
         private String sacrificialBlockString = BlockID.STONE_BRICK + ":3";
 
@@ -200,81 +142,28 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         return getEntityTaskId;
     }
 
-    private int calculateValue(ItemStack itemStack) {
+    private static int calculateModifier(double value) {
 
-        if (itemStack == null || itemStack.getTypeId() == 0) return -1;
-
-        int itemStackId = itemStack.getTypeId();
-        int itemStackData = itemStack.getData().getData();
-        int itemStackSize = itemStack.getAmount();
-
-        for (String sacrifice : config.goodSacrifices) {
-            String[] itemValue = sacrifice.split("#");
-            String[] itemData = itemValue[0].split(":");
-
-            int id;
-            int data;
-            int value;
-
-            try {
-                id = Integer.parseInt(itemData[0]);
-                data = Integer.parseInt(itemData[1]);
-                value = Integer.parseInt(itemValue[1]);
-
-                if (itemStackId == id && itemStackData == data) return (value * itemStackSize) + 64;
-            } catch (Exception a) {
-
-                try {
-
-                    id = Integer.parseInt(itemData[0]);
-                    value = Integer.parseInt(itemValue[1]);
-
-                    if (itemStackId == id) return (value * itemStackSize) + 64;
-
-                } catch (Exception b) {
-
-                    log.warning("Incorrect configuration for the component: "
-                            + this.getInformation().friendlyName() + ".");
-                }
-            }
-        }
-
-        return itemStackSize;
-    }
-
-    private static int calculateModifier(int value) {
-
-        return (value * 12) / 335;
+        return (int) Math.ceil((value * 6) / 335);
     }
 
     /**
-     * This method is used to get the ItemStacks to drop based on the ItemStack sacrificed.
+     * This method is used to get the ItemStacks to drop based
+     * on a numerical value and quantity.
      *
      * @param sender - The triggering sender
-     * @param items  - One or more items that were sacrificed
+     * @param amt - The amount of items to return
+     * @param value - The value put towards the items returned
      * @return - The ItemStacks that should be received
      */
-    public List<ItemStack> getCalculatedLoot(CommandSender sender, ItemStack... items) {
-
-        // Calculate the amt & value
-        int amt = 0;
-        int value = 0;
-        for (ItemStack item : items) {
-            amt += item.getAmount();
-            value += calculateValue(item);
-        }
-
-        return getCalculatedLoot(sender, amt, value);
-    }
-
-    public static List<ItemStack> getCalculatedLoot(CommandSender sender, int amt, int value) {
+    public static List<ItemStack> getCalculatedLoot(CommandSender sender, int amt, double value) {
 
         List<ItemStack> loot = new ArrayList<>();
 
         // Calculate the modifier
         int modifier = calculateModifier(value);
 
-        if (value > 64) {
+        if (value > 140) {
             for (int i = 0; i < amt; i++) {
 
                 ItemStack itemStack = null;
@@ -759,23 +648,34 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         PlayerInventory pInventory = player.getInventory();
 
+        final double value = AdminStoreComponent.priceCheck(item);
+
         if (ItemUtil.isMasterSword(item)) {
             pInventory.addItem(ItemUtil.Master.makeSword());
             return;
         } else if (ItemUtil.isMasterBow(item)) {
             pInventory.addItem(ItemUtil.Master.makeBow());
             return;
-        } else if (ItemUtil.isNamed(item)) {
+        } else if (value < 0) {
             pInventory.addItem(item);
             ChatUtil.sendError(player, "The gods reject your offer.");
             return;
         }
 
-        for (ItemStack aItemStack : getCalculatedLoot(player, item)) {
+        // Adapt this for less suck on expensive stuff
+        int quantity = item.getAmount();
+
+        if (quantity <= 1) {
+            for (double v2 = value; v2 >= config.increment; v2 -= config.increment) {
+                quantity++;
+            }
+        }
+
+        for (ItemStack aItemStack : getCalculatedLoot(player, quantity, value)) {
             pInventory.addItem(aItemStack);
         }
 
-        if (ChanceUtil.getChance(5) && calculateValue(item) >= 200) {
+        if (ChanceUtil.getChance(5) && value >= 500) {
 
             PrayerType prayerType;
             switch (ChanceUtil.getRandom(7)) {
@@ -833,9 +733,13 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
             ItemStack questioned = ((Player) sender).getInventory().getItemInHand();
 
-            int value = calculateValue(questioned);
-            if (value == -1 || ItemUtil.isNamed(questioned)) throw new CommandException("You can't sacrifice that!");
-            ChatUtil.sendNotice(sender, "That item has a value of: " + value + " in the sacrificial pit.");
+            // Check value & validity
+            double value = AdminStoreComponent.priceCheck(questioned);
+            if (value < 0) throw new CommandException("You can't sacrifice that!");
+
+            // Mask the value so it doesn't just show the market price and print it
+            int shownValue = calculateModifier(value);
+            ChatUtil.sendNotice(sender, "That item has a value of: " + shownValue + " in the sacrificial pit.");
         }
     }
 
