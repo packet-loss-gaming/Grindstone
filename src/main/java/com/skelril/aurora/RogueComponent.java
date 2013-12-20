@@ -136,8 +136,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
     public void deroguePlayer(Player player) {
 
-        RogueState session = sessions.getSession(RogueState.class, player);
-        session.setIsRogue(false);
+        sessions.getSession(RogueState.class, player).setIsRogue(false);
 
         player.removePotionEffect(PotionEffectType.SPEED);
         player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
@@ -152,9 +151,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (damager instanceof Arrow) {
             damager = ((Arrow) event.getDamager()).getShooter();
             wasArrow = true;
-        } else if (damager instanceof Snowball && snowBalls.contains(damager)) {
-            damager.getWorld().createExplosion(damager.getLocation(), 2.75F);
-            snowBalls.remove(damager);
         }
 
         if (event.getEntity() instanceof Player && wasArrow && ChanceUtil.getChance(3)) {
@@ -292,8 +288,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
                 Entity vehicle = player.getVehicle();
                 if (vehicle != null && vehicle instanceof Horse) {
-                    ((Horse) vehicle).removePotionEffect(PotionEffectType.SPEED);
-                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 60, 2));
+                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 2), true);
 
                     player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 45, 3), true);
                 } else {
