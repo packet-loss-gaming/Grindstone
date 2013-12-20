@@ -35,8 +35,13 @@ public class DebugComponent extends BukkitComponent {
         //inst.registerEvents(new InventoryCorruptionFixer());
         //noinspection AccessStaticViaInstance
         //inst.registerEvents(new BlockDebug());
+
+
+        // Bug fixes
+
+        // Fixes an issue where potion effects are not removed from players on death
         //noinspection AccessStaticViaInstance
-        inst.registerEvents(new PotionDeathFix());
+        //inst.registerEvents(new PotionDeathFix());
     }
 
     private class InventoryCorruptionFixer implements Listener {
