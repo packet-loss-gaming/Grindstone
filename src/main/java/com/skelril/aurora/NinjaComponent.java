@@ -7,6 +7,7 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.events.PrePrayerApplicationEvent;
@@ -190,7 +191,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).canGrapple();
     }
 
-    public void grapple(Player player, double modifier) {
+    public void grapple(Player player, Block block, double maxClimb) {
 
         sessions.getSession(NinjaState.class, player).grapple();
 
@@ -198,7 +199,23 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         Vector vel = player.getLocation().getDirection();
         vel.multiply(.5);
-        vel.setY(modifier);
+        vel.setY(.6);
+
+        // Increment the velocity
+        while (block.getY() > player.getLocation().getY()) {
+            block = block.getRelative(BlockFace.DOWN);
+        }
+
+        int i;
+        Vector increment = new Vector(0, .1, 0);
+        for (i = 0; i < maxClimb && (i < 1 || block.getType().isSolid()); i++) {
+
+            double ctl = BlockType.centralTopLimit(block.getTypeId(), block.getData());
+
+            vel.add(ctl != 1 ? increment.clone().multiply(ctl) : increment);
+            block = block.getRelative(BlockFace.UP);
+        }
+
         player.setVelocity(vel);
     }
 
@@ -301,21 +318,31 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             Block clicked = event.getClickedBlock();
             if (clicked == null) return;
             BlockFace face = event.getBlockFace();
+
+            boolean usingBow = stack != null && stack.getTypeId() == ItemID.BOW;
+
             switch (event.getAction()) {
                 case LEFT_CLICK_BLOCK:
                     if (!canSmokeBomb(player)) break;
-                    if (stack != null && stack.getTypeId() == ItemID.BOW) {
+                    if (usingBow) {
                         smokeBomb(player);
                     }
                     break;
                 case RIGHT_CLICK_BLOCK:
-                    // Check cool down
-                    if (!canGrapple(player)) break;
-                    if (EnvironmentUtil.isInteractiveBlock(clicked) || !clicked.getType().isSolid()) break;
-                    if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN)
-                            && (stack == null || stack.getType().equals(Material.AIR) || !stack.getType().isBlock())) {
+                    // Check cool player specific components
+                    if (!canGrapple(player) || usingBow || player.isSneaking()) break;
+                    if (EnvironmentUtil.isInteractiveBlock(clicked) || EnvironmentUtil.isShrubBlock(clicked)) break;
+                    if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN) && stack != null) {
+
+                        // Check types
+                        Material type = stack.getType();
+                        if ((type != Material.AIR && type.isBlock()) || type.isEdible()) break;
+
+                        // Check for possible misclick
+                        if (EnvironmentUtil.isInteractiveBlock(clicked.getRelative(face))) break;
+
                         if (clicked.getLocation().distanceSquared(player.getLocation()) <= 4) {
-                            grapple(player, player.isSneaking() ? 1.5 : 1);
+                            grapple(player, clicked, 9);
                         }
                     }
                     break;

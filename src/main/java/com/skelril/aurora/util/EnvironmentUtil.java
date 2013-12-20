@@ -36,8 +36,7 @@ public class EnvironmentUtil {
     public static boolean isServerTimeOdd(long time) {
 
         long t = time % 2;
-        if (t < 0)
-            t += 2;
+        if (t < 0) t += 2;
         return (t == 1);
     }
 
@@ -69,7 +68,8 @@ public class EnvironmentUtil {
     }
 
     private static final int[] shrubBlocks = new int[]{
-            BlockID.LONG_GRASS, BlockID.RED_FLOWER, BlockID.YELLOW_FLOWER
+            BlockID.DEAD_BUSH, BlockID.LONG_GRASS, BlockID.RED_FLOWER,
+            BlockID.YELLOW_FLOWER, BlockID.DOUBLE_PLANT
     };
 
     public static boolean isShrubBlock(Block block) {
