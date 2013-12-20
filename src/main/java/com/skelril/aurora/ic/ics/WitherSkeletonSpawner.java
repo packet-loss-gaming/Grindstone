@@ -4,11 +4,13 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.craftbook.ChangedSign;
 import com.sk89q.craftbook.circuits.ic.*;
 import com.sk89q.craftbook.util.LocationUtil;
+import com.sk89q.worldedit.blocks.ItemID;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Skeleton;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.logging.Logger;
 
@@ -45,6 +47,7 @@ public class WitherSkeletonSpawner extends AbstractIC {
         Location k = LocationUtil.getCenterOfBlock(LocationUtil.getNextFreeSpace(getBackBlock(), BlockFace.UP));
         Skeleton skeleton = (Skeleton) k.getWorld().spawnEntity(k, EntityType.SKELETON);
         skeleton.setSkeletonType(Skeleton.SkeletonType.WITHER);
+        skeleton.getEquipment().setItemInHand(new ItemStack(ItemID.STONE_SWORD));
     }
 
     public static class Factory extends AbstractICFactory implements RestrictedIC {
