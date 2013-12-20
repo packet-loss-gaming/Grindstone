@@ -29,7 +29,10 @@ import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.*;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.entity.HorseJumpEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -55,7 +58,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     @InjectComponent
     private RogueComponent rogueComponent;
 
-    private Map<Arrow, Float> arrowForce = new HashMap<>();
+    private Map<Integer, Float> arrowForce = new HashMap<>();
 
     private final int WATCH_DISTANCE = 14;
     private final int WATCH_DISTANCE_SQ = WATCH_DISTANCE * WATCH_DISTANCE;
@@ -236,7 +239,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         if (isNinja(player) && hasPoisonArrows(player) && inst.hasPermission(player, "aurora.ninja.guild")) {
 
             if (p instanceof Arrow) {
-                arrowForce.put((Arrow) p, event.getForce());
+                arrowForce.put(p.getEntityId(), event.getForce());
             }
         }
     }
@@ -261,35 +264,17 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onEntityDamageEntityEvent(EntityDamageByEntityEvent event) {
-
-        Projectile p = null;
-
-        if (event.getDamager() instanceof Arrow) {
-            p = (Projectile) event.getDamager();
-        }
-
-        if (p == null) return;
-        Entity shooter = p.getShooter();
-        if (shooter == null || !(shooter instanceof Player)) return;
-        if (p instanceof Arrow && arrowForce.containsKey(p)) {
-            poisonArrow((Arrow) p, arrowForce.get(p));
-            arrowForce.remove(p);
-
-            double diff = (((Player) shooter).getMaxHealth() - ((Player) shooter).getHealth());
-            event.setDamage(Math.max(event.getDamage(), event.getDamage() * diff * .35));
-        }
-    }
-
     @EventHandler
     public void onProjectileLand(ProjectileHitEvent event) {
 
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (p instanceof Arrow && arrowForce.containsKey(p)) {
-            poisonArrow((Arrow) p, arrowForce.get(p));
-            arrowForce.remove(p);
+        if (p instanceof Arrow) {
+            int id = p.getEntityId();
+            if (arrowForce.containsKey(id)) {
+                poisonArrow((Arrow) p, arrowForce.get(id));
+                arrowForce.remove(id);
+            }
         }
     }
 
