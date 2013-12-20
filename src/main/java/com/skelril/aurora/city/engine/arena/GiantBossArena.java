@@ -31,7 +31,6 @@ import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
 import com.skelril.aurora.util.timer.TimerUtil;
 import org.bukkit.*;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.enchantments.Enchantment;
@@ -999,8 +998,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                         if (!isBossSpawned()) return;
                         for (Player player : getContainedPlayers()) {
-                            if (player.getLocation().getBlock().getRelative(BlockFace.DOWN, 2).getTypeId()
-                                    != BlockID.DIAMOND_BLOCK) {
+                            if (boss.hasLineOfSight(player)) {
                                 ChatUtil.sendNotice(player, "Come closer...");
                                 player.teleport(boss.getLocation());
                                 player.damage(difficulty * 32, boss);
@@ -1065,7 +1063,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                                 ChatUtil.sendNotice(player, "A divine wind hides you from the boss.");
                                 continue;
                             }
-                            if (player.getLocation().getBlock().getRelative(BlockFace.DOWN, 2).getTypeId() != BlockID.DIAMOND_BLOCK) {
+                            if (boss.hasLineOfSight(player)) {
                                 ChatUtil.sendWarning(player, ChatColor.DARK_RED + "You!");
                                 baskInGlory = true;
                             }
@@ -1108,7 +1106,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                         ChatUtil.sendWarning(getContainedPlayers(1), "May those who appose me die a death like no other...");
                         for (Player player : getContainedPlayers()) {
-                            if (player.getLocation().getBlock().getRelative(BlockFace.DOWN, 2).getTypeId() != BlockID.DIAMOND_BLOCK) {
+                            if (boss.hasLineOfSight(player)) {
                                 ChatUtil.sendWarning(getContainedPlayers(1), "Parish " + player.getName() + "!");
                                 try {
                                     prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
