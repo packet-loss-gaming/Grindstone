@@ -9,6 +9,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.events.DisallowedPVPEvent;
+import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.exceptions.UnknownPluginException;
@@ -31,18 +32,18 @@ import java.util.logging.Logger;
 /**
  * Created by Wyatt on 12/8/13.
  */
-@ComponentInformation(friendlyName = "Global PvP", desc = "Global PvP Toggling.")
+@ComponentInformation(friendlyName = "PvP", desc = "Skelril PvP management.")
 @Depend(components = SessionComponent.class, plugins = "WorldGuard")
-public class GlobalPvPComponent extends BukkitComponent implements Listener {
+public class PvPComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
     @InjectComponent
-    private SessionComponent sessions;
+    private static SessionComponent sessions;
 
-    private WorldGuardPlugin WG;
+    private static WorldGuardPlugin WG;
 
     @Override
     public void enable() {
@@ -67,7 +68,7 @@ public class GlobalPvPComponent extends BukkitComponent implements Listener {
             throw new UnknownPluginException("WorldGuard");
         }
 
-        this.WG = (WorldGuardPlugin) plugin;
+        WG = (WorldGuardPlugin) plugin;
     }
 
     public class Commands {
@@ -112,8 +113,15 @@ public class GlobalPvPComponent extends BukkitComponent implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onPvPBlock(DisallowedPVPEvent event) {
 
-        Player attacker = event.getAttacker();
-        Player defender = event.getDefender();
+        if (allowsPvP(event.getAttacker(), event.getDefender(), false)) event.setCancelled(true);
+    }
+
+    public static boolean allowsPvP(Player attacker, Player defender) {
+
+        return allowsPvP(attacker, defender, true);
+    }
+
+    public static boolean allowsPvP(Player attacker, Player defender, boolean checkRegions) {
 
         PvPSession attackerSession = sessions.getSession(PvPSession.class, attacker);
         PvPSession defenderSession = sessions.getSession(PvPSession.class, defender);
@@ -132,7 +140,7 @@ public class GlobalPvPComponent extends BukkitComponent implements Listener {
                 String id = region.getId();
 
                 if (id.equalsIgnoreCase(attackerHome) || id.equals(defenderHome)) {
-                    return;
+                    return false;
                 }
             }
 
@@ -141,19 +149,26 @@ public class GlobalPvPComponent extends BukkitComponent implements Listener {
                 String id = region.getId();
 
                 if (id.equalsIgnoreCase(attackerHome) || id.equals(defenderHome)) {
-                    return;
+                    return false;
                 }
             }
-            event.setCancelled(true);
+            return true;
+        } else if (checkRegions) {
+            RegionManager manager = WG.getRegionManager(attacker.getWorld());
+            ApplicableRegionSet attackerApplicable = manager.getApplicableRegions(attacker.getLocation());
+            ApplicableRegionSet defenderApplicable = manager.getApplicableRegions(defender.getLocation());
+
+            return attackerApplicable.allows(DefaultFlag.PVP) && defenderApplicable.allows(DefaultFlag.PVP);
         }
+        return false;
     }
 
-    private String getHome(String player) {
+    private static String getHome(String player) {
 
         return player.toLowerCase() + "'s-house";
     }
 
-    private String getHome(Player player) {
+    private static String getHome(Player player) {
 
         return getHome(player.getName());
     }

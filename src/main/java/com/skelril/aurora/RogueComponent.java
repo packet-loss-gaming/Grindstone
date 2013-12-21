@@ -9,20 +9,24 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
+import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.Setting;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
@@ -38,7 +42,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Rogue", desc = "Speed and strength is always the answer.")
-@Depend(plugins = {"Pitfall"}, components = {SessionComponent.class, NinjaComponent.class})
+@Depend(plugins = {"Pitfall"}, components = {SessionComponent.class, NinjaComponent.class, PvPComponent.class})
 public class RogueComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
@@ -142,7 +146,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDamageEntityEvent(EntityDamageByEntityEvent event) {
 
         Entity damager = event.getDamager();
@@ -181,8 +185,38 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
         if (p instanceof Snowball && snowBalls.contains(p)) {
-            p.getWorld().createExplosion(p.getLocation(), 1.75F);
+
+            // Remove snow ball first to prevent memory leak
             snowBalls.remove(p);
+
+            // Create the explosion if no players are around that don't allow PvP
+            final Player shooter = (Player) p.getShooter();
+
+            for (Entity entity : p.getNearbyEntities(4, 4, 4)) {
+                if (entity.equals(shooter) || !(entity instanceof LivingEntity)) continue;
+                if (entity instanceof Player) {
+                    final Player defender = (Player) entity;
+                    if (!PvPComponent.allowsPvP(shooter, defender)) return;
+
+                    if (inst.hasPermission(defender, "aurora.rogue.guild.master")) {
+                        ChatUtil.sendWarning(shooter, defender.getName() + " sends a band of Rogue marauders after you.");
+                        for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
+                            server.getScheduler().runTaskLater(inst, new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (defender.getLocation().distanceSquared(shooter.getLocation()) > 2500) {
+                                        return;
+                                    }
+                                    Location l = LocationUtil.findRandomLoc(shooter.getLocation().getBlock(), 3, true, false);
+                                    l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 1.75F, true, false);
+                                }
+                            }, 12 * i);
+                        }
+                    }
+                }
+            }
+
+            p.getWorld().createExplosion(p.getLocation(), 1.75F);
         }
     }
 

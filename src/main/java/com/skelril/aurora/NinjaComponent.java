@@ -10,6 +10,7 @@ import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
+import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.util.ChanceUtil;
@@ -29,6 +30,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
@@ -47,7 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Ninja", desc = "Disappear into the night!")
-@Depend(plugins = "Pitfall", components = {SessionComponent.class, RogueComponent.class})
+@Depend(plugins = "Pitfall", components = {SessionComponent.class, RogueComponent.class, PvPComponent.class})
 public class NinjaComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
@@ -132,11 +134,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).canSmokeBomb();
     }
 
-    public void smokeBomb(Player player) {
+    public void smokeBomb(final Player player) {
 
         sessions.getSession(NinjaState.class, player).smokeBomb();
-
-        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
 
         Location[] locations = new Location[]{
                 player.getLocation(),
@@ -154,15 +154,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         for (Entity entity : entities) {
             if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
 
+            if (entity instanceof Player) {
+                if (!PvPComponent.allowsPvP(player, (Player) entity)) return;
+                ChatUtil.sendWarning((Player) entity, "You hear a strange ticking sound...");
+            }
+
             oldLoc = entity.getLocation();
 
             k = player.getLocation();
             k.setPitch((float) (ChanceUtil.getRandom(361.0) - 181));
             k.setYaw((float) (ChanceUtil.getRandom(361.0) - 181));
-
-            if (entity instanceof Player) {
-                ChatUtil.sendWarning((Player) entity, "You hear a strange ticking sound...");
-            }
 
             entity.teleport(k, PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
@@ -261,7 +262,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
 
         if (!(event.getEntity() instanceof Player)) return;
@@ -276,7 +277,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 break;
             case PROJECTILE:
             case ENTITY_ATTACK:
-                event.setDamage(event.getDamage() * Math.min(1, ChanceUtil.getRandom(2.0) - .4));
+                event.setDamage(event.getDamage() * .8);
                 break;
         }
     }
@@ -300,10 +301,11 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         for (Entity entity : arrow.getNearbyEntities(4, 2, 4)) {
             if (!ChanceUtil.getChance(3) || entity.equals(arrow.getShooter())) continue;
             if (entity instanceof LivingEntity) {
-                ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, duration, 1), true);
                 if (entity instanceof Player) {
+                    if (!PvPComponent.allowsPvP((Player) arrow.getShooter(), (Player) entity)) continue;
                     ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, duration, 4), true);
                 }
+                ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, duration, 1), true);
             }
         }
     }

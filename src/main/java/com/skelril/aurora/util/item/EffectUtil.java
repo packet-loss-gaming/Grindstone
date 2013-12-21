@@ -4,9 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ClothColor;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.flags.DefaultFlag;
-import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
@@ -70,7 +68,9 @@ public class EffectUtil {
 
         public static void decimate(Player owner, LivingEntity target) {
 
-            target.damage(ChanceUtil.getRandom(target instanceof Player ? 3 : 10) * 50);
+            server.getPluginManager().callEvent(new RapidHitEvent(owner));
+
+            target.damage(ChanceUtil.getRandom(target instanceof Player ? 3 : 10) * 50, owner);
             ChatUtil.sendNotice(owner, "Your sword tears through the flesh of its victim.");
         }
 
@@ -124,11 +124,9 @@ public class EffectUtil {
             ChatUtil.sendNotice(owner, "Your bow slows its victim.");
         }
 
-        public static double fearStrike(Player owner, LivingEntity target, double x, WorldGuardPlugin WG) {
+        public static double fearStrike(Player owner, LivingEntity target, double x) {
 
             server.getPluginManager().callEvent(new RapidHitEvent(owner));
-
-            RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
 
             List<Entity> entityList = target.getNearbyEntities(8, 4, 8);
             entityList.add(target);
@@ -136,7 +134,7 @@ public class EffectUtil {
                 if (e.isValid() && e instanceof LivingEntity) {
                     if (e.equals(owner)) continue;
                     if (e instanceof Player) {
-                        if (mgr != null && !mgr.getApplicableRegions(e.getLocation()).allows(DefaultFlag.PVP)) {
+                        if (!PvPComponent.allowsPvP(owner, (Player) e)) {
                             continue;
                         }
                         server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
@@ -153,7 +151,7 @@ public class EffectUtil {
             return x * ChanceUtil.getRangedRandom(2, 3);
         }
 
-        public static void fearBomb(final Player owner, LivingEntity target, WorldGuardPlugin WG) {
+        public static void fearBomb(final Player owner, LivingEntity target) {
 
             final List<Block> blocks = new ArrayList<>();
             Block block = target.getLocation().getBlock();
@@ -171,7 +169,6 @@ public class EffectUtil {
             }
 
             Collections.addAll(blocks, blockList.toArray(new Block[blockList.size()]));
-            final RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
 
             IntegratedRunnable bomb = new IntegratedRunnable() {
 
@@ -230,10 +227,8 @@ public class EffectUtil {
                         for (Entity entity : block.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
                             if (!entity.isValid()) continue;
                             if (entity instanceof Player) {
-                                if (mgr != null) {
-                                    if (!mgr.getApplicableRegions(entity.getLocation()).allows(DefaultFlag.PVP)) {
-                                        continue;
-                                    }
+                                if (!PvPComponent.allowsPvP(owner, (Player) entity)) {
+                                    continue;
                                 }
                             }
                             if (entity.getLocation().distanceSquared(loc) <= 4) {
@@ -326,13 +321,11 @@ public class EffectUtil {
             ChatUtil.sendNotice(owner, "Your weapon glows dimly.");
         }
 
-        public static void doomBlade(Player owner, LivingEntity target, WorldGuardPlugin WG) {
+        public static void doomBlade(Player owner, LivingEntity target) {
 
             ChatUtil.sendNotice(owner, "Your weapon releases a huge burst of energy.");
 
             server.getPluginManager().callEvent(new RapidHitEvent(owner));
-
-            RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
 
             double dmgTotal = 0;
             List<Entity> entityList = target.getNearbyEntities(6, 4, 6);
@@ -342,7 +335,7 @@ public class EffectUtil {
                     if (e.equals(owner)) continue;
                     double maxHit = ChanceUtil.getRangedRandom(150, 350);
                     if (e instanceof Player) {
-                        if (mgr != null && !mgr.getApplicableRegions(e.getLocation()).allows(DefaultFlag.PVP)) {
+                        if (!PvPComponent.allowsPvP(owner, (Player) e)) {
                             continue;
                         }
                         maxHit = (1.0 / 3.0) * maxHit;

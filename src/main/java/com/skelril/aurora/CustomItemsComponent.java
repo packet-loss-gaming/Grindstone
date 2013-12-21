@@ -1,17 +1,13 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.FreezeComponent;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.flags.DefaultFlag;
-import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
+import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.entity.ProjectileTickEvent;
@@ -39,7 +35,6 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -52,7 +47,7 @@ import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
  */
 @ComponentInformation(friendlyName = "Custom Items Component", desc = "Custom Items")
 @Depend(components = {SessionComponent.class, AdminComponent.class,
-        AntiCheatCompatibilityComponent.class, FreezeComponent.class})
+        AntiCheatCompatibilityComponent.class, PvPComponent.class})
 public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private static final CommandBook inst = CommandBook.inst();
@@ -65,8 +60,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private AntiCheatCompatibilityComponent antiCheat;
 
-    private WorldGuardPlugin WG;
-
     private List<String> players = new ArrayList<>();
 
     @Override
@@ -74,9 +67,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-        WG = plugin != null && plugin instanceof WorldGuardPlugin ? (WorldGuardPlugin) plugin : null;
     }
 
     public CustomItemSession getSession(Player player) {
@@ -282,10 +272,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Fear.magicChain(owner, target);
                             break;
                         case FEAR_STRIKE:
-                            event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage(), WG));
+                            event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage()));
                             break;
                         case FEAR_BOMB:
-                            EffectUtil.Fear.fearBomb(owner, target, WG);
+                            EffectUtil.Fear.fearBomb(owner, target);
                             break;
                     }
                 }
@@ -310,7 +300,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Unleashed.regen(owner, target);
                             break;
                         case DOOM_BLADE:
-                            EffectUtil.Unleashed.doomBlade(owner, target, WG);
+                            EffectUtil.Unleashed.doomBlade(owner, target);
                             break;
                         case LIFE_LEECH:
                             EffectUtil.Unleashed.lifeLeech(owner, target);
@@ -344,8 +334,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             Player owner = (Player) shooter;
             CustomItemSession session = getSession(owner);
             Location targetLoc = event.getEntity().getLocation();
-
-            RegionManager mgr = WG != null ? WG.getGlobalRegionManager().get(owner.getWorld()) : null;
 
             if (session.canSpec(SpecType.ANIMAL_BOW)) {
                 Specs used;
@@ -392,9 +380,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                                 ((Creeper) e).setPowered(true);
                             }
                             // Player
-                            if (mgr != null && e instanceof Player) {
-                                ApplicableRegionSet app = mgr.getApplicableRegions(e.getLocation());
-                                if (!app.allows(DefaultFlag.PVP)) continue;
+                            if (e instanceof Player) {
+                                if (!PvPComponent.allowsPvP(owner, (Player) e)) continue;
                             }
 
                             ((LivingEntity) e).damage(5, owner);
