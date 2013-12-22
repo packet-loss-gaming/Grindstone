@@ -738,7 +738,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             if (value < 0) throw new CommandException("You can't sacrifice that!");
 
             // Mask the value so it doesn't just show the market price and print it
-            int shownValue = calculateModifier(value);
+            int shownValue = (int) Math.round(value * 60.243);
             ChatUtil.sendNotice(sender, "That item has a value of: " + shownValue + " in the sacrificial pit.");
         }
     }
