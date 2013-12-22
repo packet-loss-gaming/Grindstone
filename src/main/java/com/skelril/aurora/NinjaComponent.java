@@ -194,8 +194,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
     public void grapple(Player player, Block block, double maxClimb) {
 
-        sessions.getSession(NinjaState.class, player).grapple();
-
         server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
 
         Vector vel = player.getLocation().getDirection();
@@ -218,6 +216,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
 
         player.setVelocity(vel);
+        player.setFallDistance(0F);
+
+        sessions.getSession(NinjaState.class, player).grapple(i * 200);
     }
 
     public void teleport(Player player) {
@@ -628,9 +629,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             return nextGrapple == 0 || System.currentTimeMillis() >= nextGrapple;
         }
 
-        public void grapple() {
+        public void grapple(long time) {
 
-            nextGrapple = System.currentTimeMillis() + 1200;
+            nextGrapple = System.currentTimeMillis() + 300 + time;
         }
 
         public boolean canSmokeBomb() {
