@@ -35,6 +35,8 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -217,10 +219,20 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         Entity damager = event.getDamager();
-        boolean wasArrow = false;
-        if (damager instanceof Arrow && ((Projectile) damager).getShooter() != null) {
+        ItemStack launcher = null;
+        if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
+            if (damager.hasMetadata("launcher")) {
+
+                Object test = damager.getMetadata("launcher").get(0).value();
+
+                if (test instanceof ItemStack) {
+                    launcher = (ItemStack) test;
+                }
+            }
+
+            if (launcher == null) return;
+
             damager = ((Projectile) damager).getShooter();
-            wasArrow = true;
         }
 
         Player owner = damager instanceof Player ? (Player) damager : null;
@@ -232,7 +244,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             Specs used;
             if (session.canSpec(SpecType.FEAR)) {
-                if (ItemUtil.hasFearSword(owner) && !wasArrow) {
+                if (ItemUtil.hasFearSword(owner)) {
                     used = callSpec(owner, target, 0, 6);
                     if (used == null) return;
                     session.updateSpec(SpecType.FEAR);
@@ -256,7 +268,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Fear.soulSmite(owner, target);
                             break;
                     }
-                } else if (ItemUtil.hasFearBow(owner) && wasArrow) {
+                } else if (ItemUtil.isFearBow(launcher)) {
                     used = callSpec(owner, target, 6, 11);
                     if (used == null) return;
                     session.updateSpec(SpecType.FEAR);
@@ -282,7 +294,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
 
             if (session.canSpec(SpecType.UNLEASHED)) {
-                if (ItemUtil.hasUnleashedSword(owner) && !wasArrow) {
+                if (ItemUtil.hasUnleashedSword(owner)) {
                     used = callSpec(owner, target, 11, 17);
                     if (used == null) return;
                     session.updateSpec(SpecType.UNLEASHED);
@@ -306,7 +318,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Unleashed.lifeLeech(owner, target);
                             break;
                     }
-                } else if (ItemUtil.hasUnleashedBow(owner) && wasArrow) {
+                } else if (ItemUtil.isUnleashedBow(launcher)) {
                     used = callSpec(owner, target, 18, 20);
                     if (used == null) return;
                     session.updateSpec(SpecType.UNLEASHED);
@@ -329,15 +341,65 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Projectile projectile = event.getEntity();
         Entity shooter = projectile.getShooter();
 
-        if (shooter != null && shooter instanceof Player && projectile instanceof Arrow) {
+        if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
 
-            Player owner = (Player) shooter;
+            Object test = projectile.getMetadata("launcher").get(0).value();
+
+            if (!(test instanceof ItemStack)) return;
+
+            ItemStack launcher = (ItemStack) test;
+
+            final Player owner = (Player) shooter;
+            final Location targetLoc = projectile.getLocation();
+
+            final boolean unleashedBow = ItemUtil.isUnleashedBow(launcher);
+            final boolean masterBow = ItemUtil.isMasterBow(launcher);
+
+            if (unleashedBow || masterBow) {
+                final Potion brewedPotion = new Potion(PotionType.SLOWNESS);
+                brewedPotion.setLevel(PotionType.SLOWNESS.getMaxLevel());
+                brewedPotion.setSplash(true);
+
+                IntegratedRunnable vacuum = new IntegratedRunnable() {
+                    @Override
+                    public boolean run(int times) {
+                        ThrownPotion potion = (ThrownPotion) targetLoc.getWorld().spawnEntity(targetLoc, EntityType.SPLASH_POTION);
+                        potion.setItem(brewedPotion.toItemStack(1));
+                        for (Entity e : potion.getNearbyEntities(2, 2, 2)) {
+                            if (e instanceof Item) {
+                                e.teleport(owner);
+                            }
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    public void end() {
+                        ThrownPotion potion = (ThrownPotion) targetLoc.getWorld().spawnEntity(targetLoc, EntityType.SPLASH_POTION);
+                        potion.setItem(brewedPotion.toItemStack(1));
+                        for (Entity e : potion.getNearbyEntities(2, 2, 2)) {
+                            if (e instanceof Item) {
+                                e.teleport(owner);
+                                continue;
+                            }
+                            if (e instanceof Monster || e instanceof Player) {
+                                if (e instanceof Player) {
+                                    if (masterBow || !PvPComponent.allowsPvP(owner, (Player) e)) continue;
+                                }
+                                e.setFireTicks(20 * (unleashedBow ? 6 : 3));
+                            }
+                        }
+                    }
+                };
+                TimedRunnable runnable = new TimedRunnable(vacuum, 3);
+                runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 1, 10));
+            }
+
             CustomItemSession session = getSession(owner);
-            Location targetLoc = event.getEntity().getLocation();
 
             if (session.canSpec(SpecType.ANIMAL_BOW)) {
                 Specs used;
-                if (ItemUtil.hasBatBow(owner)) {
+                if (ItemUtil.isBatBow(launcher)) {
                     used = callSpec(owner, targetLoc, Specs.MOB_ATTACK);
                     if (used == null) return;
                     session.updateSpec(SpecType.ANIMAL_BOW);
@@ -346,7 +408,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Strange.mobBarrage(owner, targetLoc, EntityType.BAT);
                             break;
                     }
-                } else if (ItemUtil.hasChickenBow(owner)) {
+                } else if (ItemUtil.isChickenBow(launcher)) {
                     used = callSpec(owner, targetLoc, Specs.MOB_ATTACK);
                     if (used == null) return;
                     session.updateSpec(SpecType.ANIMAL_BOW);
@@ -360,7 +422,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             if (!session.canSpec(SpecType.FEAR)) {
 
-                if (ItemUtil.hasFearBow(owner)) {
+                if (ItemUtil.isFearBow(launcher)) {
                     if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
 
                         server.getPluginManager().callEvent(new RapidHitEvent(owner));
@@ -398,10 +460,16 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Projectile projectile = event.getEntity();
         Entity shooter = projectile.getShooter();
 
-        if (shooter != null && shooter instanceof Player && projectile instanceof Arrow) {
+        if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
+
+            Object test = projectile.getMetadata("launcher").get(0).value();
+
+            if (!(test instanceof ItemStack)) return;
+
+            ItemStack launcher = (ItemStack) test;
 
             final Location location = projectile.getLocation();
-            if (ItemUtil.hasBatBow((Player) shooter)) {
+            if (ItemUtil.isBatBow(launcher)) {
 
                 if (!ChanceUtil.getChance(5)) return;
                 server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -410,6 +478,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     public void run() {
 
                         final Bat bat = (Bat) location.getWorld().spawnEntity(location, EntityType.BAT);
+                        bat.setRemoveWhenFarAway(true);
                         server.getScheduler().runTaskLater(inst, new Runnable() {
 
                             @Override
@@ -425,7 +494,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                         }, 20 * 3);
                     }
                 }, 3);
-            } else if (ItemUtil.hasChickenBow((Player) shooter)) {
+            } else if (ItemUtil.isChickenBow(launcher)) {
 
                 if (!ChanceUtil.getChance(5)) return;
                 server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -434,6 +503,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     public void run() {
 
                         final Chicken chicken = (Chicken) location.getWorld().spawnEntity(location, EntityType.CHICKEN);
+                        chicken.setRemoveWhenFarAway(true);
                         server.getScheduler().runTaskLater(inst, new Runnable() {
 
                             @Override
@@ -807,32 +877,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     player.updateInventory();
                 }
             }, 1);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onEntityDeath(EntityDeathEvent event) {
-
-        LivingEntity damaged = event.getEntity();
-        Player player = damaged.getKiller();
-
-        if (player != null) {
-
-            World w = player.getWorld();
-            Location pLocation = player.getLocation();
-
-            List<ItemStack> drops = event.getDrops();
-
-            if (drops.size() > 0) {
-                if (ItemUtil.hasUnleashedBow(player) || ItemUtil.hasMasterBow(player) && !(damaged instanceof Player)) {
-
-                    for (ItemStack is : ItemUtil.clone(drops.toArray(new ItemStack[drops.size()]))) {
-                        if (is != null) w.dropItemNaturally(pLocation, is);
-                    }
-                    drops.clear();
-                    ChatUtil.sendNotice(player, "Your Bow releases a bright flash.");
-                }
-            }
         }
     }
 

@@ -13,6 +13,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
@@ -40,7 +42,15 @@ public class ProjectileWatchingComponent extends BukkitComponent implements List
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBowFire(EntityShootBowEvent event) {
 
-        startTracker(event.getProjectile(), event.getForce());
+        Entity p = event.getProjectile();
+
+        startTracker(p, event.getForce());
+
+        ItemStack bow = event.getBow();
+
+        if (bow != null) {
+            p.setMetadata("launcher", new FixedMetadataValue(inst, bow));
+        }
     }
 
     // Not entity
