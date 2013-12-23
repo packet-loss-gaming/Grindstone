@@ -245,7 +245,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             Specs used;
             if (session.canSpec(SpecType.FEAR)) {
-                if (ItemUtil.hasFearSword(owner)) {
+                if (ItemUtil.hasFearSword(owner) && launcher == null) {
                     used = callSpec(owner, target, 0, 6);
                     if (used == null) return;
                     session.updateSpec(SpecType.FEAR);
@@ -295,7 +295,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
 
             if (session.canSpec(SpecType.UNLEASHED)) {
-                if (ItemUtil.hasUnleashedSword(owner)) {
+                if (ItemUtil.hasUnleashedSword(owner) && launcher == null) {
                     used = callSpec(owner, target, 11, 17);
                     if (used == null) return;
                     session.updateSpec(SpecType.UNLEASHED);
@@ -369,7 +369,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     public boolean run(int times) {
                         ThrownPotion potion = (ThrownPotion) targetLoc.getWorld().spawnEntity(targetLoc, EntityType.SPLASH_POTION);
                         potion.setItem(brewedPotion.toItemStack(1));
-                        for (Entity e : potion.getNearbyEntities(2, 2, 2)) {
+                        for (Entity e : potion.getNearbyEntities(4, 4, 4)) {
                             if (e instanceof Item) {
                                 e.teleport(owner);
                             }
@@ -381,7 +381,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     public void end() {
                         ThrownPotion potion = (ThrownPotion) targetLoc.getWorld().spawnEntity(targetLoc, EntityType.SPLASH_POTION);
                         potion.setItem(brewedPotion.toItemStack(1));
-                        for (Entity e : potion.getNearbyEntities(2, 2, 2)) {
+                        for (Entity e : potion.getNearbyEntities(4, 4, 4)) {
                             if (e instanceof Item) {
                                 e.teleport(owner);
                                 continue;
