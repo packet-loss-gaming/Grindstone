@@ -1,7 +1,6 @@
 package com.skelril.aurora.admin;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.CommandBookUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -17,9 +16,6 @@ import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -49,12 +45,12 @@ public class ShutdownComponent extends BukkitComponent {
         public void shutdownCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             int delay = 60;
-            long expectedDowntime = TimeUnit.SECONDS.toMillis(30);
+            String expectedDowntime = "30 seconds";
             if (args.argsLength() > 0) {
                 try {
                     delay = Math.min(120, Math.max(10, Integer.parseInt(args.getString(0))));
                     if (args.argsLength() > 1) {
-                        expectedDowntime = CommandBookUtil.matchDate(args.getString(1));
+                        expectedDowntime = args.getJoinedStrings(1).trim();
                     }
                 } catch (NumberFormatException ex) {
                     throw new CommandException("Invalid time entered!");
@@ -65,10 +61,10 @@ public class ShutdownComponent extends BukkitComponent {
     }
 
     private int seconds = 0;
-    private long downTime = 0;
+    private String downTime;
     private BukkitTask task = null;
 
-    public void shutdown(final int assignedSeconds, long expectedDownTime) {
+    public void shutdown(final int assignedSeconds, String expectedDownTime) {
 
         this.downTime = expectedDownTime;
 
@@ -81,8 +77,6 @@ public class ShutdownComponent extends BukkitComponent {
 
         if (task != null) return;
 
-        final NumberFormat formatter = new DecimalFormat("#");
-
         // New Task
         task = inst.getServer().getScheduler().runTaskTimer(inst, new Runnable() {
 
@@ -92,7 +86,7 @@ public class ShutdownComponent extends BukkitComponent {
                 server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
                 if (seconds > 0 && seconds % 5 == 0 || seconds <= 10 && seconds > 0) {
                     Bukkit.broadcastMessage(ChatColor.RED + "Shutting down in " + seconds + " seconds - for "
-                            + formatter.format(downTime / 1000) + " seconds of downtime!");
+                            + downTime + " seconds of downtime!");
                 } else if (seconds < 1) {
                     Bukkit.broadcastMessage(ChatColor.RED + "Shutting down!");
                     server.shutdown();
