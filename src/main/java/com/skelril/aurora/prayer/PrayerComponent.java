@@ -112,13 +112,13 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         }
     }
 
-    public Prayer constructPrayer(Player player, PrayerType type) throws UnsupportedPrayerException {
+    public static Prayer constructPrayer(Player player, PrayerType type) throws UnsupportedPrayerException {
 
         Validate.notNull(type);
         return constructPrayer(player, type, type.getDefaultTime());
     }
 
-    public Prayer constructPrayer(Player player, PrayerType type, long maxDuration) throws UnsupportedPrayerException {
+    public static Prayer constructPrayer(Player player, PrayerType type, long maxDuration) throws UnsupportedPrayerException {
 
         Validate.notNull(player);
         Validate.notNull(type);

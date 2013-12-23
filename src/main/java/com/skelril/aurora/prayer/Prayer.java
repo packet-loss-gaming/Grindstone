@@ -15,7 +15,7 @@ public class Prayer implements Comparable<Prayer> {
     private long maxDuration;
 
 
-    public Prayer(Player player, AbstractEffect abstractEffect, long maxDuration) {
+    protected Prayer(Player player, AbstractEffect abstractEffect, long maxDuration) {
 
         this.player = player;
         this.abstractEffect = abstractEffect;
