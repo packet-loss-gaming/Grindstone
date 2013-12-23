@@ -236,7 +236,8 @@ public class EnvironmentUtil {
             BlockID.WORKBENCH, BlockID.ENCHANTMENT_TABLE,
             BlockID.BEACON, BlockID.ANVIL, BlockID.LEVER,
             BlockID.STONE_BUTTON, BlockID.WOODEN_BUTTON,
-            BlockID.WOODEN_DOOR
+            BlockID.WOODEN_DOOR, BlockID.FENCE_GATE,
+            BlockID.TRAP_DOOR
     };
 
     public static boolean isInteractiveBlock(Block block) {
