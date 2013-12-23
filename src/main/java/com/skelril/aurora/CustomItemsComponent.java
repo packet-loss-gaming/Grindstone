@@ -35,6 +35,7 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitTask;
@@ -355,7 +356,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             final boolean unleashedBow = ItemUtil.isUnleashedBow(launcher);
             final boolean masterBow = ItemUtil.isMasterBow(launcher);
 
-            if (unleashedBow || masterBow) {
+            if ((unleashedBow || masterBow) && !projectile.hasMetadata("splashed")) {
+
+                projectile.setMetadata("splashed", new FixedMetadataValue(inst, true));
+
                 final Potion brewedPotion = new Potion(PotionType.SLOWNESS);
                 brewedPotion.setLevel(PotionType.SLOWNESS.getMaxLevel());
                 brewedPotion.setSplash(true);
