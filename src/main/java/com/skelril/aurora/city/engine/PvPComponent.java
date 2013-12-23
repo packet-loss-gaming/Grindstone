@@ -13,6 +13,7 @@ import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.exceptions.UnknownPluginException;
+import com.skelril.aurora.homes.HomeManagerComponent;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -128,8 +129,8 @@ public class PvPComponent extends BukkitComponent implements Listener {
 
         if (attackerSession.hasPvPOn() && defenderSession.hasPvPOn()) {
 
-            String attackerHome = getHome(attacker);
-            String defenderHome = getHome(defender);
+            String attackerHome = HomeManagerComponent.getHomeName(attacker);
+            String defenderHome = HomeManagerComponent.getHomeName(defender);
 
             if (!attackerSession.useSafeSpots()) attackerHome = "";
             if (!defenderSession.useSafeSpots()) defenderHome = "";
@@ -161,16 +162,6 @@ public class PvPComponent extends BukkitComponent implements Listener {
             return attackerApplicable.allows(DefaultFlag.PVP) && defenderApplicable.allows(DefaultFlag.PVP);
         }
         return false;
-    }
-
-    private static String getHome(String player) {
-
-        return player.toLowerCase() + "'s-house";
-    }
-
-    private static String getHome(Player player) {
-
-        return getHome(player.getName());
     }
 
     // PvP Session

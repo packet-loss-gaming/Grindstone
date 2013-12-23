@@ -1,4 +1,4 @@
-package com.skelril.aurora.easycommandsystem;
+package com.skelril.aurora.homes;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.PlayerUtil;
@@ -122,7 +122,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 Player player = (Player) sender;
 
                 RegionManager manager = WG.getRegionManager(player.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHome(player));
+                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
                 if (region == null) throw new CommandException("You do not have a home in this world!");
                 District district = getDistrict(region.getParent().getId().replace("-district", ""));
 
@@ -186,7 +186,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 Player player = (Player) sender;
 
                 RegionManager manager = WG.getRegionManager(player.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHome(player));
+                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
                 if (region == null) throw new CommandException("You do not have a home in this world!");
                 RegionDBUtil.addToDomain(region.getMembers(), args.getPaddedSlice(1, 0), 0);
                 try {
@@ -209,7 +209,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 Player player = (Player) sender;
 
                 RegionManager manager = WG.getRegionManager(player.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHome(player));
+                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
                 if (region == null) throw new CommandException("You do not have a home in this world!");
                 RegionDBUtil.removeFromDomain(region.getMembers(), args.getPaddedSlice(1, 0), 0);
                 try {
@@ -232,7 +232,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 Player player = (Player) sender;
                 String flag = args.getJoinedStrings(0);
 
-                Bukkit.dispatchCommand(sender, "rg flag " + getHome(player) + " " + flag);
+                Bukkit.dispatchCommand(sender, "rg flag " + getHomeName(player) + " " + flag);
             } else {
                 throw new CommandException("You must be a player to use this command.");
             }
@@ -253,7 +253,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
             if (args.argsLength() == 0) {
                 RegionManager manager = WG.getRegionManager(((Player) sender).getWorld());
-                ProtectedRegion home = manager.getRegion(getHome(sender.getName()));
+                ProtectedRegion home = manager.getRegion(getHomeName(sender.getName()));
 
                 if (home == null) {
                     throw new CommandException("You don't live in a district and did not "
@@ -279,7 +279,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 Player player = (Player) sender;
 
                 RegionManager manager = WG.getRegionManager(player.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHome(player));
+                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
                 if (region != null) {
                     if (args.hasFlag('y')) {
                         throw new CommandException("You already have a home in this world!");
@@ -320,9 +320,9 @@ public class HomeManagerComponent extends BukkitComponent {
                         throw new CommandException("Sorry, you cannot currently afford this house.");
                     }
                     try {
-                        if (RegionUtil.renameRegion(manager, region.getId(), getHome(player), true)) {
+                        if (RegionUtil.renameRegion(manager, region.getId(), getHomeName(player), true)) {
 
-                            region = manager.getRegion(getHome(player));
+                            region = manager.getRegion(getHomeName(player));
                             region.getOwners().addPlayer(player.getName());
                             region.setFlag(DefaultFlag.PRICE, null);
                             manager.addRegion(region);
@@ -355,7 +355,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 Player player = (Player) sender;
 
                 RegionManager manager = WG.getRegionManager(player.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHome(player));
+                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
                 if (region == null) throw new CommandException("You do not have a home in this world!");
 
                 // Get the price and send it to the player
@@ -420,7 +420,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
                 if (args.argsLength() == 2) {
                     player = args.getString(0).toLowerCase();
-                    regionString = getHome(player);
+                    regionString = getHomeName(player);
                     district = args.getString(1).toLowerCase().replace("-district", "");
                 } else {
                     player = null;
@@ -577,7 +577,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 String player = args.getString(0);
                 String flag = args.getJoinedStrings(1);
 
-                Bukkit.dispatchCommand(sender, "rg flag " + getHome(player) + " " + flag);
+                Bukkit.dispatchCommand(sender, "rg flag " + getHomeName(player) + " " + flag);
             } else {
                 throw new CommandException("You must be a player to use this command.");
             }
@@ -594,7 +594,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 String district = args.getString(1).toLowerCase().replace("-district", "");
 
                 RegionManager manager = WG.getRegionManager(admin.getWorld());
-                ProtectedRegion existing = manager.getRegionExact(getHome(player));
+                ProtectedRegion existing = manager.getRegionExact(getHomeName(player));
                 if (existing == null) throw new CommandException("That player doesn't have a home.");
                 Selection sel = WE.getSelection(admin);
                 if (sel == null) throw new CommandException("Select a region with WorldEdit first.");
@@ -606,11 +606,11 @@ public class HomeManagerComponent extends BukkitComponent {
                     Polygonal2DSelection polySel = (Polygonal2DSelection) sel;
                     int minY = polySel.getNativeMinimumPoint().getBlockY();
                     int maxY = polySel.getNativeMaximumPoint().getBlockY();
-                    region = new ProtectedPolygonalRegion(getHome(player), polySel.getNativePoints(), minY, maxY);
+                    region = new ProtectedPolygonalRegion(getHomeName(player), polySel.getNativePoints(), minY, maxY);
                 } else if (sel instanceof CuboidSelection) {
                     BlockVector min = sel.getNativeMinimumPoint().toBlockVector();
                     BlockVector max = sel.getNativeMaximumPoint().toBlockVector();
-                    region = new ProtectedCuboidRegion(getHome(player), min, max);
+                    region = new ProtectedCuboidRegion(getHomeName(player), min, max);
                 } else {
                     throw new CommandException("The type of region selected in WorldEdit is unsupported.");
                 }
@@ -653,7 +653,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 String player = args.getString(0).toLowerCase();
 
                 RegionManager manager = WG.getRegionManager(admin.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHome(player));
+                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
                 if (region == null) throw new CommandException("That player doesn't have a home.");
 
                 manager.removeRegion(region.getId());
@@ -680,14 +680,14 @@ public class HomeManagerComponent extends BukkitComponent {
         }
     }
 
-    private String getHome(String player) {
+    public static String getHomeName(String player) {
 
         return player.toLowerCase() + "'s-house";
     }
 
-    private String getHome(Player player) {
+    public static String getHomeName(Player player) {
 
-        return getHome(player.getName());
+        return getHomeName(player.getName());
     }
 
     private District getDistrict(String district) {
