@@ -40,6 +40,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -60,8 +61,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     private SessionComponent sessions;
     @InjectComponent
     private RogueComponent rogueComponent;
-
-    private Map<Integer, Float> arrowForce = new HashMap<>();
 
     private final int WATCH_DISTANCE = 14;
     private final int WATCH_DISTANCE_SQ = WATCH_DISTANCE * WATCH_DISTANCE;
@@ -258,7 +257,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         if (isNinja(player) && hasPoisonArrows(player) && inst.hasPermission(player, "aurora.ninja.guild")) {
 
             if (p instanceof Arrow) {
-                arrowForce.put(p.getEntityId(), event.getForce());
+                p.setMetadata("ninja-arrow", new FixedMetadataValue(inst, true));
             }
         }
     }
@@ -288,12 +287,12 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (p instanceof Arrow) {
-            int id = p.getEntityId();
-            if (arrowForce.containsKey(id)) {
-                poisonArrow((Arrow) p, arrowForce.get(id));
-                arrowForce.remove(id);
-            }
+        if (p instanceof Arrow && p.hasMetadata("ninja-arrow") && p.hasMetadata("launch-force")) {
+            Object test = p.getMetadata("launch-force").get(0).value();
+
+            if (!(test instanceof Float)) return;
+
+            poisonArrow((Arrow) p, (Float) test);
         }
     }
 

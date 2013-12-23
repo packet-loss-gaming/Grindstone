@@ -51,6 +51,7 @@ public class ProjectileWatchingComponent extends BukkitComponent implements List
         if (bow != null) {
             p.setMetadata("launcher", new FixedMetadataValue(inst, bow));
         }
+        p.setMetadata("launch-force", new FixedMetadataValue(inst, event.getForce()));
     }
 
     // Not entity

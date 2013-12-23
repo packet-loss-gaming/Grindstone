@@ -34,11 +34,14 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Rogue", desc = "Speed and strength is always the answer.")
@@ -52,8 +55,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     private SessionComponent sessions;
     @InjectComponent
     private NinjaComponent ninjaComponent;
-
-    private List<Snowball> snowBalls = new ArrayList<>();
 
     @Override
     public void enable() {
@@ -134,7 +135,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             Snowball snowball = player.launchProjectile(Snowball.class);
             Vector vector = new Vector(ChanceUtil.getRandom(2.0), 1, ChanceUtil.getRandom(2.0));
             snowball.setVelocity(snowball.getVelocity().multiply(vector));
-            snowBalls.add(snowball);
+            snowball.setMetadata("rogue-snowball", new FixedMetadataValue(inst, true));
         }
     }
 
@@ -184,10 +185,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (p instanceof Snowball && snowBalls.contains(p)) {
-
-            // Remove snow ball first to prevent memory leak
-            snowBalls.remove(p);
+        if (p instanceof Snowball && p.hasMetadata("rogue-snowball")) {
 
             // Create the explosion if no players are around that don't allow PvP
             final Player shooter = (Player) p.getShooter();
