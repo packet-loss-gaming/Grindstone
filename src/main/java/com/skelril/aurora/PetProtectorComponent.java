@@ -122,7 +122,7 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         if (entity instanceof LivingEntity && entity instanceof Vehicle) {
             Vehicle horse = (Vehicle) entity;
             Entity passenger = horse.getPassenger();
-            if (passenger != null) {
+            if (passenger != null && passenger instanceof Player) {
                 return true;
             }
         }
