@@ -14,7 +14,8 @@ import com.skelril.aurora.events.PrayerEvent;
 import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.exceptions.InvalidPrayerException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
-import com.skelril.aurora.prayer.PrayerFX.*;
+import com.skelril.aurora.prayer.PrayerFX.AbstractPrayer;
+import com.skelril.aurora.prayer.PrayerFX.AbstractTriggeredPrayer;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -124,110 +125,10 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         Validate.notNull(maxDuration);
 
         AbstractPrayer prayerEffects;
-
-        switch (type) {
-
-            case ABSORPTION:
-                prayerEffects = new AbsorptionFX();
-                break;
-            case MERLIN:
-                prayerEffects = new MerlinFX();
-                break;
-            case ANTIFIRE:
-                prayerEffects = new AntifireFX();
-                break;
-            case ARROW:
-                prayerEffects = new ArrowFX();
-                break;
-            case BLINDNESS:
-                prayerEffects = new BlindnessFX();
-                break;
-            case BUTTERFINGERS:
-                prayerEffects = new ButterFingersFX();
-                break;
-            case CANNON:
-                prayerEffects = new CannonFX();
-                break;
-            case DEADLYDEFENSE:
-                prayerEffects = new DeadlyDefenseFX();
-                break;
-            case DIGGYDIGGY:
-                prayerEffects = new DiggyDiggyFX();
-                break;
-            case DOOM:
-                prayerEffects = new DoomFX();
-                break;
-            case FIRE:
-                prayerEffects = new FireFX();
-                break;
-            case FLASH:
-                prayerEffects = new FlashFX();
-                break;
-            case GLASSBOX:
-                prayerEffects = new GlassBoxFX();
-                break;
-            case SLAP:
-                prayerEffects = new SlapFX();
-                break;
-            case GOD:
-                prayerEffects = new GodFX();
-                break;
-            case HEALTHBOOST:
-                prayerEffects = new HealthBoostFX();
-                break;
-            case HEALTH:
-                prayerEffects = new HealthFX();
-                break;
-            case HULK:
-                prayerEffects = new HulkFX();
-                break;
-            case INVENTORY:
-                prayerEffects = new InventoryFX();
-                break;
-            case INVISIBILITY:
-                prayerEffects = new InvisibilityFX();
-                break;
-            case MUSHROOM:
-                prayerEffects = new MushroomFX();
-                break;
-            case NIGHTVISION:
-                prayerEffects = new NightVisionFX();
-                break;
-            case POISON:
-                prayerEffects = new PoisonFX();
-                break;
-            case POWER:
-                prayerEffects = new PowerFX();
-                break;
-            case RACKET:
-                prayerEffects = new RacketFX();
-                break;
-            case ROCKET:
-                prayerEffects = new RocketFX();
-                break;
-            case SMOKE:
-                prayerEffects = new SmokeFX();
-                break;
-            case SPEED:
-                prayerEffects = new SpeedFX();
-                break;
-            case STARVATION:
-                prayerEffects = new StarvationFX();
-                break;
-            case FIREBALL:
-                prayerEffects = new ThrownFireballFX();
-                break;
-            case TNT:
-                prayerEffects = new TNTFX();
-                break;
-            case WALK:
-                prayerEffects = new WalkFX();
-                break;
-            case ZOMBIE:
-                prayerEffects = new ZombieFX();
-                break;
-            default:
-                throw new UnsupportedPrayerException();
+        try {
+            prayerEffects = (AbstractPrayer) type.getFXClass().newInstance();
+        } catch (ClassCastException | InstantiationException | IllegalAccessException e) {
+            throw new UnsupportedPrayerException();
         }
 
         return new Prayer(player, prayerEffects, maxDuration);
