@@ -45,11 +45,15 @@ public class EnvironmentUtil {
         return time == ((0 - 8 + 24) * 1000);
     }
 
-    private static final int[] cropBlocks = new int[]{
-            BlockID.CROPS, BlockID.MELON_STEM,
-            BlockID.CARROTS, BlockID.POTATOES,
-            BlockID.PUMPKIN_STEM
-    };
+    private static final Set<Integer> cropBlocks = new HashSet<>();
+
+    static {
+        cropBlocks.add(BlockID.CROPS);
+        cropBlocks.add(BlockID.MELON_STEM);
+        cropBlocks.add(BlockID.CARROTS);
+        cropBlocks.add(BlockID.POTATOES);
+        cropBlocks.add(BlockID.PUMPKIN_STEM);
+    }
 
     public static boolean isCropBlock(Block block) {
 
@@ -58,19 +62,20 @@ public class EnvironmentUtil {
 
     public static boolean isCropBlock(int block) {
 
-        for (int cropBlock : cropBlocks) {
-            if (cropBlock == block) {
-                return true;
-            }
-        }
-
-        return false;
+        return cropBlocks.contains(block);
     }
 
-    private static final int[] shrubBlocks = new int[]{
-            BlockID.DEAD_BUSH, BlockID.LONG_GRASS, BlockID.RED_FLOWER,
-            BlockID.YELLOW_FLOWER, BlockID.DOUBLE_PLANT
-    };
+    private static final Set<Integer> shrubBlocks = new HashSet<>();
+
+    static {
+        shrubBlocks.add(BlockID.DEAD_BUSH);
+        shrubBlocks.add(BlockID.LONG_GRASS);
+        shrubBlocks.add(BlockID.RED_FLOWER);
+        shrubBlocks.add(BlockID.YELLOW_FLOWER);
+        shrubBlocks.add(BlockID.DOUBLE_PLANT);
+        shrubBlocks.add(BlockID.RED_MUSHROOM);
+        shrubBlocks.add(BlockID.BROWN_MUSHROOM);
+    }
 
     public static boolean isShrubBlock(Block block) {
 
@@ -79,27 +84,14 @@ public class EnvironmentUtil {
 
     public static boolean isShrubBlock(int block) {
 
-        for (int aShrubBlock : shrubBlocks) {
-            if (aShrubBlock == block) return true;
-        }
-        return false;
+        return shrubBlocks.contains(block) || isCropBlock(block);
     }
 
-    private static final int[] shrubBlockDrops = new int[]{
-            ItemID.SEEDS, BlockID.RED_FLOWER, BlockID.YELLOW_FLOWER
-    };
+    private static final Set<Integer> invaluableOres = new HashSet<>();
 
-    public static boolean isShrubBlockDrop(int block) {
-
-        for (int aShrubBlockDrop : shrubBlockDrops) {
-            if (aShrubBlockDrop == block) return true;
-        }
-        return false;
+    static {
+        invaluableOres.add(BlockID.COAL_ORE);
     }
-
-    private static final int[] invaluableOres = new int[]{
-            BlockID.COAL_ORE
-    };
 
     public static boolean isOre(Block block) {
 
@@ -108,10 +100,7 @@ public class EnvironmentUtil {
 
     public static boolean isOre(int block) {
 
-        for (int ore : invaluableOres) {
-            if (ore == block) return true;
-        }
-        return isValuableOre(block);
+        return invaluableOres.contains(block) || isValuableOre(block);
     }
 
     public static boolean isValuableBlockOrOre(Block block) {
@@ -129,29 +118,36 @@ public class EnvironmentUtil {
         return isValuableBlock(block.getTypeId());
     }
 
-    private static final int[] valuableBlocks = new int[]{
-            BlockID.GOLD_BLOCK, BlockID.LAPIS_LAZULI_BLOCK,
-            BlockID.IRON_BLOCK, BlockID.DIAMOND_BLOCK,
-            BlockID.EMERALD_BLOCK, BlockID.BEACON,
-            BlockID.COMMAND_BLOCK, BlockID.COAL_BLOCK
-    };
+    private static final Set<Integer> valuableBlocks = new HashSet<>();
+
+    static {
+        valuableBlocks.add(BlockID.GOLD_BLOCK);
+        valuableBlocks.add(BlockID.LAPIS_LAZULI_BLOCK);
+        valuableBlocks.add(BlockID.IRON_BLOCK);
+        valuableBlocks.add(BlockID.DIAMOND_BLOCK);
+        valuableBlocks.add(BlockID.EMERALD_BLOCK);
+        valuableBlocks.add(BlockID.BEACON);
+        valuableBlocks.add(BlockID.COMMAND_BLOCK);
+        valuableBlocks.add(BlockID.COAL_BLOCK);
+    }
 
     public static boolean isValuableBlock(int block) {
 
-        for (int valuableBlock : valuableBlocks) {
-            if (valuableBlock == block) {
-                return true;
-            }
-        }
-        return false;
+        return valuableBlocks.contains(block);
     }
 
-    private static final int[] valuableOres = new int[]{
-            BlockID.GOLD_ORE, BlockID.LAPIS_LAZULI_ORE,
-            BlockID.IRON_ORE, BlockID.DIAMOND_ORE,
-            BlockID.REDSTONE_ORE, BlockID.GLOWING_REDSTONE_ORE,
-            BlockID.EMERALD_ORE, BlockID.QUARTZ_ORE
-    };
+    private static final Set<Integer> valuableOres = new HashSet<>();
+
+    static {
+        valuableOres.add(BlockID.GOLD_ORE);
+        valuableOres.add(BlockID.LAPIS_LAZULI_ORE);
+        valuableOres.add(BlockID.IRON_ORE);
+        valuableOres.add(BlockID.DIAMOND_ORE);
+        valuableOres.add(BlockID.REDSTONE_ORE);
+        valuableOres.add(BlockID.GLOWING_REDSTONE_ORE);
+        valuableOres.add(BlockID.EMERALD_ORE);
+        valuableOres.add(BlockID.QUARTZ_ORE);
+    }
 
     public static boolean isValuableOre(Block block) {
 
@@ -160,12 +156,7 @@ public class EnvironmentUtil {
 
     public static boolean isValuableOre(int block) {
 
-        for (int valuableOre : valuableOres) {
-            if (valuableOre == block) {
-                return true;
-            }
-        }
-        return false;
+        return valuableOres.contains(block);
     }
 
     public static ItemStack getOreDrop(Block block, boolean hasSilkTouch) {
@@ -209,13 +200,20 @@ public class EnvironmentUtil {
         }
     }
 
-    private static final int[] containerBlocks = new int[]{
-            BlockID.BREWING_STAND, BlockID.CHEST,
-            BlockID.DISPENSER, BlockID.DROPPER,
-            BlockID.FURNACE, BlockID.BURNING_FURNACE,
-            BlockID.JUKEBOX, BlockID.ENDER_CHEST,
-            BlockID.TRAPPED_CHEST, BlockID.HOPPER
-    };
+    private static final Set<Integer> containerBlocks = new HashSet<>();
+
+    static {
+        containerBlocks.add(BlockID.BREWING_STAND);
+        containerBlocks.add(BlockID.CHEST);
+        containerBlocks.add(BlockID.DISPENSER);
+        containerBlocks.add(BlockID.DROPPER);
+        containerBlocks.add(BlockID.FURNACE);
+        containerBlocks.add(BlockID.BURNING_FURNACE);
+        containerBlocks.add(BlockID.JUKEBOX);
+        containerBlocks.add(BlockID.ENDER_CHEST);
+        containerBlocks.add(BlockID.TRAPPED_CHEST);
+        containerBlocks.add(BlockID.HOPPER);
+    }
 
     public static boolean isContainer(Block block) {
 
@@ -224,21 +222,23 @@ public class EnvironmentUtil {
 
     public static boolean isContainer(int block) {
 
-        for (int containerBlock : containerBlocks) {
-            if (containerBlock == block) {
-                return true;
-            }
-        }
-        return false;
+        return containerBlocks.contains(block);
     }
 
-    private static final int[] interactiveBlocks = new int[]{
-            BlockID.WORKBENCH, BlockID.ENCHANTMENT_TABLE,
-            BlockID.BEACON, BlockID.ANVIL, BlockID.LEVER,
-            BlockID.STONE_BUTTON, BlockID.WOODEN_BUTTON,
-            BlockID.WOODEN_DOOR, BlockID.FENCE_GATE,
-            BlockID.TRAP_DOOR
-    };
+    private static final Set<Integer> interactiveBlocks = new HashSet<>();
+
+    static {
+        interactiveBlocks.add(BlockID.WORKBENCH);
+        interactiveBlocks.add(BlockID.ENCHANTMENT_TABLE);
+        interactiveBlocks.add(BlockID.BEACON);
+        interactiveBlocks.add(BlockID.ANVIL);
+        interactiveBlocks.add(BlockID.LEVER);
+        interactiveBlocks.add(BlockID.STONE_BUTTON);
+        interactiveBlocks.add(BlockID.WOODEN_BUTTON);
+        interactiveBlocks.add(BlockID.WOODEN_DOOR);
+        interactiveBlocks.add(BlockID.FENCE_GATE);
+        interactiveBlocks.add(BlockID.TRAP_DOOR);
+    }
 
     public static boolean isInteractiveBlock(Block block) {
 
@@ -247,22 +247,15 @@ public class EnvironmentUtil {
 
     public static boolean isInteractiveBlock(int block) {
 
-        for (int interactiveBlock : interactiveBlocks) {
-            if (interactiveBlock == block) {
-                return true;
-            }
-        }
-        for (int interactiveBlock : containerBlocks) {
-            if (interactiveBlock == block) {
-                return true;
-            }
-        }
-        return isContainer(block);
+        return interactiveBlocks.contains(block) || isContainer(block);
     }
 
-    private static final int[] signBlocks = new int[]{
-            BlockID.SIGN_POST, BlockID.WALL_SIGN
-    };
+    private static final Set<Integer> signBlocks = new HashSet<>();
+
+    static {
+        signBlocks.add(BlockID.SIGN_POST);
+        signBlocks.add(BlockID.WALL_SIGN);
+    }
 
     public static boolean isSign(Block block) {
 
@@ -271,17 +264,15 @@ public class EnvironmentUtil {
 
     public static boolean isSign(int block) {
 
-        for (int sign : signBlocks) {
-            if (sign == block) {
-                return true;
-            }
-        }
-        return false;
+        return signBlocks.contains(block);
     }
 
-    private static final int[] waterBlocks = new int[]{
-            BlockID.WATER, BlockID.STATIONARY_WATER
-    };
+    private static final Set<Integer> waterBlocks = new HashSet<>();
+
+    static {
+        waterBlocks.add(BlockID.WATER);
+        waterBlocks.add(BlockID.STATIONARY_WATER);
+    }
 
     public static boolean isWater(Block block) {
 
@@ -290,17 +281,15 @@ public class EnvironmentUtil {
 
     public static boolean isWater(int block) {
 
-        for (int water : waterBlocks) {
-            if (water == block) {
-                return true;
-            }
-        }
-        return false;
+        return waterBlocks.contains(block);
     }
 
-    private static final int[] lavaBlocks = new int[]{
-            BlockID.LAVA, BlockID.STATIONARY_LAVA
-    };
+    private static final Set<Integer> lavaBlocks = new HashSet<>();
+
+    static {
+        lavaBlocks.add(BlockID.LAVA);
+        lavaBlocks.add(BlockID.STATIONARY_LAVA);
+    }
 
     public static boolean isLava(Block block) {
 
@@ -309,12 +298,7 @@ public class EnvironmentUtil {
 
     public static boolean isLava(int block) {
 
-        for (int lava : lavaBlocks) {
-            if (lava == block) {
-                return true;
-            }
-        }
-        return false;
+        return lavaBlocks.contains(block);
     }
 
     public static boolean isLiquid(int block) {
@@ -322,17 +306,19 @@ public class EnvironmentUtil {
         return isWater(block) || isLava(block);
     }
 
-    private static final Biome[] frozenBiomes = new Biome[]{
-            Biome.FROZEN_OCEAN, Biome.FROZEN_RIVER,
-            Biome.ICE_MOUNTAINS, Biome.ICE_PLAINS
-    };
+    private static final Set<Biome> frozenBiomes = new HashSet<>();
+
+    static {
+        frozenBiomes.add(Biome.FROZEN_OCEAN);
+        frozenBiomes.add(Biome.FROZEN_RIVER);
+        frozenBiomes.add(Biome.ICE_MOUNTAINS);
+        frozenBiomes.add(Biome.ICE_PLAINS);
+        frozenBiomes.add(Biome.ICE_PLAINS_SPIKES);
+    }
 
     public static boolean isFrozenBiome(Biome biome) {
 
-        for (Biome aFrozenBiome : frozenBiomes) {
-            if (aFrozenBiome == biome) return true;
-        }
-        return false;
+        return frozenBiomes.contains(biome);
     }
 
     public static void generateRadialEffect(Location location, Effect effect) {
