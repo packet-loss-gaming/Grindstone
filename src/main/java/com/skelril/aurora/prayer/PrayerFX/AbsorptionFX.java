@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-public class AbsorptionFX extends AbstractPrayer {
+public class AbsorptionFX extends AbstractEffect {
 
     private static final PotionEffect effect = new PotionEffect(PotionEffectType.ABSORPTION, 20 * 600, 4);
 

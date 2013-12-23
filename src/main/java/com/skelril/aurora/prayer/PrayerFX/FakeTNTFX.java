@@ -4,7 +4,7 @@ import com.skelril.aurora.prayer.PrayerType;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-public class FakeTNTFX extends AbstractPrayer {
+public class FakeTNTFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

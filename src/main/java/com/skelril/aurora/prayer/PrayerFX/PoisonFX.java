@@ -7,7 +7,7 @@ import org.bukkit.potion.PotionEffectType;
 /**
  * Author: Turtle9598
  */
-public class PoisonFX extends AbstractPrayer {
+public class PoisonFX extends AbstractEffect {
 
     private static final PotionEffect effect = new PotionEffect(PotionEffectType.POISON, 20 * 600, 2);
 

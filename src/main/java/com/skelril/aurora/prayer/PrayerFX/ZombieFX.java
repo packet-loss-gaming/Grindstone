@@ -7,7 +7,7 @@ import org.bukkit.entity.Zombie;
 /**
  * Author: Turtle9598
  */
-public class ZombieFX extends AbstractPrayer {
+public class ZombieFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

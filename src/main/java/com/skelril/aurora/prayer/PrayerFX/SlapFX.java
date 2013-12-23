@@ -10,7 +10,7 @@ import java.util.Random;
 /**
  * Author: Turtle9598
  */
-public class SlapFX extends AbstractPrayer {
+public class SlapFX extends AbstractEffect {
 
     private final Random random = new Random();
 

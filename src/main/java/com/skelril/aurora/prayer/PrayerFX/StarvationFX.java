@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 /**
  * Author: Turtle9598
  */
-public class StarvationFX extends AbstractPrayer {
+public class StarvationFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

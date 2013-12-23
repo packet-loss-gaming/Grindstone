@@ -10,7 +10,7 @@ import org.bukkit.inventory.ItemStack;
 /**
  * Author: Turtle9598
  */
-public class InventoryFX extends AbstractPrayer {
+public class InventoryFX extends AbstractEffect {
 
     private int type, amount;
 

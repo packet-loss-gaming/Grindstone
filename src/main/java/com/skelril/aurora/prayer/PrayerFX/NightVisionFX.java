@@ -7,7 +7,7 @@ import org.bukkit.potion.PotionEffectType;
 /**
  * Author: Turtle9598
  */
-public class NightVisionFX extends AbstractPrayer {
+public class NightVisionFX extends AbstractEffect {
 
     private static final PotionEffect effect = new PotionEffect(PotionEffectType.NIGHT_VISION, 20 * 600, 1);
 

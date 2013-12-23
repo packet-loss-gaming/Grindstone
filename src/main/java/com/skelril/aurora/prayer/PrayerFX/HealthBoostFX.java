@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-public class HealthBoostFX extends AbstractPrayer {
+public class HealthBoostFX extends AbstractEffect {
 
     private static final PotionEffect effect = new PotionEffect(PotionEffectType.HEALTH_BOOST, 20 * 600, 4);
 

@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 /**
  * Author: Turtle9598
  */
-public class DeadlyDefenseFX extends AbstractPrayer {
+public class DeadlyDefenseFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

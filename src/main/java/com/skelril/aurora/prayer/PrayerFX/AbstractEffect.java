@@ -11,22 +11,22 @@ import java.util.Set;
 /**
  * Author: Turtle9598
  */
-public abstract class AbstractPrayer {
+public abstract class AbstractEffect {
 
     private final Set<PotionEffect> effects = new HashSet<>();
-    private final AbstractPrayer[] subFX;
+    private final AbstractEffect[] subFX;
 
-    public AbstractPrayer() {
+    public AbstractEffect() {
 
         this.subFX = null;
     }
 
-    public AbstractPrayer(AbstractPrayer[] subFX) {
+    public AbstractEffect(AbstractEffect[] subFX) {
 
         this.subFX = subFX;
     }
 
-    public AbstractPrayer(AbstractPrayer[] subFX, PotionEffect... effects) {
+    public AbstractEffect(AbstractEffect[] subFX, PotionEffect... effects) {
 
         this.subFX = subFX;
         Collections.addAll(this.effects, effects);
@@ -42,7 +42,7 @@ public abstract class AbstractPrayer {
     public void add(Player player) {
 
         if (subFX != null) {
-            for (AbstractPrayer aSubFX : subFX) {
+            for (AbstractEffect aSubFX : subFX) {
                 aSubFX.add(player);
             }
         }
@@ -52,7 +52,7 @@ public abstract class AbstractPrayer {
     public void clean(Player player) {
 
         if (subFX != null) {
-            for (AbstractPrayer aSubFX : subFX) {
+            for (AbstractEffect aSubFX : subFX) {
                 aSubFX.clean(player);
             }
         }

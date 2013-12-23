@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 /**
  * Author: Turtle9598
  */
-public class RacketFX extends AbstractPrayer {
+public class RacketFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

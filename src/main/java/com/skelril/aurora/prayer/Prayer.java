@@ -1,7 +1,7 @@
 package com.skelril.aurora.prayer;
 
-import com.skelril.aurora.prayer.PrayerFX.AbstractPrayer;
-import com.skelril.aurora.prayer.PrayerFX.AbstractTriggeredPrayer;
+import com.skelril.aurora.prayer.PrayerFX.AbstractEffect;
+import com.skelril.aurora.prayer.PrayerFX.AbstractTriggeredEffect;
 import org.bukkit.entity.Player;
 
 /**
@@ -10,15 +10,15 @@ import org.bukkit.entity.Player;
 public class Prayer implements Comparable<Prayer> {
 
     private final Player player;
-    private final AbstractPrayer abstractPrayer;
+    private final AbstractEffect abstractEffect;
     private final long startTime;
     private long maxDuration;
 
 
-    public Prayer(Player player, AbstractPrayer abstractPrayer, long maxDuration) {
+    public Prayer(Player player, AbstractEffect abstractEffect, long maxDuration) {
 
         this.player = player;
-        this.abstractPrayer = abstractPrayer;
+        this.abstractEffect = abstractEffect;
         this.startTime = System.currentTimeMillis();
         this.maxDuration = maxDuration;
     }
@@ -28,9 +28,9 @@ public class Prayer implements Comparable<Prayer> {
         return player;
     }
 
-    public AbstractPrayer getEffect() {
+    public AbstractEffect getEffect() {
 
-        return abstractPrayer;
+        return abstractEffect;
     }
 
     public long getStartTime() {
@@ -50,12 +50,12 @@ public class Prayer implements Comparable<Prayer> {
 
     public boolean hasTrigger() {
 
-        return abstractPrayer instanceof AbstractTriggeredPrayer;
+        return abstractEffect instanceof AbstractTriggeredEffect;
     }
 
     public Class getTriggerClass() {
 
-        return hasTrigger() ? ((AbstractTriggeredPrayer) abstractPrayer).getTriggerClass() : null;
+        return hasTrigger() ? ((AbstractTriggeredEffect) abstractEffect).getTriggerClass() : null;
     }
 
     @Override

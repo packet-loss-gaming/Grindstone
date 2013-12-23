@@ -9,7 +9,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 /**
  * Author: Turtle9598
  */
-public class ThrownFireballFX extends AbstractTriggeredPrayer {
+public class ThrownFireballFX extends AbstractTriggeredEffect {
 
     private long nextTime = -1;
 

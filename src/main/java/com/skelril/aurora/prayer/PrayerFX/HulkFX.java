@@ -8,9 +8,9 @@ import org.bukkit.potion.PotionEffectType;
 /**
  * Author: Turtle9598
  */
-public class HulkFX extends AbstractPrayer {
+public class HulkFX extends AbstractEffect {
 
-    private static final AbstractPrayer[] subFX = new AbstractPrayer[]{
+    private static final AbstractEffect[] subFX = new AbstractEffect[]{
             new InfiniteHungerFX()
     };
     private static PotionEffect[] effects = new PotionEffect[]{

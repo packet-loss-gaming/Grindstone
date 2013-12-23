@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 /**
  * Author: Turtle9598
  */
-public class InfiniteHungerFX extends AbstractPrayer {
+public class InfiniteHungerFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

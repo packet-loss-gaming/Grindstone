@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 /**
  * Author: Turtle9598
  */
-public class ArrowFX extends AbstractPrayer {
+public class ArrowFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

@@ -7,7 +7,7 @@ import org.bukkit.potion.PotionEffectType;
 /**
  * Author: Turtle9598
  */
-public class InvisibilityFX extends AbstractPrayer {
+public class InvisibilityFX extends AbstractEffect {
 
     private static final PotionEffect effect = new PotionEffect(PotionEffectType.INVISIBILITY, 20 * 600, 1);
 

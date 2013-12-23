@@ -5,9 +5,9 @@ import com.skelril.aurora.prayer.PrayerType;
 /**
  * Author: Turtle9598
  */
-public class DoomFX extends AbstractPrayer {
+public class DoomFX extends AbstractEffect {
 
-    private static final AbstractPrayer[] subFX = new AbstractPrayer[]{
+    private static final AbstractEffect[] subFX = new AbstractEffect[]{
             new SlapFX(), new PoisonFX(), new FakeTNTFX()
     };
 

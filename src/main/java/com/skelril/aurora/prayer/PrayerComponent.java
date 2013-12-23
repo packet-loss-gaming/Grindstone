@@ -14,8 +14,8 @@ import com.skelril.aurora.events.PrayerEvent;
 import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.exceptions.InvalidPrayerException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
-import com.skelril.aurora.prayer.PrayerFX.AbstractPrayer;
-import com.skelril.aurora.prayer.PrayerFX.AbstractTriggeredPrayer;
+import com.skelril.aurora.prayer.PrayerFX.AbstractEffect;
+import com.skelril.aurora.prayer.PrayerFX.AbstractTriggeredEffect;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -124,14 +124,14 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         Validate.notNull(type);
         Validate.notNull(maxDuration);
 
-        AbstractPrayer prayerEffects;
+        AbstractEffect prayerEffect;
         try {
-            prayerEffects = (AbstractPrayer) type.getFXClass().newInstance();
+            prayerEffect = (AbstractEffect) type.getFXClass().newInstance();
         } catch (ClassCastException | InstantiationException | IllegalAccessException e) {
             throw new UnsupportedPrayerException();
         }
 
-        return new Prayer(player, prayerEffects, maxDuration);
+        return new Prayer(player, prayerEffect, maxDuration);
     }
 
     @Override
@@ -203,11 +203,11 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
         if (!event.getAction().equals(Action.LEFT_CLICK_AIR)) return;
         for (Prayer prayer : getInfluences(player)) {
-            if (!integrityTest(player, prayer) || !(prayer.getEffect() instanceof AbstractTriggeredPrayer)) continue;
+            if (!integrityTest(player, prayer) || !(prayer.getEffect() instanceof AbstractTriggeredEffect)) continue;
 
             if (!prayer.getTriggerClass().equals(PlayerInteractEvent.class)) continue;
 
-            ((AbstractTriggeredPrayer) prayer.getEffect()).trigger(player);
+            ((AbstractTriggeredEffect) prayer.getEffect()).trigger(player);
         }
     }
 

@@ -7,7 +7,7 @@ import org.bukkit.potion.PotionEffectType;
 /**
  * Author: Turtle9598
  */
-public class MushroomFX extends AbstractPrayer {
+public class MushroomFX extends AbstractEffect {
 
     private static final PotionEffect effect = new PotionEffect(PotionEffectType.CONFUSION, 20 * 600, 1);
 

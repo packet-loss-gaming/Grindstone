@@ -9,9 +9,9 @@ import org.bukkit.potion.PotionEffectType;
 /**
  * Author: Turtle9598
  */
-public class GodFX extends AbstractTriggeredPrayer {
+public class GodFX extends AbstractTriggeredEffect {
 
-    private static final AbstractPrayer[] subFX = new AbstractPrayer[]{
+    private static final AbstractEffect[] subFX = new AbstractEffect[]{
             new ThrownFireballFX(), new InfiniteHungerFX(),
             new InvisibilityFX()
     };
@@ -51,9 +51,9 @@ public class GodFX extends AbstractTriggeredPrayer {
     @Override
     public void trigger(Player player) {
 
-        for (AbstractPrayer aSubFX : subFX) {
-            if (aSubFX instanceof AbstractTriggeredPrayer) {
-                ((AbstractTriggeredPrayer) aSubFX).trigger(player);
+        for (AbstractEffect aSubFX : subFX) {
+            if (aSubFX instanceof AbstractTriggeredEffect) {
+                ((AbstractTriggeredEffect) aSubFX).trigger(player);
             }
         }
     }

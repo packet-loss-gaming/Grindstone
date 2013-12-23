@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 /**
  * Author: Turtle9598
  */
-public class CannonFX extends AbstractPrayer {
+public class CannonFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

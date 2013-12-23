@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GlassBoxFX extends AbstractPrayer {
+public class GlassBoxFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

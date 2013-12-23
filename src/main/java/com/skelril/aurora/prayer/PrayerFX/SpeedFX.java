@@ -7,7 +7,7 @@ import org.bukkit.potion.PotionEffectType;
 /**
  * Author: Turtle9598
  */
-public class SpeedFX extends AbstractPrayer {
+public class SpeedFX extends AbstractEffect {
 
     private static final PotionEffect effect = new PotionEffect(PotionEffectType.SPEED, 20 * 600, 2);
 

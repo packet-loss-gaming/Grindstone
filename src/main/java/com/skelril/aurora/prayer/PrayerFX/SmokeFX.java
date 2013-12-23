@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 /**
  * Author: Turtle9598
  */
-public class SmokeFX extends AbstractPrayer {
+public class SmokeFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

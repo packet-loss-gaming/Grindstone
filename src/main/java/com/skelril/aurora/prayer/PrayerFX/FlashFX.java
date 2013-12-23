@@ -7,9 +7,9 @@ import org.bukkit.potion.PotionEffectType;
 /**
  * Author: Turtle9598
  */
-public class FlashFX extends AbstractPrayer {
+public class FlashFX extends AbstractEffect {
 
-    private static final AbstractPrayer[] subFX = new AbstractPrayer[]{
+    private static final AbstractEffect[] subFX = new AbstractEffect[]{
             new InfiniteHungerFX()
     };
     private static final PotionEffect effect = new PotionEffect(PotionEffectType.SPEED, 20 * 600, 6);

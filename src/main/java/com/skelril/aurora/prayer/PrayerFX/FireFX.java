@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 /**
  * Author: Turtle9598
  */
-public class FireFX extends AbstractPrayer {
+public class FireFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

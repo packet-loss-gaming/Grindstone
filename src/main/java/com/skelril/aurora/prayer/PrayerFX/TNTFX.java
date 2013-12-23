@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 /**
  * Author: Turtle9598
  */
-public class TNTFX extends AbstractPrayer {
+public class TNTFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {

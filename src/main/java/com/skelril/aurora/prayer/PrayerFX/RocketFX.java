@@ -8,7 +8,7 @@ import org.bukkit.util.Vector;
 /**
  * Author: Turtle9598
  */
-public class RocketFX extends AbstractPrayer {
+public class RocketFX extends AbstractEffect {
 
     public RocketFX() {
 

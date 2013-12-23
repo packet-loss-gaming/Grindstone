@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 /**
  * Author: Turtle9598
  */
-public class ButterFingersFX extends AbstractPrayer {
+public class ButterFingersFX extends AbstractEffect {
 
     @Override
     public PrayerType getType() {
