@@ -4,7 +4,6 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.minecraft.util.commands.*;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
@@ -15,6 +14,7 @@ import com.skelril.aurora.events.egg.EggDropEvent;
 import com.skelril.aurora.events.egg.EggHatchEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -151,7 +151,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         World world = block.getWorld();
         int blockType = block.getTypeId();
 
-        if (isEggDroppingBlock(blockType)) {
+        if (EnvironmentUtil.isShrubBlock(blockType)) {
             if (inst.hasPermission(player, "aurora.egg.easter") && allowedEggs(player, EggType.EASTER)
                     && config.enableEasterEggs && !ChanceUtil.getChance(5, 6)) {
 
@@ -354,24 +354,6 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
                 egg.remove();
             }
             return true;
-        }
-        return false;
-    }
-
-    private boolean isEggDroppingBlock(int BlockTypeId) {
-
-        int[] eggDroppingBlocks = new int[7];
-        eggDroppingBlocks[0] = BlockID.VINE;
-        eggDroppingBlocks[1] = BlockID.YELLOW_FLOWER;
-        eggDroppingBlocks[2] = BlockID.RED_FLOWER;
-        eggDroppingBlocks[3] = BlockID.RED_MUSHROOM;
-        eggDroppingBlocks[4] = BlockID.BROWN_MUSHROOM;
-        eggDroppingBlocks[5] = BlockID.CROPS;
-        eggDroppingBlocks[6] = BlockID.LONG_GRASS;
-
-        for (int eggDroppingBlock : eggDroppingBlocks) {
-            if (eggDroppingBlock == BlockTypeId)
-                return true;
         }
         return false;
     }
