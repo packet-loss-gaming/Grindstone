@@ -114,15 +114,12 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
     public static Prayer constructPrayer(Player player, PrayerType type) throws UnsupportedPrayerException {
 
-        Validate.notNull(type);
         return constructPrayer(player, type, type.getDefaultTime());
     }
 
     public static Prayer constructPrayer(Player player, PrayerType type, long maxDuration) throws UnsupportedPrayerException {
 
-        Validate.notNull(player);
         Validate.notNull(type);
-        Validate.notNull(maxDuration);
 
         AbstractEffect prayerEffect;
         try {
@@ -130,6 +127,14 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         } catch (ClassCastException | InstantiationException | IllegalAccessException e) {
             throw new UnsupportedPrayerException();
         }
+
+        return constructPrayer(player, prayerEffect, maxDuration);
+    }
+
+    public static Prayer constructPrayer(Player player, AbstractEffect prayerEffect, long maxDuration) {
+
+        Validate.notNull(player);
+        Validate.notNull(prayerEffect);
 
         return new Prayer(player, prayerEffect, maxDuration);
     }

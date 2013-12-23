@@ -704,7 +704,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                     prayerType = PrayerType.SMOKE;
             }
             try {
-                Prayer givenPrayer = prayer.constructPrayer(player, prayerType, TimeUnit.MINUTES.toMillis(60));
+                Prayer givenPrayer = PrayerComponent.constructPrayer(player, prayerType, TimeUnit.MINUTES.toMillis(60));
                 if (prayer.influencePlayer(player, givenPrayer)) {
                     ChatUtil.sendNotice(player, "You feel as though you have been blessed with "
                             + prayerType.toString().toLowerCase() + ".");

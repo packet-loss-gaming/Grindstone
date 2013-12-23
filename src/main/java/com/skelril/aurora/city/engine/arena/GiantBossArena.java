@@ -1109,7 +1109,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                             if (boss.hasLineOfSight(player)) {
                                 ChatUtil.sendWarning(getContainedPlayers(1), "Parish " + player.getName() + "!");
                                 try {
-                                    prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
+                                    prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
                                 } catch (UnsupportedPrayerException e) {
                                     e.printStackTrace();
                                 }

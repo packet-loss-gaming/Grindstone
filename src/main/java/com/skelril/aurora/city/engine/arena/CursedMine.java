@@ -16,7 +16,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
-import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerFX.InventoryFX;
 import com.skelril.aurora.prayer.PrayerType;
@@ -460,7 +459,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                     break;
                             }
 
-                            prayerComponent.influencePlayer(player, new Prayer(player, new InventoryFX(id, 64), 1000 * 5));
+                            prayerComponent.influencePlayer(player,
+                                    PrayerComponent.constructPrayer(player, new InventoryFX(id, 64), 5000));
                             break;
                         default:
                             break;
@@ -517,7 +517,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                                     player.chat("Nooooooooooo!!!");
 
                                                     try {
-                                                        prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                                                        prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                                                 PrayerType.CANNON, TimeUnit.MINUTES.toMillis(2)));
                                                     } catch (UnsupportedPrayerException ex) {
                                                         ex.printStackTrace();
@@ -536,7 +536,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             break;
                         case 3:
                             ChatUtil.sendWarning(player, "George plays with fire, sadly too close to you.");
-                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                            prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                     PrayerType.FIRE, TimeUnit.SECONDS.toMillis(45)));
                             break;
                         case 4:
@@ -547,12 +547,12 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             break;
                         case 5:
                             ChatUtil.sendWarning(player, "Ben dumps out your backpack.");
-                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                            prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                     PrayerType.BUTTERFINGERS, TimeUnit.SECONDS.toMillis(10)));
                             break;
                         case 6:
                             ChatUtil.sendWarning(player, "Merlin attacks with a mighty rage!");
-                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                            prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                     PrayerType.MERLIN, TimeUnit.SECONDS.toMillis(20)));
                             break;
                         case 7:
@@ -563,7 +563,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 8:
                             ChatUtil.sendWarning(player, "Dave likes your food.");
                             addToHitList(player.getName());
-                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                            prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                     PrayerType.STARVATION, TimeUnit.MINUTES.toMillis(15)));
                             break;
                         case 9:
@@ -577,11 +577,11 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 10:
                             ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
                             addToHitList(player.getName());
-                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                            prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                     PrayerType.SLAP, TimeUnit.MINUTES.toMillis(30)));
-                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                            prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                     PrayerType.BUTTERFINGERS, TimeUnit.MINUTES.toMillis(30)));
-                            prayerComponent.influencePlayer(player, prayerComponent.constructPrayer(player,
+                            prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                     PrayerType.FIRE, TimeUnit.MINUTES.toMillis(30)));
                             break;
                         default:

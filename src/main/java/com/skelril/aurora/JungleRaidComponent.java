@@ -125,8 +125,8 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
     private Prayer[] getPrayers(Player player) throws UnsupportedPrayerException {
 
         return new Prayer[]{
-                prayerComponent.constructPrayer(player, PrayerType.BLINDNESS, TimeUnit.DAYS.toMillis(1)),
-                prayerComponent.constructPrayer(player, PrayerType.WALK, TimeUnit.DAYS.toMillis(1))
+                PrayerComponent.constructPrayer(player, PrayerType.BLINDNESS, TimeUnit.DAYS.toMillis(1)),
+                PrayerComponent.constructPrayer(player, PrayerType.WALK, TimeUnit.DAYS.toMillis(1))
         };
     }
 
