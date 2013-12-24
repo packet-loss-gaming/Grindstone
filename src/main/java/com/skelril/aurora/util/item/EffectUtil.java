@@ -395,7 +395,7 @@ public class EffectUtil {
                 }
             };
 
-            TimedRunnable runnable = new TimedRunnable(glowingFog, ChanceUtil.getRandom(15) * 3);
+            TimedRunnable runnable = new TimedRunnable(glowingFog, (ChanceUtil.getRandom(15) * 3) + 7);
             runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 0, 10));
 
             ChatUtil.sendNotice(owner, "Your bow unleashes a powerful glowing fog.");
