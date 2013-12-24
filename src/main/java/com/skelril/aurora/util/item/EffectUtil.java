@@ -362,6 +362,7 @@ public class EffectUtil {
             if (target instanceof Player) {
                 target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0), true);
             }
+            target.getWorld().playSound(target.getLocation(), Sound.GHAST_SCREAM, 1, .02F);
             ChatUtil.sendNotice(owner, "Your bow traps your foe in their own sins.");
         }
 
