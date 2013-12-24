@@ -276,7 +276,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             case ENTITY_ATTACK:
                 event.setDamage(event.getDamage() * .8);
                 break;
-            case SUFFOCATION:
+            case DROWNING:
                 player.setRemainingAir(player.getMaximumAir());
             case LAVA:
             case FIRE:

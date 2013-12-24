@@ -34,7 +34,7 @@ public class PumpkinScubaHelmetComponent extends BukkitComponent implements List
     public void onPlayerDamage(EntityDamageEvent event) {
 
         Entity e = event.getEntity();
-        if (!(e instanceof Player) || !event.getCause().equals(EntityDamageEvent.DamageCause.SUFFOCATION)) return;
+        if (!(e instanceof Player) || !event.getCause().equals(EntityDamageEvent.DamageCause.DROWNING)) return;
 
         Player player = (Player) e;
 
