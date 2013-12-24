@@ -86,7 +86,7 @@ public class ShutdownComponent extends BukkitComponent {
                 server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
                 if (seconds > 0 && seconds % 5 == 0 || seconds <= 10 && seconds > 0) {
                     Bukkit.broadcastMessage(ChatColor.RED + "Shutting down in " + seconds + " seconds - for "
-                            + downTime + " seconds of downtime!");
+                            + downTime + " of downtime!");
                 } else if (seconds < 1) {
                     Bukkit.broadcastMessage(ChatColor.RED + "Shutting down!");
                     server.shutdown();
