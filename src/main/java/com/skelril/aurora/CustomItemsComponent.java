@@ -134,12 +134,19 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
+    private static Set<EntityDamageEvent.DamageCause> ignoredCauses = new HashSet<>();
+
+    static {
+        ignoredCauses.add(EntityDamageEvent.DamageCause.POISON);
+        ignoredCauses.add(EntityDamageEvent.DamageCause.WITHER);
+    }
+
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
 
         Entity entity = event.getEntity();
 
-        if (entity instanceof Player) {
+        if (entity instanceof Player && !ignoredCauses.contains(event.getCause())) {
 
             Player player = (Player) entity;
             CustomItemSession session = getSession(player);
@@ -206,9 +213,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     player.updateInventory();
 
                     event.setDamage(Math.max(0, dmg - blocked));
+                    player.setFireTicks(0);
 
                     // Update the session
-                    session.updateSpec(SpecType.RED, (long) (blocked * 150));
+                    session.updateSpec(SpecType.RED, (long) (blocked * 75));
 
                     // WORK AROUND
                     if (damager != null) {
@@ -324,15 +332,26 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             break;
                     }
                 } else if (ItemUtil.isItem(launcher, CustomItems.UNLEASHED_BOW)) {
-                    used = callSpec(owner, target, 18, 20);
+                    used = callSpec(owner, target, 18, 23);
                     if (used == null) return;
                     session.updateSpec(SpecType.UNLEASHED);
                     switch (used) {
-                        case HEALING_LIFE_LEECH:
+                        case FAMINE:
+                            if (target instanceof Player) {
+                                EffectUtil.Unleashed.famine(owner, (Player) target);
+                                break;
+                            }
+                        case RANGE_LIFE_LEECH:
                             EffectUtil.Unleashed.lifeLeech(owner, target);
                             break;
                         case EVIL_FOCUS:
                             EffectUtil.Unleashed.evilFocus(owner, target);
+                            break;
+                        case RANGE_SPEED:
+                            EffectUtil.Unleashed.speed(owner, target);
+                            break;
+                        case GLOWING_FOG:
+                            EffectUtil.Unleashed.glowingFog(owner, target);
                             break;
                     }
                 }

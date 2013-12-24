@@ -298,6 +298,14 @@ public class EffectUtil {
             }
         }
 
+        public static void famine(Player owner, Player target) {
+
+            target.setFoodLevel((int) (target.getFoodLevel() * .9));
+            target.setSaturation(0);
+
+            ChatUtil.sendNotice(owner, "You drain the stamina of your foe.");
+        }
+
         public static void blind(Player owner, LivingEntity target) {
 
             if (target instanceof Player) {
@@ -355,6 +363,42 @@ public class EffectUtil {
                 target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0), true);
             }
             ChatUtil.sendNotice(owner, "Your bow traps your foe in their own sins.");
+        }
+
+        public static void glowingFog(final Player owner, LivingEntity target) {
+
+            final Location targeted = target.getLocation();
+
+            IntegratedRunnable glowingFog = new IntegratedRunnable() {
+                @Override
+                public boolean run(int times) {
+
+                    server.getPluginManager().callEvent(new RapidHitEvent(owner));
+
+                    EnvironmentUtil.generateRadialEffect(targeted, Effect.MOBSPAWNER_FLAMES);
+
+                    Entity entity = targeted.getWorld().spawnEntity(targeted, EntityType.SNOWBALL);
+                    for (Entity aEntity : entity.getNearbyEntities(4, 4, 4)) {
+                        if (aEntity.equals(owner)) continue;
+                        if (aEntity instanceof LivingEntity) {
+                            if (aEntity instanceof Player && !PvPComponent.allowsPvP(owner, (Player) aEntity)) continue;
+                            ((LivingEntity) aEntity).damage(5, owner);
+                        }
+                    }
+                    entity.remove();
+                    return true;
+                }
+
+                @Override
+                public void end() {
+
+                }
+            };
+
+            TimedRunnable runnable = new TimedRunnable(glowingFog, ChanceUtil.getRandom(15) * 3);
+            runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 0, 10));
+
+            ChatUtil.sendNotice(owner, "Your bow unleashes a powerful glowing fog.");
         }
     }
 
