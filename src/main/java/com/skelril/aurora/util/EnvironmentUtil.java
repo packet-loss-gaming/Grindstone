@@ -323,7 +323,7 @@ public class EnvironmentUtil {
 
     public static void generateRadialEffect(Location location, Effect effect) {
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 20; i++) {
             location.getWorld().playEffect(location, effect, ChanceUtil.getRandom(9) - 1);
         }
     }

@@ -14,6 +14,7 @@ import com.skelril.aurora.events.entity.ProjectileTickEvent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -39,8 +40,6 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.potion.Potion;
-import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -383,17 +382,14 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                 projectile.setMetadata("splashed", new FixedMetadataValue(inst, true));
 
-                final Potion brewedPotion = new Potion(PotionType.SLOWNESS);
-                brewedPotion.setLevel(PotionType.SLOWNESS.getMaxLevel());
-                brewedPotion.setSplash(true);
-
                 IntegratedRunnable vacuum = new IntegratedRunnable() {
                     @Override
                     public boolean run(int times) {
-                        ThrownPotion potion = (ThrownPotion) targetLoc.getWorld().spawnEntity(targetLoc, EntityType.SPLASH_POTION);
-                        potion.setItem(brewedPotion.toItemStack(1));
-                        for (Entity e : potion.getNearbyEntities(4, 4, 4)) {
-                            if (e instanceof Item) {
+
+                        EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
+
+                        for (Entity e : targetLoc.getWorld().getEntitiesByClasses(Item.class)) {
+                            if (e.isValid() && e.getLocation().distanceSquared(targetLoc) <= 16) {
                                 e.teleport(owner);
                             }
                         }
@@ -402,18 +398,19 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                     @Override
                     public void end() {
-                        ThrownPotion potion = (ThrownPotion) targetLoc.getWorld().spawnEntity(targetLoc, EntityType.SPLASH_POTION);
-                        potion.setItem(brewedPotion.toItemStack(1));
-                        for (Entity e : potion.getNearbyEntities(4, 4, 4)) {
-                            if (e instanceof Item) {
-                                e.teleport(owner);
-                                continue;
-                            }
-                            if (e instanceof Monster || e instanceof Player) {
+
+                        EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
+
+                        for (Entity e : targetLoc.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
+                            if (e.isValid() && e.getLocation().distanceSquared(targetLoc) <= 16) {
+                                if (e instanceof Item) {
+                                    e.teleport(owner);
+                                    continue;
+                                }
                                 if (e instanceof Player) {
                                     if (masterBow || !PvPComponent.allowsPvP(owner, (Player) e)) continue;
                                 }
-                                e.setFireTicks(20 * (unleashedBow ? 6 : 3));
+                                e.setFireTicks(20 * (unleashedBow ? 4 : 2));
                             }
                         }
                     }

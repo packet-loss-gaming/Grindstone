@@ -377,15 +377,14 @@ public class EffectUtil {
 
                     EnvironmentUtil.generateRadialEffect(targeted, Effect.MOBSPAWNER_FLAMES);
 
-                    Entity entity = targeted.getWorld().spawnEntity(targeted, EntityType.SNOWBALL);
-                    for (Entity aEntity : entity.getNearbyEntities(4, 4, 4)) {
-                        if (aEntity.equals(owner)) continue;
+                    for (Entity aEntity : targeted.getWorld().getEntitiesByClasses(LivingEntity.class)) {
+                        if (!aEntity.isValid() || aEntity.equals(owner)
+                                || aEntity.getLocation().distanceSquared(targeted) > 16) continue;
                         if (aEntity instanceof LivingEntity) {
                             if (aEntity instanceof Player && !PvPComponent.allowsPvP(owner, (Player) aEntity)) continue;
                             ((LivingEntity) aEntity).damage(5, owner);
                         }
                     }
-                    entity.remove();
                     return true;
                 }
 
