@@ -23,7 +23,10 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
@@ -48,6 +51,8 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 @ComponentInformation(friendlyName = "Ninja", desc = "Disappear into the night!")
 @Depend(plugins = "Pitfall", components = {SessionComponent.class, RogueComponent.class, PvPComponent.class})
@@ -353,7 +358,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         switch (event.getAction()) {
             case RIGHT_CLICK_BLOCK:
-                if (stack != null && ItemUtil.matchesFilter(stack, ChatColor.BLACK + "Ninja Star")) {
+                if (stack != null && ItemUtil.isItem(stack, CustomItems.NINJA_STAR)) {
                     teleport(player);
                     event.setUseInteractedBlock(Event.Result.DENY);
                     break;

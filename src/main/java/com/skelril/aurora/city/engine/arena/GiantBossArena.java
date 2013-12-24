@@ -54,6 +54,8 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
+
 /**
  * Author: Turtle9598
  */
@@ -577,7 +579,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 Player player = (Player) attacker;
                 if (defender instanceof LivingEntity) {
-                    if (ItemUtil.hasMasterSword(player)) {
+                    if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_BOW)) {
 
                         if (ChanceUtil.getChance(difficulty * 3 + 1)) {
                             EffectUtil.Master.healingLight(player, (LivingEntity) defender);

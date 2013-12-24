@@ -19,10 +19,96 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
+import static com.skelril.aurora.util.item.ItemUtil.CustomItems.*;
+
 /**
  * Author: Turtle9598
  */
 public class ItemUtil {
+
+    public static enum CustomItems {
+
+        // Ancient Armor
+        ANCIENT_CROWN(ChatColor.GOLD + "Ancient Crown"),
+        ANCIENT_HELMET(ChatColor.GOLD + "Ancient Helmet"),
+        ANCIENT_CHESTPLATE(ChatColor.GOLD + "Ancient Chestplate"),
+        ANCIENT_LEGGINGS(ChatColor.GOLD + "Ancient Leggings"),
+        ANCIENT_BOOTS(ChatColor.GOLD + "Ancient Boots"),
+
+        // Master Weapons
+        MASTER_SWORD(ChatColor.DARK_PURPLE + "Master Sword"),
+        MASTER_BOW(ChatColor.DARK_PURPLE + "Master Bow"),
+
+        // Unleashed Weapons
+        UNLEASHED_SWORD(ChatColor.DARK_PURPLE + "Unleashed Sword"),
+        UNLEASHED_BOW(ChatColor.DARK_PURPLE + "Unleashed Bow"),
+
+        // Fear Weapons
+        FEAR_SWORD(ChatColor.DARK_RED + "Fear Sword"),
+        FEAR_BOW(ChatColor.DARK_RED + "Fear Bow"),
+
+        // Red Items
+        RED_FEATHER(ChatColor.DARK_RED + "Red Feather"),
+
+        // God Weapons
+        GOD_SWORD(ChatColor.RED + "God Sword"),
+        GOD_BOW(ChatColor.RED + "God Bow"),
+
+        // God Tools
+        GOD_AXE(ChatColor.GREEN + "God Axe"),
+        LEGENDARY_GOD_AXE(ChatColor.GREEN + "Legendary God Axe"),
+        GOD_PICKAXE(ChatColor.GREEN + "God Pickaxe"),
+        LEGENDARY_GOD_PICKAXE(ChatColor.GREEN + "Legendary God Pickaxe"),
+
+        // God Armor
+        GOD_HELMET(ChatColor.BLUE + "God Helmet"),
+        GOD_CHESTPLATE(ChatColor.BLUE + "God Chestplate"),
+        GOD_LEGGINGS(ChatColor.BLUE + "God Leggings"),
+        GOD_BOOTS(ChatColor.BLUE + "God Boots"),
+
+        // Combat Potions
+        DIVINE_COMBAT_POTION(ChatColor.WHITE + "Divine Combat Potion"),
+        HOLY_COMBAT_POTION(ChatColor.WHITE + "Holy Combat Potion"),
+        EXTREME_COMBAT_POTION(ChatColor.WHITE + "Extreme Combat Potion"),
+
+        // Grave Yard Gems
+        GEM_OF_LIFE(ChatColor.DARK_AQUA + "Gem of Life"),
+        GEM_OF_DARKNESS(ChatColor.DARK_RED + "Gem of Darkness"),
+        IMBUED_CRYSTAL(ChatColor.AQUA + "Imbued Crystal"),
+
+        // Phantom Items
+        PHANTOM_GOLD(ChatColor.GOLD + "Phantom Gold"),
+        PHANTOM_CLOCK(ChatColor.DARK_RED + "Phantom Clock"),
+
+        // Ninja Guild
+        NINJA_STAR(ChatColor.BLACK + "Ninja Star"),
+
+        // Flight Items
+        PIXIE_DUST(ChatColor.GOLD + "Pixie Dust"),
+        MAGIC_BUCKET(ChatColor.DARK_PURPLE + "Magic Bucket"),
+
+        // Animal Bows
+        BAT_BOW(ChatColor.DARK_RED + "Bat Bow"),
+        CHICKEN_BOW(ChatColor.DARK_RED + "Chicken Bow"),
+
+        // Miscellaneous
+        GOD_FISH(ChatColor.BLUE + "God Fish"),
+        OVERSEER_BOW(ChatColor.RED + "Overseer's Bow"),
+        BARBARIAN_BONE(ChatColor.DARK_RED + "Barbarian Bone"),
+        POTION_OF_RESTITUTION(ChatColor.DARK_RED + "Potion of Restitution");
+
+        private String name;
+
+        private CustomItems(String name) {
+
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
 
     public static final ItemStack[] leatherArmour = new ItemStack[]{
             new ItemStack(ItemID.LEATHER_BOOTS), new ItemStack(ItemID.LEATHER_PANTS),
@@ -54,7 +140,7 @@ public class ItemUtil {
             ancientMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
             ancientMeta.addEnchant(Enchantment.OXYGEN, 3, true);
             ancientMeta.addEnchant(Enchantment.WATER_WORKER, 1, true);
-            ancientMeta.setDisplayName(ChatColor.GOLD + "Ancient Crown");
+            ancientMeta.setDisplayName(ANCIENT_CROWN.toString());
             ((Repairable) ancientMeta).setRepairCost(400);
             ancientHelmet.setItemMeta(ancientMeta);
             return ancientHelmet;
@@ -70,7 +156,7 @@ public class ItemUtil {
             ancientMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
             ancientMeta.addEnchant(Enchantment.OXYGEN, 3, true);
             ancientMeta.addEnchant(Enchantment.WATER_WORKER, 1, true);
-            ancientMeta.setDisplayName(ChatColor.GOLD + "Ancient Helmet");
+            ancientMeta.setDisplayName(ANCIENT_HELMET.toString());
             ((Repairable) ancientMeta).setRepairCost(400);
             ancientHelmet.setItemMeta(ancientMeta);
             return ancientHelmet;
@@ -84,7 +170,7 @@ public class ItemUtil {
             ancientMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
             ancientMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
             ancientMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
-            ancientMeta.setDisplayName(ChatColor.GOLD + "Ancient Chestplate");
+            ancientMeta.setDisplayName(ANCIENT_CHESTPLATE.toString());
             ((Repairable) ancientMeta).setRepairCost(400);
             ancientChestplate.setItemMeta(ancientMeta);
             return ancientChestplate;
@@ -98,7 +184,7 @@ public class ItemUtil {
             ancientMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
             ancientMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
             ancientMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
-            ancientMeta.setDisplayName(ChatColor.GOLD + "Ancient Leggings");
+            ancientMeta.setDisplayName(ANCIENT_LEGGINGS.toString());
             ((Repairable) ancientMeta).setRepairCost(400);
             ancientLeggings.setItemMeta(ancientMeta);
             return ancientLeggings;
@@ -113,7 +199,7 @@ public class ItemUtil {
             ancientMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
             ancientMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
             ancientMeta.addEnchant(Enchantment.PROTECTION_FALL, 4, true);
-            ancientMeta.setDisplayName(ChatColor.GOLD + "Ancient Boots");
+            ancientMeta.setDisplayName(ANCIENT_BOOTS.toString());
             ((Repairable) ancientMeta).setRepairCost(400);
             ancientBoots.setItemMeta(ancientMeta);
             return ancientBoots;
@@ -132,7 +218,7 @@ public class ItemUtil {
             godMeta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
             godMeta.addEnchant(Enchantment.KNOCKBACK, 2, true);
             godMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 3, true);
-            godMeta.setDisplayName(ChatColor.RED + "God Sword");
+            godMeta.setDisplayName(GOD_SWORD.toString());
             ((Repairable) godMeta).setRepairCost(400);
             godSword.setItemMeta(godMeta);
             return godSword;
@@ -146,7 +232,7 @@ public class ItemUtil {
             godMeta.addEnchant(Enchantment.ARROW_FIRE, 1, true);
             godMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
             godMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 2, true);
-            godMeta.setDisplayName(ChatColor.RED + "God Bow");
+            godMeta.setDisplayName(GOD_BOW.toString());
             ((Repairable) godMeta).setRepairCost(400);
             godBow.setItemMeta(godMeta);
             return godBow;
@@ -162,7 +248,7 @@ public class ItemUtil {
             godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
             godMeta.addEnchant(Enchantment.OXYGEN, 3, true);
             godMeta.addEnchant(Enchantment.WATER_WORKER, 1, true);
-            godMeta.setDisplayName(ChatColor.BLUE + "God Helmet");
+            godMeta.setDisplayName(GOD_HELMET.toString());
             ((Repairable) godMeta).setRepairCost(400);
             godHelmet.setItemMeta(godMeta);
             return godHelmet;
@@ -176,7 +262,7 @@ public class ItemUtil {
             godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
-            godMeta.setDisplayName(ChatColor.BLUE + "God Chestplate");
+            godMeta.setDisplayName(GOD_CHESTPLATE.toString());
             ((Repairable) godMeta).setRepairCost(400);
             godChestplate.setItemMeta(godMeta);
             return godChestplate;
@@ -190,7 +276,7 @@ public class ItemUtil {
             godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
-            godMeta.setDisplayName(ChatColor.BLUE + "God Leggings");
+            godMeta.setDisplayName(GOD_LEGGINGS.toString());
             ((Repairable) godMeta).setRepairCost(400);
             godLeggings.setItemMeta(godMeta);
             return godLeggings;
@@ -205,7 +291,7 @@ public class ItemUtil {
             godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
             godMeta.addEnchant(Enchantment.PROTECTION_FALL, 4, true);
-            godMeta.setDisplayName(ChatColor.BLUE + "God Boots");
+            godMeta.setDisplayName(GOD_BOOTS.toString());
             ((Repairable) godMeta).setRepairCost(400);
             godBoots.setItemMeta(godMeta);
             return godBoots;
@@ -220,11 +306,11 @@ public class ItemUtil {
                 godMeta.addEnchant(Enchantment.DIG_SPEED, 5, true);
                 godMeta.addEnchant(Enchantment.DURABILITY, 3, true);
                 godMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 3, true);
-                godMeta.setDisplayName(ChatColor.GREEN + "Legendary God Pickaxe");
+                godMeta.setDisplayName(LEGENDARY_GOD_PICKAXE.toString());
             } else {
                 godMeta.addEnchant(Enchantment.DIG_SPEED, 4, true);
                 godMeta.addEnchant(Enchantment.SILK_TOUCH, 1, true);
-                godMeta.setDisplayName(ChatColor.GREEN + "God Pickaxe");
+                godMeta.setDisplayName(GOD_PICKAXE.toString());
             }
 
             pickaxe.setItemMeta(godMeta);
@@ -243,10 +329,10 @@ public class ItemUtil {
                 godMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 5, true);
                 godMeta.addEnchant(Enchantment.DIG_SPEED, 5, true);
                 godMeta.addEnchant(Enchantment.DURABILITY, 3, true);
-                godMeta.setDisplayName(ChatColor.GREEN + "Legendary God Axe");
+                godMeta.setDisplayName(LEGENDARY_GOD_AXE.toString());
             } else {
                 godMeta.addEnchant(Enchantment.DIG_SPEED, 4, true);
-                godMeta.setDisplayName(ChatColor.GREEN + "God Axe");
+                godMeta.setDisplayName(GOD_AXE.toString());
             }
 
             axe.setItemMeta(godMeta);
@@ -266,7 +352,7 @@ public class ItemUtil {
             masterMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
             masterMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 10, true);
             masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
-            masterMeta.setDisplayName(ChatColor.DARK_PURPLE + "Master Bow");
+            masterMeta.setDisplayName(MASTER_BOW.toString());
             ((Repairable) masterMeta).setRepairCost(400);
             masterBow.setItemMeta(masterMeta);
             return masterBow;
@@ -282,7 +368,7 @@ public class ItemUtil {
             masterMeta.addEnchant(Enchantment.FIRE_ASPECT, 10, true);
             masterMeta.addEnchant(Enchantment.KNOCKBACK, 10, true);
             masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
-            masterMeta.setDisplayName(ChatColor.DARK_PURPLE + "Master Sword");
+            masterMeta.setDisplayName(MASTER_SWORD.toString());
             ((Repairable) masterMeta).setRepairCost(400);
             masterSword.setItemMeta(masterMeta);
             return masterSword;
@@ -295,7 +381,7 @@ public class ItemUtil {
 
             ItemStack unleashedSword = Master.makeSword();
             ItemMeta unleashedMeta = unleashedSword.getItemMeta();
-            unleashedMeta.setDisplayName(ChatColor.DARK_PURPLE + "Unleashed Sword");
+            unleashedMeta.setDisplayName(UNLEASHED_SWORD.toString());
             unleashedSword.setItemMeta(unleashedMeta);
             return unleashedSword;
         }
@@ -304,7 +390,7 @@ public class ItemUtil {
 
             ItemStack unleashedBow = Master.makeBow();
             ItemMeta unleashedMeta = unleashedBow.getItemMeta();
-            unleashedMeta.setDisplayName(ChatColor.DARK_PURPLE + "Unleashed Bow");
+            unleashedMeta.setDisplayName(UNLEASHED_BOW.toString());
             unleashedBow.setItemMeta(unleashedMeta);
             return unleashedBow;
         }
@@ -322,7 +408,7 @@ public class ItemUtil {
             fearMeta.addEnchant(Enchantment.FIRE_ASPECT, 7, true);
             fearMeta.addEnchant(Enchantment.KNOCKBACK, 7, true);
             fearMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 7, true);
-            fearMeta.setDisplayName(ChatColor.DARK_RED + "Fear Sword");
+            fearMeta.setDisplayName(FEAR_SWORD.toString());
             ((Repairable) fearMeta).setRepairCost(400);
             fearSword.setItemMeta(fearMeta);
             return fearSword;
@@ -337,7 +423,7 @@ public class ItemUtil {
             fearMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
             fearMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 7, true);
             fearMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 7, true);
-            fearMeta.setDisplayName(ChatColor.DARK_RED + "Fear Bow");
+            fearMeta.setDisplayName(FEAR_BOW.toString());
             ((Repairable) fearMeta).setRepairCost(400);
             fearBow.setItemMeta(fearMeta);
             return fearBow;
@@ -350,7 +436,7 @@ public class ItemUtil {
 
             ItemStack redFeather = new ItemStack(ItemID.FEATHER);
             ItemMeta redMeta = redFeather.getItemMeta();
-            redMeta.setDisplayName(ChatColor.DARK_RED + "Red Feather");
+            redMeta.setDisplayName(RED_FEATHER.toString());
             redFeather.setItemMeta(redMeta);
             return redFeather;
         }
@@ -370,7 +456,7 @@ public class ItemUtil {
             pMeta.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, time, level), false);
             pMeta.addCustomEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, time, level), false);
             pMeta.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, time, level), false);
-            pMeta.setDisplayName(ChatColor.WHITE + "Divine Combat Potion");
+            pMeta.setDisplayName(DIVINE_COMBAT_POTION.toString());
             divineCombatPotion.setItemMeta(pMeta);
             return divineCombatPotion;
         }
@@ -387,7 +473,7 @@ public class ItemUtil {
             pMeta.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, time, level), false);
             pMeta.addCustomEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, time, level), false);
             pMeta.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, time, level), false);
-            pMeta.setDisplayName(ChatColor.WHITE + "Holy Combat Potion");
+            pMeta.setDisplayName(HOLY_COMBAT_POTION.toString());
             holyCombatPotion.setItemMeta(pMeta);
             return holyCombatPotion;
         }
@@ -404,7 +490,7 @@ public class ItemUtil {
             pMeta.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, time, level), false);
             pMeta.addCustomEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, time, level), false);
             pMeta.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, time, level), false);
-            pMeta.setDisplayName(ChatColor.WHITE + "Extreme Combat Potion");
+            pMeta.setDisplayName(EXTREME_COMBAT_POTION.toString());
             extremeCombatPotion.setItemMeta(pMeta);
             return extremeCombatPotion;
         }
@@ -416,7 +502,7 @@ public class ItemUtil {
 
             ItemStack restitutionPotion = new Potion(PotionType.POISON).toItemStack(1);
             PotionMeta pMeta = (PotionMeta) restitutionPotion.getItemMeta();
-            pMeta.setDisplayName(ChatColor.DARK_RED + "Potion of Restitution");
+            pMeta.setDisplayName(POTION_OF_RESTITUTION.toString());
             pMeta.addCustomEffect(new PotionEffect(PotionEffectType.POISON, 20 * 10, 1), true);
             restitutionPotion.setItemMeta(pMeta);
             return restitutionPotion;
@@ -431,7 +517,7 @@ public class ItemUtil {
 
                 ItemStack ninjaStar = new ItemStack(ItemID.NETHER_STAR, amount);
                 ItemMeta starMeta = ninjaStar.getItemMeta();
-                starMeta.setDisplayName(ChatColor.BLACK + "Ninja Star");
+                starMeta.setDisplayName(NINJA_STAR.toString());
                 ninjaStar.setItemMeta(starMeta);
                 return ninjaStar;
             }
@@ -446,7 +532,7 @@ public class ItemUtil {
             ItemMeta overseerMeta = overseerBow.getItemMeta();
             overseerMeta.addEnchant(Enchantment.ARROW_DAMAGE, 2, true);
             overseerMeta.addEnchant(Enchantment.ARROW_FIRE, 1, true);
-            overseerMeta.setDisplayName(ChatColor.RED + "Overseer's Bow");
+            overseerMeta.setDisplayName(OVERSEER_BOW.toString());
             ((Repairable) overseerMeta).setRepairCost(400);
             overseerBow.setItemMeta(overseerMeta);
             return overseerBow;
@@ -456,7 +542,7 @@ public class ItemUtil {
 
             ItemStack godFish = new ItemStack(ItemID.RAW_FISH, amount);
             ItemMeta fishMeta = godFish.getItemMeta();
-            fishMeta.setDisplayName(ChatColor.BLUE + "God Fish");
+            fishMeta.setDisplayName(GOD_FISH.toString());
             godFish.setItemMeta(fishMeta);
             return godFish;
         }
@@ -465,7 +551,7 @@ public class ItemUtil {
 
             ItemStack gemOfDarkness = new ItemStack(ItemID.EMERALD, amount);
             ItemMeta gemMeta = gemOfDarkness.getItemMeta();
-            gemMeta.setDisplayName(ChatColor.DARK_RED + "Gem of Darkness");
+            gemMeta.setDisplayName(GEM_OF_DARKNESS.toString());
             gemOfDarkness.setItemMeta(gemMeta);
             return gemOfDarkness;
         }
@@ -474,7 +560,7 @@ public class ItemUtil {
 
             ItemStack phantomGold = new ItemStack(ItemID.SUGAR, amount);
             ItemMeta goldMeta = phantomGold.getItemMeta();
-            goldMeta.setDisplayName(ChatColor.GOLD + "Pixie Dust");
+            goldMeta.setDisplayName(PIXIE_DUST.toString());
             phantomGold.setItemMeta(goldMeta);
             return phantomGold;
         }
@@ -483,7 +569,7 @@ public class ItemUtil {
 
             ItemStack phantomGold = new ItemStack(ItemID.GOLD_BAR, amount);
             ItemMeta goldMeta = phantomGold.getItemMeta();
-            goldMeta.setDisplayName(ChatColor.GOLD + "Phantom Gold");
+            goldMeta.setDisplayName(PHANTOM_GOLD.toString());
             phantomGold.setItemMeta(goldMeta);
             return phantomGold;
         }
@@ -492,7 +578,7 @@ public class ItemUtil {
 
             ItemStack phantomClock = new ItemStack(ItemID.WATCH, amount);
             ItemMeta phantomMeta = phantomClock.getItemMeta();
-            phantomMeta.setDisplayName(ChatColor.DARK_RED + "Phantom Clock");
+            phantomMeta.setDisplayName(PHANTOM_CLOCK.toString());
             phantomClock.setItemMeta(phantomMeta);
             return phantomClock;
         }
@@ -501,7 +587,7 @@ public class ItemUtil {
 
             ItemStack gemOfDarkness = new ItemStack(ItemID.DIAMOND, amount);
             ItemMeta gemMeta = gemOfDarkness.getItemMeta();
-            gemMeta.setDisplayName(ChatColor.AQUA + "Imbued Crystal");
+            gemMeta.setDisplayName(IMBUED_CRYSTAL.toString());
             gemOfDarkness.setItemMeta(gemMeta);
             return gemOfDarkness;
         }
@@ -510,7 +596,7 @@ public class ItemUtil {
 
             ItemStack gemOfLife = new ItemStack(ItemID.DIAMOND, amount);
             ItemMeta gemMeta = gemOfLife.getItemMeta();
-            gemMeta.setDisplayName(ChatColor.DARK_AQUA + "Gem of Life");
+            gemMeta.setDisplayName(GEM_OF_LIFE.toString());
             gemOfLife.setItemMeta(gemMeta);
             return gemOfLife;
         }
@@ -519,7 +605,7 @@ public class ItemUtil {
 
             ItemStack barbarianBones = new ItemStack(ItemID.BONE, amount);
             ItemMeta boneMeta = barbarianBones.getItemMeta();
-            boneMeta.setDisplayName(ChatColor.DARK_RED + "Barbarian Bone");
+            boneMeta.setDisplayName(BARBARIAN_BONE.toString());
             barbarianBones.setItemMeta(boneMeta);
             return barbarianBones;
         }
@@ -528,7 +614,7 @@ public class ItemUtil {
 
             ItemStack batBow = new ItemStack(ItemID.BOW);
             ItemMeta batMeta = batBow.getItemMeta();
-            batMeta.setDisplayName(ChatColor.DARK_RED + "Bat Bow");
+            batMeta.setDisplayName(BAT_BOW.toString());
             ((Repairable) batMeta).setRepairCost(400);
             batBow.setItemMeta(batMeta);
             return batBow;
@@ -538,7 +624,7 @@ public class ItemUtil {
 
             ItemStack chickenBow = new ItemStack(ItemID.BOW);
             ItemMeta chickenMeta = chickenBow.getItemMeta();
-            chickenMeta.setDisplayName(ChatColor.DARK_RED + "Chicken Bow");
+            chickenMeta.setDisplayName(CHICKEN_BOW.toString());
             ((Repairable) chickenMeta).setRepairCost(400);
             chickenBow.setItemMeta(chickenMeta);
             return chickenBow;
@@ -548,7 +634,7 @@ public class ItemUtil {
 
             ItemStack magicBucket = new ItemStack(ItemID.BUCKET);
             ItemMeta magicMeta = magicBucket.getItemMeta();
-            magicMeta.setDisplayName(ChatColor.DARK_PURPLE + "Magic Bucket");
+            magicMeta.setDisplayName(MAGIC_BUCKET.toString());
             magicBucket.setItemMeta(magicMeta);
             return magicBucket;
         }
@@ -797,9 +883,19 @@ public class ItemUtil {
         return false;
     }
 
-    public static boolean isPhantomGold(ItemStack stack) {
+    public static boolean hasItem(Player player, CustomItems type) {
 
-        return matchesFilter(stack, ChatColor.GOLD + "Phantom Gold");
+        return player.isValid() && findItemOfName(player.getInventory().getContents(), type.toString());
+    }
+
+    public static boolean isHoldingItem(Player player, CustomItems type) {
+
+        return player.isValid() && isItem(player.getItemInHand(), type);
+    }
+
+    public static boolean isItem(ItemStack stack, CustomItems type) {
+
+        return matchesFilter(stack, type.toString());
     }
 
     public static boolean hasAncientArmour(LivingEntity entity) {
@@ -837,96 +933,6 @@ public class ItemUtil {
     public static boolean matchesFilter(ItemStack stack, String filter, boolean loose) {
 
         return isNamed(stack) && (loose ? stack.getItemMeta().getDisplayName().startsWith(filter) : stack.getItemMeta().getDisplayName().equals(filter));
-    }
-
-    public static boolean hasBatBow(Player player) {
-
-        return player.isValid() && isBatBow(player.getItemInHand());
-    }
-
-    public static boolean isBatBow(ItemStack item) {
-
-        return matchesFilter(item, ChatColor.DARK_RED + "Bat Bow");
-    }
-
-    public static boolean hasChickenBow(Player player) {
-
-        return player.isValid() && isChickenBow(player.getItemInHand());
-    }
-
-    public static boolean isChickenBow(ItemStack item) {
-
-        return matchesFilter(item, ChatColor.DARK_RED + "Chicken Bow");
-    }
-
-    public static boolean hasMasterSword(Player player) {
-
-        return player.isValid() && isMasterSword(player.getItemInHand());
-    }
-
-    public static boolean isMasterSword(ItemStack item) {
-
-        return matchesFilter(item, ChatColor.DARK_PURPLE + "Master Sword");
-    }
-
-    public static boolean hasMasterBow(Player player) {
-
-        return player.isValid() && isMasterBow(player.getItemInHand());
-    }
-
-    public static boolean isMasterBow(ItemStack item) {
-
-        return matchesFilter(item, ChatColor.DARK_PURPLE + "Master Bow");
-    }
-
-    public static boolean hasUnleashedSword(Player player) {
-
-        return player.isValid() && isUnleashedSword(player.getItemInHand());
-    }
-
-    public static boolean isUnleashedSword(ItemStack item) {
-
-        return matchesFilter(item, ChatColor.DARK_PURPLE + "Unleashed Sword");
-    }
-
-    public static boolean hasUnleashedBow(Player player) {
-
-        return player.isValid() && isUnleashedBow(player.getItemInHand());
-    }
-
-    public static boolean isUnleashedBow(ItemStack item) {
-
-        return matchesFilter(item, ChatColor.DARK_PURPLE + "Unleashed Bow");
-    }
-
-    public static boolean hasFearHelmet(Player player) {
-
-        return player.isValid() && isFearHelmet(player.getInventory().getHelmet());
-    }
-
-    public static boolean isFearHelmet(ItemStack item) {
-
-        return matchesFilter(item, ChatColor.DARK_RED + "Fear Helmet");
-    }
-
-    public static boolean hasFearSword(Player player) {
-
-        return player.isValid() && isFearSword(player.getItemInHand());
-    }
-
-    public static boolean isFearSword(ItemStack item) {
-
-        return matchesFilter(item, ChatColor.DARK_RED + "Fear Sword");
-    }
-
-    public static boolean hasFearBow(Player player) {
-
-        return player.isValid() && isFearBow(player.getItemInHand());
-    }
-
-    public static boolean isFearBow(ItemStack item) {
-
-        return matchesFilter(item, ChatColor.DARK_RED + "Fear Bow");
     }
 
     public static boolean hasForgeBook(Player player) {

@@ -43,16 +43,13 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.Repairable;
-import org.bukkit.potion.Potion;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 @ComponentInformation(friendlyName = "Sacrifice", desc = "Sacrifice! Sacrifice! Sacrifice!")
 @Depend(components = {AdminStoreComponent.class, PrayerComponent.class})
@@ -176,47 +173,26 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 }
                 switch (ChanceUtil.getRandom(26)) {
                     case 1:
-                        itemStack = new ItemStack(ItemID.DIAMOND_SWORD);
                         if (Util.getChance(sender, modifier, 1.2)) {
-                            itemStack.addEnchantment(Enchantment.DAMAGE_ALL, 5);
-                            itemStack.addEnchantment(Enchantment.DAMAGE_ARTHROPODS, 5);
-                            itemStack.addEnchantment(Enchantment.DAMAGE_UNDEAD, 5);
-                            itemStack.addEnchantment(Enchantment.FIRE_ASPECT, 2);
-                            itemStack.addEnchantment(Enchantment.KNOCKBACK, 2);
-                            itemStack.addEnchantment(Enchantment.LOOT_BONUS_MOBS, 3);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.RED + "God Sword");
+                            itemStack = ItemUtil.God.makeSword();
+                        } else {
+                            itemStack = new ItemStack(ItemID.DIAMOND_SWORD);
                         }
                         break;
                     case 2:
-                        itemStack = new ItemStack(ItemID.BOW);
                         if (Util.getChance(sender, modifier, 1.2)) {
-                            itemStack.addEnchantment(Enchantment.ARROW_DAMAGE, 5);
-                            itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
-                            itemStack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
-                            itemStack.addEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.RED + "God Bow");
+                            itemStack = ItemUtil.God.makeBow();
                         } else {
-                            itemStack.addEnchantment(Enchantment.ARROW_DAMAGE, 2);
-                            itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.RED + "Overseer's Bow");
+                            itemStack = ItemUtil.Misc.overseerBow();
                         }
                         break;
                     case 3:
-                        itemStack = new ItemStack(ItemID.DIAMOND_PICKAXE);
                         if (Util.getChance(sender, modifier, 2)) {
-                            itemStack.addEnchantment(Enchantment.DIG_SPEED, 5);
-                            itemStack.addEnchantment(Enchantment.DURABILITY, 3);
-                            itemStack.addEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 3);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.GREEN + "Legendary God Pickaxe");
+                            itemStack = ItemUtil.God.makePickaxe(true);
                         } else if (Util.getChance(sender, modifier, .37)) {
-                            itemStack.addEnchantment(Enchantment.DIG_SPEED, 4);
-                            itemStack.addEnchantment(Enchantment.SILK_TOUCH, 1);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.GREEN + "God Pickaxe");
+                            itemStack = ItemUtil.God.makePickaxe(false);
+                        } else {
+                            itemStack = new ItemStack(ItemID.DIAMOND_PICKAXE);
                         }
                         break;
                     case 4:
@@ -235,25 +211,17 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         itemStack = new ItemStack(BlockID.ENDER_CHEST);
                         break;
                     case 7:
-                        itemStack = new ItemStack(ItemID.DIAMOND_CHEST);
                         if (Util.getChance(sender, modifier, .8)) {
-                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.BLUE + "God Chestplate");
+                            itemStack = ItemUtil.God.makeChest();
+                        } else {
+                            itemStack = new ItemStack(ItemID.DIAMOND_CHEST);
                         }
                         break;
                     case 8:
-                        itemStack = new ItemStack(ItemID.DIAMOND_PANTS);
                         if (Util.getChance(sender, modifier, .8)) {
-                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.BLUE + "God Leggings");
+                            itemStack = ItemUtil.God.makeLegs();
+                        } else {
+                            itemStack = new ItemStack(ItemID.DIAMOND_PANTS);
                         }
                         break;
                     case 9:
@@ -279,121 +247,49 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         break;
                     case 16:
                         if (Util.getChance(sender, modifier, 2.75)) {
-                            itemStack = new ItemStack(ItemID.CHAINMAIL_BOOTS);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_FALL, 4);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.GOLD + "Ancient Boots");
+                            itemStack = ItemUtil.Ancient.makeBoots();
                         }
                         break;
                     case 17:
                         if (Util.getChance(sender, modifier, 2.75)) {
-                            itemStack = new ItemStack(ItemID.CHAINMAIL_PANTS);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.GOLD + "Ancient Leggings");
+                            itemStack = ItemUtil.Ancient.makeLegs();
                         }
                         break;
                     case 18:
                         if (Util.getChance(sender, modifier, 2.75)) {
-                            itemStack = new ItemStack(ItemID.CHAINMAIL_CHEST);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.GOLD + "Ancient Chestplate");
+                            itemStack = ItemUtil.Ancient.makeChest();
                         }
                         break;
                     case 19:
                         if (Util.getChance(sender, modifier, 2.75)) {
-                            itemStack = new ItemStack(ItemID.CHAINMAIL_HELMET);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                            itemStack.addEnchantment(Enchantment.OXYGEN, 3);
-                            itemStack.addEnchantment(Enchantment.WATER_WORKER, 1);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.GOLD + "Ancient Helmet");
+                            itemStack = ItemUtil.Ancient.makeHelmet();
                         }
                         break;
                     case 20:
                         itemStack = new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(9));
                         break;
                     case 21:
-                        itemStack = new ItemStack(ItemID.DIAMOND_HELMET);
                         if (Util.getChance(sender, modifier, .8)) {
-                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                            itemStack.addEnchantment(Enchantment.OXYGEN, 3);
-                            itemStack.addEnchantment(Enchantment.WATER_WORKER, 1);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.BLUE + "God Helmet");
+                            itemStack = ItemUtil.God.makeHelmet();
+                        } else {
+                            itemStack = new ItemStack(ItemID.DIAMOND_HELMET);
                         }
                         break;
                     case 22:
-                        itemStack = new ItemStack(ItemID.DIAMOND_BOOTS);
                         if (Util.getChance(sender, modifier, .8)) {
-                            itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                            itemStack.addEnchantment(Enchantment.PROTECTION_FALL, 4);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.BLUE + "God Boots");
+                            itemStack = ItemUtil.God.makeBoots();
+                        } else {
+                            itemStack = new ItemStack(ItemID.DIAMOND_BOOTS);
                         }
                         break;
                     case 23:
-                        itemStack = new Potion(PotionType.INSTANT_DAMAGE).toItemStack(1);
-                        PotionMeta pMeta = (PotionMeta) itemStack.getItemMeta();
-
                         if (Util.getChance(sender, modifier, 5)) {
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 5), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.REGENERATION, 20 * 600, 5), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 5), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 600, 5), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 5), false);
-                            pMeta.setDisplayName(ChatColor.WHITE + "Divine Combat Potion");
+                            itemStack = ItemUtil.CPotion.divineCombatPotion();
                         } else if (Util.getChance(sender, modifier, 2)) {
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 45, 5), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.REGENERATION, 20 * 45, 5), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 45, 5), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 45, 5), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 45, 5), false);
-                            pMeta.setDisplayName(ChatColor.WHITE + "Holy Combat Potion");
+                            itemStack = ItemUtil.CPotion.holyCombatPotion();
                         } else {
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 2), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.REGENERATION, 20 * 600, 2), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 2), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 600, 2), false);
-                            pMeta.addCustomEffect(
-                                    new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 2), false);
-                            pMeta.setDisplayName(ChatColor.WHITE + "Extreme Combat Potion");
+                            itemStack = ItemUtil.CPotion.extremeCombatPotion();
                         }
-                        itemMeta = pMeta;
                         break;
                     case 24:
                         itemStack = new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(3));
@@ -402,19 +298,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                         itemStack = new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(3));
                         break;
                     case 26:
-                        itemStack = new ItemStack(ItemID.DIAMOND_AXE);
                         if (Util.getChance(sender, modifier, 2.5)) {
-                            itemStack.addEnchantment(Enchantment.DAMAGE_ALL, 5);
-                            itemStack.addEnchantment(Enchantment.DAMAGE_ARTHROPODS, 5);
-                            itemStack.addEnchantment(Enchantment.DAMAGE_UNDEAD, 5);
-                            itemStack.addEnchantment(Enchantment.DIG_SPEED, 5);
-                            itemStack.addEnchantment(Enchantment.DURABILITY, 3);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.GREEN + "Legendary God Axe");
+                            itemStack = ItemUtil.God.makeAxe(true);
                         } else if (Util.getChance(sender, modifier, .37)) {
-                            itemStack.addEnchantment(Enchantment.DIG_SPEED, 4);
-                            itemMeta = itemStack.getItemMeta();
-                            itemMeta.setDisplayName(ChatColor.GREEN + "God Axe");
+                            itemStack = ItemUtil.God.makeAxe(false);
+                        } else {
+                            itemStack = new ItemStack(ItemID.DIAMOND_AXE);
                         }
                         break;
                 }
@@ -650,10 +539,10 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         final double value = AdminStoreComponent.priceCheck(item);
 
-        if (ItemUtil.isMasterSword(item)) {
+        if (ItemUtil.isItem(item, CustomItems.MASTER_SWORD)) {
             pInventory.addItem(ItemUtil.Master.makeSword());
             return;
-        } else if (ItemUtil.isMasterBow(item)) {
+        } else if (ItemUtil.isItem(item, CustomItems.MASTER_BOW)) {
             pInventory.addItem(ItemUtil.Master.makeBow());
             return;
         } else if (value < 0) {

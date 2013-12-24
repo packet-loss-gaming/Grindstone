@@ -57,6 +57,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
+
 /**
  * Author: Turtle9598
  */
@@ -771,7 +773,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             Player player = (Player) event.getEntity();
 
             if (!contains(player)) return;
-            if (ChanceUtil.getChance(7) && ItemUtil.hasMasterSword(player) && ItemUtil.hasAncientArmour(player)) {
+            if (ChanceUtil.getChance(7) && ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD) && ItemUtil.hasAncientArmour(player)) {
                 EffectUtil.Master.ultimateStrength(player);
             }
         }

@@ -889,40 +889,10 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
-            ItemStack[] armour = new ItemStack[4];
-            armour[0] = new ItemStack(ItemID.DIAMOND_HELMET);
-            armour[1] = new ItemStack(ItemID.DIAMOND_CHEST);
-            armour[2] = new ItemStack(ItemID.DIAMOND_PANTS);
-            armour[3] = new ItemStack(ItemID.DIAMOND_BOOTS);
-
-            ItemMeta meta = armour[0].getItemMeta();
-            meta.setDisplayName(ChatColor.BLUE + "God Helmet");
-            armour[0].setItemMeta(meta);
-
-            meta = armour[1].getItemMeta();
-            meta.setDisplayName(ChatColor.BLUE + "God Chestplate");
-            armour[1].setItemMeta(meta);
-
-            meta = armour[2].getItemMeta();
-            meta.setDisplayName(ChatColor.BLUE + "God Leggings");
-            armour[2].setItemMeta(meta);
-
-            meta = armour[3].getItemMeta();
-            meta.setDisplayName(ChatColor.BLUE + "God Boots");
-            armour[3].setItemMeta(meta);
-
-            armour[0].addEnchantment(Enchantment.OXYGEN, 3);
-            armour[0].addEnchantment(Enchantment.WATER_WORKER, 1);
-
-            armour[3].addEnchantment(Enchantment.PROTECTION_FALL, 4);
-
-            for (ItemStack itemStack : armour) {
-                itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                player.getInventory().addItem(itemStack);
-            }
+            player.getInventory().addItem(
+                    ItemUtil.God.makeHelmet(), ItemUtil.God.makeChest(),
+                    ItemUtil.God.makeLegs(), ItemUtil.God.makeBoots()
+            );
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -937,15 +907,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
-            ItemStack itemStack = new ItemStack(ItemID.BOW);
-            itemStack.addEnchantment(Enchantment.ARROW_DAMAGE, 5);
-            itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
-            itemStack.addEnchantment(Enchantment.ARROW_INFINITE, 1);
-            itemStack.addEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
-            ItemMeta itemMeta = itemStack.getItemMeta();
-            itemMeta.setDisplayName(ChatColor.RED + "God Bow");
-            itemStack.setItemMeta(itemMeta);
-            player.getInventory().addItem(itemStack);
+            player.getInventory().addItem(ItemUtil.God.makeBow());
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -960,17 +922,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
-            ItemStack itemStack = new ItemStack(ItemID.DIAMOND_SWORD);
-            itemStack.addEnchantment(Enchantment.DAMAGE_ALL, 5);
-            itemStack.addEnchantment(Enchantment.DAMAGE_ARTHROPODS, 5);
-            itemStack.addEnchantment(Enchantment.DAMAGE_UNDEAD, 5);
-            itemStack.addEnchantment(Enchantment.FIRE_ASPECT, 2);
-            itemStack.addEnchantment(Enchantment.KNOCKBACK, 2);
-            itemStack.addEnchantment(Enchantment.LOOT_BONUS_MOBS, 3);
-            ItemMeta itemMeta = itemStack.getItemMeta();
-            itemMeta.setDisplayName(ChatColor.RED + "God Sword");
-            itemStack.setItemMeta(itemMeta);
-            player.getInventory().addItem(itemStack);
+            player.getInventory().addItem(ItemUtil.God.makeSword());
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -1033,40 +985,10 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
-            ItemStack[] armour = new ItemStack[4];
-            armour[0] = new ItemStack(ItemID.CHAINMAIL_HELMET);
-            armour[1] = new ItemStack(ItemID.CHAINMAIL_CHEST);
-            armour[2] = new ItemStack(ItemID.CHAINMAIL_PANTS);
-            armour[3] = new ItemStack(ItemID.CHAINMAIL_BOOTS);
-
-            ItemMeta meta = armour[0].getItemMeta();
-            meta.setDisplayName(ChatColor.GOLD + "Ancient Helmet");
-            armour[0].setItemMeta(meta);
-
-            meta = armour[1].getItemMeta();
-            meta.setDisplayName(ChatColor.GOLD + "Ancient Chestplate");
-            armour[1].setItemMeta(meta);
-
-            meta = armour[2].getItemMeta();
-            meta.setDisplayName(ChatColor.GOLD + "Ancient Leggings");
-            armour[2].setItemMeta(meta);
-
-            meta = armour[3].getItemMeta();
-            meta.setDisplayName(ChatColor.GOLD + "Ancient Boots");
-            armour[3].setItemMeta(meta);
-
-            armour[0].addEnchantment(Enchantment.OXYGEN, 3);
-            armour[0].addEnchantment(Enchantment.WATER_WORKER, 1);
-
-            armour[3].addEnchantment(Enchantment.PROTECTION_FALL, 4);
-
-            for (ItemStack itemStack : armour) {
-                itemStack.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-                itemStack.addEnchantment(Enchantment.PROTECTION_PROJECTILE, 4);
-                itemStack.addEnchantment(Enchantment.PROTECTION_FIRE, 4);
-                itemStack.addEnchantment(Enchantment.PROTECTION_EXPLOSIONS, 4);
-                player.getInventory().addItem(itemStack);
-            }
+            player.getInventory().addItem(
+                    ItemUtil.Ancient.makeHelmet(), ItemUtil.Ancient.makeChest(),
+                    ItemUtil.Ancient.makeLegs(), ItemUtil.Ancient.makeBoots()
+            );
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()

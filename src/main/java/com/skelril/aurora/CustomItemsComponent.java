@@ -24,7 +24,10 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.h31ix.anticheat.manage.CheckType;
-import org.bukkit.*;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -44,6 +47,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
+import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 /**
  * Author: Turtle9598
@@ -124,7 +128,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             Player player = (Player) healed;
 
-            if (ItemUtil.matchesFilter(player.getInventory().getHelmet(), ChatColor.GOLD + "Ancient Crown")) {
+            if (ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN)) {
                 event.setAmount(event.getAmount() * 2.5);
             }
         }
@@ -153,7 +157,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
             // END WORK AROUND
 
-            if (session.canSpec(SpecType.RED) && ItemUtil.findItemOfName(contents, ChatColor.DARK_RED + "Red Feather")) {
+            if (session.canSpec(SpecType.RED) && ItemUtil.hasItem(player, CustomItems.RED_FEATHER)) {
 
                 final int redQD = ItemUtil.countItemsOfType(contents, ItemID.REDSTONE_DUST);
                 final int redQB = 9 * ItemUtil.countItemsOfType(contents, BlockID.REDSTONE_BLOCK);
@@ -245,7 +249,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             Specs used;
             if (session.canSpec(SpecType.FEAR)) {
-                if (ItemUtil.hasFearSword(owner) && launcher == null) {
+                if (ItemUtil.isHoldingItem(owner, CustomItems.FEAR_SWORD) && launcher == null) {
                     used = callSpec(owner, target, 0, 6);
                     if (used == null) return;
                     session.updateSpec(SpecType.FEAR);
@@ -269,7 +273,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Fear.soulSmite(owner, target);
                             break;
                     }
-                } else if (ItemUtil.isFearBow(launcher)) {
+                } else if (ItemUtil.isItem(launcher, CustomItems.FEAR_BOW)) {
                     used = callSpec(owner, target, 6, 11);
                     if (used == null) return;
                     session.updateSpec(SpecType.FEAR);
@@ -295,7 +299,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
 
             if (session.canSpec(SpecType.UNLEASHED)) {
-                if (ItemUtil.hasUnleashedSword(owner) && launcher == null) {
+                if (ItemUtil.isHoldingItem(owner, CustomItems.UNLEASHED_SWORD) && launcher == null) {
                     used = callSpec(owner, target, 11, 17);
                     if (used == null) return;
                     session.updateSpec(SpecType.UNLEASHED);
@@ -319,7 +323,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Unleashed.lifeLeech(owner, target);
                             break;
                     }
-                } else if (ItemUtil.isUnleashedBow(launcher)) {
+                } else if (ItemUtil.isItem(launcher, CustomItems.UNLEASHED_BOW)) {
                     used = callSpec(owner, target, 18, 20);
                     if (used == null) return;
                     session.updateSpec(SpecType.UNLEASHED);
@@ -353,8 +357,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             final Player owner = (Player) shooter;
             final Location targetLoc = projectile.getLocation();
 
-            final boolean unleashedBow = ItemUtil.isUnleashedBow(launcher);
-            final boolean masterBow = ItemUtil.isMasterBow(launcher);
+            final boolean unleashedBow = ItemUtil.isItem(launcher, CustomItems.UNLEASHED_BOW);
+            final boolean masterBow = ItemUtil.isItem(launcher, CustomItems.MASTER_BOW);
 
             if ((unleashedBow || masterBow) && !projectile.hasMetadata("splashed")) {
 
@@ -403,7 +407,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             if (session.canSpec(SpecType.ANIMAL_BOW)) {
                 Specs used;
-                if (ItemUtil.isBatBow(launcher)) {
+                if (ItemUtil.isItem(launcher, CustomItems.BAT_BOW)) {
                     used = callSpec(owner, targetLoc, Specs.MOB_ATTACK);
                     if (used == null) return;
                     session.updateSpec(SpecType.ANIMAL_BOW);
@@ -412,7 +416,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             EffectUtil.Strange.mobBarrage(owner, targetLoc, EntityType.BAT);
                             break;
                     }
-                } else if (ItemUtil.isChickenBow(launcher)) {
+                } else if (ItemUtil.isItem(launcher, CustomItems.CHICKEN_BOW)) {
                     used = callSpec(owner, targetLoc, Specs.MOB_ATTACK);
                     if (used == null) return;
                     session.updateSpec(SpecType.ANIMAL_BOW);
@@ -426,7 +430,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             if (!session.canSpec(SpecType.FEAR)) {
 
-                if (ItemUtil.isFearBow(launcher)) {
+                if (ItemUtil.isItem(launcher, CustomItems.FEAR_BOW)) {
                     if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
 
                         server.getPluginManager().callEvent(new RapidHitEvent(owner));
@@ -473,7 +477,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             ItemStack launcher = (ItemStack) test;
 
             final Location location = projectile.getLocation();
-            if (ItemUtil.isBatBow(launcher)) {
+            if (ItemUtil.isItem(launcher, CustomItems.BAT_BOW)) {
 
                 if (!ChanceUtil.getChance(5)) return;
                 server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -498,7 +502,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                         }, 20 * 3);
                     }
                 }, 3);
-            } else if (ItemUtil.isChickenBow(launcher)) {
+            } else if (ItemUtil.isItem(launcher, CustomItems.CHICKEN_BOW)) {
 
                 if (!ChanceUtil.getChance(5)) return;
                 server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -533,7 +537,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         ItemStack itemStack = event.getItem();
 
-        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && handleRightClick(player, event.getClickedBlock().getLocation(), itemStack)) {
+        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)
+                && handleRightClick(player, event.getClickedBlock().getLocation(), itemStack)) {
             event.setCancelled(true);
         }
     }
@@ -568,7 +573,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         final long currentTime = System.currentTimeMillis();
 
-        if (ItemUtil.matchesFilter(itemStack, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+        if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
             player.setAllowFlight(!player.getAllowFlight());
             if (player.getAllowFlight()) {
                 player.setFlySpeed(.4F);
@@ -580,7 +585,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 ChatUtil.sendNotice(player, "The power of the bucket fades.");
             }
             return true;
-        } else if (ItemUtil.matchesFilter(itemStack, ChatColor.GOLD + "Pixie Dust")) {
+        } else if (ItemUtil.isItem(itemStack, CustomItems.PIXIE_DUST)) {
 
             if (player.getAllowFlight()) return false;
 
@@ -604,11 +609,12 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     if (!player.isValid()) return true;
 
                     if (player.getAllowFlight()) {
-                        int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), ChatColor.GOLD + "Pixie Dust") - 1;
+                        int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.PIXIE_DUST.toString()) - 1;
 
                         if (c >= 0) {
-                            ItemStack[] itemStacks = ItemUtil.removeItemOfName(player.getInventory().getContents(), ChatColor.GOLD + "Pixie Dust");
-                            player.getInventory().setContents(itemStacks);
+                            ItemStack[] pInventory = player.getInventory().getContents();
+                            pInventory = ItemUtil.removeItemOfName(pInventory, CustomItems.PIXIE_DUST.toString());
+                            player.getInventory().setContents(pInventory);
 
                             int amount = Math.min(c, 64);
                             while (amount > 0) {
@@ -660,7 +666,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         if (event.isSneaking() && player.getAllowFlight() && player.isOnGround() && !admin.isAdmin(player)) {
 
-            if (!ItemUtil.findItemOfName(player.getInventory().getContents(), ChatColor.GOLD + "Pixie Dust")) return;
+            if (!ItemUtil.hasItem(player, CustomItems.PIXIE_DUST)) return;
 
             player.setAllowFlight(false);
             antiCheat.unexempt(player, CheckType.FLY);
@@ -686,12 +692,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         final Player player = event.getPlayer();
         ItemStack itemStack = event.getItemDrop().getItemStack();
 
-        if (ItemUtil.matchesFilter(itemStack, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+        if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
             server.getScheduler().runTaskLater(inst, new Runnable() {
                 @Override
                 public void run() {
-                    ItemStack[] contents = player.getInventory().getContents();
-                    if (!ItemUtil.findItemOfName(contents, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+                    if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
                         if (player.getAllowFlight()) {
                             ChatUtil.sendNotice(player, "The power of the bucket fades.");
                         }
@@ -766,10 +771,9 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         if (!player.getAllowFlight()) return;
 
         ItemStack[] chestContents = event.getInventory().getContents();
-        if (!ItemUtil.findItemOfName(chestContents, ChatColor.DARK_PURPLE + "Magic Bucket")) return;
+        if (!ItemUtil.findItemOfName(chestContents, CustomItems.MAGIC_BUCKET.toString())) return;
 
-        ItemStack[] contents = player.getInventory().getContents();
-        if (!ItemUtil.findItemOfName(contents, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+        if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
             if (player.getAllowFlight()) {
                 ChatUtil.sendNotice(player, "The power of the bucket fades.");
             }
@@ -784,7 +788,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Player player = event.getEntity();
         ItemStack[] drops = event.getDrops().toArray(new ItemStack[event.getDrops().size()]);
 
-        if (ItemUtil.findItemOfName(drops, ChatColor.DARK_PURPLE + "Magic Bucket")) {
+        if (ItemUtil.findItemOfName(drops, CustomItems.MAGIC_BUCKET.toString())) {
             if (player.getAllowFlight()) {
                 ChatUtil.sendNotice(player, "The power of the bucket fades.");
             }
@@ -801,13 +805,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         ItemStack stack = event.getItem();
 
-        if (ItemUtil.matchesFilter(stack, ChatColor.BLUE + "God Fish")) {
-
-
+        if (ItemUtil.isItem(stack, CustomItems.GOD_FISH)) {
             player.chat("The fish flow within me!");
             new HulkFX().add(player);
-        } else if (ItemUtil.matchesFilter(stack, ChatColor.DARK_RED + "Potion of Restitution")) {
-
+        } else if (ItemUtil.isItem(stack, CustomItems.POTION_OF_RESTITUTION)) {
             Location lastLoc = getSession(player).getRecentDeathPoint();
             if (lastLoc != null) {
                 player.teleport(lastLoc);
@@ -820,7 +821,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         Player player = event.getPlayer();
 
-        boolean hasCrown = ItemUtil.matchesFilter(player.getInventory().getHelmet(), ChatColor.GOLD + "Ancient Crown");
+        boolean hasCrown = ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN);
 
         int exp = event.getAmount();
         if (hasCrown) {
@@ -852,10 +853,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         if (itemStack.getTypeId() == ItemID.GOLD_BAR || itemStack.getTypeId() == ItemID.GOLD_NUGGET) {
 
-            ItemStack[] inventoryContents = player.getInventory().getContents();
-            ItemStack[] armorContents = player.getInventory().getArmorContents();
-            if (!(ItemUtil.findItemOfName(inventoryContents, ChatColor.AQUA + "Imbued Crystal")
-                    || ItemUtil.findItemOfName(armorContents, ChatColor.GOLD + "Ancient Crown"))) {
+            if (!(ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN)
+                    || ItemUtil.hasItem(player, CustomItems.IMBUED_CRYSTAL))) {
                 return;
             }
             server.getScheduler().runTaskLater(inst, new Runnable() {

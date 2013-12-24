@@ -44,6 +44,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
+
 /**
  * @author Turtle9598
  */
@@ -166,7 +168,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 LivingEntity defender = (LivingEntity) target;
                 if (attacker instanceof Player) {
                     player = (Player) attacker;
-                    if (ItemUtil.hasMasterSword(player) && checkEntity(defender)) {
+                    if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD) && checkEntity(defender)) {
 
                         if (ChanceUtil.getChance(10)) {
                             EffectUtil.Master.healingLight(player, defender);

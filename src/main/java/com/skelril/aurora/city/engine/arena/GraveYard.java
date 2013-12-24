@@ -54,6 +54,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 public class GraveYard extends AbstractRegionedArena implements MonitoredArena, PersistentArena, Listener {
@@ -247,7 +248,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
                 if (getWorld().isThundering()) return;
 
-                if (ItemUtil.hasMasterSword(player)) {
+                if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
 
                     if (ChanceUtil.getChance(10)) {
                         EffectUtil.Master.healingLight(player, defender);
@@ -428,9 +429,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
     }
 
-    private final String IMBUED = ChatColor.AQUA + "Imbued Crystal";
-    private final String DARKNESS = ChatColor.DARK_RED + "Gem of Darkness";
-
     @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSacrifice(PlayerSacrificeItemEvent event) {
@@ -446,21 +444,21 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         int m = item.getType().getMaxDurability();
         ItemStack[] i;
 
-        if (ItemUtil.isPhantomGold(item)) {
+        if (ItemUtil.isItem(item, CustomItems.PHANTOM_GOLD)) {
             int amount = 50;
             if (isInRewardsRoom) {
                 amount = 100;
             }
             economy.depositPlayer(player.getName(), amount * item.getAmount());
             event.setItemStack(null);
-        } else if (ItemUtil.isFearSword(item) || ItemUtil.isFearBow(item)) {
+        } else if (ItemUtil.isItem(item, CustomItems.FEAR_SWORD) || ItemUtil.isItem(item, CustomItems.FEAR_BOW)) {
 
             if (!isInRewardsRoom) {
                 o = 2;
             }
 
-            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), DARKNESS);
-            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), DARKNESS);
+            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.GEM_OF_DARKNESS.toString());
+            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), CustomItems.GEM_OF_DARKNESS.toString());
             player.getInventory().setContents(i);
             while (item.getDurability() > 0 && c >= o) {
                 item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
@@ -475,14 +473,14 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             }
             player.updateInventory();
             event.setItemStack(null);
-        } else if (ItemUtil.isUnleashedSword(item) || ItemUtil.isUnleashedBow(item)) {
+        } else if (ItemUtil.isItem(item, CustomItems.UNLEASHED_SWORD) || ItemUtil.isItem(item, CustomItems.UNLEASHED_BOW)) {
 
             if (!isInRewardsRoom) {
                 o = 2;
             }
 
-            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), IMBUED);
-            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), IMBUED);
+            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.IMBUED_CRYSTAL.toString());
+            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), CustomItems.IMBUED_CRYSTAL.toString());
             player.getInventory().setContents(i);
             while (item.getDurability() > 0 && c >= o) {
                 item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
@@ -794,7 +792,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         switch (action) {
             case RIGHT_CLICK_BLOCK:
-                if (ItemUtil.matchesFilter(stack, ChatColor.DARK_RED + "Phantom Clock")) {
+                if (ItemUtil.isItem(stack, CustomItems.PHANTOM_CLOCK)) {
 
                     player.teleport(new Location(getWorld(), -126, 42, -685), TeleportCause.UNKNOWN);
 
@@ -1261,13 +1259,11 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void fogPlayer(Player player) {
 
-        if (ItemUtil.hasFearHelmet(player)) return;
-        ItemStack[] inventoryContents = player.getInventory().getContents();
-        ItemStack[] armorContents = player.getInventory().getArmorContents();
-        if (ItemUtil.findItemOfName(inventoryContents, DARKNESS) || ItemUtil.findItemOfName(armorContents, ChatColor.GOLD + "Ancient Crown"))
+        if (ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN)
+                || ItemUtil.hasItem(player, CustomItems.GEM_OF_DARKNESS)) {
             return;
-        player.removePotionEffect(PotionEffectType.BLINDNESS);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 6, 1));
+        }
+        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 6, 1), true);
     }
 
     @Override

@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
+
 /**
  * Author: Turtle9598
  */
@@ -84,7 +86,8 @@ public class WeatherManagerComponent extends BukkitComponent implements Listener
         for (Player player : Collections.synchronizedList(enabledFor)) {
             if (player.getWorld().equals(event.getWorld())) {
                 if (!event.toThunderState()) {
-                    if (ItemUtil.hasAncientArmour(player) || ItemUtil.hasMasterBow(player) || ItemUtil.hasMasterSword(player)) {
+                    if (ItemUtil.hasAncientArmour(player) || ItemUtil.isHoldingItem(player, CustomItems.MASTER_BOW)
+                            || ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
                         ChatUtil.sendWarning(player, ChatColor.DARK_RED + "===============[WARNING]===============");
                     }
                 }
