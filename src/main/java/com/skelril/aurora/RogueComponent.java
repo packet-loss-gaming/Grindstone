@@ -11,6 +11,7 @@ import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.PrePrayerApplicationEvent;
+import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -29,6 +30,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -39,9 +41,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Rogue", desc = "Speed and strength is always the answer.")
@@ -145,6 +145,34 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         player.removePotionEffect(PotionEffectType.SPEED);
         player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamageEvent(EntityDamageEvent event) {
+
+        Entity e = event.getEntity();
+        if (e instanceof Player && event.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
+            Player player = (Player) e;
+            if (isRogue(player)) {
+                List<Entity> entities = player.getNearbyEntities(2, 2, 2);
+
+                if (entities.size() < 1) return;
+
+                Collections.shuffle(entities);
+
+                server.getPluginManager().callEvent(new RapidHitEvent(player));
+
+                for (Entity entity : entities) {
+                    if (entity.equals(player)) continue;
+                    if (entity instanceof LivingEntity) {
+                        if (entity instanceof Player && !PvPComponent.allowsPvP(player, (Player) entity)) continue;
+                        ((LivingEntity) entity).damage(event.getDamage() * .5, player);
+                        event.setCancelled(true);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
