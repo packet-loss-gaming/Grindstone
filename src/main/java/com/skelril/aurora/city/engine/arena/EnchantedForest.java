@@ -2,9 +2,7 @@ package com.skelril.aurora.city.engine.arena;
 
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
@@ -13,16 +11,20 @@ import com.skelril.aurora.events.egg.EggHatchEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.restoration.BaseBlockRecordIndex;
 import com.skelril.aurora.util.restoration.BlockRecord;
+import com.skelril.aurora.util.timer.IntegratedRunnable;
+import com.skelril.aurora.util.timer.TimedRunnable;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -34,13 +36,11 @@ import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
 import java.io.File;
@@ -61,6 +61,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     private final Random random = new Random();
     private BaseBlockRecordIndex treeMap = new BaseBlockRecordIndex();
     private BaseBlockRecordIndex generalMap = new BaseBlockRecordIndex();
+    private Set<Player> noTeeth = new HashSet<>();
 
     public EnchantedForest(World world, ProtectedRegion region, AdminComponent adminComponent) {
 
@@ -164,7 +165,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         if (ChanceUtil.getChance(256)) {
             final PlayerInventory pInv = player.getInventory();
-            switch (ChanceUtil.getRandom(3)) {
+            switch (ChanceUtil.getRandom(5)) {
                 case 1:
                     boolean hasAxe = true;
                     switch (pInv.getItemInHand().getTypeId()) {
@@ -204,91 +205,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     }
                     break;
                 case 2:
-                    // Make potion
-                    ItemStack potion = new Potion(PotionType.INSTANT_DAMAGE).toItemStack(1);
-                    PotionMeta pMeta = (PotionMeta) potion.getItemMeta();
-                    pMeta.addCustomEffect(
-                            new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 2), false);
-                    pMeta.addCustomEffect(
-                            new PotionEffect(PotionEffectType.REGENERATION, 20 * 600, 2), false);
-                    pMeta.addCustomEffect(
-                            new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 2), false);
-                    pMeta.addCustomEffect(
-                            new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 600, 2), false);
-                    pMeta.addCustomEffect(
-                            new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 2), false);
-                    pMeta.setDisplayName(ChatColor.WHITE + "Extreme Combat Potion");
-                    potion.setItemMeta(pMeta);
-
-                    // Give potion
-                    ChatUtil.sendWarning(player, "You might need this friend ;)");
-                    getWorld().dropItemNaturally(player.getLocation(), potion);
-                    int waves = 5 * ChanceUtil.getRandom(3);
-                    for (int i = 0; i < waves; i++) {
-                        server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                ChatUtil.sendNotice(getContainedPlayers(), "Slimes away guys!");
-
-                                BlockVector min = getRegion().getMinimumPoint();
-                                BlockVector max = getRegion().getMaximumPoint();
-
-                                short sOut = 1000;
-                                com.sk89q.worldedit.Vector v;
-                                for (int i = 0; i < 25 * ChanceUtil.getRandom(4); i++) {
-                                    sOut--;
-                                    if (sOut < 0) break;
-                                    v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ());
-                                    v = v.add(0, 83, 0);
-                                    if (getRegion().contains(v.getBlockX(), v.getBlockY(), v.getBlockZ())) {
-                                        Block b = getWorld().getBlockAt(v.getBlockX(), v.getBlockY(), v.getBlockZ());
-                                        if (b.getTypeId() == BlockID.AIR
-                                                || EnvironmentUtil.isShrubBlock(b.getTypeId())) {
-                                            Slime s = (Slime) getWorld().spawnEntity(b.getLocation(), EntityType.SLIME);
-                                            s.setSize(ChanceUtil.getRandom(8));
-                                            s.setRemoveWhenFarAway(ChanceUtil.getChance(16));
-                                            continue;
-                                        }
-                                    }
-                                    i--;
-                                }
-
-                            }
-                        }, 20 * 7 * (i + 1));
-                    }
-                    server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            ChatUtil.sendNotice(getContainedPlayers(), "Release the god slime!");
-
-                            BlockVector min = getRegion().getMinimumPoint();
-                            BlockVector max = getRegion().getMaximumPoint();
-
-                            short sOut = 1000;
-                            com.sk89q.worldedit.Vector v;
-                            for (int i = 0; i < ChanceUtil.getRandom(1); i++) {
-                                sOut--;
-                                if (sOut < 0) break;
-                                v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ());
-                                v = v.add(0, 83, 0);
-                                if (getRegion().contains(v.getBlockX(), v.getBlockY(), v.getBlockZ())) {
-                                    Block b = getWorld().getBlockAt(v.getBlockX(), v.getBlockY(), v.getBlockZ());
-                                    if (BlockType.canPassThrough(b.getTypeId())) {
-                                        Slime s = (Slime) getWorld().spawnEntity(b.getLocation(), EntityType.SLIME);
-                                        s.setSize(16);
-                                        s.setRemoveWhenFarAway(false);
-                                        continue;
-                                    }
-                                }
-                                i--;
-                            }
-
-                        }
-                    }, 20 * 7 * (waves + 1));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * 60, 2), true);
+                    ChatUtil.sendWarning(player, "You cut your hand on the poisonous bark.");
                     break;
                 case 3:
                     List<ItemStack> toDrop = Lists.newArrayList(pInv.getArmorContents());
@@ -304,7 +222,40 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     }
                     pInv.setArmorContents(null);
                     pInv.clear();
-                    ChatUtil.sendNotice(player, "The fair throws your stuff all over the place");
+                    ChatUtil.sendNotice(player, "The fairies throws your stuff all over the place");
+                    break;
+                case 4:
+                    for (final Player aPlayer : getContainedPlayers()) {
+                        ChatUtil.sendWarning(aPlayer, "The fairies turn rabid!");
+                        IntegratedRunnable runnable = new IntegratedRunnable() {
+                            @Override
+                            public boolean run(int times) {
+                                if (contains(aPlayer)) {
+                                    aPlayer.setHealth(aPlayer.getHealth() - 1);
+                                    return false;
+                                }
+                                return true;
+                            }
+
+                            @Override
+                            public void end() {
+                                ChatUtil.sendWarning(aPlayer, "The rabid fairies disperse.");
+                            }
+                        };
+                        TimedRunnable timedRunnable = new TimedRunnable(runnable, 2);
+                        server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 20);
+                    }
+                    break;
+                case 5:
+                    ChatUtil.sendWarning(player, "The tooth fairy takes your teeth!");
+                    noTeeth.add(player);
+                    server.getScheduler().runTaskLater(inst, new Runnable() {
+                        @Override
+                        public void run() {
+                            noTeeth.remove(player);
+                        }
+                    }, 20 * 60 * 2);
+                    break;
             }
         }
     }
@@ -410,6 +361,16 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         if (!adminComponent.isAdmin(player) && contains(event.getBlockClicked())) {
             event.setCancelled(true);
             ChatUtil.sendNotice(player, ChatColor.DARK_RED, "You don't have permission for this area.");
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onItemConsume(PlayerItemConsumeEvent event) {
+
+        Player player = event.getPlayer();
+        if (noTeeth.contains(player) && event.getItem().getTypeId() != ItemID.POTION) {
+            ChatUtil.sendWarning(player, "You find it impossible to eat that without any teeth.");
+            event.setCancelled(true);
         }
     }
 
