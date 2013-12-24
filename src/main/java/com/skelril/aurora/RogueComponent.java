@@ -15,6 +15,7 @@ import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EntityDistanceComparator;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -158,7 +159,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
                 if (entities.size() < 1) return;
 
-                Collections.shuffle(entities);
+                Collections.sort(entities, new EntityDistanceComparator(player.getLocation()));
 
                 server.getPluginManager().callEvent(new RapidHitEvent(player));
 
