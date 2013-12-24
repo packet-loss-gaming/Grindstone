@@ -11,7 +11,6 @@ import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.city.engine.PvPComponent;
-import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -48,7 +47,10 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -78,7 +80,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         registerCommands(Commands.class);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 11);
+        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 5);
     }
 
     // Player Management
@@ -121,16 +123,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     public boolean hasPoisonArrows(Player player) {
 
         return sessions.getSession(NinjaState.class, player).hasPoisonArrows();
-    }
-
-    public boolean allowsConflictingPotions(Player player) {
-
-        return sessions.getSession(NinjaState.class, player).allowsConflictingPotions();
-    }
-
-    public void allowConflictingPotions(Player player, boolean allowConflictingPotions) {
-
-        sessions.getSession(NinjaState.class, player).allowConflictingPotions(allowConflictingPotions);
     }
 
     public boolean canSmokeBomb(Player player) {
@@ -284,6 +276,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             case ENTITY_ATTACK:
                 event.setDamage(event.getDamage() * .8);
                 break;
+            case SUFFOCATION:
+                player.setRemainingAir(player.getMaximumAir());
+            case LAVA:
+            case FIRE:
+                event.setCancelled(true);
+                break;
+            case FIRE_TICK:
+                player.setFireTicks(0);
+                event.setCancelled(true);
+                break;
         }
     }
 
@@ -399,32 +401,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
-    private static Set<Integer> blockedEffects = new HashSet<>();
-
-    static {
-        blockedEffects.add(PotionEffectType.FIRE_RESISTANCE.getId());
-        blockedEffects.add(PotionEffectType.WATER_BREATHING.getId());
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPrayerApplication(PrePrayerApplicationEvent event) {
-
-        Player player = event.getPlayer();
-        if (isNinja(player) && inst.hasPermission(player, "aurora.ninja.guild")) {
-            Iterator<PotionEffect> it = event.getCause().getEffect().getPotionEffects().iterator();
-            while (it.hasNext()) {
-                if (blockedEffects.contains(it.next().getType().getId())) {
-                    if (!allowsConflictingPotions(player)) {
-                        it.remove();
-                    } else {
-                        event.setCancelled(true);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
     @Override
     public void run() {
 
@@ -437,17 +413,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
             // Stop this from breaking if the player isn't here
             if (player == null || !player.isOnline() || player.isDead()) continue;
-
-            if (inst.hasPermission(player, "aurora.ninja.guild")) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, 20 * 45, 0), true);
-                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 45, 1), true);
-
-                Entity vehicle = player.getVehicle();
-                if (vehicle != null && vehicle instanceof Horse) {
-                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 20, 1), true);
-                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 20, 1), true);
-                }
-            }
 
             Set<Player> invisibleNewCount = new HashSet<>();
             Set<Player> visibleNewCount = new HashSet<>();
@@ -530,7 +495,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             showToGuild((Player) sender, args.hasFlag('g'));
             useVanish((Player) sender, !args.hasFlag('i'));
             usePoisonArrows((Player) sender, !args.hasFlag('t'));
-            allowConflictingPotions((Player) sender, !args.hasFlag('p'));
 
             if (!isNinja) {
                 ChatUtil.sendNotice(sender, "You are inspired and become a ninja!");
@@ -567,8 +531,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         private boolean showToGuild = false;
         @Setting("ninja-toxic-arrows")
         private boolean toxicArrows = true;
-        @Setting("ninja-conflicting-potions")
-        private boolean allowConflictingPotions = true;
 
         private long nextGrapple = 0;
         private long nextSmokeBomb = 0;
@@ -616,16 +578,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         public void usePoisonArrows(boolean explosiveArrows) {
 
             this.toxicArrows = explosiveArrows;
-        }
-
-        public boolean allowsConflictingPotions() {
-
-            return allowConflictingPotions;
-        }
-
-        public void allowConflictingPotions(boolean allowConflictingPotions) {
-
-            this.allowConflictingPotions = allowConflictingPotions;
         }
 
         public boolean canGrapple() {
