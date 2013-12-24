@@ -321,7 +321,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                         ItemUtil.Ancient.makeBoots(), ItemUtil.Ancient.makeLegs(),
                         ItemUtil.Ancient.makeChest(), ItemUtil.Ancient.makeHelmet()
                 });
-                equipment.setItemInHand(ItemUtil.God.makeSword());
 
                 // Drop Chances
                 equipment.setItemInHandDropChance(0);
@@ -1249,7 +1248,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 };
 
                 if (aBB.equals(new BaseBlock(BlockID.STONE_BRICK, 2))) {
-                    server.getScheduler().runTaskLater(inst, r, 17);
+                    server.getScheduler().runTaskLater(inst, r, 20 * 3);
                 } else {
                     r.run();
                 }
