@@ -232,6 +232,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                             public boolean run(int times) {
                                 if (contains(aPlayer)) {
                                     aPlayer.setHealth(aPlayer.getHealth() - 1);
+                                    ChatUtil.sendWarning(aPlayer, "A fairy tears through your flesh!");
                                     return false;
                                 }
                                 return true;
@@ -243,7 +244,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                             }
                         };
                         TimedRunnable timedRunnable = new TimedRunnable(runnable, 2);
-                        server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 20);
+                        timedRunnable.setTask(server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 20));
                     }
                     break;
                 case 5:
