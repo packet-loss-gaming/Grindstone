@@ -17,6 +17,7 @@ import com.skelril.aurora.util.restoration.BlockRecord;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
 import org.bukkit.ChatColor;
+import org.bukkit.EntityEffect;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -187,9 +188,9 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                     "at you.");
                             player.damage(7);
                             player.setVelocity(new Vector(
-                                    random.nextDouble() * 2.0 - 1.5,
+                                    random.nextDouble() * 2.0 - 1,
                                     random.nextDouble() * 1,
-                                    random.nextDouble() * 2.0 - 1.5)
+                                    random.nextDouble() * 2.0 - 1)
                             );
                     }
 
@@ -232,6 +233,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                             public boolean run(int times) {
                                 if (contains(aPlayer)) {
                                     aPlayer.setHealth(aPlayer.getHealth() - 1);
+                                    aPlayer.playEffect(EntityEffect.HURT);
                                     ChatUtil.sendWarning(aPlayer, "A fairy tears through your flesh!");
                                     return false;
                                 }
