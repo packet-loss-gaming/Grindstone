@@ -54,6 +54,7 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
 import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 /**
@@ -460,20 +461,22 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     }
 
-    private static Set<SpecialAttackEvent.Specs> generalBlacklistedSpecs = new HashSet<>();
-    private static Set<SpecialAttackEvent.Specs> bossBlacklistedSpecs = new HashSet<>();
-    private static Set<SpecialAttackEvent.Specs> ultimateBlacklistedSpecs = new HashSet<>();
+    private static Set<Specs> generalBlacklistedSpecs = new HashSet<>();
+    private static Set<Specs> bossBlacklistedSpecs = new HashSet<>();
+    private static Set<Specs> ultimateBlacklistedSpecs = new HashSet<>();
 
     static {
-        generalBlacklistedSpecs.add(SpecialAttackEvent.Specs.DISARM);
-        generalBlacklistedSpecs.add(SpecialAttackEvent.Specs.MOB_ATTACK);
-        generalBlacklistedSpecs.add(SpecialAttackEvent.Specs.FEAR_BOMB);
+        generalBlacklistedSpecs.add(Specs.DISARM);
+        generalBlacklistedSpecs.add(Specs.MOB_ATTACK);
+        generalBlacklistedSpecs.add(Specs.FEAR_BOMB);
 
-        bossBlacklistedSpecs.add(SpecialAttackEvent.Specs.LIFE_LEECH);
-        bossBlacklistedSpecs.add(SpecialAttackEvent.Specs.SOUL_SMITE);
+        bossBlacklistedSpecs.add(Specs.FAMINE);
+        bossBlacklistedSpecs.add(Specs.RANGE_LIFE_LEECH);
+        bossBlacklistedSpecs.add(Specs.LIFE_LEECH);
+        bossBlacklistedSpecs.add(Specs.SOUL_SMITE);
 
-        ultimateBlacklistedSpecs.add(SpecialAttackEvent.Specs.DECIMATE);
-        ultimateBlacklistedSpecs.add(SpecialAttackEvent.Specs.DOOM_BLADE);
+        ultimateBlacklistedSpecs.add(Specs.DECIMATE);
+        ultimateBlacklistedSpecs.add(Specs.DOOM_BLADE);
     }
 
     private long lastUltimateAttack = 0;
@@ -483,7 +486,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
         if (!contains(event.getLocation())) return;
 
-        SpecialAttackEvent.Specs spec = event.getSpec();
+        Specs spec = event.getSpec();
         LivingEntity target = event.getTarget();
 
         if (target != null && target instanceof Giant) {

@@ -100,22 +100,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         Specs[] available;
         Specs used;
-        SpecialAttackEvent event;
 
         available = Arrays.copyOfRange(Specs.values(), start, end);
         used = available[ChanceUtil.getRandom(available.length) - 1];
 
-        if (target instanceof LivingEntity) {
-            event = new SpecialAttackEvent(owner, (LivingEntity) target, used);
-        } else if (target instanceof Location) {
-            event = new SpecialAttackEvent(owner, (Location) target, used);
-        } else {
-            return null;
-        }
-
-        server.getPluginManager().callEvent(event);
-
-        return event.isCancelled() ? null : event.getSpec();
+        return callSpec(owner, target, used);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
