@@ -1144,7 +1144,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             int length = chest.getBlockInventory().getContents().length;
             int target;
-            for (int i = 0; i < length / 3; i++) {
+            for (int i = 0; i < length * .6; i++) {
                 target = ChanceUtil.getRandom(length) - 1;
                 if (chest.getBlockInventory().getContents()[target] != null) {
                     i--;
