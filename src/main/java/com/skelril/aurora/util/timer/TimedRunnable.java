@@ -12,7 +12,7 @@ public class TimedRunnable implements Runnable {
     public TimedRunnable(IntegratedRunnable action, int times) {
 
         this.action = action;
-        this.times = times + 1;
+        this.times = times;
     }
 
     public void addTime(int times) {
@@ -28,11 +28,9 @@ public class TimedRunnable implements Runnable {
     @Override
     public void run() {
 
-        times = times - 1;
-
         if (times > 0) {
-            if (!action.run(times)) {
-                times++;
+            if (action.run(times)) {
+                times--;
             }
         } else {
             cancel(true);

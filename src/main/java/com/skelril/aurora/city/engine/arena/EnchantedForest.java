@@ -245,7 +245,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                                 ChatUtil.sendWarning(aPlayer, "The rabid fairies disperse.");
                             }
                         };
-                        TimedRunnable timedRunnable = new TimedRunnable(runnable, 2);
+                        TimedRunnable timedRunnable = new TimedRunnable(runnable, 1);
                         timedRunnable.setTask(server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 20));
                     }
                     break;
