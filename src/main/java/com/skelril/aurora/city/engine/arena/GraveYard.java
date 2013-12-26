@@ -315,6 +315,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 }
 
                 Zombie zombie = (Zombie) spawn(ls, EntityType.ZOMBIE, "Guardian Zombie");
+                zombie.setCanPickupItems(false);
+
                 EntityEquipment equipment = zombie.getEquipment();
 
                 equipment.setArmorContents(new ItemStack[]{
