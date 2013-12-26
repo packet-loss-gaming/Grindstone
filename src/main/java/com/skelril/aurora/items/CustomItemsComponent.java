@@ -340,7 +340,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 SpecialAttackEvent specEvent = callSpec(owner, specType, spec);
 
                 if (!specEvent.isCancelled()) {
-                    session.updateSpec(specType);
+                    session.updateSpec(specType, specEvent.getSpec().coolDown());
                     specEvent.getSpec().activate();
                 }
             }
@@ -421,7 +421,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 if (type != null) {
                     SpecialAttackEvent specEvent = callSpec(owner, SpecType.RANGED, new MobAttack(owner, targetLoc, type));
                     if (!specEvent.isCancelled()) {
-                        session.updateSpec(SpecType.ANIMAL_BOW);
+                        session.updateSpec(SpecType.ANIMAL_BOW, specEvent.getSpec().coolDown());
                         specEvent.getSpec().activate();
                     }
                 }
