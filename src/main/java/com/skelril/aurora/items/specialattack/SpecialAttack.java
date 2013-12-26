@@ -42,7 +42,7 @@ public abstract class SpecialAttack {
         }
     }
 
-    public long coolDown() {
+    public long getCoolDown() {
 
         return 0;
     }
