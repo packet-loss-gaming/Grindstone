@@ -271,6 +271,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     switch (ChanceUtil.getRandom(5)) {
                         case 1:
                             spec = new Famine(owner, target);
+                            break;
                         case 2:
                             spec = new LifeLeech(owner, target);
                             break;
@@ -417,12 +418,13 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     type = EntityType.CHICKEN;
                 }
 
-                SpecialAttackEvent specEvent = callSpec(owner, SpecType.RANGED, new MobAttack(owner, targetLoc, type));
-                if (!specEvent.isCancelled()) {
-                    session.updateSpec(SpecType.ANIMAL_BOW);
-                    specEvent.getSpec().activate();
+                if (type != null) {
+                    SpecialAttackEvent specEvent = callSpec(owner, SpecType.RANGED, new MobAttack(owner, targetLoc, type));
+                    if (!specEvent.isCancelled()) {
+                        session.updateSpec(SpecType.ANIMAL_BOW);
+                        specEvent.getSpec().activate();
+                    }
                 }
-
             }
 
             if (!session.canSpec(SpecType.RANGED)) {

@@ -2,6 +2,7 @@ package com.skelril.aurora.items.specialattack.attacks.ranged.misc;
 
 import com.skelril.aurora.items.specialattack.LocationAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.RangedSpecial;
+import com.skelril.aurora.util.item.EffectUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -21,6 +22,7 @@ public class MobAttack extends LocationAttack implements RangedSpecial {
     @Override
     public void activate() {
 
+        EffectUtil.Strange.mobBarrage(target, type);
 
         if (type == EntityType.BAT) {
             inform("Your bow releases a batty attack.");
