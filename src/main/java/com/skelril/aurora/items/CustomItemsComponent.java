@@ -1,4 +1,4 @@
-package com.skelril.aurora;
+package com.skelril.aurora.items;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
@@ -11,11 +11,26 @@ import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.entity.ProjectileTickEvent;
+import com.skelril.aurora.items.specialattack.SpecialAttack;
+import com.skelril.aurora.items.specialattack.attacks.hybrid.fear.Curse;
+import com.skelril.aurora.items.specialattack.attacks.hybrid.unleashed.EvilFocus;
+import com.skelril.aurora.items.specialattack.attacks.hybrid.unleashed.LifeLeech;
+import com.skelril.aurora.items.specialattack.attacks.hybrid.unleashed.Speed;
+import com.skelril.aurora.items.specialattack.attacks.melee.fear.*;
+import com.skelril.aurora.items.specialattack.attacks.melee.unleashed.DoomBlade;
+import com.skelril.aurora.items.specialattack.attacks.melee.unleashed.HealingLight;
+import com.skelril.aurora.items.specialattack.attacks.melee.unleashed.Regen;
+import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
+import com.skelril.aurora.items.specialattack.attacks.ranged.fear.FearBomb;
+import com.skelril.aurora.items.specialattack.attacks.ranged.fear.FearStrike;
+import com.skelril.aurora.items.specialattack.attacks.ranged.fear.MagicChain;
+import com.skelril.aurora.items.specialattack.attacks.ranged.misc.MobAttack;
+import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.Famine;
+import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.GlowingFog;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
@@ -45,7 +60,6 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
 import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 /**
@@ -80,31 +94,13 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         return sessions.getSession(CustomItemSession.class, player);
     }
 
-    private Specs callSpec(Player owner, Object target, Specs spec) {
+    private SpecialAttackEvent callSpec(Player owner, SpecType context, SpecialAttack spec) {
 
-        SpecialAttackEvent event;
-        if (target instanceof LivingEntity) {
-            event = new SpecialAttackEvent(owner, (LivingEntity) target, spec);
-        } else if (target instanceof Location) {
-            event = new SpecialAttackEvent(owner, (Location) target, spec);
-        } else {
-            return null;
-        }
+        SpecialAttackEvent event = new SpecialAttackEvent(owner, context, spec);
 
         server.getPluginManager().callEvent(event);
 
-        return event.isCancelled() ? null : event.getSpec();
-    }
-
-    private Specs callSpec(Player owner, Object target, int start, int end) {
-
-        Specs[] available;
-        Specs used;
-
-        available = Arrays.copyOfRange(Specs.values(), start, end);
-        used = available[ChanceUtil.getRandom(available.length) - 1];
-
-        return callSpec(owner, target, used);
+        return event;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -152,7 +148,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
             // END WORK AROUND
 
-            if (session.canSpec(SpecType.RED) && ItemUtil.hasItem(player, CustomItems.RED_FEATHER)) {
+            if (session.canSpec(SpecType.RED_FEATHER) && ItemUtil.hasItem(player, CustomItems.RED_FEATHER)) {
 
                 final int redQD = ItemUtil.countItemsOfType(contents, ItemID.REDSTONE_DUST);
                 final int redQB = 9 * ItemUtil.countItemsOfType(contents, BlockID.REDSTONE_BLOCK);
@@ -204,7 +200,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     player.setFireTicks(0);
 
                     // Update the session
-                    session.updateSpec(SpecType.RED, (long) (blocked * 75));
+                    session.updateSpec(SpecType.RED_FEATHER, (long) (blocked * 75));
 
                     // WORK AROUND
                     if (damager != null) {
@@ -243,105 +239,108 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             CustomItemSession session = getSession(owner);
 
-            Specs used;
-            if (session.canSpec(SpecType.FEAR)) {
-                if (ItemUtil.isHoldingItem(owner, CustomItems.FEAR_SWORD) && launcher == null) {
-                    used = callSpec(owner, target, 0, 6);
-                    if (used == null) return;
-                    session.updateSpec(SpecType.FEAR);
-                    switch (used) {
-                        case CONFUSE:
-                            EffectUtil.Fear.confuse(owner, target);
-                            break;
-                        case BLAZE:
-                            EffectUtil.Fear.fearBlaze(owner, target);
-                            break;
-                        case CURSE:
-                            EffectUtil.Fear.curse(owner, target);
-                            break;
-                        case WEAKEN:
-                            EffectUtil.Fear.weaken(owner, target);
-                            break;
-                        case DECIMATE:
-                            EffectUtil.Fear.decimate(owner, target);
-                            break;
-                        case SOUL_SMITE:
-                            EffectUtil.Fear.soulSmite(owner, target);
-                            break;
-                    }
-                } else if (ItemUtil.isItem(launcher, CustomItems.FEAR_BOW)) {
-                    used = callSpec(owner, target, 6, 11);
-                    if (used == null) return;
-                    session.updateSpec(SpecType.FEAR);
-                    switch (used) {
-                        case DISARM:
-                            if (EffectUtil.Fear.disarm(owner, target)) {
+            SpecType specType = null;
+            SpecialAttack spec = null;
+
+            if (launcher != null) {
+
+                specType = SpecType.RANGED;
+
+                if (ItemUtil.isHoldingItem(owner, CustomItems.FEAR_BOW)) {
+                    switch (ChanceUtil.getRandom(5)) {
+                        case 1:
+                            Disarm disarmSpec = new Disarm(owner, target);
+                            if (disarmSpec.getItemStack() != null) {
+                                spec = disarmSpec;
                                 break;
                             }
-                        case RANGE_CURSE:
-                            EffectUtil.Fear.curse(owner, target);
+                        case 2:
+                            spec = new Curse(owner, target);
                             break;
-                        case MAGIC_CHAIN:
-                            EffectUtil.Fear.magicChain(owner, target);
+                        case 3:
+                            spec = new MagicChain(owner, target);
                             break;
-                        case FEAR_STRIKE:
-                            event.setDamage(EffectUtil.Fear.fearStrike(owner, target, event.getDamage()));
+                        case 4:
+                            spec = new FearStrike(owner, target);
                             break;
-                        case FEAR_BOMB:
-                            EffectUtil.Fear.fearBomb(owner, target);
+                        case 5:
+                            spec = new FearBomb(owner, target);
+                            break;
+                    }
+                } else if (ItemUtil.isHoldingItem(owner, CustomItems.UNLEASHED_BOW)) {
+                    switch (ChanceUtil.getRandom(5)) {
+                        case 1:
+                            spec = new Famine(owner, target);
+                        case 2:
+                            spec = new LifeLeech(owner, target);
+                            break;
+                        case 3:
+                            spec = new EvilFocus(owner, target);
+                            break;
+                        case 4:
+                            spec = new Speed(owner, target);
+                            break;
+                        case 5:
+                            spec = new GlowingFog(owner, target);
+                            break;
+                    }
+                }
+            } else {
+
+                specType = SpecType.MELEE;
+
+                if (ItemUtil.isHoldingItem(owner, CustomItems.FEAR_SWORD)) {
+                    switch (ChanceUtil.getRandom(6)) {
+                        case 1:
+                            spec = new Confuse(owner, target);
+                            break;
+                        case 2:
+                            spec = new FearBlaze(owner, target);
+                            break;
+                        case 3:
+                            spec = new Curse(owner, target);
+                            break;
+                        case 4:
+                            spec = new Weaken(owner, target);
+                            break;
+                        case 5:
+                            spec = new Decimate(owner, target);
+                            break;
+                        case 6:
+                            spec = new SoulSmite(owner, target);
+                            break;
+                    }
+                } else if (ItemUtil.isHoldingItem(owner, CustomItems.UNLEASHED_SWORD)) {
+                    switch (ChanceUtil.getRandom(6)) {
+                        case 1:
+                            spec = new EvilFocus(owner, target);
+                            break;
+                        case 2:
+                            spec = new HealingLight(owner, target);
+                            break;
+                        case 3:
+                            spec = new Speed(owner, target);
+                            break;
+                        case 4:
+                            spec = new Regen(owner, target);
+                            break;
+                        case 5:
+                            spec = new DoomBlade(owner, target);
+                            break;
+                        case 6:
+                            spec = new LifeLeech(owner, target);
                             break;
                     }
                 }
             }
 
-            if (session.canSpec(SpecType.UNLEASHED)) {
-                if (ItemUtil.isHoldingItem(owner, CustomItems.UNLEASHED_SWORD) && launcher == null) {
-                    used = callSpec(owner, target, 11, 17);
-                    if (used == null) return;
-                    session.updateSpec(SpecType.UNLEASHED);
-                    switch (used) {
-                        case BLIND:
-                            EffectUtil.Unleashed.blind(owner, target);
-                            break;
-                        case HEALING_LIGHT:
-                            EffectUtil.Unleashed.healingLight(owner, target);
-                            break;
-                        case SPEED:
-                            EffectUtil.Unleashed.speed(owner, target);
-                            break;
-                        case REGEN:
-                            EffectUtil.Unleashed.regen(owner, target);
-                            break;
-                        case DOOM_BLADE:
-                            EffectUtil.Unleashed.doomBlade(owner, target);
-                            break;
-                        case LIFE_LEECH:
-                            EffectUtil.Unleashed.lifeLeech(owner, target);
-                            break;
-                    }
-                } else if (ItemUtil.isItem(launcher, CustomItems.UNLEASHED_BOW)) {
-                    used = callSpec(owner, target, 18, 23);
-                    if (used == null) return;
-                    session.updateSpec(SpecType.UNLEASHED);
-                    switch (used) {
-                        case FAMINE:
-                            if (target instanceof Player) {
-                                EffectUtil.Unleashed.famine(owner, (Player) target);
-                                break;
-                            }
-                        case RANGE_LIFE_LEECH:
-                            EffectUtil.Unleashed.lifeLeech(owner, target);
-                            break;
-                        case EVIL_FOCUS:
-                            EffectUtil.Unleashed.evilFocus(owner, target);
-                            break;
-                        case RANGE_SPEED:
-                            EffectUtil.Unleashed.speed(owner, target);
-                            break;
-                        case GLOWING_FOG:
-                            EffectUtil.Unleashed.glowingFog(owner, target);
-                            break;
-                    }
+            if (spec != null && session.canSpec(specType)) {
+
+                SpecialAttackEvent specEvent = callSpec(owner, specType, spec);
+
+                if (!specEvent.isCancelled()) {
+                    session.updateSpec(specType);
+                    specEvent.getSpec().activate();
                 }
             }
         }
@@ -411,29 +410,22 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             CustomItemSession session = getSession(owner);
 
             if (session.canSpec(SpecType.ANIMAL_BOW)) {
-                Specs used;
+                EntityType type = null;
                 if (ItemUtil.isItem(launcher, CustomItems.BAT_BOW)) {
-                    used = callSpec(owner, targetLoc, Specs.MOB_ATTACK);
-                    if (used == null) return;
-                    session.updateSpec(SpecType.ANIMAL_BOW);
-                    switch (used) {
-                        case MOB_ATTACK:
-                            EffectUtil.Strange.mobBarrage(owner, targetLoc, EntityType.BAT);
-                            break;
-                    }
+                    type = EntityType.BAT;
                 } else if (ItemUtil.isItem(launcher, CustomItems.CHICKEN_BOW)) {
-                    used = callSpec(owner, targetLoc, Specs.MOB_ATTACK);
-                    if (used == null) return;
-                    session.updateSpec(SpecType.ANIMAL_BOW);
-                    switch (used) {
-                        case MOB_ATTACK:
-                            EffectUtil.Strange.mobBarrage(owner, targetLoc, EntityType.CHICKEN);
-                            break;
-                    }
+                    type = EntityType.CHICKEN;
                 }
+
+                SpecialAttackEvent specEvent = callSpec(owner, SpecType.RANGED, new MobAttack(owner, targetLoc, type));
+                if (!specEvent.isCancelled()) {
+                    session.updateSpec(SpecType.ANIMAL_BOW);
+                    specEvent.getSpec().activate();
+                }
+
             }
 
-            if (!session.canSpec(SpecType.FEAR)) {
+            if (!session.canSpec(SpecType.RANGED)) {
 
                 if (ItemUtil.isItem(launcher, CustomItems.FEAR_BOW)) {
                     if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
@@ -948,9 +940,9 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     public enum SpecType {
 
-        RED(1000),
-        FEAR(3800),
-        UNLEASHED(3800),
+        RED_FEATHER(1000),
+        RANGED(3800),
+        MELEE(3800),
         ANIMAL_BOW(15000);
 
         private final long delay;

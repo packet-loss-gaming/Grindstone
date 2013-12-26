@@ -43,7 +43,7 @@ public class DonationStoreComponent extends BukkitComponent implements Listener,
         Location pLoc = player.getLocation();
 
         if (inst.hasPermission(player, "aurora.deatheffects.bat")) {
-            EffectUtil.Strange.mobBarrage(player, pLoc, EntityType.BAT, true);
+            EffectUtil.Strange.mobBarrage(pLoc, EntityType.BAT);
         }
     }
 

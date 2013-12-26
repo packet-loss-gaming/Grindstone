@@ -17,6 +17,15 @@ import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
+import com.skelril.aurora.items.specialattack.SpecialAttack;
+import com.skelril.aurora.items.specialattack.attacks.hybrid.unleashed.LifeLeech;
+import com.skelril.aurora.items.specialattack.attacks.melee.fear.Decimate;
+import com.skelril.aurora.items.specialattack.attacks.melee.fear.SoulSmite;
+import com.skelril.aurora.items.specialattack.attacks.melee.unleashed.DoomBlade;
+import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
+import com.skelril.aurora.items.specialattack.attacks.ranged.fear.FearBomb;
+import com.skelril.aurora.items.specialattack.attacks.ranged.misc.MobAttack;
+import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.Famine;
 import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.ChanceUtil;
@@ -54,7 +63,6 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.logging.Logger;
 
-import static com.skelril.aurora.events.custom.item.SpecialAttackEvent.Specs;
 import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 /**
@@ -461,22 +469,21 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     }
 
-    private static Set<Specs> generalBlacklistedSpecs = new HashSet<>();
-    private static Set<Specs> bossBlacklistedSpecs = new HashSet<>();
-    private static Set<Specs> ultimateBlacklistedSpecs = new HashSet<>();
+    private static Set<Class> generalBlacklistedSpecs = new HashSet<>();
+    private static Set<Class> bossBlacklistedSpecs = new HashSet<>();
+    private static Set<Class> ultimateBlacklistedSpecs = new HashSet<>();
 
     static {
-        generalBlacklistedSpecs.add(Specs.DISARM);
-        generalBlacklistedSpecs.add(Specs.MOB_ATTACK);
-        generalBlacklistedSpecs.add(Specs.FEAR_BOMB);
+        generalBlacklistedSpecs.add(Disarm.class);
+        generalBlacklistedSpecs.add(MobAttack.class);
+        generalBlacklistedSpecs.add(FearBomb.class);
 
-        bossBlacklistedSpecs.add(Specs.FAMINE);
-        bossBlacklistedSpecs.add(Specs.RANGE_LIFE_LEECH);
-        bossBlacklistedSpecs.add(Specs.LIFE_LEECH);
-        bossBlacklistedSpecs.add(Specs.SOUL_SMITE);
+        bossBlacklistedSpecs.add(Famine.class);
+        bossBlacklistedSpecs.add(LifeLeech.class);
+        bossBlacklistedSpecs.add(SoulSmite.class);
 
-        ultimateBlacklistedSpecs.add(Specs.DECIMATE);
-        ultimateBlacklistedSpecs.add(Specs.DOOM_BLADE);
+        ultimateBlacklistedSpecs.add(Decimate.class);
+        ultimateBlacklistedSpecs.add(DoomBlade.class);
     }
 
     private long lastUltimateAttack = 0;
@@ -484,17 +491,19 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     @EventHandler(ignoreCancelled = true)
     public void onSpecialAttack(SpecialAttackEvent event) {
 
-        if (!contains(event.getLocation())) return;
+        SpecialAttack attack = event.getSpec();
 
-        Specs spec = event.getSpec();
-        LivingEntity target = event.getTarget();
+        if (!contains(attack.getLocation())) return;
+
+        Class specClass = attack.getClass();
+        LivingEntity target = attack.getTarget();
 
         if (target != null && target instanceof Giant) {
-            if (bossBlacklistedSpecs.contains(spec)) {
+            if (bossBlacklistedSpecs.contains(specClass)) {
                 event.setCancelled(true);
                 return;
             }
-            if (ultimateBlacklistedSpecs.contains(spec)) {
+            if (ultimateBlacklistedSpecs.contains(specClass)) {
                 if (lastUltimateAttack == 0) {
                     lastUltimateAttack = System.currentTimeMillis();
                 } else if (System.currentTimeMillis() - lastUltimateAttack >= 15000) {
@@ -506,7 +515,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             }
         }
 
-        if (generalBlacklistedSpecs.contains(spec)) {
+        if (generalBlacklistedSpecs.contains(specClass)) {
             event.setCancelled(true);
         }
     }

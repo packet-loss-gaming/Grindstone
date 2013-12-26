@@ -1,50 +1,46 @@
 package com.skelril.aurora.events.custom.item;
 
-import org.bukkit.Location;
-import org.bukkit.entity.LivingEntity;
+import com.skelril.aurora.items.specialattack.SpecialAttack;
+import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
+import static com.skelril.aurora.items.CustomItemsComponent.SpecType;
+
 public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
-    private final LivingEntity target;
-    private final Location location;
-    private final Specs spec;
+    private final SpecType context;
+    private SpecialAttack spec;
 
+    public SpecialAttackEvent(final Player owner, final SpecType context, final SpecialAttack spec) {
 
-    public SpecialAttackEvent(final Player player, final LivingEntity target, final Specs spec) {
+        super(owner);
 
-        super(player);
-        this.target = target;
-        this.location = target.getLocation();
+        Validate.isTrue(owner.equals(spec.getOwner()), "The owner and the spec owner must match!");
+
+        this.context = context;
         this.spec = spec;
     }
 
-    public SpecialAttackEvent(final Player player, final Location location, final Specs spec) {
+    public SpecType getContext() {
 
-        super(player);
-        this.target = null;
-        this.location = location;
-        this.spec = spec;
+        return context;
     }
 
-    public LivingEntity getTarget() {
-
-        return target;
-    }
-
-    public Location getLocation() {
-
-        return location;
-    }
-
-    public Specs getSpec() {
+    public SpecialAttack getSpec() {
 
         return spec;
+    }
+
+    public void setSpec(SpecialAttack spec) {
+
+        Validate.isTrue(getPlayer().equals(spec.getOwner()), "The owner and the spec owner must match!");
+
+        this.spec = spec;
     }
 
     public HandlerList getHandlers() {
@@ -65,36 +61,5 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
     public void setCancelled(boolean cancelled) {
 
         this.cancelled = cancelled;
-    }
-
-    public static enum Specs {
-
-        BLAZE,
-        CURSE,
-        WEAKEN,
-        CONFUSE,
-        DECIMATE,
-        SOUL_SMITE,
-
-        DISARM,
-        RANGE_CURSE,
-        MAGIC_CHAIN,
-        FEAR_STRIKE,
-        FEAR_BOMB,
-
-        REGEN,
-        SPEED,
-        LIFE_LEECH,
-        BLIND,
-        HEALING_LIGHT,
-        DOOM_BLADE,
-
-        MOB_ATTACK,
-
-        RANGE_LIFE_LEECH,
-        EVIL_FOCUS,
-        RANGE_SPEED,
-        FAMINE,
-        GLOWING_FOG
     }
 }

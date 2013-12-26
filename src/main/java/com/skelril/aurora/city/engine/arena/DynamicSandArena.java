@@ -8,6 +8,8 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
+import com.skelril.aurora.items.specialattack.SpecialAttack;
+import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.database.InventoryAuditLogger;
@@ -203,18 +205,20 @@ public class DynamicSandArena extends AbstractRegionedArena implements DynamicAr
         }
     }
 
-    private static Set<SpecialAttackEvent.Specs> blacklistedSpecs = new HashSet<>();
+    private static Set<Class> blacklistedSpecs = new HashSet<>();
 
     static {
-        blacklistedSpecs.add(SpecialAttackEvent.Specs.DISARM);
+        blacklistedSpecs.add(Disarm.class);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onSpecialAttack(SpecialAttackEvent event) {
 
-        if (!contains(event.getLocation())) return;
+        SpecialAttack attack = event.getSpec();
 
-        if (blacklistedSpecs.contains(event.getSpec())) {
+        if (!contains(attack.getLocation())) return;
+
+        if (blacklistedSpecs.contains(attack.getClass())) {
 
             event.setCancelled(true);
         }
