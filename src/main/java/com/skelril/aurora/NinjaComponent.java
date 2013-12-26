@@ -345,7 +345,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
                         // Check types
                         Material type = stack.getType();
-                        if ((type != Material.AIR && type.isBlock()) || type.isEdible()) break;
+                        if ((type != Material.AIR && type.isBlock()) || type.isEdible() && player.getFoodLevel() < 20) break;
 
                         // Check for possible misclick
                         if (EnvironmentUtil.isInteractiveBlock(clicked.getRelative(face))) break;
