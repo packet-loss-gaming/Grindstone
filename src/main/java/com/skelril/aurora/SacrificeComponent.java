@@ -1,6 +1,8 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.session.PersistentSession;
+import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -30,33 +32,40 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.command.CommandSender;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 @ComponentInformation(friendlyName = "Sacrifice", desc = "Sacrifice! Sacrifice! Sacrifice!")
-@Depend(components = {AdminStoreComponent.class, PrayerComponent.class})
+@Depend(components = {SessionComponent.class, PrayerComponent.class})
 public class SacrificeComponent extends BukkitComponent implements Listener, Runnable {
 
     private static final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    @InjectComponent
+    private SessionComponent sessions;
     @InjectComponent
     private PrayerComponent prayer;
 
@@ -81,9 +90,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     private static class LocalConfiguration extends ConfigurationBase {
-
-        @Setting("sacrificial-increment")
-        public int increment = 2000;
 
         @Setting("sacrificial-block")
         private String sacrificialBlockString = BlockID.STONE_BRICK + ":3";
@@ -159,7 +165,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         int k = inst.hasPermission(sender, "aurora.sacrifice.efficiency") ? 100 : 125;
         int modifier = calculateModifier(value);
 
-        value *= ChanceUtil.getRandom(2.0) - .8;
+        value *= .9;
 
         while (value > 0 && (max == -1 || max > 0)) {
 
@@ -187,7 +193,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         ItemStack itemStack = null;
 
-        switch (ChanceUtil.getRandom(26)) {
+        switch (ChanceUtil.getRandom(23)) {
             case 1:
                 if (Util.getChance(sender, modifier, 1.2)) {
                     itemStack = ItemUtil.God.makeSword();
@@ -212,17 +218,21 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 }
                 break;
             case 4:
-                if (Util.getChance(sender, modifier, 6)) {
-                    itemStack = ItemUtil.Misc.phantomClock(ChanceUtil.getRandom(3));
+                if (ChanceUtil.getChance(10000)) {
+                    itemStack = ItemUtil.Misc.phantomClock(1);
                 } else {
-                    itemStack = ItemUtil.Misc.godFish(ChanceUtil.getRandom(4));
+                    itemStack = ItemUtil.Misc.godFish(1);
                 }
                 break;
             case 5:
                 itemStack = new ItemStack(ItemID.BOTTLE_O_ENCHANTING, ChanceUtil.getRangedRandom(40, 64));
                 break;
             case 6:
-                itemStack = new ItemStack(BlockID.ENDER_CHEST);
+                if (sender instanceof Player && Util.getChance(sender, modifier, 3)) {
+                    itemStack = ItemUtil.makeSkull(sender.getName());
+                } else {
+                    itemStack = ItemUtil.Misc.pixieDust(ChanceUtil.getRangedRandom(3, 6));
+                }
                 break;
             case 7:
                 if (Util.getChance(sender, modifier, .8)) {
@@ -239,64 +249,52 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 }
                 break;
             case 9:
-                itemStack = new ItemStack(ItemID.PAINTING, ChanceUtil.getRangedRandom(50, 64));
-                break;
-            case 10:
-                itemStack = new ItemStack(BlockID.SPONGE, ChanceUtil.getRandom(64));
-                break;
-            case 11:
-                itemStack = new ItemStack(ItemID.BOOK, ChanceUtil.getRangedRandom(50, 64));
-                break;
-            case 12:
                 itemStack = new ItemStack(ItemID.BLAZE_ROD, ChanceUtil.getRangedRandom(20, 32));
                 break;
-            case 13:
+            case 10:
                 itemStack = new ItemStack(ItemID.GLISTERING_MELON, ChanceUtil.getRangedRandom(20, 32));
                 break;
-            case 14:
-                itemStack = new ItemStack(ItemID.SLIME_BALL, ChanceUtil.getRangedRandom(20, 32));
-                break;
-            case 15:
+            case 11:
                 itemStack = new ItemStack(ItemID.FERMENTED_SPIDER_EYE, ChanceUtil.getRangedRandom(20, 32));
                 break;
-            case 16:
+            case 12:
+                itemStack = new ItemStack(ItemID.GHAST_TEAR, ChanceUtil.getRangedRandom(20, 32));
+                break;
+            case 13:
                 if (Util.getChance(sender, modifier, 2.75)) {
                     itemStack = ItemUtil.Ancient.makeBoots();
                 }
                 break;
-            case 17:
+            case 14:
                 if (Util.getChance(sender, modifier, 2.75)) {
                     itemStack = ItemUtil.Ancient.makeLegs();
                 }
                 break;
-            case 18:
+            case 15:
                 if (Util.getChance(sender, modifier, 2.75)) {
                     itemStack = ItemUtil.Ancient.makeChest();
                 }
                 break;
-            case 19:
+            case 16:
                 if (Util.getChance(sender, modifier, 2.75)) {
                     itemStack = ItemUtil.Ancient.makeHelmet();
                 }
                 break;
-            case 20:
-                itemStack = new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(9));
-                break;
-            case 21:
+            case 17:
                 if (Util.getChance(sender, modifier, .8)) {
                     itemStack = ItemUtil.God.makeHelmet();
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_HELMET);
                 }
                 break;
-            case 22:
+            case 18:
                 if (Util.getChance(sender, modifier, .8)) {
                     itemStack = ItemUtil.God.makeBoots();
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_BOOTS);
                 }
                 break;
-            case 23:
+            case 19:
                 if (Util.getChance(sender, modifier, 5)) {
                     itemStack = ItemUtil.CPotion.divineCombatPotion();
                 } else if (Util.getChance(sender, modifier, 2)) {
@@ -305,13 +303,13 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                     itemStack = ItemUtil.CPotion.extremeCombatPotion();
                 }
                 break;
-            case 24:
+            case 20:
                 itemStack = new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(3));
                 break;
-            case 25:
+            case 21:
                 itemStack = new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(3));
                 break;
-            case 26:
+            case 22:
                 if (Util.getChance(sender, modifier, 2.5)) {
                     itemStack = ItemUtil.God.makeAxe(true);
                 } else if (Util.getChance(sender, modifier, .37)) {
@@ -319,6 +317,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_AXE);
                 }
+                break;
+            case 23:
+                itemStack = new ItemStack(ItemID.NAME_TAG);
                 break;
         }
         return itemStack;
@@ -382,10 +383,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 }
                 break;
             case 17:
-                if (Util.getChance(sender, modifier, .9)) {
-                    itemStack = new ItemStack(ItemID.BOW);
-                    itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
-                }
+                itemStack = new ItemStack(ItemID.EGG);
                 break;
             case 18:
                 itemStack = new ItemStack(ItemID.RED_APPLE, ChanceUtil.getRandom(6));
@@ -404,6 +402,29 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }
 
         return itemStack;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockPunch(PlayerInteractEvent event) {
+
+        if (!event.getAction().equals(Action.LEFT_CLICK_BLOCK)) return;
+
+        Player player = event.getPlayer();
+        BlockState clicked = event.getClickedBlock().getState();
+        SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
+
+        if (session.hasItems() && clicked instanceof Chest) {
+            final int starting = session.remaining();
+            Inventory inventory = ((Chest) clicked).getInventory();
+            while (inventory.firstEmpty() != -1 && session.hasItems()) {
+                inventory.addItem(session.pollItem());
+            }
+            final int ending = session.remaining();
+
+            if (starting != ending) {
+                ChatUtil.sendNotice(player, "Items deposited, " + ending + " items remaining!");
+            }
+        }
     }
 
     @EventHandler
@@ -552,12 +573,16 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             return;
         }
 
-        for (ItemStack aItemStack : getCalculatedLoot(player, -1, value)) {
-            if (pInventory.firstEmpty() != -1) {
-                pInventory.addItem(aItemStack);
-            } else {
-                player.getWorld().dropItem(player.getLocation(), aItemStack);
-            }
+        SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
+        session.addItems(getCalculatedLoot(player, -1, value));
+
+        while (pInventory.firstEmpty() != -1 && session.hasItems()) {
+            pInventory.addItem(session.pollItem());
+        }
+
+        if (session.hasItems()) {
+            ChatUtil.sendNotice(player, "The gods give you the divine touch!");
+            ChatUtil.sendNotice(player, " - Punch a chest to fill it with items");
         }
 
         if (ChanceUtil.getChance(5) && value >= 500) {
@@ -636,6 +661,45 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             int baseChance = (int) (hasEfficiency ? rarityL * 100 : rarityL * 200);
 
             return ChanceUtil.getChance(Math.max(1, baseChance - modifier));
+        }
+    }
+
+    // Sacrifice Session
+    private static class SacrificeSession extends PersistentSession {
+
+        public static final long MAX_AGE = TimeUnit.MINUTES.toMillis(30);
+
+        private Queue<ItemStack> queue = new ConcurrentLinkedQueue<>();
+
+        protected SacrificeSession() {
+
+            super(MAX_AGE);
+        }
+
+        public Player getPlayer() {
+
+            CommandSender sender = super.getOwner();
+            return sender instanceof Player ? (Player) sender : null;
+        }
+
+        public void addItems(List<ItemStack> itemStacks) {
+
+            queue.addAll(itemStacks);
+        }
+
+        public ItemStack pollItem() {
+
+            return queue.poll();
+        }
+
+        public boolean hasItems() {
+
+            return !queue.isEmpty();
+        }
+
+        public int remaining() {
+
+            return queue.size();
         }
     }
 }
