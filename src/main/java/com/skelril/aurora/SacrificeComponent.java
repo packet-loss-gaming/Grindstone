@@ -42,8 +42,6 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.Repairable;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -141,7 +139,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
     private static int calculateModifier(double value) {
 
-        return (int) Math.ceil((value * 6) / 335);
+        return (int) (Math.sqrt(value) * 1.5);
     }
 
     /**
@@ -149,260 +147,263 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
      * on a numerical value and quantity.
      *
      * @param sender - The triggering sender
-     * @param amt - The amount of items to return
+     * @param max - The maximum amount of items to return
      * @param value - The value put towards the items returned
      * @return - The ItemStacks that should be received
      */
-    public static List<ItemStack> getCalculatedLoot(CommandSender sender, int amt, double value) {
+    public static List<ItemStack> getCalculatedLoot(CommandSender sender, int max, double value) {
 
         List<ItemStack> loot = new ArrayList<>();
 
         // Calculate the modifier
+        int k = inst.hasPermission(sender, "aurora.sacrifice.efficiency") ? 100 : 125;
         int modifier = calculateModifier(value);
 
-        if (value > 140) {
-            for (int i = 0; i < amt; i++) {
+        value *= ChanceUtil.getRandom(2.0) - .8;
 
-                ItemStack itemStack = null;
-                ItemMeta itemMeta = null;
+        while (value > 0 && (max == -1 || max > 0)) {
 
-                if (inst.hasPermission(sender, "aurora.sacrifice.efficiency")) {
-                    if (!ChanceUtil.getChance(Math.max(1, 100 - modifier))) continue;
-                } else {
-                    if (!ChanceUtil.getChance(Math.max(1, 125 - modifier))) continue;
-                }
-                switch (ChanceUtil.getRandom(26)) {
-                    case 1:
-                        if (Util.getChance(sender, modifier, 1.2)) {
-                            itemStack = ItemUtil.God.makeSword();
-                        } else {
-                            itemStack = new ItemStack(ItemID.DIAMOND_SWORD);
-                        }
-                        break;
-                    case 2:
-                        if (Util.getChance(sender, modifier, 1.2)) {
-                            itemStack = ItemUtil.God.makeBow();
-                        } else {
-                            itemStack = ItemUtil.Misc.overseerBow();
-                        }
-                        break;
-                    case 3:
-                        if (Util.getChance(sender, modifier, 2)) {
-                            itemStack = ItemUtil.God.makePickaxe(true);
-                        } else if (Util.getChance(sender, modifier, .37)) {
-                            itemStack = ItemUtil.God.makePickaxe(false);
-                        } else {
-                            itemStack = new ItemStack(ItemID.DIAMOND_PICKAXE);
-                        }
-                        break;
-                    case 4:
-                        itemStack = new ItemStack(ItemID.GOLD_PICKAXE);
-                        itemMeta = itemStack.getItemMeta();
-                        List<String> lore = new ArrayList<>();
-                        lore.add("A very fast golden pickaxe.");
-                        itemMeta.setLore(lore);
-                        itemMeta.addEnchant(Enchantment.DURABILITY, 4, true);
-                        itemMeta.addEnchant(Enchantment.DIG_SPEED, 4, true);
-                        break;
-                    case 5:
-                        itemStack = new ItemStack(ItemID.BOTTLE_O_ENCHANTING, ChanceUtil.getRangedRandom(40, 64));
-                        break;
-                    case 6:
-                        itemStack = new ItemStack(BlockID.ENDER_CHEST);
-                        break;
-                    case 7:
-                        if (Util.getChance(sender, modifier, .8)) {
-                            itemStack = ItemUtil.God.makeChest();
-                        } else {
-                            itemStack = new ItemStack(ItemID.DIAMOND_CHEST);
-                        }
-                        break;
-                    case 8:
-                        if (Util.getChance(sender, modifier, .8)) {
-                            itemStack = ItemUtil.God.makeLegs();
-                        } else {
-                            itemStack = new ItemStack(ItemID.DIAMOND_PANTS);
-                        }
-                        break;
-                    case 9:
-                        itemStack = new ItemStack(ItemID.PAINTING, ChanceUtil.getRangedRandom(50, 64));
-                        break;
-                    case 10:
-                        itemStack = new ItemStack(BlockID.SPONGE, ChanceUtil.getRandom(64));
-                        break;
-                    case 11:
-                        itemStack = new ItemStack(ItemID.BOOK, ChanceUtil.getRangedRandom(50, 64));
-                        break;
-                    case 12:
-                        itemStack = new ItemStack(ItemID.BLAZE_ROD, ChanceUtil.getRangedRandom(20, 32));
-                        break;
-                    case 13:
-                        itemStack = new ItemStack(ItemID.GLISTERING_MELON, ChanceUtil.getRangedRandom(20, 32));
-                        break;
-                    case 14:
-                        itemStack = new ItemStack(ItemID.SLIME_BALL, ChanceUtil.getRangedRandom(20, 32));
-                        break;
-                    case 15:
-                        itemStack = new ItemStack(ItemID.FERMENTED_SPIDER_EYE, ChanceUtil.getRangedRandom(20, 32));
-                        break;
-                    case 16:
-                        if (Util.getChance(sender, modifier, 2.75)) {
-                            itemStack = ItemUtil.Ancient.makeBoots();
-                        }
-                        break;
-                    case 17:
-                        if (Util.getChance(sender, modifier, 2.75)) {
-                            itemStack = ItemUtil.Ancient.makeLegs();
-                        }
-                        break;
-                    case 18:
-                        if (Util.getChance(sender, modifier, 2.75)) {
-                            itemStack = ItemUtil.Ancient.makeChest();
-                        }
-                        break;
-                    case 19:
-                        if (Util.getChance(sender, modifier, 2.75)) {
-                            itemStack = ItemUtil.Ancient.makeHelmet();
-                        }
-                        break;
-                    case 20:
-                        itemStack = new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(9));
-                        break;
-                    case 21:
-                        if (Util.getChance(sender, modifier, .8)) {
-                            itemStack = ItemUtil.God.makeHelmet();
-                        } else {
-                            itemStack = new ItemStack(ItemID.DIAMOND_HELMET);
-                        }
-                        break;
-                    case 22:
-                        if (Util.getChance(sender, modifier, .8)) {
-                            itemStack = ItemUtil.God.makeBoots();
-                        } else {
-                            itemStack = new ItemStack(ItemID.DIAMOND_BOOTS);
-                        }
-                        break;
-                    case 23:
-                        if (Util.getChance(sender, modifier, 5)) {
-                            itemStack = ItemUtil.CPotion.divineCombatPotion();
-                        } else if (Util.getChance(sender, modifier, 2)) {
-                            itemStack = ItemUtil.CPotion.holyCombatPotion();
-                        } else {
-                            itemStack = ItemUtil.CPotion.extremeCombatPotion();
-                        }
-                        break;
-                    case 24:
-                        itemStack = new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(3));
-                        break;
-                    case 25:
-                        itemStack = new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(3));
-                        break;
-                    case 26:
-                        if (Util.getChance(sender, modifier, 2.5)) {
-                            itemStack = ItemUtil.God.makeAxe(true);
-                        } else if (Util.getChance(sender, modifier, .37)) {
-                            itemStack = ItemUtil.God.makeAxe(false);
-                        } else {
-                            itemStack = new ItemStack(ItemID.DIAMOND_AXE);
-                        }
-                        break;
-                }
+            ItemStack itemStack;
 
-                if (itemMeta != null) {
-                    if (itemMeta instanceof Repairable && itemMeta.hasEnchants()) {
-                        ((Repairable) itemMeta).setRepairCost(400);
-                    }
-                    itemStack.setItemMeta(itemMeta);
-                }
-                if (itemStack != null) loot.add(itemStack);
+            if (ChanceUtil.getChance(Math.max(1, k - modifier))) {
+                itemStack = getValuableItem(sender, modifier);
+            } else {
+                itemStack = getCommonItemStack(sender, modifier);
             }
-        }
 
-        if (loot.size() < amt / 2 || loot.size() == 0) {
-            for (int i = 0; i < (amt - loot.size()); i++) {
+            if (itemStack != null) {
+                value -= Math.max(9, AdminStoreComponent.priceCheck(itemStack));
+                loot.add(itemStack);
+            }
 
-                ItemStack itemStack = null;
-
-                if (!ChanceUtil.getChance(2, 3)) continue;
-                switch (ChanceUtil.getRandom(21)) {
-                    case 1:
-                        itemStack = new ItemStack(BlockID.DIRT);
-                        break;
-                    case 2:
-                        itemStack = new ItemStack(BlockID.STONE);
-                        break;
-                    case 3:
-                        itemStack = new ItemStack(BlockID.RED_FLOWER);
-                        break;
-                    case 4:
-                        itemStack = new ItemStack(BlockID.YELLOW_FLOWER);
-                        break;
-                    case 5:
-                        itemStack = new ItemStack(ItemID.INK_SACK, 1, (short) (ChanceUtil.getRandom(16) - 1));
-                        break;
-                    case 6:
-                        itemStack = new ItemStack(ItemID.SEEDS);
-                        break;
-                    case 7:
-                        itemStack = new ItemStack(ItemID.WHEAT);
-                        break;
-                    case 8:
-                        itemStack = new ItemStack(BlockID.WOOD);
-                        break;
-                    case 9:
-                        itemStack = new ItemStack(ItemID.FEATHER);
-                        break;
-                    case 10:
-                        if (Util.getChance(sender, modifier, .2)) {
-                            itemStack = new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(64));
-                        }
-                        break;
-                    case 11:
-                        itemStack = new ItemStack(ItemID.ARROW);
-                        break;
-                    case 12:
-                        itemStack = new ItemStack(ItemID.BOWL);
-                        break;
-                    case 13:
-                        itemStack = new ItemStack(ItemID.BONE);
-                        break;
-                    case 14:
-                        itemStack = new ItemStack(ItemID.SNOWBALL);
-                        break;
-                    case 15:
-                        itemStack = new ItemStack(ItemID.FLINT);
-                        break;
-                    case 16:
-                        if (Util.getChance(sender, modifier, .8)) {
-                            itemStack = new ItemStack(ItemID.CLAY_BALL, ChanceUtil.getRandom(8));
-                        }
-                        break;
-                    case 17:
-                        if (Util.getChance(sender, modifier, .9)) {
-                            itemStack = new ItemStack(ItemID.BOW);
-                            itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
-                        }
-                        break;
-                    case 18:
-                        itemStack = new ItemStack(ItemID.RED_APPLE, ChanceUtil.getRandom(6));
-                        break;
-                    case 19:
-                        if (Util.getChance(sender, modifier, .8)) {
-                            itemStack = new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(8));
-                        }
-                        break;
-                    case 20:
-                        itemStack = new ItemStack(ItemID.ENDER_PEARL, ChanceUtil.getRandom(6));
-                        break;
-                    case 21:
-                        itemStack = new ItemStack(ItemID.COOKIE, ChanceUtil.getRangedRandom(8, 16));
-                        break;
-                }
-
-                if (itemStack != null) loot.add(itemStack);
+            if (max != -1) {
+                max--;
             }
         }
         return loot;
+    }
+
+    private static ItemStack getValuableItem(CommandSender sender, int modifier) {
+
+        ItemStack itemStack = null;
+
+        switch (ChanceUtil.getRandom(26)) {
+            case 1:
+                if (Util.getChance(sender, modifier, 1.2)) {
+                    itemStack = ItemUtil.God.makeSword();
+                } else {
+                    itemStack = new ItemStack(ItemID.DIAMOND_SWORD);
+                }
+                break;
+            case 2:
+                if (Util.getChance(sender, modifier, 1.2)) {
+                    itemStack = ItemUtil.God.makeBow();
+                } else {
+                    itemStack = ItemUtil.Misc.overseerBow();
+                }
+                break;
+            case 3:
+                if (Util.getChance(sender, modifier, 2)) {
+                    itemStack = ItemUtil.God.makePickaxe(true);
+                } else if (Util.getChance(sender, modifier, .37)) {
+                    itemStack = ItemUtil.God.makePickaxe(false);
+                } else {
+                    itemStack = new ItemStack(ItemID.DIAMOND_PICKAXE);
+                }
+                break;
+            case 4:
+                if (Util.getChance(sender, modifier, 6)) {
+                    itemStack = ItemUtil.Misc.phantomClock(ChanceUtil.getRandom(3));
+                } else {
+                    itemStack = ItemUtil.Misc.godFish(ChanceUtil.getRandom(4));
+                }
+                break;
+            case 5:
+                itemStack = new ItemStack(ItemID.BOTTLE_O_ENCHANTING, ChanceUtil.getRangedRandom(40, 64));
+                break;
+            case 6:
+                itemStack = new ItemStack(BlockID.ENDER_CHEST);
+                break;
+            case 7:
+                if (Util.getChance(sender, modifier, .8)) {
+                    itemStack = ItemUtil.God.makeChest();
+                } else {
+                    itemStack = new ItemStack(ItemID.DIAMOND_CHEST);
+                }
+                break;
+            case 8:
+                if (Util.getChance(sender, modifier, .8)) {
+                    itemStack = ItemUtil.God.makeLegs();
+                } else {
+                    itemStack = new ItemStack(ItemID.DIAMOND_PANTS);
+                }
+                break;
+            case 9:
+                itemStack = new ItemStack(ItemID.PAINTING, ChanceUtil.getRangedRandom(50, 64));
+                break;
+            case 10:
+                itemStack = new ItemStack(BlockID.SPONGE, ChanceUtil.getRandom(64));
+                break;
+            case 11:
+                itemStack = new ItemStack(ItemID.BOOK, ChanceUtil.getRangedRandom(50, 64));
+                break;
+            case 12:
+                itemStack = new ItemStack(ItemID.BLAZE_ROD, ChanceUtil.getRangedRandom(20, 32));
+                break;
+            case 13:
+                itemStack = new ItemStack(ItemID.GLISTERING_MELON, ChanceUtil.getRangedRandom(20, 32));
+                break;
+            case 14:
+                itemStack = new ItemStack(ItemID.SLIME_BALL, ChanceUtil.getRangedRandom(20, 32));
+                break;
+            case 15:
+                itemStack = new ItemStack(ItemID.FERMENTED_SPIDER_EYE, ChanceUtil.getRangedRandom(20, 32));
+                break;
+            case 16:
+                if (Util.getChance(sender, modifier, 2.75)) {
+                    itemStack = ItemUtil.Ancient.makeBoots();
+                }
+                break;
+            case 17:
+                if (Util.getChance(sender, modifier, 2.75)) {
+                    itemStack = ItemUtil.Ancient.makeLegs();
+                }
+                break;
+            case 18:
+                if (Util.getChance(sender, modifier, 2.75)) {
+                    itemStack = ItemUtil.Ancient.makeChest();
+                }
+                break;
+            case 19:
+                if (Util.getChance(sender, modifier, 2.75)) {
+                    itemStack = ItemUtil.Ancient.makeHelmet();
+                }
+                break;
+            case 20:
+                itemStack = new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(9));
+                break;
+            case 21:
+                if (Util.getChance(sender, modifier, .8)) {
+                    itemStack = ItemUtil.God.makeHelmet();
+                } else {
+                    itemStack = new ItemStack(ItemID.DIAMOND_HELMET);
+                }
+                break;
+            case 22:
+                if (Util.getChance(sender, modifier, .8)) {
+                    itemStack = ItemUtil.God.makeBoots();
+                } else {
+                    itemStack = new ItemStack(ItemID.DIAMOND_BOOTS);
+                }
+                break;
+            case 23:
+                if (Util.getChance(sender, modifier, 5)) {
+                    itemStack = ItemUtil.CPotion.divineCombatPotion();
+                } else if (Util.getChance(sender, modifier, 2)) {
+                    itemStack = ItemUtil.CPotion.holyCombatPotion();
+                } else {
+                    itemStack = ItemUtil.CPotion.extremeCombatPotion();
+                }
+                break;
+            case 24:
+                itemStack = new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(3));
+                break;
+            case 25:
+                itemStack = new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(3));
+                break;
+            case 26:
+                if (Util.getChance(sender, modifier, 2.5)) {
+                    itemStack = ItemUtil.God.makeAxe(true);
+                } else if (Util.getChance(sender, modifier, .37)) {
+                    itemStack = ItemUtil.God.makeAxe(false);
+                } else {
+                    itemStack = new ItemStack(ItemID.DIAMOND_AXE);
+                }
+                break;
+        }
+        return itemStack;
+    }
+
+    private static ItemStack getCommonItemStack(CommandSender sender, int modifier) {
+
+        ItemStack itemStack = null;
+
+        switch (ChanceUtil.getRandom(21)) {
+            case 1:
+                itemStack = new ItemStack(BlockID.DIRT);
+                break;
+            case 2:
+                itemStack = new ItemStack(BlockID.STONE);
+                break;
+            case 3:
+                itemStack = new ItemStack(BlockID.RED_FLOWER);
+                break;
+            case 4:
+                itemStack = new ItemStack(BlockID.YELLOW_FLOWER);
+                break;
+            case 5:
+                itemStack = new ItemStack(ItemID.INK_SACK, 1, (short) (ChanceUtil.getRandom(16) - 1));
+                break;
+            case 6:
+                itemStack = new ItemStack(ItemID.SEEDS);
+                break;
+            case 7:
+                itemStack = new ItemStack(ItemID.WHEAT);
+                break;
+            case 8:
+                itemStack = new ItemStack(BlockID.WOOD);
+                break;
+            case 9:
+                itemStack = new ItemStack(ItemID.FEATHER);
+                break;
+            case 10:
+                if (Util.getChance(sender, modifier, .2)) {
+                    itemStack = new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(64));
+                }
+                break;
+            case 11:
+                itemStack = new ItemStack(ItemID.ARROW);
+                break;
+            case 12:
+                itemStack = new ItemStack(ItemID.BOWL);
+                break;
+            case 13:
+                itemStack = new ItemStack(ItemID.BONE);
+                break;
+            case 14:
+                itemStack = new ItemStack(ItemID.SNOWBALL);
+                break;
+            case 15:
+                itemStack = new ItemStack(ItemID.FLINT);
+                break;
+            case 16:
+                if (Util.getChance(sender, modifier, .8)) {
+                    itemStack = new ItemStack(ItemID.CLAY_BALL, ChanceUtil.getRandom(8));
+                }
+                break;
+            case 17:
+                if (Util.getChance(sender, modifier, .9)) {
+                    itemStack = new ItemStack(ItemID.BOW);
+                    itemStack.addEnchantment(Enchantment.ARROW_FIRE, 1);
+                }
+                break;
+            case 18:
+                itemStack = new ItemStack(ItemID.RED_APPLE, ChanceUtil.getRandom(6));
+                break;
+            case 19:
+                if (Util.getChance(sender, modifier, .8)) {
+                    itemStack = new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(8));
+                }
+                break;
+            case 20:
+                itemStack = new ItemStack(ItemID.ENDER_PEARL, ChanceUtil.getRandom(6));
+                break;
+            case 21:
+                itemStack = new ItemStack(ItemID.COOKIE, ChanceUtil.getRangedRandom(8, 16));
+                break;
+        }
+
+        return itemStack;
     }
 
     @EventHandler
@@ -551,17 +552,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             return;
         }
 
-        // Adapt this for less suck on expensive stuff
-        int quantity = item.getAmount();
-
-        if (quantity <= 1) {
-            for (double v2 = value; v2 >= config.increment; v2 -= config.increment) {
-                quantity++;
+        for (ItemStack aItemStack : getCalculatedLoot(player, -1, value)) {
+            if (pInventory.firstEmpty() != -1) {
+                pInventory.addItem(aItemStack);
+            } else {
+                player.getWorld().dropItem(player.getLocation(), aItemStack);
             }
-        }
-
-        for (ItemStack aItemStack : getCalculatedLoot(player, quantity, value)) {
-            pInventory.addItem(aItemStack);
         }
 
         if (ChanceUtil.getChance(5) && value >= 500) {
