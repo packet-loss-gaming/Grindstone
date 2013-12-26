@@ -46,8 +46,9 @@ public interface ItemStoreDatabase extends Iterable<ItemPricePair> {
     /**
      * Returns a list of items
      *
-     * @param filter the item name must start with this to be returned
+     * @param filter     the item name must start with this to be returned
+     * @param showHidden return items which are database only
      * @return A list of items
      */
-    public List<ItemPricePair> getItemList(String filter);
+    public List<ItemPricePair> getItemList(String filter, boolean showHidden);
 }

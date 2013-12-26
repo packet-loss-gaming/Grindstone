@@ -34,6 +34,11 @@ public class ItemPricePair implements Comparable<ItemPricePair> {
         return price > 100000 ? price * .92 : price * .80;
     }
 
+    public boolean isEnabled() {
+
+        return isBuyable() && isSellable();
+    }
+
     public boolean isBuyable() {
 
         return !disableBuy;

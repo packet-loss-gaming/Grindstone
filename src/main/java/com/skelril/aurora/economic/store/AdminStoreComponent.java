@@ -311,7 +311,8 @@ public class AdminStoreComponent extends BukkitComponent {
         public void listCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             String filterString = args.argsLength() > 0 ? args.getJoinedStrings(0) : null;
-            List<ItemPricePair> itemPricePairCollection = itemStoreDatabase.getItemList(filterString);
+            List<ItemPricePair> itemPricePairCollection = itemStoreDatabase.getItemList(filterString,
+                    inst.hasPermission(sender, "aurora.admin.adminstore.disabled"));
             Collections.sort(itemPricePairCollection);
 
             final int entryToShow = 9;
@@ -333,18 +334,20 @@ public class AdminStoreComponent extends BukkitComponent {
             ChatUtil.sendNotice(sender, ChatColor.GOLD, "Item List - Page (" + Math.min(maxPage + 1, page + 1) + "/" + (maxPage + 1) + ")");
             for (int i = min; i < max; i++) {
                 ItemPricePair pair = itemPricePairCollection.get(i);
+                ChatColor color = pair.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
                 String buy, sell;
-                if (pair.isBuyable()) {
+                if (pair.isBuyable() || !pair.isEnabled()) {
                     buy = ChatColor.WHITE + econ.format(pair.getPrice()) + ChatColor.YELLOW;
                 } else {
                     buy = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
                 }
-                if (pair.isSellable()) {
+                if (pair.isSellable() || !pair.isEnabled()) {
                     sell = ChatColor.WHITE + econ.format(pair.getSellPrice()) + ChatColor.YELLOW;
                 } else {
                     sell = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
                 }
-                ChatUtil.sendNotice(sender, ChatColor.BLUE + pair.getName().toUpperCase() + ChatColor.YELLOW + " (Quick Price: " + buy + " - " + sell + ")");
+
+                ChatUtil.sendNotice(sender, color + pair.getName().toUpperCase() + ChatColor.YELLOW + " (Quick Price: " + buy + " - " + sell + ")");
             }
         }
 
@@ -400,18 +403,26 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
+            if (!itemPricePair.isEnabled() && !inst.hasPermission(sender, "aurora.admin.adminstore.disabled")) {
+                throw new CommandException(NOT_AVAILIBLE);
+            }
+
+            ChatColor color = itemPricePair.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
             double paymentPrice = itemPricePair.getSellPrice() * percentageSale;
 
             String purchasePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getPrice()), " " + econ.currencyNamePlural());
             String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), " " + econ.currencyNamePlural());
-            ChatUtil.sendNotice(player, ChatColor.GOLD, "Price Information for: " + ChatColor.BLUE + itemName.toUpperCase());
-            if (itemPricePair.isBuyable()) {
+            ChatUtil.sendNotice(player, ChatColor.GOLD, "Price Information for: " + color + itemName.toUpperCase());
+
+            // Purchase Information
+            if (itemPricePair.isBuyable() || !itemPricePair.isEnabled()) {
                 ChatUtil.sendNotice(player, "When you buy it you pay:");
                 ChatUtil.sendNotice(player, " - " + purchasePrice + " each.");
             } else {
                 ChatUtil.sendNotice(player, ChatColor.GRAY, "This item cannot be purchased.");
             }
-            if (itemPricePair.isSellable()) {
+            // Sale Information
+            if (itemPricePair.isSellable() || !itemPricePair.isEnabled()) {
                 ChatUtil.sendNotice(player, "When you sell it you get:");
                 ChatUtil.sendNotice(player, " - " + sellPrice + " each.");
                 if (percentageSale != 1.0) {
@@ -475,10 +486,6 @@ public class AdminStoreComponent extends BukkitComponent {
             boolean disableBuy = args.hasFlag('b');
             boolean disableSell = args.hasFlag('s');
 
-            if (disableBuy && disableSell) {
-                throw new CommandException("If you disable buying and selling, then what's the point in adding it dumb ass?");
-            }
-
             double price = .1;
             if (args.hasFlag('p')) {
                 price = Math.max(.01, args.getFlagDouble('p'));
@@ -495,7 +502,8 @@ public class AdminStoreComponent extends BukkitComponent {
             ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName.toUpperCase() + ChatColor.YELLOW + noticeString + priceString + "!");
             if (disableBuy) {
                 ChatUtil.sendNotice(sender, " - It cannot be purchased.");
-            } else if (disableSell) {
+            }
+            if (disableSell) {
                 ChatUtil.sendNotice(sender, " - It cannot be sold.");
             }
         }
@@ -530,6 +538,8 @@ public class AdminStoreComponent extends BukkitComponent {
 
     static {
         names.add("red feather");
+
+        names.add("phantom clock");
 
         names.add("pixie dust");
 
@@ -599,6 +609,9 @@ public class AdminStoreComponent extends BukkitComponent {
             switch (name) {
                 case "red feather":
                     itemStacks.add(ItemUtil.Red.makeFeather());
+                    break;
+                case "phantom clock":
+                    itemStacks.add(ItemUtil.Misc.phantomClock(1));
                     break;
                 case "pixie dust":
                     itemStacks.add(ItemUtil.Misc.pixieDust(1));
@@ -739,7 +752,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
         if (itemPricePair == null) return 0;
 
-        return itemPricePair.isBuyable() ? itemPricePair.getPrice() : 0;
+        return itemPricePair.getPrice();
     }
 
     /**
@@ -789,7 +802,7 @@ public class AdminStoreComponent extends BukkitComponent {
             return -1;
         }
 
-        return itemPricePair.getSellPrice() * percentageSale * stack.getAmount();
+        return itemPricePair.getPrice() * percentageSale * stack.getAmount();
     }
 
     public String checkPlayer(CommandSender sender) throws CommandException {

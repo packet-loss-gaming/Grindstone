@@ -224,7 +224,7 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
     }
 
     @Override
-    public List<ItemPricePair> getItemList(String filter) {
+    public List<ItemPricePair> getItemList(String filter, boolean showHidden) {
 
         if (filter == null || filter.isEmpty()) {
             return getItemList();
@@ -234,6 +234,7 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
 
         List<ItemPricePair> items = new ArrayList<>();
         for (ItemPricePair itemPricePair : nameItemPrice.values()) {
+            if (!showHidden && !itemPricePair.isEnabled()) continue;
             if (itemPricePair.getName().startsWith(filter)) {
                 items.add(itemPricePair);
             }
