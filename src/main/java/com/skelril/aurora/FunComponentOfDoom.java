@@ -11,18 +11,19 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
@@ -34,6 +35,7 @@ import java.util.logging.Logger;
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Fun of Doom", desc = "Fun of Doom")
+@Depend(components = {SacrificeComponent.class})
 public class FunComponentOfDoom extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -47,8 +49,44 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+        //noinspection AccessStaticViaInstance
+        //inst.registerEvents(new ChristmasGhast());
 
         registerCommands(Commands.class);
+    }
+
+    private class ChristmasGhast implements Listener {
+
+        private Random r = new Random(System.currentTimeMillis());
+
+        @EventHandler(ignoreCancelled = true)
+        public void onEntityExplode(EntityExplodeEvent event) {
+
+            Entity e = event.getEntity();
+            if (e != null && e.getType().equals(EntityType.FIREBALL)) {
+                for (ItemStack aDrop : SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 16, 1500)) {
+                    Item item = e.getWorld().dropItem(event.getLocation(), aDrop);
+                    item.setVelocity(new org.bukkit.util.Vector(
+                            r.nextDouble() * 2 - 1,
+                            r.nextDouble() * 1,
+                            r.nextDouble() * 2 - 1
+                    ));
+                }
+                event.blockList().clear();
+            }
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onEntityDamageEvent(EntityDamageByEntityEvent event) {
+
+            Entity a = event.getEntity();
+            Entity b = event.getDamager();
+
+            if (a instanceof Player && b instanceof LargeFireball) {
+
+                event.setCancelled(true);
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
