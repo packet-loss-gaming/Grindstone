@@ -21,6 +21,7 @@ import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.hybrid.unleashed.LifeLeech;
 import com.skelril.aurora.items.specialattack.attacks.melee.fear.Decimate;
 import com.skelril.aurora.items.specialattack.attacks.melee.fear.SoulSmite;
+import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import com.skelril.aurora.items.specialattack.attacks.melee.unleashed.DoomBlade;
 import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
 import com.skelril.aurora.items.specialattack.attacks.ranged.fear.FearBomb;
@@ -474,6 +475,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     private static Set<Class> ultimateBlacklistedSpecs = new HashSet<>();
 
     static {
+        generalBlacklistedSpecs.add(Nightmare.class);
         generalBlacklistedSpecs.add(Disarm.class);
         generalBlacklistedSpecs.add(MobAttack.class);
         generalBlacklistedSpecs.add(FearBomb.class);
@@ -488,7 +490,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
     private long lastUltimateAttack = 0;
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSpecialAttack(SpecialAttackEvent event) {
 
         SpecialAttack attack = event.getSpec();

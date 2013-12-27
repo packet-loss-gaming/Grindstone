@@ -13,6 +13,10 @@ import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
+import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
+import com.skelril.aurora.items.specialattack.SpecialAttack;
+import com.skelril.aurora.items.specialattack.attacks.melee.fear.Weaken;
+import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EntityDistanceComparator;
@@ -23,6 +27,7 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.Setting;
+import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -243,7 +248,21 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                 }
             }
 
-            p.getWorld().createExplosion(p.getLocation(), 1.75F);
+            if (p.hasMetadata("nightmare")) {
+
+                server.getPluginManager().callEvent(new RapidHitEvent(shooter));
+
+                for (Entity e : p.getNearbyEntities(3, 3, 3)) {
+                    if (e.isValid() && e instanceof LivingEntity) {
+                        if (e instanceof Player && !PvPComponent.allowsPvP(shooter, (Player) e)) continue;
+                        shooter.setHealth(Math.min(shooter.getMaxHealth(), shooter.getHealth() + 1));
+                        ((LivingEntity) e).setHealth(Math.max(0, ((LivingEntity) e).getHealth() - 1));
+                        e.playEffect(EntityEffect.HURT);
+                    }
+                }
+            } else {
+                p.getWorld().createExplosion(p.getLocation(), 1.75F);
+            }
         }
     }
 
@@ -299,6 +318,20 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             if (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")) {
 
                 blip(player, 1, true);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onSpecialAttack(SpecialAttackEvent event) {
+
+        Player player = event.getPlayer();
+
+        if (isRogue(player)) {
+            SpecialAttack attack = event.getSpec();
+
+            if (attack instanceof Weaken) {
+                event.setSpec(new Nightmare(attack.getOwner(), attack.getTarget()));
             }
         }
     }
