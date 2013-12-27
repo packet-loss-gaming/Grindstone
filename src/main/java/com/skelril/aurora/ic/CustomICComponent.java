@@ -2,6 +2,7 @@ package com.skelril.aurora.ic;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.craftbook.bukkit.CircuitCore;
+import com.skelril.aurora.ic.ics.DelayedRepeater;
 import com.skelril.aurora.ic.ics.GroupSentryGun;
 import com.skelril.aurora.ic.ics.NinjaStarSpawner;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -45,5 +46,6 @@ public class CustomICComponent extends BukkitComponent {
 
         ICCore.registerIC("SK1278", "group sentry", new GroupSentryGun.Factory(server), ICCore.FAMILY_SISO, ICCore.FAMILY_AISO);
         ICCore.registerIC("SK9001", "star spawner", new NinjaStarSpawner.Factory(server), ICCore.FAMILY_SISO, ICCore.FAMILY_AISO);
+        ICCore.registerIC("SK9002", "delay repeater", new DelayedRepeater.Factory(server), ICCore.FAMILY_SISO, ICCore.FAMILY_AISO);
     }
 }
