@@ -2,6 +2,7 @@ package com.skelril.aurora.items.specialattack.attacks.ranged.fear;
 
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.RangedSpecial;
+import com.skelril.aurora.util.ChanceUtil;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -24,8 +25,22 @@ public class Disarm extends EntityAttack implements RangedSpecial {
 
         if (held == null) return;
 
-        Item item = target.getWorld().dropItem(target.getLocation(), held);
-        item.setPickupDelay(25);
+        if (target instanceof Player) {
+
+            ItemStack[] items = ((Player) target).getInventory().getContents();
+
+            int heldS = ((Player) target).getInventory().getHeldItemSlot();
+            int k = ChanceUtil.getRandom(items.length) - 1;
+
+            items[heldS] = items[k];
+            items[k] = held;
+
+            ((Player) target).getInventory().setContents(items);
+        } else {
+            target.getEquipment().setItemInHand(null);
+            Item item = target.getWorld().dropItem(target.getLocation(), held);
+            item.setPickupDelay(25);
+        }
 
         inform("Your bow disarms its victim.");
     }
@@ -36,13 +51,11 @@ public class Disarm extends EntityAttack implements RangedSpecial {
         if (target instanceof Player) {
             held = ((Player) target).getItemInHand();
             if (held != null) held = held.clone();
-            ((Player) target).setItemInHand(null);
         } else if (target instanceof Skeleton) {
             held = null;
         } else {
             held = target.getEquipment().getItemInHand();
             if (held != null) held = held.clone();
-            target.getEquipment().setItemInHand(null);
         }
         return held == null || held.getTypeId() == 0 ? null : held;
     }
