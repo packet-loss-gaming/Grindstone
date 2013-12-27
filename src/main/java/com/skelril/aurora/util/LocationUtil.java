@@ -298,19 +298,21 @@ public class LocationUtil {
             return new Location[]{startLocation};
         }
 
+        int length = BlockFace.values().length - 2;
+
         Location[] locations;
 
         if (vert > 0) {
-            locations = new Location[(searchRadius * BlockFace.values().length) + (searchRadius * BlockFace.values()
-                    .length * (vert * 2))];
+            locations = new Location[(searchRadius * length) + (searchRadius * length * (vert * 2))];
         } else {
-            locations = new Location[searchRadius * BlockFace.values().length];
+            locations = new Location[searchRadius * length];
         }
 
         int locationNumber = 0;
 
         for (int r = 0; r < searchRadius; r++) {
             for (BlockFace blockFace : BlockFace.values()) {
+                if (blockFace.getModY() != 0) continue;
                 locations[locationNumber] = startLocation.getBlock().getRelative(blockFace, r).getLocation();
                 locationNumber++;
             }
