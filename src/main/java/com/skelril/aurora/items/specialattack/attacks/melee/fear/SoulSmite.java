@@ -33,6 +33,6 @@ public class SoulSmite extends EntityAttack implements MeleeSpecial {
                 inform("Your sword releases its grasp on its victim.");
             }
         }, 20 * (int) Math.min(20, target.getMaxHealth() / 5 + 1));
-        inform("Your sword steals its victims heal for a short time.");
+        inform("Your sword steals its victims health for a short time.");
     }
 }
