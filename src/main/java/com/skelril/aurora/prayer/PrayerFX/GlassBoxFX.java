@@ -3,6 +3,7 @@ package com.skelril.aurora.prayer.PrayerFX;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.LocationUtil;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -20,6 +21,8 @@ public class GlassBoxFX extends AbstractEffect {
 
     @Override
     public void add(Player player) {
+
+        LocationUtil.toGround(player);
 
         List<Location> locationList = new ArrayList<>();
         List<Location> queList = new ArrayList<>();
