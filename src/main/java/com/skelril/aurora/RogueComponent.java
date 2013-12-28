@@ -82,6 +82,16 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(RogueState.class, player).isRogue();
     }
 
+    public boolean isTraitorProtected(Player player) {
+
+        return sessions.getSession(RogueState.class, player).isTraitorProtected();
+    }
+
+    public void setTraitorProtected(Player player, boolean rogueTraitor) {
+
+        sessions.getSession(RogueState.class, player).setTraitorProtection(rogueTraitor);
+    }
+
     public boolean allowsConflictingPotions(Player player) {
 
         return sessions.getSession(RogueState.class, player).allowsConflictingPotions();
@@ -244,7 +254,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                         final Player defender = (Player) entity;
                         if (!PvPComponent.allowsPvP(shooter, defender)) return;
 
-                        if (inst.hasPermission(defender, "aurora.rogue.guild.master")) {
+                        if (isTraitorProtected(defender)) {
                             ChatUtil.sendWarning(shooter, defender.getName() + " sends a band of Rogue marauders after you.");
                             for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
                                 server.getScheduler().runTaskLater(inst, new Runnable() {
@@ -396,7 +406,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"rogue"}, desc = "Give a player the Rogue power",
-                flags = "pl", min = 0, max = 0)
+                flags = "plt", min = 0, max = 0)
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -413,6 +423,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             // Set flags
             allowConflictingPotions((Player) sender, !args.hasFlag('p'));
             limitYVelocity((Player) sender, args.hasFlag('l'));
+            setTraitorProtected((Player) sender, args.hasFlag('t') && inst.hasPermission(sender, "aurora.rogue.guild.master"));
 
             if (!isRogue) {
                 ChatUtil.sendNotice(sender, "You gain the power of a rogue warrior!");
@@ -444,6 +455,8 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         private boolean isRogue = false;
         @Setting("rogue-y-limited")
         private boolean limitYVelocity = false;
+        @Setting("rogue-traitor")
+        private boolean rogueTraitor = false;
         @Setting("rogue-conflicting-potions")
         private boolean allowConflictingPotions = true;
 
@@ -488,6 +501,16 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         public void grenade() {
 
             nextGrenade = System.currentTimeMillis() + 3500;
+        }
+
+        public boolean isTraitorProtected() {
+
+            return rogueTraitor;
+        }
+
+        public void setTraitorProtection(boolean rogueTraitor) {
+
+            this.rogueTraitor = rogueTraitor;
         }
 
         public boolean allowsConflictingPotions() {
