@@ -13,7 +13,11 @@ import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.exceptions.UnknownPluginException;
+import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.homes.HomeManagerComponent;
+import com.skelril.aurora.prayer.Prayer;
+import com.skelril.aurora.prayer.PrayerComponent;
+import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -21,9 +25,15 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 
@@ -34,7 +44,7 @@ import java.util.logging.Logger;
  * Created by Wyatt on 12/8/13.
  */
 @ComponentInformation(friendlyName = "PvP", desc = "Skelril PvP management.")
-@Depend(components = SessionComponent.class, plugins = "WorldGuard")
+@Depend(components = {SessionComponent.class, PrayerComponent.class}, plugins = "WorldGuard")
 public class PvPComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -43,6 +53,8 @@ public class PvPComponent extends BukkitComponent implements Listener {
 
     @InjectComponent
     private static SessionComponent sessions;
+    @InjectComponent
+    private PrayerComponent prayers;
 
     private static WorldGuardPlugin WG;
 
@@ -77,13 +89,17 @@ public class PvPComponent extends BukkitComponent implements Listener {
         @Command(aliases = {"pvp"},
                 usage = "", desc = "Toggle PvP",
                 flags = "s", min = 0, max = 0)
-        public void prayerCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void pvpCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) {
                 throw new CommandException("You must be a player to use this command.");
             }
 
             PvPSession session = sessions.getSession(PvPSession.class, sender);
+
+            if (session.recentlyHit()) {
+                throw new CommandException("You have been hit recently and cannot toggle PvP!");
+            }
 
             if (!args.hasFlag('s') || !session.hasPvPOn()) {
                 session.setPvP(!session.hasPvPOn());
@@ -98,17 +114,83 @@ public class PvPComponent extends BukkitComponent implements Listener {
                 }
             }
 
-
             if (session.hasPvPOn()) {
                 ChatUtil.sendNotice(sender, "Safe spots are: " + (session.useSafeSpots() ? "enabled" : "disabled") + ".");
             }
         }
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+
+        final Player player = event.getPlayer();
+        PvPSession session = sessions.getSession(PvPSession.class, player);
+
+        if (session.punishNextLogin()) {
+            try {
+                Prayer[] targetPrayers = new Prayer[]{
+                        PrayerComponent.constructPrayer(player, PrayerType.GLASSBOX, 1000 * 60 * 3),
+                        PrayerComponent.constructPrayer(player, PrayerType.STARVATION, 1000 * 60 * 3)
+                };
+
+                prayers.influencePlayer(player, targetPrayers);
+
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+                    @Override
+                    public void run() {
+                        ChatUtil.sendWarning(player, "You ran from a fight, the Giant Chicken does not approve!");
+                    }
+                }, 1);
+            } catch (UnsupportedPrayerException ignored) {
+            }
+        }
+        session.wasKicked(false);
+    }
+
+
+    @EventHandler
+    public void onPlayerKick(PlayerKickEvent event) {
+
+        PvPSession session = sessions.getSession(PvPSession.class, event.getPlayer());
+
+        if (session.recentlyHit()) {
+            session.wasKicked(true);
+        }
+    }
+
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
 
-        sessions.getSession(PvPSession.class, event.getPlayer()).setPvP(false);
+        PvPSession session = sessions.getSession(PvPSession.class, event.getPlayer());
+
+        if (session.recentlyHit() || session.punishNextLogin()) {
+            session.punishNextLogin(true);
+            return;
+        }
+
+        session.setPvP(false);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerDamage(EntityDamageByEntityEvent event) {
+
+        Entity entity = event.getEntity();
+        Entity damager = event.getDamager();
+
+        if (!(entity instanceof Player) || !(damager instanceof Player)) return;
+
+        sessions.getSession(PvPSession.class, (Player) entity).updateHit();
+        sessions.getSession(PvPSession.class, (Player) damager).updateHit();
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+
+        PvPSession session = sessions.getSession(PvPSession.class, event.getEntity());
+
+        if (session.punishNextLogin()) {
+            session.punishNextLogin(false);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -167,10 +249,17 @@ public class PvPComponent extends BukkitComponent implements Listener {
     // PvP Session
     private static class PvPSession extends PersistentSession {
 
-        public static final long MAX_AGE = TimeUnit.MINUTES.toMillis(30);
+        public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
 
+        // Flag booleans
         private boolean hasPvPOn = false;
         private boolean useSafeSpots = true;
+
+        // Punishment booleans & data
+        private boolean wasKicked = false;
+        private boolean punishNextLogin = false;
+
+        private long nextFreePoint = 0;
 
         protected PvPSession() {
 
@@ -202,5 +291,32 @@ public class PvPComponent extends BukkitComponent implements Listener {
 
             this.useSafeSpots = useSafeSpots;
         }
+
+        public boolean punishNextLogin() {
+
+            return punishNextLogin && !wasKicked;
+        }
+
+        public void punishNextLogin(boolean witherNextLogin) {
+
+            this.punishNextLogin = witherNextLogin;
+        }
+
+        public void wasKicked(boolean wasKicked) {
+
+            this.wasKicked = wasKicked;
+        }
+
+        public boolean recentlyHit() {
+
+            return System.currentTimeMillis() < nextFreePoint;
+        }
+
+        public void updateHit() {
+
+            nextFreePoint = System.currentTimeMillis() + 7000;
+        }
+
+
     }
 }
