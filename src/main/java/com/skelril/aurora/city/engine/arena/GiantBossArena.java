@@ -665,25 +665,35 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
             if (ChanceUtil.getChance(3) && acceptedReasons.contains(event.getCause())) {
 
-                ItemStack weapon = new ItemStack(ItemID.BONE);
+                final ItemStack weapon = new ItemStack(ItemID.BONE);
                 ItemMeta weaponMeta = weapon.getItemMeta();
                 weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
                 weapon.setItemMeta(weaponMeta);
 
-                for (Location spawnPt : spawnPts) {
-                    if (ChanceUtil.getChance(11)) {
-                        for (int i = 0; i < Math.max(3, contained.length); i++) {
-                            Zombie z = (Zombie) getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
-                            z.setBaby(true);
-                            EntityEquipment equipment = z.getEquipment();
-                            equipment.setItemInHand(weapon.clone());
-                            equipment.setItemInHandDropChance(0F);
-                            if (attacker != null && attacker instanceof LivingEntity) {
-                                z.setTarget((LivingEntity) attacker);
+                final double oldHP = boss.getHealth();
+                final Entity finalAttacker = attacker;
+                server.getScheduler().runTaskLater(inst, new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (oldHP < boss.getHealth()) return;
+
+                        for (Location spawnPt : spawnPts) {
+                            if (ChanceUtil.getChance(11)) {
+                                for (int i = 0; i < Math.max(3, contained.length); i++) {
+                                    Zombie z = (Zombie) getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
+                                    z.setBaby(true);
+                                    EntityEquipment equipment = z.getEquipment();
+                                    equipment.setItemInHand(weapon.clone());
+                                    equipment.setItemInHandDropChance(0F);
+                                    if (finalAttacker != null && finalAttacker instanceof LivingEntity) {
+                                        z.setTarget((LivingEntity) finalAttacker);
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                }, 1);
             }
 
             if (attacker != null && attacker instanceof Player) {
