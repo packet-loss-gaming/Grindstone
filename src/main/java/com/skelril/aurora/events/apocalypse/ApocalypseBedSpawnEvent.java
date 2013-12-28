@@ -37,7 +37,6 @@ public class ApocalypseBedSpawnEvent extends PlayerEvent implements Cancellable 
     public void setLocation(Location spawnLocation) {
 
         Validate.notNull(spawnLocation);
-        Validate.isTrue(this.spawnLocation.getWorld().equals(spawnLocation.getWorld()));
 
         this.spawnLocation = spawnLocation;
     }
