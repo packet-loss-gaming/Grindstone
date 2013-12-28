@@ -224,43 +224,44 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             // Create the explosion if no players are around that don't allow PvP
             final Player shooter = (Player) p.getShooter();
 
-            for (Entity entity : p.getNearbyEntities(4, 4, 4)) {
-                if (entity.equals(shooter) || !(entity instanceof LivingEntity)) continue;
-                if (entity instanceof Player) {
-                    final Player defender = (Player) entity;
-                    if (!PvPComponent.allowsPvP(shooter, defender)) return;
-
-                    if (inst.hasPermission(defender, "aurora.rogue.guild.master")) {
-                        ChatUtil.sendWarning(shooter, defender.getName() + " sends a band of Rogue marauders after you.");
-                        for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
-                            server.getScheduler().runTaskLater(inst, new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (defender.getLocation().distanceSquared(shooter.getLocation()) > 2500) {
-                                        return;
-                                    }
-                                    Location l = LocationUtil.findRandomLoc(shooter.getLocation().getBlock(), 3, true, false);
-                                    l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 1.75F, true, false);
-                                }
-                            }, 12 * i);
-                        }
-                    }
-                }
-            }
-
             if (p.hasMetadata("nightmare")) {
 
                 server.getPluginManager().callEvent(new RapidHitEvent(shooter));
 
-                for (Entity e : p.getNearbyEntities(3, 3, 3)) {
-                    if (e.isValid() && e instanceof LivingEntity) {
-                        if (e instanceof Player && !PvPComponent.allowsPvP(shooter, (Player) e)) continue;
-                        shooter.setHealth(Math.min(shooter.getMaxHealth(), shooter.getHealth() + 1));
-                        ((LivingEntity) e).setHealth(Math.max(0, ((LivingEntity) e).getHealth() - 1));
-                        e.playEffect(EntityEffect.HURT);
-                    }
+                for (Entity entity : p.getNearbyEntities(3, 3, 3)) {
+                    if (!entity.isValid() || entity.equals(shooter) || !(entity instanceof LivingEntity)) continue;
+
+                    if (entity instanceof Player && !PvPComponent.allowsPvP(shooter, (Player) entity)) continue;
+                    shooter.setHealth(Math.min(shooter.getMaxHealth(), shooter.getHealth() + 1));
+                    ((LivingEntity) entity).setHealth(Math.max(0, ((LivingEntity) entity).getHealth() - 1));
+                    entity.playEffect(EntityEffect.HURT);
                 }
             } else {
+
+                for (Entity entity : p.getNearbyEntities(4, 4, 4)) {
+                    if (entity.equals(shooter) || !(entity instanceof LivingEntity)) continue;
+                    if (entity instanceof Player) {
+                        final Player defender = (Player) entity;
+                        if (!PvPComponent.allowsPvP(shooter, defender)) return;
+
+                        if (inst.hasPermission(defender, "aurora.rogue.guild.master")) {
+                            ChatUtil.sendWarning(shooter, defender.getName() + " sends a band of Rogue marauders after you.");
+                            for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
+                                server.getScheduler().runTaskLater(inst, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (defender.getLocation().distanceSquared(shooter.getLocation()) > 2500) {
+                                            return;
+                                        }
+                                        Location l = LocationUtil.findRandomLoc(shooter.getLocation().getBlock(), 3, true, false);
+                                        l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 1.75F, true, false);
+                                    }
+                                }, 12 * i);
+                            }
+                        }
+                    }
+                }
+
                 p.getWorld().createExplosion(p.getLocation(), 1.75F);
             }
         }
