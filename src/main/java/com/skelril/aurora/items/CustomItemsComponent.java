@@ -357,12 +357,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 }
             }
 
-            ChatUtil.sendNotice(owner, "Original Damage " + event.getDamage() + ".");
-            ChatUtil.sendNotice(owner, "Damage Modifier of: " + modifier + " applied!");
-
             event.setDamage(event.getDamage() * modifier);
-
-            ChatUtil.sendNotice(owner, "New Damage " + event.getDamage() + ".");
 
             if (spec != null && session.canSpec(specType)) {
 
