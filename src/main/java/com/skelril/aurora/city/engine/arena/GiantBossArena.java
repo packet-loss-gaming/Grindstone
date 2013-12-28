@@ -27,6 +27,7 @@ import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
 import com.skelril.aurora.items.specialattack.attacks.ranged.fear.FearBomb;
 import com.skelril.aurora.items.specialattack.attacks.ranged.misc.MobAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.Famine;
+import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.GlowingFog;
 import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.ChanceUtil;
@@ -479,6 +480,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
     private static Set<Class> ultimateBlacklistedSpecs = new HashSet<>();
 
     static {
+        generalBlacklistedSpecs.add(GlowingFog.class);
         generalBlacklistedSpecs.add(Nightmare.class);
         generalBlacklistedSpecs.add(Disarm.class);
         generalBlacklistedSpecs.add(MobAttack.class);
