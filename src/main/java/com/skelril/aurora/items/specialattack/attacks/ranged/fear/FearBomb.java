@@ -7,6 +7,7 @@ import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.RangedSpecial;
+import com.skelril.aurora.util.DamageUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
@@ -119,7 +120,7 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
                             }
                         }
                         if (entity.getLocation().distanceSquared(loc) <= 4) {
-                            ((LivingEntity) entity).damage(10000, owner);
+                            DamageUtil.damage(owner, target, 10000);
                         }
                     }
 

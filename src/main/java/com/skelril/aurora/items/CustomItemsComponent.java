@@ -30,6 +30,7 @@ import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.GlowingFo
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.DamageUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -215,6 +216,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
+        if (DamageUtil.remove(event.getDamager(), event.getEntity())) return;
+
         Entity damager = event.getDamager();
         ItemStack launcher = null;
         if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
@@ -334,6 +337,32 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     }
                 }
             }
+
+            double modifier = 1.0;
+
+            ItemStack targetItem = launcher;
+
+            if (targetItem == null) {
+                targetItem = owner.getItemInHand();
+            }
+
+            if (targetItem != null) {
+                if (targetItem.hasItemMeta() && targetItem.getItemMeta().hasLore()) {
+                    for (String line : targetItem.getItemMeta().getLore()) {
+                        String[] args = line.split(":");
+                        if (args.length < 1) continue;
+
+                        modifier = Double.parseDouble(args[args.length - 1]);
+                    }
+                }
+            }
+
+            ChatUtil.sendNotice(owner, "Original Damage " + event.getDamage() + ".");
+            ChatUtil.sendNotice(owner, "Damage Modifier of: " + modifier + " applied!");
+
+            event.setDamage(event.getDamage() * modifier);
+
+            ChatUtil.sendNotice(owner, "New Damage " + event.getDamage() + ".");
 
             if (spec != null && session.canSpec(specType)) {
 

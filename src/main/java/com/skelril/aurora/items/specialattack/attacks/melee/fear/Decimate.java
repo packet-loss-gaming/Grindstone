@@ -4,6 +4,7 @@ import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.DamageUtil;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -23,7 +24,7 @@ public class Decimate extends EntityAttack implements MeleeSpecial {
             server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
         }
 
-        target.damage(ChanceUtil.getRandom(target instanceof Player ? 3 : 10) * 50, owner);
+        DamageUtil.damage(owner, target, ChanceUtil.getRandom(target instanceof Player ? 3 : 10) * 50);
 
         inform("Your sword tears through the flesh of its victim.");
     }

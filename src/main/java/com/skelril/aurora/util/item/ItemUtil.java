@@ -19,6 +19,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
+import java.util.Arrays;
+
 import static com.skelril.aurora.util.item.ItemUtil.CustomItems.*;
 
 /**
@@ -212,12 +214,7 @@ public class ItemUtil {
 
             ItemStack godSword = new ItemStack(ItemID.DIAMOND_SWORD);
             ItemMeta godMeta = godSword.getItemMeta();
-            godMeta.addEnchant(Enchantment.DAMAGE_ALL, 5, true);
-            godMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 5, true);
-            godMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 5, true);
-            godMeta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
-            godMeta.addEnchant(Enchantment.KNOCKBACK, 2, true);
-            godMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 3, true);
+            godMeta.setLore(Arrays.asList(ChatColor.RED + "Damage Modifier: 1.5"));
             godMeta.setDisplayName(GOD_SWORD.toString());
             ((Repairable) godMeta).setRepairCost(400);
             godSword.setItemMeta(godMeta);
@@ -228,10 +225,7 @@ public class ItemUtil {
 
             ItemStack godBow = new ItemStack(ItemID.BOW);
             ItemMeta godMeta = godBow.getItemMeta();
-            godMeta.addEnchant(Enchantment.ARROW_DAMAGE, 5, true);
-            godMeta.addEnchant(Enchantment.ARROW_FIRE, 1, true);
-            godMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-            godMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 2, true);
+            godMeta.setLore(Arrays.asList(ChatColor.RED + "Damage Modifier: 1.5"));
             godMeta.setDisplayName(GOD_BOW.toString());
             ((Repairable) godMeta).setRepairCost(400);
             godBow.setItemMeta(godMeta);
@@ -347,11 +341,7 @@ public class ItemUtil {
 
             ItemStack masterBow = new ItemStack(ItemID.BOW);
             ItemMeta masterMeta = masterBow.getItemMeta();
-            masterMeta.addEnchant(Enchantment.ARROW_DAMAGE, 10, true);
-            masterMeta.addEnchant(Enchantment.ARROW_FIRE, 10, true);
-            masterMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-            masterMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 10, true);
-            masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
+            masterMeta.setLore(Arrays.asList(ChatColor.RED + "Damage Modifier: 2"));
             masterMeta.setDisplayName(MASTER_BOW.toString());
             ((Repairable) masterMeta).setRepairCost(400);
             masterBow.setItemMeta(masterMeta);
@@ -362,12 +352,7 @@ public class ItemUtil {
 
             ItemStack masterSword = new ItemStack(ItemID.DIAMOND_SWORD);
             ItemMeta masterMeta = masterSword.getItemMeta();
-            masterMeta.addEnchant(Enchantment.DAMAGE_ALL, 10, true);
-            masterMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 10, true);
-            masterMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 10, true);
-            masterMeta.addEnchant(Enchantment.FIRE_ASPECT, 10, true);
-            masterMeta.addEnchant(Enchantment.KNOCKBACK, 10, true);
-            masterMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 10, true);
+            masterMeta.setLore(Arrays.asList(ChatColor.RED + "Damage Modifier: 2"));
             masterMeta.setDisplayName(MASTER_SWORD.toString());
             ((Repairable) masterMeta).setRepairCost(400);
             masterSword.setItemMeta(masterMeta);
@@ -381,6 +366,7 @@ public class ItemUtil {
 
             ItemStack unleashedSword = Master.makeSword();
             ItemMeta unleashedMeta = unleashedSword.getItemMeta();
+            unleashedMeta.setLore(Arrays.asList(ChatColor.RED + "Damage Modifier: 2.25"));
             unleashedMeta.setDisplayName(UNLEASHED_SWORD.toString());
             unleashedSword.setItemMeta(unleashedMeta);
             return unleashedSword;
@@ -390,6 +376,7 @@ public class ItemUtil {
 
             ItemStack unleashedBow = Master.makeBow();
             ItemMeta unleashedMeta = unleashedBow.getItemMeta();
+            unleashedMeta.setLore(Arrays.asList(ChatColor.RED + "Damage Modifier: 2.25"));
             unleashedMeta.setDisplayName(UNLEASHED_BOW.toString());
             unleashedBow.setItemMeta(unleashedMeta);
             return unleashedBow;
@@ -402,12 +389,7 @@ public class ItemUtil {
 
             ItemStack fearSword = new ItemStack(ItemID.DIAMOND_SWORD);
             ItemMeta fearMeta = fearSword.getItemMeta();
-            fearMeta.addEnchant(Enchantment.DAMAGE_ALL, 7, true);
-            fearMeta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 7, true);
-            fearMeta.addEnchant(Enchantment.DAMAGE_UNDEAD, 7, true);
-            fearMeta.addEnchant(Enchantment.FIRE_ASPECT, 7, true);
-            fearMeta.addEnchant(Enchantment.KNOCKBACK, 7, true);
-            fearMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 7, true);
+            fearMeta.setLore(Arrays.asList(ChatColor.RED + "Damage Modifier: 2.25"));
             fearMeta.setDisplayName(FEAR_SWORD.toString());
             ((Repairable) fearMeta).setRepairCost(400);
             fearSword.setItemMeta(fearMeta);
@@ -418,11 +400,7 @@ public class ItemUtil {
 
             ItemStack fearBow = new ItemStack(ItemID.BOW);
             ItemMeta fearMeta = fearBow.getItemMeta();
-            fearMeta.addEnchant(Enchantment.ARROW_DAMAGE, 7, true);
-            fearMeta.addEnchant(Enchantment.ARROW_FIRE, 7, true);
-            fearMeta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
-            fearMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 7, true);
-            fearMeta.addEnchant(Enchantment.LOOT_BONUS_MOBS, 7, true);
+            fearMeta.setLore(Arrays.asList(ChatColor.RED + "Damage Modifier: 2.25"));
             fearMeta.setDisplayName(FEAR_BOW.toString());
             ((Repairable) fearMeta).setRepairCost(400);
             fearBow.setItemMeta(fearMeta);
@@ -447,7 +425,7 @@ public class ItemUtil {
         public static ItemStack divineCombatPotion() {
 
             int time = 20 * 600;
-            int level = 5;
+            int level = 3;
 
             ItemStack divineCombatPotion = new Potion(PotionType.INSTANT_DAMAGE).toItemStack(1);
             PotionMeta pMeta = (PotionMeta) divineCombatPotion.getItemMeta();
@@ -464,7 +442,7 @@ public class ItemUtil {
         public static ItemStack holyCombatPotion() {
 
             int time = 20 * 45;
-            int level = 5;
+            int level = 3;
 
             ItemStack holyCombatPotion = new Potion(PotionType.INSTANT_DAMAGE).toItemStack(1);
             PotionMeta pMeta = (PotionMeta) holyCombatPotion.getItemMeta();

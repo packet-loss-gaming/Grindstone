@@ -5,6 +5,7 @@ import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.RangedSpecial;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.DamageUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
@@ -44,7 +45,7 @@ public class GlowingFog extends EntityAttack implements RangedSpecial {
                         if (aEntity instanceof Player) {
                             if (owner instanceof Player && !PvPComponent.allowsPvP((Player) owner, (Player) aEntity)) continue;
                         }
-                        ((LivingEntity) aEntity).damage(5, owner);
+                        DamageUtil.damage(owner, target, 5);
                     }
                 }
                 return true;

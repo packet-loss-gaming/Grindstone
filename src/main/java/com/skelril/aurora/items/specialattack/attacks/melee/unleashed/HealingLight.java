@@ -3,6 +3,7 @@ package com.skelril.aurora.items.specialattack.attacks.melee.unleashed;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
+import com.skelril.aurora.util.DamageUtil;
 import org.bukkit.Effect;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -28,7 +29,7 @@ public class HealingLight extends EntityAttack implements MeleeSpecial {
             target.getWorld().playEffect(target.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
         }
 
-        target.damage(20, owner);
+        DamageUtil.damage(owner, target, 20);
         inform("Your weapon glows dimly.");
     }
 }

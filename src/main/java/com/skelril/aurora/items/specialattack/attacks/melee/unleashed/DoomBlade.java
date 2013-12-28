@@ -5,6 +5,7 @@ import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.DamageUtil;
 import org.bukkit.Effect;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -43,7 +44,7 @@ public class DoomBlade extends EntityAttack implements MeleeSpecial {
                     }
                     maxHit = (1.0 / 3.0) * maxHit;
                 }
-                ((LivingEntity) e).damage(maxHit, owner);
+                DamageUtil.damage(owner, target, maxHit);
                 for (int i = 0; i < 20; i++) e.getWorld().playEffect(e.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
                 dmgTotal += maxHit;
             }
