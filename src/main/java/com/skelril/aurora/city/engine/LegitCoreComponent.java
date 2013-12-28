@@ -1,6 +1,8 @@
 package com.skelril.aurora.city.engine;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.session.PersistentSession;
+import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -34,14 +36,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.*;
 
 import java.io.File;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Legit Core", desc = "Operate the legit world.")
-@Depend(components = {AdminComponent.class, EnderPearlHomesComponent.class})
+@Depend(components = {AdminComponent.class, SessionComponent.class, EnderPearlHomesComponent.class})
 public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -50,6 +52,8 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @InjectComponent
     private AdminComponent adminComponent;
+    @InjectComponent
+    private SessionComponent sessions;
     @InjectComponent
     private EnderPearlHomesComponent mainHomeDatabase;
 
@@ -201,6 +205,24 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTeleport(PlayerTeleportEvent event) {
+
+        Location from = event.getFrom();
+        Location to = event.getTo();
+
+        String fromName = from.getWorld().getName();
+        String toName = to.getWorld().getName();
+
+        LegitSession session = sessions.getSession(LegitSession.class, event.getPlayer());
+
+        if (toName.contains(config.legitWorld) && !fromName.contains(config.legitWorld)) {
+            session.setFromIndex(from);
+        } else if (fromName.contains(config.legitWorld) && !toName.contains(config.legitWorld)) {
+            session.setLegitIndex(from);
+        }
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onWorldChange(PlayerChangedWorldEvent event) {
 
@@ -282,7 +304,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         }
 
         if (result) {
-            adminComponent.standardizePlayer(player, true);
+            adminComponent.deadmin(player, true);
 
             final File fromDir = fromMain ? normalFileDir : legitFileDir;
             final File toDir = fromMain ? legitFileDir : normalFileDir;
@@ -336,7 +358,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
         Player player = event.getPlayer();
 
-        if (player.getWorld().getName().contains(config.legitWorld)) adminComponent.standardizePlayer(player);
+        if (player.getWorld().getName().contains(config.legitWorld)) adminComponent.deadmin(player);
     }
 
     @EventHandler
@@ -348,65 +370,105 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         if (player.getWorld().getName().contains(config.legitWorld) && event.isFlying()) event.setCancelled(true);
     }
 
-    private ConcurrentHashMap<String, LocationIndex> legitIndex = new ConcurrentHashMap<>();
-
     public Location getTo(Player player, boolean fromLegit) {
 
-        LocationIndex index;
+        LegitSession session = sessions.getSession(LegitSession.class, player);
         if (fromLegit) {
-            if (legitIndex.containsKey(player.getName())) {
-                index = legitIndex.get(player.getName());
-                index.setLegitIndex(player.getLocation());
-                Location from = index.getFromIndex();
-                return from != null ? from : mainHomeDatabase.getRespawnLocation(player);
+            if (session.isSet()) {
+                session.setLegitIndex(player.getLocation());
+                return session.getFromIndex();
             } else {
-                index = new LocationIndex(player.getLocation(), mainHomeDatabase.getRespawnLocation(player));
-                legitIndex.put(player.getName(), index);
-                return mainHomeDatabase.getRespawnLocation(player);
+                Location target = mainHomeDatabase.getRespawnLocation(player);
+                session.setLegitIndex(player.getLocation());
+                session.setFromIndex(target);
+                return target;
             }
         } else {
-            if (legitIndex.containsKey(player.getName())) {
-                index = legitIndex.get(player.getName());
-                index.setFromIndex(player.getLocation());
-                Location legit = index.getLegitIndex();
-                return legit != null ? legit : getRespawnLocation(player);
+            if (session.isSet()) {
+                session.setFromIndex(player.getLocation());
+                return session.getLegitIndex();
             } else {
-                index = new LocationIndex(getRespawnLocation(player), player.getLocation());
-                legitIndex.put(player.getName(), index);
-                return getRespawnLocation(player);
+                Location target = getRespawnLocation(player);
+                session.setLegitIndex(target);
+                session.setFromIndex(player.getLocation());
+                return target;
             }
         }
     }
 
-    private class LocationIndex {
+    private static class LegitSession extends PersistentSession {
 
-        Location legitIndex;
-        Location fromIndex;
+        private static final long MAX_AGE = TimeUnit.DAYS.toMillis(3);
 
-        public LocationIndex(Location legit, Location from) {
+        @Setting("is-from-set")
+        private boolean isFromSet = false;
+        @Setting("is-legit-set")
+        private boolean isLegitSet = false;
 
-            legitIndex = legit;
-            fromIndex = from;
+        @Setting("legit-x")
+        private double legit_x = 0;
+        @Setting("legit-y")
+        private double legit_y = 0;
+        @Setting("legit-z")
+        private double legit_z = 0;
+        @Setting("legit-pitch")
+        private float legit_pitch = 0;
+        @Setting("legit-yaw")
+        private float legit_yaw = 0;
+
+        @Setting("from-world")
+        private String from_world = "City";
+        @Setting("from-x")
+        private double from_x = 0;
+        @Setting("from-y")
+        private double from_y = 0;
+        @Setting("from-z")
+        private double from_z = 0;
+        @Setting("from-pitch")
+        private float from_pitch = 0;
+        @Setting("from-yaw")
+        private float from_yaw = 0;
+
+        protected LegitSession() {
+            super(MAX_AGE);
         }
 
-        public Location getLegitIndex() {
+        public boolean isSet() {
 
-            return legitIndex;
-        }
-
-        public void setLegitIndex(Location legitIndex) {
-
-            this.legitIndex = legitIndex;
+            return isFromSet && isLegitSet;
         }
 
         public Location getFromIndex() {
 
-            return fromIndex;
+            return new Location(Bukkit.getWorld(from_world), from_x, from_y, from_z, from_yaw, from_pitch);
         }
 
-        public void setFromIndex(Location fromIndex) {
+        public void setFromIndex(Location legitIndex) {
 
-            this.fromIndex = fromIndex;
+            from_world = legitIndex.getWorld().getName();
+            from_x = legitIndex.getX();
+            from_y = legitIndex.getY();
+            from_z = legitIndex.getZ();
+            from_yaw = legitIndex.getYaw();
+            from_pitch = legitIndex.getPitch();
+
+            isFromSet = true;
+        }
+
+        public Location getLegitIndex() {
+
+            return new Location(Bukkit.getWorld("Legit"), legit_x, legit_y, legit_z, legit_yaw, legit_pitch);
+        }
+
+        public void setLegitIndex(Location legitIndex) {
+
+            legit_x = legitIndex.getX();
+            legit_y = legitIndex.getY();
+            legit_z = legitIndex.getZ();
+            legit_yaw = legitIndex.getYaw();
+            legit_pitch = legitIndex.getPitch();
+
+            isLegitSet = true;
         }
     }
 }
