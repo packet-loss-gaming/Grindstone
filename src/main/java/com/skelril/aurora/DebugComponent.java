@@ -1,13 +1,19 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -36,6 +42,7 @@ public class DebugComponent extends BukkitComponent {
         //noinspection AccessStaticViaInstance
         //inst.registerEvents(new BlockDebug());
 
+        //registerCommands(LocationDebug.class);
 
         // Bug fixes
 
@@ -55,6 +62,20 @@ public class DebugComponent extends BukkitComponent {
             ItemStack[] inventory = player.getInventory().getContents();
             inventory = ItemUtil.removeItemOfType(inventory, Material.DOUBLE_PLANT.getId());
             player.getInventory().setContents(inventory);
+        }
+    }
+
+    public class LocationDebug {
+
+        @Command(aliases = {"myloc"}, desc = "Get your location",
+                flags = "", min = 0, max = 0)
+        public void myLocCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
+
+            Location l = ((Player) sender).getLocation();
+            ChatUtil.sendNotice(sender, "X: " + l.getX() + ", Y:" + l.getY() + ", Z: " + l.getZ());
+            ChatUtil.sendNotice(sender, "Pitch: " + l.getPitch() + ", Yaw: " + l.getYaw());
         }
     }
 
