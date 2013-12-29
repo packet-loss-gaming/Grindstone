@@ -5,6 +5,7 @@ import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.economic.ImpersonalComponent;
 import com.skelril.aurora.exceptions.NotFoundException;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -144,7 +145,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
             try {
                 if (!(sender instanceof Player)) {
-                    throw new CommandException("You must be a player to use this command.");
+                    throw new PlayerOnlyCommandException();
                 }
                 count = Integer.parseInt(args.getString(0));
 

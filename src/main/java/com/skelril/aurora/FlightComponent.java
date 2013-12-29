@@ -5,6 +5,7 @@ import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -64,7 +65,7 @@ public class FlightComponent extends BukkitComponent implements Listener {
                 flags = "s:", min = 0, max = 1)
         public void flyCmd(CommandContext args, CommandSender sender) throws CommandException {
             // Important Check
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             // Get the target
             Player target;
@@ -113,7 +114,7 @@ public class FlightComponent extends BukkitComponent implements Listener {
                 flags = "", min = 0, max = 1)
         public void deflyCmd(CommandContext args, CommandSender sender) throws CommandException {
             // Important Check
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             // Get the Target
             Player target;

@@ -12,6 +12,7 @@ import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.skelril.aurora.events.egg.EggDropEvent;
 import com.skelril.aurora.events.egg.EggHatchEvent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -251,7 +252,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         @CommandPermissions({"aurora.egg.easter", "aurora.egg.halloween"})
         public void eggAllCommand(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             Player player = (Player) sender;
 
@@ -275,7 +276,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         @CommandPermissions({"aurora.egg.easter"})
         public void eggEasterCommand(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             Player player = (Player) sender;
 
@@ -297,7 +298,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         @CommandPermissions({"aurora.egg.halloween"})
         public void eggHalloweenCommand(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             Player player = (Player) sender;
 

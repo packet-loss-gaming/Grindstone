@@ -6,6 +6,7 @@ import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -441,7 +442,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                     throw new CommandException("Inmate database failed to save. See console.");
                 }
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 

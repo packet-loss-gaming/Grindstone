@@ -4,6 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -55,7 +56,7 @@ public class WeatherManagerComponent extends BukkitComponent implements Listener
                 flags = "r", min = 0, max = 0)
         public void showStormCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             if (args.hasFlag('r')) {
                 enabledFor.remove(sender);

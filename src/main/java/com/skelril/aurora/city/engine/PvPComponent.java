@@ -12,6 +12,7 @@ import com.sk89q.worldguard.protection.events.DisallowedPVPEvent;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.homes.HomeManagerComponent;
@@ -92,7 +93,7 @@ public class PvPComponent extends BukkitComponent implements Listener {
         public void pvpCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
 
             PvPSession session = sessions.getSession(PvPSession.class, sender);

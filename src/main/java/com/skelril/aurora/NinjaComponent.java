@@ -12,6 +12,7 @@ import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EntityDistanceComparator;
@@ -481,7 +482,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         @CommandPermissions({"aurora.ninja"})
         public void ninja(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
             if (inst.hasPermission(sender, "aurora.rogue.guild") || rogueComponent.isRogue((Player) sender)) {
                 throw new CommandException("You are a rogue not a ninja!");
             }
@@ -507,7 +508,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 flags = "", min = 0, max = 0)
         public void unninja(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
             if (!isNinja((Player) sender)) {
                 throw new CommandException("You are not a ninja!");
             }

@@ -183,7 +183,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         public void authLoginCmd(CommandContext args, CommandSender sender) throws CommandException{
 
             if (!(sender instanceof Player))
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
 
             String authToke = authenticate(sender.getName(), args.getString(0), args.getString(1));
 

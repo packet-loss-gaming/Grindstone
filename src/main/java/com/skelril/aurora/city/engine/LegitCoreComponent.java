@@ -14,6 +14,7 @@ import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseBedSpawnEvent;
 import com.skelril.aurora.events.egg.EggDropEvent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.homes.CSVHomeDatabase;
 import com.skelril.aurora.homes.EnderPearlHomesComponent;
 import com.skelril.aurora.homes.HomeDatabase;
@@ -115,7 +116,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         @CommandPermissions({"multiverse.access.Legit", "multiverse.access.Legit_nether"})
         public void toggleLegitCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             Player player = (Player) sender;
 

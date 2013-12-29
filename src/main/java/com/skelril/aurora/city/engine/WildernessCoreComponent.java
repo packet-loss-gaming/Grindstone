@@ -13,6 +13,7 @@ import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -595,7 +596,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         public void lostPotionOfRestitutionCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
 
             int level = getLevel(((Player) sender).getLocation());

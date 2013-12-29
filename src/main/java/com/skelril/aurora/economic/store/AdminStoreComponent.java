@@ -8,6 +8,7 @@ import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -813,7 +814,7 @@ public class AdminStoreComponent extends BukkitComponent {
     private String checkPlayer(CommandSender sender, boolean onlyPlayer) throws CommandException {
 
         if (!(sender instanceof Player)) {
-            throw new CommandException("You must be a player to use this command.");
+            throw new PlayerOnlyCommandException();
         }
 
         if (onlyPlayer) return sender.getName();

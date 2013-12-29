@@ -26,6 +26,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.District;
 import com.skelril.aurora.economic.store.AdminStoreComponent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.RegionUtil;
 import com.skelril.aurora.util.item.BookUtil;
@@ -173,7 +174,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
                 ChatUtil.sendNotice(sender, ChatColor.RESET, builtInfo.toString());
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 
@@ -196,7 +197,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 }
                 ChatUtil.sendNotice(player, "Home successfully updated!");
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 
@@ -219,7 +220,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 }
                 ChatUtil.sendNotice(player, "Home successfully updated!");
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 
@@ -234,7 +235,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
                 Bukkit.dispatchCommand(sender, "rg flag " + getHomeName(player) + " " + flag);
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 
@@ -343,7 +344,7 @@ public class HomeManagerComponent extends BukkitComponent {
                     ChatUtil.sendNotice(player, "If you would like to buy this home please use /home buy -y");
                 }
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 
@@ -394,7 +395,7 @@ public class HomeManagerComponent extends BukkitComponent {
                     ChatUtil.sendNotice(player, "If you would like to sell your home please use /home sell -y");
                 }
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 
@@ -482,7 +483,7 @@ public class HomeManagerComponent extends BukkitComponent {
                             + " in the district: " + district + ".");
                 }
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 
@@ -564,7 +565,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 String totalPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total), " " + econ.currencyNamePlural());
                 ChatUtil.sendNotice(target, "Total Price: " + totalPrice + ".");
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 
@@ -579,7 +580,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
                 Bukkit.dispatchCommand(sender, "rg flag " + getHomeName(player) + " " + flag);
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 
@@ -640,7 +641,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 ChatUtil.sendNotice(player, "Your home has been moved for you by: " + admin.getDisplayName() + ".");
                 log.info(admin.getName() + " moved a home for: " + player + " into the district: " + district + ".");
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 
@@ -666,7 +667,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 ChatUtil.sendNotice(player, "Your home has been removed by: " + admin.getDisplayName() + ".");
                 log.info(admin.getName() + " deleted the player: " + player + "'s home.");
             } else {
-                throw new CommandException("You must be a player to use this command.");
+                throw new PlayerOnlyCommandException();
             }
         }
 

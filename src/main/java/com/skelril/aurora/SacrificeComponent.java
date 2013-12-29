@@ -11,6 +11,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.economic.store.AdminStoreComponent;
 import com.skelril.aurora.events.PlayerSacrificeItemEvent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
@@ -153,8 +154,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
      * on a numerical value and quantity.
      *
      * @param sender - The triggering sender
-     * @param max - The maximum amount of items to return
-     * @param value - The value put towards the items returned
+     * @param max    - The maximum amount of items to return
+     * @param value  - The value put towards the items returned
      * @return - The ItemStacks that should be received
      */
     public static List<ItemStack> getCalculatedLoot(CommandSender sender, int max, double value) {
@@ -639,7 +640,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         @Command(aliases = {"value"}, desc = "Value an item", flags = "", min = 0, max = 0)
         public void userGroupSetCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             ItemStack questioned = ((Player) sender).getInventory().getItemInHand();
 

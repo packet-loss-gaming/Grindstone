@@ -31,6 +31,7 @@ import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.egg.EggDropEvent;
 import com.skelril.aurora.events.environment.DarkAreaInjuryEvent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
@@ -1330,7 +1331,7 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         @CommandPermissions({"aurora.jr"})
         public void leaveJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
             Player targetPlayer = (Player) sender;
 
             if (args.argsLength() == 0) {

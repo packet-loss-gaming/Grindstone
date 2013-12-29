@@ -14,6 +14,7 @@ import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.melee.fear.Weaken;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
@@ -407,7 +408,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
             if (inst.hasPermission(sender, "aurora.ninja.guild") || ninjaComponent.isNinja((Player) sender)) {
                 throw new CommandException("You are a ninja not a rogue!");
             }
@@ -433,7 +434,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                 flags = "", min = 0, max = 0)
         public void derogue(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
             if (!isRogue((Player) sender)) {
                 throw new CommandException("You are not a rogue!");
             }

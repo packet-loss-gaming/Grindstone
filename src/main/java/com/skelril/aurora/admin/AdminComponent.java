@@ -10,6 +10,7 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.skelril.aurora.NinjaComponent;
 import com.skelril.aurora.RogueComponent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
+import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -638,7 +639,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @CommandPermissions("aurora.admin.simulation.damage")
         public void simulateDamageCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             Player player = (Player) sender;
 
@@ -655,7 +656,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @CommandPermissions("aurora.admin.boom")
         public void boomCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             Player player = (Player) sender;
 
@@ -680,7 +681,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 flags = "ec:", min = 0, max = 0)
         public void adminModeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             Player player = (Player) sender;
 
@@ -716,7 +717,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 flags = "k", min = 0, max = 0)
         public void deadminModeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new CommandException("You must be a player to use this command.");
+            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             Player player = (Player) sender;
 
