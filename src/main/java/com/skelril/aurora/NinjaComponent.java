@@ -251,7 +251,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         if (p == null || p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
 
         Player player = (Player) p.getShooter();
-        if (isNinja(player) && hasPoisonArrows(player) && inst.hasPermission(player, "aurora.ninja.guild")) {
+        if (isNinja(player) && hasPoisonArrows(player)) {
 
             if (p instanceof Arrow) {
                 p.setMetadata("ninja-arrow", new FixedMetadataValue(inst, true));
@@ -395,7 +395,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         if (entity instanceof Player) {
             Player player = (Player) entity;
 
-            if (isNinja(player) && player.isSneaking() && inst.hasPermission(player, "aurora.ninja.guild")) {
+            if (isNinja(player) && player.isSneaking()) {
                 event.setCancelled(true);
             }
         }
@@ -412,7 +412,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             Player player = ninjaState.getPlayer();
 
             // Stop this from breaking if the player isn't here
-            if (player == null || !player.isOnline() || player.isDead()) continue;
+            // Stop this from breaking if the player isn't here
+            if (player == null || !player.isValid()) {
+                ninjaState.setIsNinja(false);
+                continue;
+            }
+
+            if (!inst.hasPermission(player, "aurora.ninja")) {
+                unninjaPlayer(player);
+                continue;
+            }
 
             Set<Player> invisibleNewCount = new HashSet<>();
             Set<Player> visibleNewCount = new HashSet<>();
@@ -432,8 +441,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
                     if ((player.isSneaking() && dist >= SNEAK_WATCH_DISTANCE_SQ) || dist >= WATCH_DISTANCE_SQ) {
                         if (otherPlayer.canSee(player)
-                                && !(guildCanSee(player) && inst.hasPermission(otherPlayer, "aurora.ninja.guild"))
-                                && !inst.hasPermission(otherPlayer, "aurora.ninja.guild.master")) {
+                                && !(guildCanSee(player) && inst.hasPermission(otherPlayer, "aurora.ninja"))
+                                && !inst.hasPermission(otherPlayer, "aurora.ninja.master")) {
                             otherPlayer.hidePlayer(player);
                             invisibleNewCount.add(otherPlayer);
                         }
@@ -482,7 +491,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         public void ninja(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-            if (inst.hasPermission(sender, "aurora.rogue.guild") || rogueComponent.isRogue((Player) sender)) {
+            if (inst.hasPermission(sender, "aurora.rogue")) {
                 throw new CommandException("You are a rogue not a ninja!");
             }
 

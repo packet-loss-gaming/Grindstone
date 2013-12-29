@@ -206,7 +206,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             if (event.getEntity() instanceof Player && ChanceUtil.getChance(3)) {
 
                 final Player defender = (Player) event.getEntity();
-                if (isRogue(defender) && canBlip(defender) && inst.hasPermission(defender, "aurora.rogue.guild")) {
+                if (isRogue(defender) && canBlip(defender)) {
                     final Entity finalDamager = damager;
                     server.getScheduler().runTaskLater(inst, new Runnable() {
                         @Override
@@ -289,13 +289,13 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                         @Override
                         public void run() {
                             if (canBlip(player) && !player.isSneaking()) {
-                                blip(player, inst.hasPermission(player, "aurora.rogue.guild") ? 2 : 1, false);
+                                blip(player, 2, false);
                             }
                         }
                     }, 1);
                     break;
                 case RIGHT_CLICK_AIR:
-                    if (canGrenade(player) && inst.hasPermission(player, "aurora.rogue.guild")) {
+                    if (canGrenade(player)) {
                         grenade(player);
                     }
                     break;
@@ -328,7 +328,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             Player player = (Player) entity;
 
-            if (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")) {
+            if (isRogue(player)) {
 
                 blip(player, 1, true);
             }
@@ -360,7 +360,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public void onPrayerApplication(PrePrayerApplicationEvent event) {
 
         Player player = event.getPlayer();
-        if (isRogue(player) && inst.hasPermission(player, "aurora.rogue.guild")) {
+        if (isRogue(player)) {
             Iterator<PotionEffect> it = event.getCause().getEffect().getPotionEffects().iterator();
             while (it.hasNext()) {
                 if (blockedEffects.contains(it.next().getType().getId())) {
@@ -386,17 +386,21 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             Player player = rogueState.getPlayer();
 
             // Stop this from breaking if the player isn't here
-            if (player == null || !player.isOnline() || player.isDead()) {
+            if (player == null || !player.isValid()) {
+                rogueState.setIsRogue(false);
                 continue;
             }
 
-            if (inst.hasPermission(player, "aurora.rogue.guild")) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 45, 6), true);
+            if (!inst.hasPermission(player, "aurora.rogue")) {
+                deroguePlayer(player);
+                continue;
+            }
 
-                Entity vehicle = player.getVehicle();
-                if (vehicle != null && vehicle instanceof Horse) {
-                    ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 2), true);
-                }
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 45, 6), true);
+
+            Entity vehicle = player.getVehicle();
+            if (vehicle != null && vehicle instanceof Horse) {
+                ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 2), true);
             }
         }
     }
@@ -409,7 +413,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
             if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-            if (inst.hasPermission(sender, "aurora.ninja.guild") || ninjaComponent.isNinja((Player) sender)) {
+            if (inst.hasPermission(sender, "aurora.ninja")) {
                 throw new CommandException("You are a ninja not a rogue!");
             }
 
@@ -421,7 +425,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             // Set flags
             allowConflictingPotions((Player) sender, !args.hasFlag('p'));
             limitYVelocity((Player) sender, args.hasFlag('l'));
-            setTraitorProtected((Player) sender, args.hasFlag('t') && inst.hasPermission(sender, "aurora.rogue.guild.master"));
+            setTraitorProtected((Player) sender, args.hasFlag('t') && inst.hasPermission(sender, "aurora.rogue.master"));
 
             if (!isRogue) {
                 ChatUtil.sendNotice(sender, "You gain the power of a rogue warrior!");
