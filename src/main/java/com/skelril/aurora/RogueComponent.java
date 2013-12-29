@@ -16,7 +16,7 @@ import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
-import com.skelril.aurora.items.specialattack.attacks.melee.fear.Weaken;
+import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -129,14 +129,14 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (auto || isYLimited(player)) {
             vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
         } else {
-            vel.setY(Math.min(1.4, Math.max(.175, vel.getY())));
+            vel.setY(Math.min(1.4, vel.getY()));
         }
         player.setVelocity(vel);
     }
 
-    public void fakeBlip(Player player) {
+    public void stallBlip(Player player) {
 
-        sessions.getSession(RogueState.class, player).blip(3250);
+        sessions.getSession(RogueState.class, player).blip(12000);
     }
 
     public boolean canGrenade(Player player) {
@@ -161,7 +161,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         sessions.getSession(RogueState.class, player).setIsRogue(false);
 
         player.removePotionEffect(PotionEffectType.SPEED);
-        player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -203,26 +202,24 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             wasArrow = true;
         }
 
-        if (event.getEntity() instanceof Player && wasArrow && ChanceUtil.getChance(3)) {
+        if (wasArrow) {
+            if (event.getEntity() instanceof Player && ChanceUtil.getChance(3)) {
 
-            final Player defender = (Player) event.getEntity();
-            if (isRogue(defender) && canBlip(defender) && inst.hasPermission(defender, "aurora.rogue.guild")) {
-                final Entity finalDamager = damager;
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-                    @Override
-                    public void run() {
+                final Player defender = (Player) event.getEntity();
+                if (isRogue(defender) && canBlip(defender) && inst.hasPermission(defender, "aurora.rogue.guild")) {
+                    final Entity finalDamager = damager;
+                    server.getScheduler().runTaskLater(inst, new Runnable() {
+                        @Override
+                        public void run() {
 
-                        defender.teleport(finalDamager, PlayerTeleportEvent.TeleportCause.UNKNOWN);
-                        blip(defender, -.5, true);
-                    }
-                }, 1);
+                            defender.teleport(finalDamager, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                            blip(defender, -.5, true);
+                        }
+                    }, 1);
+                }
             }
-        }
-
-        if (damager instanceof Player && isRogue((Player) damager)) {
-
-            fakeBlip((Player) damager);
-            event.setDamage(event.getDamage() * 1.2);
+        } else if (damager instanceof Player && isRogue((Player) damager)) {
+            event.setDamage((event.getDamage() + 10) * 1.2);
         }
     }
 
@@ -313,8 +310,11 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             final Player player = (Player) event.getEntity();
 
             if (isRogue(player)) {
+
                 Entity p = event.getProjectile();
-                p.setVelocity(p.getVelocity().multiply(new Vector(.35, .25, .35)));
+                p.setVelocity(p.getVelocity().multiply(.9));
+
+                stallBlip(player);
             }
         }
     }
@@ -343,7 +343,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (isRogue(player)) {
             SpecialAttack attack = event.getSpec();
 
-            if (attack instanceof Weaken) {
+            if (attack instanceof MeleeSpecial && ChanceUtil.getChance(14)) {
                 event.setSpec(new Nightmare(attack.getOwner(), attack.getTarget()));
             }
         }
