@@ -13,10 +13,7 @@ import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.EntityDistanceComparator;
-import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -197,18 +194,20 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         vel.multiply(.5);
         vel.setY(.6);
 
+        int z = 0;
         // Increment the velocity
         while (block.getY() > player.getLocation().getY()) {
             block = block.getRelative(BlockFace.DOWN);
+            z++;
         }
 
         int i;
         Vector increment = new Vector(0, .1, 0);
-        for (i = 0; i < maxClimb && (i < 1 || block.getType().isSolid()); i++) {
+        for (i = 0; i < maxClimb && (i < z || block.getType().isSolid()); i++) {
 
             double ctl = BlockType.centralTopLimit(block.getTypeId(), block.getData());
 
-            vel.add(ctl != 1 ? increment.clone().multiply(ctl) : increment);
+            vel.add(ctl > 1 ? increment.clone().multiply(ctl) : increment);
             block = block.getRelative(BlockFace.UP);
         }
 
@@ -351,7 +350,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                         // Check for possible misclick
                         if (EnvironmentUtil.isInteractiveBlock(clicked.getRelative(face))) break;
 
-                        if (clicked.getLocation().distanceSquared(player.getLocation()) <= 9) {
+                        if (LocationUtil.distanceSquared2D(clicked.getLocation(), player.getLocation()) <= 4) {
                             grapple(player, clicked, 9);
                         }
                     }
