@@ -158,8 +158,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             oldLoc = entity.getLocation();
 
             k = player.getLocation();
-            k.setPitch((float) (ChanceUtil.getRandom(361.0) - 181));
-            k.setYaw((float) (ChanceUtil.getRandom(361.0) - 181));
+            k.setPitch((float) (ChanceUtil.getRandom(361.0) - 1));
+            k.setYaw((float) (ChanceUtil.getRandom(181.0) - 91));
 
             entity.teleport(k, PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
