@@ -11,6 +11,11 @@ import org.bukkit.entity.Player;
  */
 public class ChatUtil {
 
+    public static void sendDebug(Object o) {
+
+        sendDebug(String.valueOf(o));
+    }
+
     public static void sendDebug(String message) {
 
         try {
