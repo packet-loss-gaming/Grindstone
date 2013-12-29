@@ -234,9 +234,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         NinjaState session = sessions.getSession(NinjaState.class, player);
         session.setIsNinja(false);
 
-        player.removePotionEffect(PotionEffectType.WATER_BREATHING);
-        player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
-
         for (Player otherPlayer : server.getOnlinePlayers()) {
             // Show Yourself!
             if (otherPlayer != player) otherPlayer.showPlayer(player);
