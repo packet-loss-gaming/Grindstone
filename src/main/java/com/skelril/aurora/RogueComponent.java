@@ -191,7 +191,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityDamageEntityEvent(EntityDamageByEntityEvent event) {
 
         Entity damager = event.getDamager();
@@ -221,6 +221,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (damager instanceof Player && isRogue((Player) damager)) {
 
             fakeBlip((Player) damager);
+            event.setDamage(event.getDamage() * 1.2);
         }
     }
 
@@ -394,10 +395,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                 Entity vehicle = player.getVehicle();
                 if (vehicle != null && vehicle instanceof Horse) {
                     ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 2), true);
-
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 45, 3), true);
-                } else {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 45, 1), true);
                 }
             }
         }
