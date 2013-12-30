@@ -39,8 +39,6 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.Collections;
@@ -111,14 +109,14 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     }
 
 
-    public void usePoisonArrows(Player player, boolean poisonArrows) {
+    public void useTormentArrows(Player player, boolean tormentArrows) {
 
-        sessions.getSession(NinjaState.class, player).usePoisonArrows(poisonArrows);
+        sessions.getSession(NinjaState.class, player).usetormentArrows(tormentArrows);
     }
 
-    public boolean hasPoisonArrows(Player player) {
+    public boolean hasTormentArrows(Player player) {
 
-        return sessions.getSession(NinjaState.class, player).hasPoisonArrows();
+        return sessions.getSession(NinjaState.class, player).hasTormentArrows();
     }
 
     public boolean canSmokeBomb(Player player) {
@@ -272,7 +270,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         if (p == null || p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
 
         Player player = (Player) p.getShooter();
-        if (isNinja(player) && hasPoisonArrows(player)) {
+        if (isNinja(player) && hasTormentArrows(player)) {
 
             if (p instanceof Arrow) {
                 p.setMetadata("ninja-arrow", new FixedMetadataValue(inst, true));
@@ -315,25 +313,22 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (p instanceof Arrow && p.hasMetadata("ninja-arrow") && p.hasMetadata("launch-force")) {
-            Object test = p.getMetadata("launch-force").get(0).value();
+        if (p instanceof Arrow && p.hasMetadata("ninja-arrow")) {
 
-            if (!(test instanceof Float)) return;
-
-            poisonArrow((Arrow) p, (Float) test);
+            tormentArrow((Arrow) p);
         }
     }
 
-    private void poisonArrow(Arrow arrow, float force) {
-        int duration = (int) (20 * ((7 * force) + 3));
+    private void tormentArrow(Arrow arrow) {
+        Player shooter = (Player) arrow.getShooter();
         for (Entity entity : arrow.getNearbyEntities(4, 2, 4)) {
-            if (!ChanceUtil.getChance(3) || entity.equals(arrow.getShooter())) continue;
+            if (!entity.isValid() || entity.equals(shooter)) continue;
             if (entity instanceof LivingEntity) {
-                if (entity instanceof Player) {
-                    if (!PvPComponent.allowsPvP((Player) arrow.getShooter(), (Player) entity)) continue;
-                    ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, duration, 4), true);
-                }
-                ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, duration, 1), true);
+                if (entity instanceof Player && !PvPComponent.allowsPvP((Player) arrow.getShooter(), (Player) entity)) continue;
+
+                shooter.setHealth(Math.min(shooter.getMaxHealth(), shooter.getHealth() + 1));
+                ((LivingEntity) entity).setHealth(Math.max(0, ((LivingEntity) entity).getHealth() - 1));
+                entity.playEffect(EntityEffect.HURT);
             }
         }
     }
@@ -525,7 +520,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             // Set flags
             showToGuild((Player) sender, args.hasFlag('g'));
             useVanish((Player) sender, !args.hasFlag('i'));
-            usePoisonArrows((Player) sender, !args.hasFlag('t'));
+            useTormentArrows((Player) sender, !args.hasFlag('t'));
 
             if (!isNinja) {
                 ChatUtil.sendNotice(sender, "You are inspired and become a ninja!");
@@ -560,8 +555,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         private boolean useVanish = true;
         @Setting("ninja-show-to-guild")
         private boolean showToGuild = false;
-        @Setting("ninja-toxic-arrows")
-        private boolean toxicArrows = true;
+        @Setting("ninja-torment-arrows")
+        private boolean tormentArrows = true;
 
         private long nextGrapple = 0;
         private long nextSmokeBomb = 0;
@@ -601,14 +596,14 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             this.useVanish = useVanish;
         }
 
-        public boolean hasPoisonArrows() {
+        public boolean hasTormentArrows() {
 
-            return toxicArrows;
+            return tormentArrows;
         }
 
-        public void usePoisonArrows(boolean explosiveArrows) {
+        public void usetormentArrows(boolean tormentArrows) {
 
-            this.toxicArrows = explosiveArrows;
+            this.tormentArrows = tormentArrows;
         }
 
         public boolean canGrapple() {
