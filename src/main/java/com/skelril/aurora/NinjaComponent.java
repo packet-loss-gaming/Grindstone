@@ -7,6 +7,7 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
@@ -20,10 +21,7 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
@@ -136,7 +134,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 player.getLocation(),
                 player.getEyeLocation()
         };
-        EnvironmentUtil.generateRadialEffect(locations, org.bukkit.Effect.SMOKE);
+        EnvironmentUtil.generateRadialEffect(locations, Effect.SMOKE);
 
         List<Entity> entities = player.getNearbyEntities(4, 4, 4);
         if (entities.isEmpty()) return;
@@ -177,7 +175,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             }
         }, 30);
 
-        oldLoc.setDirection(player.getLocation().getDirection());
+        oldLoc.setDirection(oldLoc.getDirection().multiply(-1));
         player.teleport(oldLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
@@ -186,7 +184,18 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).canGrapple();
     }
 
-    public void grapple(Player player, Block block, double maxClimb) {
+    public void grapple(final Player player, Block block, double maxClimb) {
+
+        Location k = player.getLocation();
+
+        switch (k.getBlock().getTypeId()) {
+            case BlockID.AIR:
+                k.setX(k.getBlockX() + .5);
+                k.setZ(k.getBlockZ() + .5);
+                player.teleport(k, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                break;
+        }
+
 
         server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
 
@@ -194,21 +203,29 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         vel.multiply(.5);
         vel.setY(.6);
 
-        int z = 0;
-        // Increment the velocity
-        while (block.getY() > player.getLocation().getY()) {
+        int z;
+        for (z = 0; block.getY() > player.getLocation().getY(); z++) {
             block = block.getRelative(BlockFace.DOWN);
-            z++;
         }
+
+        Block nextBlock = block.getRelative(BlockFace.UP);
+        boolean nextBlockIsSolid = nextBlock.getType().isSolid();
 
         int i;
         Vector increment = new Vector(0, .1, 0);
-        for (i = 0; i < maxClimb && (i < z || block.getType().isSolid()); i++) {
+        for (i = 0; i < maxClimb && (i < z || block.getType().isSolid() || nextBlockIsSolid); i++) {
 
-            double ctl = BlockType.centralTopLimit(block.getTypeId(), block.getData());
+            // Determine whether we need to add more velocity
+            double ctl = nextBlockIsSolid ? 1 : BlockType.centralTopLimit(block.getTypeId(), block.getData());
 
             vel.add(ctl > 1 ? increment.clone().multiply(ctl) : increment);
-            block = block.getRelative(BlockFace.UP);
+
+            // Update blocks
+            block = nextBlock;
+            nextBlock = nextBlock.getRelative(BlockFace.UP);
+
+            // Update boolean
+            nextBlockIsSolid = nextBlock.getType().isSolid();
         }
 
         player.setVelocity(vel);
