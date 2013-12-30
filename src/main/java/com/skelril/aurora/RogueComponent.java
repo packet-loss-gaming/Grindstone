@@ -389,10 +389,12 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             Player player = rogueState.getPlayer();
 
             // Stop this from breaking if the player isn't here
-            if (player == null || !player.isValid()) {
+            if (player == null) {
                 rogueState.setIsRogue(false);
                 continue;
             }
+
+            if (!player.isValid()) continue;
 
             if (!inst.hasPermission(player, "aurora.rogue")) {
                 deroguePlayer(player);

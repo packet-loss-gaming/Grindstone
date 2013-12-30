@@ -433,11 +433,12 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             Player player = ninjaState.getPlayer();
 
             // Stop this from breaking if the player isn't here
-            // Stop this from breaking if the player isn't here
-            if (player == null || !player.isValid()) {
+            if (player == null) {
                 ninjaState.setIsNinja(false);
                 continue;
             }
+
+            if (!player.isValid()) continue;
 
             if (!inst.hasPermission(player, "aurora.ninja")) {
                 unninjaPlayer(player);
