@@ -244,10 +244,22 @@ public class FishingComponent extends BukkitComponent implements Listener {
         }
 
         if (ChanceUtil.getChance(dropFish) && EnvironmentUtil.isWater(loc.getBlock())) {
-            ItemStack fish = fishy.clone();
+            ItemStack fish;
+
+            // God fish?
             if (ChanceUtil.getChance(250)) {
                 fish = ItemUtil.Misc.godFish(1);
+            } else {
+                fish = fishy.clone();
             }
+
+            // Fish type
+            if (ChanceUtil.getChance(40)) {
+                fish.setDurability((short) 3);
+            } else if (ChanceUtil.getChance(5)) {
+                fish.setDurability((short) ChanceUtil.getRandom(2));
+            }
+
             arrow.getWorld().dropItem(loc, fish);
         }
     }
