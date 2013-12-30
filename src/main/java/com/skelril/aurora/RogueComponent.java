@@ -241,6 +241,9 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                     if (!entity.isValid() || entity.equals(shooter) || !(entity instanceof LivingEntity)) continue;
 
                     if (entity instanceof Player && !PvPComponent.allowsPvP(shooter, (Player) entity)) continue;
+
+                    if (((LivingEntity) entity).getHealth() < 2) continue;
+
                     shooter.setHealth(Math.min(shooter.getMaxHealth(), shooter.getHealth() + 1));
                     ((LivingEntity) entity).setHealth(Math.max(0, ((LivingEntity) entity).getHealth() - 1));
                     entity.playEffect(EntityEffect.HURT);
