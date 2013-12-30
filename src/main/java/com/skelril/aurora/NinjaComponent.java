@@ -141,14 +141,21 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         Collections.sort(entities, new EntityDistanceComparator(player.getLocation()));
 
+        boolean modifyCamera = false;
+
         Location oldLoc = null;
         Location k = null;
         for (Entity entity : entities) {
             if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
 
+            modifyCamera = false;
+
             if (entity instanceof Player) {
                 if (!PvPComponent.allowsPvP(player, (Player) entity)) return;
                 ChatUtil.sendWarning((Player) entity, "You hear a strange ticking sound...");
+                modifyCamera = true;
+            } else if (entity instanceof Monster) {
+                modifyCamera = true;
             }
 
             oldLoc = entity.getLocation();
@@ -175,7 +182,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             }
         }, 30);
 
-        oldLoc.setDirection(oldLoc.getDirection().multiply(-1));
+        oldLoc.setDirection(modifyCamera ? oldLoc.getDirection().multiply(-1) : player.getLocation().getDirection());
         player.teleport(oldLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
