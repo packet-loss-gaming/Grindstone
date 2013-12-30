@@ -207,6 +207,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
                 final Player defender = (Player) event.getEntity();
                 if (isRogue(defender) && canBlip(defender)) {
+                    if (damager instanceof Player && !PvPComponent.allowsPvP((Player) damager, defender)) return;
                     final Entity finalDamager = damager;
                     server.getScheduler().runTaskLater(inst, new Runnable() {
                         @Override
