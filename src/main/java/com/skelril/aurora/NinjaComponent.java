@@ -313,7 +313,10 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         Projectile p = event.getEntity();
         if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (p instanceof Arrow && p.hasMetadata("ninja-arrow")) {
+        if (p instanceof Arrow && p.hasMetadata("ninja-arrow") && p.hasMetadata("launch-force")) {
+            Object test = p.getMetadata("launch-force").get(0).value();
+
+            if (!(test instanceof Float) || (Float) test < .85) return;
 
             tormentArrow((Arrow) p);
         }
@@ -325,6 +328,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             if (!entity.isValid() || entity.equals(shooter)) continue;
             if (entity instanceof LivingEntity) {
                 if (entity instanceof Player && !PvPComponent.allowsPvP((Player) arrow.getShooter(), (Player) entity)) continue;
+
+                if (!shooter.hasLineOfSight(entity)) continue;
 
                 shooter.setHealth(Math.min(shooter.getMaxHealth(), shooter.getHealth() + 1));
                 ((LivingEntity) entity).setHealth(Math.max(0, ((LivingEntity) entity).getHealth() - 1));
