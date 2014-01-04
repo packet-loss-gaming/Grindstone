@@ -10,7 +10,6 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.city.engine.PvPComponent;
-import com.skelril.aurora.events.PrePrayerApplicationEvent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
@@ -48,7 +47,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Rogue", desc = "Speed and strength is always the answer.")
@@ -75,7 +75,17 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     // Player Management
     public void roguePlayer(Player player) {
 
-        sessions.getSession(RogueState.class, player).setIsRogue(true);
+        RogueState rogueState = sessions.getSession(RogueState.class, player);
+
+        if (rogueState.isRogue()) return;
+
+        rogueState.setIsRogue(true);
+        rogueState.setOldSpeed(player.getWalkSpeed());
+
+        double multiplier = inst.hasPermission(player, "aurora.rogue.master") ? 2.5 : 2;
+
+
+        player.setWalkSpeed((float) (RogueState.getDefaultSpeed() * multiplier));
     }
 
     public boolean isRogue(Player player) {
@@ -91,16 +101,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public void setTraitorProtected(Player player, boolean rogueTraitor) {
 
         sessions.getSession(RogueState.class, player).setTraitorProtection(rogueTraitor);
-    }
-
-    public boolean allowsConflictingPotions(Player player) {
-
-        return sessions.getSession(RogueState.class, player).allowsConflictingPotions();
-    }
-
-    public void allowConflictingPotions(Player player, boolean allowConflictingPotions) {
-
-        sessions.getSession(RogueState.class, player).allowConflictingPotions(allowConflictingPotions);
     }
 
     public boolean isYLimited(Player player) {
@@ -158,9 +158,9 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
     public void deroguePlayer(Player player) {
 
-        sessions.getSession(RogueState.class, player).setIsRogue(false);
-
-        player.removePotionEffect(PotionEffectType.SPEED);
+        RogueState rogueState = sessions.getSession(RogueState.class, player);
+        rogueState.setIsRogue(false);
+        player.setWalkSpeed(rogueState.getOldSpeed());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -353,32 +353,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
-    private static Set<Integer> blockedEffects = new HashSet<>();
-
-    static {
-        blockedEffects.add(PotionEffectType.INCREASE_DAMAGE.getId());
-        blockedEffects.add(PotionEffectType.SPEED.getId());
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPrayerApplication(PrePrayerApplicationEvent event) {
-
-        Player player = event.getPlayer();
-        if (isRogue(player)) {
-            Iterator<PotionEffect> it = event.getCause().getEffect().getPotionEffects().iterator();
-            while (it.hasNext()) {
-                if (blockedEffects.contains(it.next().getType().getId())) {
-                    if (!allowsConflictingPotions(player)) {
-                        it.remove();
-                    } else {
-                        event.setCancelled(true);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
     @Override
     public void run() {
 
@@ -401,8 +375,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                 deroguePlayer(player);
                 continue;
             }
-
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 45, 6), true);
 
             Entity vehicle = player.getVehicle();
             if (vehicle != null && vehicle instanceof Horse) {
@@ -429,7 +401,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             roguePlayer((Player) sender);
 
             // Set flags
-            allowConflictingPotions((Player) sender, !args.hasFlag('p'));
             limitYVelocity((Player) sender, args.hasFlag('l'));
             setTraitorProtected((Player) sender, args.hasFlag('t') && inst.hasPermission(sender, "aurora.rogue.master"));
 
@@ -458,6 +429,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     private static class RogueState extends PersistentSession {
 
         public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
+        private static final float DEFAULT_SPEED = .2F;
 
         @Setting("rogue-enabled")
         private boolean isRogue = false;
@@ -465,8 +437,9 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         private boolean limitYVelocity = false;
         @Setting("rogue-traitor")
         private boolean rogueTraitor = false;
-        @Setting("rogue-conflicting-potions")
-        private boolean allowConflictingPotions = true;
+
+        @Setting("rogue-old-speed")
+        private float oldSpeed = DEFAULT_SPEED;
 
         private long nextBlip = 0;
         private long nextGrenade = 0;
@@ -484,6 +457,21 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         public void setIsRogue(boolean isRogue) {
 
             this.isRogue = isRogue;
+        }
+
+        public static float getDefaultSpeed() {
+
+            return DEFAULT_SPEED;
+        }
+
+        public float getOldSpeed() {
+
+            return oldSpeed;
+        }
+
+        public void setOldSpeed(float oldSpeed) {
+
+            this.oldSpeed = oldSpeed;
         }
 
         public boolean canBlip() {
@@ -519,16 +507,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         public void setTraitorProtection(boolean rogueTraitor) {
 
             this.rogueTraitor = rogueTraitor;
-        }
-
-        public boolean allowsConflictingPotions() {
-
-            return allowConflictingPotions;
-        }
-
-        public void allowConflictingPotions(boolean allowConflictingPotions) {
-
-            this.allowConflictingPotions = allowConflictingPotions;
         }
 
         public boolean isYLimited() {
