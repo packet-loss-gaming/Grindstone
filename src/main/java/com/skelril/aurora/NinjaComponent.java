@@ -327,9 +327,12 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         for (Entity entity : arrow.getNearbyEntities(4, 2, 4)) {
             if (!entity.isValid() || entity.equals(shooter)) continue;
             if (entity instanceof LivingEntity) {
-                if (entity instanceof Player && !PvPComponent.allowsPvP((Player) arrow.getShooter(), (Player) entity)) continue;
+                if (entity instanceof Player) {
+                    if (((Player) entity).getGameMode().equals(GameMode.CREATIVE)) continue;
+                    if (!PvPComponent.allowsPvP((Player) arrow.getShooter(), (Player) entity)) continue;
+                }
 
-                if (!shooter.hasLineOfSight(entity)) continue;
+                if (!shooter.hasLineOfSight(entity) || ((LivingEntity) entity).getHealth() < 2) continue;
 
                 shooter.setHealth(Math.min(shooter.getMaxHealth(), shooter.getHealth() + 1));
                 ((LivingEntity) entity).setHealth(Math.max(0, ((LivingEntity) entity).getHealth() - 1));
