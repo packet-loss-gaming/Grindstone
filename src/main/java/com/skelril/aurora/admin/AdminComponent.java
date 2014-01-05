@@ -2,6 +2,7 @@ package com.skelril.aurora.admin;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.GodComponent;
+import com.sk89q.commandbook.InfoComponent;
 import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.BlockID;
@@ -615,6 +616,15 @@ public class AdminComponent extends BukkitComponent implements Listener {
         if (isAdmin(player)) {
             event.getDrops().clear();
             EnvironmentUtil.generateRadialEffect(player.getLocation(), Effect.POTION_BREAK);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onWhoisLookup(InfoComponent.PlayerWhoisEvent event) {
+
+        if (event.getPlayer() instanceof Player) {
+            Player player = (Player) event.getPlayer();
+            event.addWhoisInformation("User Level", getAdminState(player));
         }
     }
 

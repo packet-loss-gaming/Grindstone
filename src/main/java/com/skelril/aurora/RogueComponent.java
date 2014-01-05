@@ -1,6 +1,7 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.InfoComponent;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.PlayerUtil;
@@ -354,6 +355,16 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             if (attack instanceof MeleeSpecial && ChanceUtil.getChance(14)) {
                 event.setSpec(new Nightmare(attack.getOwner(), attack.getTarget()));
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onWhoisLookup(InfoComponent.PlayerWhoisEvent event) {
+
+        if (event.getPlayer() instanceof Player) {
+            Player player = (Player) event.getPlayer();
+            if (!inst.hasPermission(player, "aurora.rogue")) return;
+            event.addWhoisInformation("Rogue Mode", isRogue(player) ? "Enabled" : "Disabled");
         }
     }
 

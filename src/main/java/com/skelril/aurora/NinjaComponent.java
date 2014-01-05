@@ -1,6 +1,7 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.InfoComponent;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.minecraft.util.commands.Command;
@@ -426,6 +427,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             if (isNinja(player) && player.isSneaking()) {
                 event.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onWhoisLookup(InfoComponent.PlayerWhoisEvent event) {
+
+        if (event.getPlayer() instanceof Player) {
+            Player player = (Player) event.getPlayer();
+            if (!inst.hasPermission(player, "aurora.ninja")) return;
+            event.addWhoisInformation("Ninja Mode", isNinja(player) ? "Enabled" : "Disabled");
         }
     }
 
