@@ -28,6 +28,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.Setting;
 import org.bukkit.EntityEffect;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -241,7 +242,10 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                 for (Entity entity : p.getNearbyEntities(3, 3, 3)) {
                     if (!entity.isValid() || entity.equals(shooter) || !(entity instanceof LivingEntity)) continue;
 
-                    if (entity instanceof Player && !PvPComponent.allowsPvP(shooter, (Player) entity)) continue;
+                    if (entity instanceof Player) {
+                        if (((Player) entity).getGameMode().equals(GameMode.CREATIVE)) continue;
+                        if (!PvPComponent.allowsPvP(shooter, (Player) entity)) continue;
+                    }
 
                     if (((LivingEntity) entity).getHealth() < 2) continue;
 
