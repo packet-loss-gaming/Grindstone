@@ -374,6 +374,10 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                         // Check for possible misclick
                         if (EnvironmentUtil.isInteractiveBlock(clicked.getRelative(face))) break;
 
+                        // Check if the block is higher than the player
+                        if (clicked.getLocation().getY() < player.getLocation().getY()) break;
+
+                        // Check the 2D distance between the block and the player
                         if (LocationUtil.distanceSquared2D(clicked.getLocation().add(.5, 0, .5), player.getLocation()) <= 4) {
                             grapple(player, clicked, 9);
                         }
