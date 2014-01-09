@@ -13,6 +13,11 @@ public class IOUtil {
 
     private static Logger log = CommandBook.logger();
 
+    public static File getBinaryFile(File workingDir, String fileName) {
+
+        return new File(workingDir.getPath() + "/" + fileName + ".dat");
+    }
+
     public static void toBinaryFile(File workingDir, String fileName, Object object) {
 
         fileName += ".dat";

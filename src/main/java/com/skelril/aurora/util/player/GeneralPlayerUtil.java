@@ -8,6 +8,23 @@ import org.bukkit.entity.Player;
 public class GeneralPlayerUtil {
 
     /**
+     * Make a player state
+     *
+     */
+    public static PlayerState makeComplexState(Player player) {
+
+        return new PlayerState(player.getName(),
+                player.getInventory().getContents(),
+                player.getInventory().getArmorContents(),
+                player.getHealth(),
+                player.getFoodLevel(),
+                player.getSaturation(),
+                player.getExhaustion(),
+                player.getLevel(),
+                player.getExp());
+    }
+
+    /**
      * This method is used to hide a player
      *
      * @param player - The player to hide

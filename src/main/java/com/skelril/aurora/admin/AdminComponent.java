@@ -20,6 +20,7 @@ import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.database.InventoryAuditLogger;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.player.GeneralPlayerUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -85,6 +86,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
             return !name.startsWith("old-") && name.endsWith(".dat");
         }
     };
+    String profilesDirectory = stateDir + "/profiles/";
 
     private static Permission permission = null;
     private final ConcurrentHashMap<String, PlayerState> playerState = new ConcurrentHashMap<>();
@@ -269,15 +271,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
             server.getPluginManager().callEvent(event);
 
             if (!event.isCancelled()) {
-                playerState.put(player.getName(), new PlayerState(player.getName(),
-                        player.getInventory().getContents(),
-                        player.getInventory().getArmorContents(),
-                        player.getHealth(),
-                        player.getFoodLevel(),
-                        player.getSaturation(),
-                        player.getExhaustion(),
-                        player.getLevel(),
-                        player.getExp()));
+                playerState.put(player.getName(), GeneralPlayerUtil.makeComplexState(player));
                 switch (adminState) {
                     case SYSOP:
                         permission.playerAdd((World) null, player.getName(), "aurora.admin.adminmode.sysop.active");
@@ -686,6 +680,13 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         }
 
+        @Command(aliases = {"profiles"}, desc = "Profile Commands")
+        @NestedCommand({NestedProfileCommands.class})
+        public void profileCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+
+
         @Command(aliases = {"admin", "alivemin"},
                 usage = "[-c \"command\"]", desc = "Enter Admin Mode",
                 flags = "ec:", min = 0, max = 0)
@@ -759,6 +760,98 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @NestedCommand({NestedLostItemCommands.class})
         public void lostItemCommands(CommandContext args, CommandSender sender) throws CommandException {
 
+        }
+    }
+
+    public class NestedProfileCommands {
+
+        @Command(aliases = {"save"},
+                usage = "<profile name>", desc = "Save an inventory as a profile",
+                flags = "o", min = 1, max = 1)
+        @CommandPermissions({"aurora.admin.profiles.save"})
+        public void profileSaveCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            final Player player = PlayerUtil.checkPlayer(sender);
+
+            final File profileDir = new File(profilesDirectory);
+            final String profileName = args.getString(0);
+
+            File file = IOUtil.getBinaryFile(profileDir, profileName);
+
+            if (file.exists() && !args.hasFlag('o')) {
+                throw new CommandException("A profile by that name already exist!");
+            }
+
+            server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
+                @Override
+                public void run() {
+
+                    IOUtil.toBinaryFile(profileDir, profileName, GeneralPlayerUtil.makeComplexState(player));
+                }
+            });
+            ChatUtil.sendNotice(sender, "Profile: " + profileName + ", saved!");
+        }
+
+        @Command(aliases = {"load"},
+                usage = "<profile name>", desc = "Load a saved inventory profile",
+                flags = "ef", min = 1, max = 1)
+        @CommandPermissions({"aurora.admin.profiles.load"})
+        public void profileLoadCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.checkPlayer(sender);
+
+            if (!isAdmin(player) && !(args.hasFlag('f')
+                    && inst.hasPermission(player, "aurora.admin.adminmode.sysop"))) {
+                throw new CommandException("You can only use this command while in Admin Mode!");
+            }
+
+            final File profileDir = new File(profilesDirectory);
+            final String profileName = args.getString(0);
+
+            File file = IOUtil.getBinaryFile(profileDir, profileName);
+
+            if (!file.exists()) {
+                throw new CommandException("A profile by that name doesn't exist!");
+            }
+
+            Object o = IOUtil.readBinaryFile(file);
+
+            if (o instanceof PlayerState) {
+                PlayerState identity = (PlayerState) o;
+
+                // Restore the contents
+                player.getInventory().setArmorContents(identity.getArmourContents());
+                player.getInventory().setContents(identity.getInventoryContents());
+                player.setHealth(Math.min(player.getMaxHealth(), identity.getHealth()));
+                player.setFoodLevel(identity.getHunger());
+                player.setSaturation(identity.getSaturation());
+                player.setExhaustion(identity.getExhaustion());
+                if (args.hasFlag('e')) {
+                    player.setLevel(identity.getLevel());
+                    player.setExp(identity.getExperience());
+                }
+            } else {
+                throw new CommandException("The profile: " + profileName + ", is corrupt!");
+            }
+            ChatUtil.sendNotice(sender, "Profile loaded, and successfully applied!");
+        }
+
+        @Command(aliases = {"delete"},
+                usage = "<profile name>", desc = "Delete a saved inventory profile",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.admin.profiles.delete"})
+        public void profileDeleteCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            File file = IOUtil.getBinaryFile(new File(profilesDirectory), args.getString(0));
+
+            if (!file.exists()) {
+                throw new CommandException("A profile by that name doesn't exist!");
+            }
+
+            if (!file.delete()) {
+                throw new CommandException("That profile couldn't be deleted!");
+            }
+            ChatUtil.sendNotice(sender, "Profile deleted!");
         }
     }
 
