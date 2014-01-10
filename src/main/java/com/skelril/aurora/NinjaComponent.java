@@ -190,7 +190,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).canGrapple();
     }
 
-    public void grapple(final Player player, Block block, double maxClimb) {
+    public void grapple(final Player player, Block block, BlockFace clickedFace, double maxClimb) {
 
         Location k = player.getLocation();
 
@@ -223,6 +223,10 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
             // Determine whether we need to add more velocity
             double ctl = nextBlockIsSolid ? 1 : BlockType.centralTopLimit(block.getTypeId(), block.getData());
+
+            if (EnvironmentUtil.isWater(block.getRelative(clickedFace))) {
+                ctl *= 2;
+            }
 
             vel.add(ctl > 1 ? increment.clone().multiply(ctl) : increment);
 
@@ -380,7 +384,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
                         // Check the 2D distance between the block and the player
                         if (LocationUtil.distanceSquared2D(clicked.getLocation().add(.5, 0, .5), player.getLocation()) <= 4) {
-                            grapple(player, clicked, 9);
+                            grapple(player, clicked, face, 9);
                         }
                     }
                     break;
