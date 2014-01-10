@@ -15,7 +15,6 @@ import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.database.InventoryAuditLogger;
 import com.skelril.aurora.util.item.InventoryUtil;
@@ -26,7 +25,10 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.*;
+import org.bukkit.Effect;
+import org.bukkit.GameMode;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -355,30 +357,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
             server.getScheduler().runTaskLater(inst, new Runnable() {
                 @Override
                 public void run() {
-                    Location toBlock = LocationUtil.findFreePosition(player.getLocation());
-                    boolean done = toBlock != null && player.teleport(toBlock);
-                    short max = 200;
-
-                    while (!done && max > 0) {
-
-                        max--;
-
-                        if (toBlock == null) toBlock = player.getLocation();
-
-                        toBlock = LocationUtil.findRandomLoc(toBlock, 1, false, false);
-
-                        Location testBlock = LocationUtil.findFreePosition(toBlock);
-                        done = testBlock != null && player.teleport(testBlock);
-                    }
-
-                    if (max <= 0) {
-                        player.teleport(player.getWorld().getSpawnLocation());
-                        ChatUtil.sendError(player, "Failed to locate a safe location, teleporting to spawn!");
-                    }
+                    GeneralPlayerUtil.findSafeSpot(player);
                 }
             }, 1);
         }
-        if (player.getGameMode().equals(GameMode.CREATIVE)) player.setGameMode(GameMode.SURVIVAL);
+        if (!player.getGameMode().equals(GameMode.SURVIVAL)) player.setGameMode(GameMode.SURVIVAL);
         return true;
     }
 

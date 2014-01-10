@@ -1,6 +1,15 @@
 package com.skelril.aurora.util.player;
 
+import com.google.common.collect.Lists;
+import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.LocationUtil;
+import org.bukkit.Location;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Author: Turtle9598
@@ -22,6 +31,43 @@ public class GeneralPlayerUtil {
                 player.getExhaustion(),
                 player.getLevel(),
                 player.getExp());
+    }
+
+    public static void findSafeSpot(Player player) {
+
+        Location toBlock = LocationUtil.findFreePosition(player.getLocation());
+
+        if (toBlock != null && player.teleport(toBlock)) {
+            return;
+        } else {
+            toBlock = player.getLocation();
+        }
+
+        Location working = toBlock.clone();
+
+        List<BlockFace> nearbyBlockFaces = Lists.newArrayList(EnvironmentUtil.getNearbyBlockFaces());
+        nearbyBlockFaces.remove(BlockFace.SELF);
+        Collections.shuffle(nearbyBlockFaces);
+
+        boolean done = false;
+
+        for (int i = 1; i < 10 && !done; i++) {
+            for (BlockFace face : nearbyBlockFaces) {
+                working = LocationUtil.findFreePosition(toBlock.getBlock().getRelative(face, i).getLocation(working));
+
+                if (working == null) {
+                    working = toBlock.clone();
+                    continue;
+                }
+
+                done = player.teleport(working);
+            }
+        }
+
+        if (!done) {
+            player.teleport(player.getWorld().getSpawnLocation());
+            ChatUtil.sendError(player, "Failed to locate a safe location, teleporting to spawn!");
+        }
     }
 
     /**
