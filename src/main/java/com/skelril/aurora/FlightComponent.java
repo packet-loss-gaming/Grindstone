@@ -5,7 +5,6 @@ import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -64,8 +63,6 @@ public class FlightComponent extends BukkitComponent implements Listener {
                 usage = "[-s speed] [player]", desc = "Fly like the wind!",
                 flags = "s:", min = 0, max = 1)
         public void flyCmd(CommandContext args, CommandSender sender) throws CommandException {
-            // Important Check
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             // Get the target
             Player target;
@@ -74,7 +71,8 @@ public class FlightComponent extends BukkitComponent implements Listener {
                 target = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
             } else {
                 inst.checkPermission(sender, "aurora.fly.self.wing");
-                target = (Player) sender;
+                target = PlayerUtil.checkPlayer(sender);
+
             }
 
             float speed = -2;
@@ -113,8 +111,6 @@ public class FlightComponent extends BukkitComponent implements Listener {
                 usage = "[player]", desc = "Fly like the wind!",
                 flags = "", min = 0, max = 1)
         public void deflyCmd(CommandContext args, CommandSender sender) throws CommandException {
-            // Important Check
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
 
             // Get the Target
             Player target;
@@ -123,7 +119,7 @@ public class FlightComponent extends BukkitComponent implements Listener {
                 target = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
             } else {
                 inst.checkPermission(sender, "aurora.fly.self.dewing");
-                target = (Player) sender;
+                target = PlayerUtil.checkPlayer(sender);
             }
 
             // Check to see if they can already fly

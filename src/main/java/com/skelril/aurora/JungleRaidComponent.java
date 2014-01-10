@@ -31,7 +31,6 @@ import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.egg.EggDropEvent;
 import com.skelril.aurora.events.environment.DarkAreaInjuryEvent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
@@ -1331,14 +1330,14 @@ public class JungleRaidComponent extends BukkitComponent implements Listener, Ru
         @CommandPermissions({"aurora.jr"})
         public void leaveJungleRaidCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-            Player targetPlayer = (Player) sender;
+            Player targetPlayer;
 
-            if (args.argsLength() == 0) {
-                inst.checkPermission(sender, "aurora.jr.self.leave");
-            } else if (args.argsLength() == 1) {
+            if (args.argsLength() > 0) {
                 targetPlayer = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
                 inst.checkPermission(sender, targetPlayer.getWorld(), "aurora.jr.other.leave");
+            } else {
+                targetPlayer = PlayerUtil.checkPlayer(sender);
+                inst.checkPermission(sender, "aurora.jr.self.leave");
             }
 
             if (!isInJungleRaidTeam(targetPlayer)) throw new CommandException("That player is not currently in a " +

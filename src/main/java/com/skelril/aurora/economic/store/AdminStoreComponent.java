@@ -1,6 +1,7 @@
 package com.skelril.aurora.economic.store;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
@@ -8,7 +9,6 @@ import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -813,9 +813,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
     private String checkPlayer(CommandSender sender, boolean onlyPlayer) throws CommandException {
 
-        if (!(sender instanceof Player)) {
-            throw new PlayerOnlyCommandException();
-        }
+        PlayerUtil.checkPlayer(sender);
 
         if (onlyPlayer) return sender.getName();
 

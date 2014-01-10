@@ -26,7 +26,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.District;
 import com.skelril.aurora.economic.store.AdminStoreComponent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.RegionUtil;
 import com.skelril.aurora.util.item.BookUtil;
@@ -119,63 +118,59 @@ public class HomeManagerComponent extends BukkitComponent {
         @CommandPermissions({"aurora.home.self.info"})
         public void infoHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
+            Player player = PlayerUtil.checkPlayer(sender);
 
-                RegionManager manager = WG.getRegionManager(player.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
-                if (region == null) throw new CommandException("You do not have a home in this world!");
-                District district = getDistrict(region.getParent().getId().replace("-district", ""));
+            RegionManager manager = WG.getRegionManager(player.getWorld());
+            ProtectedRegion region = manager.getRegionExact(getHomeName(player));
+            if (region == null) throw new CommandException("You do not have a home in this world!");
+            District district = getDistrict(region.getParent().getId().replace("-district", ""));
 
-                StringBuilder builtInfo = new StringBuilder();
-                builtInfo.append(ChatColor.YELLOW + "Home Owner: ").append(sender.getName()).append(", ");
-                builtInfo.append(ChatColor.GRAY + "District: ").append(district.toProperName());
+            StringBuilder builtInfo = new StringBuilder();
+            builtInfo.append(ChatColor.YELLOW + "Home Owner: ").append(sender.getName()).append(", ");
+            builtInfo.append(ChatColor.GRAY + "District: ").append(district.toProperName());
+            builtInfo.append("\n");
+            builtInfo.append(ChatColor.AQUA + "Server Managers: ").append(District.GLOBAL.getManagersFriendly());
+            builtInfo.append("\n");
+            builtInfo.append(ChatColor.AQUA + "District Managers: ").append(district.getManagersFriendly());
+
+
+            if (region.getMembers().size() > 0) {
                 builtInfo.append("\n");
-                builtInfo.append(ChatColor.AQUA + "Server Managers: ").append(District.GLOBAL.getManagersFriendly());
-                builtInfo.append("\n");
-                builtInfo.append(ChatColor.AQUA + "District Managers: ").append(district.getManagersFriendly());
-
-
-                if (region.getMembers().size() > 0) {
-                    builtInfo.append("\n");
-                    builtInfo.append(ChatColor.BLUE + "Friends: ").append(region.getMembers().toUserFriendlyString());
-                }
-
-                boolean hasFlags = false;
-                final StringBuilder s = new StringBuilder("\n" + ChatColor.BLUE + "Properties: ");
-                for (Flag<?> flag : DefaultFlag.getFlags()) {
-                    Object val = region.getFlag(flag), group = null;
-
-                    if (val == null) {
-                        continue;
-                    }
-
-                    if (hasFlags) {
-                        s.append(", ");
-                    }
-
-                    RegionGroupFlag groupFlag = flag.getRegionGroupFlag();
-                    if (groupFlag != null) {
-                        group = region.getFlag(groupFlag);
-                    }
-
-                    if (group == null) {
-                        s.append(flag.getName()).append(": ").append(String.valueOf(val));
-                    } else {
-                        s.append(flag.getName()).append(" -g ").append(String.valueOf(group)).append(": ")
-                                .append(String.valueOf(val));
-                    }
-
-                    hasFlags = true;
-                }
-                if (hasFlags) {
-                    builtInfo.append(s.toString());
-                }
-
-                ChatUtil.sendNotice(sender, ChatColor.RESET, builtInfo.toString());
-            } else {
-                throw new PlayerOnlyCommandException();
+                builtInfo.append(ChatColor.BLUE + "Friends: ").append(region.getMembers().toUserFriendlyString());
             }
+
+            boolean hasFlags = false;
+            final StringBuilder s = new StringBuilder("\n" + ChatColor.BLUE + "Properties: ");
+            for (Flag<?> flag : DefaultFlag.getFlags()) {
+                Object val = region.getFlag(flag), group = null;
+
+                if (val == null) {
+                    continue;
+                }
+
+                if (hasFlags) {
+                    s.append(", ");
+                }
+
+                RegionGroupFlag groupFlag = flag.getRegionGroupFlag();
+                if (groupFlag != null) {
+                    group = region.getFlag(groupFlag);
+                }
+
+                if (group == null) {
+                    s.append(flag.getName()).append(": ").append(String.valueOf(val));
+                } else {
+                    s.append(flag.getName()).append(" -g ").append(String.valueOf(group)).append(": ")
+                            .append(String.valueOf(val));
+                }
+
+                hasFlags = true;
+            }
+            if (hasFlags) {
+                builtInfo.append(s.toString());
+            }
+
+            ChatUtil.sendNotice(sender, ChatColor.RESET, builtInfo.toString());
         }
 
         @Command(aliases = {"addplayer"}, usage = "<player>", desc = "Add a player to your home",
@@ -183,22 +178,17 @@ public class HomeManagerComponent extends BukkitComponent {
         @CommandPermissions({"aurora.home.self.add"})
         public void addMemberToHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-
-                RegionManager manager = WG.getRegionManager(player.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
-                if (region == null) throw new CommandException("You do not have a home in this world!");
-                RegionDBUtil.addToDomain(region.getMembers(), args.getPaddedSlice(1, 0), 0);
-                try {
-                    manager.save();
-                } catch (ProtectionDatabaseException e) {
-                    ChatUtil.sendError(sender, "Failed to add player to your home.");
-                }
-                ChatUtil.sendNotice(player, "Home successfully updated!");
-            } else {
-                throw new PlayerOnlyCommandException();
+            Player player = PlayerUtil.checkPlayer(sender);
+            RegionManager manager = WG.getRegionManager(player.getWorld());
+            ProtectedRegion region = manager.getRegionExact(getHomeName(player));
+            if (region == null) throw new CommandException("You do not have a home in this world!");
+            RegionDBUtil.addToDomain(region.getMembers(), args.getPaddedSlice(1, 0), 0);
+            try {
+                manager.save();
+            } catch (ProtectionDatabaseException e) {
+                ChatUtil.sendError(sender, "Failed to add player to your home.");
             }
+            ChatUtil.sendNotice(player, "Home successfully updated!");
         }
 
         @Command(aliases = {"removeplayer"}, usage = "<player>", desc = "Remove a player from your home",
@@ -206,22 +196,17 @@ public class HomeManagerComponent extends BukkitComponent {
         @CommandPermissions({"aurora.home.self.remove"})
         public void removeMemberToHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-
-                RegionManager manager = WG.getRegionManager(player.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
-                if (region == null) throw new CommandException("You do not have a home in this world!");
-                RegionDBUtil.removeFromDomain(region.getMembers(), args.getPaddedSlice(1, 0), 0);
-                try {
-                    manager.save();
-                } catch (ProtectionDatabaseException e) {
-                    ChatUtil.sendError(sender, "Failed to remove players from your home.");
-                }
-                ChatUtil.sendNotice(player, "Home successfully updated!");
-            } else {
-                throw new PlayerOnlyCommandException();
+            Player player = PlayerUtil.checkPlayer(sender);
+            RegionManager manager = WG.getRegionManager(player.getWorld());
+            ProtectedRegion region = manager.getRegionExact(getHomeName(player));
+            if (region == null) throw new CommandException("You do not have a home in this world!");
+            RegionDBUtil.removeFromDomain(region.getMembers(), args.getPaddedSlice(1, 0), 0);
+            try {
+                manager.save();
+            } catch (ProtectionDatabaseException e) {
+                ChatUtil.sendError(sender, "Failed to remove players from your home.");
             }
+            ChatUtil.sendNotice(player, "Home successfully updated!");
         }
 
         @Command(aliases = {"flag"}, usage = "<flag>", desc = "Flag a home",
@@ -229,14 +214,8 @@ public class HomeManagerComponent extends BukkitComponent {
         @CommandPermissions({"aurora.home.self.flag"})
         public void flagHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-                String flag = args.getJoinedStrings(0);
-
-                Bukkit.dispatchCommand(sender, "rg flag " + getHomeName(player) + " " + flag);
-            } else {
-                throw new PlayerOnlyCommandException();
-            }
+            Bukkit.dispatchCommand(sender, "rg flag "
+                    + getHomeName(PlayerUtil.checkPlayer(sender)) + " " + args.getJoinedStrings(0));
         }
 
         @Command(aliases = {"location", "loc"}, desc = "Home Manager")
@@ -248,13 +227,13 @@ public class HomeManagerComponent extends BukkitComponent {
         @Command(aliases = {"rules"}, usage = "[district]", desc = "District Rules", min = 0, max = 1)
         public void homeRuleCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) return;
+            Player player = PlayerUtil.checkPlayer(sender);
 
             String district;
 
             if (args.argsLength() == 0) {
-                RegionManager manager = WG.getRegionManager(((Player) sender).getWorld());
-                ProtectedRegion home = manager.getRegion(getHomeName(sender.getName()));
+                RegionManager manager = WG.getRegionManager(player.getWorld());
+                ProtectedRegion home = manager.getRegion(getHomeName(player));
 
                 if (home == null) {
                     throw new CommandException("You don't live in a district and did not "
@@ -275,76 +254,71 @@ public class HomeManagerComponent extends BukkitComponent {
         @CommandPermissions("aurora.auth.member")
         public void homeBuyCmd(CommandContext args, CommandSender sender) throws CommandException {
 
+            Player player = PlayerUtil.checkPlayer(sender);
 
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-
-                RegionManager manager = WG.getRegionManager(player.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
-                if (region != null) {
-                    if (args.hasFlag('y')) {
-                        throw new CommandException("You already have a home in this world!");
-                    } else {
-                        region = null;
-                    }
-                }
-
-                ApplicableRegionSet applicable = manager.getApplicableRegions(player.getLocation());
-
-                Iterator<ProtectedRegion> it = applicable.iterator();
-                while (it.hasNext() && region == null) {
-                    ProtectedRegion aRegion = it.next();
-                    if (aRegion.getId().endsWith("-s")) {
-                        region = aRegion;
-                    }
-                }
-
-                if (region == null) {
-                    throw new CommandException("You are not currently standing in any regions available for purchase.");
-                }
-
-                // Get the price and send it to the player
-                Double price = region.getFlag(DefaultFlag.PRICE);
-
-                if (price == null || price < 1) {
-                    throw new CommandException("This house cannot currently be bought.");
-                }
-
-                String priceString = ChatUtil.makeCountString(ChatColor.YELLOW,
-                        econ.format(price), " " + econ.currencyNamePlural());
-                ChatUtil.sendNotice(player, "This property is worth: " + priceString + ".");
-
-                // If they have used the flag y proceed to buy the house
-                // otherwise inform them about how to buy the house
+            RegionManager manager = WG.getRegionManager(player.getWorld());
+            ProtectedRegion region = manager.getRegionExact(getHomeName(player));
+            if (region != null) {
                 if (args.hasFlag('y')) {
-                    if (!econ.has(player.getName(), price)) {
-                        throw new CommandException("Sorry, you cannot currently afford this house.");
-                    }
-                    try {
-                        if (RegionUtil.renameRegion(manager, region.getId(), getHomeName(player), true)) {
-
-                            region = manager.getRegion(getHomeName(player));
-                            region.getOwners().addPlayer(player.getName());
-                            region.setFlag(DefaultFlag.PRICE, null);
-                            manager.addRegion(region);
-                            manager.save();
-
-                            econ.withdrawPlayer(player.getName(), price);
-                            ChatUtil.sendNotice(player, "Home successfully purchased!");
-
-                            // Give them a home owner's manual :P
-                            giveRuleBook(sender, sender.getName(), region.getParent().getId().replace("-district", ""));
-                        } else {
-                            throw new CommandException();
-                        }
-                    } catch (Exception ex) {
-                        throw new CommandException("Failed to purchase this home.");
-                    }
+                    throw new CommandException("You already have a home in this world!");
                 } else {
-                    ChatUtil.sendNotice(player, "If you would like to buy this home please use /home buy -y");
+                    region = null;
+                }
+            }
+
+            ApplicableRegionSet applicable = manager.getApplicableRegions(player.getLocation());
+
+            Iterator<ProtectedRegion> it = applicable.iterator();
+            while (it.hasNext() && region == null) {
+                ProtectedRegion aRegion = it.next();
+                if (aRegion.getId().endsWith("-s")) {
+                    region = aRegion;
+                }
+            }
+
+            if (region == null) {
+                throw new CommandException("You are not currently standing in any regions available for purchase.");
+            }
+
+            // Get the price and send it to the player
+            Double price = region.getFlag(DefaultFlag.PRICE);
+
+            if (price == null || price < 1) {
+                throw new CommandException("This house cannot currently be bought.");
+            }
+
+            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW,
+                    econ.format(price), " " + econ.currencyNamePlural());
+            ChatUtil.sendNotice(player, "This property is worth: " + priceString + ".");
+
+            // If they have used the flag y proceed to buy the house
+            // otherwise inform them about how to buy the house
+            if (args.hasFlag('y')) {
+                if (!econ.has(player.getName(), price)) {
+                    throw new CommandException("Sorry, you cannot currently afford this house.");
+                }
+                try {
+                    if (RegionUtil.renameRegion(manager, region.getId(), getHomeName(player), true)) {
+
+                        region = manager.getRegion(getHomeName(player));
+                        region.getOwners().addPlayer(player.getName());
+                        region.setFlag(DefaultFlag.PRICE, null);
+                        manager.addRegion(region);
+                        manager.save();
+
+                        econ.withdrawPlayer(player.getName(), price);
+                        ChatUtil.sendNotice(player, "Home successfully purchased!");
+
+                        // Give them a home owner's manual :P
+                        giveRuleBook(sender, sender.getName(), region.getParent().getId().replace("-district", ""));
+                    } else {
+                        throw new CommandException();
+                    }
+                } catch (Exception ex) {
+                    throw new CommandException("Failed to purchase this home.");
                 }
             } else {
-                throw new PlayerOnlyCommandException();
+                ChatUtil.sendNotice(player, "If you would like to buy this home please use /home buy -y");
             }
         }
 
@@ -352,50 +326,46 @@ public class HomeManagerComponent extends BukkitComponent {
         @CommandPermissions("aurora.auth.member")
         public void homeSellCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
+            Player player = PlayerUtil.checkPlayer(sender);
 
-                RegionManager manager = WG.getRegionManager(player.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
-                if (region == null) throw new CommandException("You do not have a home in this world!");
+            RegionManager manager = WG.getRegionManager(player.getWorld());
+            ProtectedRegion region = manager.getRegionExact(getHomeName(player));
+            if (region == null) throw new CommandException("You do not have a home in this world!");
 
-                // Get the price and send it to the player
-                double price = RegionUtil.getPrice(region, new BukkitWorld(player.getWorld()), false);
+            // Get the price and send it to the player
+            double price = RegionUtil.getPrice(region, new BukkitWorld(player.getWorld()), false);
 
-                if (price < 1) {
-                    throw new CommandException("Your house cannot currently be sold.");
-                }
+            if (price < 1) {
+                throw new CommandException("Your house cannot currently be sold.");
+            }
 
-                String priceString = ChatUtil.makeCountString(ChatColor.YELLOW,
-                        econ.format(price), " " + econ.currencyNamePlural());
-                ChatUtil.sendNotice(player, "Your home is worth: " + priceString + ".");
+            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW,
+                    econ.format(price), " " + econ.currencyNamePlural());
+            ChatUtil.sendNotice(player, "Your home is worth: " + priceString + ".");
 
-                // If they have used the flag y proceed to sell the house
-                // otherwise inform them about how to sell their house
-                if (args.hasFlag('y')) {
-                    try {
-                        String newName = System.currentTimeMillis() + "-s";
-                        if (RegionUtil.renameRegion(manager, region.getId(), newName, true)) {
+            // If they have used the flag y proceed to sell the house
+            // otherwise inform them about how to sell their house
+            if (args.hasFlag('y')) {
+                try {
+                    String newName = System.currentTimeMillis() + "-s";
+                    if (RegionUtil.renameRegion(manager, region.getId(), newName, true)) {
 
-                            // Set the price flag's value and then resave the database
-                            region = manager.getRegion(newName);
-                            region.setFlag(DefaultFlag.PRICE, price * 1.1);
-                            manager.addRegion(region);
-                            manager.save();
+                        // Set the price flag's value and then resave the database
+                        region = manager.getRegion(newName);
+                        region.setFlag(DefaultFlag.PRICE, price * 1.1);
+                        manager.addRegion(region);
+                        manager.save();
 
-                            econ.depositPlayer(player.getName(), price);
-                            ChatUtil.sendNotice(player, "Home successfully sold!");
-                        } else {
-                            throw new CommandException();
-                        }
-                    } catch (Exception ex) {
-                        throw new CommandException("Failed to sell your home.");
+                        econ.depositPlayer(player.getName(), price);
+                        ChatUtil.sendNotice(player, "Home successfully sold!");
+                    } else {
+                        throw new CommandException();
                     }
-                } else {
-                    ChatUtil.sendNotice(player, "If you would like to sell your home please use /home sell -y");
+                } catch (Exception ex) {
+                    throw new CommandException("Failed to sell your home.");
                 }
             } else {
-                throw new PlayerOnlyCommandException();
+                ChatUtil.sendNotice(player, "If you would like to sell your home please use /home sell -y");
             }
         }
 
@@ -414,76 +384,71 @@ public class HomeManagerComponent extends BukkitComponent {
         @CommandPermissions({"aurora.home.admin.create"})
         public void createHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
+            Player admin = PlayerUtil.checkPlayer(sender);
+            String player, regionString, district;
 
-                Player admin = (Player) sender;
-                String player, regionString, district;
-
-                if (args.argsLength() == 2) {
-                    player = args.getString(0).toLowerCase();
-                    regionString = getHomeName(player);
-                    district = args.getString(1).toLowerCase().replace("-district", "");
-                } else {
-                    player = null;
-                    regionString = System.currentTimeMillis() + "-s";
-                    district = args.getString(0).toLowerCase().replace("-district", "");
-                }
-
-                ProtectedRegion region;
-
-                RegionManager manager = WG.getRegionManager(admin.getWorld());
-
-                if (manager.hasRegion(regionString)) throw new CommandException("That player already has a home.");
-
-                Selection sel = WE.getSelection(admin);
-                if (sel == null) throw new CommandException("Select a region with WorldEdit first.");
-
-                if (sel instanceof Polygonal2DSelection) {
-                    Polygonal2DSelection polySel = (Polygonal2DSelection) sel;
-                    int minY = polySel.getNativeMinimumPoint().getBlockY();
-                    int maxY = polySel.getNativeMaximumPoint().getBlockY();
-                    region = new ProtectedPolygonalRegion(regionString, polySel.getNativePoints(), minY, maxY);
-                } else if (sel instanceof CuboidSelection) {
-                    BlockVector min = sel.getNativeMinimumPoint().toBlockVector();
-                    BlockVector max = sel.getNativeMaximumPoint().toBlockVector();
-                    region = new ProtectedCuboidRegion(regionString, min, max);
-                } else {
-                    throw new CommandException("The type of region selected in WorldEdit is unsupported.");
-                }
-
-                if (player == null) {
-                    region.setFlag(DefaultFlag.PRICE,
-                            RegionUtil.getPrice(region, new BukkitWorld(admin.getWorld()), true));
-                } else {
-                    region.getOwners().addPlayer(player);
-                }
-                region.setPriority(10);
-                ProtectedRegion districtRegion = manager.getRegion(district + "-district");
-                if (districtRegion == null) throw new CommandException("Invalid district specified.");
-                try {
-                    region.setParent(districtRegion);
-                } catch (ProtectedRegion.CircularInheritanceException e) {
-                    throw new CommandException("Circular inheritance detected.");
-                }
-
-                manager.addRegion(region);
-                try {
-                    manager.save();
-                } catch (ProtectionDatabaseException e) {
-                    throw new CommandException("Failed to create the region: " + regionString + ".");
-                }
-
-                giveRuleBook(sender, player, district);
-
-                ChatUtil.sendNotice(admin, "The home: " + regionString + " has been created successfully in "
-                        + district + ".");
-                if (player != null) {
-                    ChatUtil.sendNotice(player, "A home has been created for you by: " + admin.getDisplayName() + ".");
-                    log.info(admin.getName() + " created a home for: " + player
-                            + " in the district: " + district + ".");
-                }
+            if (args.argsLength() == 2) {
+                player = args.getString(0).toLowerCase();
+                regionString = getHomeName(player);
+                district = args.getString(1).toLowerCase().replace("-district", "");
             } else {
-                throw new PlayerOnlyCommandException();
+                player = null;
+                regionString = System.currentTimeMillis() + "-s";
+                district = args.getString(0).toLowerCase().replace("-district", "");
+            }
+
+            ProtectedRegion region;
+
+            RegionManager manager = WG.getRegionManager(admin.getWorld());
+
+            if (manager.hasRegion(regionString)) throw new CommandException("That player already has a home.");
+
+            Selection sel = WE.getSelection(admin);
+            if (sel == null) throw new CommandException("Select a region with WorldEdit first.");
+
+            if (sel instanceof Polygonal2DSelection) {
+                Polygonal2DSelection polySel = (Polygonal2DSelection) sel;
+                int minY = polySel.getNativeMinimumPoint().getBlockY();
+                int maxY = polySel.getNativeMaximumPoint().getBlockY();
+                region = new ProtectedPolygonalRegion(regionString, polySel.getNativePoints(), minY, maxY);
+            } else if (sel instanceof CuboidSelection) {
+                BlockVector min = sel.getNativeMinimumPoint().toBlockVector();
+                BlockVector max = sel.getNativeMaximumPoint().toBlockVector();
+                region = new ProtectedCuboidRegion(regionString, min, max);
+            } else {
+                throw new CommandException("The type of region selected in WorldEdit is unsupported.");
+            }
+
+            if (player == null) {
+                region.setFlag(DefaultFlag.PRICE,
+                        RegionUtil.getPrice(region, new BukkitWorld(admin.getWorld()), true));
+            } else {
+                region.getOwners().addPlayer(player);
+            }
+            region.setPriority(10);
+            ProtectedRegion districtRegion = manager.getRegion(district + "-district");
+            if (districtRegion == null) throw new CommandException("Invalid district specified.");
+            try {
+                region.setParent(districtRegion);
+            } catch (ProtectedRegion.CircularInheritanceException e) {
+                throw new CommandException("Circular inheritance detected.");
+            }
+
+            manager.addRegion(region);
+            try {
+                manager.save();
+            } catch (ProtectionDatabaseException e) {
+                throw new CommandException("Failed to create the region: " + regionString + ".");
+            }
+
+            giveRuleBook(sender, player, district);
+
+            ChatUtil.sendNotice(admin, "The home: " + regionString + " has been created successfully in "
+                    + district + ".");
+            if (player != null) {
+                ChatUtil.sendNotice(player, "A home has been created for you by: " + admin.getDisplayName() + ".");
+                log.info(admin.getName() + " created a home for: " + player
+                        + " in the district: " + district + ".");
             }
         }
 
@@ -493,80 +458,78 @@ public class HomeManagerComponent extends BukkitComponent {
         @CommandPermissions({"aurora.home.admin.pc"})
         public void priceCheckHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
-                Selection selection = WE.getSelection((Player) sender);
+            Player sendingPlayer = PlayerUtil.checkPlayer(sender);
 
-                if (selection == null) throw new CommandException("Select a region with WorldEdit first.");
+            Selection selection = WE.getSelection(sendingPlayer);
 
-                if (!(selection instanceof Polygonal2DSelection || selection instanceof CuboidSelection)) {
-                    throw new CommandException("The type of region selected in WorldEdit is unsupported.");
-                }
+            if (selection == null) throw new CommandException("Select a region with WorldEdit first.");
 
-                Player player = args.argsLength() == 0 ? null : PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            if (!(selection instanceof Polygonal2DSelection || selection instanceof CuboidSelection)) {
+                throw new CommandException("The type of region selected in WorldEdit is unsupported.");
+            }
 
-                double size = (selection.getLength() * selection.getWidth()) / (16D * 16D);
+            Player player = args.argsLength() == 0 ? null : PlayerUtil.matchPlayerExactly(sender, args.getString(0));
 
-                CommandSender[] target = new CommandSender[]{
-                        sender, player
-                };
+            double size = (selection.getLength() * selection.getWidth()) / (16D * 16D);
 
-                ChatUtil.sendNotice(target, "Chunks: " + size);
+            CommandSender[] target = new CommandSender[]{
+                    sender, player
+            };
 
-                double p1 = size <= 4 ? size * 75 : (size * 200) + (size * (size / 2) * 200);
+            ChatUtil.sendNotice(target, "Chunks: " + size);
 
-                String chunkPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p1), " " + econ.currencyNamePlural());
-                ChatUtil.sendNotice(target, "Chunk Price: " + chunkPrice + ".");
+            double p1 = size <= 4 ? size * 75 : (size * 200) + (size * (size / 2) * 200);
 
-                // Block Price
-                double p2 = 0;
+            String chunkPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p1), " " + econ.currencyNamePlural());
+            ChatUtil.sendNotice(target, "Chunk Price: " + chunkPrice + ".");
 
-                if (!args.hasFlag('f')) {
-                    Region region = selection.getRegionSelector().getIncompleteRegion();
-                    LocalWorld world = region.getWorld();
+            // Block Price
+            double p2 = 0;
 
-                    if (region instanceof CuboidRegion) {
+            if (!args.hasFlag('f')) {
+                Region region = selection.getRegionSelector().getIncompleteRegion();
+                LocalWorld world = region.getWorld();
 
-                        // Doing this for speed
-                        Vector min = region.getMinimumPoint();
-                        Vector max = region.getMaximumPoint();
+                if (region instanceof CuboidRegion) {
 
-                        int minX = min.getBlockX();
-                        int minY = min.getBlockY();
-                        int minZ = min.getBlockZ();
-                        int maxX = max.getBlockX();
-                        int maxY = max.getBlockY();
-                        int maxZ = max.getBlockZ();
+                    // Doing this for speed
+                    Vector min = region.getMinimumPoint();
+                    Vector max = region.getMaximumPoint();
 
-                        for (int x = minX; x <= maxX; ++x) {
-                            for (int y = minY; y <= maxY; ++y) {
-                                for (int z = minZ; z <= maxZ; ++z) {
-                                    Vector pt = new Vector(x, y, z);
+                    int minX = min.getBlockX();
+                    int minY = min.getBlockY();
+                    int minZ = min.getBlockZ();
+                    int maxX = max.getBlockX();
+                    int maxY = max.getBlockY();
+                    int maxZ = max.getBlockZ();
 
-                                    p2 += AdminStoreComponent.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
-                                }
+                    for (int x = minX; x <= maxX; ++x) {
+                        for (int y = minY; y <= maxY; ++y) {
+                            for (int z = minZ; z <= maxZ; ++z) {
+                                Vector pt = new Vector(x, y, z);
+
+                                p2 += AdminStoreComponent.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
                             }
                         }
-                    } else {
-                        throw new CommandException("Not yet supported.");
                     }
+                } else {
+                    throw new CommandException("Not yet supported.");
                 }
-
-                String housePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p2), " " + econ.currencyNamePlural());
-                ChatUtil.sendNotice(target, "Block Price: " + housePrice + ".");
-
-                double total = p1 + p2;
-                if (args.hasFlag('c')) {
-                    String commission = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total * .1), " " + econ.currencyNamePlural());
-
-                    ChatUtil.sendNotice(target, "Commission change: " + commission);
-                    total *= 1.1;
-                }
-
-                String totalPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total), " " + econ.currencyNamePlural());
-                ChatUtil.sendNotice(target, "Total Price: " + totalPrice + ".");
-            } else {
-                throw new PlayerOnlyCommandException();
             }
+
+            String housePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p2), " " + econ.currencyNamePlural());
+            ChatUtil.sendNotice(target, "Block Price: " + housePrice + ".");
+
+            double total = p1 + p2;
+            if (args.hasFlag('c')) {
+                String commission = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total * .1), " " + econ.currencyNamePlural());
+
+                ChatUtil.sendNotice(target, "Commission change: " + commission);
+                total *= 1.1;
+            }
+
+            String totalPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total), " " + econ.currencyNamePlural());
+            ChatUtil.sendNotice(target, "Total Price: " + totalPrice + ".");
         }
 
         @Command(aliases = {"flag"}, usage = "<player> <flag>", desc = "Flag a home",
@@ -574,14 +537,7 @@ public class HomeManagerComponent extends BukkitComponent {
         @CommandPermissions({"aurora.home.admin.flag"})
         public void flagHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
-                String player = args.getString(0);
-                String flag = args.getJoinedStrings(1);
-
-                Bukkit.dispatchCommand(sender, "rg flag " + getHomeName(player) + " " + flag);
-            } else {
-                throw new PlayerOnlyCommandException();
-            }
+            Bukkit.dispatchCommand(sender, "rg flag " + getHomeName(args.getString(0)) + " " + args.getJoinedStrings(1));
         }
 
         @Command(aliases = {"move"}, usage = "<player> <newdistrict>", desc = "Move a home",
@@ -589,95 +545,86 @@ public class HomeManagerComponent extends BukkitComponent {
         @CommandPermissions({"aurora.home.admin.move"})
         public void moveHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
-                Player admin = (Player) sender;
-                String player = args.getString(0).toLowerCase();
-                String district = args.getString(1).toLowerCase().replace("-district", "");
+            Player admin = PlayerUtil.checkPlayer(sender);
 
-                RegionManager manager = WG.getRegionManager(admin.getWorld());
-                ProtectedRegion existing = manager.getRegionExact(getHomeName(player));
-                if (existing == null) throw new CommandException("That player doesn't have a home.");
-                Selection sel = WE.getSelection(admin);
-                if (sel == null) throw new CommandException("Select a region with WorldEdit first.");
+            String player = args.getString(0).toLowerCase();
+            String district = args.getString(1).toLowerCase().replace("-district", "");
 
-                ProtectedRegion region;
+            RegionManager manager = WG.getRegionManager(admin.getWorld());
+            ProtectedRegion existing = manager.getRegionExact(getHomeName(player));
+            if (existing == null) throw new CommandException("That player doesn't have a home.");
+            Selection sel = WE.getSelection(admin);
+            if (sel == null) throw new CommandException("Select a region with WorldEdit first.");
 
-                // Detect the type of region from WorldEdit
-                if (sel instanceof Polygonal2DSelection) {
-                    Polygonal2DSelection polySel = (Polygonal2DSelection) sel;
-                    int minY = polySel.getNativeMinimumPoint().getBlockY();
-                    int maxY = polySel.getNativeMaximumPoint().getBlockY();
-                    region = new ProtectedPolygonalRegion(getHomeName(player), polySel.getNativePoints(), minY, maxY);
-                } else if (sel instanceof CuboidSelection) {
-                    BlockVector min = sel.getNativeMinimumPoint().toBlockVector();
-                    BlockVector max = sel.getNativeMaximumPoint().toBlockVector();
-                    region = new ProtectedCuboidRegion(getHomeName(player), min, max);
-                } else {
-                    throw new CommandException("The type of region selected in WorldEdit is unsupported.");
-                }
+            ProtectedRegion region;
 
-                region.setMembers(existing.getMembers());
-                region.setOwners(existing.getOwners());
-                region.setFlags(existing.getFlags());
-                region.setPriority(existing.getPriority());
-                ProtectedRegion districtRegion = manager.getRegion(district + "-district");
-                if (districtRegion == null) throw new CommandException("Invalid district specified.");
-                try {
-                    region.setParent(districtRegion);
-                } catch (ProtectedRegion.CircularInheritanceException e) {
-                    throw new CommandException("Circular inheritance detected.");
-                }
-
-                manager.addRegion(region);
-                try {
-                    manager.save();
-                } catch (ProtectionDatabaseException e) {
-                    throw new CommandException("Failed to create a home for: " + player + ".");
-                }
-
-                giveRuleBook(sender, player, district);
-
-                ChatUtil.sendNotice(admin, "The player: " + player + "'s house has been moved to: " + district + ".");
-                ChatUtil.sendNotice(player, "Your home has been moved for you by: " + admin.getDisplayName() + ".");
-                log.info(admin.getName() + " moved a home for: " + player + " into the district: " + district + ".");
+            // Detect the type of region from WorldEdit
+            if (sel instanceof Polygonal2DSelection) {
+                Polygonal2DSelection polySel = (Polygonal2DSelection) sel;
+                int minY = polySel.getNativeMinimumPoint().getBlockY();
+                int maxY = polySel.getNativeMaximumPoint().getBlockY();
+                region = new ProtectedPolygonalRegion(getHomeName(player), polySel.getNativePoints(), minY, maxY);
+            } else if (sel instanceof CuboidSelection) {
+                BlockVector min = sel.getNativeMinimumPoint().toBlockVector();
+                BlockVector max = sel.getNativeMaximumPoint().toBlockVector();
+                region = new ProtectedCuboidRegion(getHomeName(player), min, max);
             } else {
-                throw new PlayerOnlyCommandException();
+                throw new CommandException("The type of region selected in WorldEdit is unsupported.");
             }
+
+            region.setMembers(existing.getMembers());
+            region.setOwners(existing.getOwners());
+            region.setFlags(existing.getFlags());
+            region.setPriority(existing.getPriority());
+            ProtectedRegion districtRegion = manager.getRegion(district + "-district");
+            if (districtRegion == null) throw new CommandException("Invalid district specified.");
+            try {
+                region.setParent(districtRegion);
+            } catch (ProtectedRegion.CircularInheritanceException e) {
+                throw new CommandException("Circular inheritance detected.");
+            }
+
+            manager.addRegion(region);
+            try {
+                manager.save();
+            } catch (ProtectionDatabaseException e) {
+                throw new CommandException("Failed to create a home for: " + player + ".");
+            }
+
+            giveRuleBook(sender, player, district);
+
+            ChatUtil.sendNotice(admin, "The player: " + player + "'s house has been moved to: " + district + ".");
+            ChatUtil.sendNotice(player, "Your home has been moved for you by: " + admin.getDisplayName() + ".");
+            log.info(admin.getName() + " moved a home for: " + player + " into the district: " + district + ".");
         }
 
         @Command(aliases = {"remove"}, usage = "<player>", desc = "Remove a home", min = 1, max = 1)
         @CommandPermissions({"aurora.home.admin.remove"})
         public void removeHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
-                Player admin = (Player) sender;
-                String player = args.getString(0).toLowerCase();
+            Player admin = PlayerUtil.checkPlayer(sender);
+            String player = args.getString(0).toLowerCase();
 
-                RegionManager manager = WG.getRegionManager(admin.getWorld());
-                ProtectedRegion region = manager.getRegionExact(getHomeName(player));
-                if (region == null) throw new CommandException("That player doesn't have a home.");
+            RegionManager manager = WG.getRegionManager(admin.getWorld());
+            ProtectedRegion region = manager.getRegionExact(getHomeName(player));
+            if (region == null) throw new CommandException("That player doesn't have a home.");
 
-                manager.removeRegion(region.getId());
-                try {
-                    manager.save();
-                } catch (ProtectionDatabaseException e) {
-                    throw new CommandException("Failed to remove the home of: " + player + ".");
-                }
-                ChatUtil.sendNotice(admin, "The player: " + player + "'s house has been removed.");
-                ChatUtil.sendNotice(player, "Your home has been removed by: " + admin.getDisplayName() + ".");
-                log.info(admin.getName() + " deleted the player: " + player + "'s home.");
-            } else {
-                throw new PlayerOnlyCommandException();
+            manager.removeRegion(region.getId());
+            try {
+                manager.save();
+            } catch (ProtectionDatabaseException e) {
+                throw new CommandException("Failed to remove the home of: " + player + ".");
             }
+            ChatUtil.sendNotice(admin, "The player: " + player + "'s house has been removed.");
+            ChatUtil.sendNotice(player, "Your home has been removed by: " + admin.getDisplayName() + ".");
+            log.info(admin.getName() + " deleted the player: " + player + "'s home.");
         }
 
         @Command(aliases = {"help"}, desc = "Admin Help", min = 0, max = 0)
         @CommandPermissions({"aurora.home.admin.help"})
         public void adminHelpCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) return;
-
-            ((Player) sender).getInventory().addItem(BookUtil.Help.Admin.housing());
+            PlayerUtil.checkPlayer(sender).getInventory().addItem(BookUtil.Help.Admin.housing());
         }
     }
 

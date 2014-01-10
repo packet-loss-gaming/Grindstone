@@ -11,7 +11,6 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.skelril.aurora.NinjaComponent;
 import com.skelril.aurora.RogueComponent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -623,9 +622,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @CommandPermissions("aurora.admin.simulation.damage")
         public void simulateDamageCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-
-            Player player = (Player) sender;
+            Player player = PlayerUtil.checkPlayer(sender);
 
             ItemStack is = player.getInventory().getItemInHand();
             is.setDurability((short) Math.max(0, is.getData().getItemType().getMaxDurability() - 20));
@@ -640,9 +637,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         @CommandPermissions("aurora.admin.boom")
         public void boomCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-
-            Player player = (Player) sender;
+            Player player = PlayerUtil.checkPlayer(sender);
 
             try {
                 float size = Float.parseFloat(args.getString(0));
@@ -672,9 +667,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 flags = "e", min = 0, max = 0)
         public void adminModeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-
-            Player player = (Player) sender;
+            Player player = PlayerUtil.checkPlayer(sender);
 
             if (!isAdmin(player)) {
                 boolean admin;
@@ -703,9 +696,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 flags = "k", min = 0, max = 0)
         public void deadminModeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-
-            Player player = (Player) sender;
+            Player player = PlayerUtil.checkPlayer(sender);
 
             if (isAdmin(player)) {
                 if (!args.hasFlag('k') && !hasInventoryLoaded(player.getName())) {

@@ -1,11 +1,11 @@
 package com.skelril.aurora.economic.lottery;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.economic.ImpersonalComponent;
 import com.skelril.aurora.exceptions.NotFoundException;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -141,18 +141,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         @CommandPermissions({"aurora.lottery.ticket.buy.command"})
         public void lotteryBuyCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            int count = 1;
-
-            try {
-                if (!(sender instanceof Player)) {
-                    throw new PlayerOnlyCommandException();
-                }
-                count = Integer.parseInt(args.getString(0));
-
-            } catch (NumberFormatException | IndexOutOfBoundsException ignored) {
-            }
-
-            buyTickets((Player) sender, count);
+            buyTickets(PlayerUtil.checkPlayer(sender), args.argsLength() > 0 ? args.getInteger(0) : 1);
         }
 
         @Command(aliases = {"draw"},

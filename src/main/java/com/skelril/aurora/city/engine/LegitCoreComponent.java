@@ -3,6 +3,7 @@ package com.skelril.aurora.city.engine;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -14,7 +15,6 @@ import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseBedSpawnEvent;
 import com.skelril.aurora.events.egg.EggDropEvent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.homes.CSVHomeDatabase;
 import com.skelril.aurora.homes.EnderPearlHomesComponent;
 import com.skelril.aurora.homes.HomeDatabase;
@@ -116,9 +116,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         @CommandPermissions({"multiverse.access.Legit", "multiverse.access.Legit_nether"})
         public void toggleLegitCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-
-            Player player = (Player) sender;
+            Player player = PlayerUtil.checkPlayer(sender);
 
             player.teleport(getTo(player, player.getWorld().getName().contains(config.legitWorld)));
         }

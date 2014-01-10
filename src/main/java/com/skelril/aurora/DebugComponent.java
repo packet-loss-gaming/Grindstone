@@ -1,10 +1,10 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -71,9 +71,7 @@ public class DebugComponent extends BukkitComponent {
                 flags = "", min = 0, max = 0)
         public void myLocCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-
-            Location l = ((Player) sender).getLocation();
+            Location l = PlayerUtil.checkPlayer(sender).getLocation();
             ChatUtil.sendNotice(sender, "X: " + l.getX() + ", Y:" + l.getY() + ", Z: " + l.getZ());
             ChatUtil.sendNotice(sender, "Pitch: " + l.getPitch() + ", Yaw: " + l.getYaw());
         }

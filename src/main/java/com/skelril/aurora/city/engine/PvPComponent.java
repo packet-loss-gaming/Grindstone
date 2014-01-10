@@ -3,6 +3,7 @@ package com.skelril.aurora.city.engine;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -12,7 +13,6 @@ import com.sk89q.worldguard.protection.events.DisallowedPVPEvent;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.homes.HomeManagerComponent;
@@ -92,9 +92,7 @@ public class PvPComponent extends BukkitComponent implements Listener {
                 flags = "s", min = 0, max = 0)
         public void pvpCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) {
-                throw new PlayerOnlyCommandException();
-            }
+            PlayerUtil.checkPlayer(sender);
 
             PvPSession session = sessions.getSession(PvPSession.class, sender);
 

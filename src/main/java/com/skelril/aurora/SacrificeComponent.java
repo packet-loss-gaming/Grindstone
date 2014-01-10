@@ -3,6 +3,7 @@ package com.skelril.aurora;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -11,7 +12,6 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.economic.store.AdminStoreComponent;
 import com.skelril.aurora.events.PlayerSacrificeItemEvent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
@@ -640,9 +640,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         @Command(aliases = {"value"}, desc = "Value an item", flags = "", min = 0, max = 0)
         public void userGroupSetCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
+            Player player = PlayerUtil.checkPlayer(sender);
 
-            ItemStack questioned = ((Player) sender).getInventory().getItemInHand();
+            ItemStack questioned = player.getInventory().getItemInHand();
 
             // Check value & validity
             double value = AdminStoreComponent.priceCheck(questioned);
@@ -650,7 +650,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
             // Mask the value so it doesn't just show the market price and print it
             int shownValue = (int) Math.round(value * 60.243);
-            ChatUtil.sendNotice(sender, "That item has a value of: " + shownValue + " in the sacrificial pit.");
+            ChatUtil.sendNotice(player, "That item has a value of: " + shownValue + " in the sacrificial pit.");
         }
     }
 

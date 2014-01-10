@@ -1,10 +1,10 @@
 package com.skelril.aurora.city.engine;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -56,17 +56,17 @@ public class WeatherManagerComponent extends BukkitComponent implements Listener
                 flags = "r", min = 0, max = 0)
         public void showStormCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
+            Player player = PlayerUtil.checkPlayer(sender);
 
             if (args.hasFlag('r')) {
-                enabledFor.remove(sender);
-                ((Player) sender).resetPlayerWeather();
-                ChatUtil.sendNotice(sender, "Storms are no longer hidden.");
+                enabledFor.remove(player);
+                player.resetPlayerWeather();
+                ChatUtil.sendNotice(player, "Storms are no longer hidden.");
             } else {
-                enabledFor.add((Player) sender);
-                ((Player) sender).setPlayerWeather(WeatherType.CLEAR);
-                ChatUtil.sendNotice(sender, "Storms are now hidden.");
-                ChatUtil.sendNotice(sender, "To show storms again please use /stopweather -r.");
+                enabledFor.add(player);
+                player.setPlayerWeather(WeatherType.CLEAR);
+                ChatUtil.sendNotice(player, "Storms are now hidden.");
+                ChatUtil.sendNotice(player, "To show storms again please use /stopweather -r.");
             }
         }
     }

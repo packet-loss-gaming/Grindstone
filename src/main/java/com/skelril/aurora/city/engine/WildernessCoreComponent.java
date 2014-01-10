@@ -3,6 +3,7 @@ package com.skelril.aurora.city.engine;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -13,7 +14,6 @@ import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -595,21 +595,20 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 flags = "", min = 0, max = 1)
         public void lostPotionOfRestitutionCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) {
-                throw new PlayerOnlyCommandException();
+            int level;
+            if (args.argsLength() > 0) {
+                level = args.getInteger(0);
+            } else {
+                level = Math.max(1, getLevel(PlayerUtil.checkPlayer(sender).getLocation()));
             }
-
-            int level = getLevel(((Player) sender).getLocation());
-            double targetLevel = args.argsLength() > 0 ? args.getInteger(0) : Math.max(1, level);
             ChatUtil.sendNotice(sender, "Current Level: " + (level == 0 ? ChatColor.RED + "Not available" : level)
-                    + ChatColor.YELLOW + ", Target Level: " + (int) targetLevel + ".\n");
+                    + ChatColor.YELLOW + ", Target Level: " + level + ".\n");
 
             DecimalFormat df = new DecimalFormat("#.#");
 
-            ChatUtil.sendNotice(sender, "Damage Modifier: " + df.format(targetLevel) + "x");
-            ChatUtil.sendNotice(sender, "Ore Pool Modifier: " + df.format(Math.max(1, (targetLevel * 1.2) / 3)) + "x");
-            ChatUtil.sendNotice(sender, "Mob Health Modifier: "
-                    + df.format(targetLevel > 1 ? 5 * (targetLevel - 1) : 1) + "x");
+            ChatUtil.sendNotice(sender, "Damage Modifier: " + level + "x");
+            ChatUtil.sendNotice(sender, "Ore Pool Modifier: " + df.format(Math.max(1, (level * 1.2) / 3)) + "x");
+            ChatUtil.sendNotice(sender, "Mob Health Modifier: " + (level > 1 ? 5 * (level - 1) : 1) + "x");
         }
     }
 

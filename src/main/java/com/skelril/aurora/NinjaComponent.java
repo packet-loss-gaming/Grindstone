@@ -4,6 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.InfoComponent;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -14,7 +15,6 @@ import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -534,25 +534,25 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         @CommandPermissions({"aurora.ninja"})
         public void ninja(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-            if (inst.hasPermission(sender, "aurora.rogue")) {
+            Player player = PlayerUtil.checkPlayer(sender);
+            if (inst.hasPermission(player, "aurora.rogue")) {
                 throw new CommandException("You are a rogue not a ninja!");
             }
 
-            final boolean isNinja = isNinja((Player) sender);
+            final boolean isNinja = isNinja(player);
 
             // Enter Ninja Mode
-            ninjaPlayer((Player) sender);
+            ninjaPlayer(player);
 
             // Set flags
-            showToGuild((Player) sender, args.hasFlag('g'));
-            useVanish((Player) sender, !args.hasFlag('i'));
-            useTormentArrows((Player) sender, !args.hasFlag('t'));
+            showToGuild(player, args.hasFlag('g'));
+            useVanish(player, !args.hasFlag('i'));
+            useTormentArrows(player, !args.hasFlag('t'));
 
             if (!isNinja) {
-                ChatUtil.sendNotice(sender, "You are inspired and become a ninja!");
+                ChatUtil.sendNotice(player, "You are inspired and become a ninja!");
             } else {
-                ChatUtil.sendNotice(sender, "Ninja flags updated!");
+                ChatUtil.sendNotice(player, "Ninja flags updated!");
             }
         }
 
@@ -560,14 +560,14 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 flags = "", min = 0, max = 0)
         public void unninja(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-            if (!isNinja((Player) sender)) {
+            Player player = PlayerUtil.checkPlayer(sender);
+            if (!isNinja(player)) {
                 throw new CommandException("You are not a ninja!");
             }
 
-            unninjaPlayer((Player) sender);
+            unninjaPlayer(player);
 
-            ChatUtil.sendNotice(sender, "You return to your previous boring existence.");
+            ChatUtil.sendNotice(player, "You return to your previous boring existence.");
         }
     }
 

@@ -3,6 +3,7 @@ package com.skelril.aurora;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
@@ -12,7 +13,6 @@ import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.skelril.aurora.events.egg.EggDropEvent;
 import com.skelril.aurora.events.egg.EggHatchEvent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -252,9 +252,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         @CommandPermissions({"aurora.egg.easter", "aurora.egg.halloween"})
         public void eggAllCommand(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-
-            Player player = (Player) sender;
+            Player player = PlayerUtil.checkPlayer(sender);
 
             switch (args.getString(0).toLowerCase()) {
                 case "on":
@@ -276,9 +274,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         @CommandPermissions({"aurora.egg.easter"})
         public void eggEasterCommand(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-
-            Player player = (Player) sender;
+            Player player = PlayerUtil.checkPlayer(sender);
 
             switch (args.getString(0).toLowerCase()) {
                 case "on":
@@ -298,9 +294,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         @CommandPermissions({"aurora.egg.halloween"})
         public void eggHalloweenCommand(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-
-            Player player = (Player) sender;
+            Player player = PlayerUtil.checkPlayer(sender);
 
             switch (args.getString(0).toLowerCase()) {
                 case "on":

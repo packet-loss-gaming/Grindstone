@@ -182,8 +182,8 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
                 min = 2, max = 2)
         public void authLoginCmd(CommandContext args, CommandSender sender) throws CommandException{
 
-            if (!(sender instanceof Player))
-                throw new PlayerOnlyCommandException();
+            Player player = PlayerUtil.checkPlayer(sender);
+
 
             String authToke = authenticate(sender.getName(), args.getString(0), args.getString(1));
 

@@ -14,7 +14,6 @@ import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
@@ -405,24 +404,24 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-            if (inst.hasPermission(sender, "aurora.ninja")) {
+            Player player = PlayerUtil.checkPlayer(sender);
+            if (inst.hasPermission(player, "aurora.ninja")) {
                 throw new CommandException("You are a ninja not a rogue!");
             }
 
-            final boolean isRogue = isRogue((Player) sender);
+            final boolean isRogue = isRogue(player);
 
             // Enter Rogue Mode
-            roguePlayer((Player) sender);
+            roguePlayer(player);
 
             // Set flags
-            limitYVelocity((Player) sender, args.hasFlag('l'));
-            setTraitorProtected((Player) sender, args.hasFlag('t') && inst.hasPermission(sender, "aurora.rogue.master"));
+            limitYVelocity(player, args.hasFlag('l'));
+            setTraitorProtected(player, args.hasFlag('t') && inst.hasPermission(player, "aurora.rogue.master"));
 
             if (!isRogue) {
-                ChatUtil.sendNotice(sender, "You gain the power of a rogue warrior!");
+                ChatUtil.sendNotice(player, "You gain the power of a rogue warrior!");
             } else {
-                ChatUtil.sendNotice(sender, "Rogue flags updated!");
+                ChatUtil.sendNotice(player, "Rogue flags updated!");
             }
         }
 
@@ -430,13 +429,13 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                 flags = "", min = 0, max = 0)
         public void derogue(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (!(sender instanceof Player)) throw new PlayerOnlyCommandException();
-            if (!isRogue((Player) sender)) {
+            Player player = PlayerUtil.checkPlayer(sender);
+            if (!isRogue(player)) {
                 throw new CommandException("You are not a rogue!");
             }
 
-            deroguePlayer(PlayerUtil.matchSinglePlayer(sender, sender.getName()));
-            ChatUtil.sendNotice(sender, "You return to your weak existence.");
+            deroguePlayer(player);
+            ChatUtil.sendNotice(player, "You return to your weak existence.");
         }
     }
 

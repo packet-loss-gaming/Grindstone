@@ -6,7 +6,6 @@ import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
-import com.skelril.aurora.exceptions.PlayerOnlyCommandException;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -424,25 +423,21 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         @CommandPermissions({"aurora.jail.cells.add"})
         public void addCellCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            if (sender instanceof Player) {
-                String prisonName = args.getString(0);
-                String cellName = args.argsLength() > 1 ? args.getString(1) : String.valueOf(System.currentTimeMillis());
-                Player player = (Player) sender;
-                Location loc = player.getLocation();
+            Player player = PlayerUtil.checkPlayer(sender);
+            String prisonName = args.getString(0);
+            String cellName = args.argsLength() > 1 ? args.getString(1) : String.valueOf(System.currentTimeMillis());
+            Location loc = player.getLocation();
 
-                if (jailCells.cellExist(prisonName, cellName)) {
-                    throw new CommandException("Cell already exists!");
-                }
+            if (jailCells.cellExist(prisonName, cellName)) {
+                throw new CommandException("Cell already exists!");
+            }
 
-                jailCells.createJailCell(prisonName, cellName, player, loc);
+            jailCells.createJailCell(prisonName, cellName, player, loc);
 
-                ChatUtil.sendNotice(sender, "Cell '" + cellName + "' created.");
+            ChatUtil.sendNotice(sender, "Cell '" + cellName + "' created.");
 
-                if (!jailCells.save()) {
-                    throw new CommandException("Inmate database failed to save. See console.");
-                }
-            } else {
-                throw new PlayerOnlyCommandException();
+            if (!jailCells.save()) {
+                throw new CommandException("Inmate database failed to save. See console.");
             }
         }
 
