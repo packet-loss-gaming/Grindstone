@@ -54,7 +54,9 @@ public class SnowSpleefArena extends AbstractRegionedArena implements SpleefAren
 
             for (BlockVector bv : snow) {
                 Block b = getWorld().getBlockAt(bv.getBlockX(), bv.getBlockY(), bv.getBlockZ());
-                b.setTypeIdAndData(BlockID.SNOW_BLOCK, (byte) 0, false);
+                if (b.getTypeId() != BlockID.SNOW_BLOCK) {
+                    b.setTypeIdAndData(BlockID.SNOW_BLOCK, (byte) 0, false);
+                }
             }
         } catch (Exception e) {
             log.warning("An error has occurred while trying to create snow in the region: "
