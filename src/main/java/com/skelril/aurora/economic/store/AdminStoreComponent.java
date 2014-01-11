@@ -357,16 +357,12 @@ public class AdminStoreComponent extends BukkitComponent {
                 flags = "", min = 0)
         public void valueCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            checkPlayer(sender, true);
-
-            final Player player = (Player) sender;
-
             String itemName;
             double percentageSale = 1;
             if (args.argsLength() > 0) {
                 itemName = args.getJoinedStrings(0).toLowerCase();
             } else {
-                ItemStack stack = player.getInventory().getItemInHand();
+                ItemStack stack = PlayerUtil.checkPlayer(sender).getInventory().getItemInHand();
                 if (stack == null || stack.getTypeId() == 0) {
                     throw new CommandException("That's not a valid item!");
                 }
@@ -413,25 +409,25 @@ public class AdminStoreComponent extends BukkitComponent {
 
             String purchasePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getPrice()), " " + econ.currencyNamePlural());
             String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), " " + econ.currencyNamePlural());
-            ChatUtil.sendNotice(player, ChatColor.GOLD, "Price Information for: " + color + itemName.toUpperCase());
+            ChatUtil.sendNotice(sender, ChatColor.GOLD, "Price Information for: " + color + itemName.toUpperCase());
 
             // Purchase Information
             if (itemPricePair.isBuyable() || !itemPricePair.isEnabled()) {
-                ChatUtil.sendNotice(player, "When you buy it you pay:");
-                ChatUtil.sendNotice(player, " - " + purchasePrice + " each.");
+                ChatUtil.sendNotice(sender, "When you buy it you pay:");
+                ChatUtil.sendNotice(sender, " - " + purchasePrice + " each.");
             } else {
-                ChatUtil.sendNotice(player, ChatColor.GRAY, "This item cannot be purchased.");
+                ChatUtil.sendNotice(sender, ChatColor.GRAY, "This item cannot be purchased.");
             }
             // Sale Information
             if (itemPricePair.isSellable() || !itemPricePair.isEnabled()) {
-                ChatUtil.sendNotice(player, "When you sell it you get:");
-                ChatUtil.sendNotice(player, " - " + sellPrice + " each.");
+                ChatUtil.sendNotice(sender, "When you sell it you get:");
+                ChatUtil.sendNotice(sender, " - " + sellPrice + " each.");
                 if (percentageSale != 1.0) {
                     sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getSellPrice()), " " + econ.currencyNamePlural());
-                    ChatUtil.sendNotice(player, " - " + sellPrice + " each when new.");
+                    ChatUtil.sendNotice(sender, " - " + sellPrice + " each when new.");
                 }
             } else {
-                ChatUtil.sendNotice(player, ChatColor.GRAY, "This item cannot be sold.");
+                ChatUtil.sendNotice(sender, ChatColor.GRAY, "This item cannot be sold.");
             }
         }
 
@@ -808,14 +804,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
     public String checkPlayer(CommandSender sender) throws CommandException {
 
-        return checkPlayer(sender, false);
-    }
-
-    private String checkPlayer(CommandSender sender, boolean onlyPlayer) throws CommandException {
-
         PlayerUtil.checkPlayer(sender);
-
-        if (onlyPlayer) return sender.getName();
 
         if (adminComponent.isAdmin((Player) sender)) {
             throw new CommandException("You cannot use this command while in admin mode.");
