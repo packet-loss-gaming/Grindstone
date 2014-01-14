@@ -5,7 +5,7 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.skelril.aurora.JungleRaidComponent;
+import com.skelril.aurora.city.engine.minigame.games.JungleRaidComponent;
 import com.skelril.aurora.events.ServerShutdownEvent;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
