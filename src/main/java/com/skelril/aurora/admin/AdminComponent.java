@@ -655,7 +655,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         }
 
-        @Command(aliases = {"profiles"}, desc = "Profile Commands")
+        @Command(aliases = {"profiles", "p"}, desc = "Profile Commands")
         @NestedCommand({NestedProfileCommands.class})
         public void profileCommands(CommandContext args, CommandSender sender) throws CommandException {
 
