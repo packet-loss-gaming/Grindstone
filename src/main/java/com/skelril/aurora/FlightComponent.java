@@ -11,7 +11,9 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.util.logging.Logger;
 
@@ -55,6 +57,23 @@ public class FlightComponent extends BukkitComponent implements Listener {
         player.setAllowFlight(false);
         player.setFallDistance(0F);
         ChatUtil.sendWarning(player, "You lose your wings and can no longer fly.");
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+
+        final Player player = event.getPlayer();
+
+        server.getScheduler().runTaskLater(inst, new Runnable() {
+            @Override
+            public void run() {
+                //noinspection deprecation
+                if (inst.hasPermission(player, "aurora.fly.auto") && !player.isOnGround()) {
+                    player.setAllowFlight(true);
+                    player.setFlying(true);
+                }
+            }
+        }, 1);
     }
 
     public class Commands {
