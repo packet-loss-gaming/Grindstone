@@ -85,7 +85,7 @@ public class RegionUtil {
 
         // Recreate the region based on it's old values
         if (oldRegion instanceof ProtectedPolygonalRegion) {
-            int minY = oldRegion.getMaximumPoint().getBlockY();
+            int minY = oldRegion.getMinimumPoint().getBlockY();
             int maxY = oldRegion.getMaximumPoint().getBlockY();
             newRegion = new ProtectedPolygonalRegion(newName, oldRegion.getPoints(), minY, maxY);
         } else if (oldRegion instanceof ProtectedCuboidRegion) {
