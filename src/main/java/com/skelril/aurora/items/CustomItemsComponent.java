@@ -619,7 +619,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
 
             player.setAllowFlight(true);
-            player.setFlySpeed(1);
+            player.setFlySpeed(.6F);
             antiCheat.exempt(player, CheckType.FLY);
 
             ChatUtil.sendNotice(player, "You use the Pixie Dust to gain flight.");
