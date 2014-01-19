@@ -270,7 +270,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
             throw new CommandException("This " + casualName + " has already been initialised.");
         }
 
-        begin(args.getFlags(), 20 * 9 * (args.hasFlag('q') ? 1 : 45));
+        begin(args.getFlags(), 20 * 9 * (args.hasFlag('q') ? 1 : 5));
 
         if (gameFlags.size() > 0) {
             printFlags();

@@ -144,6 +144,26 @@ public class JungleRaidComponent extends MinigameComponent {
         super.initialize(flags);
 
         start = System.currentTimeMillis();
+
+        Player[] players = getContainedPlayers();
+
+        if (gameFlags.contains('H')) {
+            ChatUtil.sendNotice(players, "Team two can now run.");
+        } else {
+            ChatUtil.sendNotice(players, "All players can now run.");
+        }
+    }
+
+    @Override
+    public void start() {
+        super.start();
+
+        Player[] players = getContainedPlayers();
+
+        if (gameFlags.contains('H')) {
+            ChatUtil.sendNotice(players, "All players can now run.");
+        }
+        ChatUtil.sendNotice(players, "Fighting can now commence!");
     }
 
     // Player Management
@@ -235,6 +255,7 @@ public class JungleRaidComponent extends MinigameComponent {
         Player[] players = getContainedPlayers();
 
         ChatUtil.sendNotice(players, ChatColor.GREEN + "The following flags are enabled: ");
+        if (gameFlags.contains('H')) ChatUtil.sendNotice(players, "Hunter Mode");
         if (gameFlags.contains('T')) {
             ChatUtil.sendNotice(players, "Titan Mode");
 
@@ -332,6 +353,8 @@ public class JungleRaidComponent extends MinigameComponent {
     @Override
     public void removeFromTeam(Player player, boolean forced) {
 
+        if (!playerState.containsKey(player.getName())) return;
+
         super.removeFromTeam(player, forced);
 
         if (economy != null && forced && isGameInitialised()) {
@@ -341,6 +364,8 @@ public class JungleRaidComponent extends MinigameComponent {
 
     @Override
     public void removeGoneFromTeam(Player player, boolean forced) {
+
+        if (!goneState.containsKey(player.getName())) return;
 
         super.removeGoneFromTeam(player, forced);
 
@@ -453,35 +478,20 @@ public class JungleRaidComponent extends MinigameComponent {
             if (playerState.size() == 0 && !isGameInitialised()) return;
 
             if (isGameInitialised()) {
-                if (!isGameActive()) {
-                    for (PlayerGameState entry : playerState.values()) {
-                        if (entry.getTeamNumber() != 2) continue;
-                        try {
-                            Player player = Bukkit.getPlayerExact(entry.getOwnerName());
-                            if (player == null) continue;
-                            prayerComponent.uninfluencePlayer(player);
-                            for (PotionEffectType potionEffectType : PotionEffectType.values()) {
-                                if (potionEffectType == null) continue;
-                                if (player.hasPotionEffect(potionEffectType)) player.removePotionEffect(potionEffectType);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                int min = gameFlags.contains('H') ? (isGameActive() ? 0 : 2) : 0;
+
+                for (PlayerGameState entry : playerState.values()) {
+                    if (entry.getTeamNumber() < min) continue;
+                    try {
+                        Player player = Bukkit.getPlayerExact(entry.getOwnerName());
+                        if (player == null) continue;
+                        prayerComponent.uninfluencePlayer(player);
+                        for (PotionEffectType potionEffectType : PotionEffectType.values()) {
+                            if (potionEffectType == null) continue;
+                            if (player.hasPotionEffect(potionEffectType)) player.removePotionEffect(potionEffectType);
                         }
-                    }
-                } else {
-                    for (PlayerGameState entry : playerState.values()) {
-                        if (entry.getTeamNumber() > 1) continue;
-                        try {
-                            Player player = Bukkit.getPlayerExact(entry.getOwnerName());
-                            if (player == null) continue;
-                            prayerComponent.uninfluencePlayer(player);
-                            for (PotionEffectType potionEffectType : PotionEffectType.values()) {
-                                if (potionEffectType == null) continue;
-                                if (player.hasPotionEffect(potionEffectType)) player.removePotionEffect(potionEffectType);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -1184,7 +1194,7 @@ public class JungleRaidComponent extends MinigameComponent {
 
             Location l = event.getBlock().getLocation();
 
-            if (contains(l) && gameFlags.contains('f')) event.setCancelled(true);
+            if (contains(l) && (progress == GameProgress.DONE || gameFlags.contains('f'))) event.setCancelled(true);
         }
 
         @EventHandler
