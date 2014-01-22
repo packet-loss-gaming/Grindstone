@@ -120,6 +120,11 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
 
     public abstract void checkTeam(int teamNumber) throws CommandException;
 
+    public boolean isFriendlyFire(Player attacker, Player defender) {
+
+        return (getTeam(attacker) == (getTeam(defender))) && (getTeam(attacker) != 0);
+    }
+
     public int getTeam(Player player) {
 
         PlayerGameState state = playerState.get(player.getName());

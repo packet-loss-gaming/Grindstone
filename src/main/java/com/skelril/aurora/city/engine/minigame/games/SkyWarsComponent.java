@@ -630,22 +630,28 @@ public class SkyWarsComponent extends MinigameComponent {
                             block.getWorld().playEffect(block.getLocation(k), Effect.MOBSPAWNER_FLAMES, 0);
 
                             for (Entity aEntity : targets) {
-                                if (!aEntity.isValid() || aEntity.equals(player)) continue;
+                                innerLoop:
+                                {
+                                    if (!aEntity.isValid() || aEntity.equals(player)) break innerLoop;
 
-                                if (aEntity.getLocation().distanceSquared(block.getLocation()) <= 12) {
-                                    if (aEntity instanceof Player) {
-                                        Player aPlayer = (Player) aEntity;
-                                        server.getPluginManager().callEvent(new ThrowPlayerEvent(aPlayer));
-                                        aPlayer.setVelocity(vel);
+                                    if (aEntity.getLocation().distanceSquared(block.getLocation()) <= 12) {
+                                        if (aEntity instanceof Player) {
+                                            Player aPlayer = (Player) aEntity;
 
-                                        SkyWarSession aSession = sessions.getSession(SkyWarSession.class, aPlayer);
-                                        if (aSession.canFly()) {
-                                            ChatUtil.sendNotice(player, "You push back: " + aPlayer.getName() + "!");
+                                            if (isFriendlyFire(player, aPlayer)) break innerLoop;
+
+                                            server.getPluginManager().callEvent(new ThrowPlayerEvent(aPlayer));
+                                            aPlayer.setVelocity(vel);
+
+                                            SkyWarSession aSession = sessions.getSession(SkyWarSession.class, aPlayer);
+                                            if (aSession.canFly()) {
+                                                ChatUtil.sendNotice(player, "You push back: " + aPlayer.getName() + "!");
+                                            }
+                                            aSession.stopFlight();
+                                        } else {
+                                            awardPowerup(player);
+                                            aEntity.remove();
                                         }
-                                        aSession.stopFlight();
-                                    } else {
-                                        awardPowerup(player);
-                                        aEntity.remove();
                                     }
                                 }
                             }
@@ -671,18 +677,12 @@ public class SkyWarsComponent extends MinigameComponent {
                     event.setCancelled(true);
 
                     if (event instanceof EntityDamageByEntityEvent) {
-
                         Entity attacker = ((EntityDamageByEntityEvent) event).getDamager();
-                        boolean wasProjectile = attacker instanceof Projectile;
-                        if (wasProjectile) {
+                        if (attacker instanceof Projectile) {
                             attacker = ((Projectile) attacker).getShooter();
                         }
                         if (!(attacker instanceof Player)) return;
                         ChatUtil.sendError((Player) attacker, "The game has not yet started!");
-
-                        if (!wasProjectile) {
-                            attacker.teleport(new Location(world, config.x, config.y, config.z));
-                        }
                     }
                 } else if (event.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
                     event.setCancelled(true);
@@ -693,7 +693,7 @@ public class SkyWarsComponent extends MinigameComponent {
             }
         }
 
-        @EventHandler(ignoreCancelled = true)
+        @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
         public void onEntityDamagedByEntity(EntityDamageByEntityEvent event) {
 
             Entity attackingEntity = event.getDamager();
@@ -724,7 +724,7 @@ public class SkyWarsComponent extends MinigameComponent {
                 return;
             }
 
-            if ((getTeam(attackingPlayer) == (getTeam(defendingPlayer))) && (getTeam(attackingPlayer) != 0)) {
+            if (isFriendlyFire(attackingPlayer, defendingPlayer)) {
                 event.setCancelled(true);
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
             } else {

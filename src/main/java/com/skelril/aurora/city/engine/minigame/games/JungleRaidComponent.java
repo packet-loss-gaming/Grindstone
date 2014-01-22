@@ -919,7 +919,7 @@ public class JungleRaidComponent extends MinigameComponent {
             if (getTeam(event.getPlayer()) != -1 && !isGameActive()) event.setCancelled(true);
         }
 
-        @EventHandler(ignoreCancelled = true)
+        @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
         public void onEntityDamageEvent(EntityDamageEvent event) {
 
             Entity e = event.getEntity();
@@ -1008,7 +1008,7 @@ public class JungleRaidComponent extends MinigameComponent {
                 return;
             }
 
-            if ((getTeam(attackingPlayer) == (getTeam(defendingPlayer))) && (getTeam(attackingPlayer) != 0)) {
+            if (isFriendlyFire(attackingPlayer, defendingPlayer)) {
                 event.setCancelled(true);
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
             } else {
