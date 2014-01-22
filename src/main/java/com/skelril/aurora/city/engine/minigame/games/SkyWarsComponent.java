@@ -644,14 +644,15 @@ public class SkyWarsComponent extends MinigameComponent {
 
                                             if (isFriendlyFire(player, aPlayer)) break innerLoop;
 
+                                            // Handle Sender
+                                            session.stopPushBack(250);
+                                            ChatUtil.sendNotice(player, "You push back: " + aPlayer.getName() + "!");
+
+                                            // Handle Target
                                             server.getPluginManager().callEvent(new ThrowPlayerEvent(aPlayer));
                                             aPlayer.setVelocity(vel);
 
-                                            SkyWarSession aSession = sessions.getSession(SkyWarSession.class, aPlayer);
-                                            if (aSession.canFly()) {
-                                                ChatUtil.sendNotice(player, "You push back: " + aPlayer.getName() + "!");
-                                            }
-                                            aSession.stopFlight();
+                                            sessions.getSession(SkyWarSession.class, aPlayer).stopFlight();
                                         } else {
                                             awardPowerup(player);
                                             aEntity.remove();
