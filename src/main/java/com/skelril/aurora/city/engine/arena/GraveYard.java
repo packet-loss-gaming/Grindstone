@@ -1281,8 +1281,31 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             @Override
             public void run() {
 
-                IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
-                IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
+                generalFile:
+                {
+                    File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
+                    if (generalFile.exists()) {
+                        Object generalFileO = IOUtil.readBinaryFile(generalFile);
+
+                        if (generalIndex.equals(generalFileO)) {
+                            break generalFile;
+                        }
+                    }
+                    IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
+                }
+
+                respawnsFile:
+                {
+                    File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
+                    if (playerStateFile.exists()) {
+                        Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
+
+                        if (playerState.equals(playerStateFileO)) {
+                            break respawnsFile;
+                        }
+                    }
+                    IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
+                }
             }
         };
 
@@ -1343,7 +1366,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
                     playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
 
-                    if (playerStateFileO instanceof BaseBlockRecordIndex) {
+                    if (playerStateFileO instanceof HashMap) {
                         //noinspection unchecked
                         playerState = (HashMap<String, PlayerState>) playerStateFileO;
                         log.info("Backup file loaded successfully!");

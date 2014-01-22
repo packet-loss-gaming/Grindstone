@@ -93,6 +93,11 @@ public class PlayerMappedBlockRecordIndex extends BlockRecordIndex implements Se
     }
 
     @Override
+    public boolean equals(Object o) {
+        return o instanceof PlayerMappedBlockRecordIndex && recordMap.equals(((PlayerMappedBlockRecordIndex) o).recordMap);
+    }
+
+    @Override
     public int size() {
 
         return recordMap.size();

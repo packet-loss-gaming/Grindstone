@@ -42,6 +42,11 @@ public class BaseBlockRecordIndex extends BlockRecordIndex implements Serializab
     }
 
     @Override
+    public boolean equals(Object o) {
+        return o instanceof BaseBlockRecordIndex && recordList.equals(((BaseBlockRecordIndex) o).recordList);
+    }
+
+    @Override
     public int size() {
 
         return recordList.size();

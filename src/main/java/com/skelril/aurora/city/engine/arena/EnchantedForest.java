@@ -406,8 +406,31 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             @Override
             public void run() {
 
-                IOUtil.toBinaryFile(getWorkingDir(), "trees", treeMap);
-                IOUtil.toBinaryFile(getWorkingDir(), "general", generalMap);
+                treeFile:
+                {
+                    File treeFile = new File(getWorkingDir().getPath() + "/trees.dat");
+                    if (treeFile.exists()) {
+                        Object treeFileO = IOUtil.readBinaryFile(treeFile);
+
+                        if (treeMap.equals(treeFileO)) {
+                            break treeFile;
+                        }
+                    }
+                    IOUtil.toBinaryFile(getWorkingDir(), "trees", treeMap);
+                }
+
+                generalFile:
+                {
+                    File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
+                    if (generalFile.exists()) {
+                        Object generalFileO = IOUtil.readBinaryFile(generalFile);
+
+                        if (generalMap.equals(generalFileO)) {
+                            break generalFile;
+                        }
+                    }
+                    IOUtil.toBinaryFile(getWorkingDir(), "general", generalMap);
+                }
             }
         };
 
