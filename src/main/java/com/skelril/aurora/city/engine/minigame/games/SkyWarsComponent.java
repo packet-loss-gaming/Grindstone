@@ -88,7 +88,7 @@ public class SkyWarsComponent extends MinigameComponent {
     SessionComponent sessions;
 
     public SkyWarsComponent() {
-        super("Sky War", "sw");
+        super("Sky War", "sw", 10);
     }
 
     @Override
@@ -281,14 +281,6 @@ public class SkyWarsComponent extends MinigameComponent {
     }
 
     @Override
-    public void checkTeam(int teamNumber) throws CommandException {
-
-        if (teamNumber != 0) {
-            throw new CommandException("You can only join team 0.");
-        }
-    }
-
-    @Override
     public void printFlags() {
 
         Player[] players = getContainedPlayers();
@@ -296,6 +288,34 @@ public class SkyWarsComponent extends MinigameComponent {
         ChatUtil.sendNotice(players, ChatColor.GREEN + "The following flags are enabled: ");
 
         if (gameFlags.contains('q')) ChatUtil.sendNotice(players, ChatColor.GOLD, "Quick start");
+    }
+
+    @Override
+    public String getWinner() {
+
+        int[] teams = new int[MAX_TEAMS];
+        for (PlayerGameState entry : playerState.values()) {
+            teams[entry.getTeamNumber()]++;
+        }
+
+        int aliveTeam = -1;
+        for (int team = 0; team < teams.length; team++) {
+            if (teams[team] > 0) {
+                if (aliveTeam != -1) return null;
+                aliveTeam = team;
+            }
+        }
+
+        String winnerName = "Team " + aliveTeam;
+        switch (aliveTeam) {
+            case -1:
+                return "";
+            case 0:
+                if (teams[0] > 1) return null;
+                winnerName = Lists.newArrayList(playerState.values()).get(0).getOwnerName();
+                break;
+        }
+        return winnerName;
     }
 
     @Override
@@ -410,8 +430,13 @@ public class SkyWarsComponent extends MinigameComponent {
                     }
                     Location pLoc = player.getLocation();
                     if (contains(pLoc)) {
+
+                        // Keep the player within game parameters
+                        adminComponent.standardizePlayer(player);
                         player.setFoodLevel(20);
                         player.setSaturation(5F);
+
+                        // Damage the player or teleport them if need be
                         if (EnvironmentUtil.isWater(pLoc.getBlock())) {
                             if (isGameActive()) {
                                 player.damage(ChanceUtil.getRandom(3));
@@ -438,63 +463,18 @@ public class SkyWarsComponent extends MinigameComponent {
                 c.setRemoveWhenFarAway(true);
             }
 
-            // Security
-            for (Player player : getContainedPlayers()) {
-
-                if (!player.isValid()) continue;
-
-                if (!player.getGameMode().equals(GameMode.SURVIVAL)) {
-                    if (player.isFlying()) {
-                        player.setAllowFlight(true);
-                        player.setFlying(true);
-                        player.setGameMode(GameMode.SURVIVAL);
-                    } else player.setGameMode(GameMode.SURVIVAL);
-                }
-            }
-
             if (!isGameActive()) return;
 
-            // Team Counter
-            int teamZero = 0;
-            int teamOne = 0;
-            int teamTwo = 0;
-            for (PlayerGameState entry : playerState.values()) {
-                try {
-                    Player teamPlayer = Bukkit.getPlayerExact(entry.getOwnerName());
+            String winnerName = getWinner();
 
-                    adminComponent.standardizePlayer(teamPlayer);
-                    switch (entry.getTeamNumber()) {
-                        case 0:
-                            teamZero++;
-                            break;
-                        case 1:
-                            teamOne++;
-                            break;
-                        case 2:
-                            teamTwo++;
-                            break;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            // No winner
+            if (winnerName == null) return;
 
-            // Win Machine
-            if (teamOne > 0 || teamTwo > 0 || teamZero > 0) {
-                String winner;
-                if (teamOne >= 1) {
-                    if (teamTwo >= 1 || teamZero >= 1) return;
-                    else winner = "Team one";
-                } else if (teamTwo >= 1) {
-                    if (teamOne >= 1 || teamZero >= 1) return;
-                    else winner = "Team two";
-                } else {
-                    if (teamZero > 1) return;
-                    else winner = Lists.newArrayList(playerState.values()).get(0).getOwnerName();
-                }
-                Bukkit.broadcastMessage(ChatColor.GOLD + winner + " has won!");
-            } else {
+            // Tie or a specific team/player?
+            if (winnerName.isEmpty()) {
                 Bukkit.broadcastMessage(ChatColor.YELLOW + "Tie game!");
+            } else {
+                Bukkit.broadcastMessage(ChatColor.GOLD + winnerName + " has won!");
             }
 
             end();

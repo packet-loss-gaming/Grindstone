@@ -119,7 +119,7 @@ public class JungleRaidComponent extends MinigameComponent {
     AntiCheatCompatibilityComponent antiCheat;
 
     public JungleRaidComponent() {
-        super("Jungle Raid", "jr");
+        super("Jungle Raid", "jr", 3);
     }
 
     private Prayer[] getPrayers(Player player) throws UnsupportedPrayerException {
@@ -250,13 +250,6 @@ public class JungleRaidComponent extends MinigameComponent {
     }
 
     @Override
-    public void checkTeam(int teamNumber) throws CommandException {
-        if (teamNumber > 2 || teamNumber < 0) {
-            throw new CommandException("Valid teams: 0, 1, 2.");
-        }
-    }
-
-    @Override
     public void printFlags() {
 
         Player[] players = getContainedPlayers();
@@ -347,6 +340,34 @@ public class JungleRaidComponent extends MinigameComponent {
 
         if (gameFlags.contains('q')) ChatUtil.sendNotice(players, ChatColor.GOLD, "Quick start");
         if (gameFlags.contains('S')) ChatUtil.sendNotice(players, ChatColor.GOLD, "Sudden death disabled");
+    }
+
+    @Override
+    public String getWinner() {
+
+        int[] teams = new int[MAX_TEAMS];
+        for (PlayerGameState entry : playerState.values()) {
+            teams[entry.getTeamNumber()]++;
+        }
+
+        int aliveTeam = -1;
+        for (int team = 0; team < teams.length; team++) {
+            if (teams[team] > 0) {
+                if (aliveTeam != -1) return null;
+                aliveTeam = team;
+            }
+        }
+
+        String winnerName = "Team " + aliveTeam;
+        switch (aliveTeam) {
+            case -1:
+                return "";
+            case 0:
+                if (teams[0] > 1) return null;
+                winnerName = Lists.newArrayList(playerState.values()).get(0).getOwnerName();
+                break;
+        }
+        return winnerName;
     }
 
     @Override
@@ -618,47 +639,16 @@ public class JungleRaidComponent extends MinigameComponent {
                 }
             }
 
-            // Team Counter
-            int teamZero = 0;
-            int teamOne = 0;
-            int teamTwo = 0;
-            for (PlayerGameState entry : playerState.values()) {
-                try {
-                    Player teamPlayer = Bukkit.getPlayerExact(entry.getOwnerName());
+            String winnerName = getWinner();
 
-                    adminComponent.standardizePlayer(teamPlayer);
-                    switch (entry.getTeamNumber()) {
-                        case 0:
-                            teamZero++;
-                            break;
-                        case 1:
-                            teamOne++;
-                            break;
-                        case 2:
-                            teamTwo++;
-                            break;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            // No winner
+            if (winnerName == null) return;
 
-            // Win Machine
-            if (teamOne > 0 || teamTwo > 0 || teamZero > 0) {
-                String winner;
-                if (teamOne >= 1) {
-                    if (teamTwo >= 1 || teamZero >= 1) return;
-                    else winner = "Team one";
-                } else if (teamTwo >= 1) {
-                    if (teamOne >= 1 || teamZero >= 1) return;
-                    else winner = "Team two";
-                } else {
-                    if (teamZero > 1) return;
-                    else winner = Lists.newArrayList(playerState.values()).get(0).getOwnerName();
-                }
-                Bukkit.broadcastMessage(ChatColor.GOLD + winner + " has won!");
-            } else {
+            // Tie or a specific team/player?
+            if (winnerName.isEmpty()) {
                 Bukkit.broadcastMessage(ChatColor.YELLOW + "Tie game!");
+            } else {
+                Bukkit.broadcastMessage(ChatColor.GOLD + winnerName + " has won!");
             }
 
             end();

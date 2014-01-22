@@ -28,6 +28,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
 
+    protected final int MAX_TEAMS;
     protected final String casualName;
     protected final String name;
 
@@ -38,10 +39,11 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     protected ConcurrentHashMap<String, PlayerGameState> goneState = new ConcurrentHashMap<>();
     protected Set<Character> gameFlags = new HashSet<>();
 
-    public MinigameComponent(String casualName, String name) {
+    public MinigameComponent(String casualName, String name, int maxTeams) {
 
         this.casualName = casualName;
         this.name = name;
+        this.MAX_TEAMS = maxTeams;
         this.workingDir = inst.getDataFolder().getPath() + "/minigames/" + name + "/";
     }
 
@@ -85,6 +87,11 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     }
 
     public abstract void printFlags();
+
+    /**
+     * @return the winner name, an empty string if a tie, or null if no one has won
+     */
+    public abstract String getWinner();
 
     public void end() {
 
@@ -131,7 +138,12 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         return true;
     }
 
-    public abstract void checkTeam(int teamNumber) throws CommandException;
+    public void checkTeam(int teamNumber) throws CommandException {
+        int highest = MAX_TEAMS - 1;
+        if (teamNumber < 0 || teamNumber > highest) {
+            throw new CommandException("You can join teams 0-" + highest + ".");
+        }
+    }
 
     public boolean isFriendlyFire(Player attacker, Player defender) {
 
@@ -382,7 +394,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
 
         inst.checkPermission(sender, "aurora." + name + ".start");
 
-        if (playerState.size() < 2) {
+        if (getWinner() != null) {
             throw new CommandException("You need more players to start a " + casualName + ".");
         } else if (isGameInitialised()) {
             throw new CommandException("This " + casualName + " has already been initialised.");
