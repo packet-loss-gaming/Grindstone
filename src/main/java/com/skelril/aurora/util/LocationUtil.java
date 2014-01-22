@@ -3,7 +3,7 @@ package com.skelril.aurora.util;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -339,12 +339,28 @@ public class LocationUtil {
         return locations;
     }
 
-    public static Location pickLocation(World world, double y, CuboidRegion region) {
+    public static Location pickLocation(World world, double y, ProtectedRegion region) {
 
         com.sk89q.worldedit.Vector max = region.getMaximumPoint();
         com.sk89q.worldedit.Vector min = region.getMinimumPoint();
 
-        com.sk89q.worldedit.Vector v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ());
+        com.sk89q.worldedit.Vector v;
+        do {
+            v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ()).setY(y);
+        } while (!region.contains(v));
+
+        return new Location(world, v.getX(), y, v.getZ());
+    }
+
+    public static Location pickLocation(World world, double y, Region region) {
+
+        com.sk89q.worldedit.Vector max = region.getMaximumPoint();
+        com.sk89q.worldedit.Vector min = region.getMinimumPoint();
+
+        com.sk89q.worldedit.Vector v;
+        do {
+            v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ()).setY(y);
+        } while (!region.contains(v));
 
         return new Location(world, v.getX(), y, v.getZ());
     }

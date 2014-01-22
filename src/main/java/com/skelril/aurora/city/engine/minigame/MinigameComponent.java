@@ -118,6 +118,8 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         return true;
     }
 
+    public abstract void checkTeam(int teamNumber) throws CommandException;
+
     public int getTeam(Player player) {
 
         PlayerGameState state = playerState.get(player.getName());
@@ -204,9 +206,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
             teamNumber = args.getInteger(1, 0);
         }
 
-        if (teamNumber > 2 || teamNumber < 0) {
-            throw new CommandException("Valid teams: 0, 1, 2.");
-        }
+        checkTeam(teamNumber);
 
         if (!addToTeam(targetPlayer, teamNumber, args.getFlags())) {
             removeFromTeam(targetPlayer, true);

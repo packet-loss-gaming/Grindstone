@@ -250,6 +250,13 @@ public class JungleRaidComponent extends MinigameComponent {
     }
 
     @Override
+    public void checkTeam(int teamNumber) throws CommandException {
+        if (teamNumber > 2 || teamNumber < 0) {
+            throw new CommandException("Valid teams: 0, 1, 2.");
+        }
+    }
+
+    @Override
     public void printFlags() {
 
         Player[] players = getContainedPlayers();
