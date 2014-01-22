@@ -350,9 +350,14 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 if (targetItem.hasItemMeta() && targetItem.getItemMeta().hasLore()) {
                     for (String line : targetItem.getItemMeta().getLore()) {
                         String[] args = line.split(":");
-                        if (args.length < 1) continue;
+                        if (args.length < 2) continue;
 
-                        modifier = Double.parseDouble(args[args.length - 1]);
+                        if (args[0].endsWith("Damage Modifier")) {
+                            try {
+                                modifier = Double.parseDouble(args[args.length - 1]);
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
                     }
                 }
             }
@@ -415,7 +420,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                         EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
 
                         for (Entity e : targetLoc.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
-                            if (e.isValid() && e.getLocation().distanceSquared(targetLoc) <= 16) {
+                            if (!e.isValid() || e.equals(owner)) continue;
+                            if (e.getLocation().distanceSquared(targetLoc) <= 16) {
                                 if (e instanceof Item) {
                                     e.teleport(owner);
                                     continue;
