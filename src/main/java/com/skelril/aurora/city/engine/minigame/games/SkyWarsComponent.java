@@ -14,6 +14,8 @@ import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
+import com.sk89q.worldedit.patterns.Pattern;
+import com.sk89q.worldedit.patterns.SingleBlockPattern;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
@@ -185,9 +187,13 @@ public class SkyWarsComponent extends MinigameComponent {
         battleLoc = battleLoc.clone().add(0, -1, 0);
 
         EditSession editor = new EditSession(new BukkitWorld(battleLoc.getWorld()), -1);
+        com.sk89q.worldedit.Vector origin = new com.sk89q.worldedit.Vector(
+                battleLoc.getX(), battleLoc.getY(), battleLoc.getZ()
+        );
+        Pattern pattern = new SingleBlockPattern(new BaseBlock(toType, toData));
         try {
-            editor.fillXZ(new com.sk89q.worldedit.Vector(battleLoc.getX(), battleLoc.getY(), battleLoc.getZ()),
-                    new BaseBlock(toType, toData), 12, 1, false);
+
+            editor.makeCylinder(origin, pattern, 12, 1, true);
         } catch (MaxChangedBlocksException e) {
             e.printStackTrace();
         }
@@ -249,7 +255,9 @@ public class SkyWarsComponent extends MinigameComponent {
         if (uses == -1) {
             suffix = "Infinite";
         } else {
-            if (flight > pushBack) {
+            if (flight == pushBack) {
+                suffix = "Balance";
+            } else if (flight > pushBack) {
                 suffix = "Flight";
             } else {
                 suffix = "Push Back";
