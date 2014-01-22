@@ -211,32 +211,34 @@ public class SkyWarsComponent extends MinigameComponent {
                 + feather.getItemMeta().getDisplayName() + ChatColor.YELLOW + "!");
     }
 
-    private void decrementUses(final Player player, int uses, double flight, double pushBack) {
+    private void decrementUses(final Player player, ItemStack itemStack, int uses, double flight, double pushBack) {
 
         if (uses == -1) return;
 
         uses--;
 
-        final ItemStack newSkyFeather;
-        if (uses < 1) {
-            newSkyFeather = null;
-        } else {
-            newSkyFeather = makeSkyFeather(uses, flight, pushBack);
-        }
-
         final ItemStack remainder;
-        ItemStack is = player.getInventory().getItemInHand();
-        if (is.getAmount() > 1) {
-            remainder = is.clone();
+        if (itemStack.getAmount() > 1) {
+            remainder = itemStack.clone();
             remainder.setAmount(remainder.getAmount() - 1);
         } else {
             remainder = null;
         }
 
+        final ItemStack newSkyFeather;
+        if (uses < 1) {
+            newSkyFeather = null;
+        } else {
+            newSkyFeather = modifySkyFeather(itemStack, uses, flight, pushBack);
+            newSkyFeather.setAmount(1);
+        }
+
         server.getScheduler().runTaskLater(inst, new Runnable() {
             @Override
             public void run() {
-                player.getInventory().setItemInHand(newSkyFeather);
+                if (newSkyFeather == null) {
+                    player.getInventory().setItemInHand(null);
+                }
                 if (remainder != null) {
                     player.getInventory().addItem(remainder);
                 }
@@ -247,7 +249,11 @@ public class SkyWarsComponent extends MinigameComponent {
     }
 
     private ItemStack makeSkyFeather(int uses, double flight, double pushBack) {
-        ItemStack skyFeather = new ItemStack(ItemID.FEATHER);
+
+        return modifySkyFeather(new ItemStack(ItemID.FEATHER), uses, flight, pushBack);
+    }
+
+    private ItemStack modifySkyFeather(ItemStack skyFeather, int uses, double flight, double pushBack) {
         ItemMeta skyMeta = skyFeather.getItemMeta();
 
         String suffix;
@@ -609,7 +615,9 @@ public class SkyWarsComponent extends MinigameComponent {
                         server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
                         player.setVelocity(vel);
 
-                        decrementUses(player, uses, flight, pushBack);
+                        session.stopFlight(250);
+
+                        decrementUses(player, stack, uses, flight, pushBack);
                         break;
                     case RIGHT_CLICK_AIR:
 
@@ -655,7 +663,7 @@ public class SkyWarsComponent extends MinigameComponent {
                                 }
                             }
                         }
-                        decrementUses(player, uses, flight, pushBack);
+                        decrementUses(player, stack, uses, flight, pushBack);
                         break;
                 }
             }
