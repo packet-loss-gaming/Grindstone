@@ -5,6 +5,7 @@ import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.player.GeneralPlayerUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -13,6 +14,7 @@ import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,20 +31,30 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     protected final String casualName;
     protected final String name;
 
+    protected final String workingDir;
+
     protected GameProgress progress = GameProgress.DONE;
-    protected final ConcurrentHashMap<String, PlayerGameState> playerState = new ConcurrentHashMap<>();
-    protected final ConcurrentHashMap<String, PlayerGameState> goneState = new ConcurrentHashMap<>();
+    protected ConcurrentHashMap<String, PlayerGameState> playerState = new ConcurrentHashMap<>();
+    protected ConcurrentHashMap<String, PlayerGameState> goneState = new ConcurrentHashMap<>();
     protected Set<Character> gameFlags = new HashSet<>();
 
     public MinigameComponent(String casualName, String name) {
 
         this.casualName = casualName;
         this.name = name;
+        this.workingDir = inst.getDataFolder().getPath() + "/minigames/" + name + "/";
     }
 
     @Override
     public void enable() {
 
+        reloadData();
+    }
+
+    @Override
+    public void disable() {
+
+        writeData();
     }
 
     // Region Methods
@@ -115,6 +127,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         state.setLocation(player.getLocation());
         playerState.put(player.getName(), new PlayerGameState(state, team));
 
+        writeData();
         return true;
     }
 
@@ -141,6 +154,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         PlayerGameState state = playerState.get(player.getName());
         goneState.put(state.getOwnerName(), state);
         playerState.remove(state.getOwnerName());
+        writeData();
     }
 
     protected void restore(Player player, PlayerGameState state) {
@@ -172,6 +186,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         if (!playerState.containsKey(player.getName())) return;
         restore(player, playerState.get(player.getName()));
         playerState.remove(player.getName());
+        writeData();
     }
 
     public void removeGoneFromTeam(Player player, boolean forced) {
@@ -179,8 +194,106 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         if (!goneState.containsKey(player.getName())) return;
         restore(player, goneState.get(player.getName()));
         goneState.remove(player.getName());
+        writeData();
     }
 
+    // Persistence System
+    public void writeData() {
+
+        File workingDirectory = new File(workingDir);
+
+        activeFile:
+        {
+            File activeFile = new File(workingDir + "active.dat");
+            if (activeFile.exists()) {
+                Object playerStateFileO = IOUtil.readBinaryFile(activeFile);
+
+                if (playerState.equals(playerStateFileO)) {
+                    break activeFile;
+                }
+            }
+            IOUtil.toBinaryFile(workingDirectory, "active", playerState);
+        }
+
+        goneFile:
+        {
+            File goneFile = new File(workingDir + "gone.dat");
+            if (goneFile.exists()) {
+                Object playerStateFileO = IOUtil.readBinaryFile(goneFile);
+
+                if (goneState.equals(playerStateFileO)) {
+                    break goneFile;
+                }
+            }
+            IOUtil.toBinaryFile(workingDirectory, "gone", goneState);
+        }
+    }
+
+    public void reloadData() {
+
+        File activeFile = new File(workingDir + "active.dat");
+        File goneFile = new File(workingDir + "gone.dat");
+
+        if (activeFile.exists()) {
+            Object playerStateFileO = IOUtil.readBinaryFile(activeFile);
+
+            if (playerStateFileO instanceof ConcurrentHashMap) {
+                //noinspection unchecked
+                playerState = (ConcurrentHashMap<String, PlayerGameState>) playerStateFileO;
+            } else {
+                log.warning("Invalid identity record file encountered: " + activeFile.getName() + "!");
+                log.warning("Attempting to use backup file...");
+
+                activeFile = new File(workingDir + "old-" + activeFile.getName());
+
+                if (activeFile.exists()) {
+
+                    playerStateFileO = IOUtil.readBinaryFile(activeFile);
+
+                    if (playerStateFileO instanceof ConcurrentHashMap) {
+                        //noinspection unchecked
+                        playerState = (ConcurrentHashMap<String, PlayerGameState>) playerStateFileO;
+                        log.info("Backup file loaded successfully!");
+                    } else {
+                        log.warning("Backup file failed to load!");
+                    }
+                }
+            }
+        }
+
+        if (goneFile.exists()) {
+            Object playerStateFileO = IOUtil.readBinaryFile(goneFile);
+
+            if (playerStateFileO instanceof ConcurrentHashMap) {
+                //noinspection unchecked
+                goneState = (ConcurrentHashMap<String, PlayerGameState>) playerStateFileO;
+            } else {
+                log.warning("Invalid identity record file encountered: " + goneFile.getName() + "!");
+                log.warning("Attempting to use backup file...");
+
+                goneFile = new File(workingDir + "old-" + goneFile.getName());
+
+                if (goneFile.exists()) {
+
+                    playerStateFileO = IOUtil.readBinaryFile(goneFile);
+
+                    if (playerStateFileO instanceof ConcurrentHashMap) {
+                        //noinspection unchecked
+                        goneState = (ConcurrentHashMap<String, PlayerGameState>) playerStateFileO;
+                        log.info("Backup file loaded successfully!");
+                    } else {
+                        log.warning("Backup file failed to load!");
+                    }
+                }
+            }
+        }
+
+        end();
+
+        log.info("Loaded: " + goneState.size() + " saved identities for: " + casualName + ".");
+    }
+
+    // Commands
     public void joinCmd(CommandContext args, CommandSender sender) throws CommandException {
 
         if (!(sender instanceof Player)) sender.sendMessage("You must be a player to use this command.");

@@ -2,11 +2,13 @@ package com.skelril.aurora.city.engine.minigame;
 
 import com.skelril.aurora.util.player.PlayerState;
 
+import java.io.Serializable;
+
 /**
  * User: Wyatt Childers
  * Date: 1/13/14
  */
-public class PlayerGameState extends PlayerState {
+public class PlayerGameState extends PlayerState implements Serializable {
 
     private int teamNumber = 0;
 

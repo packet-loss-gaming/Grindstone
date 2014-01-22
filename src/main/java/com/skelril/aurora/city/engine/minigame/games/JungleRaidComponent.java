@@ -473,7 +473,7 @@ public class JungleRaidComponent extends MinigameComponent {
     @Override
     public void disable() {
 
-        super.end();
+        super.disable();
 
         stopRestore();
     }
@@ -694,7 +694,12 @@ public class JungleRaidComponent extends MinigameComponent {
 
         try {
             // Discover chunks
-            Location battleLoc = new Location(world, config.x, config.y, config.z);
+            Location battleLoc;
+            try {
+                battleLoc = new Location(world, config.x, config.y, config.z);
+            } catch (NullPointerException ex) {
+                return;
+            }
 
             for (Entity entity : world.getEntitiesByClasses(Item.class, TNTPrimed.class)) {
                 if (region.contains(BukkitUtil.toVector(entity.getLocation()))) {
@@ -712,8 +717,15 @@ public class JungleRaidComponent extends MinigameComponent {
             final List<Chunk> chunkList = new ArrayList<>();
             chunkList.add(battleLoc.getChunk());
 
-            Vector min = region.getMinimumPoint();
-            Vector max = region.getMaximumPoint();
+            Vector min;
+            Vector max;
+
+            try {
+                min = region.getMinimumPoint();
+                max = region.getMaximumPoint();
+            } catch (NullPointerException ex) {
+                return;
+            }
 
             final int minX = min.getBlockX();
             final int minZ = min.getBlockZ();
@@ -910,7 +922,7 @@ public class JungleRaidComponent extends MinigameComponent {
         @EventHandler
         public void onShutDownEvent(ServerShutdownEvent event) {
 
-            disable();
+            end();
         }
 
         @EventHandler(ignoreCancelled = true)

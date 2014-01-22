@@ -390,12 +390,6 @@ public class SkyWarsComponent extends MinigameComponent {
     }
 
     @Override
-    public void disable() {
-
-        super.end();
-    }
-
-    @Override
     public void run() {
 
         try {
@@ -549,7 +543,7 @@ public class SkyWarsComponent extends MinigameComponent {
         @EventHandler
         public void onShutDownEvent(ServerShutdownEvent event) {
 
-            disable();
+            end();
         }
 
         @EventHandler(ignoreCancelled = true)
