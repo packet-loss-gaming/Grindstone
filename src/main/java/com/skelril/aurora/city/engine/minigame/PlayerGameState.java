@@ -55,7 +55,12 @@ public class PlayerGameState extends PlayerState implements Serializable {
         Location k = super.getLocation();
 
         if (k == null) {
-            k = new Location(Bukkit.getWorld(worldName), x, y, z, yaw, pitch);
+            try {
+                k = new Location(Bukkit.getWorld(worldName), x, y, z, yaw, pitch);
+            } catch (Exception ex) {
+                k = Bukkit.getWorlds().get(0).getSpawnLocation();
+            }
+
             super.setLocation(k);
         }
 
