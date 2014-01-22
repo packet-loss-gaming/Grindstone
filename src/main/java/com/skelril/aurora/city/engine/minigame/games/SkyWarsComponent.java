@@ -413,7 +413,11 @@ public class SkyWarsComponent extends MinigameComponent {
                         player.setFoodLevel(20);
                         player.setSaturation(5F);
                         if (EnvironmentUtil.isWater(pLoc.getBlock())) {
-                            player.damage(ChanceUtil.getRandom(3));
+                            if (isGameActive()) {
+                                player.damage(ChanceUtil.getRandom(3));
+                            } else {
+                                player.teleport(new Location(Bukkit.getWorld(config.worldName), config.x, config.y, config.z));
+                            }
                         }
                         continue;
                     }
