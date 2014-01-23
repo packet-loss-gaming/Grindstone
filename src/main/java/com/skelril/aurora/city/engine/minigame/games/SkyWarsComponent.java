@@ -47,6 +47,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -108,16 +109,18 @@ public class SkyWarsComponent extends MinigameComponent {
 
         for (Player player : players) {
 
-            server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
-
-            player.setVelocity(new Vector(0, 3.5, 0));
-
+            launchPlayer(player, 1);
             sessions.getSession(SkyWarSession.class, player).stopPushBack();
         }
 
         editStartingPad(0, 0);
 
         ChatUtil.sendNotice(players, "Fight!");
+    }
+
+    private void launchPlayer(Player player, double mod) {
+        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+        player.setVelocity(new Vector(0, 3.5, 0).multiply(mod));
     }
 
     // Player Management
@@ -133,7 +136,7 @@ public class SkyWarsComponent extends MinigameComponent {
 
         List<ItemStack> gear = new ArrayList<>();
 
-        gear.add(makeSkyFeather(-1, 2, 4));
+        gear.add(makeSkyFeather(-1, 3, 2, 2));
 
         player.getInventory().addItem(gear.toArray(new ItemStack[gear.size()]));
 
@@ -199,19 +202,61 @@ public class SkyWarsComponent extends MinigameComponent {
         }
     }
 
-    private void awardPowerup(Player player) {
+    private void awardPowerup(Player player, ItemStack held) {
 
-        ItemStack feather = makeSkyFeather(ChanceUtil.getRandom(5), ChanceUtil.getRandom(12), ChanceUtil.getRandom(12));
-        player.getInventory().addItem(feather);
+        ItemStack powerup;
+
+        if (ChanceUtil.getChance(12)) {
+            if (ChanceUtil.getChance(2)) {
+                powerup = new ItemStack(ItemID.BOOK);
+                ItemMeta powerMeta = powerup.getItemMeta();
+                powerMeta.setDisplayName(ChatColor.WHITE + "Book o' Omens");
+                powerup.setItemMeta(powerMeta);
+            } else {
+                powerup = new ItemStack(ItemID.SNOWBALL, 16);
+                ItemMeta powerMeta = powerup.getItemMeta();
+                powerMeta.setDisplayName(ChatColor.BLUE + "Frost Orb");
+                powerup.setItemMeta(powerMeta);
+            }
+        } else if (ChanceUtil.getChance(5)) {
+            powerup = new ItemStack(ItemID.WATCH);
+            ItemMeta powerMeta = powerup.getItemMeta();
+            powerMeta.setDisplayName(ChatColor.GOLD + "Defroster");
+            powerup.setItemMeta(powerMeta);
+        } else {
+
+            if (ItemUtil.matchesFilter(held, ChatColor.AQUA + "Sky Feather [Doom]", false)) return;
+
+            int uses = ChanceUtil.getRandom(5) + 3;
+            double radius = 3;
+            double flight = 1 + ChanceUtil.getRandom(5);
+            double pushBack = 3 + ChanceUtil.getRandom(3);
+
+            if (ChanceUtil.getChance(20)) {
+                uses = -1;
+                radius = 7;
+                flight = 6;
+                pushBack = 6;
+                for (Player aPlayer : getContainedPlayers()) {
+                    if (player.equals(aPlayer)) continue;
+                    ChatUtil.sendWarning(aPlayer, player.getName() + " has been given a Doom feather!");
+                }
+
+                player.getInventory().clear();
+            }
+
+            powerup = makeSkyFeather(uses, radius, flight, pushBack);
+        }
+        player.getInventory().addItem(powerup);
         //noinspection deprecation
         player.updateInventory();
 
-        // Display name doesn't need checked as all sky feathers have one assigned
+        // Display name doesn't need checked as all power ups have one assigned
         ChatUtil.sendNotice(player, "You obtain a power-up: "
-                + feather.getItemMeta().getDisplayName() + ChatColor.YELLOW + "!");
+                + powerup.getItemMeta().getDisplayName() + ChatColor.YELLOW + "!");
     }
 
-    private void decrementUses(final Player player, ItemStack itemStack, int uses, double flight, double pushBack) {
+    private void decrementUses(final Player player, ItemStack itemStack, int uses, double radius, double flight, double pushBack) {
 
         if (uses == -1) return;
 
@@ -229,7 +274,7 @@ public class SkyWarsComponent extends MinigameComponent {
         if (uses < 1) {
             newSkyFeather = null;
         } else {
-            newSkyFeather = modifySkyFeather(itemStack, uses, flight, pushBack);
+            newSkyFeather = modifySkyFeather(itemStack, uses, radius, flight, pushBack);
             newSkyFeather.setAmount(1);
         }
 
@@ -248,18 +293,22 @@ public class SkyWarsComponent extends MinigameComponent {
         }, 1);
     }
 
-    private ItemStack makeSkyFeather(int uses, double flight, double pushBack) {
+    private ItemStack makeSkyFeather(int uses, double radius, double flight, double pushBack) {
 
-        return modifySkyFeather(new ItemStack(ItemID.FEATHER), uses, flight, pushBack);
+        return modifySkyFeather(new ItemStack(ItemID.FEATHER), uses, radius, flight, pushBack);
     }
 
-    private ItemStack modifySkyFeather(ItemStack skyFeather, int uses, double flight, double pushBack) {
+    private ItemStack modifySkyFeather(ItemStack skyFeather, int uses, double radius, double flight, double pushBack) {
         ItemMeta skyMeta = skyFeather.getItemMeta();
 
         String suffix;
 
         if (uses == -1) {
-            suffix = "Infinite";
+            if (flight == pushBack && flight > 2) {
+                suffix = "Doom";
+            } else {
+                suffix = "Infinite";
+            }
         } else {
             if (flight == pushBack) {
                 suffix = "Balance";
@@ -273,6 +322,7 @@ public class SkyWarsComponent extends MinigameComponent {
         skyMeta.setDisplayName(ChatColor.AQUA + "Sky Feather [" + suffix + "]");
         skyMeta.setLore(Arrays.asList(
                 ChatColor.GOLD + "Uses: " + (uses != -1 ? uses : "Infinite"),
+                ChatColor.GOLD + "Radius: " + radius,
                 ChatColor.GOLD + "Flight: " + flight,
                 ChatColor.GOLD + "Push Back: " + pushBack
         ));
@@ -288,6 +338,8 @@ public class SkyWarsComponent extends MinigameComponent {
         ChatUtil.sendNotice(players, ChatColor.GREEN + "The following flags are enabled: ");
 
         if (gameFlags.contains('q')) ChatUtil.sendNotice(players, ChatColor.GOLD, "Quick start");
+        if (gameFlags.contains('r')) ChatUtil.sendNotice(players, ChatColor.GOLD, "Regen enabled");
+        if (gameFlags.contains('c')) ChatUtil.sendNotice(players, ChatColor.GOLD, "Chicken++");
     }
 
     @Override
@@ -456,7 +508,7 @@ public class SkyWarsComponent extends MinigameComponent {
 
             for (int i = 0; i < playerState.size(); i++) {
 
-                if (!ChanceUtil.getChance(10)) continue;
+                if (!ChanceUtil.getChance(10) && !gameFlags.contains('c')) continue;
 
                 Chicken c = (Chicken) world.spawnEntity(
                         LocationUtil.pickLocation(world, region.getMaximumPoint().getY() - 10, region), EntityType.CHICKEN);
@@ -539,6 +591,18 @@ public class SkyWarsComponent extends MinigameComponent {
         }
 
         @EventHandler
+        public void onHealthRegain(EntityRegainHealthEvent event) {
+
+            if (event.getEntity() instanceof Player) {
+                Player player = (Player) event.getEntity();
+                if (getTeam(player) != -1) {
+                    if (gameFlags.contains('r')) return;
+                    event.setCancelled(true);
+                }
+            }
+        }
+
+        @EventHandler
         public void onClick(PlayerInteractEvent event) {
 
             final Player player = event.getPlayer();
@@ -546,105 +610,161 @@ public class SkyWarsComponent extends MinigameComponent {
 
             if (!isGameActive()) return;
 
-            if (getTeam(player) != -1 && ItemUtil.matchesFilter(stack, ChatColor.AQUA + "Sky Feather")) {
+            if (getTeam(player) != -1) {
                 SkyWarSession session = sessions.getSession(SkyWarSession.class, player);
-                Vector vel = player.getLocation().getDirection();
+                if (ItemUtil.matchesFilter(stack, ChatColor.AQUA + "Sky Feather")) {
 
-                int uses = -1;
-                double flight = 2;
-                double pushBack = 4;
+                    Vector vel = player.getLocation().getDirection();
 
-                if (stack.hasItemMeta() && stack.getItemMeta().hasLore()) {
-                    for (String line : stack.getItemMeta().getLore()) {
-                        String[] args = line.split(":");
-                        if (args.length < 2) continue;
+                    int uses = -1;
+                    double radius = 3;
+                    double flight = 2;
+                    double pushBack = 4;
 
-                        for (int i = 0; i < args.length; i++) {
-                            args[i] = args[i].trim();
-                        }
-                        if (args[0].endsWith("Uses")) {
-                            try {
-                                uses = Integer.parseInt(args[args.length - 1]);
-                            } catch (NumberFormatException ignored) {
+                    if (stack.hasItemMeta() && stack.getItemMeta().hasLore()) {
+                        for (String line : stack.getItemMeta().getLore()) {
+                            String[] args = line.split(":");
+                            if (args.length < 2) continue;
+
+                            for (int i = 0; i < args.length; i++) {
+                                args[i] = args[i].trim();
                             }
-                        }
-
-                        if (args[0].endsWith("Flight")) {
-                            try {
-                                flight = Double.parseDouble(args[args.length - 1]);
-                            } catch (NumberFormatException ignored) {
+                            if (args[0].endsWith("Uses")) {
+                                try {
+                                    uses = Integer.parseInt(args[args.length - 1]);
+                                } catch (NumberFormatException ignored) {
+                                }
                             }
-                        }
 
-                        if (args[0].endsWith("Push Back")) {
-                            try {
-                                pushBack = Double.parseDouble(args[args.length - 1]);
-                            } catch (NumberFormatException ignored) {
+                            if (args[0].endsWith("Radius")) {
+                                try {
+                                    radius = Double.parseDouble(args[args.length - 1]);
+                                } catch (NumberFormatException ignored) {
+                                }
+                            }
+
+                            if (args[0].endsWith("Flight")) {
+                                try {
+                                    flight = Double.parseDouble(args[args.length - 1]);
+                                } catch (NumberFormatException ignored) {
+                                }
+                            }
+
+                            if (args[0].endsWith("Push Back")) {
+                                try {
+                                    pushBack = Double.parseDouble(args[args.length - 1]);
+                                } catch (NumberFormatException ignored) {
+                                }
                             }
                         }
                     }
-                }
 
-                switch (event.getAction()) {
-                    case LEFT_CLICK_AIR:
+                    switch (event.getAction()) {
+                        case LEFT_CLICK_AIR:
 
-                        if (!session.canFly()) break;
+                            if (!session.canFly()) break;
 
-                        vel.multiply(flight);
+                            vel.multiply(flight);
 
-                        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
-                        player.setVelocity(vel);
+                            server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+                            player.setVelocity(vel);
 
-                        session.stopFlight(250);
+                            session.stopFlight(250);
 
-                        decrementUses(player, stack, uses, flight, pushBack);
-                        break;
-                    case RIGHT_CLICK_AIR:
+                            decrementUses(player, stack, uses, radius, flight, pushBack);
+                            break;
+                        case RIGHT_CLICK_AIR:
 
-                        if (!session.canPushBack()) break;
+                            if (!session.canPushBack()) break;
 
-                        vel.multiply(pushBack);
+                            vel.multiply(pushBack * 2);
 
-                        BlockIterator it = new BlockIterator(player, 50);
-                        Location k = new Location(null, 0, 0, 0);
+                            BlockIterator it = new BlockIterator(player, 50);
+                            Location k = new Location(null, 0, 0, 0);
 
-                        Entity[] targets = getContainedEntities(Chicken.class, Player.class);
+                            Entity[] targets = getContainedEntities(Chicken.class, Player.class);
 
-                        while (it.hasNext()) {
-                            Block block = it.next();
+                            while (it.hasNext()) {
+                                Block block = it.next();
 
-                            block.getWorld().playEffect(block.getLocation(k), Effect.MOBSPAWNER_FLAMES, 0);
+                                block.getWorld().playEffect(block.getLocation(k), Effect.MOBSPAWNER_FLAMES, 0);
 
-                            for (Entity aEntity : targets) {
-                                innerLoop:
-                                {
-                                    if (!aEntity.isValid() || aEntity.equals(player)) break innerLoop;
+                                for (Entity aEntity : targets) {
+                                    innerLoop:
+                                    {
+                                        if (!aEntity.isValid() || aEntity.equals(player)) break innerLoop;
 
-                                    if (aEntity.getLocation().distanceSquared(block.getLocation()) <= 12) {
-                                        if (aEntity instanceof Player) {
-                                            Player aPlayer = (Player) aEntity;
+                                        if (aEntity.getLocation().distanceSquared(block.getLocation()) <= Math.pow(radius, 2)) {
+                                            if (aEntity instanceof Player) {
+                                                Player aPlayer = (Player) aEntity;
 
-                                            if (isFriendlyFire(player, aPlayer)) break innerLoop;
+                                                if (isFriendlyFire(player, aPlayer)) break innerLoop;
 
-                                            // Handle Sender
-                                            session.stopPushBack(250);
-                                            ChatUtil.sendNotice(player, "You push back: " + aPlayer.getName() + "!");
+                                                // Handle Sender
+                                                session.stopPushBack(250);
+                                                ChatUtil.sendNotice(player, "You push back: " + aPlayer.getName() + "!");
 
-                                            // Handle Target
-                                            server.getPluginManager().callEvent(new ThrowPlayerEvent(aPlayer));
-                                            aPlayer.setVelocity(vel);
+                                                // Handle Target
+                                                server.getPluginManager().callEvent(new ThrowPlayerEvent(aPlayer));
+                                                aPlayer.setVelocity(vel);
 
-                                            sessions.getSession(SkyWarSession.class, aPlayer).stopFlight();
-                                        } else {
-                                            awardPowerup(player);
-                                            aEntity.remove();
+                                                sessions.getSession(SkyWarSession.class, aPlayer).stopFlight();
+                                            } else {
+                                                awardPowerup(player, stack);
+                                                aEntity.remove();
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        decrementUses(player, stack, uses, flight, pushBack);
-                        break;
+                            decrementUses(player, stack, uses, radius, flight, pushBack);
+                            break;
+                    }
+                } else if (ItemUtil.matchesFilter(stack, ChatColor.WHITE + "Book o' Omens")) {
+
+                    ChatUtil.sendNotice(player, "You used the Book o' Omens!");
+                    for (Player aPlayer : getContainedPlayers()) {
+                        if (player.equals(aPlayer)) continue;
+                        ChatUtil.sendWarning(aPlayer, player.getName() + " used the Book o' Omens!");
+                        launchPlayer(aPlayer, -1);
+
+                        sessions.getSession(SkyWarSession.class, aPlayer).stopFlight();
+                    }
+
+                    if (stack.getAmount() > 1) {
+                        stack.setAmount(stack.getAmount() - 1);
+                        //noinspection deprecation
+                        player.updateInventory();
+                    } else {
+                        server.getScheduler().runTaskLater(inst, new Runnable() {
+                            @Override
+                            public void run() {
+                                player.setItemInHand(null);
+                                //noinspection deprecation
+                                player.updateInventory();
+                            }
+                        }, 1);
+                    }
+                } else if (ItemUtil.matchesFilter(stack, ChatColor.GOLD + "Defroster")) {
+                    ChatUtil.sendNotice(player, "You used the Defroster!");
+
+                    session.stopFlight(0);
+                    session.stopPushBack(0);
+
+                    if (stack.getAmount() > 1) {
+                        stack.setAmount(stack.getAmount() - 1);
+                        //noinspection deprecation
+                        player.updateInventory();
+                    } else {
+                        server.getScheduler().runTaskLater(inst, new Runnable() {
+                            @Override
+                            public void run() {
+                                player.setItemInHand(null);
+                                //noinspection deprecation
+                                player.updateInventory();
+                            }
+                        }, 1);
+                    }
                 }
             }
         }
@@ -692,9 +812,12 @@ public class SkyWarsComponent extends MinigameComponent {
             Player attackingPlayer;
             if (attackingEntity instanceof Player) {
                 attackingPlayer = (Player) attackingEntity;
-            } else if (attackingEntity instanceof Arrow) {
-                if (!(((Arrow) attackingEntity).getShooter() instanceof Player)) return;
-                attackingPlayer = (Player) ((Arrow) attackingEntity).getShooter();
+            } else if (attackingEntity instanceof Projectile) {
+                if (attackingEntity instanceof Snowball) {
+                    sessions.getSession(SkyWarSession.class, defendingPlayer).stopFlight(5000);
+                }
+                if (!(((Projectile) attackingEntity).getShooter() instanceof Player)) return;
+                attackingPlayer = (Player) ((Projectile) attackingEntity).getShooter();
             } else {
                 return;
             }
