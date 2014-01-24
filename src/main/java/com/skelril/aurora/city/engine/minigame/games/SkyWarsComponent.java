@@ -22,7 +22,6 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
 import com.skelril.aurora.city.engine.minigame.MinigameComponent;
 import com.skelril.aurora.city.engine.minigame.PlayerGameState;
-import com.skelril.aurora.events.ServerShutdownEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.exceptions.UnknownPluginException;
@@ -583,12 +582,6 @@ public class SkyWarsComponent extends MinigameComponent {
                     event.setCancelled(true);
                 }
             }
-        }
-
-        @EventHandler
-        public void onShutDownEvent(ServerShutdownEvent event) {
-
-            end();
         }
 
         @EventHandler(ignoreCancelled = true)
