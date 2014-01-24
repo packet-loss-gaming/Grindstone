@@ -227,12 +227,19 @@ public class SkyWarsComponent extends MinigameComponent {
 
             if (ItemUtil.matchesFilter(held, ChatColor.AQUA + "Sky Feather [Doom]", false)) return;
 
-            int uses = ChanceUtil.getRandom(5) + 3;
+            int uses = 5;
             double radius = 3;
-            double flight = 1 + ChanceUtil.getRandom(5);
-            double pushBack = 3 + ChanceUtil.getRandom(3);
+            double flight = 2;
+            double pushBack = 4;
 
-            if (ChanceUtil.getChance(20)) {
+            if (ChanceUtil.getChance(2)) {
+                radius = 5;
+                pushBack = 6;
+            } else {
+                flight = 6;
+            }
+
+            if (ChanceUtil.getChance(50)) {
                 uses = -1;
                 radius = 7;
                 flight = 6;
@@ -708,7 +715,10 @@ public class SkyWarsComponent extends MinigameComponent {
                                                 server.getPluginManager().callEvent(new ThrowPlayerEvent(aPlayer));
                                                 aPlayer.setVelocity(vel);
 
-                                                sessions.getSession(SkyWarSession.class, aPlayer).stopFlight();
+                                                SkyWarSession aSession = sessions.getSession(SkyWarSession.class, aPlayer);
+                                                if (aSession.canDefrost()) {
+                                                    aSession.stopFlight();
+                                                }
                                             } else {
                                                 awardPowerup(player, stack);
                                                 aEntity.remove();
@@ -722,13 +732,22 @@ public class SkyWarsComponent extends MinigameComponent {
                     }
                 } else if (ItemUtil.matchesFilter(stack, ChatColor.WHITE + "Book o' Omens")) {
 
+                    if (!session.canUseOmen()) return;
+
                     ChatUtil.sendNotice(player, "You used the Book o' Omens!");
+
+                    session.stopOmen();
+
                     for (Player aPlayer : getContainedPlayers()) {
                         if (player.equals(aPlayer)) continue;
                         ChatUtil.sendWarning(aPlayer, player.getName() + " used the Book o' Omens!");
+                        if (isFriendlyFire(player, aPlayer)) continue;
                         launchPlayer(aPlayer, -1);
 
-                        sessions.getSession(SkyWarSession.class, aPlayer).stopFlight();
+                        SkyWarSession aSession = sessions.getSession(SkyWarSession.class, aPlayer);
+                        if (aSession.canDefrost()) {
+                            aSession.stopFlight();
+                        }
                     }
 
                     if (stack.getAmount() > 1) {
@@ -746,8 +765,12 @@ public class SkyWarsComponent extends MinigameComponent {
                         }, 1);
                     }
                 } else if (ItemUtil.matchesFilter(stack, ChatColor.GOLD + "Defroster")) {
+
+                    if (!session.canDefrost()) return;
+
                     ChatUtil.sendNotice(player, "You used the Defroster!");
 
+                    session.stopDefrost();
                     session.stopFlight(0);
                     session.stopPushBack(0);
 
@@ -813,9 +836,6 @@ public class SkyWarsComponent extends MinigameComponent {
             if (attackingEntity instanceof Player) {
                 attackingPlayer = (Player) attackingEntity;
             } else if (attackingEntity instanceof Projectile) {
-                if (attackingEntity instanceof Snowball) {
-                    sessions.getSession(SkyWarSession.class, defendingPlayer).stopFlight(5000);
-                }
                 if (!(((Projectile) attackingEntity).getShooter() instanceof Player)) return;
                 attackingPlayer = (Player) ((Projectile) attackingEntity).getShooter();
             } else {
@@ -838,6 +858,9 @@ public class SkyWarsComponent extends MinigameComponent {
                 event.setCancelled(true);
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
             } else {
+                if (attackingEntity instanceof Snowball) {
+                    sessions.getSession(SkyWarSession.class, defendingPlayer).stopFlight(5000);
+                }
                 ChatUtil.sendNotice(attackingPlayer, "You've hit " + defendingPlayer.getName() + "!");
             }
         }
@@ -975,6 +998,8 @@ public class SkyWarsComponent extends MinigameComponent {
 
         private long nextFlight = 0;
         private long nextPushBack = 0;
+        private long nextOmen = 0;
+        private long nextDefrost = 0;
 
         protected SkyWarSession() {
 
@@ -1009,6 +1034,36 @@ public class SkyWarsComponent extends MinigameComponent {
         public void stopPushBack(long time) {
 
             nextPushBack = System.currentTimeMillis() + time;
+        }
+
+        public boolean canUseOmen() {
+
+            return nextOmen == 0 || System.currentTimeMillis() >= nextOmen;
+        }
+
+        public void stopOmen() {
+
+            stopOmen(1000);
+        }
+
+        public void stopOmen(long time) {
+
+            nextOmen = System.currentTimeMillis() + time;
+        }
+
+        public boolean canDefrost() {
+
+            return nextDefrost == 0 || System.currentTimeMillis() >= nextDefrost;
+        }
+
+        public void stopDefrost() {
+
+            stopDefrost(1000);
+        }
+
+        public void stopDefrost(long time) {
+
+            nextDefrost = System.currentTimeMillis() + time;
         }
 
         public Player getPlayer() {
