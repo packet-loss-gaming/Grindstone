@@ -778,7 +778,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         if (contains(event.getEntity()) && players.contains(playerName)) {
             double amt = Math.min(economy.getBalance(playerName), Math.max(5000, economy.getBalance(playerName) * .005));
             economy.withdrawPlayer(playerName, amt);
-            ChatUtil.sendWarning(event.getEntity(), "You are forced to pay a fine of: " + economy.format(amt) + ' ' + economy.currencyNamePlural() + '.');
+            ChatUtil.sendWarning(event.getEntity(), "You are forced to pay a fine of: " + economy.format(amt) + '.');
             players.remove(playerName);
             String deathMessage;
             switch (ChanceUtil.getRandom(6)) {

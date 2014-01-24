@@ -222,10 +222,10 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
 
         if (bet != 1) {
             ChatUtil.sendNotice(player, "You deposit: "
-                    + ChatUtil.makeCountString(economy.format(bet), " " + economy.currencyNamePlural() + "."));
+                    + ChatUtil.makeCountString(economy.format(bet), "."));
         } else {
             ChatUtil.sendNotice(player, "You deposit: "
-                    + ChatUtil.makeCountString(economy.format(bet), " " + economy.currencyNameSingular() + "."));
+                    + ChatUtil.makeCountString(economy.format(bet), "."));
         }
 
         ChatUtil.sendNotice(player, "Jack pot on: " + jackPotChar + ".");
@@ -236,8 +236,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
             economy.depositPlayer(player.getName(), loot);
             if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot * config.operatorLossScale);
             ChatUtil.sendNotice(player, ChatColor.GOLD, "Jackpot!");
-            ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot),
-                    " " + economy.currencyNamePlural() + "."));
+            ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot), "."));
         } else {
             bet = bet - (bet * config.slotPaybackRate);
             profit += bet;
@@ -255,18 +254,17 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
 
         if (bet != 1) {
             ChatUtil.sendNotice(player, "You deposit: "
-                    + ChatUtil.makeCountString(economy.format(bet), " " + economy.currencyNamePlural() + "."));
+                    + ChatUtil.makeCountString(economy.format(bet), "."));
         } else {
             ChatUtil.sendNotice(player, "You deposit: "
-                    + ChatUtil.makeCountString(economy.format(bet), " " + economy.currencyNameSingular() + "."));
+                    + ChatUtil.makeCountString(economy.format(bet), "."));
         }
 
         if (ChanceUtil.getChance(18, 37) && (config.minProfit == -1 || profit > 0)) {
             profit -= loot;
             economy.depositPlayer(player.getName(), loot);
             if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot * config.operatorLossScale);
-            ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot),
-                    " " + economy.currencyNamePlural() + "."));
+            ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot), "."));
         } else {
             profit += bet;
             economy.withdrawPlayer(player.getName(), bet);
@@ -293,10 +291,10 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
 
         if (bet != 1) {
             ChatUtil.sendNotice(player, "You deposit: "
-                    + ChatUtil.makeCountString(economy.format(bet), " " + economy.currencyNamePlural() + "."));
+                    + ChatUtil.makeCountString(economy.format(bet), "."));
         } else {
             ChatUtil.sendNotice(player, "You deposit: "
-                    + ChatUtil.makeCountString(economy.format(bet), " " + economy.currencyNameSingular() + "."));
+                    + ChatUtil.makeCountString(economy.format(bet), "."));
         }
 
         ChatUtil.sendNotice(player, "The dice roll: " + ChatUtil.makeCountString(roll, "."));
@@ -308,8 +306,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
             profit -= loot;
             economy.depositPlayer(player.getName(), loot);
             if (!operatorIsInf(operator)) economy.withdrawPlayer(operator, loot * config.operatorLossScale);
-            ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot),
-                    " " + economy.currencyNamePlural() + "."));
+            ChatUtil.sendNotice(player, "You won: " + ChatUtil.makeCountString(economy.format(loot), "."));
         } else {
             profit += bet;
             economy.withdrawPlayer(player.getName(), bet);

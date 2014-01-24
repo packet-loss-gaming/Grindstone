@@ -306,13 +306,11 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         if (sold * config.ticketPrice != 1) {
             ChatUtil.sendNotice(player, "You purchased: "
                     + ChatUtil.makeCountString(sold, " tickets for: ")
-                    + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice),
-                    " " + economy.currencyNamePlural() + "."));
+                    + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice), "."));
         } else {
             ChatUtil.sendNotice(player, "You purchased: "
                     + ChatUtil.makeCountString(sold, " tickets for: ")
-                    + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice),
-                    " " + economy.currencyNameSingular() + "."));
+                    + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice), "."));
         }
         recentList.add(player);
         server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
@@ -342,8 +340,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         }
         economy.depositPlayer(name, cash);
         Bukkit.broadcastMessage(ChatColor.YELLOW + name + " has won: " +
-                ChatUtil.makeCountString(economy.format(cash),
-                        " " + economy.currencyNamePlural() + " via the lottery!"));
+                ChatUtil.makeCountString(economy.format(cash), " via the lottery!"));
 
         lotteryWinnerDatabase.addWinner(name + ChatColor.GOLD + " - " + ChatColor.WHITE + economy.format(cash));
         lotteryWinnerDatabase.save(config.recentLength);
@@ -357,7 +354,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
             ChatUtil.sendNotice(receiver, "The lottery currently has: "
                     + ChatUtil.makeCountString(getCount(), " tickets and is worth: ")
                     + ChatUtil.makeCountString(economy.format(getWinnerCash()),
-                    " " + economy.currencyNamePlural() + "."));
+                    "."));
         }
     }
 

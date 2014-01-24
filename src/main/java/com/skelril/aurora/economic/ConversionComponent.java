@@ -116,12 +116,10 @@ public class ConversionComponent extends BukkitComponent implements Listener {
                     economy.depositPlayer(player.getName(), amount - flexAmount);
                     if (amount - flexAmount != 1) {
                         ChatUtil.sendNotice(player, "You deposited: "
-                                + ChatUtil.makeCountString(economy.format(amount - flexAmount),
-                                " " + economy.currencyNamePlural() + "."));
+                                + ChatUtil.makeCountString(economy.format(amount - flexAmount), "."));
                     } else {
                         ChatUtil.sendNotice(player, "You deposited: "
-                                + ChatUtil.makeCountString(economy.format(amount - flexAmount),
-                                " " + economy.currencyNameSingular() + "."));
+                                + ChatUtil.makeCountString(economy.format(amount - flexAmount), "."));
                     }
 
                 } catch (NumberFormatException ignored) {
@@ -173,12 +171,10 @@ public class ConversionComponent extends BukkitComponent implements Listener {
                     economy.withdrawPlayer(player.getName(), amount - flexAmount);
                     if (amount - flexAmount != 1) {
                         ChatUtil.sendNotice(player, "You withdrew: "
-                                + ChatUtil.makeCountString(economy.format(amount - flexAmount),
-                                " " + economy.currencyNamePlural() + "."));
+                                + ChatUtil.makeCountString(economy.format(amount - flexAmount), "."));
                     } else {
                         ChatUtil.sendNotice(player, "You withdrew: "
-                                + ChatUtil.makeCountString(economy.format(amount - flexAmount),
-                                " " + economy.currencyNameSingular() + "."));
+                                + ChatUtil.makeCountString(economy.format(amount - flexAmount), "."));
                     }
 
                 } catch (NumberFormatException ignored) {

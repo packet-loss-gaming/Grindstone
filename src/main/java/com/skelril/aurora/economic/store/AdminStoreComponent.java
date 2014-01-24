@@ -160,10 +160,10 @@ public class AdminStoreComponent extends BukkitComponent {
             // Charge the money and send the sender some feedback
             econ.withdrawPlayer(playerName, price - rebate);
             itemStoreDatabase.logTransaction(playerName, itemName, amt);
-            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), " " + econ.currencyNamePlural());
+            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), "");
             ChatUtil.sendNotice(sender, "Item(s) purchased for " + priceString + "!");
             if (rebate != 0) {
-                String rebateString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(rebate), " " + econ.currencyNamePlural());
+                String rebateString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(rebate), "");
                 ChatUtil.sendNotice(sender, "You get " + rebateString + " back.");
             }
         }
@@ -301,7 +301,7 @@ public class AdminStoreComponent extends BukkitComponent {
             econ.depositPlayer(playerName, payment);
             player.getInventory().setContents(itemStacks);
 
-            String paymentString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(payment), " " + econ.currencyNamePlural());
+            String paymentString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(payment), "");
             ChatUtil.sendNotice(player, "Item(s) sold for: " + paymentString + "!");
         }
 
@@ -407,8 +407,8 @@ public class AdminStoreComponent extends BukkitComponent {
             ChatColor color = itemPricePair.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
             double paymentPrice = itemPricePair.getSellPrice() * percentageSale;
 
-            String purchasePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getPrice()), " " + econ.currencyNamePlural());
-            String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), " " + econ.currencyNamePlural());
+            String purchasePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getPrice()), "");
+            String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), "");
             ChatUtil.sendNotice(sender, ChatColor.GOLD, "Price Information for: " + color + itemName.toUpperCase());
 
             // Purchase Information
@@ -423,7 +423,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 ChatUtil.sendNotice(sender, "When you sell it you get:");
                 ChatUtil.sendNotice(sender, " - " + sellPrice + " each.");
                 if (percentageSale != 1.0) {
-                    sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getSellPrice()), " " + econ.currencyNamePlural());
+                    sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getSellPrice()), "");
                     ChatUtil.sendNotice(sender, " - " + sellPrice + " each when new.");
                 }
             } else {
@@ -495,7 +495,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
             // Notification
             String noticeString = oldItem == null ? " added with a price of " : " is now ";
-            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), " " + econ.currencyNamePlural());
+            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), " ");
             ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName.toUpperCase() + ChatColor.YELLOW + noticeString + priceString + "!");
             if (disableBuy) {
                 ChatUtil.sendNotice(sender, " - It cannot be purchased.");

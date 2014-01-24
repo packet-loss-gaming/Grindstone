@@ -287,8 +287,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 throw new CommandException("This house cannot currently be bought.");
             }
 
-            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW,
-                    econ.format(price), " " + econ.currencyNamePlural());
+            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), "");
             ChatUtil.sendNotice(player, "This property is worth: " + priceString + ".");
 
             // If they have used the flag y proceed to buy the house
@@ -339,8 +338,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 throw new CommandException("Your house cannot currently be sold.");
             }
 
-            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW,
-                    econ.format(price), " " + econ.currencyNamePlural());
+            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), "");
             ChatUtil.sendNotice(player, "Your home is worth: " + priceString + ".");
 
             // If they have used the flag y proceed to sell the house
@@ -480,7 +478,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
             double p1 = size <= 4 ? size * 75 : (size * 200) + (size * (size / 2) * 200);
 
-            String chunkPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p1), " " + econ.currencyNamePlural());
+            String chunkPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p1), "");
             ChatUtil.sendNotice(target, "Chunk Price: " + chunkPrice + ".");
 
             // Block Price
@@ -517,18 +515,18 @@ public class HomeManagerComponent extends BukkitComponent {
                 }
             }
 
-            String housePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p2), " " + econ.currencyNamePlural());
+            String housePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(p2), "");
             ChatUtil.sendNotice(target, "Block Price: " + housePrice + ".");
 
             double total = p1 + p2;
             if (args.hasFlag('c')) {
-                String commission = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total * .1), " " + econ.currencyNamePlural());
+                String commission = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total * .1), "");
 
                 ChatUtil.sendNotice(target, "Commission change: " + commission);
                 total *= 1.1;
             }
 
-            String totalPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total), " " + econ.currencyNamePlural());
+            String totalPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(total), "");
             ChatUtil.sendNotice(target, "Total Price: " + totalPrice + ".");
         }
 
