@@ -141,8 +141,35 @@ public class SkyWarsComponent extends MinigameComponent {
 
         ItemStack[] leatherArmour = ItemUtil.leatherArmour;
         Color color = Color.WHITE;
-        if (teamNumber == 2) color = Color.RED;
-        else if (teamNumber == 1) color = Color.BLUE;
+        switch (teamNumber) {
+            case 1:
+                color = Color.BLUE;
+                break;
+            case 2:
+                color = Color.RED;
+                break;
+            case 3:
+                color = Color.GREEN;
+                break;
+            case 4:
+                color = Color.ORANGE;
+                break;
+            case 5:
+                color = Color.MAROON;
+                break;
+            case 6:
+                color = Color.PURPLE;
+                break;
+            case 7:
+                color = Color.GRAY;
+                break;
+            case 8:
+                color = Color.YELLOW;
+                break;
+            case 9:
+                color = Color.BLACK;
+                break;
+        }
 
         LeatherArmorMeta helmMeta = (LeatherArmorMeta) leatherArmour[3].getItemMeta();
         helmMeta.setDisplayName(ChatColor.WHITE + "Sky Hood");
@@ -175,7 +202,6 @@ public class SkyWarsComponent extends MinigameComponent {
         if (player.getVehicle() != null) {
             player.getVehicle().eject();
         }
-        player.sendMessage(ChatColor.YELLOW + "You have joined the Sky War.");
         return player.teleport(battleLoc);
     }
 
@@ -477,6 +503,7 @@ public class SkyWarsComponent extends MinigameComponent {
     public void run() {
 
         try {
+            if (!isGameInitialised() && !queue.isEmpty()) processQueue();
             if (playerState.size() == 0 && !isGameInitialised()) return;
 
             // Damage players & kill missing players
@@ -852,7 +879,10 @@ public class SkyWarsComponent extends MinigameComponent {
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
             } else {
                 if (attackingEntity instanceof Snowball) {
-                    sessions.getSession(SkyWarSession.class, defendingPlayer).stopFlight(5000);
+                    SkyWarSession session = sessions.getSession(SkyWarSession.class, defendingPlayer);
+                    session.stopFlight(3000 + (1000 * ChanceUtil.getRandom(5)));
+                    session.stopDefrost(15000);
+
                 }
                 ChatUtil.sendNotice(attackingPlayer, "You've hit " + defendingPlayer.getName() + "!");
             }

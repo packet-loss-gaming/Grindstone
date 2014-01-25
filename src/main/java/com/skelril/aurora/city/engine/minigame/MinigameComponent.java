@@ -9,6 +9,7 @@ import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.player.GeneralPlayerUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -35,6 +36,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     protected final String workingDir;
 
     protected GameProgress progress = GameProgress.DONE;
+    protected ConcurrentHashMap<String, GameQueueProperty> queue = new ConcurrentHashMap<>();
     protected ConcurrentHashMap<String, PlayerGameState> playerState = new ConcurrentHashMap<>();
     protected ConcurrentHashMap<String, PlayerGameState> goneState = new ConcurrentHashMap<>();
     protected Set<Character> gameFlags = new HashSet<>();
@@ -115,6 +117,30 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         progress = GameProgress.DONE;
     }
 
+    public void processQueue() {
+
+        Iterator<GameQueueProperty> names = queue.values().iterator();
+        while (names.hasNext()) {
+            GameQueueProperty properties = names.next();
+            Player player = Bukkit.getPlayerExact(properties.name);
+
+            if (player == null) {
+                names.remove();
+                continue;
+            }
+
+            if (!player.isValid() || getTeam(player) != -1) {
+                continue;
+            }
+
+            if (!properties.flags.contains('Q')) {
+                names.remove();
+            }
+
+            addToTeam(player, properties.team, properties.flags);
+        }
+    }
+
     public boolean isGameInitialised() {
 
         return progress.level > 0;
@@ -128,6 +154,17 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     public abstract Player[] getContainedPlayers();
 
     // Team Methods
+    public boolean enqueue(Player player, int team, Set<Character> flags) {
+
+        queue.put(player.getName(), new GameQueueProperty(player.getName(), team, flags));
+        return true;
+    }
+
+    public void dequeue(Player player) {
+
+        queue.remove(player.getName());
+    }
+
     public boolean addToTeam(Player player, int team, Set<Character> flags) {
 
         PlayerState state = GeneralPlayerUtil.makeComplexState(player);
@@ -312,10 +349,11 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         Player targetPlayer = (Player) sender;
 
         int teamNumber;
+        boolean useQueue = args.hasFlag('q') || args.hasFlag('Q');
 
         if (args.argsLength() <= 1) {
             inst.checkPermission(sender, "aurora." + name + ".self.join");
-            if (isGameInitialised()) {
+            if (isGameInitialised() && !useQueue) {
                 throw new CommandException("You cannot add players while a " + casualName + " is active!");
             } else if (getTeam(targetPlayer) != -1) {
                 throw new CommandException("You are already in a " + casualName + "!");
@@ -326,7 +364,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         } else {
             targetPlayer = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
             inst.checkPermission(sender, targetPlayer.getWorld(), "aurora." + name + ".other.join");
-            if (isGameInitialised()) {
+            if (isGameInitialised() && !useQueue) {
                 throw new CommandException("You cannot add players while a " + casualName + " is active!");
             } else if (getTeam(targetPlayer) != -1) {
                 throw new CommandException("That player is already in a " + casualName + "!");
@@ -338,9 +376,24 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
 
         checkTeam(teamNumber);
 
+        if (useQueue) {
+            enqueue(targetPlayer, teamNumber, args.getFlags());
+            ChatUtil.sendNotice(targetPlayer, "You have been added to the " + casualName + " queue.");
+            if (!targetPlayer.equals(sender)) {
+                ChatUtil.sendNotice(sender, targetPlayer.getName() + " has been added to the "
+                        + casualName + " queue.");
+            }
+            if (isGameInitialised()) return;
+        }
+
         if (!addToTeam(targetPlayer, teamNumber, args.getFlags())) {
             removeFromTeam(targetPlayer, true);
             throw new CommandException("That player couldn't be added to the " + casualName + "!");
+        }
+
+        ChatUtil.sendNotice(targetPlayer, "You have joined the " + casualName + ".");
+        if (!targetPlayer.equals(sender)) {
+            ChatUtil.sendNotice(sender, targetPlayer.getName() + " has joined the " + casualName + ".");
         }
 
         Player[] containedPlayers = getContainedPlayers();
@@ -371,7 +424,13 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
             throw new CommandException("That player is not currently in a " + casualName + ".");
         }
 
+        dequeue(targetPlayer);
         removeFromTeam(targetPlayer, false);
+
+        ChatUtil.sendNotice(targetPlayer, "You have left the " + casualName + ".");
+        if (!targetPlayer.equals(sender)) {
+            ChatUtil.sendNotice(sender, targetPlayer.getName() + " has left the " + casualName + ".");
+        }
 
         for (Player player : getContainedPlayers()) {
             if (!player.isValid() || targetPlayer.equals(player)) continue;

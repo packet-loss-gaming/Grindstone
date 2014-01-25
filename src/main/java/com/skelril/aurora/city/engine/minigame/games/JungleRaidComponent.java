@@ -244,7 +244,6 @@ public class JungleRaidComponent extends MinigameComponent {
         } catch (UnsupportedPrayerException e) {
             e.printStackTrace();
         }
-        player.sendMessage(ChatColor.YELLOW + "You have joined the Jungle Raid.");
         return player.teleport(battleLoc);
     }
 
@@ -501,6 +500,7 @@ public class JungleRaidComponent extends MinigameComponent {
     public void run() {
 
         try {
+            if (!isGameInitialised() && !queue.isEmpty()) processQueue();
             if (playerState.size() == 0 && !isGameInitialised()) return;
 
             if (isGameInitialised()) {
