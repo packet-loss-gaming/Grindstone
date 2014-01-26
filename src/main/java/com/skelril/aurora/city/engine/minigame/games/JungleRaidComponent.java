@@ -62,8 +62,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockDamageEvent;
+import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
@@ -102,6 +102,7 @@ public class JungleRaidComponent extends MinigameComponent {
     private static Economy economy = null;
     private static final double BASE_AMT = 1.2;
     private short attempts = 0;
+    private Location[] teamSpawns;
     private List<BukkitTask> restorationTask = new ArrayList<>();
 
     private long start = 0;
@@ -119,6 +120,7 @@ public class JungleRaidComponent extends MinigameComponent {
 
     public JungleRaidComponent() {
         super("Jungle Raid", "jr", 3);
+        teamSpawns = new Location[MAX_TEAMS - 1];
     }
 
     private Prayer[] getPrayers(Player player) throws UnsupportedPrayerException {
@@ -136,6 +138,7 @@ public class JungleRaidComponent extends MinigameComponent {
     private static final ItemStack shears = new ItemStack(ItemID.SHEARS);
     private static final ItemStack axe = new ItemStack(ItemID.IRON_AXE);
     private static final ItemStack steak = new ItemStack(ItemID.COOKED_BEEF, 64);
+    private static final ItemStack compass = new ItemStack(ItemID.COMPASS);
     private static final ItemStack arrows = new ItemStack(ItemID.ARROW, 64);
 
     @Override
@@ -202,6 +205,7 @@ public class JungleRaidComponent extends MinigameComponent {
         gear.add(shears.clone());
         gear.add(axe.clone());
         gear.add(steak.clone());
+        gear.add(compass.clone());
         for (int i = 0; i < 2; i++) gear.add(arrows.clone());
 
         player.getInventory().addItem(gear.toArray(new ItemStack[gear.size()]));
@@ -233,7 +237,19 @@ public class JungleRaidComponent extends MinigameComponent {
 
         playerInventory.setArmorContents(leatherArmour);
 
-        Location battleLoc = new Location(Bukkit.getWorld(config.worldName), config.x, config.y, config.z);
+        // Gets a player a nice random location of entry
+        Location battleLoc = null;
+        if (teamNumber > 0) {
+            battleLoc = teamSpawns[teamNumber - 1].clone();
+        }
+
+        while (battleLoc == null || !contains(battleLoc) || battleLoc.getBlock().getTypeId() != BlockID.AIR) {
+            battleLoc = LocationUtil.findFreePosition(LocationUtil.pickLocation(world, 75, region));
+        }
+
+        if (teamNumber > 0) {
+            teamSpawns[teamNumber - 1] = battleLoc;
+        }
 
         if (player.getVehicle() != null) {
             player.getVehicle().eject();
@@ -478,6 +494,10 @@ public class JungleRaidComponent extends MinigameComponent {
         super.end();
 
         restore();
+
+        for (int i = 0; i < teamSpawns.length; i++) {
+            teamSpawns[i] = null;
+        }
     }
 
     @Override
@@ -913,6 +933,44 @@ public class JungleRaidComponent extends MinigameComponent {
             if (getTeam(event.getPlayer()) != -1 && !isGameActive()) event.setCancelled(true);
         }
 
+        @EventHandler
+        public void onClick(PlayerInteractEvent event) {
+
+            final Player player = event.getPlayer();
+            ItemStack stack = player.getItemInHand();
+
+            if (!isGameActive()) return;
+
+            if (getTeam(player) != -1) {
+                if (stack != null && stack.getTypeId() == ItemID.COMPASS) {
+                    Set<String> resultSet = new HashSet<>();
+                    for (PlayerGameState state : playerState.values()) {
+
+                        Player aPlayer = Bukkit.getPlayerExact(state.getOwnerName());
+
+                        // Check validity
+                        if (aPlayer == null || !player.isValid() || player.equals(aPlayer)) continue;
+
+                        // Check team
+                        if (isFriendlyFire(player, aPlayer)) continue;
+
+                        ChatColor color = player.hasLineOfSight(aPlayer) ? ChatColor.DARK_RED : ChatColor.RED;
+
+                        resultSet.add(color + aPlayer.getName() + " - " + player.getLocation().distance(aPlayer.getLocation()));
+                    }
+
+                    if (resultSet.isEmpty()) {
+                        ChatUtil.sendNotice(player, "No players found.");
+                    }
+
+                    ChatUtil.sendNotice(player, "Player - Distance");
+                    for (String string : resultSet) {
+                        ChatUtil.sendNotice(player, string);
+                    }
+                }
+            }
+        }
+
         @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
         public void onEntityDamageEvent(EntityDamageEvent event) {
 
@@ -951,10 +1009,11 @@ public class JungleRaidComponent extends MinigameComponent {
                             server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
                             server.getPluginManager().callEvent(new FallBlockerEvent(player));
                             if (ChanceUtil.getChance(2) || gameFlags.contains('j')) {
-                                player.setVelocity(new org.bukkit.util.Vector(
-                                        random.nextDouble() * 2.0 - 1.5,
-                                        random.nextDouble() * 2,
-                                        random.nextDouble() * 2.0 - 1.5).add(player.getVelocity()));
+                                org.bukkit.util.Vector v = player.getLocation().getDirection();
+                                v.setY(0);
+                                v.setX(v.getX() > 0 ? -.5 : .5);
+                                v.setZ(v.getZ() > 0 ? -.5 : .5);
+                                player.setVelocity(new org.bukkit.util.Vector(0, .1, 0).multiply(event.getDamage()).add(v));
                             }
                             event.setCancelled(true);
                         }
@@ -1012,8 +1071,7 @@ public class JungleRaidComponent extends MinigameComponent {
                 }
 
                 if (gameFlags.contains('d')) {
-                    double m = defendingPlayer.getMaxHealth();
-                    event.setDamage(m * m * m);
+                    event.setDamage(Math.pow(defendingPlayer.getMaxHealth(), 3));
                     ChatUtil.sendNotice(attackingPlayer, "You've killed " + defendingPlayer.getName() + "!");
                 } else {
                     ChatUtil.sendNotice(attackingPlayer, "You've hit " + defendingPlayer.getName() + "!");
@@ -1191,11 +1249,17 @@ public class JungleRaidComponent extends MinigameComponent {
         }
 
         @EventHandler
-        public void onFireSpread(BlockBurnEvent event) {
+        public void onFireSpread(BlockIgniteEvent event) {
 
             Location l = event.getBlock().getLocation();
 
-            if (contains(l) && (progress == GameProgress.DONE || gameFlags.contains('f'))) event.setCancelled(true);
+            if (contains(l) && (progress == GameProgress.DONE || gameFlags.contains('f'))) {
+                switch (event.getCause()) {
+                    case SPREAD:
+                        event.setCancelled(true);
+                        break;
+                }
+            }
         }
 
         @EventHandler
