@@ -20,6 +20,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.skelril.aurora.util.item.ItemUtil.CustomItems.*;
 
@@ -916,6 +918,23 @@ public class ItemUtil {
     public static boolean hasForgeBook(Player player) {
 
         return player.isValid() && hasForgeBook(player.getItemInHand());
+    }
+
+    public static Map<String, String> getItemTags(ItemStack item) {
+
+        if (item == null || !item.hasItemMeta() || !item.getItemMeta().hasLore()) return null;
+
+        Map<String, String> tags = new HashMap<>();
+        for (String line : item.getItemMeta().getLore()) {
+            String[] args = line.split(":");
+            if (args.length < 2) continue;
+
+            for (int i = 0; i < args.length; i++) {
+                args[i] = args[i].trim();
+            }
+            tags.put(args[0], args[args.length - 1]);
+        }
+        return tags;
     }
 
     public static boolean hasForgeBook(ItemStack item) {

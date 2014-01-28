@@ -51,7 +51,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
-import net.h31ix.anticheat.manage.CheckType;
+import net.gravitydevelopment.anticheat.check.CheckType;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;

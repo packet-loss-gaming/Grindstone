@@ -10,8 +10,8 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import net.h31ix.anticheat.api.AnticheatAPI;
-import net.h31ix.anticheat.manage.CheckType;
+import net.gravitydevelopment.anticheat.api.AntiCheatAPI;
+import net.gravitydevelopment.anticheat.check.CheckType;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -83,12 +83,12 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
 
     public void exempt(Player player, CheckType checkType) {
 
-        AnticheatAPI.exemptPlayer(player, checkType);
+        AntiCheatAPI.exemptPlayer(player, checkType);
     }
 
     public void unexempt(Player player, CheckType checkType) {
 
-        AnticheatAPI.unexemptPlayer(player, checkType);
+        AntiCheatAPI.unexemptPlayer(player, checkType);
     }
 
     public void bypass(Player player, CheckType[] checkTypes) {
@@ -98,7 +98,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
         else hashMap = new ConcurrentHashMap<>();
 
         for (CheckType checkType : checkTypes) {
-            if (AnticheatAPI.isExempt(player, checkType) && !hashMap.containsKey(checkType)) continue;
+            if (AntiCheatAPI.isExempt(player, checkType) && !hashMap.containsKey(checkType)) continue;
             hashMap.put(checkType, System.currentTimeMillis());
             exempt(player, checkType);
         }
@@ -111,14 +111,15 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
         Player player = event.getPlayer();
         if (playerList.containsKey(player.getName())) {
             for (Map.Entry<CheckType, Long> e : playerList.get(player.getName()).entrySet()) {
-                AnticheatAPI.unexemptPlayer(player, e.getKey());
+                AntiCheatAPI.unexemptPlayer(player, e.getKey());
             }
             playerList.remove(player.getName());
         }
     }
 
     private static final CheckType[] playerThrowCheckTypes = new CheckType[]{
-            CheckType.FLY, CheckType.ZOMBE_FLY, CheckType.SPEED, CheckType.SNEAK, CheckType.SPIDER
+            CheckType.FLY, CheckType.ZOMBE_FLY, CheckType.SPEED, CheckType.SNEAK, CheckType.SPIDER,
+            CheckType.WATER_WALK
     };
     private static final CheckType[] fallBlockerCheckTypes = new CheckType[]{CheckType.NOFALL};
     private static final CheckType[] rapidHitCheckTypes = new CheckType[]{

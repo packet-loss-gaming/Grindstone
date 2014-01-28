@@ -57,10 +57,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -648,41 +645,39 @@ public class SkyWarsComponent extends MinigameComponent {
                     double flight = 2;
                     double pushBack = 4;
 
-                    if (stack.hasItemMeta() && stack.getItemMeta().hasLore()) {
-                        for (String line : stack.getItemMeta().getLore()) {
-                            String[] args = line.split(":");
-                            if (args.length < 2) continue;
+                    Map<String, String> map = ItemUtil.getItemTags(stack);
 
-                            for (int i = 0; i < args.length; i++) {
-                                args[i] = args[i].trim();
-                            }
-                            if (args[0].endsWith("Uses")) {
-                                try {
-                                    uses = Integer.parseInt(args[args.length - 1]);
-                                } catch (NumberFormatException ignored) {
-                                }
-                            }
+                    String currentValue;
 
-                            if (args[0].endsWith("Radius")) {
-                                try {
-                                    radius = Double.parseDouble(args[args.length - 1]);
-                                } catch (NumberFormatException ignored) {
-                                }
-                            }
+                    currentValue = map.get(ChatColor.GOLD + "Uses");
+                    if (currentValue != null) {
+                        try {
+                            uses = Integer.parseInt(currentValue);
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
 
-                            if (args[0].endsWith("Flight")) {
-                                try {
-                                    flight = Double.parseDouble(args[args.length - 1]);
-                                } catch (NumberFormatException ignored) {
-                                }
-                            }
+                    currentValue = map.get(ChatColor.GOLD + "Radius");
+                    if (currentValue != null) {
+                        try {
+                            radius = Double.parseDouble(currentValue);
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
 
-                            if (args[0].endsWith("Push Back")) {
-                                try {
-                                    pushBack = Double.parseDouble(args[args.length - 1]);
-                                } catch (NumberFormatException ignored) {
-                                }
-                            }
+                    currentValue = map.get(ChatColor.GOLD + "Flight");
+                    if (currentValue != null) {
+                        try {
+                            flight = Double.parseDouble(currentValue);
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+
+                    currentValue = map.get(ChatColor.GOLD + "Push Back");
+                    if (currentValue != null) {
+                        try {
+                            pushBack = Double.parseDouble(currentValue);
+                        } catch (NumberFormatException ignored) {
                         }
                     }
 

@@ -40,11 +40,8 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import net.h31ix.anticheat.manage.CheckType;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import net.gravitydevelopment.anticheat.check.CheckType;
+import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -346,18 +343,14 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 targetItem = owner.getItemInHand();
             }
 
-            if (targetItem != null) {
-                if (targetItem.hasItemMeta() && targetItem.getItemMeta().hasLore()) {
-                    for (String line : targetItem.getItemMeta().getLore()) {
-                        String[] args = line.split(":");
-                        if (args.length < 2) continue;
+            Map<String, String> map = ItemUtil.getItemTags(targetItem);
 
-                        if (args[0].endsWith("Damage Modifier")) {
-                            try {
-                                modifier = Double.parseDouble(args[args.length - 1]);
-                            } catch (NumberFormatException ignored) {
-                            }
-                        }
+            if (map != null) {
+                String modifierString = map.get(ChatColor.RED + "Damage Modifier");
+                if (modifierString != null) {
+                    try {
+                        modifier = Integer.parseInt(modifierString);
+                    } catch (NumberFormatException ignored) {
                     }
                 }
             }
