@@ -11,8 +11,8 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
-import net.h31ix.anticheat.api.AnticheatAPI;
-import net.h31ix.anticheat.manage.CheckType;
+import net.gravitydevelopment.anticheat.api.AntiCheatAPI;
+import net.gravitydevelopment.anticheat.check.CheckType;
 import org.bukkit.Effect;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -170,9 +170,9 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
                 playerL.add(player);
 
-                AnticheatAPI.exemptPlayer(player, CheckType.WATER_WALK);
-                AnticheatAPI.exemptPlayer(player, CheckType.FLY);
-                AnticheatAPI.exemptPlayer(player, CheckType.SNEAK);
+                AntiCheatAPI.exemptPlayer(player, CheckType.WATER_WALK);
+                AntiCheatAPI.exemptPlayer(player, CheckType.FLY);
+                AntiCheatAPI.exemptPlayer(player, CheckType.SNEAK);
 
                 IntegratedRunnable runnable = new IntegratedRunnable() {
                     @Override
@@ -206,9 +206,9 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
                         if (player == null || !player.isValid()) return;
 
-                        AnticheatAPI.unexemptPlayer(player, CheckType.WATER_WALK);
-                        AnticheatAPI.unexemptPlayer(player, CheckType.FLY);
-                        AnticheatAPI.unexemptPlayer(player, CheckType.SNEAK);
+                        AntiCheatAPI.unexemptPlayer(player, CheckType.WATER_WALK);
+                        AntiCheatAPI.unexemptPlayer(player, CheckType.FLY);
+                        AntiCheatAPI.unexemptPlayer(player, CheckType.SNEAK);
                     }
                 };
 
