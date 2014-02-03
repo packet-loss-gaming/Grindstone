@@ -46,6 +46,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import java.util.Collections;
@@ -199,8 +200,13 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         boolean wasArrow = false;
 
         if (damager instanceof Arrow) {
-            damager = ((Arrow) event.getDamager()).getShooter();
-            wasArrow = true;
+            ProjectileSource source = ((Arrow) event.getDamager()).getShooter();
+            if (source instanceof Entity) {
+                damager = (Entity) source;
+                wasArrow = true;
+            } else {
+                return;
+            }
         }
 
         if (wasArrow) {

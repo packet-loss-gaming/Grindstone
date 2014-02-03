@@ -77,6 +77,7 @@ import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
@@ -990,7 +991,10 @@ public class JungleRaidComponent extends MinigameComponent {
                         Entity attacker = ((EntityDamageByEntityEvent) event).getDamager();
                         boolean wasProjectile = attacker instanceof Projectile;
                         if (wasProjectile) {
-                            attacker = ((Projectile) attacker).getShooter();
+                            ProjectileSource source = ((Projectile) attacker).getShooter();
+                            if (source instanceof Entity) {
+                                attacker = (Entity) source;
+                            }
                         }
                         if (!(attacker instanceof Player)) return;
                         ChatUtil.sendError((Player) attacker, "The game has not yet started!");
@@ -1310,6 +1314,7 @@ public class JungleRaidComponent extends MinigameComponent {
 
             Projectile p = event.getEntity();
             if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
+            LivingEntity shooter = (LivingEntity) p.getShooter();
             if (getTeam((Player) p.getShooter()) != -1 && isGameActive()) {
 
                 int explosionSize = 2;
@@ -1318,12 +1323,12 @@ public class JungleRaidComponent extends MinigameComponent {
                     if (gameFlags.contains('t')) {
                         if (gameFlags.contains('s')) explosionSize = 4;
                         for (Entity e : p.getNearbyEntities(16, 16, 16)) {
-                            if (e.equals(p.getShooter())) continue;
+                            if (e.equals(shooter)) continue;
                             if (e instanceof LivingEntity) {
                                 ((LivingEntity) e).damage(1, p);
                                 if (ChanceUtil.getChance(5)) {
-                                    p.getShooter().setHealth(Math.min(p.getShooter().getHealth() + 1,
-                                            p.getShooter().getMaxHealth()));
+                                    shooter.setHealth(Math.min(shooter.getHealth() + 1,
+                                            shooter.getMaxHealth()));
                                 }
                             }
                         }

@@ -54,6 +54,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
@@ -824,7 +825,10 @@ public class SkyWarsComponent extends MinigameComponent {
                     if (event instanceof EntityDamageByEntityEvent) {
                         Entity attacker = ((EntityDamageByEntityEvent) event).getDamager();
                         if (attacker instanceof Projectile) {
-                            attacker = ((Projectile) attacker).getShooter();
+                            ProjectileSource source = ((Projectile) attacker).getShooter();
+                            if (source instanceof Entity) {
+                                attacker = (Entity) source;
+                            }
                         }
                         if (!(attacker instanceof Player)) return;
                         ChatUtil.sendError((Player) attacker, "The game has not yet started!");

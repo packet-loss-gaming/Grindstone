@@ -17,6 +17,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -69,8 +70,10 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         }
         if (isSafe(event.getEntity()) && !ignored.contains(event.getCause())) {
             if (e != null) {
-                if (e instanceof Projectile) e = ((Projectile) e).getShooter();
-                if (e != null && e instanceof Player) {
+                ProjectileSource source = null;
+                if (e instanceof Projectile) source = ((Projectile) e).getShooter();
+                if (source != null && source instanceof Player) {
+                    e = (Entity) source;
                     if (admin.isSysop((Player) e)) return;
                     ChatUtil.sendError((Player) e, "You cannot currently hurt that " + event.getEntityType().toString().toLowerCase() + ".");
                 }

@@ -53,6 +53,7 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -229,7 +230,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             if (launcher == null) return;
 
-            damager = ((Projectile) damager).getShooter();
+            ProjectileSource source = ((Projectile) damager).getShooter();
+            if (source instanceof Entity) {
+                damager = (Entity) source;
+            }
         }
 
         Player owner = damager instanceof Player ? (Player) damager : null;
@@ -373,7 +377,12 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     public void onArrowLand(ProjectileHitEvent event) {
 
         Projectile projectile = event.getEntity();
-        Entity shooter = projectile.getShooter();
+        Entity shooter = null;
+
+        ProjectileSource source = projectile.getShooter();
+        if (source instanceof Entity) {
+            shooter = (Entity) source;
+        }
 
         if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
 
@@ -488,7 +497,12 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     public void onArrowTick(ProjectileTickEvent event) {
 
         Projectile projectile = event.getEntity();
-        Entity shooter = projectile.getShooter();
+        Entity shooter = null;
+
+        ProjectileSource source = projectile.getShooter();
+        if (source instanceof Entity) {
+            shooter = (Entity) source;
+        }
 
         if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
 

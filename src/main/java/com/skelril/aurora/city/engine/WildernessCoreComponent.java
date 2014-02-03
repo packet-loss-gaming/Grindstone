@@ -46,6 +46,7 @@ import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.text.DecimalFormat;
@@ -379,7 +380,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             Entity damager = ((EntityDamageByEntityEvent) event).getDamager();
 
             if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
-                damager = ((Projectile) damager).getShooter();
+                ProjectileSource source = ((Projectile) damager).getShooter();
+                if (source instanceof Entity) {
+                    damager = (Entity) source;
+                }
             }
 
             if (damager instanceof Player) {

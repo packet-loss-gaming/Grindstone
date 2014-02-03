@@ -60,6 +60,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
@@ -574,7 +575,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             if (attacker instanceof Projectile) {
                 if (((Projectile) attacker).getShooter() != null) {
                     projectile = (Projectile) attacker;
-                    attacker = projectile.getShooter();
+                    ProjectileSource source = projectile.getShooter();
+                    if (source != null && source instanceof Entity) {
+                        attacker = (Entity) projectile.getShooter();
+                    }
                 } else if (!(attacker instanceof LivingEntity)) return;
             }
 
