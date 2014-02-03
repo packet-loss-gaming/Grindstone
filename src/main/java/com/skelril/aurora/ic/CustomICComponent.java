@@ -1,7 +1,8 @@
 package com.skelril.aurora.ic;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.craftbook.bukkit.CircuitCore;
+;
+import com.sk89q.craftbook.circuits.ic.ICManager;
 import com.skelril.aurora.ic.ics.DelayedRepeater;
 import com.skelril.aurora.ic.ics.GroupSentryGun;
 import com.skelril.aurora.ic.ics.NinjaStarSpawner;
@@ -23,7 +24,7 @@ public class CustomICComponent extends BukkitComponent {
     private static final Logger log = inst.getLogger();
     private static final Server server = CommandBook.server();
 
-    private CircuitCore ICCore;
+    private ICManager ICCore;
 
     @Override
     public void enable() {
@@ -31,9 +32,9 @@ public class CustomICComponent extends BukkitComponent {
         server.getScheduler().runTaskLater(inst, new Runnable() {
             @Override
             public void run() {
-                ICCore = CircuitCore.inst();
+                ICCore = ICManager.inst();
                 if (ICCore == null) {
-                    log.warning("ICCore is null!");
+                    log.warning("ICManager is null!");
                 }
                 registerICs();
             }
@@ -44,8 +45,8 @@ public class CustomICComponent extends BukkitComponent {
     @SuppressWarnings("AccessStaticViaInstance")
     private void registerICs() {
 
-        ICCore.registerIC("SK1278", "group sentry", new GroupSentryGun.Factory(server), ICCore.FAMILY_SISO, ICCore.FAMILY_AISO);
-        ICCore.registerIC("SK9001", "star spawner", new NinjaStarSpawner.Factory(server), ICCore.FAMILY_SISO, ICCore.FAMILY_AISO);
-        ICCore.registerIC("SK9002", "delay repeater", new DelayedRepeater.Factory(server), ICCore.FAMILY_SISO, ICCore.FAMILY_AISO);
+        ICCore.registerIC("SK1278", "group sentry", new GroupSentryGun.Factory(server), ICCore.familySISO, ICCore.familyAISO);
+        ICCore.registerIC("SK9001", "star spawner", new NinjaStarSpawner.Factory(server), ICCore.familySISO, ICCore.familyAISO);
+        ICCore.registerIC("SK9002", "delay repeater", new DelayedRepeater.Factory(server), ICCore.familySISO, ICCore.familyAISO);
     }
 }
