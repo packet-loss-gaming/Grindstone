@@ -341,7 +341,7 @@ public class JungleRaidComponent extends MinigameComponent {
         if (gameFlags.contains('t')) ChatUtil.sendWarning(players, "Torment Arrows");
         if (gameFlags.contains('d')) ChatUtil.sendWarning(players, "Death touch");
         if (gameFlags.contains('a')) ChatUtil.sendWarning(players, "2012");
-        if (gameFlags.contains('p')) ChatUtil.sendNotice(players, ChatColor.MAGIC, "Potion Plummet");
+        if (gameFlags.contains('p')) ChatUtil.sendNotice(players, "Potion Plummet");
         if (gameFlags.contains('j')) {
             if (gameFlags.contains('s')) {
                 ChatUtil.sendNotice(players, ChatColor.AQUA, "Super jumpy");
