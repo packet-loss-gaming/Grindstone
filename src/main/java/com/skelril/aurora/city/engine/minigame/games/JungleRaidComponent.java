@@ -45,6 +45,8 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.hackbook.ChunkBook;
+import com.skelril.hackbook.exceptions.UnsupportedFeatureException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -789,10 +791,13 @@ public class JungleRaidComponent extends MinigameComponent {
 
                             try {
                                 restore.restore();
+                                ChunkBook.relight(chunk);
                             } catch (MaxChangedBlocksException e) {
                                 log.warning("Congratulations! You got an error which makes no sense!");
                                 e.printStackTrace();
                                 return;
+                            } catch (UnsupportedFeatureException e) {
+                                log.warning("Couldn't relight the chunk!");
                             }
 
                             if (restore.hadTotalFailure()) {

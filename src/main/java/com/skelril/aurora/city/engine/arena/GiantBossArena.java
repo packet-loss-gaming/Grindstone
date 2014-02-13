@@ -42,6 +42,7 @@ import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
 import com.skelril.aurora.util.timer.TimerUtil;
 import com.skelril.hackbook.AttributeBook;
+import com.skelril.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
@@ -185,8 +186,12 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         boss.setHealth(510 + (difficulty * 80));
         boss.setRemoveWhenFarAway(false);
 
-        AttributeBook.setAttribute(boss, AttributeBook.Attribute.KNOCKBACK_RESISTANCE, 1);
-        AttributeBook.setAttribute(boss, AttributeBook.Attribute.FOLLOW_RANGE, 40);
+        try {
+            AttributeBook.setAttribute(boss, AttributeBook.Attribute.KNOCKBACK_RESISTANCE, 1);
+            AttributeBook.setAttribute(boss, AttributeBook.Attribute.FOLLOW_RANGE, 40);
+        } catch (UnsupportedFeatureException ex) {
+            log.warning("Boss NMS attributes not properly set.");
+        }
 
         for (Player player : getContainedPlayers(1)) ChatUtil.sendWarning(player, "I live again!");
     }

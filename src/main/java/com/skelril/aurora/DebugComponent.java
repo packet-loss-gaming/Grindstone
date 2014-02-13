@@ -5,8 +5,11 @@ import com.sk89q.commandbook.util.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.hackbook.ChunkBook;
+import com.skelril.hackbook.exceptions.UnsupportedFeatureException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Location;
@@ -42,6 +45,7 @@ public class DebugComponent extends BukkitComponent {
         //noinspection AccessStaticViaInstance
         //inst.registerEvents(new BlockDebug());
 
+        registerCommands(ChunkLighter.class);
         //registerCommands(LocationDebug.class);
 
         // Bug fixes
@@ -62,6 +66,23 @@ public class DebugComponent extends BukkitComponent {
             ItemStack[] inventory = player.getInventory().getContents();
             inventory = ItemUtil.removeItemOfType(inventory, Material.DOUBLE_PLANT.getId());
             player.getInventory().setContents(inventory);
+        }
+    }
+
+    public class ChunkLighter {
+
+        @Command(aliases = {"relight"}, desc = "Get your location",
+                flags = "", min = 0, max = 0)
+        @CommandPermissions("aurora.debug.relight")
+        public void myLocCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.checkPlayer(sender);
+            try {
+                ChunkBook.relight(player.getLocation().getChunk());
+            } catch (UnsupportedFeatureException e) {
+                throw new CommandException("This feature is not currently supported.");
+            }
+            ChatUtil.sendNotice(player, "The chunk lighting has successfully been recalculated.");
         }
     }
 

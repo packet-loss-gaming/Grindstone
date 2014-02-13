@@ -1,5 +1,6 @@
 package com.skelril.hackbook;
 
+import com.skelril.hackbook.exceptions.UnsupportedFeatureException;
 import net.minecraft.server.v1_7_R1.EntityInsentient;
 import net.minecraft.server.v1_7_R1.GenericAttributes;
 import net.minecraft.server.v1_7_R1.IAttribute;
@@ -28,31 +29,37 @@ public class AttributeBook {
 
     }
 
-    public static double getAttribute(LivingEntity entity, Attribute attribute) {
+    public static double getAttribute(LivingEntity entity, Attribute attribute) throws UnsupportedFeatureException {
 
         try {
             EntityInsentient nmsEntity = getNMSEntity(entity);
 
             return nmsEntity.getAttributeInstance(attribute.attribute).getValue();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return -1;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new UnsupportedFeatureException();
         }
     }
 
-    public static void setAttribute(LivingEntity entity, Attribute attribute, double value) {
+    public static void setAttribute(LivingEntity entity, Attribute attribute, double value) throws UnsupportedFeatureException {
 
         try {
             EntityInsentient nmsEntity = getNMSEntity(entity);
 
             nmsEntity.getAttributeInstance(attribute.attribute).setValue(value);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new UnsupportedFeatureException();
         }
     }
 
-    private static EntityInsentient getNMSEntity(LivingEntity entity) {
+    private static EntityInsentient getNMSEntity(LivingEntity entity) throws UnsupportedFeatureException {
 
-        return ((EntityInsentient) ((CraftLivingEntity) entity).getHandle());
+        try {
+            return ((EntityInsentient) ((CraftLivingEntity) entity).getHandle());
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new UnsupportedFeatureException();
+        }
     }
 }
