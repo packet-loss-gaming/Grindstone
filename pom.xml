@@ -26,8 +26,21 @@
             <url>http://maven.sk89q.com/repo</url>
         </repository>
         <repository>
+            <id>md_5-rep</id>
+            <url>http://repo.md-5.net/content/repositories/public</url>
+        </repository>
+        <repository>
+            <id>comphenix-rep</id>
+            <name>Comphenix Repository</name>
+            <url>http://repo.comphenix.net/content/groups/public</url>
+        </repository>
+        <repository>
             <id>vault-repo</id>
-            <url>http://ci.herocraftonline.com/plugin/repository/everything</url>
+            <url>http://nexus.theyeticave.net/content/repositories/pub_releases</url>
+        </repository>
+        <repository>
+            <id>gravity-repo</id>
+            <url>http://repo.gravitydevelopment.net/</url>
         </repository>
     </repositories>
 
@@ -41,7 +54,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.7.2-R0.3-SNAPSHOT</version>
+            <version>1.7.2-R0.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.bukkit</groupId>
@@ -51,7 +64,7 @@
         <dependency>
             <groupId>com.sk89q</groupId>
             <artifactId>worldedit</artifactId>
-            <version>5.5.8-SNAPSHOT</version>
+            <version>5.5.9-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.spout</groupId>
@@ -72,12 +85,22 @@
         <dependency>
             <groupId>com.sk89q.craftbook</groupId>
             <artifactId>craftbook</artifactId>
-            <version>3.7-SNAPSHOT</version>
+            <version>3.8-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>net.milkbowl.vault</groupId>
             <artifactId>Vault</artifactId>
             <version>1.2.31</version>
+        </dependency>
+        <dependency>
+            <groupId>net.gravitydevelopment.anticheat</groupId>
+            <artifactId>AntiCheat</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>de.diddiz</groupId>
+            <artifactId>logblock</artifactId>
+            <version>dev-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
@@ -110,26 +133,6 @@
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
-                </configuration>
-            </plugin>
-
-            <!-- Assembly -->
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <descriptor>${basedir}/src/main/assembly/default.xml</descriptor>
-                </configuration>
-            </plugin>
-
-            <!-- Release -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.4.2</version>
-                <configuration>
-                    <preparationGoals>assembly:assembly</preparationGoals>
-                    <goals>assembly:assembly</goals>
                 </configuration>
             </plugin>
         </plugins>
