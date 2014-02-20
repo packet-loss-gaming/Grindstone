@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2014 Wyatt Childers.
+ *
+ * All Rights Reserved
+ */
+
 package com.skelril.aurora.util;
 
 import com.sk89q.worldedit.BlockVector;

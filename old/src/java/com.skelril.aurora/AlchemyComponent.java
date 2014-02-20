@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2014 Wyatt Childers.
+ *
+ * All Rights Reserved
+ */
+
 package com.skelril.aurora;
 
 import com.sk89q.minecraft.util.commands.Command;

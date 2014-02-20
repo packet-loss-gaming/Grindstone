@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2014 Wyatt Childers.
+ *
+ * All Rights Reserved
+ */
+
 package com.skelril.aurora.events.custom.item;
 
 import com.skelril.aurora.items.specialattack.SpecialAttack;

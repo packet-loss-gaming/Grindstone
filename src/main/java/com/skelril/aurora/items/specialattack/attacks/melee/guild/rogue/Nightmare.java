@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2014 Wyatt Childers.
+ *
+ * All Rights Reserved
+ */
+
 package com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue;
 
 import com.skelril.aurora.items.specialattack.EntityAttack;

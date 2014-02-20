@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2014 Wyatt Childers.
+ *
+ * All Rights Reserved
+ */
+
 package com.skelril.aurora.city.engine.minigame;
 
 import com.skelril.aurora.util.player.PlayerState;
