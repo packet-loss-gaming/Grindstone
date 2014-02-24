@@ -11,6 +11,7 @@ import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
+import com.skelril.aurora.bosses.ThunderZombie;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseBedSpawnEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
@@ -71,11 +72,13 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private EnderPearlHomesComponent homesComponent;
 
     private LocalConfiguration config;
+    private ThunderZombie bossManager;
 
     @Override
     public void enable() {
 
         config = configure(new LocalConfiguration());
+        bossManager = new ThunderZombie();
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
     }
@@ -89,6 +92,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     private static class LocalConfiguration extends ConfigurationBase {
 
+        @Setting("boss-chance")
+        public int bossChance = 100;
         @Setting("multiplier")
         public int multiplier = 6;
         @Setting("local-de-multiplier")
@@ -387,6 +392,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         LivingEntity entity = (LivingEntity) location.getWorld().spawnEntity(location, type);
         entity.setCustomName("Apocalyptic Zombie");
         entity.setCustomNameVisible(false);
+        if (ChanceUtil.getChance(config.bossChance)) {
+            bossManager.bind(entity);
+        }
         return entity;
     }
 
