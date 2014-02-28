@@ -9,7 +9,7 @@ package com.skelril.aurora.prayer;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -275,7 +275,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
             } else {
                 playerString = args.getString(0);
                 prayerString = args.getString(1).toLowerCase();
-                player = PlayerUtil.matchSinglePlayer(sender, playerString);
+                player = InputUtil.PlayerParser.matchSinglePlayer(sender, playerString);
             }
 
             // Check for valid nameType

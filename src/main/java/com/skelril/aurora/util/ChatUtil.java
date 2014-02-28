@@ -6,7 +6,7 @@
 
 package com.skelril.aurora.util;
 
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.CommandException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -25,7 +25,7 @@ public class ChatUtil {
     public static void sendDebug(String message) {
 
         try {
-            Player player = PlayerUtil.matchPlayerExactly(null, "Dark_Arc");
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(null, "Dark_Arc");
             StringBuilder builder = new StringBuilder();
             builder.append(ChatColor.BLACK).append("[");
             builder.append(ChatColor.DARK_RED).append("DEBUG");
@@ -44,7 +44,7 @@ public class ChatUtil {
     public static void sendNotice(String playerName, String notice) {
 
         try {
-            Player player = PlayerUtil.matchPlayerExactly(null, playerName);
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(null, playerName);
             player.sendMessage(ChatColor.YELLOW + notice);
         } catch (CommandException ignored) {
         }

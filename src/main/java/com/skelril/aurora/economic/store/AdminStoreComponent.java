@@ -7,7 +7,7 @@
 package com.skelril.aurora.economic.store;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;

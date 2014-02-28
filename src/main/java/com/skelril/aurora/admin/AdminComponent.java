@@ -9,7 +9,7 @@ package com.skelril.aurora.admin;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.GodComponent;
 import com.sk89q.commandbook.InfoComponent;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;

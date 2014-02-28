@@ -9,7 +9,7 @@ package com.skelril.aurora.jail;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.ChatUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -222,7 +222,7 @@ public class CSVInmateDatabase implements InmateDatabase {
         Inmate inmate = new Inmate(name, prisonName, reason, start, end, isMuted);
         nameInmate.put(name, inmate);
         inmates.add(inmate);
-        auditLogger.info(String.format("JAIL: %s jailed %s: %s", source == null ? "Plugin" : PlayerUtil.toUniqueName(source), name, reason.trim()));
+        auditLogger.info(String.format("JAIL: %s jailed %s: %s", source == null ? "Plugin" : ChatUtil.toUniqueName(source), name, reason.trim()));
     }
 
     public boolean unjail(Player player, CommandSender source, String reason) {
@@ -244,7 +244,7 @@ public class CSVInmateDatabase implements InmateDatabase {
         if (inmate != null) {
             inmates.remove(inmate);
             auditLogger.info(String.format("UNJAIL: %s unjailed %s: %s",
-                    source == null ? "Plugin" : PlayerUtil.toUniqueName(source),
+                    source == null ? "Plugin" : ChatUtil.toUniqueName(source),
                     jailedName,
                     reason.trim()));
             return true;

@@ -7,7 +7,7 @@
 package com.skelril.aurora.admin;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.util.ChatUtil;
@@ -115,7 +115,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.god.armor"})
         public void lostArmorCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(
                     ItemUtil.God.makeHelmet(), ItemUtil.God.makeChest(),
@@ -133,7 +133,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.god.bow"})
         public void lostBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.God.makeBow());
 
@@ -148,7 +148,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.god.sword"})
         public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.God.makeSword());
 
@@ -163,7 +163,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.god.pickaxe"})
         public void lostPickaxeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.God.makePickaxe(args.hasFlag('l')));
 
@@ -178,7 +178,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.god.axe"})
         public void lostAxeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.God.makeAxe(args.hasFlag('l')));
 
@@ -196,7 +196,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.ancient.crown"})
         public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Ancient.makeCrown());
 
@@ -211,7 +211,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.ancient.armor"})
         public void lostArmorCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(
                     ItemUtil.Ancient.makeHelmet(), ItemUtil.Ancient.makeChest(),
@@ -232,7 +232,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.master.sword"})
         public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Master.makeSword());
 
@@ -247,7 +247,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.master.bow"})
         public void lostBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Master.makeBow());
 
@@ -265,7 +265,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.fear.sword"})
         public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Fear.makeSword());
 
@@ -280,7 +280,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.fear.bow"})
         public void lostBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Fear.makeBow());
 
@@ -298,7 +298,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.unleashed.sword"})
         public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Unleashed.makeSword());
 
@@ -313,7 +313,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.unleashed.bow"})
         public void lostBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Unleashed.makeBow());
 
@@ -331,7 +331,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.red.feather"})
         public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Red.makeFeather());
 
@@ -349,7 +349,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.misc.potionofrestitution"})
         public void lostPotionOfRestitutionCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
             player.getInventory().addItem(ItemUtil.MPotion.potionOfRestitution());
 
             // Tell Admin
@@ -363,7 +363,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.misc.gemofdarkness"})
         public void lostGemOfDarknessCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             int amount = 1;
             if (args.argsLength() > 1) {
@@ -384,7 +384,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.misc.phantomgold"})
         public void lostPixieDustCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             int amount = 1;
             if (args.argsLength() > 1) {
@@ -405,7 +405,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.misc.phantomgold"})
         public void lostPhantomGoldCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             int amount = 1;
             if (args.argsLength() > 1) {
@@ -426,7 +426,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.misc.phantomclock"})
         public void lostPhantomClockCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             int amount = 1;
             if (args.argsLength() > 1) {
@@ -447,7 +447,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.misc.gemoflife"})
         public void lostGemOfLifeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             int amount = 1;
             if (args.argsLength() > 1) {
@@ -468,7 +468,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.misc.imbuedcrystal"})
         public void lostImbuedCrystalCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             int amount = 1;
             if (args.argsLength() > 1) {
@@ -489,7 +489,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.misc.bow.bat"})
         public void lostBatBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Misc.batBow());
 
@@ -504,7 +504,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.misc.bow.chicken"})
         public void lostChickenBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Misc.chickenBow());
 
@@ -519,7 +519,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.misc.magicbucket"})
         public void lostMagicBucketCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(ItemUtil.Misc.magicBucket());
 
@@ -537,7 +537,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.donation.butterboots"})
         public void lostButterBootsCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             ItemStack bootStack = new ItemStack(ItemID.GOLD_BOOTS);
             ItemMeta butterMeta = bootStack.getItemMeta();
@@ -559,7 +559,7 @@ public class LostItemsComponent extends BukkitComponent {
         @CommandPermissions({"aurora.lost.admin.pwngbow"})
         public void lostPwngBowCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             ItemStack pwngBowStack = new ItemStack(Material.BOW);
             ItemMeta pwngBow = pwngBowStack.getItemMeta();

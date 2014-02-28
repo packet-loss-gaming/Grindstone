@@ -7,7 +7,8 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.InputUtil;
+import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -93,7 +94,7 @@ public class FlightComponent extends BukkitComponent implements Listener {
             Player target;
             if (args.argsLength() > 0) {
                 inst.checkPermission(sender, "aurora.fly.other.wing");
-                target = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
+                target = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(0));
             } else {
                 inst.checkPermission(sender, "aurora.fly.self.wing");
                 target = PlayerUtil.checkPlayer(sender);
@@ -141,7 +142,7 @@ public class FlightComponent extends BukkitComponent implements Listener {
             Player target;
             if (args.argsLength() > 0) {
                 inst.checkPermission(sender, "aurora.fly.other.dewing");
-                target = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
+                target = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(0));
             } else {
                 inst.checkPermission(sender, "aurora.fly.self.dewing");
                 target = PlayerUtil.checkPlayer(sender);

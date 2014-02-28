@@ -7,7 +7,7 @@
 package com.skelril.aurora;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -247,7 +247,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
 
                 inst.checkPermission(sender, "aurora.fireworks.other");
 
-                Iterable<Player> players = PlayerUtil.matchPlayers(sender, args.getString(5));
+                Iterable<Player> players = InputUtil.PlayerParser.matchPlayers(sender, args.getString(5));
                 playerLocList = new ArrayList<>();
                 for (Player player : players) {
                     playerLocList.add(player.getLocation());

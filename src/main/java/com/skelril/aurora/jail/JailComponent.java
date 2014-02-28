@@ -7,8 +7,8 @@
 package com.skelril.aurora.jail;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.CommandBookUtil;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.InputUtil;
+import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
@@ -338,7 +338,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
             Player inmate = null;
             String inmateName = "";
             String prisonName = args.argsLength() >= 2 ? args.getString(1) : config.defaultJail;
-            long endDate = args.hasFlag('t') ? CommandBookUtil.matchFutureDate(args.getFlag('t')) : 0L;
+            long endDate = args.hasFlag('t') ? InputUtil.TimeParser.matchFutureDate(args.getFlag('t')) : 0L;
             String message = args.argsLength() >= 3 ? args.getJoinedStrings(2) : "";
 
             final boolean hasExemptOverride = args.hasFlag('o') && inst.hasPermission(sender, "aurora.jail.exempt.override");
@@ -347,9 +347,9 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
             try {
                 // Exact mode matches names exactly
                 if (args.hasFlag('e')) {
-                    inmate = PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+                    inmate = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
                 } else {
-                    inmate = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
+                    inmate = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(0));
                 }
 
                 inmateName = inmate.getName();

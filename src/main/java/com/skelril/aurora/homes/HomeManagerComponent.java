@@ -7,7 +7,8 @@
 package com.skelril.aurora.homes;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.InputUtil;
+import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.LocalWorld;
@@ -472,7 +473,7 @@ public class HomeManagerComponent extends BukkitComponent {
                 throw new CommandException("The type of region selected in WorldEdit is unsupported.");
             }
 
-            Player player = args.argsLength() == 0 ? null : PlayerUtil.matchPlayerExactly(sender, args.getString(0));
+            Player player = args.argsLength() == 0 ? null : InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             double size = (selection.getLength() * selection.getWidth()) / (16D * 16D);
 
@@ -689,7 +690,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
         Player tPlayer;
         try {
-            tPlayer = PlayerUtil.matchPlayerExactly(sender, player);
+            tPlayer = InputUtil.PlayerParser.matchPlayerExactly(sender, player);
         } catch (CommandException ex) {
             tPlayer = null;
         }

@@ -7,7 +7,8 @@
 package com.skelril.aurora.city.engine.minigame;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.InputUtil;
+import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.skelril.aurora.util.ChatUtil;
@@ -111,7 +112,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
             PlayerGameState state = it.next().getValue();
 
             try {
-                removeFromTeam(PlayerUtil.matchPlayerExactly(null, state.getOwnerName()), true);
+                removeFromTeam(InputUtil.PlayerParser.matchPlayerExactly(null, state.getOwnerName()), true);
             } catch (CommandException e) {
                 goneState.put(state.getOwnerName(), state);
             }
@@ -368,7 +369,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
             }
             teamNumber = args.getInteger(0, 0);
         } else {
-            targetPlayer = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
+            targetPlayer = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(0));
             inst.checkPermission(sender, targetPlayer.getWorld(), "aurora." + name + ".other.join");
             if (isGameInitialised() && !useQueue) {
                 throw new CommandException("You cannot add players while a " + casualName + " is active!");
@@ -419,7 +420,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         Player targetPlayer;
 
         if (args.argsLength() > 0) {
-            targetPlayer = PlayerUtil.matchSinglePlayer(sender, args.getString(0));
+            targetPlayer = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(0));
             inst.checkPermission(sender, targetPlayer.getWorld(), "aurora." + name + ".other.leave");
         } else {
             targetPlayer = PlayerUtil.checkPlayer(sender);

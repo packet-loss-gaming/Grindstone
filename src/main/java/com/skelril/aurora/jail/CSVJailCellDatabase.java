@@ -10,7 +10,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.PlayerUtil;
+import com.sk89q.commandbook.util.ChatUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
@@ -202,7 +202,7 @@ public class CSVJailCellDatabase implements JailCellDatabase {
         map.put(cellName, jailCell);
         jailCells.add(jailCell);
         auditLogger.info(String.format("CELL: %s created cell: %s",
-                source == null ? "Plugin" : PlayerUtil.toUniqueName(source),
+                source == null ? "Plugin" : com.sk89q.commandbook.util.ChatUtil.toUniqueName(source),
                 cellName));
     }
 
@@ -229,7 +229,7 @@ public class CSVJailCellDatabase implements JailCellDatabase {
 
             jailCells.remove(jailCell);
             auditLogger.info(String.format("CELL: %s removed cell: %s",
-                    source == null ? "Plugin" : PlayerUtil.toUniqueName(source),
+                    source == null ? "Plugin" : ChatUtil.toUniqueName(source),
                     cellName));
             return true;
         }

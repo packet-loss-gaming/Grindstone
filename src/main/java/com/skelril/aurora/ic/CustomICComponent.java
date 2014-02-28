@@ -7,7 +7,6 @@
 package com.skelril.aurora.ic;
 
 import com.sk89q.commandbook.CommandBook;
-;
 import com.sk89q.craftbook.circuits.ic.ICManager;
 import com.skelril.aurora.ic.ics.DelayedRepeater;
 import com.skelril.aurora.ic.ics.GroupSentryGun;
@@ -18,6 +17,8 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
 
 import java.util.logging.Logger;
+
+;
 
 /**
  * Created by wyatt on 12/15/13.
