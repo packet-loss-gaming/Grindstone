@@ -13,8 +13,8 @@ import com.skelril.OSBL.bukkit.entity.BukkitBoss;
 import com.skelril.OSBL.bukkit.entity.BukkitEntity;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
 import com.skelril.OSBL.entity.LocalEntity;
-import com.skelril.OSBL.instruction.BoundInstruction;
 import com.skelril.OSBL.instruction.Instruction;
+import com.skelril.OSBL.instruction.InstructionResult;
 import com.skelril.aurora.util.ChanceUtil;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -45,26 +45,21 @@ public class ThunderZombie {
 
     private void setupThunderZombie() {
         List<Instruction> bindInstructions = thunderZombie.bindInstructions;
-        bindInstructions.add(new BoundInstruction() {
+        bindInstructions.add(new Instruction() {
             @Override
-            public Instruction execute(LocalEntity entity, Object... objects) {
+            public InstructionResult execute(LocalEntity entity, Object... objects) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(entity);
                 if (anEntity instanceof LivingEntity) {
                     ((LivingEntity) anEntity).setCustomName("Thor Zombie");
                 }
                 return null;
             }
-
-            @Override
-            public Instruction execute() {
-                return null;
-            }
         });
 
         List<Instruction> unbindInstructions = thunderZombie.unbindInstructions;
-        unbindInstructions.add(new BoundInstruction() {
+        unbindInstructions.add(new Instruction() {
             @Override
-            public Instruction execute(LocalEntity entity, Object... objects) {
+            public InstructionResult execute(LocalEntity entity, Object... objects) {
                 Entity boss = BukkitUtil.getBukkitEntity(entity);
                 Location target = boss.getLocation();
                 double x = target.getX();
@@ -73,15 +68,10 @@ public class ThunderZombie {
                 boss.getWorld().createExplosion(x, y, z, 4F, false, false);
                 return null;
             }
-
-            @Override
-            public Instruction execute() {
-                return null;
-            }
         });
-        unbindInstructions.add(new BoundInstruction() {
+        unbindInstructions.add(new Instruction() {
             @Override
-            public Instruction execute(LocalEntity entity, Object... objects) {
+            public InstructionResult execute(LocalEntity entity, Object... objects) {
                 Entity boss = BukkitUtil.getBukkitEntity(entity);
                 Location target = boss.getLocation();
                 for (int i = 0; i < ChanceUtil.getRangedRandom(12, 150); i++) {
@@ -89,17 +79,12 @@ public class ThunderZombie {
                 }
                 return null;
             }
-
-            @Override
-            public Instruction execute() {
-                return null;
-            }
         });
 
         List<Instruction> damageInstructions = thunderZombie.damageInstructions;
-        damageInstructions.add(new BoundInstruction() {
+        damageInstructions.add(new Instruction() {
             @Override
-            public Instruction execute(LocalEntity entity, Object... objects) {
+            public InstructionResult execute(LocalEntity entity, Object... objects) {
                 Entity boss = BukkitUtil.getBukkitEntity(entity);
 
                 if (objects != null && objects.length > 0) {
@@ -121,11 +106,6 @@ public class ThunderZombie {
                         }, 30);
                     }
                 }
-                return null;
-            }
-
-            @Override
-            public Instruction execute() {
                 return null;
             }
         });
