@@ -108,16 +108,11 @@ public class FishingComponent extends BukkitComponent implements Listener {
                 // Take Fish
                 // ### BEGIN WORK AROUND ###
                 final int amt = player.getItemInHand().getAmount();
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                    @Override
-                    public void run() {
-
-                        if (amt > 1) {
-                            player.setItemInHand(new ItemStack(ItemID.RAW_FISH, amt - 1));
-                        } else {
-                            player.setItemInHand(null);
-                        }
+                server.getScheduler().runTaskLater(inst, () -> {
+                    if (amt > 1) {
+                        player.setItemInHand(new ItemStack(ItemID.RAW_FISH, amt - 1));
+                    } else {
+                        player.setItemInHand(null);
                     }
                 }, 1);
                 // ### END WORK AROUND ###

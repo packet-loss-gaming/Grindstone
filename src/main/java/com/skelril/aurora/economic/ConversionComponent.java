@@ -187,17 +187,8 @@ public class ConversionComponent extends BukkitComponent implements Listener {
                 }
             }
             recentList.add(player);
-            server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    recentList.remove(player);
-                }
-            }, 10);
+            server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 10);
         }
-
-
     }
 
     @EventHandler(ignoreCancelled = true)

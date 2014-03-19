@@ -21,9 +21,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class GlowingFog extends EntityAttack implements RangedSpecial {
 
     public GlowingFog(LivingEntity owner, LivingEntity target) {
@@ -49,7 +46,8 @@ public class GlowingFog extends EntityAttack implements RangedSpecial {
                             || aEntity.getLocation().distanceSquared(targeted) > 16) continue;
                     if (aEntity instanceof LivingEntity) {
                         if (aEntity instanceof Player) {
-                            if (owner instanceof Player && !PvPComponent.allowsPvP((Player) owner, (Player) aEntity)) continue;
+                            if (owner instanceof Player && !PvPComponent.allowsPvP((Player) owner, (Player) aEntity))
+                                continue;
                         }
                         DamageUtil.damage(owner, target, 5);
                     }

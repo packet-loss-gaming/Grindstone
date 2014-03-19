@@ -15,7 +15,10 @@ import com.skelril.aurora.util.database.UnloadableDatabase;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.logging.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  * Author: Turtle9598
@@ -49,13 +52,7 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
                 }
             });
 
-            purchaseHandler.setFilter(new Filter() {
-                @Override
-                public boolean isLoggable(LogRecord record) {
-
-                    return record.getMessage().contains("purchased") || record.getMessage().contains("sold");
-                }
-            });
+            purchaseHandler.setFilter(record -> record.getMessage().contains("purchased") || record.getMessage().contains("sold"));
 
             storeLogger.addHandler(purchaseHandler);
 
@@ -70,13 +67,7 @@ public class CSVItemStoreDatabase implements ItemStoreDatabase, UnloadableDataba
                 }
             });
 
-            changeHandler.setFilter(new Filter() {
-                @Override
-                public boolean isLoggable(LogRecord record) {
-
-                    return record.getMessage().contains("set") || record.getMessage().contains("removed");
-                }
-            });
+            changeHandler.setFilter(record -> record.getMessage().contains("set") || record.getMessage().contains("removed"));
 
             storeLogger.addHandler(changeHandler);
         } catch (SecurityException | IOException e) {

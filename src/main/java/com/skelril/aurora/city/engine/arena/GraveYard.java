@@ -59,6 +59,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
@@ -245,12 +246,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             if (aAttacker instanceof Player) {
                 Player player = (Player) aAttacker;
 
-                for (PotionEffect effect : player.getActivePotionEffects()) {
-
-                    if (!excludedTypes.contains(effect.getType())) {
-                        defender.addPotionEffect(effect);
-                    }
-                }
+                player.getActivePotionEffects().stream().filter(effect -> !excludedTypes.contains(effect.getType())).forEach(defender::addPotionEffect);
 
                 if (getWorld().isThundering()) return;
 
@@ -261,11 +257,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     }
 
                     if (ChanceUtil.getChance(18)) {
-                        List<LivingEntity> entities = new ArrayList<>();
-                        for (Entity e : player.getNearbyEntities(6, 4, 6)) {
-
-                            if (EnvironmentUtil.isHostileEntity(e)) entities.add((LivingEntity) e);
-                        }
+                        List<LivingEntity> entities = player.getNearbyEntities(6, 4, 6).stream().filter(EnvironmentUtil::isHostileEntity).map(e -> (LivingEntity) e).collect(Collectors.toList());
                         EffectUtil.Master.doomBlade(player, entities);
                     }
                 }
@@ -287,16 +279,14 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     @EventHandler(ignoreCancelled = true)
     public void onPotionSplash(PotionSplashEvent event) {
 
-        for (Entity entity : event.getAffectedEntities()) {
-            if (entity != null && entity instanceof Player && ChanceUtil.getChance(14)) {
-                if (ChanceUtil.getChance(14)) {
-                    ((Player) entity).removePotionEffect(PotionEffectType.REGENERATION);
-                }
-                if (ChanceUtil.getChance(14)) {
-                    ((Player) entity).removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-                }
+        event.getAffectedEntities().stream().filter(entity -> entity != null && entity instanceof Player && ChanceUtil.getChance(14)).forEach(entity -> {
+            if (ChanceUtil.getChance(14)) {
+                entity.removePotionEffect(PotionEffectType.REGENERATION);
             }
-        }
+            if (ChanceUtil.getChance(14)) {
+                entity.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+            }
+        });
     }
 
     private void localSpawn(Player player) {
@@ -715,15 +705,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         final Player player = event.getPlayer();
 
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-
-            @Override
-            public void run() {
-
-                if (isHostileTempleArea(player.getLocation()) && !adminComponent.isAdmin(player)) {
-                    player.teleport(headStones.get(ChanceUtil.getRandom(headStones.size()) - 1));
-                    ChatUtil.sendWarning(player, "You feel dazed and confused as you wake up near a head stone.");
-                }
+        server.getScheduler().runTaskLater(inst, () -> {
+            if (isHostileTempleArea(player.getLocation()) && !adminComponent.isAdmin(player)) {
+                player.teleport(headStones.get(ChanceUtil.getRandom(headStones.size()) - 1));
+                ChatUtil.sendWarning(player, "You feel dazed and confused as you wake up near a head stone.");
             }
         }, 1);
     }
@@ -780,13 +765,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         if (isHostileTempleArea(clickedLoc)) {
             switch (block.getTypeId()) {
                 case BlockID.LEVER:
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            isPressurePlateLocked = !checkPressurePlateLock();
-                        }
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        isPressurePlateLocked = !checkPressurePlateLock();
                     }, 1);
                     break;
                 case BlockID.STONE_PRESSURE_PLATE:
@@ -804,16 +784,12 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     player.teleport(new Location(getWorld(), -126, 42, -685), TeleportCause.UNKNOWN);
 
                     final int amt = stack.getAmount() - 1;
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-                        @Override
-                        public void run() {
-
-                            ItemStack newStack = null;
-                            if (amt > 0) {
-                                newStack = ItemUtil.Misc.phantomClock(amt);
-                            }
-                            player.setItemInHand(newStack);
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        ItemStack newStack = null;
+                        if (amt > 0) {
+                            newStack = ItemUtil.Misc.phantomClock(amt);
                         }
+                        player.setItemInHand(newStack);
                     }, 1);
                 }
                 break;
@@ -1030,14 +1006,10 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         for (final Chunk aChunk : chunkList) {
 
             try {
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-                    @Override
-                    public void run() {
-
-                        for (BlockState aSign : aChunk.getTileEntities()) {
-                            if (!(aSign instanceof Sign)) continue;
-                            checkHeadStone((Sign) aSign);
-                        }
+                server.getScheduler().runTaskLater(inst, () -> {
+                    for (BlockState aSign : aChunk.getTileEntities()) {
+                        if (!(aSign instanceof Sign)) continue;
+                        checkHeadStone((Sign) aSign);
                     }
                 }, chunkList.indexOf(aChunk) * 20);
             } catch (NullPointerException ex) {
@@ -1247,12 +1219,9 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
             if (ChanceUtil.getChance(chance) && accept(aBB, autoBreakable)) {
 
                 final BlockRecord record = new BlockRecord(aBlock.getLocation(location), aBB);
-                Runnable r = new Runnable() {
-                    @Override
-                    public void run() {
-                        generalIndex.addItem(record);
-                        aBlock.setTypeId(0);
-                    }
+                Runnable r = () -> {
+                    generalIndex.addItem(record);
+                    aBlock.setTypeId(0);
                 };
 
                 if (aBB.equals(new BaseBlock(BlockID.STONE_BRICK, 2))) {
@@ -1283,35 +1252,32 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     @Override
     public void writeData(boolean doAsync) {
 
-        Runnable run = new Runnable() {
-            @Override
-            public void run() {
+        Runnable run = () -> {
 
-                generalFile:
-                {
-                    File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
-                    if (generalFile.exists()) {
-                        Object generalFileO = IOUtil.readBinaryFile(generalFile);
+            generalFile:
+            {
+                File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
+                if (generalFile.exists()) {
+                    Object generalFileO = IOUtil.readBinaryFile(generalFile);
 
-                        if (generalIndex.equals(generalFileO)) {
-                            break generalFile;
-                        }
+                    if (generalIndex.equals(generalFileO)) {
+                        break generalFile;
                     }
-                    IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
                 }
+                IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
+            }
 
-                respawnsFile:
-                {
-                    File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
-                    if (playerStateFile.exists()) {
-                        Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
+            respawnsFile:
+            {
+                File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
+                if (playerStateFile.exists()) {
+                    Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
 
-                        if (playerState.equals(playerStateFileO)) {
-                            break respawnsFile;
-                        }
+                    if (playerState.equals(playerStateFileO)) {
+                        break respawnsFile;
                     }
-                    IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
                 }
+                IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
             }
         };
 

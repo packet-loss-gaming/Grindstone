@@ -11,9 +11,6 @@ import org.bukkit.entity.Entity;
 
 import java.util.Comparator;
 
-/**
- * Created by wyatt on 12/15/13.
- */
 public class EntityDistanceComparator implements Comparator<Entity> {
 
     final Location targetLoc;

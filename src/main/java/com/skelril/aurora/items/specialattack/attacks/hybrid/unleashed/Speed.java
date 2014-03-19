@@ -13,9 +13,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class Speed extends EntityAttack implements MeleeSpecial, RangedSpecial {
 
     public Speed(LivingEntity owner, LivingEntity target) {

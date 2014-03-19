@@ -92,17 +92,11 @@ public class ThunderZombie {
                         final Entity toHit = BukkitUtil.getBukkitEntity(objects[0]);
                         toHit.setVelocity(boss.getLocation().getDirection().multiply(2));
 
-                        server.getScheduler().runTaskLater(inst, new Runnable() {
-                            @Override
-                            public void run() {
-                                final Location targetLocation = toHit.getLocation();
-                                server.getScheduler().runTaskLater(inst, new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        targetLocation.getWorld().strikeLightning(targetLocation);
-                                    }
-                                }, 15);
-                            }
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            final Location targetLocation = toHit.getLocation();
+                            server.getScheduler().runTaskLater(inst, () -> {
+                                targetLocation.getWorld().strikeLightning(targetLocation);
+                            }, 15);
                         }, 30);
                     }
                 }

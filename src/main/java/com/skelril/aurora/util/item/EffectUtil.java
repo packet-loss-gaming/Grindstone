@@ -92,27 +92,25 @@ public class EffectUtil {
 
             entity.setHealth(Math.min(entity.getHealth() + attackDamage, entity.getMaxHealth()));
 
-            for (Entity e : entity.getNearbyEntities(8, 8, 8)) {
-                if (e.isValid() && e instanceof LivingEntity) {
-                    if (e.getType() == entity.getType()) {
-                        ((LivingEntity) e).setHealth(Math.min(((LivingEntity) e).getHealth() + attackDamage,
-                                ((LivingEntity) e).getMaxHealth()));
-                        if (e instanceof Player) {
-                            ChatUtil.sendNotice((Player) e, "You are healed by an ancient force.");
-                        }
-                    } else if (!(entity instanceof Player) || EnvironmentUtil.isHostileEntity(e)) {
-                        if (e instanceof Player) {
-                            server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
-                        }
-                        e.setVelocity(new Vector(
-                                Math.random() * 3 - 1.5,
-                                Math.random() * 4,
-                                Math.random() * 3 - 1.5
-                        ));
-                        e.setFireTicks(ChanceUtil.getRandom(20 * 60));
+            entity.getNearbyEntities(8, 8, 8).stream().filter(e -> e.isValid() && e instanceof LivingEntity).forEach(e -> {
+                if (e.getType() == entity.getType()) {
+                    ((LivingEntity) e).setHealth(Math.min(((LivingEntity) e).getHealth() + attackDamage,
+                            ((LivingEntity) e).getMaxHealth()));
+                    if (e instanceof Player) {
+                        ChatUtil.sendNotice((Player) e, "You are healed by an ancient force.");
                     }
+                } else if (!(entity instanceof Player) || EnvironmentUtil.isHostileEntity(e)) {
+                    if (e instanceof Player) {
+                        server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
+                    }
+                    e.setVelocity(new Vector(
+                            Math.random() * 3 - 1.5,
+                            Math.random() * 4,
+                            Math.random() * 3 - 1.5
+                    ));
+                    e.setFireTicks(ChanceUtil.getRandom(20 * 60));
                 }
-            }
+            });
         }
     }
 
@@ -132,18 +130,12 @@ public class EffectUtil {
                 entities.add(entity);
             }
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    for (Entity entity : entities) {
-
-                        if (entity.isValid()) {
-                            entity.remove();
-                            for (int i = 0; i < 20; i++) {
-                                entity.getWorld().playEffect(entity.getLocation(), Effect.SMOKE, 0);
-                            }
+            server.getScheduler().runTaskLater(inst, () -> {
+                for (Entity entity : entities) {
+                    if (entity.isValid()) {
+                        entity.remove();
+                        for (int i = 0; i < 20; i++) {
+                            entity.getWorld().playEffect(entity.getLocation(), Effect.SMOKE, 0);
                         }
                     }
                 }

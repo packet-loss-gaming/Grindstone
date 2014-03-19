@@ -13,9 +13,6 @@ import net.minecraft.server.v1_7_R1.IAttribute;
 import org.bukkit.craftbukkit.v1_7_R1.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 
-/**
- * Created by wyatt on 12/28/13.
- */
 public class AttributeBook {
 
     public enum Attribute {

@@ -11,9 +11,6 @@ import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
 import com.skelril.aurora.items.specialattack.attacks.ranged.RangedSpecial;
 import org.bukkit.entity.LivingEntity;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class LifeLeech extends EntityAttack implements MeleeSpecial, RangedSpecial {
 
     public LifeLeech(LivingEntity owner, LivingEntity target) {

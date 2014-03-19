@@ -147,59 +147,44 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
         worldTimer.put(world, seconds);
 
         // New Task
-        int taskId = inst.getServer().getScheduler().scheduleSyncRepeatingTask(inst, new Runnable() {
+        int taskId = inst.getServer().getScheduler().scheduleSyncRepeatingTask(inst, () -> {
 
-            @Override
-            public void run() {
+            final Collection<Entity> entityCollection = world.getEntitiesByClasses(Item.class, Arrow.class,
+                    ExperienceOrb.class);
+            final int clearCount = entityCollection.size();
 
-                final Collection<Entity> entityCollection = world.getEntitiesByClasses(Item.class, Arrow.class,
-                        ExperienceOrb.class);
-                final int clearCount = entityCollection.size();
+            int timerSeconds = 0;
+            if (worldTimer.containsKey(world)) {
+                timerSeconds = worldTimer.get(world) - 1;
+                worldTimer.put(world, timerSeconds);
 
-                int timerSeconds = 0;
-                if (worldTimer.containsKey(world)) {
-                    timerSeconds = worldTimer.get(world) - 1;
-                    worldTimer.put(world, timerSeconds);
+                DropClearPulseEvent event = new DropClearPulseEvent(world, timerSeconds);
+                server.getPluginManager().callEvent(event);
+                timerSeconds = event.getSecondsLeft();
+            }
 
-                    DropClearPulseEvent event = new DropClearPulseEvent(world, timerSeconds);
-                    server.getPluginManager().callEvent(event);
-                    timerSeconds = event.getSecondsLeft();
+
+            boolean force = clearCount > config.itemCountMin * 3;
+            if ((timerSeconds > 0 && timerSeconds % 5 == 0 || timerSeconds <= 10 && timerSeconds > 0) && !force) {
+                Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops in "
+                        + timerSeconds + " seconds!");
+            } else if (timerSeconds < 1 || force) {
+                Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops!");
+
+                // Remove Entities
+                entityCollection.stream().filter(Entity::isValid).forEach(Entity::remove);
+                Bukkit.broadcastMessage(ChatColor.GREEN + "" + clearCount + " drops cleared!");
+
+                // Add to recent List
+                recentList.add(world);
+                server.getScheduler().runTaskLater(inst, () -> recentList.remove(world), 20 * 3);
+
+                // Shut down
+                if (activeWorlds.containsKey(world)) {
+                    server.getScheduler().cancelTask(activeWorlds.get(world));
+                    activeWorlds.remove(world);
                 }
-
-
-                boolean force = clearCount > config.itemCountMin * 3;
-                if ((timerSeconds > 0 && timerSeconds % 5 == 0 || timerSeconds <= 10 && timerSeconds > 0) && !force) {
-                    Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops in "
-                            + timerSeconds + " seconds!");
-                } else if (timerSeconds < 1 || force) {
-                    Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops!");
-
-                    // Remove Entities
-                    for (Entity ent : entityCollection) {
-
-                        if (ent.isValid()) ent.remove();
-                    }
-
-                    Bukkit.broadcastMessage(ChatColor.GREEN + "" + clearCount + " drops cleared!");
-
-                    // Add to recent List
-                    recentList.add(world);
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            recentList.remove(world);
-                        }
-                    }, 20 * 3);
-
-                    // Shut down
-                    if (activeWorlds.containsKey(world)) {
-                        server.getScheduler().cancelTask(activeWorlds.get(world));
-                        activeWorlds.remove(world);
-                    }
-                    if (worldTimer.containsKey(world)) worldTimer.remove(world);
-                }
+                if (worldTimer.containsKey(world)) worldTimer.remove(world);
             }
         }, delay, 20); // Multiply seconds by 20 to convert to ticks
         if (activeWorlds.containsKey(world)) {

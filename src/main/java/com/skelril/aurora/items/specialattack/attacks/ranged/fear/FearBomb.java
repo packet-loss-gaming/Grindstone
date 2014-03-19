@@ -33,9 +33,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class FearBomb extends EntityAttack implements RangedSpecial {
 
     public FearBomb(LivingEntity owner, LivingEntity target) {

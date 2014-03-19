@@ -131,14 +131,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
         }
 
         recentList.add(player);
-        server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-            @Override
-            public void run() {
-
-                recentList.remove(player);
-            }
-        }, 10);
+        server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 10);
     }
 
     @EventHandler(ignoreCancelled = true)

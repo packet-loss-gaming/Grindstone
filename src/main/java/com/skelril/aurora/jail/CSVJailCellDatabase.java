@@ -53,7 +53,8 @@ public class CSVJailCellDatabase implements JailCellDatabase {
         try {
             FileHandler handler = new FileHandler(
                     (new File(cellStorageDir, "cells.%g.%u.log")).getAbsolutePath()
-                            .replace("\\", "/"), true);
+                            .replace("\\", "/"), true
+            );
 
             handler.setFormatter(new java.util.logging.Formatter() {
 

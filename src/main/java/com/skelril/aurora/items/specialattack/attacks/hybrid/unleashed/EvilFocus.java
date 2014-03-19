@@ -15,9 +15,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpecial {
 
     public EvilFocus(LivingEntity owner, LivingEntity target) {

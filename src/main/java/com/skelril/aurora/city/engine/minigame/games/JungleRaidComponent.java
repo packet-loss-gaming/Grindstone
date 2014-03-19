@@ -468,15 +468,8 @@ public class JungleRaidComponent extends MinigameComponent {
                 e.printStackTrace();
                 return false;
             }
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    attempts++;
-                    probe();
-                }
-            }, 2);
+            attempts++;
+            server.getScheduler().runTaskLater(inst, this::probe, 2);
         }
 
         return world != null && region != null;
@@ -643,24 +636,19 @@ public class JungleRaidComponent extends MinigameComponent {
                 for (final Player player : getContainedPlayers()) {
                     if (!ChanceUtil.getChance(30)) continue;
                     for (int i = 0; i < 5; i++) {
-                        server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                Location targetLocation = player.getLocation();
-                                Firework firework = (Firework) targetLocation.getWorld().spawnEntity(targetLocation, EntityType.FIREWORK);
-                                FireworkMeta meta = firework.getFireworkMeta();
-                                FireworkEffect.Builder builder = FireworkEffect.builder();
-                                builder.flicker(ChanceUtil.getChance(2));
-                                builder.trail(ChanceUtil.getChance(2));
-                                builder.withColor(Arrays.asList(Color.RED));
-                                builder.withFade(Arrays.asList(Color.YELLOW));
-                                builder.with(FireworkEffect.Type.BURST);
-                                meta.addEffect(builder.build());
-                                meta.setPower(ChanceUtil.getRangedRandom(2, 5));
-                                firework.setFireworkMeta(meta);
-                            }
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            Location targetLocation = player.getLocation();
+                            Firework firework = (Firework) targetLocation.getWorld().spawnEntity(targetLocation, EntityType.FIREWORK);
+                            FireworkMeta meta = firework.getFireworkMeta();
+                            FireworkEffect.Builder builder = FireworkEffect.builder();
+                            builder.flicker(ChanceUtil.getChance(2));
+                            builder.trail(ChanceUtil.getChance(2));
+                            builder.withColor(Arrays.asList(Color.RED));
+                            builder.withFade(Arrays.asList(Color.YELLOW));
+                            builder.with(FireworkEffect.Type.BURST);
+                            meta.addEffect(builder.build());
+                            meta.setPower(ChanceUtil.getRangedRandom(2, 5));
+                            firework.setFireworkMeta(meta);
                         }, i * 4);
                     }
                 }
@@ -718,11 +706,9 @@ public class JungleRaidComponent extends MinigameComponent {
                 return;
             }
 
-            for (Entity entity : world.getEntitiesByClasses(Item.class, TNTPrimed.class)) {
-                if (region.contains(BukkitUtil.toVector(entity.getLocation()))) {
-                    entity.remove();
-                }
-            }
+            world.getEntitiesByClasses(Item.class, TNTPrimed.class).stream()
+                    .filter(entity -> region.contains(BukkitUtil.toVector(entity.getLocation())))
+                    .forEach(Entity::remove);
 
             final Snapshot snap = worldEditConfig.snapshotRepo.getDefaultSnapshot(config.worldName);
 
@@ -769,66 +755,61 @@ public class JungleRaidComponent extends MinigameComponent {
             // Setup task to progressively restore
             final EditSession fakeEditor = new EditSession(new BukkitWorld(world), -1);
             for (final Chunk chunk : chunkList) {
-                BukkitTask aTask = server.getScheduler().runTaskLater(inst, new Runnable() {
+                BukkitTask aTask = server.getScheduler().runTaskLater(inst, () -> {
+                    ChunkStore chunkStore;
 
-                    @Override
-                    public void run() {
+                    try {
+                        chunkStore = snap._getChunkStore();
+                    } catch (DataException | IOException e) {
+                        log.warning("Failed to load snapshot: " + e.getMessage());
+                        return;
+                    }
 
-                        ChunkStore chunkStore;
+                    try {
+                        Block minBlock = chunk.getBlock(0, minY, 0);
+                        Block maxBlock = chunk.getBlock(15, maxY, 15);
+                        Vector minPt = new Vector(minBlock.getX(), minBlock.getY(), minBlock.getZ());
+                        Vector maxPt = new Vector(maxBlock.getX(), maxBlock.getY(), maxBlock.getZ());
+
+                        Region r = new CuboidRegion(minPt, maxPt);
+
+                        // Restore snapshot
+                        if (!chunk.isLoaded()) chunk.load();
+                        SnapshotRestore restore = new SnapshotRestore(chunkStore, fakeEditor, r);
 
                         try {
-                            chunkStore = snap._getChunkStore();
-                        } catch (DataException | IOException e) {
-                            log.warning("Failed to load snapshot: " + e.getMessage());
+                            restore.restore();
+                            ChunkBook.relight(chunk);
+                        } catch (MaxChangedBlocksException e) {
+                            log.warning("Congratulations! You got an error which makes no sense!");
+                            e.printStackTrace();
                             return;
+                        } catch (UnsupportedFeatureException e) {
+                            log.warning("Couldn't relight the chunk!");
                         }
 
-                        try {
-                            Block minBlock = chunk.getBlock(0, minY, 0);
-                            Block maxBlock = chunk.getBlock(15, maxY, 15);
-                            Vector minPt = new Vector(minBlock.getX(), minBlock.getY(), minBlock.getZ());
-                            Vector maxPt = new Vector(maxBlock.getX(), maxBlock.getY(), maxBlock.getZ());
-
-                            Region r = new CuboidRegion(minPt, maxPt);
-
-                            // Restore snapshot
-                            if (!chunk.isLoaded()) chunk.load();
-                            SnapshotRestore restore = new SnapshotRestore(chunkStore, fakeEditor, r);
-
-                            try {
-                                restore.restore();
-                                ChunkBook.relight(chunk);
-                            } catch (MaxChangedBlocksException e) {
-                                log.warning("Congratulations! You got an error which makes no sense!");
-                                e.printStackTrace();
-                                return;
-                            } catch (UnsupportedFeatureException e) {
-                                log.warning("Couldn't relight the chunk!");
-                            }
-
-                            if (restore.hadTotalFailure()) {
-                                String error = restore.getLastErrorMessage();
-                                if (error != null) {
-                                    log.warning("Errors prevented any blocks from being restored.");
-                                    log.warning("Last error: " + error);
-                                } else {
-                                    log.warning("No chunks could be loaded. (Bad archive?)");
-                                }
+                        if (restore.hadTotalFailure()) {
+                            String error = restore.getLastErrorMessage();
+                            if (error != null) {
+                                log.warning("Errors prevented any blocks from being restored.");
+                                log.warning("Last error: " + error);
                             } else {
-                                if (restore.getMissingChunks().size() > 0 || restore.getErrorChunks().size() > 0) {
-                                    log.info(String.format("Restored, %d missing chunks and %d other errors.",
-                                            restore.getMissingChunks().size(),
-                                            restore.getErrorChunks().size()));
-                                }
-                                if (chunkList.indexOf(chunk) == chunkList.size() - 1) {
-                                    Bukkit.broadcastMessage(ChatColor.YELLOW + "Restored successfully.");
-                                }
+                                log.warning("No chunks could be loaded. (Bad archive?)");
                             }
-                        } finally {
-                            try {
-                                chunkStore.close();
-                            } catch (IOException ignored) {
+                        } else {
+                            if (restore.getMissingChunks().size() > 0 || restore.getErrorChunks().size() > 0) {
+                                log.info(String.format("Restored, %d missing chunks and %d other errors.",
+                                        restore.getMissingChunks().size(),
+                                        restore.getErrorChunks().size()));
                             }
+                            if (chunkList.indexOf(chunk) == chunkList.size() - 1) {
+                                Bukkit.broadcastMessage(ChatColor.YELLOW + "Restored successfully.");
+                            }
+                        }
+                    } finally {
+                        try {
+                            chunkStore.close();
+                        } catch (IOException ignored) {
                         }
                     }
                 }, 5 * chunkList.indexOf(chunk));
@@ -836,14 +817,7 @@ public class JungleRaidComponent extends MinigameComponent {
             }
 
             // Setup a task to clear out any restoration task
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    restorationTask.clear();
-                }
-            }, (5 * chunkList.size()) + 20);
+            server.getScheduler().runTaskLater(inst, restorationTask::clear, (5 * chunkList.size()) + 20);
         } catch (MissingWorldException e) {
             log.warning("The world: " + config.worldName + " could not be found, restoration cancelled.");
         }
@@ -1153,22 +1127,17 @@ public class JungleRaidComponent extends MinigameComponent {
                 final Location playerLoc = player.getLocation().clone();
 
                 for (int i = 0; i < 12; i++) {
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            Firework firework = (Firework) world.spawnEntity(playerLoc, EntityType.FIREWORK);
-                            FireworkMeta meta = firework.getFireworkMeta();
-                            FireworkEffect.Builder builder = FireworkEffect.builder();
-                            builder.flicker(ChanceUtil.getChance(2));
-                            builder.trail(ChanceUtil.getChance(2));
-                            builder.withColor(colors);
-                            builder.withFade(fades);
-                            meta.addEffect(builder.build());
-                            meta.setPower(ChanceUtil.getRangedRandom(2, 5));
-                            firework.setFireworkMeta(meta);
-                        }
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        Firework firework = (Firework) world.spawnEntity(playerLoc, EntityType.FIREWORK);
+                        FireworkMeta meta = firework.getFireworkMeta();
+                        FireworkEffect.Builder builder = FireworkEffect.builder();
+                        builder.flicker(ChanceUtil.getChance(2));
+                        builder.trail(ChanceUtil.getChance(2));
+                        builder.withColor(colors);
+                        builder.withFade(fades);
+                        meta.addEffect(builder.build());
+                        meta.setPower(ChanceUtil.getRangedRandom(2, 5));
+                        firework.setFireworkMeta(meta);
                     }, i * 4);
                 }
 
@@ -1193,16 +1162,10 @@ public class JungleRaidComponent extends MinigameComponent {
 
             final Player p = event.getPlayer();
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-                    // Technically forced, but because this
-                    // happens from disconnect/quit button
-                    // we don't want it to count as forced
-                    removeGoneFromTeam(p, false);
-                }
-            }, 1);
+            // Technically forced, but because this
+            // happens from disconnect/quit button
+            // we don't want it to count as forced
+            server.getScheduler().runTaskLater(inst, () -> removeGoneFromTeam(p, false), 1);
         }
 
         @EventHandler(ignoreCancelled = true)
@@ -1210,13 +1173,7 @@ public class JungleRaidComponent extends MinigameComponent {
 
             final Player p = event.getPlayer();
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-                    removeGoneFromTeam(p, true);
-                }
-            }, 1);
+            server.getScheduler().runTaskLater(inst, () -> removeGoneFromTeam(p, true), 1);
         }
 
         @EventHandler(ignoreCancelled = true)

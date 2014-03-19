@@ -78,12 +78,10 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
                 continue;
             }
 
-            for (Map.Entry<CheckType, Long> p : e.getValue().entrySet()) {
-                if ((System.currentTimeMillis() - p.getValue()) / 1000 > config.removalDelay) {
-                    unexempt(player, p.getKey());
-                    e.getValue().remove(p.getKey());
-                }
-            }
+            e.getValue().entrySet().stream().filter(p -> (System.currentTimeMillis() - p.getValue()) / 1000 > config.removalDelay).forEach(p -> {
+                unexempt(player, p.getKey());
+                e.getValue().remove(p.getKey());
+            });
         }
     }
 

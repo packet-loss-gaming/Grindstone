@@ -180,12 +180,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
 
         final Location finalK = k;
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-            @Override
-            public void run() {
-                finalK.getWorld().createExplosion(finalK, 3, false);
-            }
-        }, 30);
+        server.getScheduler().runTaskLater(inst, () -> finalK.getWorld().createExplosion(finalK, 3, false), 30);
 
         oldLoc.setDirection(modifyCamera ? oldLoc.getDirection().multiply(-1) : player.getLocation().getDirection());
         player.teleport(oldLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
@@ -380,7 +375,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
                         // Check types
                         Material type = stack.getType();
-                        if ((type != Material.AIR && type.isBlock()) || type.isEdible() && player.getFoodLevel() < 20) break;
+                        if ((type != Material.AIR && type.isBlock()) || type.isEdible() && player.getFoodLevel() < 20)
+                            break;
 
                         // Check for possible misclick
                         if (EnvironmentUtil.isInteractiveBlock(clicked.getRelative(face))) break;

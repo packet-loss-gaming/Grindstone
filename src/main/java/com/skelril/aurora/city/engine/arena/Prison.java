@@ -142,14 +142,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
                 return;
             } else {
                 players.add(name);
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-                    @Override
-                    public void run() {
-                        if (players.contains(name)) {
-                            players.remove(name);
-                        }
-                    }
-                }, 1);
+                server.getScheduler().runTaskLater(inst, () -> players.remove(name), 1);
             }
             ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport to that location.");
         }

@@ -20,9 +20,6 @@ import java.util.logging.Logger;
 
 ;
 
-/**
- * Created by wyatt on 12/15/13.
- */
 @ComponentInformation(friendlyName = "IC Component", desc = "Custom ICs!")
 @Depend(plugins = "CraftBook")
 public class CustomICComponent extends BukkitComponent {
@@ -36,15 +33,12 @@ public class CustomICComponent extends BukkitComponent {
     @Override
     public void enable() {
 
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-            @Override
-            public void run() {
-                ICCore = ICManager.inst();
-                if (ICCore == null) {
-                    log.warning("ICManager is null!");
-                }
-                registerICs();
+        server.getScheduler().runTaskLater(inst, () -> {
+            ICCore = ICManager.inst();
+            if (ICCore == null) {
+                log.warning("ICManager is null!");
             }
+            registerICs();
         }, 1);
 
     }

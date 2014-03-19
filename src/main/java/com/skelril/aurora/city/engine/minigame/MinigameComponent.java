@@ -75,12 +75,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     public void begin(Set<Character> flags, int tickDelay) {
 
         initialize(flags);
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-            @Override
-            public void run() {
-                start();
-            }
-        }, tickDelay);
+        server.getScheduler().runTaskLater(inst, this::start, tickDelay);
     }
 
     public void initialize(Set<Character> flags) {
@@ -352,8 +347,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     // Commands
     public void joinCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-        if (!(sender instanceof Player)) sender.sendMessage("You must be a player to use this command.");
-        Player targetPlayer = (Player) sender;
+        Player targetPlayer = PlayerUtil.checkPlayer(sender);
 
         int teamNumber;
         boolean useQueue = args.hasFlag('q') || args.hasFlag('Q');

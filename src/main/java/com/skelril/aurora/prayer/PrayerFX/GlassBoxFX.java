@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GlassBoxFX extends AbstractEffect {
 
@@ -42,9 +43,7 @@ public class GlassBoxFX extends AbstractEffect {
                 queList.add(loc.getBlock().getRelative(face).getLocation());
             }
         }
-        for (Location loc : queList) {
-            locationList.add(loc);
-        }
+        locationList.addAll(queList.stream().map(loc -> loc).collect(Collectors.toList()));
         for (Location loc : locationList) {
             if (loc.getBlock().equals(loc1.getBlock()) || loc.getBlock().equals(loc2.getBlock())) continue;
             player.sendBlockChange(loc, BlockID.GLASS, (byte) 0);

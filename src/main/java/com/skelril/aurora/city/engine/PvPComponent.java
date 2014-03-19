@@ -47,9 +47,6 @@ import org.bukkit.plugin.Plugin;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-/**
- * Created by Wyatt on 12/8/13.
- */
 @ComponentInformation(friendlyName = "PvP", desc = "Skelril PvP management.")
 @Depend(components = {SessionComponent.class, PrayerComponent.class}, plugins = "WorldGuard")
 public class PvPComponent extends BukkitComponent implements Listener {
@@ -140,12 +137,10 @@ public class PvPComponent extends BukkitComponent implements Listener {
 
                 prayers.influencePlayer(player, targetPrayers);
 
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-                    @Override
-                    public void run() {
-                        ChatUtil.sendWarning(player, "You ran from a fight, the Giant Chicken does not approve!");
-                    }
-                }, 1);
+                server.getScheduler().runTaskLater(inst,
+                        () -> ChatUtil.sendWarning(player,
+                                "You ran from a fight, the Giant Chicken does not approve!"), 1
+                );
             } catch (UnsupportedPrayerException ignored) {
             }
         }

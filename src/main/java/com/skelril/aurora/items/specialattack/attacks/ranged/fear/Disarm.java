@@ -15,9 +15,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.inventory.ItemStack;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class Disarm extends EntityAttack implements RangedSpecial {
 
     public Disarm(LivingEntity owner, LivingEntity target) {

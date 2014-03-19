@@ -15,9 +15,6 @@ import org.bukkit.entity.Player;
 
 import java.util.logging.Logger;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public abstract class SpecialAttack {
 
     protected static final CommandBook inst = CommandBook.inst();

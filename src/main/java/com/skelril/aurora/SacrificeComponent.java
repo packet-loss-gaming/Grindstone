@@ -458,14 +458,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         final Block above = origin.getRelative(BlockFace.UP);
         if (above.getTypeId() == BlockID.AIR) {
             above.setTypeId(BlockID.FIRE);
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    above.setTypeId(BlockID.AIR);
-                }
-            }, 20 * 4);
+            server.getScheduler().runTaskLater(inst, () -> above.setTypeId(BlockID.AIR), 20 * 4);
 
             for (BlockFace face : surrounding) {
                 createFire(origin.getRelative(face));
@@ -480,45 +473,39 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         final Item item = event.getItemDrop();
         if (!inst.hasPermission(player, "aurora.sacrifice")) return;
 
-        int taskId = server.getScheduler().scheduleSyncRepeatingTask(inst, new Runnable() {
+        int taskId = server.getScheduler().scheduleSyncRepeatingTask(inst, () -> {
+            int id = getEntityTaskId(item);
 
-            @Override
-            public void run() {
+            if (item.isDead() || item.getTicksLived() > 40) {
 
-                int id = getEntityTaskId(item);
+                if (id != -1) {
+                    removeEntity(item);
+                    server.getScheduler().cancelTask(id);
+                }
+            } else {
+                final Block searchBlock = item.getLocation().getBlock().getRelative(BlockFace.DOWN);
 
-                if (item.isDead() || item.getTicksLived() > 40) {
-
-                    if (id != -1) {
+                int blockTypeId = searchBlock.getTypeId();
+                int blockData = searchBlock.getData();
+                if ((blockTypeId == config.sacrificialBlockId) && (blockData == config.sacrificialBlockData)) {
+                    try {
+                        // Create the event here
+                        PlayerSacrificeItemEvent sacrificeItemEvent = new PlayerSacrificeItemEvent(player, searchBlock, item.getItemStack());
+                        server.getPluginManager().callEvent(sacrificeItemEvent);
+                        if (sacrificeItemEvent.isCancelled()) return;
+                        createFire(searchBlock);
+                        sacrifice(player, sacrificeItemEvent.getItemStack());
                         removeEntity(item);
+                        item.remove();
                         server.getScheduler().cancelTask(id);
-                    }
-                } else {
-                    final Block searchBlock = item.getLocation().getBlock().getRelative(BlockFace.DOWN);
-
-                    int blockTypeId = searchBlock.getTypeId();
-                    int blockData = searchBlock.getData();
-                    if ((blockTypeId == config.sacrificialBlockId) && (blockData == config.sacrificialBlockData)) {
-                        try {
-                            // Create the event here
-                            PlayerSacrificeItemEvent sacrificeItemEvent = new PlayerSacrificeItemEvent(player, searchBlock, item.getItemStack());
-                            server.getPluginManager().callEvent(sacrificeItemEvent);
-                            if (sacrificeItemEvent.isCancelled()) return;
-                            createFire(searchBlock);
-                            sacrifice(player, sacrificeItemEvent.getItemStack());
-                            removeEntity(item);
-                            item.remove();
-                            server.getScheduler().cancelTask(id);
-                            player.sendMessage(ChatColor.GOLD + "An ancient fire ignites.");
-                        } catch (Exception e) {
-                            log.warning("The: "
-                                    + SacrificeComponent.this.getInformation().friendlyName()
-                                    + " component could not contact Pitfall.");
-                        }
+                        player.sendMessage(ChatColor.GOLD + "An ancient fire ignites.");
+                    } catch (Exception e) {
+                        log.warning("The: "
+                                + SacrificeComponent.this.getInformation().friendlyName()
+                                + " component could not contact Pitfall.");
                     }
                 }
             }
-
         }, 0, 1); // Start at 0 ticks and repeat every 1 ticks
         addEntityTaskId(item, taskId);
     }

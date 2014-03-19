@@ -71,15 +71,11 @@ public class AdminStoreComponent extends BukkitComponent {
         registerCommands(Commands.class);
 
         // Get the region
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-            @Override
-            public void run() {
-
-                try {
-                    region = getWorldGuard().getGlobalRegionManager().get(Bukkit.getWorld("City")).getRegion("vineam-district-bank");
-                } catch (UnknownPluginException e) {
-                    e.printStackTrace();
-                }
+        server.getScheduler().runTaskLater(inst, () -> {
+            try {
+                region = getWorldGuard().getGlobalRegionManager().get(Bukkit.getWorld("City")).getRegion("vineam-district-bank");
+            } catch (UnknownPluginException e) {
+                e.printStackTrace();
             }
         }, 1);
     }
@@ -458,10 +454,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException("Cannot scale by 0.");
             }
 
-            Iterator<ItemPricePair> it = itemStoreDatabase.iterator();
-
-            while (it.hasNext()) {
-                ItemPricePair pair = it.next();
+            for (ItemPricePair pair : itemStoreDatabase) {
                 pair.setPrice(pair.getPrice() * factor);
             }
 

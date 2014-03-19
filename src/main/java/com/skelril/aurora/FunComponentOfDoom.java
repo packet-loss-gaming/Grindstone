@@ -36,6 +36,7 @@ import org.bukkit.inventory.meta.FireworkMeta;
 
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Author: Turtle9598
@@ -154,12 +155,8 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
                     times = args.getFlagInteger('t');
                 }
                 for (int i = 0; i < times; i++) {
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-                        @Override
-                        public void run() {
-                            ((Player) sender).performCommand(args.getJoinedStrings(0));
-                        }
-                    }, 1);
+                    server.getScheduler().runTaskLater(inst,
+                            () -> ((Player) sender).performCommand(args.getJoinedStrings(0)), 1);
                 }
             }
         }
@@ -247,11 +244,9 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
 
                 inst.checkPermission(sender, "aurora.fireworks.other");
 
-                Iterable<Player> players = InputUtil.PlayerParser.matchPlayers(sender, args.getString(5));
+                List<Player> players = InputUtil.PlayerParser.matchPlayers(sender, args.getString(5));
                 playerLocList = new ArrayList<>();
-                for (Player player : players) {
-                    playerLocList.add(player.getLocation());
-                }
+                playerLocList.addAll(players.stream().map(player -> player.getLocation()).collect(Collectors.toList()));
             } else if (sender instanceof Player) {
                 playerLocList = Arrays.asList(((Player) sender).getLocation());
             } else {
@@ -263,30 +258,25 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
             for (final Location playerLoc : playerLocList) {
                 for (int i = 0; i < amount; i++) {
                     final int finalI = i;
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        Location targetLocation = playerLoc.clone();
+                        if (random) {
+                            targetLocation = LocationUtil.findRandomLoc(playerLoc, 7, true, false);
+                        }
+                        Firework firework = (Firework) playerLoc.getWorld().spawnEntity(targetLocation, EntityType.FIREWORK);
+                        FireworkMeta meta = firework.getFireworkMeta();
+                        FireworkEffect.Builder builder = FireworkEffect.builder();
+                        builder.flicker(ChanceUtil.getChance(2));
+                        builder.trail(ChanceUtil.getChance(2));
+                        builder.withColor(colors);
+                        builder.withFade(fades);
+                        builder.with(type);
+                        meta.addEffect(builder.build());
+                        meta.setPower(ChanceUtil.getRangedRandom(rocketPower / 2, rocketPower));
+                        firework.setFireworkMeta(meta);
 
-                        @Override
-                        public void run() {
-
-                            Location targetLocation = playerLoc.clone();
-                            if (random) {
-                                targetLocation = LocationUtil.findRandomLoc(playerLoc, 7, true, false);
-                            }
-                            Firework firework = (Firework) playerLoc.getWorld().spawnEntity(targetLocation, EntityType.FIREWORK);
-                            FireworkMeta meta = firework.getFireworkMeta();
-                            FireworkEffect.Builder builder = FireworkEffect.builder();
-                            builder.flicker(ChanceUtil.getChance(2));
-                            builder.trail(ChanceUtil.getChance(2));
-                            builder.withColor(colors);
-                            builder.withFade(fades);
-                            builder.with(type);
-                            meta.addEffect(builder.build());
-                            meta.setPower(ChanceUtil.getRangedRandom(rocketPower / 2, rocketPower));
-                            firework.setFireworkMeta(meta);
-
-                            if (finalI == amount - 1 && players.contains(name)) {
-                                players.remove(name);
-                            }
+                        if (finalI == amount - 1 && players.contains(name)) {
+                            players.remove(name);
                         }
                     }, i * 4);
                 }

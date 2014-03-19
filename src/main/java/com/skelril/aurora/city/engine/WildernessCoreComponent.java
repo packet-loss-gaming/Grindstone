@@ -158,15 +158,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 wilderness.setThunderDuration(city.getThunderDuration());
             }
 
-            for (Entity horse : city.getEntitiesByClasses(Horse.class)) {
-
-                tryTeleport(horse);
-            }
-
-            for (Entity horse : wilderness.getEntitiesByClasses(Horse.class)) {
-
-                tryTeleport(horse);
-            }
+            city.getEntitiesByClasses(Horse.class).forEach(this::tryTeleport);
+            wilderness.getEntitiesByClasses(Horse.class).forEach(this::tryTeleport);
         }
     }
 
@@ -176,16 +169,13 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         if (passenger != null && vehicle.getLocation().getBlock().getTypeId() == BlockID.END_PORTAL) {
             vehicle.eject();
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-                @Override
-                public void run() {
-                    if (!vehicle.isValid() || !passenger.isValid()) return;
-                    vehicle.teleport(passenger);
-                    vehicle.setPassenger(passenger);
+            server.getScheduler().runTaskLater(inst, () -> {
+                if (!vehicle.isValid() || !passenger.isValid()) return;
+                vehicle.teleport(passenger);
+                vehicle.setPassenger(passenger);
 
-                    if (passenger instanceof Player) {
-                        ((Player) passenger).kickPlayer("Please Reconnect");
-                    }
+                if (passenger instanceof Player) {
+                    ((Player) passenger).kickPlayer("Please Reconnect");
                 }
             }, 20);
         }
@@ -401,30 +391,27 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 final Entity finalDamager = damager;
                 final int oldCurrent = (int) Math.ceil(((LivingEntity) entity).getHealth());
 
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-                    @Override
-                    public void run() {
+                server.getScheduler().runTaskLater(inst, () -> {
 
-                        int current = (int) Math.ceil(((LivingEntity) entity).getHealth());
+                    int current = (int) Math.ceil(((LivingEntity) entity).getHealth());
 
-                        if (oldCurrent == current) return;
+                    if (oldCurrent == current) return;
 
-                        WildernessSession session = sessions.getSession(WildernessSession.class, (CommandSender) finalDamager);
+                    WildernessSession session = sessions.getSession(WildernessSession.class, (CommandSender) finalDamager);
 
-                        int max = (int) Math.ceil(((LivingEntity) entity).getMaxHealth());
+                    int max = (int) Math.ceil(((LivingEntity) entity).getMaxHealth());
 
-                        String message;
+                    String message;
 
-                        if (current > 0) {
-                            message = ChatColor.DARK_AQUA
-                                    + String.valueOf(session.checkLast(entity.getUniqueId()) ? ChatColor.ITALIC : "")
-                                    + "Entity Health: " + current + " / " + max;
-                        } else {
-                            message = ChatColor.GOLD + String.valueOf(ChatColor.BOLD) + "KO!";
-                        }
-
-                        ChatUtil.sendNotice((Player) finalDamager, message);
+                    if (current > 0) {
+                        message = ChatColor.DARK_AQUA
+                                + String.valueOf(session.checkLast(entity.getUniqueId()) ? ChatColor.ITALIC : "")
+                                + "Entity Health: " + current + " / " + max;
+                    } else {
+                        message = ChatColor.GOLD + String.valueOf(ChatColor.BOLD) + "KO!";
                     }
+
+                    ChatUtil.sendNotice((Player) finalDamager, message);
                 }, 1);
                 return;
             }
@@ -551,13 +538,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         event.setYield(.1F);
 
-        for (Block block : event.blockList()) {
-
-            if (isEffectedOre(block.getTypeId())) {
-
-                addPool(block.getState(), 0, false);
-            }
-        }
+        event.blockList().stream().filter(block -> isEffectedOre(block.getTypeId()))
+                .forEach(block -> addPool(block.getState(), 0, false));
     }
 
     @EventHandler

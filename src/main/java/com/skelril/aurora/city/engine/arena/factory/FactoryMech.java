@@ -198,7 +198,7 @@ public class FactoryMech extends AbstractRegionedArena {
 
     /**
      * Copied from the Bukkit potion class
-     * <p/>
+     * <p>
      * Converts this potion to a valid potion damage short, usable for potion
      * item stacks.
      *

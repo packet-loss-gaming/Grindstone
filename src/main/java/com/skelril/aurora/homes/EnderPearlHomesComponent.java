@@ -99,26 +99,15 @@ public class EnderPearlHomesComponent extends BukkitComponent implements Listene
                         != BlockID.BED) {
                     ChatUtil.sendNotice(player, "The vortex cannot find your home and sends you to spawn.");
                     event.setCancelled(true);
-                    server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            player.teleport(player.getWorld().getSpawnLocation());
-                        }
-                    }, 1);
+                    server.getScheduler().scheduleSyncDelayedTask(inst,
+                            () -> player.teleport(player.getWorld().getSpawnLocation()), 1);
                 } else {
                     ChatUtil.sendNotice(player, "The vortex sends you to your home.");
                     event.setCancelled(true);
-                    server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            HomeTeleportEvent HTE = new HomeTeleportEvent(player, getBedLocation(player));
-                            server.getPluginManager().callEvent(HTE);
-                            if (!HTE.isCancelled()) player.teleport(HTE.getDestination());
-                        }
+                    server.getScheduler().scheduleSyncDelayedTask(inst, () -> {
+                        HomeTeleportEvent HTE = new HomeTeleportEvent(player, getBedLocation(player));
+                        server.getPluginManager().callEvent(HTE);
+                        if (!HTE.isCancelled()) player.teleport(HTE.getDestination());
                     }, 1);
                 }
             }

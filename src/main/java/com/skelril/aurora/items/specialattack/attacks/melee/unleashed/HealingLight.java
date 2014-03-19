@@ -14,9 +14,6 @@ import org.bukkit.Effect;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class HealingLight extends EntityAttack implements MeleeSpecial {
 
     public HealingLight(LivingEntity owner, LivingEntity target) {

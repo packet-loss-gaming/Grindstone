@@ -127,14 +127,11 @@ public class DebugComponent extends BukkitComponent {
         @EventHandler
         public void onRespawn(final PlayerRespawnEvent event) {
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-                @Override
-                public void run() {
-                    Player player = event.getPlayer();
+            server.getScheduler().runTaskLater(inst, () -> {
+                Player player = event.getPlayer();
 
-                    for (PotionEffect next : player.getActivePotionEffects()) {
-                        player.addPotionEffect(new PotionEffect(next.getType(), 0, 0), true);
-                    }
+                for (PotionEffect next : player.getActivePotionEffects()) {
+                    player.addPotionEffect(new PotionEffect(next.getType(), 0, 0), true);
                 }
             }, 1);
         }

@@ -64,14 +64,9 @@ public class SheepProtectionComponent extends BukkitComponent implements Listene
             // Tell them not to do it again
             ChatUtil.sendWarning(player, "Don't dye sheep!");
 
-            server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    Sheep sheep = (Sheep) entity;
-                    sheep.setColor(DyeColor.WHITE);
-                }
+            server.getScheduler().scheduleSyncDelayedTask(inst, () -> {
+                Sheep sheep = (Sheep) entity;
+                sheep.setColor(DyeColor.WHITE);
             }, 1);
         }
     }

@@ -15,9 +15,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-/**
- * Created by wyatt on 12/28/13.
- */
 public class DamageUtil {
 
     private static final CommandBook inst = CommandBook.inst();

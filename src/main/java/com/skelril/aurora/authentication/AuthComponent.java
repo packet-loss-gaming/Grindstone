@@ -277,14 +277,7 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         return objective;
     }
 
-    private static final FilenameFilter filenameFilter = new FilenameFilter() {
-
-        @Override
-        public boolean accept(File dir, String name) {
-
-            return name.startsWith("character") && name.endsWith(".json");
-        }
-    };
+    private static final FilenameFilter filenameFilter = (dir, name) -> name.startsWith("character") && name.endsWith(".json");
 
     public synchronized void updateWhiteList(JSONArray object) {
 

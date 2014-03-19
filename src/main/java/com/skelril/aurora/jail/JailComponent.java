@@ -35,6 +35,7 @@ import org.bukkit.event.player.*;
 import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Author: Turtle9598
@@ -466,10 +467,9 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
                 items = new ArrayList<>();
 
-                for (JailCell cell : prisonCells) {
-                    items.add(cell.getCellName()
-                            + " (" + cell.getWorldName() + "; " + cell.getX() + ", " + cell.getY() + ", " + cell.getZ() + ")");
-                }
+                items.addAll(prisonCells.stream().map(cell -> cell.getCellName()
+                        + " (" + cell.getWorldName() + "; " + cell.getX() + ", "
+                        + cell.getY() + ", " + cell.getZ() + ")").collect(Collectors.toList()));
             }
 
             Collections.sort(items);

@@ -73,6 +73,7 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
@@ -117,17 +118,12 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         inst.registerEvents(this);
 
         // Mob Destroyer
-        mobDestroyer = server.getScheduler().runTaskTimer(inst, new Runnable() {
-
-            @Override
-            public void run() {
-
-                Entity[] contained = getContainedEntities(1, Zombie.class, ExperienceOrb.class);
-                if (!getWorld().isThundering()) removeOutsideZombies(contained);
-                if (isBossSpawned()) {
-                    buffBabies(contained);
-                    removeXP(contained);
-                }
+        mobDestroyer = server.getScheduler().runTaskTimer(inst, () -> {
+            Entity[] contained = getContainedEntities(1, Zombie.class, ExperienceOrb.class);
+            if (!getWorld().isThundering()) removeOutsideZombies(contained);
+            if (isBossSpawned()) {
+                buffBabies(contained);
+                removeXP(contained);
             }
         }, 0, 20 * 2);
 
@@ -270,20 +266,15 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
         }
     }
 
-    public Runnable spawnXP = new Runnable() {
-
-        @Override
-        public void run() {
-
-            for (Location pt : spawnPts) {
-                if (!ChanceUtil.getChance(6)) continue;
-                ThrownExpBottle bottle = (ThrownExpBottle) getWorld().spawnEntity(pt, EntityType.THROWN_EXP_BOTTLE);
-                bottle.setVelocity(new Vector(
-                        random.nextDouble() * 1.7 - 1.5,
-                        random.nextDouble() * 1.5,
-                        random.nextDouble() * 1.7 - 1.5)
-                );
-            }
+    public Runnable spawnXP = () -> {
+        for (Location pt : spawnPts) {
+            if (!ChanceUtil.getChance(6)) continue;
+            ThrownExpBottle bottle = (ThrownExpBottle) getWorld().spawnEntity(pt, EntityType.THROWN_EXP_BOTTLE);
+            bottle.setVelocity(new Vector(
+                            random.nextDouble() * 1.7 - 1.5,
+                            random.nextDouble() * 1.5,
+                            random.nextDouble() * 1.7 - 1.5)
+            );
         }
     };
 
@@ -621,11 +612,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         }
 
                         if (ChanceUtil.getChance(difficulty * 3)) {
-                            List<LivingEntity> entities = new ArrayList<>();
-                            for (Entity e : player.getNearbyEntities(6, 4, 6)) {
-
-                                if (EnvironmentUtil.isHostileEntity(e)) entities.add((LivingEntity) e);
-                            }
+                            List<LivingEntity> entities = player.getNearbyEntities(6, 4, 6).stream().filter(EnvironmentUtil::isHostileEntity).map(e -> (LivingEntity) e).collect(Collectors.toList());
                             EffectUtil.Master.doomBlade(player, entities);
                         }
                     }
@@ -641,13 +628,10 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
             final Giant boss = (Giant) defender;
 
             // Schedule a task to change the display name to show HP
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-                @Override
-                public void run() {
-                    if (getWorld().getTime() % 7 != 0 || boss == null || !boss.isValid()) return;
+            server.getScheduler().runTaskLater(inst, () -> {
+                if (getWorld().getTime() % 7 != 0 || !boss.isValid()) return;
 
-                    printBossHealth();
-                }
+                printBossHealth();
             }, 1);
 
             if (damageHeals) {
@@ -689,23 +673,20 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 final double oldHP = boss.getHealth();
                 final Entity finalAttacker = attacker;
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-                    @Override
-                    public void run() {
+                server.getScheduler().runTaskLater(inst, () -> {
 
-                        if (oldHP < boss.getHealth()) return;
+                    if (oldHP < boss.getHealth()) return;
 
-                        for (Location spawnPt : spawnPts) {
-                            if (ChanceUtil.getChance(11)) {
-                                for (int i = 0; i < Math.max(3, contained.length); i++) {
-                                    Zombie z = (Zombie) getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
-                                    z.setBaby(true);
-                                    EntityEquipment equipment = z.getEquipment();
-                                    equipment.setItemInHand(weapon.clone());
-                                    equipment.setItemInHandDropChance(0F);
-                                    if (finalAttacker != null && finalAttacker instanceof LivingEntity) {
-                                        z.setTarget((LivingEntity) finalAttacker);
-                                    }
+                    for (Location spawnPt : spawnPts) {
+                        if (ChanceUtil.getChance(11)) {
+                            for (int i = 0; i < Math.max(3, contained.length); i++) {
+                                Zombie z = (Zombie) getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
+                                z.setBaby(true);
+                                EntityEquipment equipment = z.getEquipment();
+                                equipment.setItemInHand(weapon.clone());
+                                equipment.setItemInHandDropChance(0F);
+                                if (finalAttacker != null && finalAttacker instanceof LivingEntity) {
+                                    z.setTarget((LivingEntity) finalAttacker);
                                 }
                             }
                         }
@@ -721,14 +702,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                     final Player finalAttacker = (Player) attacker;
                     if (!finalAttacker.getGameMode().equals(GameMode.CREATIVE)) {
-                        server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                (finalAttacker).setItemInHand(null);
-                            }
-                        }, 1);
+                        server.getScheduler().runTaskLater(inst, () -> (finalAttacker).setItemInHand(null), 1);
                     }
                 }
             }
@@ -741,11 +715,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                         Zombie zombie = (Zombie) attacker;
                         if (zombie.isBaby() && ChanceUtil.getChance(difficulty * 5)) {
                             ChatUtil.sendNotice(player, "Your armour weakens the zombies.");
-                            for (Entity e : player.getNearbyEntities(8, 8, 8)) {
-                                if (e.isValid() && e instanceof Zombie && ((Zombie) e).isBaby()) {
-                                    ((Zombie) e).damage(18);
-                                }
-                            }
+                            player.getNearbyEntities(8, 8, 8).stream().filter(e -> e.isValid() && e instanceof Zombie && ((Zombie) e).isBaby()).forEach(e -> ((Zombie) e).damage(18));
                         }
                     }
 
@@ -1038,47 +1008,37 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 break;
             case 4:
                 ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Tango time!");
-                server.getScheduler().runTaskLater(inst, new Runnable() {
+                server.getScheduler().runTaskLater(inst, () -> {
+                    if (!isBossSpawned()) return;
+                    for (Player player : getContainedPlayers()) {
+                        if (boss.hasLineOfSight(player)) {
+                            ChatUtil.sendNotice(player, "Come closer...");
+                            player.teleport(boss.getLocation());
+                            player.damage(difficulty * 32, boss);
 
-                    @Override
-                    public void run() {
-
-                        if (!isBossSpawned()) return;
-                        for (Player player : getContainedPlayers()) {
-                            if (boss.hasLineOfSight(player)) {
-                                ChatUtil.sendNotice(player, "Come closer...");
-                                player.teleport(boss.getLocation());
-                                player.damage(difficulty * 32, boss);
-
-                                // Call this event to notify AntiCheat
-                                server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
-                                player.setVelocity(new Vector(
-                                        random.nextDouble() * 1.7 - 1.5,
-                                        random.nextDouble() * 2,
-                                        random.nextDouble() * 1.7 - 1.5
-                                ));
-                            } else {
-                                ChatUtil.sendNotice(player, "Fine... No tango this time...");
-                            }
+                            // Call this event to notify AntiCheat
+                            server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+                            player.setVelocity(new Vector(
+                                    random.nextDouble() * 1.7 - 1.5,
+                                    random.nextDouble() * 2,
+                                    random.nextDouble() * 1.7 - 1.5
+                            ));
+                        } else {
+                            ChatUtil.sendNotice(player, "Fine... No tango this time...");
                         }
-                        ChatUtil.sendNotice(getContainedPlayers(1), "Now wasn't that fun?");
                     }
+                    ChatUtil.sendNotice(getContainedPlayers(1), "Now wasn't that fun?");
                 }, 20 * (difficulty == 1 ? 14 : 7));
                 break;
             case 5:
                 if (!damageHeals) {
                     ChatUtil.sendWarning(containedP, "I am everlasting!");
                     damageHeals = true;
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            if (damageHeals) {
-                                damageHeals = false;
-                                if (!isBossSpawned()) return;
-                                ChatUtil.sendNotice(getContainedPlayers(1), "Thank you for your assistance.");
-                            }
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        if (!damageHeals) {
+                            damageHeals = false;
+                            if (!isBossSpawned()) return;
+                            ChatUtil.sendNotice(getContainedPlayers(1), "Thank you for your assistance.");
                         }
                     }, 20 * (difficulty * 10));
                     break;
@@ -1093,73 +1053,56 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 break;
             case 7:
                 ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Bask in my glory!");
-                server.getScheduler().runTaskLater(inst, new Runnable() {
+                server.getScheduler().runTaskLater(inst, () -> {
+                    if (!isBossSpawned()) return;
 
-                    @Override
-                    public void run() {
+                    // Set defaults
+                    boolean baskInGlory = getContainedPlayers().length == 0;
+                    damageHeals = true;
 
-                        if (!isBossSpawned()) return;
-
-                        // Set defaults
-                        boolean baskInGlory = getContainedPlayers().length == 0;
-                        damageHeals = true;
-
-                        // Check Players
-                        for (Player player : getContainedPlayers()) {
-                            if (inst.hasPermission(player, "aurora.prayer.intervention") && ChanceUtil.getChance(3)) {
-                                ChatUtil.sendNotice(player, "A divine wind hides you from the boss.");
-                                continue;
-                            }
-                            if (boss.hasLineOfSight(player)) {
-                                ChatUtil.sendWarning(player, ChatColor.DARK_RED + "You!");
-                                baskInGlory = true;
-                            }
+                    // Check Players
+                    for (Player player : getContainedPlayers()) {
+                        if (inst.hasPermission(player, "aurora.prayer.intervention") && ChanceUtil.getChance(3)) {
+                            ChatUtil.sendNotice(player, "A divine wind hides you from the boss.");
+                            continue;
                         }
-
-                        //Attack
-                        if (baskInGlory) {
-                            int dmgFact = difficulty * 3 + 1;
-                            for (Location pt : spawnPts) {
-                                if (ChanceUtil.getChance(12)) {
-                                    getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), dmgFact, false, false);
-                                }
-                            }
-
-                            //Schedule Reset
-                            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                                @Override
-                                public void run() {
-
-                                    damageHeals = false;
-                                }
-                            }, 10);
-                            return;
+                        if (boss.hasLineOfSight(player)) {
+                            ChatUtil.sendWarning(player, ChatColor.DARK_RED + "You!");
+                            baskInGlory = true;
                         }
-                        // Notify if avoided
-                        ChatUtil.sendNotice(getContainedPlayers(1), "Gah... Afraid are you friends?");
                     }
+
+                    //Attack
+                    if (baskInGlory) {
+                        int dmgFact = difficulty * 3 + 1;
+                        spawnPts.stream().filter(pt -> ChanceUtil.getChance(12)).forEach(pt -> {
+                            getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), dmgFact, false, false);
+                        });
+
+                        //Schedule Reset
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            damageHeals = false;
+                        }, 10);
+                        return;
+                    }
+                    // Notify if avoided
+                    ChatUtil.sendNotice(getContainedPlayers(1), "Gah... Afraid are you friends?");
                 }, 20 * (difficulty == 1 ? 14 : 7));
                 break;
             case 8:
                 ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "I ask thy lord for aid in this all mighty battle...");
                 ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Heed thy warning, or parish!");
-                server.getScheduler().runTaskLater(inst, new Runnable() {
+                server.getScheduler().runTaskLater(inst, () -> {
+                    if (!isBossSpawned()) return;
 
-                    @Override
-                    public void run() {
-
-                        if (!isBossSpawned()) return;
-
-                        ChatUtil.sendWarning(getContainedPlayers(1), "May those who appose me die a death like no other...");
-                        for (Player player : getContainedPlayers()) {
-                            if (boss.hasLineOfSight(player)) {
-                                ChatUtil.sendWarning(getContainedPlayers(1), "Parish " + player.getName() + "!");
-                                try {
-                                    prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
-                                } catch (UnsupportedPrayerException e) {
-                                    e.printStackTrace();
-                                }
+                    ChatUtil.sendWarning(getContainedPlayers(1), "May those who appose me die a death like no other...");
+                    for (Player player : getContainedPlayers()) {
+                        if (boss.hasLineOfSight(player)) {
+                            ChatUtil.sendWarning(getContainedPlayers(1), "Parish " + player.getName() + "!");
+                            try {
+                                prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
+                            } catch (UnsupportedPrayerException e) {
+                                e.printStackTrace();
                             }
                         }
                     }

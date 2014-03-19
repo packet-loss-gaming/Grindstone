@@ -314,18 +314,15 @@ public class SkyWarsComponent extends MinigameComponent {
             newSkyFeather.setAmount(1);
         }
 
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-            @Override
-            public void run() {
-                if (newSkyFeather == null) {
-                    player.getInventory().setItemInHand(null);
-                }
-                if (remainder != null) {
-                    player.getInventory().addItem(remainder);
-                }
-                //noinspection deprecation
-                player.updateInventory();
+        server.getScheduler().runTaskLater(inst, () -> {
+            if (newSkyFeather == null) {
+                player.getInventory().setItemInHand(null);
             }
+            if (remainder != null) {
+                player.getInventory().addItem(remainder);
+            }
+            //noinspection deprecation
+            player.updateInventory();
         }, 1);
     }
 
@@ -467,15 +464,8 @@ public class SkyWarsComponent extends MinigameComponent {
                 e.printStackTrace();
                 return false;
             }
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    attempts++;
-                    probe();
-                }
-            }, 2);
+            attempts++;
+            server.getScheduler().runTaskLater(inst, this::probe, 2);
         }
 
         return world != null && region != null;
@@ -777,13 +767,10 @@ public class SkyWarsComponent extends MinigameComponent {
                         //noinspection deprecation
                         player.updateInventory();
                     } else {
-                        server.getScheduler().runTaskLater(inst, new Runnable() {
-                            @Override
-                            public void run() {
-                                player.setItemInHand(null);
-                                //noinspection deprecation
-                                player.updateInventory();
-                            }
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            player.setItemInHand(null);
+                            //noinspection deprecation
+                            player.updateInventory();
                         }, 1);
                     }
                 } else if (ItemUtil.matchesFilter(stack, ChatColor.GOLD + "Defroster")) {
@@ -801,13 +788,10 @@ public class SkyWarsComponent extends MinigameComponent {
                         //noinspection deprecation
                         player.updateInventory();
                     } else {
-                        server.getScheduler().runTaskLater(inst, new Runnable() {
-                            @Override
-                            public void run() {
-                                player.setItemInHand(null);
-                                //noinspection deprecation
-                                player.updateInventory();
-                            }
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            player.setItemInHand(null);
+                            //noinspection deprecation
+                            player.updateInventory();
                         }, 1);
                     }
                 }
@@ -916,16 +900,10 @@ public class SkyWarsComponent extends MinigameComponent {
 
             final Player p = event.getPlayer();
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-                    // Technically forced, but because this
-                    // happens from disconnect/quit button
-                    // we don't want it to count as forced
-                    removeGoneFromTeam(p, false);
-                }
-            }, 1);
+            // Technically forced, but because this
+            // happens from disconnect/quit button
+            // we don't want it to count as forced
+            server.getScheduler().runTaskLater(inst, () -> removeGoneFromTeam(p, false), 1);
         }
 
         @EventHandler(ignoreCancelled = true)
@@ -933,13 +911,7 @@ public class SkyWarsComponent extends MinigameComponent {
 
             final Player p = event.getPlayer();
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-                    removeGoneFromTeam(p, true);
-                }
-            }, 1);
+            server.getScheduler().runTaskLater(inst, () -> removeGoneFromTeam(p, true), 1);
         }
 
         @EventHandler(priority = EventPriority.MONITOR)

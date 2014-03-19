@@ -24,7 +24,6 @@ public class GeneralPlayerUtil {
 
     /**
      * Make a player state
-     *
      */
     public static PlayerState makeComplexState(Player player) {
 

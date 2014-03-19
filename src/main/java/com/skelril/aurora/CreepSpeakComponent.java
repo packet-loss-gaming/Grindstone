@@ -104,14 +104,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                         }
 
                         hallowCreepersActive.add(player);
-                        server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                hallowCreepersActive.remove(player);
-                            }
-                        }, 20 * 30);
+                        server.getScheduler().scheduleSyncDelayedTask(inst, () -> hallowCreepersActive.remove(player), 20 * 30);
 
                         color = ChatColor.DARK_RED;
                         message = "Haaaallooowwwww ssssent ussss.";

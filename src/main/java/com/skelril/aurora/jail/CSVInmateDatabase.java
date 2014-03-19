@@ -48,7 +48,8 @@ public class CSVInmateDatabase implements InmateDatabase {
         try {
             FileHandler handler = new FileHandler(
                     (new File(inmateStorageDir, "inmates.%g.%u.log")).getAbsolutePath()
-                            .replace("\\", "/"), true);
+                            .replace("\\", "/"), true
+            );
 
             handler.setFormatter(new Formatter() {
 

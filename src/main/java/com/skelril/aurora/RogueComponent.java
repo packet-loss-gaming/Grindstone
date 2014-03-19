@@ -222,13 +222,9 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                 if (isRogue(defender) && canBlip(defender)) {
                     if (damager instanceof Player && !PvPComponent.allowsPvP((Player) damager, defender)) return;
                     final Entity finalDamager = damager;
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-                        @Override
-                        public void run() {
-
-                            defender.teleport(finalDamager, PlayerTeleportEvent.TeleportCause.UNKNOWN);
-                            blip(defender, -.5, true);
-                        }
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        defender.teleport(finalDamager, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                        blip(defender, -.5, true);
                     }, 1);
                 }
             }
@@ -276,15 +272,12 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                         if (isTraitorProtected(defender)) {
                             ChatUtil.sendWarning(shooter, defender.getName() + " sends a band of Rogue marauders after you.");
                             for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
-                                server.getScheduler().runTaskLater(inst, new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (defender.getLocation().distanceSquared(shooter.getLocation()) > 2500) {
-                                            return;
-                                        }
-                                        Location l = LocationUtil.findRandomLoc(shooter.getLocation().getBlock(), 3, true, false);
-                                        l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 1.75F, true, false);
+                                server.getScheduler().runTaskLater(inst, () -> {
+                                    if (defender.getLocation().distanceSquared(shooter.getLocation()) > 2500) {
+                                        return;
                                     }
+                                    Location l = LocationUtil.findRandomLoc(shooter.getLocation().getBlock(), 3, true, false);
+                                    l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 1.75F, true, false);
                                 }, 12 * i);
                             }
                         }
@@ -305,12 +298,9 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (isRogue(player) && stack != null && ItemUtil.isSword(stack.getTypeId())) {
             switch (event.getAction()) {
                 case LEFT_CLICK_AIR:
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-                        @Override
-                        public void run() {
-                            if (canBlip(player) && !player.isSneaking()) {
-                                blip(player, 2, false);
-                            }
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        if (canBlip(player) && !player.isSneaking()) {
+                            blip(player, 2, false);
                         }
                     }, 1);
                     break;

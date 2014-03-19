@@ -19,9 +19,6 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class DoomBlade extends EntityAttack implements MeleeSpecial {
 
     public DoomBlade(LivingEntity owner, LivingEntity target) {

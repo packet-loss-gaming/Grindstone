@@ -12,9 +12,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class Regen extends EntityAttack implements MeleeSpecial {
 
     public Regen(LivingEntity owner, LivingEntity target) {

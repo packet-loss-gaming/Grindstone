@@ -324,12 +324,8 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
                     player.getLevel(),
                     player.getExp());
 
-            server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
-                @Override
-                public void run() {
-                    IOUtil.toBinaryFile(fromDir, unlegitState.getOwnerName(), unlegitState);
-                }
-            });
+            server.getScheduler().runTaskAsynchronously(inst,
+                    () -> IOUtil.toBinaryFile(fromDir, unlegitState.getOwnerName(), unlegitState));
 
             File target = new File(toDir.getPath() + "/" + unlegitState.getOwnerName() + ".dat");
 

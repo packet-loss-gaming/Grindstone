@@ -20,7 +20,7 @@ public class PlayerMappedBlockRecordIndex extends BlockRecordIndex implements Se
     public void addItem(String player, BlockRecord record) {
 
         if (!recordMap.containsKey(player)) {
-            recordMap.put(player, new Vector<BlockRecord>());
+            recordMap.put(player, new Vector<>());
         }
         recordMap.get(player).add(record);
     }

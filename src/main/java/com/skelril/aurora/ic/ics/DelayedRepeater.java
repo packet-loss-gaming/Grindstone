@@ -13,9 +13,6 @@ import org.bukkit.Server;
 
 import java.util.logging.Logger;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class DelayedRepeater extends AbstractIC {
 
     private static final CommandBook inst = CommandBook.inst();
@@ -54,13 +51,7 @@ public class DelayedRepeater extends AbstractIC {
     public void trigger(final ChipState chip) {
 
         final boolean trigger = chip.getInput(0);
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-            @Override
-            public void run() {
-
-                chip.setOutput(0, trigger);
-            }
-        }, delay);
+        server.getScheduler().runTaskLater(inst, () -> chip.setOutput(0, trigger), delay);
     }
 
     public static class Factory extends AbstractICFactory implements RestrictedIC {

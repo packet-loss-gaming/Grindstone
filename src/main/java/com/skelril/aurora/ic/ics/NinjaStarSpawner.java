@@ -71,12 +71,9 @@ public class NinjaStarSpawner extends AbstractSelfTriggeredIC {
 
         Location k = LocationUtil.getCenterOfBlock(LocationUtil.getNextFreeSpace(getBackBlock(), BlockFace.UP));
         final Item item = k.getWorld().dropItem(k, ItemUtil.Guild.Ninja.makeStar(quantity));
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-            @Override
-            public void run() {
-                if (item.isValid()) {
-                    item.remove();
-                }
+        server.getScheduler().runTaskLater(inst, () -> {
+            if (item.isValid()) {
+                item.remove();
             }
         }, 20 * 15);
     }

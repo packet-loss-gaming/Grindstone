@@ -11,9 +11,6 @@ import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class Famine extends EntityAttack implements MeleeSpecial {
 
     public Famine(LivingEntity owner, LivingEntity target) {

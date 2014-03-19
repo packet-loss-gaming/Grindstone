@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * User: Wyatt Childers
@@ -111,10 +112,9 @@ public class SerializableItemStack implements Serializable {
                 }
 
                 if (aMetaMap.containsKey("custom-effects")) {
-                    List<PotionEffect> potionEffects = new ArrayList<>();
-                    for (Map<String, Object> entry : (List<Map<String, Object>>) aMetaMap.get("custom-effects")) {
-                        potionEffects.add((PotionEffect) ConfigurationSerialization.deserializeObject(entry));
-                    }
+                    List<PotionEffect> potionEffects = ((List<Map<String, Object>>) aMetaMap.get("custom-effects"))
+                            .stream().map(entry -> (PotionEffect) ConfigurationSerialization.deserializeObject(entry))
+                            .collect(Collectors.toList());
                     aMetaMap.put("custom-effects", potionEffects);
                 }
 

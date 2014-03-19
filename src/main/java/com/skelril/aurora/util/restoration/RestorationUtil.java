@@ -71,21 +71,18 @@ public class RestorationUtil extends BukkitComponent {
 
                 final int amt = player.getItemInHand().getAmount();
                 final boolean isWater = EnvironmentUtil.isWater(block);
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-                    @Override
-                    public void run() {
+                server.getScheduler().runTaskLater(inst, () -> {
 
-                        if (amt > 1) {
-                            player.setItemInHand(new ItemStack(ItemID.BUCKET, amt));
-                        } else {
-                            player.setItemInHand(null);
-                        }
+                    if (amt > 1) {
+                        player.setItemInHand(new ItemStack(ItemID.BUCKET, amt));
+                    } else {
+                        player.setItemInHand(null);
+                    }
 
-                        if (isWater) {
-                            player.getInventory().addItem(new ItemStack(ItemID.WATER_BUCKET));
-                        } else {
-                            player.getInventory().addItem(new ItemStack(ItemID.LAVA_BUCKET));
-                        }
+                    if (isWater) {
+                        player.getInventory().addItem(new ItemStack(ItemID.WATER_BUCKET));
+                    } else {
+                        player.getInventory().addItem(new ItemStack(ItemID.LAVA_BUCKET));
                     }
                 }, 1);
             } else {
@@ -106,21 +103,16 @@ public class RestorationUtil extends BukkitComponent {
 
     public static void handleToolDamage(final Player player) {
 
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-
-            @Override
-            public void run() {
-
-                ItemStack held = player.getItemInHand();
-                if (!ItemUtil.isTool(held.getTypeId())) return;
-                short newDurability = (short) (held.getDurability() + 1);
-                short maxDurability = held.getType().getMaxDurability();
-                if (newDurability >= maxDurability) {
-                    player.setItemInHand(null);
-                } else {
-                    held.setDurability(newDurability);
-                    player.setItemInHand(held);
-                }
+        server.getScheduler().runTaskLater(inst, () -> {
+            ItemStack held = player.getItemInHand();
+            if (!ItemUtil.isTool(held.getTypeId())) return;
+            short newDurability = (short) (held.getDurability() + 1);
+            short maxDurability = held.getType().getMaxDurability();
+            if (newDurability >= maxDurability) {
+                player.setItemInHand(null);
+            } else {
+                held.setDurability(newDurability);
+                player.setItemInHand(held);
             }
         }, 1);
     }

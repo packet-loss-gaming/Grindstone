@@ -12,9 +12,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class Confuse extends EntityAttack implements MeleeSpecial {
 
     public Confuse(LivingEntity owner, LivingEntity target) {

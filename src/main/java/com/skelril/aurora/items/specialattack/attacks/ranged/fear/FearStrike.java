@@ -20,9 +20,6 @@ import org.bukkit.util.Vector;
 
 import java.util.List;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class FearStrike extends EntityAttack implements RangedSpecial {
 
     public FearStrike(LivingEntity owner, LivingEntity target) {

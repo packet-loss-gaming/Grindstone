@@ -13,9 +13,6 @@ import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class MobAttack extends LocationAttack implements RangedSpecial {
 
     private EntityType type;

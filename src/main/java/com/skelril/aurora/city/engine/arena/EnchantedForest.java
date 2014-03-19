@@ -202,13 +202,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
                     if (hasAxe) {
                         ChatUtil.sendWarning(player, "The fairy breaks your axe.");
-                        server.getScheduler().runTaskLater(inst, new Runnable() {
-                            @Override
-                            public void run() {
-
-                                player.getInventory().setItemInHand(null);
-                            }
-                        }, 1);
+                        server.getScheduler().runTaskLater(inst, () -> player.getInventory().setItemInHand(null), 1);
                     }
                     break;
                 case 2:
@@ -258,12 +252,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                 case 5:
                     ChatUtil.sendWarning(player, "The tooth fairy takes your teeth!");
                     noTeeth.add(player);
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-                        @Override
-                        public void run() {
-                            noTeeth.remove(player);
-                        }
-                    }, 20 * 60 * 2);
+                    server.getScheduler().runTaskLater(inst, () -> noTeeth.remove(player), 20 * 60 * 2);
                     break;
             }
         }
@@ -408,35 +397,31 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     @Override
     public void writeData(boolean doAsync) {
 
-        Runnable run = new Runnable() {
-            @Override
-            public void run() {
+        Runnable run = () -> {
+            treeFile:
+            {
+                File treeFile = new File(getWorkingDir().getPath() + "/trees.dat");
+                if (treeFile.exists()) {
+                    Object treeFileO = IOUtil.readBinaryFile(treeFile);
 
-                treeFile:
-                {
-                    File treeFile = new File(getWorkingDir().getPath() + "/trees.dat");
-                    if (treeFile.exists()) {
-                        Object treeFileO = IOUtil.readBinaryFile(treeFile);
-
-                        if (treeMap.equals(treeFileO)) {
-                            break treeFile;
-                        }
+                    if (treeMap.equals(treeFileO)) {
+                        break treeFile;
                     }
-                    IOUtil.toBinaryFile(getWorkingDir(), "trees", treeMap);
                 }
+                IOUtil.toBinaryFile(getWorkingDir(), "trees", treeMap);
+            }
 
-                generalFile:
-                {
-                    File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
-                    if (generalFile.exists()) {
-                        Object generalFileO = IOUtil.readBinaryFile(generalFile);
+            generalFile:
+            {
+                File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
+                if (generalFile.exists()) {
+                    Object generalFileO = IOUtil.readBinaryFile(generalFile);
 
-                        if (generalMap.equals(generalFileO)) {
-                            break generalFile;
-                        }
+                    if (generalMap.equals(generalFileO)) {
+                        break generalFile;
                     }
-                    IOUtil.toBinaryFile(getWorkingDir(), "general", generalMap);
                 }
+                IOUtil.toBinaryFile(getWorkingDir(), "general", generalMap);
             }
         };
 

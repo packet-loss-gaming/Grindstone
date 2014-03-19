@@ -90,17 +90,15 @@ public class WeatherManagerComponent extends BukkitComponent implements Listener
 
         World world = event.getWorld();
         String state = event.toThunderState() ? "starting" : "ending";
-        for (Player player : Collections.synchronizedList(enabledFor)) {
-            if (player.getWorld().equals(event.getWorld())) {
-                if (!event.toThunderState()) {
-                    if (ItemUtil.hasAncientArmour(player) || ItemUtil.isHoldingItem(player, CustomItems.MASTER_BOW)
-                            || ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
-                        ChatUtil.sendWarning(player, ChatColor.DARK_RED + "===============[WARNING]===============");
-                    }
+        Collections.synchronizedList(enabledFor).stream().filter(player -> player.getWorld().equals(event.getWorld())).forEach(player -> {
+            if (!event.toThunderState()) {
+                if (ItemUtil.hasAncientArmour(player) || ItemUtil.isHoldingItem(player, CustomItems.MASTER_BOW)
+                        || ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
+                    ChatUtil.sendWarning(player, ChatColor.DARK_RED + "===============[WARNING]===============");
                 }
-                ChatUtil.sendNotice(player, "A thunder storm is " + state + " on your world.");
             }
-        }
+            ChatUtil.sendNotice(player, "A thunder storm is " + state + " on your world.");
+        });
 
         if (event.toThunderState() && world.getWeatherDuration() < world.getThunderDuration()) {
             world.setStorm(true);

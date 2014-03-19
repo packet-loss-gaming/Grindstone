@@ -414,11 +414,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                         EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
 
-                        for (Entity e : targetLoc.getWorld().getEntitiesByClasses(Item.class)) {
-                            if (e.isValid() && e.getLocation().distanceSquared(targetLoc) <= 16) {
-                                e.teleport(owner);
-                            }
-                        }
+                        targetLoc.getWorld().getEntitiesByClasses(Item.class).stream().filter(e -> e.isValid()
+                                && e.getLocation().distanceSquared(targetLoc) <= 16).forEach(e -> {
+                            e.teleport(owner);
+                        });
                         return true;
                     }
 
@@ -522,52 +521,32 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             if (ItemUtil.isItem(launcher, CustomItems.BAT_BOW)) {
 
                 if (!ChanceUtil.getChance(5)) return;
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                    @Override
-                    public void run() {
-
-                        final Bat bat = (Bat) location.getWorld().spawnEntity(location, EntityType.BAT);
-                        bat.setRemoveWhenFarAway(true);
-                        server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                if (bat.isValid()) {
-                                    bat.remove();
-                                    for (int i = 0; i < 20; i++) {
-                                        bat.getWorld().playEffect(bat.getLocation(), Effect.SMOKE, 0);
-                                    }
-                                }
+                server.getScheduler().runTaskLater(inst, () -> {
+                    final Bat bat = (Bat) location.getWorld().spawnEntity(location, EntityType.BAT);
+                    bat.setRemoveWhenFarAway(true);
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        if (bat.isValid()) {
+                            bat.remove();
+                            for (int i = 0; i < 20; i++) {
+                                bat.getWorld().playEffect(bat.getLocation(), Effect.SMOKE, 0);
                             }
-                        }, 20 * 3);
-                    }
+                        }
+                    }, 20 * 3);
                 }, 3);
             } else if (ItemUtil.isItem(launcher, CustomItems.CHICKEN_BOW)) {
 
                 if (!ChanceUtil.getChance(5)) return;
-                server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                    @Override
-                    public void run() {
-
-                        final Chicken chicken = (Chicken) location.getWorld().spawnEntity(location, EntityType.CHICKEN);
-                        chicken.setRemoveWhenFarAway(true);
-                        server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                            @Override
-                            public void run() {
-
-                                if (chicken.isValid()) {
-                                    chicken.remove();
-                                    for (int i = 0; i < 20; i++) {
-                                        chicken.getWorld().playEffect(chicken.getLocation(), Effect.SMOKE, 0);
-                                    }
-                                }
+                server.getScheduler().runTaskLater(inst, () -> {
+                    final Chicken chicken = (Chicken) location.getWorld().spawnEntity(location, EntityType.CHICKEN);
+                    chicken.setRemoveWhenFarAway(true);
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        if (chicken.isValid()) {
+                            chicken.remove();
+                            for (int i = 0; i < 20; i++) {
+                                chicken.getWorld().playEffect(chicken.getLocation(), Effect.SMOKE, 0);
                             }
-                        }, 20 * 3);
-                    }
+                        }
+                    }, 20 * 3);
                 }, 3);
             }
         }
@@ -718,13 +697,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             players.add(playerName);
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-                @Override
-                public void run() {
-
-                    players.remove(playerName);
-                }
-            }, 20 * 30);
+            server.getScheduler().runTaskLater(inst, () -> players.remove(playerName), 20 * 30);
         }
     }
 
@@ -735,16 +708,13 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         ItemStack itemStack = event.getItemDrop().getItemStack();
 
         if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-                @Override
-                public void run() {
-                    if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
-                        if (player.getAllowFlight()) {
-                            ChatUtil.sendNotice(player, "The power of the bucket fades.");
-                        }
-                        player.setAllowFlight(false);
-                        antiCheat.unexempt(player, CheckType.FLY);
+            server.getScheduler().runTaskLater(inst, () -> {
+                if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
+                    if (player.getAllowFlight()) {
+                        ChatUtil.sendNotice(player, "The power of the bucket fades.");
                     }
+                    player.setAllowFlight(false);
+                    antiCheat.unexempt(player, CheckType.FLY);
                 }
             }, 1);
         }
@@ -899,28 +869,23 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     || ItemUtil.hasItem(player, CustomItems.IMBUED_CRYSTAL))) {
                 return;
             }
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    int nugget = ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_NUGGET);
-                    while (nugget / 9 > 0 && player.getInventory().firstEmpty() != -1) {
-                        player.getInventory().removeItem(new ItemStack(ItemID.GOLD_NUGGET, 9));
-                        player.getInventory().addItem(new ItemStack(ItemID.GOLD_BAR));
-                        nugget -= 9;
-                    }
-
-                    int bar = ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_BAR);
-                    while (bar / 9 > 0 && player.getInventory().firstEmpty() != -1) {
-                        player.getInventory().removeItem(new ItemStack(ItemID.GOLD_BAR, 9));
-                        player.getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK));
-                        bar -= 9;
-                    }
-
-                    //noinspection deprecation
-                    player.updateInventory();
+            server.getScheduler().runTaskLater(inst, () -> {
+                int nugget = ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_NUGGET);
+                while (nugget / 9 > 0 && player.getInventory().firstEmpty() != -1) {
+                    player.getInventory().removeItem(new ItemStack(ItemID.GOLD_NUGGET, 9));
+                    player.getInventory().addItem(new ItemStack(ItemID.GOLD_BAR));
+                    nugget -= 9;
                 }
+
+                int bar = ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_BAR);
+                while (bar / 9 > 0 && player.getInventory().firstEmpty() != -1) {
+                    player.getInventory().removeItem(new ItemStack(ItemID.GOLD_BAR, 9));
+                    player.getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK));
+                    bar -= 9;
+                }
+
+                //noinspection deprecation
+                player.updateInventory();
             }, 1);
         }
     }
@@ -946,12 +911,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             protectedAgainst.add(entity);
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-                @Override
-                public void run() {
-                    protectedAgainst.remove(entity);
-                }
-            }, 5);
+            server.getScheduler().runTaskLater(inst, () -> protectedAgainst.remove(entity), 5);
         }
 
         public void updateSpec(SpecType type) {

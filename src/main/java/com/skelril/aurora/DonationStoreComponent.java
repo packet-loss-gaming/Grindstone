@@ -80,17 +80,12 @@ public class DonationStoreComponent extends BukkitComponent implements Listener,
 
             if (!BlockType.canPassThrough(type)) continue;
             for (Player aPlayer : players) {
-
                 aPlayer.sendBlockChange(loc, Material.FIRE, (byte) 0);
             }
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-                @Override
-                public void run() {
-                    for (Player aPlayer : players) {
-
-                        aPlayer.sendBlockChange(locClone, type, data);
-                    }
+            server.getScheduler().runTaskLater(inst, () -> {
+                for (Player aPlayer : players) {
+                    aPlayer.sendBlockChange(locClone, type, data);
                 }
             }, 20 * 8);
         }

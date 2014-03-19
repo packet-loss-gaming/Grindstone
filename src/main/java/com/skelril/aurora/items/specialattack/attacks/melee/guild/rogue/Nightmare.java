@@ -21,9 +21,6 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class Nightmare extends EntityAttack implements MeleeSpecial {
 
     private Random r;
@@ -57,14 +54,12 @@ public class Nightmare extends EntityAttack implements MeleeSpecial {
         IntegratedRunnable hellFire = new IntegratedRunnable() {
             @Override
             public boolean run(int times) {
-                for (Location location : locations) {
-                    if (ChanceUtil.getChance(3)) {
-                        Snowball snowball = (Snowball) location.getWorld().spawnEntity(location, EntityType.SNOWBALL);
-                        snowball.setMetadata("rogue-snowball", new FixedMetadataValue(inst, true));
-                        snowball.setMetadata("nightmare", new FixedMetadataValue(inst, true));
-                        snowball.setShooter(owner);
-                    }
-                }
+                locations.stream().filter(location -> ChanceUtil.getChance(3)).forEach(location -> {
+                    Snowball snowball = (Snowball) location.getWorld().spawnEntity(location, EntityType.SNOWBALL);
+                    snowball.setMetadata("rogue-snowball", new FixedMetadataValue(inst, true));
+                    snowball.setMetadata("nightmare", new FixedMetadataValue(inst, true));
+                    snowball.setShooter(owner);
+                });
                 return true;
             }
 

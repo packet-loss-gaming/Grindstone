@@ -78,7 +78,7 @@ public class Inmate {
     @Override
     public int hashCode() {
 
-        int result = name != null ? name.hashCode() : 0;
+        int result = name.hashCode();
         result = 32 * result;
         return result;
     }

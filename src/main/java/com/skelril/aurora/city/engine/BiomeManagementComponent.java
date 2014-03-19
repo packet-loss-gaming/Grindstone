@@ -82,11 +82,13 @@ public class BiomeManagementComponent extends BukkitComponent implements Listene
     public void run() {
 
         try {
-            for (Player player : Bukkit.getWorld(config.mainWorld).getPlayers()) {
-                frostBite(player); // Attempt to execute Frost Bite
-                //darkWind(player); // Attempt to execute the Dark Wind
-
-            }
+            // Attempt to execute Frost Bite
+            //noinspection CodeBlock2Expr
+            Bukkit.getWorld(config.mainWorld).getPlayers().forEach((t) -> {
+                //darkWind(t);
+                //noinspection Convert2MethodRef
+                frostBite(t);
+            });
         } catch (Exception e) {
             log.warning("Please verify the world: " + config.mainWorld + " exists.");
         }

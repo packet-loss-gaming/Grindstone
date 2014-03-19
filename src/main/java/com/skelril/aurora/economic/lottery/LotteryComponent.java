@@ -101,21 +101,9 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         configure(config);
     }
 
-    private Runnable runLottery = new Runnable() {
-        @Override
-        public void run() {
+    private Runnable runLottery = this::completeLottery;
 
-            completeLottery();
-        }
-    };
-
-    private Runnable broadcastLottery = new Runnable() {
-        @Override
-        public void run() {
-
-            broadcastLottery(server.getOnlinePlayers());
-        }
-    };
+    private Runnable broadcastLottery = () -> broadcastLottery(server.getOnlinePlayers());
 
 
     private static class LocalConfiguration extends ConfigurationBase {
@@ -319,14 +307,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
                     + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice), "."));
         }
         recentList.add(player);
-        server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
-
-            @Override
-            public void run() {
-
-                recentList.remove(player);
-            }
-        }, 10);
+        server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 10);
     }
 
     public void completeLottery() {

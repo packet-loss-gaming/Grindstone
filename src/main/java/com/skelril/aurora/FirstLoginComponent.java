@@ -210,26 +210,21 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
 
             if (!player.hasPlayedBefore() || LocationUtil.isInRegion(world, protectedRegion, player)) {
 
-                server.getScheduler().scheduleSyncDelayedTask(inst, new Runnable() {
+                server.getScheduler().scheduleSyncDelayedTask(inst, () -> {
+                    try {
 
-                    @Override
-                    public void run() {
+                        Location firstLoc = new Location(world, config.firstTeleportX, config.firstTeleportY,
+                                config.firstTeleportZ);
+                        firstLoc.setPitch(2);
+                        player.teleport(firstLoc);
 
-                        try {
-
-                            Location firstLoc = new Location(world, config.firstTeleportX, config.firstTeleportY,
-                                    config.firstTeleportZ);
-                            firstLoc.setPitch(2);
-                            player.teleport(firstLoc);
-
-                            ChatUtil.sendNotice(player, "Welcome to Skelril!");
-                            ChatUtil.sendNotice(player, "Follow the path to begin your adventure!");
-                            if (!blockedPlayers.contains(player)) blockedPlayers.add(player);
-                        } catch (Exception e) {
-                            log.warning("Please ensure the following location exists: "
-                                    + config.firstTeleportX + ", " + config.firstTeleportY
-                                    + ", " + config.firstTeleportZ + " in the world: " + config.mainWorld + ".");
-                        }
+                        ChatUtil.sendNotice(player, "Welcome to Skelril!");
+                        ChatUtil.sendNotice(player, "Follow the path to begin your adventure!");
+                        if (!blockedPlayers.contains(player)) blockedPlayers.add(player);
+                    } catch (Exception e) {
+                        log.warning("Please ensure the following location exists: "
+                                + config.firstTeleportX + ", " + config.firstTeleportY
+                                + ", " + config.firstTeleportZ + " in the world: " + config.mainWorld + ".");
                     }
                 }, 5);
             }

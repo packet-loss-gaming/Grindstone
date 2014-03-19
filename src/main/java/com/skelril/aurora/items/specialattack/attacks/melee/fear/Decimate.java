@@ -14,9 +14,6 @@ import com.skelril.aurora.util.DamageUtil;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
-/**
- * Created by wyatt on 12/26/13.
- */
 public class Decimate extends EntityAttack implements MeleeSpecial {
 
     public Decimate(LivingEntity owner, LivingEntity target) {

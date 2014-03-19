@@ -77,20 +77,15 @@ public class ProjectileWatchingComponent extends BukkitComponent implements List
 
         if (projectileTask.containsKey(projectile.getEntityId()) || !(projectile instanceof Projectile)) return;
 
-        BukkitTask task = server.getScheduler().runTaskTimer(inst, new Runnable() {
+        BukkitTask task = server.getScheduler().runTaskTimer(inst, () -> {
+            Location loc = projectile.getLocation();
 
-            @Override
-            public void run() {
-
-                Location loc = projectile.getLocation();
-
-                if (projectile.isDead() || !hasChangedLocation(projectile)) {
-                    projectileLoc.remove(projectile.getEntityId());
-                    projectileTask.get(projectile.getEntityId()).cancel();
-                } else {
-                    server.getPluginManager().callEvent(new ProjectileTickEvent((Projectile) projectile, force));
-                    projectileLoc.put(projectile.getEntityId(), loc);
-                }
+            if (projectile.isDead() || !hasChangedLocation(projectile)) {
+                projectileLoc.remove(projectile.getEntityId());
+                projectileTask.get(projectile.getEntityId()).cancel();
+            } else {
+                server.getPluginManager().callEvent(new ProjectileTickEvent((Projectile) projectile, force));
+                projectileLoc.put(projectile.getEntityId(), loc);
             }
         }, 0, 1); // Start at 0 ticks and repeat every 1 ticks
         projectileTask.put(projectile.getEntityId(), task);

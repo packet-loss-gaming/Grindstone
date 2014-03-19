@@ -83,13 +83,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     private InventoryAuditLogger auditor;
 
     private final String stateDir = inst.getDataFolder().getPath() + "/admin/states/";
-    private final FilenameFilter stateFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-
-            return !name.startsWith("old-") && name.endsWith(".dat");
-        }
-    };
+    private final FilenameFilter stateFilter = (dir, name) -> !name.startsWith("old-") && name.endsWith(".dat");
     String profilesDirectory = stateDir + "/profiles/";
 
     private static Permission permission = null;
@@ -192,9 +186,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     public void writeInventories() {
 
-        for (PlayerState state : playerState.values()) {
-            writeInventory(state);
-        }
+        playerState.values().forEach(this::writeInventory);
     }
 
     public void writeInventory(String playerName) {
@@ -212,13 +204,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
     public void writeInventory(final PlayerState state) {
 
 
-        server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
-            @Override
-            public void run() {
-
-                IOUtil.toBinaryFile(new File(stateDir), state.getOwnerName(), state);
-            }
-        });
+        server.getScheduler().runTaskAsynchronously(inst,
+                () -> IOUtil.toBinaryFile(new File(stateDir), state.getOwnerName(), state));
     }
 
     public InventoryAuditLogger getInventoryDumpLogger() {
@@ -359,12 +346,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
             player.setAllowFlight(false);
             player.setFallDistance(0F);
 
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-                @Override
-                public void run() {
-                    GeneralPlayerUtil.findSafeSpot(player);
-                }
-            }, 1);
+            server.getScheduler().runTaskLater(inst, () -> GeneralPlayerUtil.findSafeSpot(player), 1);
         }
         if (!player.getGameMode().equals(GameMode.SURVIVAL)) player.setGameMode(GameMode.SURVIVAL);
         return true;
@@ -748,13 +730,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 throw new CommandException("A profile by that name already exist!");
             }
 
-            server.getScheduler().runTaskAsynchronously(inst, new Runnable() {
-                @Override
-                public void run() {
-
-                    IOUtil.toBinaryFile(profileDir, profileName, GeneralPlayerUtil.makeComplexState(player));
-                }
-            });
+            server.getScheduler().runTaskAsynchronously(inst,
+                    () -> IOUtil.toBinaryFile(profileDir, profileName, GeneralPlayerUtil.makeComplexState(player)));
             ChatUtil.sendNotice(sender, "Profile: " + profileName + ", saved!");
         }
 

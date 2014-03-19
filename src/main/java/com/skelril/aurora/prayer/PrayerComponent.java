@@ -224,10 +224,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
     @Override
     public void run() {
-
-        for (InfluenceState influenceState : sessions.getSessions(InfluenceState.class).values()) {
-            executeInfluence(influenceState);
-        }
+        sessions.getSessions(InfluenceState.class).values().forEach(this::executeInfluence);
     }
 
 

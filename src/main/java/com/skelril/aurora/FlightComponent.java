@@ -71,14 +71,11 @@ public class FlightComponent extends BukkitComponent implements Listener {
 
         final Player player = event.getPlayer();
 
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-            @Override
-            public void run() {
-                //noinspection deprecation
-                if (inst.hasPermission(player, "aurora.fly.auto") && !player.isOnGround()) {
-                    player.setAllowFlight(true);
-                    player.setFlying(true);
-                }
+        server.getScheduler().runTaskLater(inst, () -> {
+            //noinspection deprecation
+            if (inst.hasPermission(player, "aurora.fly.auto") && !player.isOnGround()) {
+                player.setAllowFlight(true);
+                player.setFlying(true);
             }
         }, 1);
     }

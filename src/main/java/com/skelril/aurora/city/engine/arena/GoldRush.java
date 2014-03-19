@@ -126,9 +126,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     private void clearFloor() {
 
-        for (Item item : getWorld().getEntitiesByClass(Item.class)) {
-            if (item.isValid() && getRegion().contains(BukkitUtil.toVector(item.getLocation()))) item.remove();
-        }
+        getWorld().getEntitiesByClass(Item.class).stream().filter(i -> i.isValid()
+                && getRegion().contains(BukkitUtil.toVector(i.getLocation()))).forEach(Item::remove);
     }
 
     private void findRewardChest() {
@@ -363,33 +362,21 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 state.setTypeId(BlockID.REDSTONE_LAMP_OFF);
                 state.update(true);
             }
-            server.getScheduler().runTaskLater(inst, new Runnable() {
+            server.getScheduler().runTaskLater(inst, () -> {
 
-                @Override
-                public void run() {
+                BlockState aState;
+                Location aMutable;
+                for (Map.Entry<Location, Boolean> entry : leverBlocks.entrySet()) {
+                    aMutable = entry.getKey().clone();
+                    aMutable.add(0, -1, 0);
 
-                    BlockState state;
-                    Location mutable;
-                    for (Map.Entry<Location, Boolean> entry : leverBlocks.entrySet()) {
-
-                        mutable = entry.getKey().clone();
-                        mutable.add(0, -1, 0);
-
-                        if (!mutable.getBlock().getChunk().isLoaded()) mutable.getChunk().load();
-                        state = mutable.getBlock().getState();
-                        if (entry.getValue()) state.setTypeId(BlockID.REDSTONE_LAMP_ON);
-                        else state.setTypeId(BlockID.REDSTONE_LAMP_OFF);
-                        state.update(true);
-                    }
-                    server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            randomizeLevers();
-                        }
-                    }, 15);
+                    if (!aMutable.getBlock().getChunk().isLoaded()) aMutable.getChunk().load();
+                    aState = aMutable.getBlock().getState();
+                    if (entry.getValue()) aState.setTypeId(BlockID.REDSTONE_LAMP_ON);
+                    else aState.setTypeId(BlockID.REDSTONE_LAMP_OFF);
+                    aState.update(true);
                 }
+                server.getScheduler().runTaskLater(inst, this::randomizeLevers, 15);
             }, 15);
         } else {
             for (Location entry : leverBlocks.keySet()) {
@@ -719,13 +706,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 ChatUtil.sendNotice(event.getPlayer(), "[Partner] Ey there kid, just press that button over there to start.");
             }
         } else if (state.getTypeId() == BlockID.LEVER && leverBlocks.containsKey(state.getLocation())) {
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    if (checkLevers()) leversTriggered = true;
-                }
+            server.getScheduler().runTaskLater(inst, () -> {
+                if (checkLevers()) leversTriggered = true;
             }, 1);
         } else if (state.getTypeId() == BlockID.CHEST && contains(state.getLocation())) {
             if (!players.contains(event.getPlayer().getName())) {
@@ -757,16 +739,11 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
         final Player player = event.getPlayer();
         if (contains(player) || players.contains(player.getName())) {
-            server.getScheduler().runTaskLater(inst, new Runnable() {
-
-                @Override
-                public void run() {
-
-                    ChatUtil.sendWarning(player, "[Partner] Thought you'd scam me huh kid?");
-                    ChatUtil.sendWarning(player, "[Partner] Well I'll teach you kid!");
-                    ChatUtil.sendWarning(player, "The alarm goes off.");
-                    player.setHealth(0);
-                }
+            server.getScheduler().runTaskLater(inst, () -> {
+                ChatUtil.sendWarning(player, "[Partner] Thought you'd scam me huh kid?");
+                ChatUtil.sendWarning(player, "[Partner] Well I'll teach you kid!");
+                ChatUtil.sendWarning(player, "The alarm goes off.");
+                player.setHealth(0);
             }, 1);
         }
     }

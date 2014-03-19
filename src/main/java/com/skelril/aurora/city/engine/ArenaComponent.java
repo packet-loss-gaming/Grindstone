@@ -78,14 +78,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         inst.registerEvents(this);
         this.config = configure(new LocalConfiguration());
         this.arenaManager = new ArenaManager();
-        server.getScheduler().runTaskLater(inst, new Runnable() {
-
-            @Override
-            public void run() {
-
-                arenaManager.setupArenas();
-            }
-        }, 1);
+        server.getScheduler().runTaskLater(inst, arenaManager::setupArenas, 1);
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20 * 4);
 
         registerCommands(Commands.class);

@@ -129,45 +129,40 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
         if (task != null) task.cancel();
 
-        task = server.getScheduler().runTaskTimer(inst, new Runnable() {
+        task = server.getScheduler().runTaskTimer(inst, () -> {
+            if (lastDropPulse != 0 && System.currentTimeMillis() - lastDropPulse < TimeUnit.SECONDS.toMillis(3)) {
+                return;
+            }
 
-            @Override
-            public void run() {
+            Iterator<ItemStack> it = drops.iterator();
 
-                if (lastDropPulse != 0 && System.currentTimeMillis() - lastDropPulse < TimeUnit.SECONDS.toMillis(3)) {
-                    return;
-                }
+            for (int k = 10; it.hasNext() && k > 0; k--) {
 
-                Iterator<ItemStack> it = drops.iterator();
+                // Pick a random Location
+                Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), rg);
+                if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
+                getWorld().dropItem(l, it.next());
 
-                for (int k = 10; it.hasNext() && k > 0; k--) {
+                // Remove the drop
+                it.remove();
 
-                    // Pick a random Location
-                    Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), rg);
-                    if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
-                    getWorld().dropItem(l, it.next());
-
-                    // Remove the drop
-                    it.remove();
-
-                    // Drop the xp
-                    if (populate) {
-                        // Throw in some xp cause why not
-                        for (short s = (short) ChanceUtil.getRandom(5); s > 0; s--) {
-                            ExperienceOrb e = (ExperienceOrb) getWorld().spawnEntity(l, EntityType.EXPERIENCE_ORB);
-                            e.setExperience(8);
-                        }
+                // Drop the xp
+                if (populate) {
+                    // Throw in some xp cause why not
+                    for (short s = (short) ChanceUtil.getRandom(5); s > 0; s--) {
+                        ExperienceOrb e = (ExperienceOrb) getWorld().spawnEntity(l, EntityType.EXPERIENCE_ORB);
+                        e.setExperience(8);
                     }
                 }
-
-                // Cancel if we've ran out of drop party pulses or if there is nothing more to drop
-                if (drops.size() < 1 || dropPartyPulses <= 0) {
-                    task.cancel();
-                    task = null;
-                }
-
-                dropPartyPulses--;
             }
+
+            // Cancel if we've ran out of drop party pulses or if there is nothing more to drop
+            if (drops.size() < 1 || dropPartyPulses <= 0) {
+                task.cancel();
+                task = null;
+            }
+
+            dropPartyPulses--;
         }, 20 * 60, 20 * 3);
     }
 

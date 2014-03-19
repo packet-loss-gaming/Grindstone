@@ -84,22 +84,17 @@ public class ShutdownComponent extends BukkitComponent {
         if (task != null) return;
 
         // New Task
-        task = inst.getServer().getScheduler().runTaskTimer(inst, new Runnable() {
-
-            @Override
-            public void run() {
-
-                server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
-                if (seconds > 0 && seconds % 5 == 0 || seconds <= 10 && seconds > 0) {
-                    Bukkit.broadcastMessage(ChatColor.RED + "Shutting down in " + seconds + " seconds - for "
-                            + downTime + " of downtime!");
-                } else if (seconds < 1) {
-                    Bukkit.broadcastMessage(ChatColor.RED + "Shutting down!");
-                    server.shutdown();
-                    return;
-                }
-                seconds -= 1;
+        task = inst.getServer().getScheduler().runTaskTimer(inst, () -> {
+            server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
+            if (seconds > 0 && seconds % 5 == 0 || seconds <= 10 && seconds > 0) {
+                Bukkit.broadcastMessage(ChatColor.RED + "Shutting down in " + seconds + " seconds - for "
+                        + downTime + " of downtime!");
+            } else if (seconds < 1) {
+                Bukkit.broadcastMessage(ChatColor.RED + "Shutting down!");
+                server.shutdown();
+                return;
             }
+            seconds -= 1;
         }, 0, 20); // Multiply seconds by 20 to convert to ticks
     }
 }

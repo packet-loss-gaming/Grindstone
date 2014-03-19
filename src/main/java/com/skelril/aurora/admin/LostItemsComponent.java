@@ -25,9 +25,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.logging.Logger;
 
-/**
- * Created by wyatt on 1/9/14.
- */
 @ComponentInformation(friendlyName = "Lost Custom Items", desc = "Lost item commands.")
 public class LostItemsComponent extends BukkitComponent {
 

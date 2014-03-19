@@ -496,43 +496,33 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                     }
                                     for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
                                         final boolean untele = i == 11;
-                                        server.getScheduler().runTaskLater(inst, new Runnable() {
-                                            @Override
-                                            public void run() {
-
-                                                if (untele) {
-                                                    recordSystem.revertByPlayer(player.getName());
-                                                    daveHitList.remove(player.getName());
-                                                }
-
-                                                if (!contains(player)) return;
-
-                                                Location l = LocationUtil.findRandomLoc(player.getLocation().getBlock(), 3, true, false);
-                                                l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 3F, true, false);
+                                        server.getScheduler().runTaskLater(inst, () -> {
+                                            if (untele) {
+                                                recordSystem.revertByPlayer(player.getName());
+                                                daveHitList.remove(player.getName());
                                             }
+
+                                            if (!contains(player)) return;
+
+                                            Location l = LocationUtil.findRandomLoc(player.getLocation().getBlock(), 3, true, false);
+                                            l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 3F, true, false);
                                         }, 12 * i);
                                     }
                                 } else {
                                     addToHitList(player.getName());
                                     player.chat("Who's a good ghost?!?!");
-                                    server.getScheduler().runTaskLater(inst, new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            player.chat("Don't hurt me!!!");
-                                            server.getScheduler().runTaskLater(inst, new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    player.chat("Nooooooooooo!!!");
+                                    server.getScheduler().runTaskLater(inst, () -> {
+                                        player.chat("Don't hurt me!!!");
+                                        server.getScheduler().runTaskLater(inst, () -> {
+                                            player.chat("Nooooooooooo!!!");
 
-                                                    try {
-                                                        prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                                                PrayerType.CANNON, TimeUnit.MINUTES.toMillis(2)));
-                                                    } catch (UnsupportedPrayerException ex) {
-                                                        ex.printStackTrace();
-                                                    }
-                                                }
-                                            }, 20);
-                                        }
+                                            try {
+                                                prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
+                                                        PrayerType.CANNON, TimeUnit.MINUTES.toMillis(2)));
+                                            } catch (UnsupportedPrayerException ex) {
+                                                ex.printStackTrace();
+                                            }
+                                        }, 20);
                                     }, 20);
                                 }
                                 break;
