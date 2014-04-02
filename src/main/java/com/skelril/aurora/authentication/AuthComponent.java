@@ -33,6 +33,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Logger;
@@ -286,6 +287,11 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         if (!charactersDirectory.exists()) charactersDirectory.mkdir();
         log.info("Updating white list...");
 
+        if (!loadCharacters((JSONObject[]) object.toArray(new JSONObject[object.size()]))) {
+            log.info("No changes detected.");
+            return;
+        }
+
         // Remove outdated JSON backup files
         for (File file : charactersDirectory.listFiles(filenameFilter)) {
             file.delete();
@@ -311,8 +317,6 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
                 }
             }
         }
-
-        loadCharacters((JSONObject[]) object.toArray(new JSONObject[object.size()]));
 
         log.info("The white list has updated successfully.");
     }
@@ -355,14 +359,28 @@ public class AuthComponent extends BukkitComponent implements Listener, Runnable
         log.info("The offline file has been loaded.");
     }
 
-    public synchronized void loadCharacters(JSONObject[] characters) {
+    public synchronized boolean loadCharacters(JSONObject[] chars) {
 
-        // Remove Old Characters
-        this.characters.clear();
-
-        // Add all new Characters
-        for (JSONObject aCharacter : characters) {
-            this.characters.add(aCharacter.get("name").toString().trim().toLowerCase());
+        boolean diff = false;
+        Set<String> localChars = new HashSet<>();
+        for (JSONObject aChar : chars) {
+            String targ = aChar.get("name").toString().trim().toLowerCase();
+            if (!characters.contains(targ)) {
+                diff = true;
+            }
+            localChars.add(targ);
         }
+
+        diff = diff || characters.size() != localChars.size();
+
+        if (diff) {
+            // Clear all old chars
+            characters.clear();
+
+            // Add all new Characters
+            characters.addAll(localChars);
+            return true;
+        }
+        return false;
     }
 }
