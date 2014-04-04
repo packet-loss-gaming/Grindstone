@@ -16,8 +16,6 @@ import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.blocks.SkullBlock;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.internal.InternalEditSessionFactory;
-import com.sk89q.worldedit.util.eventbus.EventBus;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -37,18 +35,10 @@ import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.restoration.BlockRecord;
 import com.skelril.aurora.util.restoration.PlayerMappedBlockRecordIndex;
 import com.skelril.aurora.util.restoration.RestorationUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Blaze;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -61,12 +51,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerBucketFillEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -74,13 +59,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -238,8 +217,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             Vector v = LocationUtil.pickLocation(r.getMinimumPoint(), r.getMaximumPoint())
                     .add(0, r.getMinimumPoint().getY(), 0);
             BukkitWorld world = new BukkitWorld(getWorld());
-			InternalEditSessionFactory factory = new InternalEditSessionFactory(new EventBus());
-			factory.getEditSession(world, 1).rawSetBlock(v, new SkullBlock(0x1, b, player.getName()));
+            EditSession skullEditor = new EditSession(world, 1);
+            skullEditor.rawSetBlock(v, new SkullBlock(0x1, b, player.getName()));
         }
     }
 
@@ -509,8 +488,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                 if (blockid == BlockID.DIAMOND_ORE) {
                                     addToHitList(player.getName());
                                     ChatUtil.sendWarning(player, "You ignite fumes in the air!");
-									InternalEditSessionFactory factory = new InternalEditSessionFactory(new EventBus());
-                                    EditSession ess = factory.getEditSession(new BukkitWorld(player.getWorld()), -1);
+                                    EditSession ess = new EditSession(new BukkitWorld(player.getWorld()), -1);
                                     try {
                                         ess.fillXZ(BukkitUtil.toVector(player.getLocation()), new BaseBlock(BlockID.FIRE), 20, 20, true);
                                     } catch (MaxChangedBlocksException ignored) {
