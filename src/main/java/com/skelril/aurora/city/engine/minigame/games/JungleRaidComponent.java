@@ -759,7 +759,7 @@ public class JungleRaidComponent extends MinigameComponent {
                     ChunkStore chunkStore;
 
                     try {
-                        chunkStore = snap._getChunkStore();
+                        chunkStore = snap.getChunkStore();
                     } catch (DataException | IOException e) {
                         log.warning("Failed to load snapshot: " + e.getMessage());
                         return;
@@ -820,9 +820,7 @@ public class JungleRaidComponent extends MinigameComponent {
             server.getScheduler().runTaskLater(inst, restorationTask::clear, (5 * chunkList.size()) + 20);
         } catch (MissingWorldException e) {
             log.warning("The world: " + config.worldName + " could not be found, restoration cancelled.");
-        } catch (com.sk89q.worldedit.world.DataException e) {
-			e.printStackTrace();
-		}
+        }
         /* LogBlock Legacy Code
         if (startT == 0) return;
 

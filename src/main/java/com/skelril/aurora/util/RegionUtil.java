@@ -7,8 +7,9 @@
 package com.skelril.aurora.util;
 
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.LocalWorld;
 import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.blocks.BaseBlock;
+import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
@@ -19,7 +20,7 @@ import com.skelril.aurora.economic.store.AdminStoreComponent;
 public class RegionUtil {
 
     // TODO Some more optimization
-    public static double getPrice(ProtectedRegion region, LocalWorld world, boolean commission) {
+    public static double getPrice(ProtectedRegion region, World world, boolean commission) {
 
         double size, length, width;
         if (region instanceof ProtectedCuboidRegion) {
@@ -61,8 +62,8 @@ public class RegionUtil {
                 for (int y = minY; y <= maxY; ++y) {
                     for (int z = minZ; z <= maxZ; ++z) {
                         Vector pt = new Vector(x, y, z);
-
-                        p2 += AdminStoreComponent.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
+                        BaseBlock b = world.getBlock(pt);
+                        p2 += AdminStoreComponent.priceCheck(b.getId(), b.getData());
                     }
                 }
             }

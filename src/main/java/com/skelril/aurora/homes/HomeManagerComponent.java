@@ -11,8 +11,8 @@ import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.LocalWorld;
 import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
@@ -20,6 +20,7 @@ import com.sk89q.worldedit.bukkit.selections.Polygonal2DSelection;
 import com.sk89q.worldedit.bukkit.selections.Selection;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
@@ -493,7 +494,7 @@ public class HomeManagerComponent extends BukkitComponent {
 
             if (!args.hasFlag('f')) {
                 Region region = selection.getRegionSelector().getIncompleteRegion();
-                LocalWorld world = region.getWorld();
+                World world = region.getWorld();
 
                 if (region instanceof CuboidRegion) {
 
@@ -512,8 +513,8 @@ public class HomeManagerComponent extends BukkitComponent {
                         for (int y = minY; y <= maxY; ++y) {
                             for (int z = minZ; z <= maxZ; ++z) {
                                 Vector pt = new Vector(x, y, z);
-
-                                p2 += AdminStoreComponent.priceCheck(world.getBlockType(pt), world.getBlockData(pt));
+                                BaseBlock b = world.getBlock(pt);
+                                p2 += AdminStoreComponent.priceCheck(b.getId(), b.getData());
                             }
                         }
                     }
