@@ -12,9 +12,7 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.NestedCommand;
-import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.MaxChangedBlocksException;
+import com.sk89q.worldedit.*;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
@@ -62,10 +60,12 @@ import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import net.gravitydevelopment.anticheat.check.CheckType;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -753,7 +753,8 @@ public class JungleRaidComponent extends MinigameComponent {
             }
 
             // Setup task to progressively restore
-            final EditSession fakeEditor = new EditSession(new BukkitWorld(world), -1);
+            final EditSession fakeEditor = WorldEdit.getInstance()
+                    .getEditSessionFactory().getEditSession(new BukkitWorld(world), -1);
             for (final Chunk chunk : chunkList) {
                 BukkitTask aTask = server.getScheduler().runTaskLater(inst, () -> {
                     ChunkStore chunkStore;

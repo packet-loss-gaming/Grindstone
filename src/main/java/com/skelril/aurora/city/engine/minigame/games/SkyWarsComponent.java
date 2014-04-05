@@ -16,6 +16,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
+import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
@@ -218,7 +219,8 @@ public class SkyWarsComponent extends MinigameComponent {
 
         battleLoc = battleLoc.clone().add(0, -1, 0);
 
-        EditSession editor = new EditSession(new BukkitWorld(battleLoc.getWorld()), -1);
+        EditSession editor = WorldEdit.getInstance()
+                .getEditSessionFactory().getEditSession(new BukkitWorld(battleLoc.getWorld()), -1);
         com.sk89q.worldedit.Vector origin = new com.sk89q.worldedit.Vector(
                 battleLoc.getX(), battleLoc.getY(), battleLoc.getZ()
         );

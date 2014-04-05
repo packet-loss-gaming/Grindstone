@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
@@ -217,7 +218,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             Vector v = LocationUtil.pickLocation(r.getMinimumPoint(), r.getMaximumPoint())
                     .add(0, r.getMinimumPoint().getY(), 0);
             BukkitWorld world = new BukkitWorld(getWorld());
-            EditSession skullEditor = new EditSession(world, 1);
+            EditSession skullEditor = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, 1);
             skullEditor.rawSetBlock(v, new SkullBlock(0x1, b, player.getName()));
         }
     }
@@ -488,7 +489,9 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                 if (blockid == BlockID.DIAMOND_ORE) {
                                     addToHitList(player.getName());
                                     ChatUtil.sendWarning(player, "You ignite fumes in the air!");
-                                    EditSession ess = new EditSession(new BukkitWorld(player.getWorld()), -1);
+                                    EditSession ess = WorldEdit.getInstance()
+                                            .getEditSessionFactory()
+                                            .getEditSession(new BukkitWorld(player.getWorld()), -1);
                                     try {
                                         ess.fillXZ(BukkitUtil.toVector(player.getLocation()), new BaseBlock(BlockID.FIRE), 20, 20, true);
                                     } catch (MaxChangedBlocksException ignored) {
