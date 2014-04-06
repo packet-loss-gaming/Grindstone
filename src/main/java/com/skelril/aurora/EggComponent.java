@@ -42,6 +42,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -159,7 +161,9 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         int blockType = block.getTypeId();
 
         if (EnvironmentUtil.isShrubBlock(blockType)) {
-            if (inst.hasPermission(player, "aurora.egg.easter") && allowedEggs(player, EggType.EASTER)
+            if ((LocalDate.now().getMonth().equals(Month.APRIL)
+                    || inst.hasPermission(player, "aurora.egg.easter"))
+                    && allowedEggs(player, EggType.EASTER)
                     && config.enableEasterEggs && !ChanceUtil.getChance(5, 6)) {
 
                 for (short c = 0; c < ChanceUtil.getRangedRandom(7, 17); c++) {
@@ -199,7 +203,9 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
                 }
             }
 
-            if (inst.hasPermission(event.getPlayer(), "aurora.egg.halloween") && allowedEggs(player, EggType.HALLOWEEN)
+            if ((LocalDate.now().getMonth().equals(Month.OCTOBER)
+                    || inst.hasPermission(event.getPlayer(), "aurora.egg.halloween"))
+                    && allowedEggs(player, EggType.HALLOWEEN)
                     && config.enableHalloweenEggs && !ChanceUtil.getChance(7, 8)) {
 
                 for (short c = 0; c < ChanceUtil.getRangedRandom(7, 13); c++) {
