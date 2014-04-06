@@ -29,6 +29,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.logging.Logger;
 
@@ -93,8 +95,12 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
             String message = "";
             if (entity instanceof Creeper) {
                 try {
+                    LocalDate now = LocalDate.now();
+                    boolean isFriday = now.getDayOfWeek().equals(DayOfWeek.FRIDAY);
+                    boolean isThirteenth = now.getDayOfMonth() == 13;
+                    int creeperChance = isFriday && isThirteenth ? 1 : config.hallowCreeperChance;
                     // Hallow Feature
-                    if (config.hallowCreeperChance != -1 && ChanceUtil.getChance(config.hallowCreeperChance)
+                    if (creeperChance != -1 && ChanceUtil.getChance(creeperChance)
                             && !inst.hasPermission(player, "aurora.hallow.immune")
                             && !hallowCreepersActive.contains(player)) {
                         Location loc = entity.getLocation();
