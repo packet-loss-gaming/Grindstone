@@ -71,6 +71,8 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -809,6 +811,13 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     }
                     //noinspection deprecation
                     player.updateInventory();
+                }
+
+                LocalDate date = LocalDate.now();
+                date.with(Month.APRIL).withDayOfMonth(6);
+                if (date.equals(LocalDate.now())) {
+                    ChatUtil.sendNotice(getContainedPlayers(1), ChatColor.GOLD, "DROPS DOUBLED!");
+                    event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
                 }
 
                 // Reset respawn mechanics
