@@ -504,8 +504,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         for (Player aPlayer : server.getOnlinePlayers()) {
 
             if (LocationUtil.isInRegion(getWorld(), lobby, aPlayer)) {
-                // Add
-                players.add(aPlayer.getName());
 
                 // Teleport
                 Location location;
@@ -514,13 +512,16 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                             LocationUtil.pickLocation(roomOne.getMinimumPoint(), roomOne.getMaximumPoint()));
                     location.setY(roomOne.getMinimumPoint().getBlockY() + 1);
                 } while (location.getBlock().getTypeId() != BlockID.AIR);
-                aPlayer.teleport(location);
+                aPlayer.teleport(location, PlayerTeleportEvent.TeleportCause.UNKNOWN);
 
                 // Reset vitals
                 aPlayer.setHealth(20);
                 aPlayer.setFoodLevel(20);
                 aPlayer.setSaturation(5F);
                 aPlayer.setExhaustion(0F);
+
+                // Add
+                players.add(aPlayer.getName());
 
                 // Partner talk
                 ChatUtil.sendWarning(aPlayer, "[Partner] I've disabled the security systems for now.");
