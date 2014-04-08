@@ -350,7 +350,10 @@ public class AdminStoreComponent extends BukkitComponent {
                     sell = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
                 }
 
-                ChatUtil.sendNotice(sender, color + pair.getName().toUpperCase() + ChatColor.YELLOW + " (Quick Price: " + buy + " - " + sell + ")");
+                String message = color + pair.getName().toUpperCase()
+                        + ChatColor.YELLOW + " (Quick Price: " + buy + " - " + sell + ")";
+                message = message.replace(' ' + econ.currencyNamePlural(), "");
+                ChatUtil.sendNotice(sender, message);
             }
         }
 
