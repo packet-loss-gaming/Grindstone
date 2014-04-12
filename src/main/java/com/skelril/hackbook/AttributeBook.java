@@ -7,10 +7,10 @@
 package com.skelril.hackbook;
 
 import com.skelril.hackbook.exceptions.UnsupportedFeatureException;
-import net.minecraft.server.v1_7_R2.EntityInsentient;
-import net.minecraft.server.v1_7_R2.GenericAttributes;
-import net.minecraft.server.v1_7_R2.IAttribute;
-import org.bukkit.craftbukkit.v1_7_R2.entity.CraftLivingEntity;
+import net.minecraft.server.v1_7_R3.EntityInsentient;
+import net.minecraft.server.v1_7_R3.GenericAttributes;
+import net.minecraft.server.v1_7_R3.IAttribute;
+import org.bukkit.craftbukkit.v1_7_R3.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 
 public class AttributeBook {
