@@ -10,6 +10,7 @@ import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.world.World;
+import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
@@ -17,12 +18,35 @@ import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.economic.store.AdminStoreComponent;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 public class RegionUtil {
 
-    // TODO Some more optimization
-    public static double getPrice(ProtectedRegion region, World world, boolean commission) {
+    public static Stream<ProtectedRegion> getHouseStream(LocalPlayer player, RegionManager manager) {
+        return manager.getRegions().entrySet().stream()
+                .filter(e -> e.getValue().getOwners().contains(player.getName()))
+                .filter(e -> e.getKey().endsWith("-house"))
+                .map(Map.Entry<String, ProtectedRegion>::getValue);
+    }
 
-        double size, length, width;
+    public static List<ProtectedRegion> getHouses(LocalPlayer player, RegionManager manager) {
+        return getHouseStream(player, manager).collect(Collectors.toList());
+    }
+
+    public static int sumChunks(LocalPlayer player, RegionManager manager) {
+        return sumChunks(getHouseStream(player, manager));
+    }
+
+    public static int sumChunks(Stream<ProtectedRegion> regionStream) {
+        return regionStream.mapToInt(RegionUtil::countChunks).sum();
+    }
+
+    public static int countChunks(ProtectedRegion region) {
+        double size = -1;
+        double length, width;
         if (region instanceof ProtectedCuboidRegion) {
             Vector min = region.getMinimumPoint();
             Vector max = region.getMaximumPoint();
@@ -36,14 +60,16 @@ public class RegionUtil {
             width = (maxZ - minZ) + 1;
 
             size = (length * width) / (16 * 16);
-        } else {
-            return -1;
         }
-        double p1 = size <= 4 ? size * 75 : (size * 200) + (size * (size / 2) * 200);
+        return (int) Math.ceil(size);
+    }
 
-        // Block Price
-        double p2 = 0;
+    public static double calcChunkPrice(double chunkCount) {
+        return Math.pow(chunkCount, 4) * (chunkCount / 2);
+    }
 
+    public static double calcBlockPrice(ProtectedRegion region, World world) {
+        double bp = 0;
         //noinspection ConstantConditions
         if (region instanceof ProtectedCuboidRegion) {
 
@@ -63,15 +89,26 @@ public class RegionUtil {
                     for (int z = minZ; z <= maxZ; ++z) {
                         Vector pt = new Vector(x, y, z);
                         BaseBlock b = world.getBlock(pt);
-                        p2 += AdminStoreComponent.priceCheck(b.getId(), b.getData());
+                        bp += AdminStoreComponent.priceCheck(b.getId(), b.getData());
                     }
                 }
             }
         } else {
+            bp = -1;
+        }
+        return bp;
+    }
+
+    // TODO Some more optimization
+    public static double getPrice(ProtectedRegion region, World world, boolean commission) {
+
+        double size = countChunks(region);
+
+        if (size == -1) {
             return -1;
         }
 
-        double total = p1 + p2;
+        double total = calcChunkPrice(size) + calcBlockPrice(region, world);
         if (commission) {
             total *= 1.1;
         }

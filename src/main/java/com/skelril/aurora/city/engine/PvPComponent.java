@@ -204,34 +204,29 @@ public class PvPComponent extends BukkitComponent implements Listener {
         return allowsPvP(attacker, defender, true);
     }
 
+    private static boolean checkSafeZone(ApplicableRegionSet regions, Player attacker, Player defender) {
+        for (ProtectedRegion region : regions) {
+            if (HomeManagerComponent.isPlayerHouse(region, attacker) || HomeManagerComponent.isPlayerHouse(region, defender)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static boolean allowsPvP(Player attacker, Player defender, boolean checkRegions) {
 
         PvPSession attackerSession = sessions.getSession(PvPSession.class, attacker);
         PvPSession defenderSession = sessions.getSession(PvPSession.class, defender);
 
         if (attackerSession.hasPvPOn() && defenderSession.hasPvPOn()) {
+            if (attackerSession.useSafeSpots() || defenderSession.useSafeSpots()) {
+                RegionManager manager = WG.getRegionManager(attacker.getWorld());
 
-            String attackerHome = HomeManagerComponent.getHomeName(attacker);
-            String defenderHome = HomeManagerComponent.getHomeName(defender);
-
-            if (!attackerSession.useSafeSpots()) attackerHome = "";
-            if (!defenderSession.useSafeSpots()) defenderHome = "";
-
-            RegionManager manager = WG.getRegionManager(attacker.getWorld());
-            ApplicableRegionSet attackerApplicable = manager.getApplicableRegions(attacker.getLocation());
-            for (ProtectedRegion region : attackerApplicable) {
-                String id = region.getId();
-
-                if (id.equalsIgnoreCase(attackerHome) || id.equals(defenderHome)) {
+                if (!checkSafeZone(manager.getApplicableRegions(attacker.getLocation()), attacker, defender)) {
                     return false;
                 }
-            }
 
-            ApplicableRegionSet defenderApplicable = manager.getApplicableRegions(defender.getLocation());
-            for (ProtectedRegion region : defenderApplicable) {
-                String id = region.getId();
-
-                if (id.equalsIgnoreCase(attackerHome) || id.equals(defenderHome)) {
+                if (!checkSafeZone(manager.getApplicableRegions(defender.getLocation()), attacker, defender)) {
                     return false;
                 }
             }
