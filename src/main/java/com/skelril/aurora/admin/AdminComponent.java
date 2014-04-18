@@ -30,10 +30,7 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.Effect;
-import org.bukkit.GameMode;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -59,6 +56,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -87,7 +85,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     String profilesDirectory = stateDir + "/profiles/";
 
     private static Permission permission = null;
-    private final ConcurrentHashMap<String, PlayerState> playerState = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, PlayerState> playerState = new ConcurrentHashMap<>();
 
     @Override
     public void enable() {
@@ -134,9 +132,9 @@ public class AdminComponent extends BukkitComponent implements Listener {
         return false;
     }
 
-    public boolean hasInventoryLoaded(String player) {
+    public boolean hasInventoryLoaded(UUID playerID) {
 
-        return playerState.containsKey(player) && playerState.get(player) != null;
+        return playerState.get(playerID) != null;
     }
 
     public void loadInventories() {
@@ -150,7 +148,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
             Object o = IOUtil.readBinaryFile(file);
             if (o instanceof PlayerState) {
                 PlayerState aPlayerState = (PlayerState) o;
-                playerState.put(aPlayerState.getOwnerName(), aPlayerState);
+                playerState.put(UUID.fromString(aPlayerState.getOwnerName()), aPlayerState);
             } else {
                 log.warning("Invalid player state file encountered: " + file.getName() + "!");
             }
@@ -160,28 +158,60 @@ public class AdminComponent extends BukkitComponent implements Listener {
     /**
      * A thread safe method to load an inventory into the system
      *
-     * @param playerName - The player who should be loaded
+     * @param player - The player who's state should be loaded
      */
-    public void loadInventory(final String playerName) {
+    public void loadInventory(final OfflinePlayer player) {
 
-        File file = new File(stateDir + "/" + playerName + ".dat");
+        File UUIDFile = new File(stateDir + "/" + player.getUniqueId() + ".dat");
+
+        if (UUIDFile.exists()) {
+            loadInventory(player.getUniqueId());
+            return;
+        }
+
+        File nameFile = new File(stateDir + "/" + player.getName() + ".dat");
+        File oldNameFile = new File(stateDir + "/old-" + player.getName() + ".dat");
+
+        if (!nameFile.exists()) return;
+
+        Object o = IOUtil.readBinaryFile(nameFile);
+        if (o instanceof PlayerState) {
+            PlayerState aPlayerState = (PlayerState) o;
+            aPlayerState.setOwnerName(player.getUniqueId().toString());
+            writeInventory(aPlayerState);
+            playerState.put(player.getUniqueId(), aPlayerState);
+            nameFile.delete();
+            if (oldNameFile.exists()) {
+                oldNameFile.delete();
+            }
+        } else {
+            log.warning("Invalid player state file encountered: " + nameFile.getName() + "!");
+        }
+    }
+
+    /**
+     * A thread safe method to load an inventory into the system
+     *
+     * @param playerID - The ID of the player who should be loaded
+     */
+    public void loadInventory(final UUID playerID) {
+
+        File file = new File(stateDir + "/" + playerID + ".dat");
 
         if (!file.exists()) return;
 
         Object o = IOUtil.readBinaryFile(file);
         if (o instanceof PlayerState) {
             PlayerState aPlayerState = (PlayerState) o;
-            playerState.put(aPlayerState.getOwnerName(), aPlayerState);
+            playerState.put(playerID, aPlayerState);
         } else {
             log.warning("Invalid player state file encountered: " + file.getName() + "!");
         }
     }
 
-    public void unloadInventory(final String playerName) {
+    public void unloadInventory(final UUID playerID) {
 
-        if (playerState.containsKey(playerName)) {
-            playerState.remove(playerName);
-        }
+        playerState.remove(playerID);
     }
 
     public void writeInventories() {
@@ -189,11 +219,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
         playerState.values().forEach(this::writeInventory);
     }
 
-    public void writeInventory(String playerName) {
+    public void writeInventory(UUID playerID) {
 
-        if (!playerState.containsKey(playerName)) return;
+        if (!playerState.containsKey(playerID)) return;
 
-        writeInventory(playerState.get(playerName));
+        writeInventory(playerState.get(playerID));
     }
 
     /**
@@ -262,7 +292,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
             server.getPluginManager().callEvent(event);
 
             if (!event.isCancelled()) {
-                playerState.put(player.getName(), GeneralPlayerUtil.makeComplexState(player));
+                playerState.put(player.getUniqueId(), GeneralPlayerUtil.makeComplexState(player));
                 switch (adminState) {
                     case SYSOP:
                         permission.playerAdd((World) null, player.getName(), "aurora.admin.adminmode.sysop.active");
@@ -276,7 +306,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                         break;
                 }
 
-                writeInventory(player.getName());
+                writeInventory(player.getUniqueId());
             }
         }
         return isAdmin(player);
@@ -295,9 +325,9 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 player.getInventory().setArmorContents(null);
 
                 // Restore their inventory if they have one stored
-                if (playerState.containsKey(player.getName())) {
+                if (playerState.containsKey(player.getUniqueId())) {
 
-                    PlayerState identity = playerState.get(player.getName());
+                    PlayerState identity = playerState.get(player.getUniqueId());
 
                     // Restore the contents
                     player.getInventory().setArmorContents(identity.getArmourContents());
@@ -309,7 +339,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     player.setLevel(identity.getLevel());
                     player.setExp(identity.getExperience());
 
-                    playerState.remove(player.getName());
+                    playerState.remove(player.getUniqueId());
                 }
 
                 // Change Permissions
@@ -405,13 +435,13 @@ public class AdminComponent extends BukkitComponent implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
 
-        loadInventory(event.getName());
+        loadInventory(Bukkit.getOfflinePlayer(event.getUniqueId()));
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
 
-        unloadInventory(event.getPlayer().getName());
+        unloadInventory(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -687,7 +717,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
             Player player = PlayerUtil.checkPlayer(sender);
 
             if (isAdmin(player)) {
-                if (!args.hasFlag('k') && !hasInventoryLoaded(player.getName())) {
+                if (!args.hasFlag('k') && !hasInventoryLoaded(player.getUniqueId())) {
                     throw new CommandException("Your inventory is not loaded! \nLeaving admin mode will result in item loss! " +
                             "\nUse \"/deadmin -k\" to ignore this warning and continue anyways.");
                 }

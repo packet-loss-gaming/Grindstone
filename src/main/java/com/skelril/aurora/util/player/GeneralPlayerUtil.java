@@ -27,7 +27,7 @@ public class GeneralPlayerUtil {
      */
     public static PlayerState makeComplexState(Player player) {
 
-        return new PlayerState(player.getName(),
+        return new PlayerState(player.getUniqueId().toString(),
                 player.getInventory().getContents(),
                 player.getInventory().getArmorContents(),
                 player.getHealth(),
