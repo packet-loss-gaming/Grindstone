@@ -360,7 +360,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                     inmate = InputUtil.PlayerParser.matchSinglePlayer(sender, inmateName);
                 }
 
-                inmate.getUniqueId();
+                inmateID = inmate.getUniqueId();
 
                 // They are offline
             } catch (CommandException e) {
