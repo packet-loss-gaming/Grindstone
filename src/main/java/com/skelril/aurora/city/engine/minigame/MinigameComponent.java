@@ -170,6 +170,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     public boolean addToTeam(Player player, int team, Set<Character> flags) {
 
         PlayerState state = GeneralPlayerUtil.makeComplexState(player);
+        state.setOwnerName(player.getName());
         state.setLocation(player.getLocation());
         playerState.put(player.getName(), new PlayerGameState(state, team));
 
