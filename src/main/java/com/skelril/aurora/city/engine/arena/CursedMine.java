@@ -483,7 +483,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
                     Location modifiedLoc = null;
 
-                    switch (ChanceUtil.getRandom(10)) {
+                    switch (ChanceUtil.getRandom(11)) {
                         case 1:
                             if (ChanceUtil.getChance(4)) {
                                 if (blockid == BlockID.DIAMOND_ORE) {
@@ -572,10 +572,18 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             for (int i = 0; i < ChanceUtil.getRangedRandom(10, 30); i++) {
                                 Blaze blaze = getWorld().spawn(player.getLocation(), Blaze.class);
                                 blaze.setTarget(player);
-                                blaze.setRemoveWhenFarAway(false);
+                                blaze.setRemoveWhenFarAway(true);
                             }
                             break;
                         case 10:
+                            ChatUtil.sendWarning(player, "A legion of hell hounds appears!");
+                            for (int i = 0; i < ChanceUtil.getRangedRandom(10, 30); i++) {
+                                Wolf wolf = getWorld().spawn(player.getLocation(), Wolf.class);
+                                wolf.setTarget(player);
+                                wolf.setRemoveWhenFarAway(true);
+                            }
+                            break;
+                        case 11:
                             ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
                             addToHitList(player.getName());
                             prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
