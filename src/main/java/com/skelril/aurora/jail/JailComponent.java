@@ -22,6 +22,7 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -126,25 +127,25 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         return jailCells;
     }
 
-    public void jail(String name, long time) {
+    public void jail(UUID ID, long time) {
 
-        jail(name, time, false);
+        jail(ID, time, false);
     }
 
-    public void jail(String name, long time, boolean mute) {
+    public void jail(UUID ID, long time, boolean mute) {
 
-        inmates.jail(name, config.defaultJail, server.getConsoleSender(), "", System.currentTimeMillis() + time, mute);
+        inmates.jail(ID, config.defaultJail, server.getConsoleSender(), "", System.currentTimeMillis() + time, mute);
     }
 
     public boolean checkSentence(Player player) {
 
-        Inmate inmate = inmates.getInmate(player.getName());
+        Inmate inmate = inmates.getInmate(player.getUniqueId());
 
         if (inmate != null) {
             if (inmate.getEnd() == 0L || inmate.getEnd() - System.currentTimeMillis() > 0) {
                 return true;
             }
-            inmates.unjail(player.getName(), null, "Temp-jail expired");
+            inmates.unjail(player.getUniqueId(), null, "Temp-jail expired");
             inmates.save();
         }
 
@@ -162,26 +163,26 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         return checkSentence(player);
     }
 
-    public boolean isJailed(String name) {
+    public boolean isJailed(UUID ID) {
 
-        return inmates.isInmate(name);
+        return inmates.isInmate(ID);
     }
 
     public boolean isJailMuted(Player player) {
 
-        return checkSentence(player) && isJailMuted(player.getName());
+        return checkSentence(player) && isJailMuted(player.getUniqueId());
     }
 
-    public boolean isJailMuted(String name) {
+    public boolean isJailMuted(UUID ID) {
 
-        return isJailed(name) && inmates.getInmate(name).isMuted();
+        return isJailed(ID) && inmates.getInmate(ID).isMuted();
     }
 
     public void notify(Player player) {
 
         ChatUtil.sendWarning(player, config.jailMessage);
 
-        Inmate inmate = inmates.getInmate(player.getName());
+        Inmate inmate = inmates.getInmate(player.getUniqueId());
         String reason = inmate.getReason();
 
         StringBuilder builder = new StringBuilder();
@@ -225,7 +226,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                 if (isJailed(player)) {
 
                     JailCell cell = cells.get(player);
-                    Inmate inmate = inmates.getInmate(player.getName());
+                    Inmate inmate = inmates.getInmate(player.getUniqueId());
                     if (cell == null || !cell.getPrisonName().equals(inmate.getPrisonName())) {
                         cell = assignCell(player, inmate.getPrisonName());
                     }
@@ -337,52 +338,62 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         public void jailCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player inmate = null;
-            String inmateName = "";
+            UUID inmateID = null;
             String prisonName = args.argsLength() >= 2 ? args.getString(1) : config.defaultJail;
             long endDate = args.hasFlag('t') ? InputUtil.TimeParser.matchFutureDate(args.getFlag('t')) : 0L;
             String message = args.argsLength() >= 3 ? args.getJoinedStrings(2) : "";
 
             final boolean hasExemptOverride = args.hasFlag('o') && inst.hasPermission(sender, "aurora.jail.exempt.override");
 
+            String inmateName = args.getString(0)
+                    .replace("\r", "")
+                    .replace("\n", "")
+                    .replace("\0", "")
+                    .replace("\b", "");
+
             // Check if it's a player in the server right now
             try {
                 // Exact mode matches names exactly
                 if (args.hasFlag('e')) {
-                    inmate = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+                    inmate = InputUtil.PlayerParser.matchPlayerExactly(sender, inmateName);
                 } else {
-                    inmate = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(0));
+                    inmate = InputUtil.PlayerParser.matchSinglePlayer(sender, inmateName);
                 }
 
-                inmateName = inmate.getName();
+                inmate.getUniqueId();
 
                 // They are offline
             } catch (CommandException e) {
-                inmateName = args.getString(0).replace("\r", "").replace("\n", "").replace("\0", "").replace("\b", "");
+                OfflinePlayer player = server.getOfflinePlayer(inmateName);
+                inmateID = player == null ? null : player.getUniqueId();
             }
 
             if (!hasExemptOverride) {
                 try {
                     if (inst.hasPermission(inmate, "aurora.jail.exempt")) {
                         if (inst.hasPermission(sender, "aurora.jail.exempt.override")) {
-                            throw new CommandException("The player: " + inmateName + " is exempt from being jailed! (use -o flag to override this)");
+                            throw new CommandException("That player is exempt from being jailed! (use -o flag to override this)");
                         } else {
-                            throw new CommandException("The player: " + inmateName + " is exempt from being jailed!");
+                            throw new CommandException("That player is exempt from being jailed!");
                         }
                     }
                 } catch (NullPointerException npe) {
                     if (inst.hasPermission(sender, "aurora.jail.exempt.override")) {
-                        throw new CommandException("The player: " + inmateName + " is offline, and cannot be jailed! (use -o flag to override this)");
+                        throw new CommandException("That player is offline, and cannot be jailed! (use -o flag to override this)");
                     } else {
-                        throw new CommandException("The player: " + inmateName + " is offline, and cannot be jailed!");
+                        throw new CommandException("That player is offline, and cannot be jailed!");
                     }
                 }
             }
 
             if (!jailCells.prisonExist(prisonName)) throw new CommandException("No such prison exists.");
 
+            if (inmateID == null) {
+                throw new CommandException("That player could not be jailed!");
+            }
 
             // Jail the player
-            inmates.jail(inmateName, prisonName, sender, message, endDate, args.hasFlag('m'));
+            inmates.jail(inmateID, prisonName, sender, message, endDate, args.hasFlag('m'));
 
             // Tell the sender of their success
             ChatUtil.sendNotice(sender, "The player: " + inmateName + " has been jailed!");
@@ -404,9 +415,15 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
             String message = args.argsLength() >= 2 ? args.getJoinedStrings(1) : "";
 
-            String inmateName = args.getString(0).replace("\r", "").replace("\n", "").replace("\0", "").replace("\b", "");
+            String inmateName = args.getString(0)
+                    .replace("\r", "")
+                    .replace("\n", "")
+                    .replace("\0", "")
+                    .replace("\b", "");
 
-            if (inmates.unjail(inmateName, sender, message)) {
+            UUID ID = CommandBook.server().getOfflinePlayer(inmateName).getUniqueId();
+
+            if (inmates.unjail(ID, sender, message)) {
                 ChatUtil.sendNotice(sender, inmateName + " unjailed.");
 
                 if (!inmates.save()) {

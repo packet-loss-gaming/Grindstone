@@ -8,8 +8,10 @@ package com.skelril.aurora.jail;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.ChatUtil;
+import com.sk89q.commandbook.util.entity.player.UUIDUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -19,6 +21,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.*;
 import java.util.logging.Formatter;
+
+import static com.sk89q.commandbook.CommandBook.logger;
 
 public class CSVInmateDatabase implements InmateDatabase {
 
@@ -30,12 +34,7 @@ public class CSVInmateDatabase implements InmateDatabase {
     /**
      * Used to lookup inmates by name
      */
-    protected Map<String, Inmate> nameInmate = new HashMap<>();
-
-    /**
-     * A set of all inmates
-     */
-    protected final Set<Inmate> inmates = new HashSet<>();
+    protected Map<UUID, Inmate> UUIDInmate = new HashMap<>();
 
     private static final SimpleDateFormat dateFormat =
             new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -72,6 +71,7 @@ public class CSVInmateDatabase implements InmateDatabase {
 
         FileInputStream input = null;
         boolean successful = true;
+        boolean needsSaved = false;
 
         try {
             input = new FileInputStream(inmateFile);
@@ -85,7 +85,7 @@ public class CSVInmateDatabase implements InmateDatabase {
                     continue;
                 }
                 try {
-                    String name = "null";
+                    String rawID = "null";
                     String prisonName = "lava-flow";
                     String reason = "";
                     long startDate = 0;
@@ -95,7 +95,7 @@ public class CSVInmateDatabase implements InmateDatabase {
                     for (int i = 0; i < line.length; i++) {
                         switch (i) {
                             case 0:
-                                name = line[i].trim().toLowerCase();
+                                rawID = line[i].trim().toLowerCase();
                                 break;
                             case 1:
                                 prisonName = line[i].trim().toLowerCase();
@@ -114,18 +114,31 @@ public class CSVInmateDatabase implements InmateDatabase {
                                 break;
                         }
                     }
-                    if ("".equals(name) || "null".equals(name)) name = null;
-                    Inmate inmate = new Inmate(name, prisonName, reason, startDate, endDate, isMuted);
-                    if (name != null) nameInmate.put(name, inmate);
-                    inmates.add(inmate);
+                    if ("".equals(rawID) || "null".equals(rawID)) rawID = null;
+                    Inmate inmate = new Inmate(prisonName, reason, startDate, endDate, isMuted);
+                    try {
+                        inmate.setID(UUID.fromString(rawID));
+                    } catch (IllegalArgumentException ex) {
+                        logger().finest("Converting inmate " + rawID + "'s name to UUID...");
+                        UUID creatorID = UUIDUtil.convert(rawID);
+                        if (creatorID != null) {
+                            inmate.setID(creatorID);
+                            needsSaved = true;
+                            logger().finest("Success!");
+                        } else {
+                            inmate.setName(rawID);
+                            logger().warning("Inmate " + rawID + "'s name could not be converted!");
+                        }
+                    }
+                    UUIDInmate.put(inmate.getID(), inmate);
                 } catch (NumberFormatException e) {
                     log.warning("Non-long long field found in inmate!");
                 }
             }
-            log.info(inmates.size() + " jailed name(s) loaded.");
+            log.info(UUIDInmate.size() + " jailed name(s) loaded.");
         } catch (FileNotFoundException ignored) {
         } catch (IOException e) {
-            nameInmate = new HashMap<>();
+            UUIDInmate = new HashMap<>();
             log.warning("Failed to load " + inmateFile.getAbsolutePath() + ": " + e.getMessage());
             successful = false;
         } finally {
@@ -136,6 +149,7 @@ public class CSVInmateDatabase implements InmateDatabase {
                 }
             }
         }
+        if (needsSaved) save();
         return successful;
     }
 
@@ -149,9 +163,9 @@ public class CSVInmateDatabase implements InmateDatabase {
             CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(output, "utf-8")));
             String[] line;
 
-            for (Inmate inmate : inmates) {
+            for (Inmate inmate : UUIDInmate.values()) {
                 line = new String[]{
-                        inmate.getName().trim().toLowerCase(),
+                        String.valueOf(inmate.getID()),
                         inmate.getPrisonName().trim().toLowerCase(),
                         inmate.getReason() == null ? "" : inmate.getReason(),
                         String.valueOf(inmate.getStart()),
@@ -190,107 +204,87 @@ public class CSVInmateDatabase implements InmateDatabase {
         return false;
     }
 
-    public boolean isInmate(String name) {
-
-        name = name.trim().toLowerCase();
-
-        return nameInmate.get(name) != null;
+    @Override
+    public boolean isInmate(UUID ID) {
+        return UUIDInmate.containsKey(ID);
     }
 
+    @Override
+    public Inmate getInmate(UUID ID) {
+        return UUIDInmate.get(ID);
+    }
+
+    @Override
     public void jail(Player player, String prisonName, CommandSender source, String reason, long end, boolean isMuted) {
-
-        jail(player.getName(), prisonName, source, reason, end, isMuted);
+        jail(player.getUniqueId(), prisonName, source, reason, end, isMuted);
     }
 
-    public void jail(String name, String prisonName, CommandSender source, String reason, long end, boolean isMuted) {
-
-        Validate.notNull(name);
-        Validate.notNull(prisonName);
+    @Override
+    public void jail(UUID ID, String prison, CommandSender source, String reason, long end, boolean mute) {
+        Validate.notNull(ID);
+        Validate.notNull(prison);
         Validate.notNull(reason);
 
-        name = name.trim().toLowerCase();
-        prisonName = prisonName.trim().toLowerCase();
+        prison = prison.trim().toLowerCase();
         reason = reason.trim();
 
         long start = System.currentTimeMillis();
 
-        if (isInmate(name)) {
-            Inmate inmate = nameInmate.remove(name);
+        if (isInmate(ID)) {
+            Inmate inmate = UUIDInmate.remove(ID);
             start = inmate.getStart();
-            inmates.remove(inmate);
         }
 
-        Inmate inmate = new Inmate(name, prisonName, reason, start, end, isMuted);
-        nameInmate.put(name, inmate);
-        inmates.add(inmate);
-        auditLogger.info(String.format("JAIL: %s jailed %s: %s", source == null ? "Plugin" : ChatUtil.toUniqueName(source), name, reason.trim()));
+        Inmate inmate = new Inmate(ID, prison, reason, start, end, mute);
+        UUIDInmate.put(ID, inmate);
+        auditLogger.info(String.format("JAIL: %s jailed %s: %s", source == null ? "Plugin" : ChatUtil.toUniqueName(source), ID, reason.trim()));
     }
 
+    @Override
     public boolean unjail(Player player, CommandSender source, String reason) {
-
-        return unjail(player.getName(), source, reason);
+        return unjail(player.getUniqueId(), source, reason);
     }
 
-    public boolean unjail(String name, CommandSender source, String reason) {
+    @Override
+    public boolean unjail(UUID ID, CommandSender source, String reason) {
 
-        Inmate inmate = null;
-        String jailedName = null;
-        if (name != null) {
-            name = name.trim().toLowerCase();
-            inmate = nameInmate.remove(name);
-            if (inmate != null) {
-                jailedName = name;
-            }
-        }
+        Validate.notNull(ID);
+
+        Inmate inmate = UUIDInmate.remove(ID);
         if (inmate != null) {
-            inmates.remove(inmate);
             auditLogger.info(String.format("UNJAIL: %s unjailed %s: %s",
                     source == null ? "Plugin" : ChatUtil.toUniqueName(source),
-                    jailedName,
+                    inmate.getID(),
                     reason.trim()));
             return true;
         }
         return false;
     }
 
-    public String getJailedNameMessage(String name) {
-
-        Inmate inmate = nameInmate.get(name.trim().toLowerCase());
-        return inmate.getReason() == null ? null : inmate.getReason().trim();
-    }
-
     public Iterator<Inmate> iterator() {
 
         return new Iterator<Inmate>() {
 
-            private final Iterator<Inmate> setIter = inmates.iterator();
+            private final Iterator<Map.Entry<UUID, Inmate>> setIter = UUIDInmate.entrySet().iterator();
             private Inmate next;
 
             public boolean hasNext() {
-
                 return setIter.hasNext();
             }
 
             public Inmate next() {
-
-                return next = setIter.next();
+                next = setIter.next().getValue();
+                return next;
             }
 
             public void remove() {
-
-                unjail(next.getName(), null, "Removed by iterator");
+                unjail(next.getID(), null, "Removed by iterator");
             }
         };
     }
 
-    public Inmate getInmate(String name) {
-
-        return nameInmate.get(name.trim().toLowerCase());
-    }
-
     @Override
     public List<Inmate> getInmatesList() {
-
-        return new ArrayList<>(inmates);
+        return Lists.newArrayList(UUIDInmate.values());
     }
 }

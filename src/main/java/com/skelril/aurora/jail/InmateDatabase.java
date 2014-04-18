@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Author: Turtle9598
@@ -40,18 +41,18 @@ public interface InmateDatabase extends Iterable<Inmate> {
     /**
      * Checks if a player's name is jailed.
      *
-     * @param name The name to check
+     * @param ID The ID to check
      * @return Whether name is jailed
      */
-    public boolean isInmate(String name);
+    public boolean isInmate(UUID ID);
 
     /**
-     * Returns a Inmate with the given name
+     * Returns a Inmate with the given ID
      *
-     * @param name The name given to the ban.
+     * @param ID The ID of the jailed player
      * @return The applicable Inmate
      */
-    public Inmate getInmate(String name);
+    public Inmate getInmate(UUID ID);
 
     /**
      * Jails a player
@@ -66,16 +67,16 @@ public interface InmateDatabase extends Iterable<Inmate> {
     public void jail(Player player, String prison, CommandSender source, String reason, long end, boolean mute);
 
     /**
-     * Jails a player by name
+     * Jails a player by ID
      *
-     * @param name
+     * @param ID
      * @param prison
      * @param source
      * @param reason
      * @param end
      * @param mute
      */
-    public void jail(String name, String prison, CommandSender source, String reason, long end, boolean mute);
+    public void jail(UUID ID, String prison, CommandSender source, String reason, long end, boolean mute);
 
     /**
      * Unjails a player
@@ -87,13 +88,13 @@ public interface InmateDatabase extends Iterable<Inmate> {
     public boolean unjail(Player player, CommandSender source, String reason);
 
     /**
-     * Unjails a player by name
+     * Unjails a player by ID
      *
-     * @param name
+     * @param ID
      * @param source
      * @param reason
      */
-    public boolean unjail(String name, CommandSender source, String reason);
+    public boolean unjail(UUID ID, CommandSender source, String reason);
 
     /**
      * Returns a list of inmates
