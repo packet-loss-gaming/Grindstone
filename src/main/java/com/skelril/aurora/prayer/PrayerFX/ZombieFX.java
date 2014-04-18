@@ -25,7 +25,7 @@ public class ZombieFX extends AbstractEffect {
     public void add(Player player) {
 
         if (player.getWorld().getEntitiesByClass(Zombie.class).size() < 1000) {
-            player.getWorld().spawn(player.getLocation(), Zombie.class);
+            player.getWorld().spawn(player.getLocation(), Zombie.class).setTarget(player);
         }
     }
 
