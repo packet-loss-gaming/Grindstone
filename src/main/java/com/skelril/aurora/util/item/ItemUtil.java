@@ -594,6 +594,7 @@ public class ItemUtil {
             ItemStack phantomHymn = new ItemStack(ItemID.BOOK);
             ItemMeta phantomMeta = phantomHymn.getItemMeta();
             phantomMeta.setDisplayName(PHANTOM_HYMN.toString());
+            phantomMeta.setLore(Arrays.asList(ChatColor.RED + "A hymn of dark origins..."));
             phantomHymn.setItemMeta(phantomMeta);
             return phantomHymn;
         }
