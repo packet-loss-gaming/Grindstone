@@ -794,6 +794,11 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     event.getDrops().add(ItemUtil.Misc.magicBucket());
                 }
 
+                // Uber rare drops
+                if (ChanceUtil.getChance(15000 / m)) {
+                    event.getDrops().add(ItemUtil.Ancient.makeCrown());
+                }
+
                 // Add a few Barbarian Bones to the drop list
                 event.getDrops().add(ItemUtil.Misc.barbarianBone(ChanceUtil.getRandom(Math.max(1, amt * 2))));
 
