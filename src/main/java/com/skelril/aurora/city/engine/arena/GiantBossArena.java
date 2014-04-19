@@ -818,8 +818,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                     player.updateInventory();
                 }
 
-                LocalDate date = LocalDate.now();
-                date.with(Month.APRIL).withDayOfMonth(6);
+                LocalDate date = LocalDate.now().with(Month.APRIL).withDayOfMonth(6);
                 if (date.equals(LocalDate.now())) {
                     ChatUtil.sendNotice(getContainedPlayers(1), ChatColor.GOLD, "DROPS DOUBLED!");
                     event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
