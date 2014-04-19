@@ -438,6 +438,21 @@ public class LostItemsComponent extends BukkitComponent {
                     + player.getDisplayName() + " has been given " + stack.getAmount() + " Phantom Clocks.");
         }
 
+        @Command(aliases = {"phantomhymn"},
+                usage = "<player>", desc = "Give a player a Phantom Hymn",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.misc.phantomhymn"})
+        public void lostPhantomHymnCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.Misc.phantomHymn());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: "
+                    + player.getDisplayName() + " has been given a Phantom Hymn.");
+        }
+
         @Command(aliases = {"gemoflife"},
                 usage = "<player> [amount]", desc = "Give a player some Gems of Life",
                 flags = "", min = 1, max = 2)

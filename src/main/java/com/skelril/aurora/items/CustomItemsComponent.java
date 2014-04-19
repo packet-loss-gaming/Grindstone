@@ -15,6 +15,7 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
 import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
+import com.skelril.aurora.events.custom.item.HymnSingEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.entity.ProjectileTickEvent;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
@@ -558,9 +559,15 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         ItemStack itemStack = event.getItem();
 
-        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)
-                && handleRightClick(player, event.getClickedBlock().getLocation(), itemStack)) {
-            event.setCancelled(true);
+        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
+            if (handleRightClick(player, event.getClickedBlock().getLocation(), itemStack)) {
+                event.setCancelled(true);
+            } else if (ItemUtil.isItem(itemStack, CustomItems.PHANTOM_HYMN)) {
+                ChatUtil.sendNotice(player, "You sing the hymn...");
+                //noinspection AccessStaticViaInstance
+                inst.callEvent(new HymnSingEvent(player, HymnSingEvent.Hymn.PHANTOM));
+
+            }
         }
     }
 

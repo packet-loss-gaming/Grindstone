@@ -16,6 +16,7 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PlayerSacrificeItemEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
+import com.skelril.aurora.events.custom.item.HymnSingEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -77,7 +78,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
     private Economy economy;
 
     // Temple regions
-    private ProtectedRegion temple, pressurePlateLockArea, rewards;
+    private ProtectedRegion temple, pressurePlateLockArea, creepers, rewards;
 
     // Block information
     private static Set<BaseBlock> breakable = new HashSet<>();
@@ -126,7 +127,8 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         this.temple = regions[1];
         this.pressurePlateLockArea = regions[2];
-        this.rewards = regions[3];
+        this.creepers = regions[3];
+        this.rewards = regions[4];
         this.adminComponent = adminComponent;
 
         findHeadStones();
@@ -793,6 +795,18 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     }, 1);
                 }
                 break;
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onHymnSing(HymnSingEvent event) {
+
+        Player player = event.getPlayer();
+
+        if (LocationUtil.isInRegion(getWorld(), creepers, player)
+                && event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) {
+            ChatUtil.sendNotice(player, "A spirit carries you through the maze!");
+            player.teleport(new Location(getWorld(), -162.5, 52, -704), PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
     }
 

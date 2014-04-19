@@ -85,6 +85,8 @@ public class ItemUtil {
         GEM_OF_LIFE(ChatColor.DARK_AQUA + "Gem of Life"),
         GEM_OF_DARKNESS(ChatColor.DARK_RED + "Gem of Darkness"),
         IMBUED_CRYSTAL(ChatColor.AQUA + "Imbued Crystal"),
+        PHANTOM_HYMN(ChatColor.DARK_RED + "Phantom Hymn"),
+
 
         // Phantom Items
         PHANTOM_GOLD(ChatColor.GOLD + "Phantom Gold"),
@@ -585,6 +587,15 @@ public class ItemUtil {
             gemMeta.setDisplayName(GEM_OF_LIFE.toString());
             gemOfLife.setItemMeta(gemMeta);
             return gemOfLife;
+        }
+
+        public static ItemStack phantomHymn() {
+
+            ItemStack phantomHymn = new ItemStack(ItemID.BOOK);
+            ItemMeta phantomMeta = phantomHymn.getItemMeta();
+            phantomMeta.setDisplayName(PHANTOM_HYMN.toString());
+            phantomHymn.setItemMeta(phantomMeta);
+            return phantomHymn;
         }
 
         public static ItemStack barbarianBone(int amount) {

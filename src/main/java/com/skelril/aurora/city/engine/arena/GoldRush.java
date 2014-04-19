@@ -56,6 +56,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
+
 public class GoldRush extends AbstractRegionedArena implements MonitoredArena, Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -84,6 +86,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     // Session
     private long startTime = System.currentTimeMillis();
     private int lootSplit = 0;
+    private int floodBlockType = BlockID.WATER;
     private List<String> players = new ArrayList<>();
     private boolean leversTriggered = false;
 
@@ -119,6 +122,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
         resetChestAndKeys();
         drainAll();
+        resetFloodType();
         resetLevers();
         setDoor(doorOne, BlockID.IRON_BLOCK);
         setDoor(doorTwo, BlockID.IRON_BLOCK);
@@ -217,6 +221,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 }
                 if (ChanceUtil.getChance(1000)) {
                     targetStack = ItemUtil.Misc.phantomGold(ChanceUtil.getRandom(6));
+                }
+                if (ChanceUtil.getChance(10000)) {
+                    inventory.addItem(ItemUtil.Misc.phantomHymn());
                 }
 
                 inventory.setItem(ChanceUtil.getRandom(chestState.getBlockInventory().getSize() - 1), targetStack);
@@ -392,6 +399,21 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         }
     }
 
+    private void checkFloodType() {
+        for (Player player : getContainedPlayers()) {
+            if (!players.contains(player.getName())) continue;
+            if (ItemUtil.findItemOfName(player.getInventory().getContents(), CustomItems.PHANTOM_HYMN.toString())) {
+                drainAll(); // Force away all water
+                floodBlockType = BlockID.LAVA;
+                break;
+            }
+        }
+    }
+
+    private void resetFloodType() {
+        floodBlockType = BlockID.WATER;
+    }
+
     private long lastFlood = System.currentTimeMillis();
 
     private void flood() {
@@ -400,7 +422,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         if (System.currentTimeMillis() - startTime >= TimeUnit.SECONDS.toMillis((3 * 60) / playerMod)) {
 
             for (Location floodBlock : floodBlocks) {
-                floodBlock.getBlock().setTypeId(BlockID.WATER);
+                floodBlock.getBlock().setTypeId(floodBlockType);
             }
 
             if (System.currentTimeMillis() - lastFlood >= TimeUnit.SECONDS.toMillis(30 / Math.max(1, playerMod))) {
@@ -420,7 +442,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                             Block block = getWorld().getBlockAt(x, y, z);
                             if (!block.getChunk().isLoaded()) block.getChunk().load();
                             if (block.getTypeId() == BlockID.AIR) {
-                                block.setTypeId(BlockID.WATER);
+                                block.setTypeId(floodBlockType);
                                 break;
                             }
                         }
@@ -470,7 +492,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             for (int z = minZ; z <= maxZ; z++) {
                 for (int y = maxY; y >= minY; --y) {
                     Block block = getWorld().getBlockAt(x, y, z);
-                    if (EnvironmentUtil.isWater(block)) {
+                    if (EnvironmentUtil.isLiquid(block.getTypeId())) {
                         block.setTypeId(BlockID.AIR);
                     }
                 }
@@ -556,6 +578,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     setDoor(doorTwo, BlockID.AIR);
                 } else {
                     randomizeLevers();
+                    checkFloodType();
                     flood();
                 }
             }
@@ -759,7 +782,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
         String playerName = event.getEntity().getName();
         if (contains(event.getEntity()) && players.contains(playerName)) {
-            double amt = Math.min(economy.getBalance(playerName), Math.max(5000, economy.getBalance(playerName) * .005));
+            double amt = Math.min(economy.getBalance(playerName), Math.max(100, economy.getBalance(playerName) * .005));
             economy.withdrawPlayer(playerName, amt);
             ChatUtil.sendWarning(event.getEntity(), "You are forced to pay a fine of: " + economy.format(amt) + '.');
             players.remove(playerName);

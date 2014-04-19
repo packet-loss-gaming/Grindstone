@@ -539,6 +539,7 @@ public class AdminStoreComponent extends BukkitComponent {
         names.add("red feather");
 
         names.add("phantom clock");
+        names.add("phantom hymn");
 
         names.add("pixie dust");
 
@@ -611,6 +612,9 @@ public class AdminStoreComponent extends BukkitComponent {
                     break;
                 case "phantom clock":
                     itemStacks.add(ItemUtil.Misc.phantomClock(1));
+                    break;
+                case "phantom hymn":
+                    itemStacks.add(ItemUtil.Misc.phantomHymn());
                     break;
                 case "pixie dust":
                     itemStacks.add(ItemUtil.Misc.pixieDust(1));
