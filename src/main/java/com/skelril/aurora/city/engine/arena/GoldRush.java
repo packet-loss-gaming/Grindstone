@@ -714,7 +714,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 if (ItemUtil.countFilledSlots(event.getPlayer()) > 0) {
                     ChatUtil.sendError(event.getPlayer(), "[Partner] Don't bring anything with ya kid, it'll weigh you down.");
                     return;
-                } else if (!economy.has(playerName, Math.max(5000, economy.getBalance(playerName) * .005))) {
+                } else if (!economy.has(playerName, 100)) {
                     ChatUtil.sendError(event.getPlayer(), "[Partner] Kid you don't have enough cash, your balance will never pay bail.");
                     return;
                 }
