@@ -7,6 +7,7 @@
 package com.skelril.aurora.economic.store;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.Vector;
@@ -41,7 +42,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Admin Store", desc = "Admin Store system.")
-@Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class})
+@Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, SessionComponent.class})
 public class AdminStoreComponent extends BukkitComponent {
 
     private final CommandBook inst = CommandBook.inst();
@@ -50,6 +51,8 @@ public class AdminStoreComponent extends BukkitComponent {
 
     @InjectComponent
     private AdminComponent adminComponent;
+    @InjectComponent
+    private SessionComponent sessions;
 
     private static ItemStoreDatabase itemStoreDatabase;
 
@@ -125,6 +128,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 itemName = type.getName();
             }
             ItemPricePair itemPricePair = itemStoreDatabase.getItem(itemName);
+            itemName = itemPricePair.getName();
 
             if (itemPricePair == null || !itemPricePair.isBuyable()) {
                 throw new CommandException(NOT_AVAILIBLE);
@@ -164,10 +168,18 @@ public class AdminStoreComponent extends BukkitComponent {
             itemStoreDatabase.logTransaction(playerName, itemName, amt);
             String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), "");
             ChatUtil.sendNotice(sender, "Item(s) purchased for " + priceString + "!");
-            if (rebate != 0) {
+            if (rebate >= 0.01) {
                 String rebateString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(rebate), "");
                 ChatUtil.sendNotice(sender, "You get " + rebateString + " back.");
             }
+
+            // Market Command Help
+            StoreSession sess = sessions.getSession(StoreSession.class, player);
+            if (amt == 1 && sess.recentPurch() && sess.getLastPurch().equals(itemName)) {
+                ChatUtil.sendNotice(sender, "Did you know you can specify the amount of items to buy?");
+                ChatUtil.sendNotice(sender, "/market buy -a <amount> " + itemName);
+            }
+            sess.setLastPurch(itemName);
         }
 
         @Command(aliases = {"sell", "s"},
@@ -305,6 +317,18 @@ public class AdminStoreComponent extends BukkitComponent {
 
             String paymentString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(payment), "");
             ChatUtil.sendNotice(player, "Item(s) sold for: " + paymentString + "!");
+
+            // Market Command Help
+            StoreSession sess = sessions.getSession(StoreSession.class, player);
+            if (singleItem && sess.recentSale() && !sess.recentNotice()) {
+                ChatUtil.sendNotice(sender, "Did you know you can sell more than one stack at a time?");
+                ChatUtil.sendNotice(sender, "To sell all of what you're holding:");
+                ChatUtil.sendNotice(sender, "/market sell -a");
+                ChatUtil.sendNotice(sender, "To sell everything in your inventory:");
+                ChatUtil.sendNotice(sender, "/market sell -au");
+                sess.updateNotice();
+            }
+            sess.updateSale();
         }
 
         @Command(aliases = {"list", "l"},
