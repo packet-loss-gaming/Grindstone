@@ -99,9 +99,13 @@ public class ItemUtil {
         PIXIE_DUST(ChatColor.GOLD + "Pixie Dust"),
         MAGIC_BUCKET(ChatColor.DARK_PURPLE + "Magic Bucket"),
 
-        // Animal Bows
+        // Animal Bow
         BAT_BOW(ChatColor.DARK_RED + "Bat Bow"),
-        CHICKEN_BOW(ChatColor.DARK_RED + "Chicken Bow"),
+        CHICKEN_BOW(ChatColor.GOLD + "Chicken Bow"),
+
+        // Animal Hymn
+        CHICKEN_HYMN(ChatColor.GOLD + "Chicken Hymn"),
+
 
         // Miscellaneous
         GOD_FISH(ChatColor.BLUE + "God Fish"),
@@ -626,6 +630,16 @@ public class ItemUtil {
             ((Repairable) chickenMeta).setRepairCost(400);
             chickenBow.setItemMeta(chickenMeta);
             return chickenBow;
+        }
+
+        public static ItemStack chickenHymn() {
+
+            ItemStack phantomHymn = new ItemStack(ItemID.BOOK);
+            ItemMeta phantomMeta = phantomHymn.getItemMeta();
+            phantomMeta.setDisplayName(CHICKEN_HYMN.toString());
+            phantomMeta.setLore(Arrays.asList(ChatColor.BLUE + "Cluck cluck!"));
+            phantomHymn.setItemMeta(phantomMeta);
+            return phantomHymn;
         }
 
         public static ItemStack magicBucket() {

@@ -66,6 +66,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.skelril.aurora.events.custom.item.HymnSingEvent.Hymn;
 import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 /**
@@ -560,14 +561,43 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         ItemStack itemStack = event.getItem();
 
         if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
+            boolean isPhantomH = ItemUtil.isItem(itemStack, CustomItems.PHANTOM_HYMN);
+            boolean isChickenH = ItemUtil.isItem(itemStack, CustomItems.CHICKEN_HYMN);
             if (handleRightClick(player, event.getClickedBlock().getLocation(), itemStack)) {
                 event.setCancelled(true);
-            } else if (ItemUtil.isItem(itemStack, CustomItems.PHANTOM_HYMN)) {
+            } else if (isPhantomH || isChickenH) {
                 ChatUtil.sendNotice(player, "You sing the hymn...");
+                Event e;
+                if (isPhantomH) {
+                    e = new HymnSingEvent(player, Hymn.PHANTOM);
+                } else {
+                    e = new HymnSingEvent(player, Hymn.CHICKEN);
+                }
                 //noinspection AccessStaticViaInstance
-                inst.callEvent(new HymnSingEvent(player, HymnSingEvent.Hymn.PHANTOM));
+                inst.callEvent(e);
 
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onHymnSing(HymnSingEvent event) {
+        Player player = event.getPlayer();
+        Hymn hymn = event.getHymn();
+
+        switch (hymn) {
+            case CHICKEN:
+                player.getNearbyEntities(4, 4, 4).stream()
+                        .filter(e -> e instanceof Item).forEach(e -> {
+                    Location l = e.getLocation();
+                    for (int k = 0; k < ((Item) e).getItemStack().getAmount(); k++) {
+                        Chicken chicken = l.getWorld().spawn(l, Chicken.class);
+                        chicken.setRemoveWhenFarAway(true);
+                    }
+                    e.remove();
+                    ChatUtil.sendNotice(player, "The item transforms into chickens!");
+                });
+                break;
         }
     }
 

@@ -525,6 +525,21 @@ public class LostItemsComponent extends BukkitComponent {
                     + player.getDisplayName() + " has been a new Chicken Bow.");
         }
 
+        @Command(aliases = {"chickenhymn"},
+                usage = "<player>", desc = "Give a player a Chicken Hymn",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.misc.chickenhymn"})
+        public void lostChickenHymnCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(ItemUtil.Misc.chickenHymn());
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: "
+                    + player.getDisplayName() + " has been given a Chicken Hymn.");
+        }
+
         @Command(aliases = {"magicbucket"},
                 usage = "<player>", desc = "Return a player's Magic Bucket",
                 flags = "", min = 1, max = 1)
