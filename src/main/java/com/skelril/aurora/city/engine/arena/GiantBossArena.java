@@ -685,6 +685,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                                 Zombie z = (Zombie) getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
                                 z.setBaby(true);
                                 EntityEquipment equipment = z.getEquipment();
+                                equipment.setArmorContents(null);
                                 equipment.setItemInHand(weapon.clone());
                                 equipment.setItemInHandDropChance(0F);
                                 if (finalAttacker != null && finalAttacker instanceof LivingEntity) {
