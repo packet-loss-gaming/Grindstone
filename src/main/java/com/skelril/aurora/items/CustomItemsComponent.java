@@ -588,14 +588,21 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         switch (hymn) {
             case CHICKEN:
                 player.getNearbyEntities(4, 4, 4).stream()
-                        .filter(e -> e instanceof Item).forEach(e -> {
+                        .filter(e -> (e instanceof Item || e instanceof Chicken)).limit(30).forEach(e -> {
                     Location l = e.getLocation();
-                    for (int k = 0; k < ((Item) e).getItemStack().getAmount(); k++) {
-                        Chicken chicken = l.getWorld().spawn(l, Chicken.class);
-                        chicken.setRemoveWhenFarAway(true);
+                    if (e instanceof Item) {
+                        for (int i = 0; i < 3; i++) {
+                            Chicken chicken = l.getWorld().spawn(l, Chicken.class);
+                            chicken.setRemoveWhenFarAway(true);
+                        }
+                        e.remove();
+                        ChatUtil.sendNotice(player, "The item transforms into chickens!");
+                    } else if (((Chicken) e).getRemoveWhenFarAway()) {
+                        if (ChanceUtil.getChance(3)) {
+                            l.getWorld().dropItem(l, new ItemStack(ItemID.COOKED_CHICKEN));
+                        }
+                        e.remove();
                     }
-                    e.remove();
-                    ChatUtil.sendNotice(player, "The item transforms into chickens!");
                 });
                 break;
         }
