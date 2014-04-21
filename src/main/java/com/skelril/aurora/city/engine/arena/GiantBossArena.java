@@ -1104,14 +1104,14 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
                 break;
             case 8:
                 ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "I ask thy lord for aid in this all mighty battle...");
-                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Heed thy warning, or parish!");
+                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Heed thy warning, or perish!");
                 server.getScheduler().runTaskLater(inst, () -> {
                     if (!isBossSpawned()) return;
 
                     ChatUtil.sendWarning(getContainedPlayers(1), "May those who appose me die a death like no other...");
                     for (Player player : getContainedPlayers()) {
                         if (boss.hasLineOfSight(player)) {
-                            ChatUtil.sendWarning(getContainedPlayers(1), "Parish " + player.getName() + "!");
+                            ChatUtil.sendWarning(getContainedPlayers(1), "Perish " + player.getName() + "!");
                             try {
                                 prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
                             } catch (UnsupportedPrayerException e) {
