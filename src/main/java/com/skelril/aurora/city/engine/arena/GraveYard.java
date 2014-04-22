@@ -135,8 +135,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         findPressurePlateLockLevers();
         findRewardChest();
 
-        resetRewardChest();
-
         reloadData();
         setupEconomy();
 
@@ -268,11 +266,14 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 Player player = (Player) defender;
                 Iterator<PotionEffect> potionIt = player.getActivePotionEffects().iterator();
                 while (potionIt.hasNext()) {
-
                     potionIt.next();
                     if (ChanceUtil.getChance(18)) {
                         potionIt.remove();
                     }
+                }
+
+                if (ItemUtil.findItemOfName(player.getInventory().getContents(), CustomItems.PHANTOM_HYMN.toString())) {
+                    event.setDamage(event.getDamage() * 1.5);
                 }
             }
         }
@@ -803,10 +804,14 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
         Player player = event.getPlayer();
 
-        if (LocationUtil.isInRegion(getWorld(), creepers, player)
-                && event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) {
-            ChatUtil.sendNotice(player, "A spirit carries you through the maze!");
-            player.teleport(new Location(getWorld(), -162.5, 52, -704), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        if (event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) {
+            if (LocationUtil.isInRegion(getWorld(), creepers, player)) {
+                ChatUtil.sendNotice(player, "A spirit carries you through the maze!");
+                player.teleport(new Location(getWorld(), -162.5, 52, -704), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+            } else if (LocationUtil.isInRegion(getWorld(), rewards, player) && !getWorld().isThundering()) {
+                ChatUtil.sendNotice(player, "A monstrous thunderstorm begins!");
+                getWorld().setThundering(true);
+            }
         }
     }
 
