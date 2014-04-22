@@ -340,8 +340,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
                 if (!shooter.hasLineOfSight(entity) || ((LivingEntity) entity).getHealth() < 2) continue;
 
-                shooter.setHealth(Math.min(shooter.getMaxHealth(), shooter.getHealth() + 1));
-                ((LivingEntity) entity).setHealth(Math.max(0, ((LivingEntity) entity).getHealth() - 1));
+                EntityUtil.heal(shooter, 1);
+                EntityUtil.forceDamage(entity, 1);
                 entity.playEffect(EntityEffect.HURT);
             }
         }

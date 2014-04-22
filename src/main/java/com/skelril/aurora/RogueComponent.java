@@ -23,10 +23,7 @@ import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.EntityDistanceComparator;
-import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -257,8 +254,8 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
                     if (((LivingEntity) entity).getHealth() < 2) continue;
 
-                    shooter.setHealth(Math.min(shooter.getMaxHealth(), shooter.getHealth() + 1));
-                    ((LivingEntity) entity).setHealth(Math.max(0, ((LivingEntity) entity).getHealth() - 1));
+                    EntityUtil.heal(shooter, 1);
+                    EntityUtil.forceDamage(entity, 1);
                     entity.playEffect(EntityEffect.HURT);
                 }
             } else {

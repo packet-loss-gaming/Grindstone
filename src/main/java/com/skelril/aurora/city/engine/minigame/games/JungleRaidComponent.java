@@ -47,6 +47,7 @@ import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EntityUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.hackbook.ChunkBook;
@@ -1296,8 +1297,7 @@ public class JungleRaidComponent extends MinigameComponent {
                             if (e instanceof LivingEntity) {
                                 ((LivingEntity) e).damage(1, p);
                                 if (ChanceUtil.getChance(5)) {
-                                    shooter.setHealth(Math.min(shooter.getHealth() + 1,
-                                            shooter.getMaxHealth()));
+                                    EntityUtil.heal(shooter, 1);
                                 }
                             }
                         }
