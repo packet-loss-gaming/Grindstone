@@ -18,10 +18,7 @@ import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -696,9 +693,12 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         Block block = event.getBlock();
         Location contactedLoc = block.getLocation();
         if (isHostileTempleArea(contactedLoc)) {
-            if (block.getTypeId() == BlockID.STONE_PRESSURE_PLATE
-                    && (isPressurePlateLocked || contactedLoc.getBlockY() < 57)) {
-                throwSlashPotion(contactedLoc);
+            if (block.getTypeId() == BlockID.STONE_PRESSURE_PLATE) {
+                if (contactedLoc.getBlockY() < 57) {
+                    EntityUtil.heal(event.getEntity(), 1);
+                } else if (isPressurePlateLocked) {
+                    throwSlashPotion(contactedLoc);
+                }
             }
         }
     }
