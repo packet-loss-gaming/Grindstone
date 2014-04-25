@@ -1244,7 +1244,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
     private void breakBlock(Entity e, Location location) {
 
-        int chance = e instanceof Player ? 2 : 6;
+        int chance = e instanceof Player ? 2 : e instanceof CaveSpider ? 30 : 6;
 
         Block block = location.getBlock();
 
@@ -1259,6 +1259,9 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         }
 
         for (BlockFace face : targets) {
+
+            if (!ChanceUtil.getChance(chance)) continue;
+
             final Block aBlock = block.getRelative(face);
             Block bBlock = aBlock.getRelative(BlockFace.DOWN);
             if (!BlockType.canPassThrough(bBlock.getTypeId())) continue;
@@ -1272,7 +1275,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
 
             server.getScheduler().runTaskLater(inst, () -> {
                 BaseBlock uABB = new BaseBlock(aBlock.getTypeId(), aBlock.getData());
-                if (!ChanceUtil.getChance(chance) || !accept(uABB, autoBreakable)) {
+                if (!accept(uABB, autoBreakable)) {
                     return;
                 }
                 generalIndex.addItem(new BlockRecord(aBlock.getLocation(location), uABB));
