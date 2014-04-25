@@ -135,8 +135,25 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         reloadData();
         setupEconomy();
 
+        spawnBlockBreakerTask();
+
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+    }
+
+    private void spawnBlockBreakerTask() {
+        server.getScheduler().runTaskTimer(inst, () -> {
+            if (cachedEmpty()) return;
+            for (Entity e : getContainedEntities(LivingEntity.class)) {
+                // Auto break stuff
+                Location belowLoc = e.getLocation();
+                if (!(e instanceof Player) || isInEvilRegion(belowLoc)) {
+                    breakBlock(e, belowLoc.add(0, -1, 0));
+                    breakBlock(e, belowLoc.add(0, -1, 0));
+                    breakBlock(e, belowLoc.add(0, -1, 0));
+                }
+            }
+        }, 0, 5);
     }
 
     public Player[] getTempleContained() {
@@ -1230,25 +1247,37 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         int chance = e instanceof Player ? 2 : 6;
 
         Block block = location.getBlock();
-        for (BlockFace face : EnvironmentUtil.getNearbyBlockFaces()) {
+
+        BaseBlock bb = new BaseBlock(block.getTypeId(), block.getData());
+        BaseBlock crackedBrick = new BaseBlock(BlockID.STONE_BRICK, 2);
+        BlockFace[] targets;
+        if (bb.getType() == BlockID.AIR) return;
+        if (bb.equals(crackedBrick)) {
+            targets = new BlockFace[] {BlockFace.SELF};
+        } else {
+            targets = EnvironmentUtil.getNearbyBlockFaces();
+        }
+
+        for (BlockFace face : targets) {
             final Block aBlock = block.getRelative(face);
             Block bBlock = aBlock.getRelative(BlockFace.DOWN);
             if (!BlockType.canPassThrough(bBlock.getTypeId())) continue;
+
             BaseBlock aBB = new BaseBlock(aBlock.getTypeId(), aBlock.getData());
-            if (ChanceUtil.getChance(chance) && accept(aBB, autoBreakable)) {
 
-                final BlockRecord record = new BlockRecord(aBlock.getLocation(location), aBB);
-                Runnable r = () -> {
-                    generalIndex.addItem(record);
-                    aBlock.setTypeId(0);
-                };
-
-                if (aBB.equals(new BaseBlock(BlockID.STONE_BRICK, 2))) {
-                    server.getScheduler().runTaskLater(inst, r, 20 * 3);
-                } else {
-                    r.run();
-                }
+            int delay = 20;
+            if (aBB.equals(crackedBrick)) {
+                delay *= .75;
             }
+
+            server.getScheduler().runTaskLater(inst, () -> {
+                BaseBlock uABB = new BaseBlock(aBlock.getTypeId(), aBlock.getData());
+                if (!ChanceUtil.getChance(chance) || !accept(uABB, autoBreakable)) {
+                    return;
+                }
+                generalIndex.addItem(new BlockRecord(aBlock.getLocation(location), uABB));
+                aBlock.setTypeId(0);
+            }, delay);
         }
     }
 
@@ -1395,14 +1424,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 for (int i = 0; i < 20; i++) getWorld().playEffect(entity.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
                 entity.remove();
                 continue;
-            }
-
-            // Auto break stuff
-            Location belowLoc = entity.getLocation();
-            if (!(entity instanceof Player) || isInEvilRegion(belowLoc)) {
-                breakBlock(entity, belowLoc);
-                breakBlock(entity, belowLoc.add(0, -1, 0));
-                breakBlock(entity, belowLoc.add(0, -1, 0));
             }
 
             // People Code

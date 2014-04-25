@@ -30,6 +30,7 @@ public abstract class AbstractRegionedArena {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    private boolean empty = true;
     private World world;
     private ProtectedRegion region;
 
@@ -94,9 +95,17 @@ public abstract class AbstractRegionedArena {
 
         for (Player player : server.getOnlinePlayers()) {
 
-            if (contains(player)) return false;
+            if (contains(player)) {
+                empty = false;
+                return false;
+            }
         }
+        empty = true;
         return true;
+    }
+
+    public boolean cachedEmpty() {
+        return empty;
     }
 
     public boolean contains(Entity entity) {
