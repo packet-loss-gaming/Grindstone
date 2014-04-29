@@ -11,7 +11,7 @@ import org.bukkit.entity.LivingEntity;
 
 public class EntityUtil {
     public static void heal(Entity entity, double amt) {
-        if (!(entity instanceof LivingEntity)) return;
+        if (entity == null || !entity.isValid() || !(entity instanceof LivingEntity)) return;
         double cur = ((LivingEntity) entity).getHealth();
         double max = ((LivingEntity) entity).getMaxHealth();
 
@@ -19,7 +19,7 @@ public class EntityUtil {
     }
 
     public static void forceDamage(Entity entity, double amt) {
-        if (!(entity instanceof LivingEntity)) return;
+        if (entity == null || !entity.isValid() || !(entity instanceof LivingEntity)) return;
         double cur = ((LivingEntity) entity).getHealth();
 
         ((LivingEntity) entity).setHealth(Math.max(cur - amt, 0));
