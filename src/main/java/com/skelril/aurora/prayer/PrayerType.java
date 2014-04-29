@@ -38,6 +38,7 @@ public enum PrayerType {
     MERLIN(1016, 35, MerlinFX.class),
     ROCKET(1017, 35, 1, RocketFX.class),
     GLASSBOX(1018, 35, GlassBoxFX.class),
+    DEADLYPOTION(1019, 35, DeadlyPotionFX.class),
 
     FIREBALL(2000, 75, ThrownFireballFX.class),
     HEALTH(2001, 15, HealthFX.class),

@@ -47,11 +47,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Lever;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
-import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.util.*;
@@ -99,8 +96,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
         autoBreakable.add(new BaseBlock(BlockID.WOODEN_STEP, 8));
         autoBreakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
     }
-
-    private final Random random = new Random();
 
     // Head Stones
     private List<Location> headStones = new ArrayList<>();
@@ -714,7 +709,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 if (contactedLoc.getBlockY() < 57) {
                     EntityUtil.heal(event.getEntity(), 1);
                 } else if (isPressurePlateLocked) {
-                    throwSlashPotion(contactedLoc);
+                    DeathUtil.throwSlashPotion(contactedLoc);
                 }
             }
         }
@@ -791,7 +786,7 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                     break;
                 case BlockID.STONE_PRESSURE_PLATE:
                     if ((isPressurePlateLocked || clickedLoc.getBlockY() < 57) && action.equals(Action.PHYSICAL)) {
-                        throwSlashPotion(clickedLoc);
+                        DeathUtil.throwSlashPotion(clickedLoc);
                     }
                     break;
             }
@@ -830,26 +825,6 @@ public class GraveYard extends AbstractRegionedArena implements MonitoredArena, 
                 getWorld().setThundering(true);
             }
         }
-    }
-
-    private static final PotionType[] thrownTypes = new PotionType[]{
-            PotionType.INSTANT_DAMAGE, PotionType.INSTANT_DAMAGE,
-            PotionType.POISON, PotionType.WEAKNESS
-    };
-
-    private void throwSlashPotion(Location location) {
-
-        ThrownPotion potionEntity = (ThrownPotion) getWorld().spawnEntity(location, EntityType.SPLASH_POTION);
-        PotionType type = thrownTypes[ChanceUtil.getRandom(thrownTypes.length) - 1];
-        Potion potion = new Potion(type);
-        potion.setLevel(type.getMaxLevel());
-        potion.setSplash(true);
-        potionEntity.setItem(potion.toItemStack(1));
-        potionEntity.setVelocity(new Vector(
-                random.nextDouble() * .5 - .25,
-                random.nextDouble() * .4 + .1,
-                random.nextDouble() * .5 - .25
-        ));
     }
 
     private static final String GEM_OF_LIFE = ChatColor.DARK_AQUA + "Gem of Life";

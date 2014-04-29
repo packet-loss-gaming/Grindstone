@@ -584,14 +584,21 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             }
                             break;
                         case 11:
-                            ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
-                            addToHitList(player.getName());
-                            prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                    PrayerType.SLAP, TimeUnit.MINUTES.toMillis(30)));
-                            prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                    PrayerType.BUTTERFINGERS, TimeUnit.MINUTES.toMillis(30)));
-                            prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                    PrayerType.FIRE, TimeUnit.MINUTES.toMillis(30)));
+                            if (blockid == BlockID.EMERALD_ORE) {
+                                ChatUtil.sendNotice(player, "Dave got a chemistry set!");
+                                addToHitList(player.getName());
+                                prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
+                                        PrayerType.DEADLYPOTION, TimeUnit.MINUTES.toMillis(30)));
+                            } else {
+                                ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
+                                addToHitList(player.getName());
+                                prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
+                                        PrayerType.SLAP, TimeUnit.MINUTES.toMillis(30)));
+                                prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
+                                        PrayerType.BUTTERFINGERS, TimeUnit.MINUTES.toMillis(30)));
+                                prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
+                                        PrayerType.FIRE, TimeUnit.MINUTES.toMillis(30)));
+                            }
                             break;
                         default:
                             break;
@@ -651,7 +658,11 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         final Block block = event.getClickedBlock();
 
         if (contains(block) && triggerBlocks.contains(block.getTypeId()) && triggerInteractions.contains(event.getAction())) {
+            long temp = lastActivation;
             lastActivation = System.currentTimeMillis();
+            if (System.currentTimeMillis() - temp <= lastActivationTime * 5) {
+                 lastActivation -= lastActivationTime * .4;
+            }
         }
     }
 
