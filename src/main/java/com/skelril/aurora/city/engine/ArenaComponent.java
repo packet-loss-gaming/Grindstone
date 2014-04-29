@@ -312,6 +312,9 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     e.printStackTrace();
                 }
             }
+
+            // Add Patient X
+            arenas.add(new PatientXArena(world, mgr.get(world).getRegion("glacies-mare-district-mad-man"), adminComponent));
         }
     }
 
