@@ -607,7 +607,7 @@ public class GiantBossArena extends AbstractRegionedArena implements BossArena, 
 
                 Player player = (Player) attacker;
                 if (defender instanceof LivingEntity) {
-                    if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_BOW)) {
+                    if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
 
                         if (ChanceUtil.getChance(difficulty * 3 + 1)) {
                             EffectUtil.Master.healingLight(player, (LivingEntity) defender);
