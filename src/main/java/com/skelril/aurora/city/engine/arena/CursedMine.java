@@ -862,8 +862,17 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         Player player = event.getPlayer();
         String playerName = player.getName();
-        if (daveHitList.containsKey(playerName) && daveHitList.get(playerName) > System.currentTimeMillis()) {
+        if (daveHitList.containsKey(playerName)) {
             player.setHealth(0);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        String playerName = player.getName();
+        if (recordSystem.hasRecordForPlayer(playerName) && contains(player)) {
+            addToHitList(playerName);
         }
     }
 }
