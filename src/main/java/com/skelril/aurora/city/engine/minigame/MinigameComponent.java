@@ -15,6 +15,7 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.player.GeneralPlayerUtil;
 import com.skelril.aurora.util.player.PlayerState;
+import com.zachsthings.libcomponents.TemplateComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -30,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+@TemplateComponent
 public abstract class MinigameComponent extends BukkitComponent implements Runnable {
 
     private final CommandBook inst = CommandBook.inst();
