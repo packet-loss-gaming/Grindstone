@@ -45,6 +45,7 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
             tick = 5 * 20;
             listener = new SandArenaListener(this);
             config = new SandArenaConfig();
+            saveConfig();
         } catch (UnknownPluginException e) {
             log.info("WorldGuard could not be found!");
         }
@@ -60,9 +61,9 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
     public void run() {
         if (!isEmpty()) {
             addBlocks();
+            equalize();
         }
         removeBlocks();
-        equalize();
     }
 
     private void equalize() {

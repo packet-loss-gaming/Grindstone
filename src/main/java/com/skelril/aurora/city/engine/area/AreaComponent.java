@@ -52,12 +52,14 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
         }
         if (config != null) {
             config = configure(config);
+            saveConfig();
         }
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, tick);
     }
 
     @Override
     public void reload() {
+        super.reload();
         if (config != null) {
             config = configure(config);
         }
