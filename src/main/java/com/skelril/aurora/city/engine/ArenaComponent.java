@@ -101,14 +101,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         protected Set<String> snowSpleefRegions = new HashSet<>(Arrays.asList(
                 "glacies-mare-district-spleef-snow"
         ));
-        @Setting("sand-dynamic-arenas")
-        protected Set<String> dynamicSandRegions = new HashSet<>(Arrays.asList(
-                "oblitus-district-arena-pvp"
-        ));
-        @Setting("sand-dynamic-arenas-increase-rate")
-        public int dynamicSandRegionsIR = 8;
-        @Setting("sand-dynamic-arenas-decrease-rate")
-        public int dynamicSandRegionsDR = 16;
         @Setting("cursed-mines")
         protected Set<String> cursedMines = new HashSet<>(Arrays.asList(
                 "oblitus-district-cursed-mine"
@@ -162,19 +154,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                 try {
                     ProtectedRegion pr = mgr.get(world).getRegion(region);
                     arenas.add(new SnowSpleefArena(world, pr, adminComponent));
-                    if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
-                } catch (Exception e) {
-                    log.warning("Failed to add arena: " + region + ".");
-                    e.printStackTrace();
-                }
-            }
-
-            // Add Dynamic Arenas
-            for (String region : config.dynamicSandRegions) {
-                try {
-                    ProtectedRegion pr = mgr.get(world).getRegion(region);
-                    arenas.add(new DynamicSandArena(world, pr, config.dynamicSandRegionsIR, config.dynamicSandRegionsDR,
-                            adminComponent));
                     if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
