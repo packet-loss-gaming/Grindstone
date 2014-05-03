@@ -46,15 +46,21 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
 
         setUp();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(listener);
-        config = configure(config);
+        if (listener != null) {
+            //noinspection AccessStaticViaInstance
+            inst.registerEvents(listener);
+        }
+        if (config != null) {
+            config = configure(config);
+        }
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, tick);
     }
 
     @Override
     public void reload() {
-        config = configure(config);
+        if (config != null) {
+            config = configure(config);
+        }
     }
 
     @Override
