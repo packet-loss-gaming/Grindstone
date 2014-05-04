@@ -103,6 +103,11 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     }
 
     @Override
+    public void enable() {
+        server.getScheduler().runTaskLater(inst, super::enable, 1);
+    }
+
+    @Override
     public void run() {
         if (!isBossSpawned()) {
             if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
