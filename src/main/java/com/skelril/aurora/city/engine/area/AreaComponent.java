@@ -21,9 +21,9 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @TemplateComponent
 public abstract class AreaComponent<Config extends ConfigurationBase> extends BukkitComponent implements Runnable {
@@ -73,12 +73,13 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
     }
 
     public <T extends Entity> T[] getContained(int parentsUp, Class<T> clazz) {
-        List<T> returnedList = new ArrayList<>();
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
-        for (T entity : world.getEntitiesByClass(clazz)) {
-            if (entity.isValid() && LocationUtil.isInRegion(world, r, entity)) returnedList.add(entity);
-        }
+        final ProtectedRegion finalR = r;
+        List<T> returnedList = world.getEntitiesByClass(clazz).stream()
+                .filter(e -> e.isValid() && LocationUtil.isInRegion(finalR, e))
+                .collect(Collectors.toList());
+
         //noinspection unchecked
         return returnedList.toArray((T[]) Array.newInstance(clazz, returnedList.size()));
     }
@@ -98,12 +99,12 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
 
     @SafeVarargs
     public final <T extends Entity> Entity[] getContained(int parentsUp, Class<T>... classes) {
-        List<Entity> returnedList = new ArrayList<>();
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
-        for (Entity entity : world.getEntitiesByClasses(classes)) {
-            if (entity.isValid() && LocationUtil.isInRegion(r, entity)) returnedList.add(entity);
-        }
+        final ProtectedRegion finalR = r;
+        List<Entity> returnedList = world.getEntitiesByClass(classes).stream()
+                .filter(e -> e.isValid() && LocationUtil.isInRegion(finalR, e))
+                .collect(Collectors.toList());
         return returnedList.toArray(new Entity[returnedList.size()]);
     }
 
