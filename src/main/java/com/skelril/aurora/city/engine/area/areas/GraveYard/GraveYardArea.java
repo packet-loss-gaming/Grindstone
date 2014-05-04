@@ -112,7 +112,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             creepers = manager.getRegion(base + "-creepers");
             rewards = manager.getRegion(base + "-temple-rewards");
 
-            tick = 8 * 20;
+            tick = 4 * 20;
             listener = new GraveYardListener(this);
             config = new GraveYardConfig();
 
