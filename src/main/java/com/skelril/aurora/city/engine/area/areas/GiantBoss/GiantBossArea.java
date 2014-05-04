@@ -80,7 +80,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         try {
             WorldGuardPlugin WG = APIUtil.getWorldGuard();
             world = server.getWorlds().get(0);
-            region = WG.getRegionManager(world).getRegion("glacies-mare-district-mad-man");
+            region = WG.getRegionManager(world).getRegion("vineam-district-giant-boss-area");
             tick = 4 * 20;
             listener = new GiantBossListener(this);
             config = new GiantBossConfig();

@@ -126,10 +126,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         protected Set<String> prisonRaids = new HashSet<>(Arrays.asList(
                 "vineam-district-prison"
         ));
-        @Setting("zombie-bosses")
-        protected Set<String> zombieBosses = new HashSet<>(Arrays.asList(
-                "vineam-district-giant-boss-area"
-        ));
         @Setting("factories")
         protected Set<String> factories = new HashSet<>(Arrays.asList(
                 "oblitus-district-old-factory"
@@ -234,18 +230,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
-                }
-            }
-
-            // Add Zombie bosses
-            for (String region : config.zombieBosses) {
-                try {
-                    ProtectedRegion pr = mgr.get(world).getRegion(region);
-                    arenas.add(new GiantBossArena(world, pr, adminComponent, prayerComponent));
-                    if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
-                } catch (Exception e) {
-                    log.warning("Failed to add arena: " + region + ".");
-                    e.printStackTrace();
                 }
             }
 
