@@ -123,7 +123,7 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
                             }
                         }
                         if (entity.getLocation().distanceSquared(loc) <= 4) {
-                            DamageUtil.damage(owner, target, 10000);
+                            DamageUtil.damage(owner, (LivingEntity) entity, 10000);
                         }
                     }
 

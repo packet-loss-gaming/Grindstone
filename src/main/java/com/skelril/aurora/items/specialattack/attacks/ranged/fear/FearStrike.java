@@ -48,7 +48,7 @@ public class FearStrike extends EntityAttack implements RangedSpecial {
                 Vector velocity = owner.getLocation().getDirection().multiply(2);
                 velocity.setY(Math.max(velocity.getY(), Math.random() * 2 + 1.27));
                 e.setVelocity(velocity);
-                DamageUtil.damage(owner, target, 10);
+                DamageUtil.damage(owner, (LivingEntity) e, 10);
                 e.setFireTicks(20 * (ChanceUtil.getRandom(40) + 20));
             }
         }

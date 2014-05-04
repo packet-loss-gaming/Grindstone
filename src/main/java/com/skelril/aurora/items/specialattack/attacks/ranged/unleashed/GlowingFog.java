@@ -49,7 +49,7 @@ public class GlowingFog extends EntityAttack implements RangedSpecial {
                             if (owner instanceof Player && !PvPComponent.allowsPvP((Player) owner, (Player) aEntity))
                                 continue;
                         }
-                        DamageUtil.damage(owner, target, 5);
+                        DamageUtil.damage(owner, (LivingEntity) aEntity, 5);
                     }
                 }
                 return true;
