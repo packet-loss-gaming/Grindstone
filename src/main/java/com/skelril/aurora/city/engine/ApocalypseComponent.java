@@ -18,6 +18,7 @@ import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.homes.EnderPearlHomesComponent;
 import com.skelril.aurora.jail.JailComponent;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.EffectUtil;
@@ -300,8 +301,13 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
             for (Player player : server.getOnlinePlayers()) {
 
-                if (player.getWorld() != world || jailComponent.isJailed(player) || adminComponent.isAdmin(player)) {
+                if (!player.getWorld().equals(world) || jailComponent.isJailed(player) || adminComponent.isAdmin(player)) {
                     continue;
+                }
+                if (player.isFlying()) {
+                    player.setFlying(false);
+                    player.setAllowFlight(false);
+                    ChatUtil.sendNotice(player, "The lightning hinders your ability to fly.");
                 }
                 applicablePlayers.add(player);
             }
