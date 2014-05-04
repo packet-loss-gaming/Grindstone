@@ -73,7 +73,6 @@ public class PatientXListener extends AreaListener<PatientXArea> {
     private static Set<Class> ultimateBlacklistedSpecs = new HashSet<>();
 
     static {
-        generalBlacklistedSpecs.add(GlowingFog.class);
         generalBlacklistedSpecs.add(Nightmare.class);
         generalBlacklistedSpecs.add(Disarm.class);
         generalBlacklistedSpecs.add(MobAttack.class);
@@ -83,6 +82,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         bossBlacklistedSpecs.add(LifeLeech.class);
         bossBlacklistedSpecs.add(SoulSmite.class);
 
+        ultimateBlacklistedSpecs.add(GlowingFog.class);
         ultimateBlacklistedSpecs.add(Decimate.class);
         ultimateBlacklistedSpecs.add(DoomBlade.class);
     }
