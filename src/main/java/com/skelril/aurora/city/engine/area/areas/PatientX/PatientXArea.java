@@ -7,10 +7,13 @@
 package com.skelril.aurora.city.engine.area.areas.PatientX;
 
 import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.area.AreaComponent;
 import com.skelril.aurora.exceptions.UnknownPluginException;
@@ -21,6 +24,8 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -41,6 +46,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     protected static final int groundLevel = 54;
     protected static final int OPTION_COUNT = 7;
 
+    protected ProtectedRegion ice;
+
     protected Zombie boss = null;
     protected long lastDeath = 0;
     protected long lastTelep = 0;
@@ -55,7 +62,10 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         try {
             WorldGuardPlugin WG = APIUtil.getWorldGuard();
             world = server.getWorlds().get(0);
-            region = WG.getRegionManager(world).getRegion("glacies-mare-district-mad-man");
+            RegionManager manager = WG.getRegionManager(world);
+            String base = "glacies-mare-district-mad-man";
+            region = manager.getRegion(base);
+            ice = manager.getRegion(base + "-ice");
             tick = 8 * 20;
             listener = new PatientXListener(this);
             config = new PatientXConfig();
@@ -92,7 +102,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         } else if (!isEmpty()) {
             equalize();
             teleportRandom();
-            runFreeze();
+            freezeEntities();
+            freezeBlocks();
             spawnCreatures();
             printBossHealth();
         }
@@ -158,6 +169,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     private void runAttack(int attackCase) {
+
+        if (!isBossSpawned()) return;
+
         Player[] contained = getContained(Player.class);
         if (contained == null || contained.length <= 0) return;
 
@@ -236,7 +250,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         }
     }
 
-    private void runFreeze() {
+    private void freezeEntities() {
         for (LivingEntity entity : getContained(LivingEntity.class)) {
             if (entity.equals(boss)) continue;
             if (!EnvironmentUtil.isWater(entity.getLocation().getBlock())) {
@@ -247,6 +261,28 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 EntityUtil.heal(boss, 1);
             } else if (!ChanceUtil.getChance(5)) {
                 entity.damage(ChanceUtil.getRandom(25));
+            }
+        }
+    }
+
+    private void freezeBlocks() {
+        int minX = ice.getMinimumPoint().getBlockX();
+        int maxX = ice.getMaximumPoint().getBlockX();
+        int minZ = ice.getMinimumPoint().getBlockZ();
+        int maxZ = ice.getMaximumPoint().getBlockZ();
+        int y = ice.getMaximumPoint().getBlockY();
+
+        for (int x = minX; x < maxX; x++) {
+            for (int z = minZ; z < maxZ; z++) {
+                Block block = world.getBlockAt(x, y, z);
+                if (block.getRelative(BlockFace.UP).getTypeId() == 0
+                        && EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN))) {
+                    if (block.getTypeId() == BlockID.PACKED_ICE) {
+                        block.setTypeId(BlockID.STATIONARY_WATER);
+                    } else if (ChanceUtil.getChance(config.iceChance)) {
+                        block.setTypeId(BlockID.PACKED_ICE);
+                    }
+                }
             }
         }
     }
@@ -264,15 +300,18 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
         for (Zombie e : getContained(Zombie.class)) {
             if (e.isValid() && !e.isBaby()) {
-                if (!found) {
-                    boss = e;
-                    found = true;
-                } else if (e.getHealth() < boss.getHealth()) {
-                    boss = e;
-                    second = true;
-                } else {
-                    e.remove();
+                if (e.getMaxHealth() == config.baseHealth + (difficulty * 100)) {
+                    if (!found) {
+                        boss = e;
+                        found = true;
+                        continue;
+                    } else if (e.getHealth() < boss.getHealth()) {
+                        boss = e;
+                        second = true;
+                        continue;
+                    }
                 }
+                e.remove();
             }
         }
 
@@ -288,8 +327,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     public void spawnBoss() {
         boss = (Zombie) getWorld().spawnEntity(getCentralLoc(), EntityType.ZOMBIE);
-        boss.setMaxHealth(700 + (difficulty * 100));
-        boss.setHealth(700 + (difficulty * 100));
+        boss.setMaxHealth(config.baseHealth + (difficulty * 100));
+        boss.setHealth(config.baseHealth + (difficulty * 100));
         boss.setRemoveWhenFarAway(false);
         boss.setCustomName("Patient X");
 
