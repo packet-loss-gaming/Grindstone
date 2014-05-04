@@ -138,10 +138,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         protected Set<String> factoryVats = new HashSet<>(Arrays.asList(
                 "vat-1", "vat-2", "vat-3"
         ));
-        @Setting("grave-yards")
-        protected Set<String> graveYards = new HashSet<>(Arrays.asList(
-                "carpe-diem-district-grave-yard"
-        ));
     }
 
     private class ArenaManager {
@@ -267,24 +263,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                         mechs.add(new FactoryMech(world, er));
                     }
                     arenas.add(new FactoryFloor(world, PRs, mechs, adminComponent));
-                    if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
-                } catch (Exception e) {
-                    log.warning("Failed to add arena: " + region + ".");
-                    e.printStackTrace();
-                }
-            }
-
-            // Add Grave Yards
-            for (String region : config.graveYards) {
-                try {
-                    ProtectedRegion[] PRs = new ProtectedRegion[5];
-                    PRs[0] = mgr.get(world).getRegion(region);
-                    PRs[1] = mgr.get(world).getRegion(region + "-temple");
-                    PRs[2] = mgr.get(world).getRegion(region + "-temple-puzzle-one");
-                    PRs[3] = mgr.get(world).getRegion(region + "-creepers");
-                    PRs[4] = mgr.get(world).getRegion(region + "-temple-rewards");
-
-                    arenas.add(new GraveYard(world, PRs, adminComponent));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");

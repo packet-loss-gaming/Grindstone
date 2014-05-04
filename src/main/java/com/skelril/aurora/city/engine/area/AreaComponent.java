@@ -43,9 +43,7 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
 
     @Override
     public void enable() {
-
         setUp();
-
         if (listener != null) {
             //noinspection AccessStaticViaInstance
             inst.registerEvents(listener);
