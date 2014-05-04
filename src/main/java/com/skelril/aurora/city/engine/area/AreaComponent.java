@@ -21,6 +21,7 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -90,19 +91,17 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
         return getContained(parentsUp, Entity.class);
     }
 
-    @SafeVarargs
-    public final <T extends Entity> Entity[] getContained(Class<T>... classes) {
+    public final Entity[] getContained(Class<?>... classes) {
         return getContained(0, classes);
     }
 
-    @SafeVarargs
-    public final <T extends Entity> Entity[] getContained(int parentsUp, Class<T>... classes) {
+    public final Entity[] getContained(int parentsUp, Class<?>... classes) {
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
-        final ProtectedRegion finalR = r;
-        List<Entity> returnedList = world.getEntitiesByClass(classes).stream()
-                .filter(e -> e.isValid() && LocationUtil.isInRegion(finalR, e))
-                .collect(Collectors.toList());
+        List<Entity> returnedList = new ArrayList<>();
+        for (Entity entity : world.getEntitiesByClasses(classes)) {
+            if (entity.isValid() && LocationUtil.isInRegion(r, entity)) returnedList.add(entity);
+        }
         return returnedList.toArray(new Entity[returnedList.size()]);
     }
 
