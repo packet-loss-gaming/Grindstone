@@ -244,8 +244,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             if (damager instanceof Player) {
                 NecrosisFX necrosis = new NecrosisFX();
                 necrosis.setBeneficiary((Player) defender);
-                Prayer prayer = PrayerComponent.constructPrayer((Player) damager, necrosis, 20 * 3);
-                prayers.influencePlayer((Player) defender, prayer);
+                Prayer prayer = PrayerComponent.constructPrayer((Player) damager, necrosis, 5000);
+                prayers.influencePlayer((Player) damager, prayer);
                 ((Player) defender).chat("Taste necrosis!");
             } else {
                 EffectUtil.Ancient.powerBurst((Player) defender, Math.max(10, event.getDamage()));
