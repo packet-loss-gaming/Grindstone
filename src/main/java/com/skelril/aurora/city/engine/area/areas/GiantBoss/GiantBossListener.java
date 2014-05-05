@@ -340,9 +340,9 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
-        if (parent.contains(event.getEntity()) && parent.boss != null) {
-            Entity e = event.getEntity();
-            if (e instanceof Giant) {
+        Entity e = event.getEntity();
+        if (parent.contains(e)) {
+            if (parent.boss != null && e instanceof Giant) {
                 Player[] players = parent.getContained(Player.class);
                 Player player = null;
                 int amt = players != null ? players.length : 0;
