@@ -80,6 +80,28 @@ public class ItemUtil {
                 true
         ),
 
+        // Necros Armor
+        NECROS_HELMET(ChatColor.DARK_RED, "Necros Helmet",
+                Arrays.asList("Set Effect: Necros Armor"),
+                Arrays.asList("Patient X",
+                        "Market")
+        ),
+        NECROS_CHESTPLATE(ChatColor.DARK_RED, "Necros Chestplate",
+                Arrays.asList("Set Effect: Necros Armor"),
+                Arrays.asList("Patient X",
+                        "Market")
+        ),
+        NECROS_LEGGINGS(ChatColor.DARK_RED, "Necros Leggings",
+                Arrays.asList("Set Effect: Necros Armor"),
+                Arrays.asList("Patient X",
+                        "Market")
+        ),
+        NECROS_BOOTS(ChatColor.DARK_RED, "Necros Boots",
+                Arrays.asList("Set Effect: Necros Armor"),
+                Arrays.asList("Patient X",
+                        "Market")
+        ),
+
         // Master Weapons
         MASTER_SWORD(ChatColor.DARK_PURPLE, "Master Sword", 2,
                 Arrays.asList("Repairable at any Sacrificial Pit",
@@ -484,6 +506,67 @@ public class ItemUtil {
             ((Repairable) ancientMeta).setRepairCost(400);
             ancientBoots.setItemMeta(ancientMeta);
             return ancientBoots;
+        }
+    }
+
+    public static class Necros {
+        public static ItemStack makeHelmet() {
+
+            ItemStack godHelmet = new ItemStack(ItemID.DIAMOND_HELMET);
+            ItemMeta godMeta = godHelmet.getItemMeta();
+            godMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            godMeta.addEnchant(Enchantment.OXYGEN, 3, true);
+            godMeta.addEnchant(Enchantment.WATER_WORKER, 1, true);
+            godMeta.setDisplayName(NECROS_HELMET.toString());
+            ((Repairable) godMeta).setRepairCost(400);
+            godHelmet.setItemMeta(godMeta);
+            return godHelmet;
+        }
+
+        public static ItemStack makeChest() {
+
+            ItemStack godChestplate = new ItemStack(ItemID.DIAMOND_CHEST);
+            ItemMeta godMeta = godChestplate.getItemMeta();
+            godMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            godMeta.setDisplayName(NECROS_CHESTPLATE.toString());
+            ((Repairable) godMeta).setRepairCost(400);
+            godChestplate.setItemMeta(godMeta);
+            return godChestplate;
+        }
+
+        public static ItemStack makeLegs() {
+
+            ItemStack godLeggings = new ItemStack(ItemID.DIAMOND_PANTS);
+            ItemMeta godMeta = godLeggings.getItemMeta();
+            godMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            godMeta.setDisplayName(NECROS_LEGGINGS.toString());
+            ((Repairable) godMeta).setRepairCost(400);
+            godLeggings.setItemMeta(godMeta);
+            return godLeggings;
+        }
+
+        public static ItemStack makeBoots() {
+
+            ItemStack godBoots = new ItemStack(ItemID.DIAMOND_BOOTS);
+            ItemMeta godMeta = godBoots.getItemMeta();
+            godMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_FIRE, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4, true);
+            godMeta.addEnchant(Enchantment.PROTECTION_FALL, 4, true);
+            godMeta.setDisplayName(NECROS_BOOTS.toString());
+            ((Repairable) godMeta).setRepairCost(400);
+            godBoots.setItemMeta(godMeta);
+            return godBoots;
         }
     }
 
@@ -1188,6 +1271,23 @@ public class ItemUtil {
 
         for (int i = 0; i < 4; i++) {
             b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient");
+        }
+        return b[0] && b[1] && b[2] && b[3];
+    }
+
+    public static boolean hasNecrosArmour(LivingEntity entity) {
+
+        if (!entity.isValid()) return false;
+
+        ItemStack[] armour;
+        EntityEquipment equipment = entity.getEquipment();
+        if (equipment != null) armour = equipment.getArmorContents();
+        else return false;
+
+        boolean[] b = new boolean[]{false, false, false, false};
+
+        for (int i = 0; i < 4; i++) {
+            b[i] = matchesFilter(armour[i], ChatColor.DARK_RED + "Necros");
         }
         return b[0] && b[1] && b[2] && b[3];
     }

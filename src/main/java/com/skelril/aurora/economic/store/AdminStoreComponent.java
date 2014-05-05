@@ -613,6 +613,11 @@ public class AdminStoreComponent extends BukkitComponent {
         names.add("ancient chestplate");
         names.add("ancient leggings");
         names.add("ancient boots");
+
+        names.add("necros helmet");
+        names.add("necros chestplate");
+        names.add("necros leggings");
+        names.add("necros boots");
     }
 
     private static boolean hasItemOfName(String name) {
@@ -738,6 +743,18 @@ public class AdminStoreComponent extends BukkitComponent {
                     break;
                 case "ancient boots":
                     itemStacks.add(ItemUtil.Ancient.makeBoots());
+                    break;
+                case "necros helmet":
+                    itemStacks.add(ItemUtil.Necros.makeHelmet());
+                    break;
+                case "necros chestplate":
+                    itemStacks.add(ItemUtil.Necros.makeChest());
+                    break;
+                case "necros leggings":
+                    itemStacks.add(ItemUtil.Necros.makeLegs());
+                    break;
+                case "necros boots":
+                    itemStacks.add(ItemUtil.Necros.makeBoots());
                     break;
                 default:
                     ItemType type = ItemType.lookup(name);

@@ -34,11 +34,15 @@ import com.skelril.aurora.items.specialattack.attacks.ranged.fear.MagicChain;
 import com.skelril.aurora.items.specialattack.attacks.ranged.misc.MobAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.Famine;
 import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.GlowingFog;
+import com.skelril.aurora.prayer.Prayer;
+import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
+import com.skelril.aurora.prayer.PrayerFX.NecrosisFX;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.DamageUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
@@ -74,7 +78,9 @@ import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
  */
 @ComponentInformation(friendlyName = "Custom Items Component", desc = "Custom Items")
 @Depend(components = {SessionComponent.class, AdminComponent.class,
-        AntiCheatCompatibilityComponent.class, PvPComponent.class})
+        AntiCheatCompatibilityComponent.class, PvPComponent.class,
+        PrayerComponent.class
+})
 public class CustomItemsComponent extends BukkitComponent implements Listener {
 
     private static final CommandBook inst = CommandBook.inst();
@@ -86,6 +92,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     private AdminComponent admin;
     @InjectComponent
     private AntiCheatCompatibilityComponent antiCheat;
+    @InjectComponent
+    private PrayerComponent prayers;
 
     private List<String> players = new ArrayList<>();
 
@@ -220,7 +228,33 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
+    public void necrosis(EntityDamageByEntityEvent event) {
+        Entity damager = event.getDamager();
+        if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
+            ProjectileSource source = ((Projectile) damager).getShooter();
+            if (source instanceof Entity) {
+                damager = (Entity) source;
+            }
+        }
+
+        Entity defender = event.getEntity();
+        if (!(defender instanceof Player)) return;
+
+        if (ItemUtil.hasNecrosArmour((Player) defender) && ChanceUtil.getChance(12)) {
+            if (damager instanceof Player) {
+                NecrosisFX necrosis = new NecrosisFX();
+                necrosis.setBeneficiary((Player) defender);
+                Prayer prayer = PrayerComponent.constructPrayer((Player) damager, necrosis, 20 * 3);
+                prayers.influencePlayer((Player) defender, prayer);
+                ((Player) defender).chat("Taste necrosis!");
+            } else {
+                EffectUtil.Ancient.powerBurst((Player) defender, Math.max(10, event.getDamage()));
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void specAttack(EntityDamageByEntityEvent event) {
 
         if (DamageUtil.remove(event.getDamager(), event.getEntity())) return;
 
@@ -884,7 +918,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             exp *= 2;
         }
 
-        if (ItemUtil.hasAncientArmour(player)) {
+        if (ItemUtil.hasAncientArmour(player) || ItemUtil.hasNecrosArmour(player)) {
             ItemStack[] armour = player.getInventory().getArmorContents();
             ItemStack is = armour[ChanceUtil.getRandom(armour.length) - 1];
             if (exp > is.getDurability()) {

@@ -60,6 +60,12 @@ public class LostItemsComponent extends BukkitComponent {
 
         }
 
+        @Command(aliases = {"necros"}, desc = "Lost Necros items")
+        @NestedCommand({LostNecrosItem.class})
+        public void lostNecrosCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+
         @Command(aliases = {"master"}, desc = "Lost Master items")
         @NestedCommand({LostMasterItem.class})
         public void lostMasterCommands(CommandContext args, CommandSender sender) throws CommandException {
@@ -218,6 +224,27 @@ public class LostItemsComponent extends BukkitComponent {
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given new ancient armour.");
+        }
+    }
+
+    public class LostNecrosItem {
+
+        @Command(aliases = {"armor"},
+                usage = "<player>", desc = "Return a player's Necros Armor",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.necros.armor"})
+        public void lostArmorCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(
+                    ItemUtil.Necros.makeHelmet(), ItemUtil.Necros.makeChest(),
+                    ItemUtil.Necros.makeLegs(), ItemUtil.Necros.makeBoots()
+            );
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given new necros armour.");
         }
     }
 
