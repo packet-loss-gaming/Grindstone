@@ -17,6 +17,7 @@ import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
@@ -134,7 +135,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 Player player = (Player) aAttacker;
                 player.getActivePotionEffects().stream().filter(effect -> !excludedTypes.contains(effect.getType())).forEach(defender::addPotionEffect);
                 if (parent.getWorld().isThundering()) return;
-                if (ItemUtil.isHoldingItem(player, ItemUtil.CustomItems.MASTER_SWORD)) {
+                if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
                     if (ChanceUtil.getChance(10)) {
                         EffectUtil.Master.healingLight(player, defender);
                     }
@@ -152,7 +153,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                         potionIt.remove();
                     }
                 }
-                if (ItemUtil.findItemOfName(player.getInventory().getContents(), ItemUtil.CustomItems.PHANTOM_HYMN.toString())) {
+                if (ItemUtil.findItemOfName(player.getInventory().getContents(), CustomItems.PHANTOM_HYMN.toString())) {
                     event.setDamage(event.getDamage() * 1.5);
                 }
             }
@@ -182,19 +183,19 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         int o = 1;
         int m = item.getType().getMaxDurability();
         ItemStack[] i;
-        if (ItemUtil.isItem(item, ItemUtil.CustomItems.PHANTOM_GOLD)) {
+        if (ItemUtil.isItem(item, CustomItems.PHANTOM_GOLD)) {
             int amount = 50;
             if (isInRewardsRoom) {
                 amount = 100;
             }
             parent.economy.depositPlayer(player.getName(), amount * item.getAmount());
             event.setItemStack(null);
-        } else if (ItemUtil.isItem(item, ItemUtil.CustomItems.FEAR_SWORD) || ItemUtil.isItem(item, ItemUtil.CustomItems.FEAR_BOW)) {
+        } else if (ItemUtil.isItem(item, CustomItems.FEAR_SWORD) || ItemUtil.isItem(item, CustomItems.FEAR_BOW)) {
             if (!isInRewardsRoom) {
                 o = 2;
             }
-            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), ItemUtil.CustomItems.GEM_OF_DARKNESS.toString());
-            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), ItemUtil.CustomItems.GEM_OF_DARKNESS.toString());
+            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.GEM_OF_DARKNESS.toString());
+            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), CustomItems.GEM_OF_DARKNESS.toString());
             player.getInventory().setContents(i);
             while (item.getDurability() > 0 && c >= o) {
                 item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
@@ -209,12 +210,12 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             }
             player.updateInventory();
             event.setItemStack(null);
-        } else if (ItemUtil.isItem(item, ItemUtil.CustomItems.UNLEASHED_SWORD) || ItemUtil.isItem(item, ItemUtil.CustomItems.UNLEASHED_BOW)) {
+        } else if (ItemUtil.isItem(item, CustomItems.UNLEASHED_SWORD) || ItemUtil.isItem(item, CustomItems.UNLEASHED_BOW)) {
             if (!isInRewardsRoom) {
                 o = 2;
             }
-            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), ItemUtil.CustomItems.IMBUED_CRYSTAL.toString());
-            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), ItemUtil.CustomItems.IMBUED_CRYSTAL.toString());
+            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.IMBUED_CRYSTAL.toString());
+            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), CustomItems.IMBUED_CRYSTAL.toString());
             player.getInventory().setContents(i);
             while (item.getDurability() > 0 && c >= o) {
                 item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
@@ -477,7 +478,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
         switch (action) {
             case RIGHT_CLICK_BLOCK:
-                if (ItemUtil.isItem(stack, ItemUtil.CustomItems.PHANTOM_CLOCK)) {
+                if (ItemUtil.isItem(stack, CustomItems.PHANTOM_CLOCK)) {
                     player.teleport(new Location(parent.getWorld(), -126, 42, -685), PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     final int amt = stack.getAmount() - 1;
                     server.getScheduler().runTaskLater(inst, () -> {

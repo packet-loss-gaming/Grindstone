@@ -42,6 +42,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.DamageUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -71,7 +72,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.skelril.aurora.events.custom.item.HymnSingEvent.Hymn;
-import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 /**
  * Author: Turtle9598

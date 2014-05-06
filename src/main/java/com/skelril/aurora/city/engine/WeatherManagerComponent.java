@@ -12,6 +12,7 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -31,8 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
-
-import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 /**
  * Author: Turtle9598

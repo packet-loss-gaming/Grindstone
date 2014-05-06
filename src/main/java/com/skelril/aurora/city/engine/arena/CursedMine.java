@@ -31,6 +31,7 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.BookUtil;
+import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.restoration.BlockRecord;
@@ -63,8 +64,6 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 /**
  * Author: Turtle9598

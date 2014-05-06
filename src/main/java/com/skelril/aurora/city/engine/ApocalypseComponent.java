@@ -21,6 +21,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -52,8 +53,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 /**
  * @author Turtle9598

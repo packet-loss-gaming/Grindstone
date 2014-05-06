@@ -18,6 +18,7 @@ import com.skelril.aurora.city.engine.area.AreaComponent;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.database.IOUtil;
+import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.skelril.aurora.util.restoration.BaseBlockRecordIndex;
@@ -725,8 +726,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     private void fogPlayer(Player player) {
-        if (ItemUtil.isItem(player.getInventory().getHelmet(), ItemUtil.CustomItems.ANCIENT_CROWN)
-                || ItemUtil.hasItem(player, ItemUtil.CustomItems.GEM_OF_DARKNESS)) {
+        if (ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN)
+                || ItemUtil.hasItem(player, CustomItems.GEM_OF_DARKNESS)) {
             return;
         }
         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 6, 1), true);

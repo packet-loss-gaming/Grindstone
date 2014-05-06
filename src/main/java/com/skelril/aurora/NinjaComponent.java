@@ -22,6 +22,7 @@ import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -54,8 +55,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import static com.skelril.aurora.util.item.ItemUtil.CustomItems;
 
 @ComponentInformation(friendlyName = "Ninja", desc = "Disappear into the night!")
 @Depend(plugins = "Pitfall", components = {SessionComponent.class, RogueComponent.class, PvPComponent.class})

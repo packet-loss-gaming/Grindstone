@@ -32,6 +32,7 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EntityUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.item.BookUtil;
+import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
@@ -227,7 +228,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             if (attacker instanceof Player) {
                 Player player = (Player) attacker;
                 if (defender instanceof LivingEntity) {
-                    if (ItemUtil.isHoldingItem(player, ItemUtil.CustomItems.MASTER_SWORD)) {
+                    if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
                         if (ChanceUtil.getChance(parent.difficulty * 3 + 1)) {
                             EffectUtil.Master.healingLight(player, (LivingEntity) defender);
                         }
