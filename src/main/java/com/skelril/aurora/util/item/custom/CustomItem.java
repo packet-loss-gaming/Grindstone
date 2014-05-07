@@ -102,7 +102,7 @@ public class CustomItem {
         }
         List<String> lore = tags.stream().map(e -> e.getColor() + e.getKey() + ": " + e.getProp()).collect(Collectors.toList());
         lore.addAll(this.lore);
-        if (lore.size() > 0) meta.setLore(lore);
+        if (!lore.isEmpty()) meta.setLore(lore);
         meta.setDisplayName(item.toString());
         itemStack.setItemMeta(meta);
         return itemStack;
