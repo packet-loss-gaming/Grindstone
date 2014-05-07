@@ -18,8 +18,9 @@ import com.skelril.aurora.city.engine.area.AreaComponent;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.database.IOUtil;
-import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.skelril.aurora.util.player.PlayerState;
 import com.skelril.aurora.util.restoration.BaseBlockRecordIndex;
 import com.skelril.aurora.util.restoration.BlockRecord;
@@ -326,8 +327,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 zombie.setCanPickupItems(false);
                 EntityEquipment equipment = zombie.getEquipment();
                 equipment.setArmorContents(new ItemStack[]{
-                        ItemUtil.Ancient.makeBoots(), ItemUtil.Ancient.makeLegs(),
-                        ItemUtil.Ancient.makeChest(), ItemUtil.Ancient.makeHelmet()
+                        CustomItemCenter.build(CustomItems.ANCIENT_BOOTS),
+                        CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS),
+                        CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE),
+                        CustomItemCenter.build(CustomItems.ANCIENT_HELMET)
                 });
                 // Drop Chances
                 equipment.setItemInHandDropChance(0);
@@ -626,47 +629,47 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     private ItemStack pickRandomItem() {
         switch (ChanceUtil.getRandom(39)) {
             case 1:
-                return ItemUtil.Misc.gemOfLife(6);
+                return CustomItemCenter.build(CustomItems.GEM_OF_LIFE, 6);
             case 3:
                 if (!ChanceUtil.getChance(17)) return null;
-                return ItemUtil.Fear.makeSword();
+                return CustomItemCenter.build(CustomItems.FEAR_SWORD);
             case 4:
                 if (!ChanceUtil.getChance(17)) return null;
-                return ItemUtil.Fear.makeBow();
+                return CustomItemCenter.build(CustomItems.FEAR_BOW);
             case 5:
                 if (!ChanceUtil.getChance(25)) return null;
-                return ItemUtil.Unleashed.makeSword();
+                return CustomItemCenter.build(CustomItems.UNLEASHED_SWORD);
             case 6:
                 if (!ChanceUtil.getChance(25)) return null;
-                return ItemUtil.Unleashed.makeBow();
+                return CustomItemCenter.build(CustomItems.UNLEASHED_BOW);
             case 7:
-                return ItemUtil.Misc.imbuedCrystal(ChanceUtil.getRandom(3));
+                return CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL, ChanceUtil.getRandom(3));
             case 8:
-                return ItemUtil.Misc.gemOfDarkness(ChanceUtil.getRandom(3));
+                return CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS, ChanceUtil.getRandom(3));
             case 9:
-                return ItemUtil.Misc.batBow();
+                return CustomItemCenter.build(CustomItems.BAT_BOW);
             case 10:
-                return ItemUtil.Misc.phantomGold(ChanceUtil.getRandom(64));
+                return CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(64));
             case 11:
-                return ItemUtil.Ancient.makeHelmet();
+                return CustomItemCenter.build(CustomItems.ANCIENT_HELMET);
             case 12:
-                return ItemUtil.Ancient.makeChest();
+                return CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE);
             case 13:
-                return ItemUtil.Ancient.makeLegs();
+                return CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS);
             case 14:
-                return ItemUtil.Ancient.makeBoots();
+                return CustomItemCenter.build(CustomItems.ANCIENT_BOOTS);
             case 15:
-                return ItemUtil.God.makeHelmet();
+                return CustomItemCenter.build(CustomItems.GOD_HELMET);
             case 16:
-                return ItemUtil.God.makeChest();
+                return CustomItemCenter.build(CustomItems.GOD_CHESTPLATE);
             case 17:
-                return ItemUtil.God.makeLegs();
+                return CustomItemCenter.build(CustomItems.GOD_LEGGINGS);
             case 18:
-                return ItemUtil.God.makeBoots();
+                return CustomItemCenter.build(CustomItems.GOD_BOOTS);
             case 19:
-                return ItemUtil.God.makePickaxe(false);
+                return CustomItemCenter.build(CustomItems.GOD_PICKAXE);
             case 20:
-                return ItemUtil.God.makePickaxe(true);
+                return CustomItemCenter.build(CustomItems.LEGENDARY_GOD_PICKAXE);
             case 21:
                 return new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(64));
             case 22:
@@ -688,7 +691,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             case 31:
                 return new ItemStack(ItemID.HORSE_ARMOR_DIAMOND);
             default:
-                return ItemUtil.Misc.barbarianBone(ChanceUtil.getRandom(5));
+                return CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(5));
         }
     }
 

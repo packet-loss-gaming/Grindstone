@@ -13,7 +13,8 @@ import com.skelril.aurora.events.entity.ProjectileTickEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
@@ -249,7 +250,7 @@ public class FishingComponent extends BukkitComponent implements Listener {
 
             // God fish?
             if (ChanceUtil.getChance(250)) {
-                fish = ItemUtil.Misc.godFish(1);
+                fish = CustomItemCenter.build(CustomItems.GOD_FISH);
             } else {
                 fish = fishy.clone();
             }

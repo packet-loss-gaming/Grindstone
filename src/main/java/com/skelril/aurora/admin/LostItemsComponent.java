@@ -11,7 +11,8 @@ import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.ChatColor;
@@ -121,8 +122,10 @@ public class LostItemsComponent extends BukkitComponent {
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(
-                    ItemUtil.God.makeHelmet(), ItemUtil.God.makeChest(),
-                    ItemUtil.God.makeLegs(), ItemUtil.God.makeBoots()
+                    CustomItemCenter.build(CustomItems.GOD_HELMET),
+                    CustomItemCenter.build(CustomItems.GOD_CHESTPLATE),
+                    CustomItemCenter.build(CustomItems.GOD_LEGGINGS),
+                    CustomItemCenter.build(CustomItems.GOD_BOOTS)
             );
 
             // Tell Admin
@@ -138,7 +141,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.God.makeBow());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.GOD_BOW));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -153,7 +156,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.God.makeSword());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.GOD_SWORD));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -168,7 +171,9 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.God.makePickaxe(args.hasFlag('l')));
+            player.getInventory().addItem(CustomItemCenter.build(args.hasFlag('l')
+                            ? CustomItems.LEGENDARY_GOD_PICKAXE : CustomItems.GOD_PICKAXE
+            ));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -183,7 +188,9 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.God.makeAxe(args.hasFlag('l')));
+            player.getInventory().addItem(CustomItemCenter.build(args.hasFlag('l')
+                            ? CustomItems.LEGENDARY_GOD_AXE : CustomItems.GOD_AXE
+            ));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -201,7 +208,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Ancient.makeCrown());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.ANCIENT_CROWN));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -217,8 +224,10 @@ public class LostItemsComponent extends BukkitComponent {
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(
-                    ItemUtil.Ancient.makeHelmet(), ItemUtil.Ancient.makeChest(),
-                    ItemUtil.Ancient.makeLegs(), ItemUtil.Ancient.makeBoots()
+                    CustomItemCenter.build(CustomItems.ANCIENT_HELMET),
+                    CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE),
+                    CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS),
+                    CustomItemCenter.build(CustomItems.ANCIENT_BOOTS)
             );
 
             // Tell Admin
@@ -238,8 +247,10 @@ public class LostItemsComponent extends BukkitComponent {
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
             player.getInventory().addItem(
-                    ItemUtil.Necros.makeHelmet(), ItemUtil.Necros.makeChest(),
-                    ItemUtil.Necros.makeLegs(), ItemUtil.Necros.makeBoots()
+                    CustomItemCenter.build(CustomItems.NECROS_HELMET),
+                    CustomItemCenter.build(CustomItems.NECROS_CHESTPLATE),
+                    CustomItemCenter.build(CustomItems.NECROS_LEGGINGS),
+                    CustomItemCenter.build(CustomItems.NECROS_BOOTS)
             );
 
             // Tell Admin
@@ -258,7 +269,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Master.makeSword());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.MASTER_SWORD));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -273,7 +284,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Master.makeBow());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.MASTER_BOW));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -291,7 +302,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Fear.makeSword());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.FEAR_SWORD));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -306,7 +317,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Fear.makeBow());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.FEAR_BOW));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -324,7 +335,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Unleashed.makeSword());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.UNLEASHED_SWORD));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -339,7 +350,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Unleashed.makeBow());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.UNLEASHED_BOW));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -357,7 +368,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Red.makeFeather());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.RED_FEATHER));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
@@ -374,7 +385,7 @@ public class LostItemsComponent extends BukkitComponent {
         public void lostPotionOfRestitutionCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
-            player.getInventory().addItem(ItemUtil.MPotion.potionOfRestitution());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.POTION_OF_RESTITUTION));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: "
@@ -394,7 +405,7 @@ public class LostItemsComponent extends BukkitComponent {
                 amount = args.getInteger(1);
             }
 
-            ItemStack stack = ItemUtil.Misc.gemOfDarkness(Math.max(0, Math.min(64, amount)));
+            ItemStack stack = CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS, Math.max(0, Math.min(64, amount)));
             player.getInventory().addItem(stack);
 
             // Tell Admin
@@ -415,7 +426,7 @@ public class LostItemsComponent extends BukkitComponent {
                 amount = args.getInteger(1);
             }
 
-            ItemStack stack = ItemUtil.Misc.pixieDust(Math.max(0, Math.min(64, amount)));
+            ItemStack stack = CustomItemCenter.build(CustomItems.PIXIE_DUST, Math.max(0, Math.min(64, amount)));
             player.getInventory().addItem(stack);
 
             // Tell Admin
@@ -436,7 +447,7 @@ public class LostItemsComponent extends BukkitComponent {
                 amount = args.getInteger(1);
             }
 
-            ItemStack stack = ItemUtil.Misc.phantomGold(Math.max(0, Math.min(64, amount)));
+            ItemStack stack = CustomItemCenter.build(CustomItems.PHANTOM_GOLD, Math.max(0, Math.min(64, amount)));
             player.getInventory().addItem(stack);
 
             // Tell Admin
@@ -457,7 +468,7 @@ public class LostItemsComponent extends BukkitComponent {
                 amount = args.getInteger(1);
             }
 
-            ItemStack stack = ItemUtil.Misc.phantomClock(Math.max(0, Math.min(64, amount)));
+            ItemStack stack = CustomItemCenter.build(CustomItems.PHANTOM_CLOCK, Math.max(0, Math.min(64, amount)));
             player.getInventory().addItem(stack);
 
             // Tell Admin
@@ -473,7 +484,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Misc.phantomHymn());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.PHANTOM_HYMN));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: "
@@ -493,7 +504,7 @@ public class LostItemsComponent extends BukkitComponent {
                 amount = args.getInteger(1);
             }
 
-            ItemStack stack = ItemUtil.Misc.gemOfLife(Math.max(0, Math.min(64, amount)));
+            ItemStack stack = CustomItemCenter.build(CustomItems.GEM_OF_LIFE, Math.max(0, Math.min(64, amount)));
             player.getInventory().addItem(stack);
 
             // Tell Admin
@@ -514,7 +525,7 @@ public class LostItemsComponent extends BukkitComponent {
                 amount = args.getInteger(1);
             }
 
-            ItemStack stack = ItemUtil.Misc.imbuedCrystal(Math.max(0, Math.min(64, amount)));
+            ItemStack stack = CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL, Math.max(0, Math.min(64, amount)));
             player.getInventory().addItem(stack);
 
             // Tell Admin
@@ -530,7 +541,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Misc.batBow());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.BAT_BOW));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: "
@@ -545,7 +556,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Misc.chickenBow());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.CHICKEN_BOW));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: "
@@ -560,7 +571,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Misc.chickenHymn());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.CHICKEN_HYMN));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: "
@@ -575,7 +586,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            player.getInventory().addItem(ItemUtil.Misc.magicBucket());
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.MAGIC_BUCKET));
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: "

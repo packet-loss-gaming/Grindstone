@@ -22,8 +22,9 @@ import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.util.*;
-import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -252,7 +253,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         };
         EnvironmentUtil.generateRadialEffect(locations, org.bukkit.Effect.SMOKE);
 
-        ItemUtil.removeItemOfName(player, ItemUtil.Guild.Ninja.makeStar(1), 1, false);
+        ItemUtil.removeItemOfName(player, CustomItemCenter.build(CustomItems.NINJA_STAR), 1, false);
         player.teleport(new Location(Bukkit.getWorld("City"), 150.0001, 45, -443.0001, -180, 0));
     }
 

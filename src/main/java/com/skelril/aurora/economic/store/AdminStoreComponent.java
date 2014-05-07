@@ -22,6 +22,8 @@ import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.database.UnloadableDatabase;
 import com.skelril.aurora.util.item.ItemType;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -516,6 +518,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
             // Database operations
             ItemPricePair oldItem = itemStoreDatabase.getItem(itemName);
+            itemName = itemName.replace('_', ' ');
             itemStoreDatabase.addItem(sender.getName(), itemName, price, disableBuy, disableSell);
             itemStoreDatabase.save();
 
@@ -557,210 +560,36 @@ public class AdminStoreComponent extends BukkitComponent {
         }
     }
 
-    private static List<String> names = new ArrayList<>();
+    private static Set<String> names = new HashSet<>();
 
     static {
-        names.add("red feather");
-
-        names.add("phantom clock");
-        names.add("phantom hymn");
-
-        names.add("pixie dust");
-
-        names.add("god fish");
-
-        names.add("gem of life");
-        names.add("gem of darkness");
-        names.add("imbued crystal");
-
-        names.add("bat bow");
-
-        names.add("magic bucket");
-
-        names.add("unleashed sword");
-        names.add("unleashed bow");
-
-        names.add("fear sword");
-        names.add("fear bow");
-
-        names.add("master sword");
-        names.add("master bow");
-
-        names.add("divine combat potion");
-        names.add("holy combat potion");
-        names.add("extreme combat potion");
-
-        names.add("potion of restitution");
-
-        names.add("god sword");
-        names.add("god bow");
-
-        names.add("overseer's bow");
-
-        names.add("god pickaxe");
-        names.add("legendary god pickaxe");
-
-        names.add("god axe");
-        names.add("legendary god axe");
-
-        names.add("god helmet");
-        names.add("god chestplate");
-        names.add("god leggings");
-        names.add("god boots");
-
-        names.add("ancient crown");
-        names.add("ancient helmet");
-        names.add("ancient chestplate");
-        names.add("ancient leggings");
-        names.add("ancient boots");
-
-        names.add("necros helmet");
-        names.add("necros chestplate");
-        names.add("necros leggings");
-        names.add("necros boots");
+        for (CustomItems item : CustomItems.values()) {
+            names.add(item.name());
+        }
     }
 
     private static boolean hasItemOfName(String name) {
-
-        for (String aName : names) {
-            if (name.equalsIgnoreCase(aName)) return true;
-        }
-        return false;
+        return names.contains(name.toUpperCase().replace(' ', '_'));
     }
 
-    private static ItemStack[] getItem(String name, int amount) {
+    private static ItemStack[] getItem(String name, int amount) throws CommandException {
 
-        name = name.toLowerCase();
+        name = name.toUpperCase().replace(" ", "_");
 
         List<ItemStack> itemStacks = new ArrayList<>();
 
-        for (int i = 0; i < amount; i++) {
-            switch (name) {
-                case "red feather":
-                    itemStacks.add(ItemUtil.Red.makeFeather());
-                    break;
-                case "phantom clock":
-                    itemStacks.add(ItemUtil.Misc.phantomClock(1));
-                    break;
-                case "phantom hymn":
-                    itemStacks.add(ItemUtil.Misc.phantomHymn());
-                    break;
-                case "pixie dust":
-                    itemStacks.add(ItemUtil.Misc.pixieDust(1));
-                    break;
-                case "god fish":
-                    itemStacks.add(ItemUtil.Misc.godFish(1));
-                    break;
-                case "gem of life":
-                    itemStacks.add(ItemUtil.Misc.gemOfLife(1));
-                    break;
-                case "gem of darkness":
-                    itemStacks.add(ItemUtil.Misc.gemOfDarkness(1));
-                    break;
-                case "imbued crystal":
-                    itemStacks.add(ItemUtil.Misc.imbuedCrystal(1));
-                    break;
-                case "bat bow":
-                    itemStacks.add(ItemUtil.Misc.batBow());
-                    break;
-                case "magic bucket":
-                    itemStacks.add(ItemUtil.Misc.magicBucket());
-                    break;
-                case "unleashed sword":
-                    itemStacks.add(ItemUtil.Unleashed.makeSword());
-                    break;
-                case "unleashed bow":
-                    itemStacks.add(ItemUtil.Unleashed.makeBow());
-                    break;
-                case "fear sword":
-                    itemStacks.add(ItemUtil.Fear.makeSword());
-                    break;
-                case "fear bow":
-                    itemStacks.add(ItemUtil.Fear.makeBow());
-                    break;
-                case "master sword":
-                    itemStacks.add(ItemUtil.Master.makeSword());
-                    break;
-                case "master bow":
-                    itemStacks.add(ItemUtil.Master.makeBow());
-                    break;
-                case "divine combat potion":
-                    itemStacks.add(ItemUtil.CPotion.divineCombatPotion());
-                    break;
-                case "holy combat potion":
-                    itemStacks.add(ItemUtil.CPotion.holyCombatPotion());
-                    break;
-                case "extreme combat potion":
-                    itemStacks.add(ItemUtil.CPotion.extremeCombatPotion());
-                    break;
-                case "potion of restitution":
-                    itemStacks.add(ItemUtil.MPotion.potionOfRestitution());
-                    break;
-                case "god sword":
-                    itemStacks.add(ItemUtil.God.makeSword());
-                    break;
-                case "god bow":
-                    itemStacks.add(ItemUtil.God.makeBow());
-                    break;
-                case "overseer's bow":
-                    itemStacks.add(ItemUtil.Misc.overseerBow());
-                    break;
-                case "god pickaxe":
-                    itemStacks.add(ItemUtil.God.makePickaxe(false));
-                    break;
-                case "legendary god pickaxe":
-                    itemStacks.add(ItemUtil.God.makePickaxe(true));
-                    break;
-                case "god axe":
-                    itemStacks.add(ItemUtil.God.makeAxe(false));
-                    break;
-                case "legendary god axe":
-                    itemStacks.add(ItemUtil.God.makeAxe(true));
-                    break;
-                case "god helmet":
-                    itemStacks.add(ItemUtil.God.makeHelmet());
-                    break;
-                case "god chestplate":
-                    itemStacks.add(ItemUtil.God.makeChest());
-                    break;
-                case "god leggings":
-                    itemStacks.add(ItemUtil.God.makeLegs());
-                    break;
-                case "god boots":
-                    itemStacks.add(ItemUtil.God.makeBoots());
-                    break;
-                case "ancient crown":
-                    itemStacks.add(ItemUtil.Ancient.makeCrown());
-                    break;
-                case "ancient helmet":
-                    itemStacks.add(ItemUtil.Ancient.makeHelmet());
-                    break;
-                case "ancient chestplate":
-                    itemStacks.add(ItemUtil.Ancient.makeChest());
-                    break;
-                case "ancient leggings":
-                    itemStacks.add(ItemUtil.Ancient.makeLegs());
-                    break;
-                case "ancient boots":
-                    itemStacks.add(ItemUtil.Ancient.makeBoots());
-                    break;
-                case "necros helmet":
-                    itemStacks.add(ItemUtil.Necros.makeHelmet());
-                    break;
-                case "necros chestplate":
-                    itemStacks.add(ItemUtil.Necros.makeChest());
-                    break;
-                case "necros leggings":
-                    itemStacks.add(ItemUtil.Necros.makeLegs());
-                    break;
-                case "necros boots":
-                    itemStacks.add(ItemUtil.Necros.makeBoots());
-                    break;
-                default:
-                    ItemType type = ItemType.lookup(name);
-                    itemStacks.add(new ItemStack(type.getID(), 1, (short) type.getData()));
-                    break;
-            }
+        ItemStack stack;
+        try {
+            CustomItems item = CustomItems.valueOf(name);
+            stack = CustomItemCenter.build(item);
+        } catch (IllegalArgumentException ex) {
+            throw new CommandException("Please report this error, " + name + " could not be found.");
+        }
+        for (int i = amount; i > 0;) {
+            ItemStack cloned = stack.clone();
+            cloned.setAmount(Math.min(stack.getMaxStackSize(), i));
+            i -= cloned.getAmount();
+            itemStacks.add(cloned);
         }
         return itemStacks.toArray(new ItemStack[itemStacks.size()]);
     }

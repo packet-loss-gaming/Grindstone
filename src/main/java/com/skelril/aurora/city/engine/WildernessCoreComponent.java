@@ -25,6 +25,8 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -440,7 +442,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
             double diffLevel = Math.max(1, level * .63);
             for (int i = 0; i < diffLevel * diffLevel * diffLevel; i++) {
-                if (ChanceUtil.getChance(100000)) event.getDrops().add(ItemUtil.Red.makeFeather());
+                if (ChanceUtil.getChance(100000)) event.getDrops().add(CustomItemCenter.build(CustomItems.RED_FEATHER));
                 if (ChanceUtil.getChance(2000)) event.getDrops().add(ItemUtil.MPotion.potionOfRestitution());
             }
 

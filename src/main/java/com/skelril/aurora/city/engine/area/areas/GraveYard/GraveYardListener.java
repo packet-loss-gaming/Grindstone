@@ -17,9 +17,10 @@ import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.*;
-import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.skelril.aurora.util.player.PlayerState;
 import com.skelril.aurora.util.restoration.BlockRecord;
 import com.skelril.aurora.util.restoration.RestorationUtil;
@@ -204,7 +205,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             player.getInventory().addItem(item);
             int amount = Math.min(c, 64);
             while (amount > 0) {
-                player.getInventory().addItem(ItemUtil.Misc.gemOfDarkness(amount));
+                player.getInventory().addItem(CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS, amount));
                 c -= amount;
                 amount = Math.min(c, 64);
             }
@@ -224,7 +225,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             player.getInventory().addItem(item);
             int amount = Math.min(c, 64);
             while (amount > 0) {
-                player.getInventory().addItem(ItemUtil.Misc.imbuedCrystal(amount));
+                player.getInventory().addItem(CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL, amount));
                 c -= amount;
                 amount = Math.min(c, 64);
             }
@@ -246,36 +247,36 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
                 }
                 if (ChanceUtil.getChance(15000)) {
-                    drops.add(ItemUtil.Misc.phantomClock(ChanceUtil.getRandom(3)));
+                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_CLOCK, ChanceUtil.getRandom(3)));
                 }
                 if (ChanceUtil.getChance(10000)) {
-                    drops.add(ItemUtil.Misc.imbuedCrystal(1));
+                    drops.add(CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL));
                 }
                 if (ChanceUtil.getChance(6000) || world.isThundering() && ChanceUtil.getChance(4000)) {
-                    drops.add(ItemUtil.Misc.batBow());
+                    drops.add(CustomItemCenter.build(CustomItems.BAT_BOW));
                 }
                 if (ChanceUtil.getChance(6000) || world.isThundering() && ChanceUtil.getChance(4000)) {
-                    drops.add(ItemUtil.Misc.gemOfDarkness(1));
+                    drops.add(CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS));
                 }
                 if (ChanceUtil.getChance(6000) || world.isThundering() && ChanceUtil.getChance(4000)) {
-                    drops.add(ItemUtil.Misc.gemOfLife(1));
+                    drops.add(CustomItemCenter.build(CustomItems.GEM_OF_LIFE));
                 }
                 if (ChanceUtil.getChance(400)) {
-                    drops.add(ItemUtil.Misc.phantomGold(ChanceUtil.getRandom(3)));
+                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(3)));
                 }
                 if (ChanceUtil.getChance(1000000)) {
                     switch (ChanceUtil.getRandom(4)) {
                         case 1:
-                            drops.add(ItemUtil.Fear.makeSword());
+                            drops.add(CustomItemCenter.build(CustomItems.FEAR_SWORD));
                             break;
                         case 2:
-                            drops.add(ItemUtil.Fear.makeBow());
+                            drops.add(CustomItemCenter.build(CustomItems.FEAR_BOW));
                             break;
                         case 3:
-                            drops.add(ItemUtil.Unleashed.makeSword());
+                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_SWORD));
                             break;
                         case 4:
-                            drops.add(ItemUtil.Unleashed.makeBow());
+                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_BOW));
                             break;
                     }
                 }
@@ -287,43 +288,43 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
                 }
                 if (ChanceUtil.getChance(60)) {
-                    drops.add(ItemUtil.CPotion.divineCombatPotion());
+                    drops.add(CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION));
                 } else if (ChanceUtil.getChance(40)) {
-                    drops.add(ItemUtil.CPotion.holyCombatPotion());
+                    drops.add(CustomItemCenter.build(CustomItems.HOLY_COMBAT_POTION));
                 } else if (ChanceUtil.getChance(20)) {
-                    drops.add(ItemUtil.CPotion.extremeCombatPotion());
+                    drops.add(CustomItemCenter.build(CustomItems.EXTREME_COMBAT_POTION));
                 }
                 if (ChanceUtil.getChance(250)) {
-                    drops.add(ItemUtil.Misc.phantomClock(ChanceUtil.getRandom(3)));
+                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_CLOCK, ChanceUtil.getRandom(3)));
                 }
                 if (ChanceUtil.getChance(100)) {
-                    drops.add(ItemUtil.Misc.imbuedCrystal(1));
+                    drops.add(CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL));
                 }
                 if (ChanceUtil.getChance(60) || world.isThundering() && ChanceUtil.getChance(40)) {
-                    drops.add(ItemUtil.Misc.batBow());
+                    drops.add(CustomItemCenter.build(CustomItems.BAT_BOW));
                 }
                 if (ChanceUtil.getChance(60) || world.isThundering() && ChanceUtil.getChance(40)) {
-                    drops.add(ItemUtil.Misc.gemOfDarkness(1));
+                    drops.add(CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS));
                 }
                 if (ChanceUtil.getChance(60) || world.isThundering() && ChanceUtil.getChance(40)) {
-                    drops.add(ItemUtil.Misc.gemOfLife(1));
+                    drops.add(CustomItemCenter.build(CustomItems.GEM_OF_LIFE));
                 }
                 if (ChanceUtil.getChance(20)) {
-                    drops.add(ItemUtil.Misc.phantomGold(1));
+                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_GOLD));
                 }
                 if (ChanceUtil.getChance(8000)) {
                     switch (ChanceUtil.getRandom(4)) {
                         case 1:
-                            drops.add(ItemUtil.Fear.makeSword());
+                            drops.add(CustomItemCenter.build(CustomItems.FEAR_SWORD));
                             break;
                         case 2:
-                            drops.add(ItemUtil.Fear.makeBow());
+                            drops.add(CustomItemCenter.build(CustomItems.FEAR_BOW));
                             break;
                         case 3:
-                            drops.add(ItemUtil.Unleashed.makeSword());
+                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_SWORD));
                             break;
                         case 4:
-                            drops.add(ItemUtil.Unleashed.makeBow());
+                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_BOW));
                             break;
                     }
                 }
@@ -484,7 +485,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     server.getScheduler().runTaskLater(inst, () -> {
                         ItemStack newStack = null;
                         if (amt > 0) {
-                            newStack = ItemUtil.Misc.phantomClock(amt);
+                            newStack = CustomItemCenter.build(CustomItems.PHANTOM_CLOCK, amt);
                         }
                         player.setItemInHand(newStack);
                     }, 1);
@@ -562,7 +563,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 // Add back the gems of life as needed
                 int amount = Math.min(c, 64);
                 while (amount > 0) {
-                    player.getInventory().addItem(ItemUtil.Misc.gemOfLife(amount));
+                    player.getInventory().addItem(CustomItemCenter.build(CustomItems.GEM_OF_LIFE, amount));
                     c -= amount;
                     amount = Math.min(c, 64);
                 }

@@ -32,9 +32,10 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EntityUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.item.BookUtil;
-import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.skelril.aurora.util.player.PlayerState;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
@@ -373,20 +374,20 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
                 if (ChanceUtil.getChance(138) || m > 1 && ChanceUtil.getChance(84 / m)) {
-                    event.getDrops().add(ItemUtil.Master.makeSword());
+                    event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_SWORD));
                 }
                 if (ChanceUtil.getChance(138) || m > 1 && ChanceUtil.getChance(84 / m)) {
-                    event.getDrops().add(ItemUtil.Master.makeBow());
+                    event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_BOW));
                 }
                 if (ChanceUtil.getChance(200) || m > 1 && ChanceUtil.getChance(108 / m)) {
-                    event.getDrops().add(ItemUtil.Misc.magicBucket());
+                    event.getDrops().add(CustomItemCenter.build(CustomItems.MAGIC_BUCKET));
                 }
                 // Uber rare drops
                 if (ChanceUtil.getChance(15000 / m)) {
-                    event.getDrops().add(ItemUtil.Ancient.makeCrown());
+                    event.getDrops().add(CustomItemCenter.build(CustomItems.ANCIENT_CROWN));
                 }
                 // Add a few Barbarian Bones to the drop list
-                event.getDrops().add(ItemUtil.Misc.barbarianBone(ChanceUtil.getRandom(Math.max(1, amt * 2))));
+                event.getDrops().add(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(Math.max(1, amt * 2))));
                 // Remove the Barbarian Bones
                 if (player != null) {
                     int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), BARBARIAN_BONES) - required;
@@ -394,7 +395,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     player.getInventory().setContents(nc);
                     int amount = Math.min(c, 64);
                     while (amount > 0) {
-                        player.getInventory().addItem(ItemUtil.Misc.barbarianBone(amount));
+                        player.getInventory().addItem(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, amount));
                         c -= amount;
                         amount = Math.min(c, 64);
                     }

@@ -15,7 +15,8 @@ import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
-import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -141,7 +142,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
                     new ItemStack(ItemID.STONE_HOE),
                     new ItemStack(ItemID.MAP),
                     new ItemStack(ItemID.BED_ITEM),
-                    ItemUtil.Misc.gemOfLife(3)
+                    CustomItemCenter.build(CustomItems.GEM_OF_LIFE, 3)
             };
 
             // Tell others to great him/her

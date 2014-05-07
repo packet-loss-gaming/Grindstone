@@ -42,10 +42,11 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.DamageUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -717,7 +718,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                             int amount = Math.min(c, 64);
                             while (amount > 0) {
-                                player.getInventory().addItem(ItemUtil.Misc.pixieDust(amount));
+                                player.getInventory().addItem(CustomItemCenter.build(CustomItems.PIXIE_DUST, amount));
                                 c -= amount;
                                 amount = Math.min(c, 64);
                             }

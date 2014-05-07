@@ -21,8 +21,9 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
-import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -216,13 +217,13 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 targetStack.setAmount(ChanceUtil.getRandom(3));
 
                 if (ChanceUtil.getChance(300)) {
-                    inventory.addItem(ItemUtil.Misc.pixieDust(ChanceUtil.getRandom(12)));
+                    inventory.addItem(CustomItemCenter.build(CustomItems.PIXIE_DUST, ChanceUtil.getRandom(12)));
                 }
                 if (ChanceUtil.getChance(1000)) {
-                    targetStack = ItemUtil.Misc.phantomGold(ChanceUtil.getRandom(6));
+                    targetStack = CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(6));
                 }
                 if (ChanceUtil.getChance(10000)) {
-                    inventory.addItem(ItemUtil.Misc.phantomHymn());
+                    inventory.addItem(CustomItemCenter.build(CustomItems.PHANTOM_HYMN));
                 }
 
                 inventory.setItem(ChanceUtil.getRandom(chestState.getBlockInventory().getSize() - 1), targetStack);

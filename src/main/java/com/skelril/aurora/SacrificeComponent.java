@@ -26,8 +26,9 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
-import com.skelril.aurora.util.item.CustomItems;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -202,32 +203,32 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         switch (ChanceUtil.getRandom(23)) {
             case 1:
                 if (Util.getChance(sender, modifier, 1.2)) {
-                    itemStack = ItemUtil.God.makeSword();
+                    itemStack = CustomItemCenter.build(CustomItems.GOD_SWORD);
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_SWORD);
                 }
                 break;
             case 2:
                 if (Util.getChance(sender, modifier, 1.2)) {
-                    itemStack = ItemUtil.God.makeBow();
+                    itemStack = CustomItemCenter.build(CustomItems.GOD_BOW);
                 } else {
-                    itemStack = ItemUtil.Misc.overseerBow();
+                    itemStack = CustomItemCenter.build(CustomItems.OVERSEER_BOW);
                 }
                 break;
             case 3:
                 if (Util.getChance(sender, modifier, 2)) {
-                    itemStack = ItemUtil.God.makePickaxe(true);
+                    itemStack = CustomItemCenter.build(CustomItems.LEGENDARY_GOD_PICKAXE);
                 } else if (Util.getChance(sender, modifier, .37)) {
-                    itemStack = ItemUtil.God.makePickaxe(false);
+                    itemStack = CustomItemCenter.build(CustomItems.GOD_PICKAXE);
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_PICKAXE);
                 }
                 break;
             case 4:
                 if (ChanceUtil.getChance(10000)) {
-                    itemStack = ItemUtil.Misc.phantomClock(1);
+                    itemStack = CustomItemCenter.build(CustomItems.PHANTOM_CLOCK);
                 } else {
-                    itemStack = ItemUtil.Misc.godFish(1);
+                    itemStack = CustomItemCenter.build(CustomItems.GOD_FISH);
                 }
                 break;
             case 5:
@@ -237,19 +238,19 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 if (sender instanceof Player && Util.getChance(sender, modifier, 3)) {
                     itemStack = ItemUtil.makeSkull(sender.getName());
                 } else {
-                    itemStack = ItemUtil.Misc.pixieDust(ChanceUtil.getRangedRandom(3, 6));
+                    itemStack = CustomItemCenter.build(CustomItems.PIXIE_DUST, ChanceUtil.getRangedRandom(3, 6));
                 }
                 break;
             case 7:
                 if (Util.getChance(sender, modifier, .8)) {
-                    itemStack = ItemUtil.God.makeChest();
+                    itemStack = CustomItemCenter.build(CustomItems.GOD_CHESTPLATE);
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_CHEST);
                 }
                 break;
             case 8:
                 if (Util.getChance(sender, modifier, .8)) {
-                    itemStack = ItemUtil.God.makeLegs();
+                    itemStack = CustomItemCenter.build(CustomItems.GOD_LEGGINGS);
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_PANTS);
                 }
@@ -268,45 +269,45 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 break;
             case 13:
                 if (Util.getChance(sender, modifier, 2.75)) {
-                    itemStack = ItemUtil.Ancient.makeBoots();
+                    itemStack = CustomItemCenter.build(CustomItems.ANCIENT_BOOTS);
                 }
                 break;
             case 14:
                 if (Util.getChance(sender, modifier, 2.75)) {
-                    itemStack = ItemUtil.Ancient.makeLegs();
+                    itemStack = CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS);
                 }
                 break;
             case 15:
                 if (Util.getChance(sender, modifier, 2.75)) {
-                    itemStack = ItemUtil.Ancient.makeChest();
+                    itemStack = CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE);
                 }
                 break;
             case 16:
                 if (Util.getChance(sender, modifier, 2.75)) {
-                    itemStack = ItemUtil.Ancient.makeHelmet();
+                    itemStack = CustomItemCenter.build(CustomItems.ANCIENT_HELMET);
                 }
                 break;
             case 17:
                 if (Util.getChance(sender, modifier, .8)) {
-                    itemStack = ItemUtil.God.makeHelmet();
+                    itemStack = CustomItemCenter.build(CustomItems.GOD_HELMET);
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_HELMET);
                 }
                 break;
             case 18:
                 if (Util.getChance(sender, modifier, .8)) {
-                    itemStack = ItemUtil.God.makeBoots();
+                    itemStack = CustomItemCenter.build(CustomItems.GOD_BOOTS);
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_BOOTS);
                 }
                 break;
             case 19:
                 if (Util.getChance(sender, modifier, 5)) {
-                    itemStack = ItemUtil.CPotion.divineCombatPotion();
+                    itemStack = CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION);
                 } else if (Util.getChance(sender, modifier, 2)) {
-                    itemStack = ItemUtil.CPotion.holyCombatPotion();
+                    itemStack = CustomItemCenter.build(CustomItems.HOLY_COMBAT_POTION);
                 } else {
-                    itemStack = ItemUtil.CPotion.extremeCombatPotion();
+                    itemStack = CustomItemCenter.build(CustomItems.EXTREME_COMBAT_POTION);
                 }
                 break;
             case 20:
@@ -317,9 +318,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 break;
             case 22:
                 if (Util.getChance(sender, modifier, 2.5)) {
-                    itemStack = ItemUtil.God.makeAxe(true);
+                    itemStack = CustomItemCenter.build(CustomItems.LEGENDARY_GOD_AXE);
                 } else if (Util.getChance(sender, modifier, .37)) {
-                    itemStack = ItemUtil.God.makeAxe(false);
+                    itemStack = CustomItemCenter.build(CustomItems.GOD_AXE);
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_AXE);
                 }
@@ -555,10 +556,10 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         final double value = AdminStoreComponent.priceCheck(item);
 
         if (ItemUtil.isItem(item, CustomItems.MASTER_SWORD)) {
-            pInventory.addItem(ItemUtil.Master.makeSword());
+            pInventory.addItem(CustomItemCenter.build(CustomItems.MASTER_SWORD));
             return;
         } else if (ItemUtil.isItem(item, CustomItems.MASTER_BOW)) {
-            pInventory.addItem(ItemUtil.Master.makeBow());
+            pInventory.addItem(CustomItemCenter.build(CustomItems.MASTER_BOW));
             return;
         } else if (value < 0) {
             pInventory.addItem(item);

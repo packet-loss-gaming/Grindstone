@@ -10,7 +10,8 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.craftbook.ChangedSign;
 import com.sk89q.craftbook.circuits.ic.*;
 import com.sk89q.craftbook.util.LocationUtil;
-import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.block.BlockFace;
@@ -70,7 +71,7 @@ public class NinjaStarSpawner extends AbstractSelfTriggeredIC {
     public void drop() {
 
         Location k = LocationUtil.getCenterOfBlock(LocationUtil.getNextFreeSpace(getBackBlock(), BlockFace.UP));
-        final Item item = k.getWorld().dropItem(k, ItemUtil.Guild.Ninja.makeStar(quantity));
+        final Item item = k.getWorld().dropItem(k, CustomItemCenter.build(CustomItems.NINJA_STAR, quantity));
         server.getScheduler().runTaskLater(inst, () -> {
             if (item.isValid()) {
                 item.remove();
