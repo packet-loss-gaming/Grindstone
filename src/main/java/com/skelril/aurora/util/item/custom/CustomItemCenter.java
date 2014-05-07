@@ -40,7 +40,7 @@ public class CustomItemCenter {
         ancientCrown.addSource(ItemSource.GIANT_BOSS);
         ancientCrown.addUse("Set Effect: Ancient Armor");
         ancientCrown.addUse("Double Health Regen");
-        ancientCrown.addUse("Double XP Gian");
+        ancientCrown.addUse("Double XP Gain");
         ancientCrown.addUse("Acts as an Imbued Crystal");
         ancientCrown.addUse("Acts as a Gem of Darkness");
         ancientCrown.addUse("Acts as an Ancient Helmet");
