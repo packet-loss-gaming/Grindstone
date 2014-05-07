@@ -395,8 +395,8 @@ public class CustomItemCenter {
         addItem(batBow);
 
         CustomItem chickenBow = new CustomItem(CHICKEN_BOW, Material.BOW);
-        batBow.addUse("Creates chickens at the point where a fired arrow lands.");
-        batBow.addUse("Creates a trail of chickens following any fired arrow.");
+        chickenBow.addUse("Creates chickens at the point where a fired arrow lands.");
+        chickenBow.addUse("Creates a trail of chickens following any fired arrow.");
         addItem(chickenBow);
 
         CustomItem chickenHymn = new CustomItem(CHICKEN_HYMN, Material.BOOK);
