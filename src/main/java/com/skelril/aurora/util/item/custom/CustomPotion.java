@@ -31,6 +31,10 @@ public class CustomPotion extends CustomItem {
         addEffect(new Potion(type, time, level));
     }
 
+    public List<Potion> getEffects() {
+        return effects;
+    }
+
     @Override
     public ItemStack build() {
         ItemStack base = super.build();
