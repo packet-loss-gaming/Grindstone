@@ -349,7 +349,7 @@ public class CustomItemCenter {
         CustomItem phantomGold = new CustomItem(PHANTOM_GOLD, Material.GOLD_INGOT);
         phantomGold.addSource(ItemSource.GOLD_RUSH);
         phantomGold.addSource(ItemSource.GRAVE_YARD);
-        phantomGold.addUse("When sacrificed gives 50 Skrin, or 100 Skrin" +
+        phantomGold.addUse("When sacrificed gives 50 Skrin, or 100 Skrin " +
                 "if sacrificed in the Grave Yard rewards room.");
         addItem(phantomGold);
 
