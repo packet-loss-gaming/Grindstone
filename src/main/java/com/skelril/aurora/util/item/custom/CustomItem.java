@@ -6,6 +6,7 @@
 
 package com.skelril.aurora.util.item.custom;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -44,8 +45,8 @@ public class CustomItem {
         tags.add(tag);
     }
 
-    public void addTag(String key, String prop) {
-        addTag(new Tag(key, prop));
+    public void addTag(ChatColor color, String key, String prop) {
+        addTag(new Tag(color, key, prop));
     }
 
     public List<Tag> getTags() {
@@ -100,7 +101,7 @@ public class CustomItem {
         for (Enchant enchant : enchants) {
             meta.addEnchant(enchant.getEnchant(), enchant.getLevel(), true);
         }
-        List<String> lore = tags.stream().map(e -> e.getKey() + ": " + e.getProp()).collect(Collectors.toList());
+        List<String> lore = tags.stream().map(e -> e.getColor() + e.getKey() + ": " + e.getProp()).collect(Collectors.toList());
         lore.addAll(this.lore);
         meta.setLore(lore);
         meta.setDisplayName(item.toString());

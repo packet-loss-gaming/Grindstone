@@ -254,6 +254,9 @@ public class CustomItemCenter {
         // God Tools
         CustomItem godAxe = new CustomItem(GOD_AXE, Material.DIAMOND_AXE);
         godAxe.addEnchant(Enchantment.DIG_SPEED, 4);
+        godAxe.addSource(ItemSource.SACRIFICIAL_PIT);
+        godAxe.addSource(ItemSource.GRAVE_YARD);
+        godAxe.addSource(ItemSource.MARKET);
         addItem(godAxe);
 
         CustomItem legendaryGodAxe = new CustomItem(LEGENDARY_GOD_AXE, Material.DIAMOND_AXE);
@@ -262,17 +265,26 @@ public class CustomItemCenter {
         legendaryGodAxe.addEnchant(Enchantment.DAMAGE_UNDEAD, 5);
         legendaryGodAxe.addEnchant(Enchantment.DIG_SPEED, 5);
         legendaryGodAxe.addEnchant(Enchantment.DURABILITY, 3);
+        legendaryGodAxe.addSource(ItemSource.SACRIFICIAL_PIT);
+        legendaryGodAxe.addSource(ItemSource.GRAVE_YARD);
+        legendaryGodAxe.addSource(ItemSource.MARKET);
         addItem(legendaryGodAxe);
 
         CustomItem godPickaxe = new CustomItem(GOD_PICKAXE, Material.DIAMOND_PICKAXE);
         godPickaxe.addEnchant(Enchantment.DIG_SPEED, 4);
         godPickaxe.addEnchant(Enchantment.SILK_TOUCH, 1);
+        godPickaxe.addSource(ItemSource.SACRIFICIAL_PIT);
+        godPickaxe.addSource(ItemSource.GRAVE_YARD);
+        godPickaxe.addSource(ItemSource.MARKET);
         addItem(godPickaxe);
 
         CustomItem legendaryGodPickaxe = new CustomItem(LEGENDARY_GOD_PICKAXE, Material.DIAMOND_PICKAXE);
         legendaryGodPickaxe.addEnchant(Enchantment.DIG_SPEED, 5);
         legendaryGodPickaxe.addEnchant(Enchantment.DURABILITY, 3);
         legendaryGodPickaxe.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 3);
+        legendaryGodPickaxe.addSource(ItemSource.SACRIFICIAL_PIT);
+        legendaryGodPickaxe.addSource(ItemSource.GRAVE_YARD);
+        legendaryGodPickaxe.addSource(ItemSource.MARKET);
         addItem(legendaryGodPickaxe);
 
         // Combat Potions

@@ -16,7 +16,7 @@ public class CustomWeapon extends CustomItem {
     public CustomWeapon(CustomItems item, Material type, double damageMod) {
         super(item, type);
         this.damageMod = damageMod;
-        addTag(ChatColor.RED + "Damage Modifier", String.valueOf(damageMod));
+        addTag(ChatColor.RED, "Damage Modifier", String.valueOf(damageMod));
     }
 
     public double getDamageMod() {
