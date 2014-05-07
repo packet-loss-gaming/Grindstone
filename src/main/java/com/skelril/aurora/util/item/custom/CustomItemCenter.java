@@ -28,7 +28,7 @@ public class CustomItemCenter {
 
     static {
         // Ancient Armor
-        CustomItem ancientCrown = new CustomItem(ANCIENT_CROWN, Material.GOLD_HELMET);
+        CustomEquipment ancientCrown = new CustomEquipment(ANCIENT_CROWN, Material.GOLD_HELMET);
         ancientCrown.addEnchant(Enchantment.DURABILITY, 3);
         ancientCrown.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         ancientCrown.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
@@ -46,7 +46,7 @@ public class CustomItemCenter {
         ancientCrown.addUse("Acts as an Ancient Helmet");
         addItem(ancientCrown);
 
-        CustomItem ancientHelmet = new CustomItem(ANCIENT_HELMET, Material.CHAINMAIL_HELMET);
+        CustomEquipment ancientHelmet = new CustomEquipment(ANCIENT_HELMET, Material.CHAINMAIL_HELMET);
         ancientHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         ancientHelmet.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         ancientHelmet.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -59,7 +59,7 @@ public class CustomItemCenter {
         ancientHelmet.addUse("Set Effect: Ancient Armor");
         addItem(ancientHelmet);
 
-        CustomItem ancientChestplate = new CustomItem(ANCIENT_CHESTPLATE, Material.CHAINMAIL_CHESTPLATE);
+        CustomEquipment ancientChestplate = new CustomEquipment(ANCIENT_CHESTPLATE, Material.CHAINMAIL_CHESTPLATE);
         ancientChestplate.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         ancientChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         ancientChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -70,7 +70,7 @@ public class CustomItemCenter {
         ancientChestplate.addUse("Set Effect: Ancient Armor");
         addItem(ancientChestplate);
 
-        CustomItem ancientLeggings = new CustomItem(ANCIENT_LEGGINGS, Material.CHAINMAIL_LEGGINGS);
+        CustomEquipment ancientLeggings = new CustomEquipment(ANCIENT_LEGGINGS, Material.CHAINMAIL_LEGGINGS);
         ancientLeggings.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         ancientLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         ancientLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -81,7 +81,7 @@ public class CustomItemCenter {
         ancientLeggings.addUse("Set Effect: Ancient Armor");
         addItem(ancientLeggings);
 
-        CustomItem ancientBoots = new CustomItem(ANCIENT_BOOTS, Material.CHAINMAIL_BOOTS);
+        CustomEquipment ancientBoots = new CustomEquipment(ANCIENT_BOOTS, Material.CHAINMAIL_BOOTS);
         ancientBoots.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         ancientBoots.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         ancientBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -94,7 +94,7 @@ public class CustomItemCenter {
         addItem(ancientBoots);
 
         // Necros Armor
-        CustomItem necrosHelmet = new CustomItem(NECROS_HELMET, Material.DIAMOND_HELMET);
+        CustomEquipment necrosHelmet = new CustomEquipment(NECROS_HELMET, Material.DIAMOND_HELMET);
         necrosHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         necrosHelmet.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         necrosHelmet.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -106,7 +106,7 @@ public class CustomItemCenter {
         necrosHelmet.addUse("Set Effect: Necros Armor");
         addItem(necrosHelmet);
 
-        CustomItem necrosChestplate = new CustomItem(NECROS_CHESTPLATE, Material.DIAMOND_CHESTPLATE);
+        CustomEquipment necrosChestplate = new CustomEquipment(NECROS_CHESTPLATE, Material.DIAMOND_CHESTPLATE);
         necrosChestplate.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         necrosChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         necrosChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -116,7 +116,7 @@ public class CustomItemCenter {
         necrosChestplate.addUse("Set Effect: Necros Armor");
         addItem(necrosChestplate);
 
-        CustomItem necrosLeggings = new CustomItem(NECROS_LEGGINGS, Material.DIAMOND_LEGGINGS);
+        CustomEquipment necrosLeggings = new CustomEquipment(NECROS_LEGGINGS, Material.DIAMOND_LEGGINGS);
         necrosLeggings.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         necrosLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         necrosLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -126,7 +126,7 @@ public class CustomItemCenter {
         necrosLeggings.addUse("Set Effect: Necros Armor");
         addItem(necrosLeggings);
 
-        CustomItem necrosBoots = new CustomItem(NECROS_BOOTS, Material.DIAMOND_BOOTS);
+        CustomEquipment necrosBoots = new CustomEquipment(NECROS_BOOTS, Material.DIAMOND_BOOTS);
         necrosBoots.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         necrosBoots.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         necrosBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -195,7 +195,7 @@ public class CustomItemCenter {
         addItem(redFeather);
 
         // God Armor
-        CustomItem godHelmet = new CustomItem(GOD_HELMET, Material.DIAMOND_HELMET);
+        CustomEquipment godHelmet = new CustomEquipment(GOD_HELMET, Material.DIAMOND_HELMET);
         godHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         godHelmet.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         godHelmet.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -207,7 +207,7 @@ public class CustomItemCenter {
         godHelmet.addSource(ItemSource.MARKET);
         addItem(godHelmet);
 
-        CustomItem godChestplate = new CustomItem(GOD_CHESTPLATE, Material.DIAMOND_CHESTPLATE);
+        CustomEquipment godChestplate = new CustomEquipment(GOD_CHESTPLATE, Material.DIAMOND_CHESTPLATE);
         godChestplate.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         godChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         godChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -217,7 +217,7 @@ public class CustomItemCenter {
         godChestplate.addSource(ItemSource.MARKET);
         addItem(godChestplate);
 
-        CustomItem godLeggings = new CustomItem(GOD_LEGGINGS, Material.DIAMOND_LEGGINGS);
+        CustomEquipment godLeggings = new CustomEquipment(GOD_LEGGINGS, Material.DIAMOND_LEGGINGS);
         godLeggings.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         godLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         godLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -227,7 +227,7 @@ public class CustomItemCenter {
         godLeggings.addSource(ItemSource.MARKET);
         addItem(godLeggings);
 
-        CustomItem godBoots = new CustomItem(GOD_BOOTS, Material.DIAMOND_BOOTS);
+        CustomEquipment godBoots = new CustomEquipment(GOD_BOOTS, Material.DIAMOND_BOOTS);
         godBoots.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         godBoots.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         godBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
@@ -252,14 +252,14 @@ public class CustomItemCenter {
         addItem(godBow);
 
         // God Tools
-        CustomItem godAxe = new CustomItem(GOD_AXE, Material.DIAMOND_AXE);
+        CustomEquipment godAxe = new CustomEquipment(GOD_AXE, Material.DIAMOND_AXE);
         godAxe.addEnchant(Enchantment.DIG_SPEED, 4);
         godAxe.addSource(ItemSource.SACRIFICIAL_PIT);
         godAxe.addSource(ItemSource.GRAVE_YARD);
         godAxe.addSource(ItemSource.MARKET);
         addItem(godAxe);
 
-        CustomItem legendaryGodAxe = new CustomItem(LEGENDARY_GOD_AXE, Material.DIAMOND_AXE);
+        CustomEquipment legendaryGodAxe = new CustomEquipment(LEGENDARY_GOD_AXE, Material.DIAMOND_AXE);
         legendaryGodAxe.addEnchant(Enchantment.DAMAGE_ALL, 5);
         legendaryGodAxe.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 5);
         legendaryGodAxe.addEnchant(Enchantment.DAMAGE_UNDEAD, 5);
@@ -270,7 +270,7 @@ public class CustomItemCenter {
         legendaryGodAxe.addSource(ItemSource.MARKET);
         addItem(legendaryGodAxe);
 
-        CustomItem godPickaxe = new CustomItem(GOD_PICKAXE, Material.DIAMOND_PICKAXE);
+        CustomEquipment godPickaxe = new CustomEquipment(GOD_PICKAXE, Material.DIAMOND_PICKAXE);
         godPickaxe.addEnchant(Enchantment.DIG_SPEED, 4);
         godPickaxe.addEnchant(Enchantment.SILK_TOUCH, 1);
         godPickaxe.addSource(ItemSource.SACRIFICIAL_PIT);
@@ -278,7 +278,7 @@ public class CustomItemCenter {
         godPickaxe.addSource(ItemSource.MARKET);
         addItem(godPickaxe);
 
-        CustomItem legendaryGodPickaxe = new CustomItem(LEGENDARY_GOD_PICKAXE, Material.DIAMOND_PICKAXE);
+        CustomEquipment legendaryGodPickaxe = new CustomEquipment(LEGENDARY_GOD_PICKAXE, Material.DIAMOND_PICKAXE);
         legendaryGodPickaxe.addEnchant(Enchantment.DIG_SPEED, 5);
         legendaryGodPickaxe.addEnchant(Enchantment.DURABILITY, 3);
         legendaryGodPickaxe.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 3);
@@ -387,14 +387,14 @@ public class CustomItemCenter {
         addItem(magicbucket);
 
         // Animal Bows
-        CustomItem batBow = new CustomItem(BAT_BOW, Material.BOW);
+        CustomEquipment batBow = new CustomEquipment(BAT_BOW, Material.BOW);
         batBow.addSource(ItemSource.GRAVE_YARD);
         batBow.addSource(ItemSource.MARKET);
         batBow.addUse("Creates bats at the point where a fired arrow lands.");
         batBow.addUse("Creates a trail of bats following any fired arrow.");
         addItem(batBow);
 
-        CustomItem chickenBow = new CustomItem(CHICKEN_BOW, Material.BOW);
+        CustomEquipment chickenBow = new CustomEquipment(CHICKEN_BOW, Material.BOW);
         chickenBow.addUse("Creates chickens at the point where a fired arrow lands.");
         chickenBow.addUse("Creates a trail of chickens following any fired arrow.");
         addItem(chickenBow);

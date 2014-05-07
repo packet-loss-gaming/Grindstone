@@ -9,7 +9,7 @@ package com.skelril.aurora.util.item.custom;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
-public class CustomWeapon extends CustomItem {
+public class CustomWeapon extends CustomEquipment {
 
     private final double damageMod;
 

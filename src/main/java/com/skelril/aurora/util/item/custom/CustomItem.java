@@ -11,7 +11,6 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.Repairable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -103,11 +102,8 @@ public class CustomItem {
         }
         List<String> lore = tags.stream().map(e -> e.getColor() + e.getKey() + ": " + e.getProp()).collect(Collectors.toList());
         lore.addAll(this.lore);
-        meta.setLore(lore);
+        if (lore.size() > 0) meta.setLore(lore);
         meta.setDisplayName(item.toString());
-        if (meta instanceof Repairable) {
-            ((Repairable) meta).setRepairCost(400);
-        }
         itemStack.setItemMeta(meta);
         return itemStack;
     }
