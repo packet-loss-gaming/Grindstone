@@ -577,13 +577,18 @@ public class AdminStoreComponent extends BukkitComponent {
         name = name.toUpperCase().replace(" ", "_");
 
         List<ItemStack> itemStacks = new ArrayList<>();
-
         ItemStack stack;
-        try {
-            CustomItems item = CustomItems.valueOf(name);
-            stack = CustomItemCenter.build(item);
-        } catch (IllegalArgumentException ex) {
-            throw new CommandException("Please report this error, " + name + " could not be found.");
+
+        ItemType type = ItemType.lookup(name);
+        if (type == null) {
+            try {
+                CustomItems item = CustomItems.valueOf(name);
+                stack = CustomItemCenter.build(item);
+            } catch (IllegalArgumentException ex) {
+                throw new CommandException("Please report this error, " + name + " could not be found.");
+            }
+        } else {
+            stack = new ItemStack(type.getID(), 1, (short) type.getData());
         }
         for (int i = amount; i > 0;) {
             ItemStack cloned = stack.clone();
