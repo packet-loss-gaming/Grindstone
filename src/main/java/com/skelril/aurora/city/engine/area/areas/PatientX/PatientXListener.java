@@ -166,7 +166,9 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
             if (attacker.equals(parent.boss)) {
-                event.setDamage(2000);
+                if (!ItemUtil.hasNecrosArmour(player)) {
+                    event.setDamage(2000);
+                }
                 return;
             }
             if (ItemUtil.hasAncientArmour(player) && parent.difficulty >= Difficulty.HARD.getValue()) {
