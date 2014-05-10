@@ -99,7 +99,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         Class specClass = attack.getClass();
         LivingEntity target = attack.getTarget();
 
-        if (target != null && target instanceof Zombie) {
+        if (target != null && target.equals(parent.boss)) {
             if (bossBlacklistedSpecs.contains(specClass)) {
                 event.setCancelled(true);
                 return;
