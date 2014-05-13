@@ -74,7 +74,10 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         Player player = event.getPlayer();
         ItemStack item = event.getItem().getItemStack();
         if (!parent.contains(player) || item.getTypeId() != ItemID.SUGAR) return;
-        EntityUtil.forceDamage(player, 1);
+        if (ChanceUtil.getChance(5)) {
+            EntityUtil.forceDamage(player, 1);
+            EntityUtil.heal(parent.boss, 1);
+        }
         event.setCancelled(true);
     }
 
