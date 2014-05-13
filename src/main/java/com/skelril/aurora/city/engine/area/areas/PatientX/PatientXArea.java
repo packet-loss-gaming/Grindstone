@@ -8,6 +8,7 @@ package com.skelril.aurora.city.engine.area.areas.PatientX;
 
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
@@ -27,6 +28,7 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -44,7 +46,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     protected static final Random random = new Random();
     protected static final int groundLevel = 54;
-    protected static final int OPTION_COUNT = 7;
+    protected static final int OPTION_COUNT = 8;
 
     protected ProtectedRegion ice;
 
@@ -246,6 +248,14 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 }
                 ChatUtil.sendWarning(contained, "Awe, I love you too!");
                 ChatUtil.sendWarning(contained, "But only cause I'm a little batty...");
+                break;
+            case 8:
+                for (Zombie zombie : getContained(Zombie.class)) {
+                    if (!zombie.isBaby()) continue;
+                    zombie.setHealth(0);
+                    world.dropItem(zombie.getLocation(), new ItemStack(ItemID.SUGAR));
+                }
+                ChatUtil.sendNotice(contained, "I'm so sweet!");
                 break;
         }
     }

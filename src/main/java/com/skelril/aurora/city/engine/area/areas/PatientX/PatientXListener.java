@@ -38,6 +38,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
@@ -66,6 +67,15 @@ public class PatientXListener extends AreaListener<PatientXArea> {
     public void onCreepSpeak(CreepSpeakEvent event) {
 
         if (parent.contains(event.getPlayer()) || parent.contains(event.getTargeter())) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onItemPickup(PlayerPickupItemEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem().getItemStack();
+        if (!parent.contains(player) || item.getTypeId() != ItemID.SUGAR) return;
+        EntityUtil.forceDamage(player, 1);
+        event.setCancelled(true);
     }
 
     private static Set<Class> generalBlacklistedSpecs = new HashSet<>();
