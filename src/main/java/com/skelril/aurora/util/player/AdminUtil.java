@@ -22,6 +22,6 @@ public class AdminUtil {
             returned.add(e);
         }
         //noinspection unchecked
-        return returned.toArray((T[]) Array.newInstance(entities.getClass(), returned.size()));
+        return returned.toArray((T[]) Array.newInstance(entities.getClass().getComponentType(), returned.size()));
     }
 }
