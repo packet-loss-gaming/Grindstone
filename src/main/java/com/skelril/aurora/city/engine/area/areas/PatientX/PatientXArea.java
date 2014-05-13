@@ -19,6 +19,7 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.area.AreaComponent;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.player.AdminUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -31,6 +32,7 @@ import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +48,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     protected static final Random random = new Random();
     protected static final int groundLevel = 54;
-    protected static final int OPTION_COUNT = 8;
+    protected static final int OPTION_COUNT = 9;
 
     protected ProtectedRegion ice;
 
@@ -85,7 +87,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             server.getScheduler().runTaskTimer(inst, this::runAttack, 0, 20 * 20);
 
             destinations.add(new Location(world, -180, 54, 109.5));
-            destinations.add(new Location(world, -172, 54, 120));
+            destinations.add(new Location(world, -173, 54, 120));
             destinations.add(new Location(world, -203, 58, 135.5));
             destinations.add(new Location(world, -213, 58, 116));
             destinations.add(new Location(world, -230.5, 50, 110));
@@ -105,7 +107,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             equalize();
             teleportRandom();
             freezeEntities();
-            freezeBlocks();
+            freezeBlocks(false);
             spawnCreatures();
             printBossHealth();
         }
@@ -132,15 +134,12 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     private void spawnCreatures() {
-        LivingEntity[] entities = getContained(LivingEntity.class);
+        LivingEntity[] entities = AdminUtil.removeAdmin(getContained(LivingEntity.class), admin);
         if (entities.length > 500) {
             ChatUtil.sendWarning(getContained(Player.class), "Ring-a-round the rosie, a pocket full of posies...");
             boss.setHealth(boss.getMaxHealth());
             for (Entity entity : entities) {
                 if (entity instanceof Player) {
-                    if (admin.isAdmin((Player) entity)) {
-                        continue;
-                    }
                     ((Player) entity).setHealth(0);
                 } else if (!entity.equals(boss)) {
                     entity.remove();
@@ -149,7 +148,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             return;
         }
 
-        double amt = Math.pow(getContained(Player.class).length + 1, 2);
+        double amt = Math.pow(AdminUtil.removeAdmin(getContained(Player.class), admin).length + 1, 2);
         Location l = getCentralLoc();
         for (int i = 0; i < amt; i++) {
             Zombie zombie = getWorld().spawn(l, Zombie.class);
@@ -174,28 +173,24 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
         if (!isBossSpawned()) return;
 
-        Player[] contained = getContained(Player.class);
+        Player[] spectator = getContained(Player.class);
+        Player[] contained = AdminUtil.removeAdmin(spectator, admin);
         if (contained == null || contained.length <= 0) return;
 
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
 
         switch (attackCase) {
             case 1:
-                if (contained.length > 1) {
-                    final Player player = contained[0];
-                    player.teleport(new Location(getWorld(), -203.5, 50, 133));
-                    server.getScheduler().runTaskLater(inst, () -> {
-                        if (player.isValid() && !contains(player)) return;
-                        if (!targetP.isEmpty()) {
-                            player.setHealth(0);
-                            ChatUtil.sendWarning(getContained(Player.class), "Just\"ice\" has been served.");
-                        } else {
-                            player.teleport(getRandomDest());
-                        }
-                    }, 20 * 17);
-                    ChatUtil.sendWarning(contained, "Find me to save your friend...");
-                    break;
+                ChatUtil.sendWarning(spectator, "Let's play musical chairs!");
+                for (Player player : contained) {
+                    player.teleport(getRandomDest());
+                    if (boss.hasLineOfSight(player)) {
+                        player.setHealth(ChanceUtil.getRandom(player.getMaxHealth()));
+                        ChatUtil.sendWarning(player, "Don't worry, I have a medical degree...");
+                        ChatUtil.sendWarning(player, "...or was that a certificate of insanity?");
+                    }
                 }
+                break;
             case 2:
                 for (Player player : contained) {
                     final double old = player.getHealth();
@@ -205,7 +200,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                         player.setHealth(old * .75);
                     }, 20 * 2);
                 }
-                ChatUtil.sendWarning(contained, "This special attack will be a \"smashing hit\"!");
+                ChatUtil.sendWarning(spectator, "This special attack will be a \"smashing hit\"!");
                 break;
             case 3:
                 for (Player player : contained) {
@@ -218,13 +213,13 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                         ));
                     }
                 }
-                ChatUtil.sendWarning(contained, "Your performance is really going to \"bomb\"!");
+                ChatUtil.sendWarning(spectator, "Your performance is really going to \"bomb\"!");
                 break;
             case 4:
                 for (Player player : contained) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 15, 1));
                 }
-                ChatUtil.sendWarning(contained, "Like a candle I hope you don't \"whither\" and die!");
+                ChatUtil.sendWarning(spectator, "Like a candle I hope you don't \"whither\" and die!");
                 break;
             case 5:
                 for (Player player : contained) {
@@ -232,13 +227,13 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                         DeathUtil.throwSlashPotion(player.getLocation());
                     }
                 }
-                ChatUtil.sendWarning(contained, "Splash to it!");
+                ChatUtil.sendWarning(spectator, "Splash to it!");
                 break;
             case 6:
                 for (Player player : contained) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 60, 2));
                 }
-                ChatUtil.sendWarning(contained, "What's the mater, got cold feet?");
+                ChatUtil.sendWarning(spectator, "What's the mater, got cold feet?");
                 break;
             case 7:
                 for (Player player : contained) {
@@ -246,8 +241,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     Bat b = getWorld().spawn(player.getLocation(), Bat.class);
                     b.setPassenger(player);
                 }
-                ChatUtil.sendWarning(contained, "Awe, I love you too!");
-                ChatUtil.sendWarning(contained, "But only cause I'm a little batty...");
+                ChatUtil.sendWarning(spectator, "Awe, I love you too!");
+                ChatUtil.sendWarning(spectator, "But only cause I'm a little batty...");
                 break;
             case 8:
                 for (Zombie zombie : getContained(Zombie.class)) {
@@ -255,13 +250,21 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     zombie.setHealth(0);
                     world.dropItem(zombie.getLocation(), new ItemStack(ItemID.SUGAR));
                 }
-                ChatUtil.sendNotice(contained, "I'm so sweet!");
+                ChatUtil.sendWarning(spectator, "I'm so sweet!");
+                break;
+            case 9:
+                server.getScheduler().runTaskLater(inst, () -> {
+                    for (int i = ChanceUtil.getRangedRandom(10, 20); i > 0; i--) {
+                        server.getScheduler().runTaskLater(inst, () -> freezeBlocks(true), i * 10);
+                    }
+                }, 7 * 20);
+                ChatUtil.sendWarning(spectator, "Let's have a snow ball fight!");
                 break;
         }
     }
 
     private void freezeEntities() {
-        for (LivingEntity entity : getContained(LivingEntity.class)) {
+        for (LivingEntity entity : AdminUtil.removeAdmin(getContained(LivingEntity.class), admin)) {
             if (entity.equals(boss)) continue;
             if (!EnvironmentUtil.isWater(entity.getLocation().getBlock())) {
                 continue;
@@ -275,7 +278,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         }
     }
 
-    private void freezeBlocks() {
+    private void freezeBlocks(boolean throwExplosives) {
         int minX = ice.getMinimumPoint().getBlockX();
         int maxX = ice.getMaximumPoint().getBlockX();
         int minZ = ice.getMinimumPoint().getBlockZ();
@@ -289,6 +292,13 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                         && EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN))) {
                     if (block.getTypeId() == BlockID.PACKED_ICE) {
                         block.setTypeId(BlockID.STATIONARY_WATER);
+                        if (!ChanceUtil.getChance(10) || !throwExplosives) continue;
+                        Location target = block.getRelative(BlockFace.UP).getLocation();
+                        for (int i = ChanceUtil.getRandom(3); i > 0; i--) {
+                            Snowball melvin = world.spawn(target, Snowball.class);
+                            melvin.setVelocity(new Vector(0, ChanceUtil.getRangedRandom(.25, 1), 0));
+                            melvin.setShooter(boss);
+                        }
                     } else if (ChanceUtil.getChance(config.iceChance)) {
                         block.setTypeId(BlockID.PACKED_ICE);
                     }

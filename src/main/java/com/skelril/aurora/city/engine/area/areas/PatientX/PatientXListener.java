@@ -30,14 +30,11 @@ import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import org.bukkit.ChatColor;
-import org.bukkit.Difficulty;
+import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
@@ -134,13 +131,11 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         }
     }
 
-    private static Set<EntityDamageByEntityEvent.DamageCause> acceptedReasons = new HashSet<>();
+    private static Set<EntityDamageByEntityEvent.DamageCause> blockedDamage = new HashSet<>();
 
     static {
-        acceptedReasons.add(EntityDamageEvent.DamageCause.ENTITY_ATTACK);
-        acceptedReasons.add(EntityDamageEvent.DamageCause.PROJECTILE);
-        acceptedReasons.add(EntityDamageEvent.DamageCause.MAGIC);
-        acceptedReasons.add(EntityDamageEvent.DamageCause.THORNS);
+        blockedDamage.add(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION);
+        blockedDamage.add(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -164,6 +159,11 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             } else if (!(attacker instanceof LivingEntity)) return;
         }
 
+        if (defender.equals(parent.boss) && blockedDamage.contains(event.getCause())) {
+            event.setCancelled(true);
+            return;
+        }
+
         if (attacker == null || !parent.contains(attacker)) return;
 
 
@@ -184,11 +184,23 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 }
                 return;
             }
-            if (ItemUtil.hasAncientArmour(player) && parent.difficulty >= Difficulty.HARD.getValue()) {
+            if (ItemUtil.hasAncientArmour(player)) {
                 double diff = player.getMaxHealth() - player.getHealth();
                 if (ChanceUtil.getChance((int) Math.max(parent.difficulty, Math.round(player.getMaxHealth() - diff)))) {
                     EffectUtil.Ancient.powerBurst(player, event.getDamage());
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onProjectileHit(ProjectileHitEvent event) {
+        Projectile p = event.getEntity();
+        if (!parent.contains(p)) return;
+        if (p instanceof Snowball) {
+            if (parent.boss != null && parent.boss.equals(p.getShooter())) {
+                Location pt = p.getLocation();
+                p.getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), parent.difficulty, false, false);
             }
         }
     }
