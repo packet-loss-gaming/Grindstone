@@ -14,4 +14,6 @@ public class PatientXConfig extends ConfigurationBase {
     public int baseHealth = 700;
     @Setting("ice-chance")
     public int iceChance = 12;
+    @Setting("player-value")
+    public int playerVal = 50000;
 }

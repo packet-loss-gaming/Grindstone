@@ -29,6 +29,7 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -359,8 +360,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         boss.setRemoveWhenFarAway(false);
 
         // Handle items
-        boss.getEquipment().setArmorContents(null);
-        boss.getEquipment().setItemInHand(null);
+        EntityEquipment equipment = boss.getEquipment();
+        equipment.setArmorContents(null);
+        equipment.setItemInHand(null);
         boss.setCanPickupItems(false);
 
         // Handle name
@@ -369,7 +371,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         ChatUtil.sendWarning(getContained(Player.class), "Ice to meet you again!");
     }
 
-    private Location getCentralLoc() {
+    protected Location getCentralLoc() {
         BlockVector min = region.getMinimumPoint();
         BlockVector max = region.getMaximumPoint();
 

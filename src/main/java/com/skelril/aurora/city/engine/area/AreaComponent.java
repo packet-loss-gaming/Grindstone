@@ -67,6 +67,10 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
     @Override
     public abstract void run();
 
+    public Config getConfig() {
+        return config;
+    }
+
     public <T extends Entity> T[] getContained(Class<T> clazz) {
         return getContained(0, clazz);
     }

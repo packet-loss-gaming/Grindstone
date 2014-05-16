@@ -7,6 +7,7 @@
 package com.skelril.aurora.city.engine.area.areas.PatientX;
 
 import com.sk89q.worldedit.blocks.ItemID;
+import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.city.engine.area.AreaListener;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
@@ -30,7 +31,10 @@ import com.skelril.aurora.util.EntityUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import com.skelril.aurora.util.player.PlayerState;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
@@ -44,9 +48,7 @@ import org.bukkit.projectiles.ProjectileSource;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PatientXListener extends AreaListener<PatientXArea> {
@@ -86,7 +88,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
     public void onItemPickup(PlayerPickupItemEvent event) {
         Player player = event.getPlayer();
         ItemStack item = event.getItem().getItemStack();
-        if (!parent.contains(player) || item.getTypeId() != ItemID.SUGAR) return;
+        if (parent.boss == null || !parent.contains(player) || item.getTypeId() != ItemID.SUGAR) return;
         if (ChanceUtil.getChance(5)) {
             EntityUtil.forceDamage(player, 1);
             EntityUtil.heal(parent.boss, 1);
@@ -244,10 +246,34 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     return;
                 }
 
+                List<ItemStack> drops = new ArrayList<>();
+                int playerCount = parent.getContained(Player.class).length;
+                int dropVal = parent.getConfig().playerVal * playerCount;
+                drops.addAll(SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), -1, dropVal));
+
+                switch (ChanceUtil.getRandom(4)) {
+                    case 1:
+                        drops.add(CustomItemCenter.build(CustomItems.NECROS_HELMET));
+                        break;
+                    case 2:
+                        drops.add(CustomItemCenter.build(CustomItems.NECROS_CHESTPLATE));
+                        break;
+                    case 3:
+                        drops.add(CustomItemCenter.build(CustomItems.NECROS_LEGGINGS));
+                        break;
+                    case 4:
+                        drops.add(CustomItemCenter.build(CustomItems.NECROS_BOOTS));
+                        break;
+                }
+
                 LocalDate date = LocalDate.now().with(Month.APRIL).withDayOfMonth(6);
                 if (date.equals(LocalDate.now())) {
                     ChatUtil.sendNotice(parent.getContained(Player.class), ChatColor.GOLD, "DROPS DOUBLED!");
                     event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
+                }
+
+                for (ItemStack stack : drops) {
+                    parent.getWorld().dropItem(parent.getCentralLoc(), stack);
                 }
 
                 // Reset respawn mechanics
