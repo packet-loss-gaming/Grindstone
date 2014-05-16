@@ -124,7 +124,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 admin.deadmin(player);
 
                 if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
-                    player.damage(2000, boss);
+                    ChatUtil.sendWarning(player, "Your defensive potion enrages me!");
+                    modifyDifficulty(1);
+                    player.damage(difficulty * config.baseBossHit, boss);
                 }
 
                 Entity vehicle = player.getVehicle();
@@ -273,7 +275,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 final int burst = ChanceUtil.getRangedRandom(10, 20);
                 server.getScheduler().runTaskLater(inst, () -> {
                     for (int i = burst; i > 0; i--) {
-                        server.getScheduler().runTaskLater(inst, () -> freezeBlocks(true), i * 10);
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            if (boss != null) freezeBlocks(true);
+                        }, i * 10);
                     }
                 }, 7 * 20);
                 attackDur = System.currentTimeMillis() + 7000 + (500 * burst);
@@ -317,7 +321,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 Block block = world.getBlockAt(x, y, z);
                 if (block.getRelative(BlockFace.UP).getTypeId() == 0
                         && EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN))) {
-                    if (percentage == 100) {
+                    if (percentage >= 100) {
                         block.setTypeId(BlockID.ICE);
                         continue;
                     }
@@ -379,6 +383,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     public void spawnBoss() {
 
         resetDifficulty();
+        freezeBlocks(false);
 
         boss = getWorld().spawn(getCentralLoc(), Zombie.class);
 

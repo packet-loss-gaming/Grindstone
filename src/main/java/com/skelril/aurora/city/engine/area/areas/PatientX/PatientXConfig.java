@@ -12,6 +12,8 @@ import com.zachsthings.libcomponents.config.Setting;
 public class PatientXConfig extends ConfigurationBase {
     @Setting("boss-health")
     public int bossHealth = 1000;
+    @Setting("base-boss-hit")
+    public double baseBossHit = 175;
     @Setting("ice-chance")
     public int iceChance = 12;
     @Setting("ice-explosive-change-chance")

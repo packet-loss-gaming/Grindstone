@@ -215,7 +215,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             Player player = (Player) defender;
             if (attacker.equals(parent.boss)) {
                 if (!ItemUtil.hasNecrosArmour(player)) {
-                    event.setDamage(parent.difficulty * 175);
+                    event.setDamage(parent.difficulty * parent.getConfig().baseBossHit);
                 }
                 return;
             }
@@ -251,11 +251,11 @@ public class PatientXListener extends AreaListener<PatientXArea> {
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
 
-        if (parent.contains(event.getEntity()) && parent.boss != null) {
+        if (parent.contains(event.getEntity())) {
             Entity e = event.getEntity();
             if (e instanceof Zombie) {
                 event.getDrops().clear();
-                if (((Zombie) e).isBaby()) {
+                if (((Zombie) e).isBaby() || parent.boss == null) {
                     if (ChanceUtil.getChance(10)) {
                         event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, 1));
                     }
@@ -313,7 +313,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 DropPartyTask task = new DropPartyTask(parent.getWorld(), rg, drops, 3000);
                 task.setXPChance(5);
                 task.setXPSize(10);
-                task.start(CommandBook.inst(), server.getScheduler());
+                task.start(CommandBook.inst(), server.getScheduler(), 20 * 5);
                 parent.freezeBlocks(100, false);
 
                 // Reset respawn mechanics

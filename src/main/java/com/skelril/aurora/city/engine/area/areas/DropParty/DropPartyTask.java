@@ -41,6 +41,10 @@ public class DropPartyTask {
     }
 
     public void start(Plugin plugin, BukkitScheduler scheduler) {
+        start(plugin, scheduler, 0);
+    }
+
+    public void start(Plugin plugin, BukkitScheduler scheduler, long delay) {
         runnable.setTask(scheduler.runTaskTimer(plugin, runnable, 0, 20));
     }
 
