@@ -14,6 +14,8 @@ public class PatientXConfig extends ConfigurationBase {
     public int bossHealth = 1000;
     @Setting("ice-chance")
     public int iceChance = 12;
+    @Setting("ice-explosive-change-chance")
+    public int iceChangeChance = 30;
     @Setting("snow-ball-chance")
     public int snowBallChance = 10;
     @Setting("player-value")

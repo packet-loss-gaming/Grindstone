@@ -100,6 +100,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         if (ChanceUtil.getChance(5)) {
             EntityUtil.forceDamage(player, 1);
             EntityUtil.heal(parent.boss, 1);
+            parent.modifyDifficulty(-.1);
         }
         event.setCancelled(true);
     }
@@ -204,13 +205,17 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 }
             }
 
+            if (projectile != null) {
+                com.sk89q.commandbook.util.entity.EntityUtil
+                        .sendProjectilesFromEntity(parent.boss, 12, .5F, Snowball.class);
+            }
             parent.modifyDifficulty(.5);
             parent.teleportRandom(true);
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
             if (attacker.equals(parent.boss)) {
                 if (!ItemUtil.hasNecrosArmour(player)) {
-                    event.setDamage(2000);
+                    event.setDamage(parent.difficulty * 175);
                 }
                 return;
             }

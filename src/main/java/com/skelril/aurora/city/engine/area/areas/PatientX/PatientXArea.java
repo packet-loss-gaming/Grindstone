@@ -112,7 +112,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             equalize();
             teleportRandom();
             freezeEntities();
-            freezeBlocks(false);
+            freezeBlocks(ChanceUtil.getChance((int) Math.ceil(config.iceChangeChance - difficulty)));
             spawnCreatures();
             printBossHealth();
         }
@@ -215,7 +215,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 break;
             case 3:
                 for (Player player : contained) {
-                    for (int i = 0; i < ChanceUtil.getRandom(10) + 5; i++) {
+                    for (double i = ChanceUtil.getRangedRandom(difficulty, Math.pow(2, difficulty)); i > 0; i--) {
                         Entity e = getWorld().spawnEntity(player.getLocation(), EntityType.PRIMED_TNT);
                         e.setVelocity(new org.bukkit.util.Vector(
                                 random.nextDouble() * 1 - .5,
