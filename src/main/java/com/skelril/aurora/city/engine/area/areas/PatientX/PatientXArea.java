@@ -335,7 +335,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
         for (Zombie e : getContained(Zombie.class)) {
             if (e.isValid() && !e.isBaby()) {
-                if (e.getMaxHealth() == config.baseHealth + (difficulty * 100)) {
+                if (e.getMaxHealth() == config.bossHealth) {
                     if (!found) {
                         boss = e;
                         found = true;
@@ -364,8 +364,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         boss = getWorld().spawn(getCentralLoc(), Zombie.class);
 
         // Handle vitals
-        boss.setMaxHealth(config.baseHealth + (difficulty * 100));
-        boss.setHealth(config.baseHealth + (difficulty * 100));
+        boss.setMaxHealth(config.bossHealth);
+        boss.setHealth(config.bossHealth);
         boss.setRemoveWhenFarAway(false);
 
         // Handle items

@@ -10,8 +10,8 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 
 public class PatientXConfig extends ConfigurationBase {
-    @Setting("base-health")
-    public int baseHealth = 700;
+    @Setting("boss-health")
+    public int bossHealth = 1000;
     @Setting("ice-chance")
     public int iceChance = 12;
     @Setting("snow-ball-chance")
