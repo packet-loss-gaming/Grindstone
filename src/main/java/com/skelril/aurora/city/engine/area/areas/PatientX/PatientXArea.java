@@ -154,6 +154,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         Location l = getCentralLoc();
         for (int i = 0; i < amt; i++) {
             Zombie zombie = getWorld().spawn(l, Zombie.class);
+            zombie.setCanPickupItems(false);
             zombie.setBaby(true);
         }
     }
@@ -349,21 +350,30 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     public void spawnBoss() {
-        boss = (Zombie) getWorld().spawnEntity(getCentralLoc(), EntityType.ZOMBIE);
+        boss = getWorld().spawn(getCentralLoc(), Zombie.class);
+
+        // Handle vitals
         boss.setMaxHealth(config.baseHealth + (difficulty * 100));
         boss.setHealth(config.baseHealth + (difficulty * 100));
         boss.setRemoveWhenFarAway(false);
+
+        // Handle items
+        boss.getEquipment().setArmorContents(null);
+        boss.getEquipment().setItemInHand(null);
+        boss.setCanPickupItems(false);
+
+        // Handle name
         boss.setCustomName("Patient X");
 
         ChatUtil.sendWarning(getContained(Player.class), "Ice to meet you again!");
     }
 
     private Location getCentralLoc() {
-        BlockVector min = getRegion().getMinimumPoint();
-        BlockVector max = getRegion().getMaximumPoint();
+        BlockVector min = region.getMinimumPoint();
+        BlockVector max = region.getMaximumPoint();
 
         Region region = new CuboidRegion(min, max);
-        return BukkitUtil.toLocation(getWorld(), region.getCenter().setY(groundLevel));
+        return BukkitUtil.toLocation(world, region.getCenter().setY(groundLevel));
     }
 
     protected Location getRandomDest() {
