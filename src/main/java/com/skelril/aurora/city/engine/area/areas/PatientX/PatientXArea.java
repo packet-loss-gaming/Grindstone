@@ -53,7 +53,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     protected AdminToolkit adminKit;
 
-    protected ProtectedRegion ice, entry;
+    protected ProtectedRegion ice, drops, entry;
 
     protected Zombie boss = null;
     protected int lastAttack = 0;
@@ -74,6 +74,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             String base = "glacies-mare-district-mad-man";
             region = manager.getRegion(base);
             ice = manager.getRegion(base + "-ice");
+            drops = manager.getRegion(base + "-drops");
             entry = manager.getRegion("carpe-diem-district-theater-patient-x");
             tick = 8 * 20;
             listener = new PatientXListener(this);
@@ -284,7 +285,11 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         }
     }
 
-    private void freezeBlocks(boolean throwExplosives) {
+    protected void freezeBlocks(boolean throwExplosives) {
+        freezeBlocks(config.iceChance, throwExplosives);
+    }
+
+    protected void freezeBlocks(int percentage, boolean throwExplosives) {
         int minX = ice.getMinimumPoint().getBlockX();
         int maxX = ice.getMaximumPoint().getBlockX();
         int minZ = ice.getMinimumPoint().getBlockZ();
@@ -296,16 +301,20 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 Block block = world.getBlockAt(x, y, z);
                 if (block.getRelative(BlockFace.UP).getTypeId() == 0
                         && EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN))) {
-                    if (block.getTypeId() == BlockID.PACKED_ICE) {
+                    if (percentage == 100) {
+                        block.setTypeId(BlockID.ICE);
+                        continue;
+                    }
+                    if (block.getTypeId() == BlockID.PACKED_ICE || block.getTypeId() == BlockID.ICE) {
                         block.setTypeId(BlockID.STATIONARY_WATER);
-                        if (!ChanceUtil.getChance(10) || !throwExplosives) continue;
+                        if (!ChanceUtil.getChance(config.snowBallChance) || !throwExplosives) continue;
                         Location target = block.getRelative(BlockFace.UP).getLocation();
                         for (int i = ChanceUtil.getRandom(3); i > 0; i--) {
                             Snowball melvin = world.spawn(target, Snowball.class);
                             melvin.setVelocity(new Vector(0, ChanceUtil.getRangedRandom(.25, 1), 0));
                             melvin.setShooter(boss);
                         }
-                    } else if (ChanceUtil.getChance(config.iceChance)) {
+                    } else if (ChanceUtil.getChance(percentage, 100)) {
                         block.setTypeId(BlockID.PACKED_ICE);
                     }
                 }

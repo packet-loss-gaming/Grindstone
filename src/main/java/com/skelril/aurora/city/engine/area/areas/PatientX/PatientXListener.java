@@ -6,9 +6,12 @@
 
 package com.skelril.aurora.city.engine.area.areas.PatientX;
 
+import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.sk89q.worldedit.regions.CuboidRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.city.engine.area.AreaListener;
+import com.skelril.aurora.city.engine.area.areas.DropParty.DropPartyTask;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
@@ -37,6 +40,7 @@ import com.skelril.aurora.util.player.PlayerState;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Server;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -45,14 +49,18 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.util.Vector;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class PatientXListener extends AreaListener<PatientXArea> {
-
+    private final CommandBook inst = CommandBook.inst();
+    private final Logger log = inst.getLogger();
+    private final Server server = CommandBook.server();
 
     public PatientXListener(PatientXArea parent) {
         super(parent);
@@ -246,8 +254,13 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     return;
                 }
 
+                Player[] spectator = parent.getContained(Player.class);
+                Player[] contained = parent.adminKit.removeAdmin(spectator);
+                ChatUtil.sendWarning(spectator, "So you think you've won? Ha!");
+                ChatUtil.sendWarning(spectator, "I'll get you next time...");
+
                 List<ItemStack> drops = new ArrayList<>();
-                int playerCount = parent.getContained(Player.class).length;
+                int playerCount = contained.length;
                 int dropVal = parent.getConfig().playerVal * playerCount;
                 drops.addAll(SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), -1, dropVal));
 
@@ -272,9 +285,27 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
                 }
 
-                for (ItemStack stack : drops) {
-                    parent.getWorld().dropItem(parent.getCentralLoc(), stack);
+                Location target = parent.getCentralLoc();
+                for (Player player : contained) {
+                    player.teleport(target);
+                    Vector v = new Vector(
+                            ChanceUtil.getChance(2) ? 1 : -1,
+                            0,
+                            ChanceUtil.getChance(2) ? 1 : -1
+                    );
+                    if (ChanceUtil.getChance(2)) {
+                        v.setX(0);
+                    } else {
+                        v.setZ(0);
+                    }
+                    player.setVelocity(v);
                 }
+                CuboidRegion rg = new CuboidRegion(parent.drops.getMinimumPoint(), parent.drops.getMaximumPoint());
+                DropPartyTask task = new DropPartyTask(parent.getWorld(), rg, drops, 3000);
+                task.setXPChance(5);
+                task.setXPSize(10);
+                task.start(CommandBook.inst(), server.getScheduler());
+                parent.freezeBlocks(100, false);
 
                 // Reset respawn mechanics
                 parent.lastDeath = System.currentTimeMillis();
