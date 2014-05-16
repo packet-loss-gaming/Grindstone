@@ -260,7 +260,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 ChatUtil.sendWarning(spectator, "I'll get you next time...");
 
                 List<ItemStack> drops = new ArrayList<>();
-                int playerCount = contained.length;
+                int playerCount = spectator.length < 1 ? 1 : contained.length;
                 int dropVal = parent.getConfig().playerVal * playerCount;
                 drops.addAll(SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), -1, dropVal));
 
