@@ -55,6 +55,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     protected ProtectedRegion ice;
 
     protected Zombie boss = null;
+    protected int lastAttack = 0;
     protected long lastDeath = 0;
     protected long lastTelep = 0;
     protected int difficulty = 3;
@@ -262,6 +263,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 ChatUtil.sendWarning(spectator, "Let's have a snow ball fight!");
                 break;
         }
+        lastAttack = attackCase;
     }
 
     private void freezeEntities() {

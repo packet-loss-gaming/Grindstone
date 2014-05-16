@@ -259,9 +259,35 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     player.getExp()));
             event.getDrops().clear();
 
-            int number = 0;
             String deathMessage;
-            switch (number) {
+            switch (parent.lastAttack) {
+                case 1:
+                    deathMessage = " tripped over a chair";
+                    break;
+                case 2:
+                    deathMessage = " got smashed";
+                    break;
+                case 3:
+                    deathMessage = " bombed a performance evaluation";
+                    break;
+                case 4:
+                    deathMessage = " became a fellow candle";
+                    break;
+                case 5:
+                    deathMessage = " loves toxic fluids";
+                    break;
+                case 6:
+                    deathMessage = " lost a foot or two";
+                    break;
+                case 7:
+                    deathMessage = " went batty";
+                    break;
+                case 8:
+                    deathMessage = " has a big sweet tooth";
+                    break;
+                case 9:
+                    deathMessage = " took a snowball to the face";
+                    break;
                 default:
                     deathMessage = " froze";
                     break;
