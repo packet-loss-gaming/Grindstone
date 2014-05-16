@@ -14,8 +14,15 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AdminUtil {
-    public static <T extends Entity> T[] removeAdmin(T[] entities, AdminComponent admin) {
+public class AdminToolkit {
+
+    private AdminComponent admin;
+
+    public AdminToolkit(AdminComponent admin) {
+        this.admin = admin;
+    }
+
+    public <T extends Entity> T[] removeAdmin(T[] entities) {
         List<T> returned = new ArrayList<>();
         for (T e : entities) {
             if (e instanceof Player && admin.isAdmin((Player) e)) continue;

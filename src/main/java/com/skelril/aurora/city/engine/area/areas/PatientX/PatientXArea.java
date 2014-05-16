@@ -19,7 +19,7 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.area.AreaComponent;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.*;
-import com.skelril.aurora.util.player.AdminUtil;
+import com.skelril.aurora.util.player.AdminToolkit;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -50,6 +50,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     protected static final int groundLevel = 54;
     protected static final int OPTION_COUNT = 9;
 
+    protected AdminToolkit adminKit;
+
     protected ProtectedRegion ice;
 
     protected Zombie boss = null;
@@ -73,16 +75,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             tick = 8 * 20;
             listener = new PatientXListener(this);
             config = new PatientXConfig();
-        } catch (UnknownPluginException e) {
-            log.info("WorldGuard could not be found!");
-        }
-    }
-
-    @Override
-    public void enable() {
-        // WorldGuard loads late for some reason
-        server.getScheduler().runTaskLater(inst, () -> {
-            super.enable();
+            adminKit = new AdminToolkit(admin);
 
             server.getScheduler().runTaskTimer(inst, this::runAttack, 0, 20 * 20);
 
@@ -94,7 +87,15 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             destinations.add(new Location(world, -203.5, 47, 109.5));
             destinations.add(new Location(world, -173, 47, 109.5));
             destinations.add(getCentralLoc());
-        }, 1);
+        } catch (UnknownPluginException e) {
+            log.info("WorldGuard could not be found!");
+        }
+    }
+
+    @Override
+    public void enable() {
+        // WorldGuard loads late for some reason
+        server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
     @Override
@@ -134,7 +135,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     private void spawnCreatures() {
-        LivingEntity[] entities = AdminUtil.removeAdmin(getContained(LivingEntity.class), admin);
+        LivingEntity[] entities = adminKit.removeAdmin(getContained(LivingEntity.class));
         if (entities.length > 500) {
             ChatUtil.sendWarning(getContained(Player.class), "Ring-a-round the rosie, a pocket full of posies...");
             boss.setHealth(boss.getMaxHealth());
@@ -148,7 +149,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             return;
         }
 
-        double amt = Math.pow(AdminUtil.removeAdmin(getContained(Player.class), admin).length + 1, 2);
+        double amt = Math.pow(adminKit.removeAdmin(getContained(Player.class)).length + 1, 2);
         Location l = getCentralLoc();
         for (int i = 0; i < amt; i++) {
             Zombie zombie = getWorld().spawn(l, Zombie.class);
@@ -174,7 +175,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         if (!isBossSpawned()) return;
 
         Player[] spectator = getContained(Player.class);
-        Player[] contained = AdminUtil.removeAdmin(spectator, admin);
+        Player[] contained = adminKit.removeAdmin(spectator);
         if (contained == null || contained.length <= 0) return;
 
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
@@ -264,7 +265,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     private void freezeEntities() {
-        for (LivingEntity entity : AdminUtil.removeAdmin(getContained(LivingEntity.class), admin)) {
+        for (LivingEntity entity : adminKit.removeAdmin(getContained(LivingEntity.class))) {
             if (entity.equals(boss)) continue;
             if (!EnvironmentUtil.isWater(entity.getLocation().getBlock())) {
                 continue;
