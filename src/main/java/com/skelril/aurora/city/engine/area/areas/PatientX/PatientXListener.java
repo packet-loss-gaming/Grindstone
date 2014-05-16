@@ -73,7 +73,9 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         if (event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) {
             Player player = event.getPlayer();
             if (LocationUtil.isInRegion(parent.getWorld(), parent.entry, player)) {
-                player.teleport(parent.getRandomDest());
+                do {
+                    player.teleport(parent.getRandomDest());
+                } while (parent.boss.hasLineOfSight(player));
                 ChatUtil.sendWarning(player, "It's been a long time since I had a worthy opponent...");
                 ChatUtil.sendWarning(player, "Let's see if you have what it takes...");
             }
