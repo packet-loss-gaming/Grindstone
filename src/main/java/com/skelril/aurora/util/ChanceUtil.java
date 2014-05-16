@@ -40,6 +40,10 @@ public class ChanceUtil {
         return lowestValue + getRandom((highestValue + 1) - lowestValue) - 1;
     }
 
+    public static boolean getChance(Number number) {
+        return getChance(number.intValue());
+    }
+
     public static boolean getChance(int outOf) {
 
         return getChance(1, outOf);
