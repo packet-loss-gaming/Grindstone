@@ -10,6 +10,7 @@ import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.city.engine.area.AreaListener;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
+import com.skelril.aurora.events.custom.item.HymnSingEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
@@ -26,6 +27,7 @@ import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.GlowingFo
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EntityUtil;
+import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
@@ -64,6 +66,18 @@ public class PatientXListener extends AreaListener<PatientXArea> {
     public void onCreepSpeak(CreepSpeakEvent event) {
 
         if (parent.contains(event.getPlayer()) || parent.contains(event.getTargeter())) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onHymnUse(HymnSingEvent event) {
+        if (event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) {
+            Player player = event.getPlayer();
+            if (LocationUtil.isInRegion(parent.getWorld(), parent.entry, player)) {
+                player.teleport(parent.getRandomDest());
+                ChatUtil.sendWarning(player, "It's been a long time since I had a worthy opponent...");
+                ChatUtil.sendWarning(player, "Let's see if you have what it takes...");
+            }
+        }
     }
 
     @EventHandler(ignoreCancelled = true)

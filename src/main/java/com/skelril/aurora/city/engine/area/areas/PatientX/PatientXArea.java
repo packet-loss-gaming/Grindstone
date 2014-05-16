@@ -52,7 +52,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     protected AdminToolkit adminKit;
 
-    protected ProtectedRegion ice;
+    protected ProtectedRegion ice, entry;
 
     protected Zombie boss = null;
     protected int lastAttack = 0;
@@ -73,6 +73,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             String base = "glacies-mare-district-mad-man";
             region = manager.getRegion(base);
             ice = manager.getRegion(base + "-ice");
+            entry = manager.getRegion("carpe-diem-district-theater-patient-x");
             tick = 8 * 20;
             listener = new PatientXListener(this);
             config = new PatientXConfig();
