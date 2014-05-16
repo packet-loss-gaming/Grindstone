@@ -18,4 +18,10 @@ public class PatientXConfig extends ConfigurationBase {
     public int snowBallChance = 10;
     @Setting("player-value")
     public int playerVal = 50000;
+    @Setting("default-difficulty")
+    public int defaultDifficulty = 3;
+    @Setting("min-difficulty")
+    public int minDifficulty = 3;
+    @Setting("max-difficulty")
+    public int maxDifficulty = 9;
 }

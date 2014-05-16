@@ -192,15 +192,19 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
         if (attacker == null || !parent.contains(attacker)) return;
 
-
-        final Player[] contained = parent.getContained(Player.class);
-
         if (defender instanceof Zombie) {
             if (((Zombie) defender).isBaby()) {
                 return;
             }
 
-            parent.targetP = "";
+            if (attacker instanceof Player) {
+                ItemStack held = ((Player) attacker).getItemInHand();
+                if (held != null && held.getTypeId() == ItemID.BLAZE_ROD) {
+                    parent.modifyDifficulty(2);
+                }
+            }
+
+            parent.modifyDifficulty(.5);
             parent.teleportRandom(true);
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
@@ -212,7 +216,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             }
             if (ItemUtil.hasAncientArmour(player)) {
                 double diff = player.getMaxHealth() - player.getHealth();
-                if (ChanceUtil.getChance((int) Math.max(parent.difficulty, Math.round(player.getMaxHealth() - diff)))) {
+                if (ChanceUtil.getChance((int) Math.max(Math.round(parent.difficulty), Math.round(player.getMaxHealth() - diff)))) {
                     EffectUtil.Ancient.powerBurst(player, event.getDamage());
                 }
             }
@@ -226,7 +230,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         if (p instanceof Snowball) {
             if (parent.boss != null && parent.boss.equals(p.getShooter())) {
                 Location pt = p.getLocation();
-                p.getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), parent.difficulty, false, false);
+                p.getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), Math.round(parent.difficulty), false, false);
             }
         }
     }
@@ -324,6 +328,9 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         if (parent.contains(player) && !parent.admin.isAdmin(player) && !playerState.containsKey(player.getName())) {
             if (parent.contains(player) && parent.isBossSpawned()) {
                 EntityUtil.heal(boss, boss.getMaxHealth() / 4);
+                parent.resetDifficulty();
+                ChatUtil.sendWarning(parent.getContained(Player.class), "Haha, bow down "
+                        + player.getName() + ", show's over for you.");
             }
             playerState.put(player.getName(), new PlayerState(player.getName(),
                     player.getInventory().getContents(),
@@ -333,7 +340,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             event.getDrops().clear();
 
             String deathMessage;
-            switch (parent.lastAttack) {
+            switch (System.currentTimeMillis() > parent.attackDur ? 0 : parent.lastAttack) {
                 case 1:
                     deathMessage = " tripped over a chair";
                     break;

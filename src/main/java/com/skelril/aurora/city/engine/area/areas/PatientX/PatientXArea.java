@@ -56,11 +56,11 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     protected ProtectedRegion ice, drops, entry;
 
     protected Zombie boss = null;
+    protected long attackDur = 0;
     protected int lastAttack = 0;
     protected long lastDeath = 0;
     protected long lastTelep = 0;
-    protected int difficulty = 3;
-    protected String targetP = "";
+    protected double difficulty;
 
     protected List<Location> destinations = new ArrayList<>();
     protected final HashMap<String, PlayerState> playerState = new HashMap<>();
@@ -153,7 +153,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             return;
         }
 
-        double amt = Math.pow(adminKit.removeAdmin(getContained(Player.class)).length + 1, 2);
+        double amt = adminKit.removeAdmin(getContained(Player.class)).length * difficulty;
         Location l = getCentralLoc();
         for (int i = 0; i < amt; i++) {
             Zombie zombie = getWorld().spawn(l, Zombie.class);
@@ -168,6 +168,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         int max = (int) Math.ceil(boss.getMaxHealth());
 
         String message = "Boss Health: " + current + " / " + max;
+        double maxDiff = config.maxDifficulty - config.minDifficulty;
+        double curDiff = difficulty - config.minDifficulty;
+        message += " Enragement: " + (int) Math.round((curDiff / maxDiff) * 100) + "%";
         ChatUtil.sendNotice(getContained(Player.class), ChatColor.DARK_AQUA, message);
     }
 
@@ -196,6 +199,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                         ChatUtil.sendWarning(player, "...or was that a certificate of insanity?");
                     }
                 }
+                attackDur = System.currentTimeMillis() + 2000;
                 break;
             case 2:
                 for (Player player : contained) {
@@ -206,6 +210,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                         player.setHealth(old * .75);
                     }, 20 * 2);
                 }
+                attackDur = System.currentTimeMillis() + 3000;
                 ChatUtil.sendWarning(spectator, "This special attack will be a \"smashing hit\"!");
                 break;
             case 3:
@@ -219,12 +224,14 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                         ));
                     }
                 }
+                attackDur = System.currentTimeMillis() + 5000;
                 ChatUtil.sendWarning(spectator, "Your performance is really going to \"bomb\"!");
                 break;
             case 4:
                 for (Player player : contained) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 15, 1));
                 }
+                attackDur = System.currentTimeMillis() + 15750;
                 ChatUtil.sendWarning(spectator, "Like a candle I hope you don't \"whither\" and die!");
                 break;
             case 5:
@@ -233,12 +240,14 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                         DeathUtil.throwSlashPotion(player.getLocation());
                     }
                 }
+                attackDur = System.currentTimeMillis() + 2000;
                 ChatUtil.sendWarning(spectator, "Splash to it!");
                 break;
             case 6:
                 for (Player player : contained) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 60, 2));
                 }
+                attackDur = System.currentTimeMillis() + 20000;
                 ChatUtil.sendWarning(spectator, "What's the mater, got cold feet?");
                 break;
             case 7:
@@ -247,6 +256,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     Bat b = getWorld().spawn(player.getLocation(), Bat.class);
                     b.setPassenger(player);
                 }
+                attackDur = System.currentTimeMillis() + 20000;
                 ChatUtil.sendWarning(spectator, "Awe, I love you too!");
                 ChatUtil.sendWarning(spectator, "But only cause I'm a little batty...");
                 break;
@@ -256,14 +266,17 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     zombie.setHealth(0);
                     world.dropItem(zombie.getLocation(), new ItemStack(ItemID.SUGAR));
                 }
+                attackDur = System.currentTimeMillis() + 20000;
                 ChatUtil.sendWarning(spectator, "I'm so sweet!");
                 break;
             case 9:
+                final int burst = ChanceUtil.getRangedRandom(10, 20);
                 server.getScheduler().runTaskLater(inst, () -> {
-                    for (int i = ChanceUtil.getRangedRandom(10, 20); i > 0; i--) {
+                    for (int i = burst; i > 0; i--) {
                         server.getScheduler().runTaskLater(inst, () -> freezeBlocks(true), i * 10);
                     }
                 }, 7 * 20);
+                attackDur = System.currentTimeMillis() + 7000 + (500 * burst);
                 ChatUtil.sendWarning(spectator, "Let's have a snow ball fight!");
                 break;
         }
@@ -271,6 +284,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     private void freezeEntities() {
+        double total = 0;
         for (LivingEntity entity : adminKit.removeAdmin(getContained(LivingEntity.class))) {
             if (entity.equals(boss)) continue;
             if (!EnvironmentUtil.isWater(entity.getLocation().getBlock())) {
@@ -279,10 +293,12 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             if (entity instanceof Zombie) {
                 entity.setHealth(0);
                 EntityUtil.heal(boss, 1);
+                total += .02;
             } else if (!ChanceUtil.getChance(5)) {
                 entity.damage(ChanceUtil.getRandom(25));
             }
         }
+        modifyDifficulty(-total);
     }
 
     protected void freezeBlocks(boolean throwExplosives) {
@@ -361,6 +377,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     public void spawnBoss() {
+
+        resetDifficulty();
+
         boss = getWorld().spawn(getCentralLoc(), Zombie.class);
 
         // Handle vitals
@@ -406,5 +425,17 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
         boss.teleport(getRandomDest());
         ChatUtil.sendNotice(getContained(Player.class), "Pause for a second chap, I need to answer the teleport!");
+    }
+
+    public void setDifficulty(double difficulty) {
+        this.difficulty = Math.max(config.minDifficulty, Math.min(config.maxDifficulty, difficulty));
+    }
+
+    public void resetDifficulty() {
+        setDifficulty(config.defaultDifficulty);
+    }
+
+    public void modifyDifficulty(double amt) {
+        setDifficulty(this.difficulty + amt);
     }
 }
