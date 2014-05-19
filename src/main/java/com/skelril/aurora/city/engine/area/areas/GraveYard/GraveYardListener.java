@@ -102,7 +102,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 if (world.getEntitiesByClass(Zombie.class).size() > 1000) return;
                 if (ChanceUtil.getChance(18)) {
                     for (int i = 0; i < ChanceUtil.getRangedRandom(3, 6); i++) {
-                        parent.spawnAndArm(headStone, EntityType.ZOMBIE, true);
+                        parent.spawnAndArm(headStone, Zombie.class, true);
                     }
                 }
             }

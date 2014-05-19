@@ -17,10 +17,8 @@ import com.skelril.aurora.events.apocalypse.ApocalypseBedSpawnEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.homes.EnderPearlHomesComponent;
 import com.skelril.aurora.jail.JailComponent;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.checker.Checker;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItems;
@@ -72,12 +70,13 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private EnderPearlHomesComponent homesComponent;
 
+    private static final Class<Zombie> attackMob = Zombie.class;
+
     private LocalConfiguration config;
     private ThunderZombie bossManager;
 
     @Override
     public void enable() {
-
         config = configure(new LocalConfiguration());
         bossManager = new ThunderZombie();
         //noinspection AccessStaticViaInstance
@@ -86,7 +85,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     @Override
     public void reload() {
-
         super.reload();
         configure(config);
     }
@@ -105,39 +103,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public int armourChance = 100;
         @Setting("weapon-chance")
         public int weaponChance = 100;
-        @Setting("mob")
-        public String cityAttackMobString = "zombie";
         @Setting("enable-safe-respawn-location")
         public boolean enableSafeRespawn = true;
         @Setting("safe-respawn-radius")
         public int safeRespawnRadius = 10;
-        @Setting("enable-ultimate-chaos")
-        public boolean enableUltimateChaos = true;
-
-        public EntityType attackMob = getAttackMob();
-
-        private EntityType getAttackMob() {
-
-            try {
-                return EntityType.fromName(cityAttackMobString.toUpperCase());
-            } catch (Exception e) {
-                return null;
-            }
-        }
     }
-
-    /*
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onEntitySpawn(CreatureSpawnEvent event) {
-
-        if (config.enableUltimateChaos
-                && event.getLocation().getWorld().isThundering()
-                && event.getEntity().getType().equals(config.attackMob)
-                && !event.getSpawnReason().equals(CreatureSpawnEvent.SpawnReason.NATURAL)
-                && event.isCancelled())
-            event.setCancelled(false);
-    }
-    */
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityTarget(EntityTargetLivingEntityEvent event) {
@@ -145,11 +115,10 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         Entity target = event.getTarget();
         Entity targeter = event.getEntity();
 
-        if (!(target instanceof Player) || !targeter.isValid() || !targeter.getType().equals(config.attackMob)) return;
+        if (!(target instanceof Player) || !targeter.isValid() || !attackMob.isInstance(targeter)) return;
 
         Player player = (Player) target;
         if (checkEntity((LivingEntity) targeter) && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(8)) {
-
             targeter.setFireTicks(ChanceUtil.getRandom(20 * 60));
         }
     }
@@ -171,7 +140,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 if (ItemUtil.hasAncientArmour(player) && checkEntity((LivingEntity) attacker)) {
                     double diff = player.getMaxHealth() - player.getHealth();
                     if (ChanceUtil.getChance((int) Math.max(3, Math.round(player.getMaxHealth() - diff)))) {
-
                         EffectUtil.Ancient.powerBurst(player, event.getDamage());
                     }
                 }
@@ -198,25 +166,17 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDeath(PlayerRespawnEvent event) {
-
-        Player player = event.getPlayer();
-
         if (config.enableSafeRespawn) {
             int safeRespawnRadius = config.safeRespawnRadius * config.safeRespawnRadius;
 
             // Ensure the radius is at least 2
             if (safeRespawnRadius < 4) safeRespawnRadius = 4;
 
-            try {
-                Location respawnLoc = event.getRespawnLocation();
-                for (Entity attackMob : respawnLoc.getWorld().getEntitiesByClass(config.attackMob.getEntityClass())) {
+            Location respawnLoc = event.getRespawnLocation();
+            for (Entity entity : respawnLoc.getWorld().getEntitiesByClass(attackMob)) {
 
-                    if (!(attackMob instanceof LivingEntity) || !checkEntity((LivingEntity) attackMob)) continue;
-                    if (attackMob.getLocation().distanceSquared(respawnLoc) < safeRespawnRadius) attackMob.remove();
-                }
-            } catch (Exception e) {
-                log.warning("One or more " + config.cityAttackMobString + " could not be removed from the player: "
-                        + player.getName() + "'s respawn location.");
+                if (!(entity instanceof LivingEntity) || !checkEntity((LivingEntity) entity)) continue;
+                if (entity.getLocation().distanceSquared(respawnLoc) < safeRespawnRadius) entity.remove();
             }
         }
     }
@@ -226,8 +186,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         Entity ent = event.getEntity();
         World world = ent.getWorld();
-
-        EntityType entType = config.attackMob;
 
         if (ent instanceof Skeleton && ((Skeleton) ent).getKiller() != null) {
             ItemStack held = ((Skeleton) ent).getEquipment().getItemInHand();
@@ -249,7 +207,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 if (next != null && next.getTypeId() == ItemID.ROTTEN_FLESH) dropIterator.remove();
             }
 
-            if (ent.getType().equals(entType) && ChanceUtil.getChance(5)) {
+            if (attackMob.isInstance(ent) && ChanceUtil.getChance(5)) {
                 event.setDroppedExp(event.getDroppedExp() * 3);
                 event.getDrops().add(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(8)));
             } else event.setDroppedExp(event.getDroppedExp() * 2);
@@ -258,10 +216,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onAdminChange(PlayerAdminModeChangeEvent event) {
-
         if (event.getNewAdminState().equals(AdminState.SYSOP)) return;
         if (!event.getNewAdminState().equals(AdminState.MEMBER) && event.getPlayer().getWorld().isThundering()) {
-
             event.setCancelled(true);
         }
     }
@@ -277,96 +233,98 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         Location lightningStrikeLoc = lightning.getLocation();
 
         // Get the mob count
-        try {
-            mobCount = world.getEntitiesByClasses(config.attackMob.getEntityClass()).size();
-        } catch (Exception e) {
-            log.warning("Misconfigurated configuration, cannot count mob: " + config.cityAttackMobString + ".");
-            return;
-        }
+        mobCount = world.getEntitiesByClasses(attackMob).size();
 
         // Lets not flood the world farther
         if (mobCount >= mobCountMax || world.getEntities().size() > (mobCountMax * 2)) return;
 
         // Do we care?
         if (world.isThundering()) {
-            //Attack info
-            List<Player> applicablePlayers = new ArrayList<>();
-            int multiplier = config.multiplier;
+            lightning(lightningStrikeLoc);
+        }
+    }
 
-            // Change Multiplier
-            if (ChanceUtil.getChance(7)) {
-                multiplier *= ChanceUtil.getRandom(6);
+    public void lightning(Location location) {
+
+        List<Player> applicable = getApplicable(location.getWorld());
+
+        spawnAndArm(LocationUtil.findFreePosition(location), attackMob, true);
+
+        startle(applicable);
+        bedSpawn(CollectionUtil.removalAll(applicable, new Checker<CommandBook, Player>(inst) {
+            @Override
+            public boolean check(Player player) {
+                return get().hasPermission(player, "aurora.apocalypse.bedsafe");
             }
-
-            for (Player player : server.getOnlinePlayers()) {
-
-                if (!player.getWorld().equals(world) || jailComponent.isJailed(player) || adminComponent.isAdmin(player)) {
-                    continue;
-                }
-                if (player.isFlying()) {
-                    player.setFlying(false);
-                    player.setAllowFlight(false);
-                    ChatUtil.sendNotice(player, "The lightning hinders your ability to fly.");
-                }
-                applicablePlayers.add(player);
+        }), config.multiplier * (ChanceUtil.getRandom(6)));
+        localSpawn(CollectionUtil.removalAll(applicable, new Checker<CommandBook, Player>(inst) {
+            @Override
+            public boolean check(Player player) {
+                return get().hasPermission(player, "aurora.apocalypse.huntsafe");
             }
+        }));
+    }
 
-            try {
-                // Lightning, Spawn, and Beds
-                for (int i = 0; i < (multiplier * applicablePlayers.size()); i++) {
+    public List<Player> getApplicable(World world) {
+        List<Player> applicablePlayers = new ArrayList<>();
+        for (Player player : server.getOnlinePlayers()) {
+            if (!player.getWorld().equals(world) || jailComponent.isJailed(player) || adminComponent.isAdmin(player)) {
+                continue;
+            }
+            applicablePlayers.add(player);
+        }
+        return applicablePlayers;
+    }
 
-                    spawnAndArm(LocationUtil.findFreePosition(lightningStrikeLoc), config.attackMob, true);
+    private void startle(List<Player> applicable) {
+        applicable.stream().filter(Player::isFlying).forEach(player -> {
+            player.setFlying(false);
+            player.setAllowFlight(false);
+            ChatUtil.sendNotice(player, "The lightning hinders your ability to fly.");
+        });
+    }
 
-                    if (ChanceUtil.getChance((multiplier / config.deMultiplier) * applicablePlayers.size())) {
-                        for (Player player : applicablePlayers) {
+    public void bedSpawn(List<Player> players, int multiplier) {
 
-                            if (inst.hasPermission(player, "aurora.apocalypse.bedsafe")) continue;
-                            Location bedLocation = homesComponent.getBedLocation(player);
-                            if (bedLocation == null) continue;
-                            ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(player,
-                                    LocationUtil.findFreePosition(bedLocation));
-                            server.getPluginManager().callEvent(apocalypseEvent);
-                            if (!apocalypseEvent.isCancelled()) {
+        for (int i = 0; i < players.size() * multiplier; i++) {
+            if (ChanceUtil.getChance((multiplier / config.deMultiplier) * players.size())) {
+                for (Player player : players) {
+                    Location bedLocation = homesComponent.getBedLocation(player);
+                    if (bedLocation == null) continue;
 
-                                spawnAndArm(apocalypseEvent.getLocation(), config.attackMob, true);
-                            }
-                        }
-                    }
+                    ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(player, LocationUtil.findFreePosition(bedLocation));
+                    server.getPluginManager().callEvent(apocalypseEvent);
+
+                    if (apocalypseEvent.isCancelled()) continue;
+
+                    spawnAndArm(apocalypseEvent.getLocation(), attackMob, true);
                 }
-
-                // Local Spawn
-                for (Player player : applicablePlayers) {
-                    if (inst.hasPermission(player, "aurora.apocalypse.huntsafe") || ChanceUtil.getChance(2)) continue;
-                    try {
-                        Block playerBlock = player.getLocation().getBlock();
-                        Location ls;
-
-                        for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
-
-                            ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
-
-                            if (!BlockType.isTranslucent(ls.getBlock().getTypeId())) {
-                                ls = player.getLocation();
-                            }
-
-                            ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, ls);
-                            server.getPluginManager().callEvent(apocalypseEvent);
-
-                            if (!apocalypseEvent.isCancelled()) {
-                                spawnAndArm(apocalypseEvent.getLocation(), config.attackMob, false);
-                            }
-                        }
-                    } catch (Exception e) {
-                        log.warning("Could not find a location around the player: "
-                                + player.getName() + " to spawn a mob called: "
-                                + config.cityAttackMobString + ".");
-                    }
-                }
-            } catch (Exception e) {
-                log.warning("Could not spawn all: "
-                        + config.cityAttackMobString + " in world: " + world.getName());
             }
         }
+    }
+
+    public void localSpawn(List<Player> players) {
+        for (Player player : players) {
+            if (ChanceUtil.getChance(2)) continue;
+            Block playerBlock = player.getLocation().getBlock();
+
+            for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
+
+                Location l = findLocation(player.getLocation());
+
+                ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, l);
+                server.getPluginManager().callEvent(apocalypseEvent);
+
+                if (apocalypseEvent.isCancelled()) continue;
+
+                spawnAndArm(apocalypseEvent.getLocation(), attackMob, false);
+            }
+        }
+    }
+
+    public Location findLocation(Location origin) {
+        Location l = LocationUtil.findRandomLoc(origin, 8, true, false);
+        return BlockType.isTranslucent(l.getBlock().getTypeId()) ? l : origin;
     }
 
     public boolean checkEntity(LivingEntity e) {
@@ -375,11 +333,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 || (e.getCustomName() != null && e.getCustomName().equals("Apocalyptic Zombie"));
     }
 
-    private void spawnAndArm(Location location, EntityType type, boolean allowItemPickup) {
+    private <T extends LivingEntity> void spawnAndArm(Location location, Class<T> clazz, boolean allowItemPickup) {
 
         if (!location.getChunk().isLoaded()) return;
 
-        Entity e = spawn(location, type);
+        Entity e = spawn(location, clazz);
         if (e == null) return;
         if (e instanceof Zombie && ChanceUtil.getChance(16)) {
             ((Zombie) e).setBaby(true);
@@ -388,10 +346,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         arm(e, false);
     }
 
-    private Entity spawn(Location location, EntityType type) {
-
-        if (location == null || !type.isAlive()) return null;
-        LivingEntity entity = (LivingEntity) location.getWorld().spawnEntity(location, type);
+    private <T extends LivingEntity> T spawn(Location location, Class<T> clazz) {
+        if (location == null) return null;
+        T entity = location.getWorld().spawn(location, clazz);
         entity.setCustomName("Apocalyptic Zombie");
         entity.setCustomNameVisible(false);
         if (ChanceUtil.getChance(config.bossChance)) {

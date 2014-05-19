@@ -263,7 +263,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
                         if (random) {
                             targetLocation = LocationUtil.findRandomLoc(playerLoc, 7, true, false);
                         }
-                        Firework firework = (Firework) playerLoc.getWorld().spawnEntity(targetLocation, EntityType.FIREWORK);
+                        Firework firework = playerLoc.getWorld().spawn(targetLocation, Firework.class);
                         FireworkMeta meta = firework.getFireworkMeta();
                         FireworkEffect.Builder builder = FireworkEffect.builder();
                         builder.flicker(ChanceUtil.getChance(2));

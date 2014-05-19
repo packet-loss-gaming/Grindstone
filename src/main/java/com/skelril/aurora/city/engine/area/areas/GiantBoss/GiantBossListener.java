@@ -283,7 +283,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     for (Location spawnPt : parent.spawnPts) {
                         if (ChanceUtil.getChance(11)) {
                             for (int i = 0; i < Math.max(3, contained.length); i++) {
-                                Zombie z = (Zombie) parent.getWorld().spawnEntity(spawnPt, EntityType.ZOMBIE);
+                                Zombie z = parent.getWorld().spawn(spawnPt, Zombie.class);
                                 z.setBaby(true);
                                 EntityEquipment equipment = z.getEquipment();
                                 equipment.setArmorContents(null);

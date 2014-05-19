@@ -12,7 +12,7 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.area.AreaComponent;
-import com.skelril.aurora.city.engine.area.areas.PersistentArena;
+import com.skelril.aurora.city.engine.area.PersistentArena;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.APIUtil;
 import com.skelril.aurora.util.ChanceUtil;

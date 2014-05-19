@@ -14,7 +14,7 @@ public abstract class Checker<T, K> {
         this.main = main;
     }
 
-    public T getHeld() {
+    public T get() {
         return main;
     }
 

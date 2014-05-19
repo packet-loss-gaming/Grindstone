@@ -323,7 +323,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 if (!BlockType.isTranslucent(ls.getBlock().getTypeId())) {
                     ls = player.getLocation();
                 }
-                Zombie zombie = (Zombie) spawn(ls, EntityType.ZOMBIE, "Guardian Zombie");
+                Zombie zombie = spawn(ls, Zombie.class, "Guardian Zombie");
                 zombie.setCanPickupItems(false);
                 EntityEquipment equipment = zombie.getEquipment();
                 equipment.setArmorContents(new ItemStack[]{
@@ -355,25 +355,25 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                     ls.add(0, -3, 0);
                 }
             }
-            spawnAndArm(ls, EntityType.ZOMBIE, true);
+            spawnAndArm(ls, Zombie.class, true);
         }
     }
 
-    protected Entity spawnAndArm(Location location, EntityType type, boolean allowItemPickup) {
+    protected  <T extends LivingEntity> T spawnAndArm(Location location, Class<T> type, boolean allowItemPickup) {
         if (!location.getChunk().isLoaded()) return null;
-        Entity e = spawn(location, type);
+        T e = spawn(location, type);
         if (e == null) return null;
         arm(e, allowItemPickup);
         return e;
     }
 
-    private Entity spawn(Location location, EntityType type) {
+    private <T extends LivingEntity> T spawn(Location location, Class<T> type) {
         return spawn(location, type, "Grave Zombie");
     }
 
-    private Entity spawn(Location location, EntityType type, String name) {
-        if (location == null || !type.isAlive()) return null;
-        LivingEntity entity = (LivingEntity) location.getWorld().spawnEntity(location, type);
+    private  <T extends LivingEntity> T spawn(Location location, Class<T> type, String name) {
+        if (location == null) return null;
+        T entity = location.getWorld().spawn(location, type);
         entity.setCustomName(name);
         entity.setCustomNameVisible(false);
         return entity;

@@ -23,6 +23,6 @@ public class RegionChecker extends Checker<Region, Vector> {
 
     @Override
     public boolean check(Vector vector) {
-        return getHeld().contains(vector);
+        return get().contains(vector);
     }
 }

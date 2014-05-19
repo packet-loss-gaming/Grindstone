@@ -346,8 +346,8 @@ public class LocationUtil {
     }
 
     public static Location pickLocation(World world, double y, RegionChecker checker) {
-        com.sk89q.worldedit.Vector max = checker.getHeld().getMaximumPoint();
-        com.sk89q.worldedit.Vector min = checker.getHeld().getMinimumPoint();
+        com.sk89q.worldedit.Vector max = checker.get().getMaximumPoint();
+        com.sk89q.worldedit.Vector min = checker.get().getMinimumPoint();
 
         com.sk89q.worldedit.Vector v;
         do {

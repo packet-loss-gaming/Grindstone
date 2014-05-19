@@ -17,7 +17,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.area.AreaComponent;
-import com.skelril.aurora.city.engine.area.areas.PersistentArena;
+import com.skelril.aurora.city.engine.area.PersistentArena;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.database.IOUtil;
