@@ -79,7 +79,7 @@ public class DropPartyTask {
                     // Drop the xp
                     if (xpAmt > 0) {
                         // Throw in some xp cause why not
-                        for (short s = (short) ChanceUtil.getRandom(xpAmt); s > 0; s--) {
+                        for (int s = ChanceUtil.getRandom(xpAmt); s > 0; --s) {
                             ExperienceOrb e = world.spawn(l, ExperienceOrb.class);
                             e.setExperience(xpSize);
                         }

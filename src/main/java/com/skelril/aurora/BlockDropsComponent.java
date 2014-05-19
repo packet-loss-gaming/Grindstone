@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.CollectionUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
@@ -76,22 +77,22 @@ public class BlockDropsComponent extends BukkitComponent implements Listener {
 
         Block block = event.getBlock();
 
-        if (!ChanceUtil.getChance(config.commonChance)) return;
-
-        switch (block.getTypeId()) {
-            case BlockID.GRAVEL:
-                int item = config.gravelDrops.get(ChanceUtil.getRandom(config.gravelDrops.size()) - 1);
-                block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(item, ChanceUtil.getRandom(6)));
-                break;
+        if (ChanceUtil.getChance(config.commonChance)) {
+            switch (block.getTypeId()) {
+                case BlockID.GRAVEL:
+                    int item = CollectionUtil.getElement(config.gravelDrops);
+                    block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(item, ChanceUtil.getRandom(6)));
+                    break;
+            }
         }
 
-        if (!ChanceUtil.getChance(config.rareChance)) return;
-
-        switch (block.getTypeId()) {
-            case BlockID.GRAVEL:
-                int item = config.rareGravelDrops.get(ChanceUtil.getRandom(config.rareGravelDrops.size()) - 1);
-                block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(item, ChanceUtil.getRandom(6)));
-                break;
+        if (ChanceUtil.getChance(config.rareChance)) {
+            switch (block.getTypeId()) {
+                case BlockID.GRAVEL:
+                    int item = CollectionUtil.getElement(config.rareGravelDrops);
+                    block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(item, ChanceUtil.getRandom(6)));
+                    break;
+            }
         }
     }
 }

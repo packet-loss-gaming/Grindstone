@@ -59,7 +59,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
 
         if (que.isEmpty()) return;
         List<ItemStack> shortList = new ArrayList<>();
-        for (int i = 0; i < ChanceUtil.getRandom(9); i++) {
+        for (int i = ChanceUtil.getRandom(9); i > 0; --i) {
             if (que.isEmpty()) break;
             shortList.add(que.poll());
         }

@@ -12,8 +12,8 @@ import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
-import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.CollectionUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -538,7 +538,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         prison = prison == null ? jailCells.getPrison(config.defaultJail) : prison;
 
         if (prison != null && prison.size() > 0) {
-            jailCell = prison.get(ChanceUtil.getRandom(prison.size()) - 1);
+            jailCell = CollectionUtil.getElement(prison);
         } else {
             jailCell = null;
         }

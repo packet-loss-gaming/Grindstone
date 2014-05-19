@@ -12,8 +12,8 @@ import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.economic.ImpersonalComponent;
 import com.skelril.aurora.exceptions.NotFoundException;
-import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.CollectionUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.TimeUtil;
 import com.skelril.aurora.util.player.GenericWealthStore;
@@ -43,7 +43,6 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -286,7 +285,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
             sold = 0;
         }
 
-        if (economy.getBalance(player.getName()) - config.ticketPrice * sold <= 0) {
+        if (economy.has(player.getName(), config.ticketPrice * sold)) {
             throw new CommandException("You do not have enough " + economy.currencyNamePlural() + ".");
         }
 
@@ -347,7 +346,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
     public double getWinnerCash() {
 
-        double amt = Math.round(getCount(lotteryTicketDatabase.getTickets()) * config.ticketPrice) * .75;
+        double amt = getCount(lotteryTicketDatabase.getTickets()) * config.ticketPrice * .75;
 
         EconomyResponse response = economy.bankBalance(LOTTERY_BANK_ACCOUNT);
         if (response.transactionSuccess()) {
@@ -375,15 +374,12 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         List<GenericWealthStore> ticketDB = lotteryTicketDatabase.getTickets();
         if (ticketDB.size() < 2) throw new NotFoundException();
 
-        HashMap<Integer, String> tickets = new HashMap<>();
-
-        int t = 0;
+        List<String> tickets = new ArrayList<>();
         for (GenericWealthStore lotteryTicket : ticketDB) {
             for (int i = 0; i < lotteryTicket.getValue(); i++) {
-                t++;
-                tickets.put(t, lotteryTicket.getOwnerName());
+                tickets.add(lotteryTicket.getOwnerName());
             }
         }
-        return tickets.get(ChanceUtil.getRandom(tickets.size() - 1));
+        return CollectionUtil.getElement(tickets);
     }
 }

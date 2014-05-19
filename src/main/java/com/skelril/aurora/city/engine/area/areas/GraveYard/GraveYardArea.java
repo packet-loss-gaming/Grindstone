@@ -150,7 +150,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             if (!entity.isValid()) continue;
             // Cave Spider killer
             if (entity instanceof CaveSpider && entity.getLocation().getBlock().getLightFromSky() >= 10) {
-                for (int i = 0; i < 20; i++) getWorld().playEffect(entity.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
+                for (int i = 0; i < 20; ++i) getWorld().playEffect(entity.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
                 entity.remove();
                 continue;
             }
@@ -318,7 +318,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         Block playerBlock = player.getLocation().getBlock();
         Location ls;
         if (LocationUtil.isInRegion(getWorld(), rewards, player)) {
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 3; ++i) {
                 ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
                 if (!BlockType.isTranslucent(ls.getBlock().getTypeId())) {
                     ls = player.getLocation();
@@ -342,7 +342,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             return;
         }
         Block aBlock;
-        for (int i = 0; i < ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i++) {
+        for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
             ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
             if (!BlockType.isTranslucent(ls.getBlock().getTypeId())) {
                 ls = player.getLocation();
@@ -435,7 +435,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             return;
         }
         tries--;
-        Location headStone = headStones.get(ChanceUtil.getRandom(headStones.size()) - 1).clone();
+        Location headStone = CollectionUtil.getElement(headStones).clone();
         BlockState signState = headStone.getBlock().getState();
         if (signState instanceof Sign) {
             Calendar calendar = Calendar.getInstance();
@@ -613,9 +613,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             chest = (Chest) block;
             chest.getBlockInventory().clear();
             int length = chest.getBlockInventory().getContents().length;
-            int target;
-            for (int i = 0; i < length * .6; i++) {
-                target = ChanceUtil.getRandom(length) - 1;
+            for (int i = 0; i < length * .6; ++i) {
+                int target = ChanceUtil.getRandom(length) - 1;
                 if (chest.getBlockInventory().getContents()[target] != null) {
                     i--;
                     continue;

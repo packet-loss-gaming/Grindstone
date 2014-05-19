@@ -200,7 +200,7 @@ public class LocationUtil {
 
         BlockFace dir;
         do {
-            dir = BlockFace.values()[(ChanceUtil.getRandom(BlockFace.values().length) - 1)];
+            dir = CollectionUtil.getElement(BlockFace.values());
         } while (dir == null);
 
         if (airOnly) {

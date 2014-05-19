@@ -414,7 +414,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         final Player player = event.getPlayer();
         server.getScheduler().runTaskLater(inst, () -> {
             if (parent.isHostileTempleArea(player.getLocation()) && !parent.admin.isAdmin(player)) {
-                player.teleport(parent.headStones.get(ChanceUtil.getRandom(parent.headStones.size()) - 1));
+                player.teleport(CollectionUtil.getElement(parent.headStones));
                 ChatUtil.sendWarning(player, "You feel dazed and confused as you wake up near a head stone.");
             }
         }, 1);
@@ -431,7 +431,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
         if (parent.isHostileTempleArea(event.getFrom()) && event.getCause().equals(PlayerTeleportEvent.TeleportCause.NETHER_PORTAL)) {
-            Location tg = parent.headStones.get(ChanceUtil.getRandom(parent.headStones.size()) - 1);
+            Location tg = CollectionUtil.getElement(parent.headStones);
             tg = LocationUtil.findFreePosition(tg);
             if (tg == null) tg = parent.getWorld().getSpawnLocation();
             event.setTo(tg);
@@ -447,7 +447,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (parent.contains(event.getFrom())) {
                 event.setCancelled(true);
             } else {
-                Location tg = parent.headStones.get(ChanceUtil.getRandom(parent.headStones.size()) - 1);
+                Location tg = CollectionUtil.getElement(parent.headStones);
                 tg = LocationUtil.findFreePosition(tg);
                 if (tg == null) tg = parent.getWorld().getSpawnLocation();
                 event.setTo(tg);

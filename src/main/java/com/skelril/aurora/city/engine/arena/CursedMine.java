@@ -496,7 +496,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                     } catch (MaxChangedBlocksException ignored) {
 
                                     }
-                                    for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
+                                    for (int i = ChanceUtil.getRandom(24) + 20; i > 0; --i) {
                                         final boolean untele = i == 11;
                                         server.getScheduler().runTaskLater(inst, () -> {
                                             if (untele) {

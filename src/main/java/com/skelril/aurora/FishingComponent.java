@@ -190,19 +190,19 @@ public class FishingComponent extends BukkitComponent implements Listener {
         String creature = null;
         if (fishingMonsters[2] && EnvironmentUtil.isNightTime(world.getTime())) {
             creature = "creeper(s)";
-            for (int i = 1; i < ChanceUtil.getRandom(10); i++) {
+            for (int i = ChanceUtil.getRandom(10); i > 0; --i) {
                 world.spawn(entityLoc, Creeper.class);
             }
         } else if (fishingMonsters[1] && EnvironmentUtil.isNightTime(world.getTime())) {
             creature = "skeleton(s)";
-            for (int i = 1; i < ChanceUtil.getRandom(10); i++) {
+            for (int i = ChanceUtil.getRandom(10); i > 0; --i) {
                 Skeleton skeleton = world.spawn(entityLoc, Skeleton.class);
                 EntityEquipment equipment = skeleton.getEquipment();
                 equipment.setItemInHand(new ItemStack(ItemID.BOW));
             }
         } else if (fishingMonsters[0] && EnvironmentUtil.isNightTime(world.getTime())) {
             creature = "zombie(s)";
-            for (int i = 1; i < ChanceUtil.getRandom(10); i++) {
+            for (int i = ChanceUtil.getRandom(10); i > 0; --i) {
                 world.spawn(entityLoc, Zombie.class);
             }
         }

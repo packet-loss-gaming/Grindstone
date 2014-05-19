@@ -341,7 +341,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                         Block playerBlock = player.getLocation().getBlock();
                         Location ls;
 
-                        for (int i = 0; i < ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i++) {
+                        for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
 
                             ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
 

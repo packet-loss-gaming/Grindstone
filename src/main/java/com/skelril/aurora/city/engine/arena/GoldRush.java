@@ -17,10 +17,7 @@ import com.skelril.aurora.economic.ImpersonalComponent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
 import com.skelril.aurora.util.item.custom.CustomItems;
@@ -211,7 +208,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
             chestState = (Chest) chest.getBlock().getState();
             Inventory inventory = chestState.getBlockInventory();
-            for (int i = 0; i < ChanceUtil.getRandom(9 * 3); i++) {
+            for (int i = ChanceUtil.getRandom(9 * 3); i > 0; --i) {
 
                 ItemStack targetStack = goldBar.clone();
                 targetStack.setAmount(ChanceUtil.getRandom(3));
@@ -226,13 +223,13 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     inventory.addItem(CustomItemCenter.build(CustomItems.PHANTOM_HYMN));
                 }
 
-                inventory.setItem(ChanceUtil.getRandom(chestState.getBlockInventory().getSize() - 1), targetStack);
+                inventory.setItem(ChanceUtil.getRandom(inventory.getSize()) - 1, targetStack);
             }
             chestState.update(true);
         }
 
         for (int i = 0; i < 2; i++) {
-            Block block = chestBlocks.get(ChanceUtil.getRandom(chestBlocks.size() - 1)).getBlock();
+            Block block = CollectionUtil.getElement(chestBlocks).getBlock();
             if (!block.getChunk().isLoaded()) block.getChunk().load();
             Chest chest = (Chest) block.getState();
             chest.getInventory().setItem(ChanceUtil.getRandom(chest.getBlockInventory().getSize() - 1), keys[i]);

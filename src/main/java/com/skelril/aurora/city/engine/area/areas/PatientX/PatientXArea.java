@@ -249,7 +249,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
                 break;
             case 5:
                 for (Player player : contained) {
-                    for (int i = 0; i < ChanceUtil.getRandom(6) + 2; i++) {
+                    for (int i = ChanceUtil.getRandom(6) + 2; i > 0; --i) {
                         DeathUtil.throwSlashPotion(player.getLocation());
                     }
                 }
@@ -424,7 +424,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
     }
 
     protected Location getRandomDest() {
-        return destinations.get(ChanceUtil.getRandom(destinations.size()) - 1);
+        return CollectionUtil.getElement(destinations);
     }
 
     protected void teleportRandom() {

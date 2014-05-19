@@ -12,6 +12,7 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.environment.DarkAreaInjuryEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.CollectionUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -100,7 +101,7 @@ public class AntiLightHackComponent extends BukkitComponent implements Listener 
 
             // Damage
             DarkAreaInjuryEvent aEvent = new DarkAreaInjuryEvent(player,
-                    ChanceUtil.getRandom(config.maxDamage), textOps[ChanceUtil.getRandom(textOps.length) - 1]);
+                    ChanceUtil.getRandom(config.maxDamage), CollectionUtil.getElement(textOps));
             server.getPluginManager().callEvent(aEvent);
 
             if (aEvent.isCancelled()) return;

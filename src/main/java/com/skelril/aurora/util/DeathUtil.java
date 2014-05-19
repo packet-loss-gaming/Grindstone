@@ -27,7 +27,7 @@ public class DeathUtil {
     public static void throwSlashPotion(Location location) {
 
         ThrownPotion potionEntity = (ThrownPotion) location.getWorld().spawnEntity(location, EntityType.SPLASH_POTION);
-        PotionType type = thrownTypes[ChanceUtil.getRandom(thrownTypes.length) - 1];
+        PotionType type = CollectionUtil.getElement(thrownTypes);
         Potion potion = new Potion(type);
         potion.setLevel(type.getMaxLevel());
         potion.setSplash(true);

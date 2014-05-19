@@ -105,7 +105,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                             && !hallowCreepersActive.contains(player)) {
                         Location loc = entity.getLocation();
 
-                        for (int i = 0; i < ((ChanceUtil.getRandom(12) * ChanceUtil.getRandom(12)) + 6); i++) {
+                        for (int i = ((ChanceUtil.getRandom(12) * ChanceUtil.getRandom(12)) + 6); i > 0; --i) {
                             entity.getWorld().spawn(loc, Creeper.class);
                         }
 

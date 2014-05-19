@@ -38,10 +38,7 @@ import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import com.skelril.aurora.prayer.PrayerFX.NecrosisFX;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.DamageUtil;
-import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -921,7 +918,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         if (ItemUtil.hasAncientArmour(player) || ItemUtil.hasNecrosArmour(player)) {
             ItemStack[] armour = player.getInventory().getArmorContents();
-            ItemStack is = armour[ChanceUtil.getRandom(armour.length) - 1];
+            ItemStack is = CollectionUtil.getElement(armour);
             if (exp > is.getDurability()) {
                 exp -= is.getDurability();
                 is.setDurability((short) 0);

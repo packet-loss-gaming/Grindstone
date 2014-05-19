@@ -153,7 +153,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         sessions.getSession(RogueState.class, player).grenade();
 
-        for (int i = 0; i < ChanceUtil.getRandom(5) + 4; i++) {
+        for (int i = ChanceUtil.getRandom(5) + 4; i > 0; --i) {
             Snowball snowball = player.launchProjectile(Snowball.class);
             Vector vector = new Vector(ChanceUtil.getRandom(2.0), 1, ChanceUtil.getRandom(2.0));
             snowball.setVelocity(snowball.getVelocity().multiply(vector));
@@ -268,7 +268,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
                         if (isTraitorProtected(defender)) {
                             ChatUtil.sendWarning(shooter, defender.getName() + " sends a band of Rogue marauders after you.");
-                            for (int i = 1; i < ChanceUtil.getRandom(24) + 20; i++) {
+                            for (int i = ChanceUtil.getRandom(24) + 20; i > 0; --i) {
                                 server.getScheduler().runTaskLater(inst, () -> {
                                     if (defender.getLocation().distanceSquared(shooter.getLocation()) > 2500) {
                                         return;

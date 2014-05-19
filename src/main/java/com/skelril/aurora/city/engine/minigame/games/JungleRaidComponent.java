@@ -45,10 +45,7 @@ import com.skelril.aurora.exceptions.UnsupportedPrayerException;
 import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerType;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.EntityUtil;
-import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.checker.RegionChecker;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.hackbook.ChunkBook;
@@ -118,7 +115,6 @@ public class JungleRaidComponent extends MinigameComponent {
 
     private long start = 0;
     private int amt = 7;
-    private static final int potionAmt = PotionType.values().length;
 
     private String titan = "";
 
@@ -310,7 +306,7 @@ public class JungleRaidComponent extends MinigameComponent {
                 }
             }
 
-            titan = gameStates.get(ChanceUtil.getRandom(gameStates.size()) - 1).getOwnerName();
+            titan = CollectionUtil.getElement(gameStates).getOwnerName();
             try {
                 Player aPlayer = Bukkit.getPlayerExact(titan);
                 antiCheat.exempt(aPlayer, CheckType.FAST_BREAK);
@@ -610,12 +606,12 @@ public class JungleRaidComponent extends MinigameComponent {
                         if (ChanceUtil.getChance(4)) e.setIsIncendiary(true);
                     }
                     if (gameFlags.contains('p')) {
-                        PotionType type = PotionType.values()[ChanceUtil.getRandom(potionAmt) - 1];
+                        PotionType type = CollectionUtil.getElement(PotionType.values());
                         if (type == null || type == PotionType.WATER) {
                             i--;
                             continue;
                         }
-                        for (int ii = 0; ii < ChanceUtil.getRandom(5); ii++) {
+                        for (int ii = ChanceUtil.getRandom(5); ii > 0; --ii) {
                             ThrownPotion potion = (ThrownPotion) world.spawnEntity(testLoc, EntityType.SPLASH_POTION);
                             Potion brewedPotion = new Potion(type);
                             brewedPotion.setLevel(type.getMaxLevel());

@@ -151,7 +151,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 // Drop the xp
                 if (populate) {
                     // Throw in some xp cause why not
-                    for (short s = (short) ChanceUtil.getRandom(5); s > 0; s--) {
+                    for (int s = ChanceUtil.getRandom(5); s > 0; s--) {
                         ExperienceOrb e = (ExperienceOrb) getWorld().spawnEntity(l, EntityType.EXPERIENCE_ORB);
                         e.setExperience(8);
                     }
