@@ -17,8 +17,10 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.area.AreaComponent;
+import com.skelril.aurora.city.engine.area.areas.PersistentArena;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.player.AdminToolkit;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -35,6 +37,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +45,7 @@ import java.util.Random;
 
 @ComponentInformation(friendlyName = "Patient X Arena", desc = "The mad boss of Ice")
 @Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
-public class PatientXArea extends AreaComponent<PatientXConfig> {
+public class PatientXArea extends AreaComponent<PatientXConfig> implements PersistentArena {
 
     @InjectComponent
     protected AdminComponent admin;
@@ -63,7 +66,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     protected double difficulty;
 
     protected List<Location> destinations = new ArrayList<>();
-    protected final HashMap<String, PlayerState> playerState = new HashMap<>();
+    protected HashMap<String, PlayerState> playerState = new HashMap<>();
 
     @Override
     public void setUp() {
@@ -91,6 +94,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             destinations.add(new Location(world, -203.5, 47, 109.5));
             destinations.add(new Location(world, -173, 47, 109.5));
             destinations.add(getCentralLoc());
+
+            reloadData();
         } catch (UnknownPluginException e) {
             log.info("WorldGuard could not be found!");
         }
@@ -100,6 +105,11 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     public void enable() {
         // WorldGuard loads late for some reason
         server.getScheduler().runTaskLater(inst, super::enable, 1);
+    }
+
+    @Override
+    public void disable() {
+        writeData(false);
     }
 
     @Override
@@ -116,6 +126,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             spawnCreatures();
             printBossHealth();
         }
+        writeData(true);
     }
 
     private void equalize() {
@@ -430,6 +441,57 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
         boss.teleport(getRandomDest());
         ChatUtil.sendNotice(getContained(Player.class), "Pause for a second chap, I need to answer the teleport!");
+    }
+
+    @Override
+    public void writeData(boolean doAsync) {
+        Runnable run = () -> {
+            respawnsFile:
+            {
+                File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
+                if (playerStateFile.exists()) {
+                    Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
+
+                    if (playerState.equals(playerStateFileO)) {
+                        break respawnsFile;
+                    }
+                }
+                IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
+            }
+        };
+        if (doAsync) {
+            server.getScheduler().runTaskAsynchronously(inst, run);
+        } else {
+            run.run();
+        }
+    }
+
+    @Override
+    public void reloadData() {
+        File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
+        if (playerStateFile.exists()) {
+            Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
+            if (playerStateFileO instanceof HashMap) {
+                //noinspection unchecked
+                playerState = (HashMap<String, PlayerState>) playerStateFileO;
+                log.info("Loaded: " + playerState.size() + " respawn records for the Patient X.");
+            } else {
+                log.warning("Invalid block record file encountered: " + playerStateFile.getName() + "!");
+                log.warning("Attempting to use backup file...");
+                playerStateFile = new File(getWorkingDir().getPath() + "/old-" + playerStateFile.getName());
+                if (playerStateFile.exists()) {
+                    playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
+                    if (playerStateFileO instanceof HashMap) {
+                        //noinspection unchecked
+                        playerState = (HashMap<String, PlayerState>) playerStateFileO;
+                        log.info("Backup file loaded successfully!");
+                        log.info("Loaded: " + playerState.size() + " respawn records for the Patient X.");
+                    } else {
+                        log.warning("Backup file failed to load!");
+                    }
+                }
+            }
+        }
     }
 
     public void setDifficulty(double difficulty) {
