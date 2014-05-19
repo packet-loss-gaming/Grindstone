@@ -37,6 +37,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.checker.RegionChecker;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -534,12 +535,13 @@ public class SkyWarsComponent extends MinigameComponent {
 
             if (!isGameInitialised()) return;
 
+            RegionChecker checker = new RegionChecker(region);
             for (int i = 0; i < playerState.size(); i++) {
 
                 if (!ChanceUtil.getChance(10) && !gameFlags.contains('c')) continue;
 
                 Chicken c = (Chicken) world.spawnEntity(
-                        LocationUtil.pickLocation(world, region.getMaximumPoint().getY() - 10, region), EntityType.CHICKEN);
+                        LocationUtil.pickLocation(world, region.getMaximumPoint().getY() - 10, checker), EntityType.CHICKEN);
                 c.setRemoveWhenFarAway(true);
             }
 

@@ -49,6 +49,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EntityUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.checker.RegionChecker;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.hackbook.ChunkBook;
 import com.skelril.hackbook.exceptions.UnsupportedFeatureException;
@@ -253,8 +254,9 @@ public class JungleRaidComponent extends MinigameComponent {
             battleLoc = teamSpawns[teamNumber - 1].clone();
         }
 
+        RegionChecker checker = new RegionChecker(region);
         while (battleLoc == null || !contains(battleLoc) || battleLoc.getBlock().getTypeId() != BlockID.AIR) {
-            battleLoc = LocationUtil.findFreePosition(LocationUtil.pickLocation(world, 75, region));
+            battleLoc = LocationUtil.findFreePosition(LocationUtil.pickLocation(world, 75, checker));
         }
 
         if (teamNumber > 0) {

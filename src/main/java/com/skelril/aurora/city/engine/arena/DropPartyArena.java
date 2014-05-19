@@ -17,6 +17,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.TimeUtil;
+import com.skelril.aurora.util.checker.RegionChecker;
 import com.skelril.aurora.util.item.ItemUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -136,10 +137,11 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
             Iterator<ItemStack> it = drops.iterator();
 
+            RegionChecker checker = new RegionChecker(rg);
             for (int k = 10; it.hasNext() && k > 0; k--) {
 
                 // Pick a random Location
-                Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), rg);
+                Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), checker);
                 if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
                 getWorld().dropItem(l, it.next());
 

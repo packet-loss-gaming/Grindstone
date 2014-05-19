@@ -32,6 +32,7 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EntityUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.checker.RegionChecker;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
@@ -332,10 +333,16 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     player.setVelocity(v);
                 }
                 CuboidRegion rg = new CuboidRegion(parent.drops.getMinimumPoint(), parent.drops.getMaximumPoint());
-                DropPartyTask task = new DropPartyTask(parent.getWorld(), rg, drops, 3000);
+                DropPartyTask task = new DropPartyTask(parent.getWorld(), rg, drops, new RegionChecker(rg) {
+                    @Override
+                    public boolean check(com.sk89q.worldedit.Vector v) {
+                        Location l = new Location(parent.getWorld(), v.getX(), v.getY(), v.getZ());
+                        return super.check(v) && !l.getBlock().getType().isSolid();
+                    }
+                });
                 task.setXPChance(5);
                 task.setXPSize(10);
-                task.start(CommandBook.inst(), server.getScheduler(), 20 * 5);
+                task.start(CommandBook.inst(), server.getScheduler(), 20 * 5, 20 * 3);
                 parent.freezeBlocks(100, false);
 
                 // Reset respawn mechanics
