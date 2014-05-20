@@ -47,6 +47,10 @@ public class LocationUtil {
     }
 
     public static Location findFreePosition(final Location pos) {
+        return findFreePosition(pos, true);
+    }
+
+    public static Location findFreePosition(final Location pos, boolean center) {
 
         // Find the raw safe position
         Location mPos = findRawFreePosition(pos);
@@ -59,15 +63,11 @@ public class LocationUtil {
         // Add the offset from the original position
         mPos.add(pos.getX() - pos.getBlockX(), 0, pos.getZ() - pos.getBlockZ());
 
-        // If there is no y change the location is pretty much the same
-        // and moving the location is just annoying
-        if (pos.getBlockY() == mPos.getBlockY()) {
-            return mPos;
-        }
-
         // Move to the center of the block if undefined
-        if (mPos.getX() == mPos.getBlockX()) mPos.add(.5, 0, 0);
-        if (mPos.getZ() == mPos.getBlockZ()) mPos.add(0, 0, .5);
+        if (center) {
+            if (mPos.getX() == mPos.getBlockX()) mPos.add(.5, 0, 0);
+            if (mPos.getZ() == mPos.getBlockZ()) mPos.add(0, 0, .5);
+        }
         return mPos;
     }
 

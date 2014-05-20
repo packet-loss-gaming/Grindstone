@@ -47,7 +47,7 @@ public class SafeTeleComponent extends BukkitComponent implements Listener {
     public void onTeleport(PlayerTeleportEvent event) {
 
         if (causes.contains(event.getCause()) && !event.getPlayer().isFlying()) {
-            Location loc = LocationUtil.findFreePosition(event.getTo());
+            Location loc = LocationUtil.findFreePosition(event.getTo(), false);
             if (loc == null) {
                 ChatUtil.sendError(event.getPlayer(), "That location is not safe!");
                 event.setCancelled(true);
