@@ -56,14 +56,14 @@ public class LocationUtil {
             return null;
         }
 
+        // Add the offset from the original position
+        mPos.add(pos.getX() - pos.getBlockX(), 0, pos.getZ() - pos.getBlockZ());
+
         // If there is no y change the location is pretty much the same
         // and moving the location is just annoying
         if (pos.getBlockY() == mPos.getBlockY()) {
             return mPos;
         }
-
-        // Add the offset to the location to negate it
-        mPos.subtract(pos.getX() - pos.getBlockX(), 0, pos.getZ() - pos.getBlockZ());
 
         // Move to the center of the block if undefined
         if (mPos.getX() == mPos.getBlockX()) mPos.add(.5, 0, 0);

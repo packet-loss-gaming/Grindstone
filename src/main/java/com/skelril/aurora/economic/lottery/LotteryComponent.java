@@ -285,7 +285,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
             sold = 0;
         }
 
-        if (economy.has(player.getName(), config.ticketPrice * sold)) {
+        if (!economy.has(player.getName(), config.ticketPrice * sold)) {
             throw new CommandException("You do not have enough " + economy.currencyNamePlural() + ".");
         }
 

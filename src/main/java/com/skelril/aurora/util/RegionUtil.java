@@ -29,7 +29,7 @@ public class RegionUtil {
         return manager.getRegions().entrySet().stream()
                 .filter(e -> e.getValue().getOwners().contains(player.getName()))
                 .filter(e -> e.getKey().endsWith("-house"))
-                .map(Map.Entry<String, ProtectedRegion>::getValue);
+                .map(Map.Entry::getValue);
     }
 
     public static List<ProtectedRegion> getHouses(LocalPlayer player, RegionManager manager) {
