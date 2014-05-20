@@ -13,6 +13,7 @@ import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.city.engine.area.AreaListener;
 import com.skelril.aurora.city.engine.area.areas.DropParty.DropPartyTask;
 import com.skelril.aurora.events.PrayerApplicationEvent;
+import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
@@ -78,6 +79,11 @@ public class PatientXListener extends AreaListener<PatientXArea> {
     public void onCreepSpeak(CreepSpeakEvent event) {
 
         if (parent.contains(event.getPlayer()) || parent.contains(event.getTargeter())) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onApocalypseLocalSpawn(ApocalypseLocalSpawnEvent event) {
+        if (parent.contains(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
