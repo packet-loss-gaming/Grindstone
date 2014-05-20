@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.skelril.aurora.SacrificeComponent;
+import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.city.engine.area.AreaListener;
 import com.skelril.aurora.city.engine.area.areas.DropParty.DropPartyTask;
 import com.skelril.aurora.events.PrayerApplicationEvent;
@@ -110,7 +111,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
         if (parent.contains(to) && !parent.contains(from)) {
             Player player = event.getPlayer();
-            if (parent.admin.isAdmin(player)) return;
+            if (parent.admin.isAdmin(player, AdminState.ADMIN)) return;
             if (!ItemUtil.removeItemOfName(player, CustomItemCenter.build(CustomItems.PHANTOM_HYMN), 1, false)) {
                 ChatUtil.sendError(player, "You need a Phantom Hymn to sacrifice to enter that area.");
                 event.setCancelled(true);
