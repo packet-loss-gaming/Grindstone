@@ -170,7 +170,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
         BlockVector max = getRegion().getMaximumPoint();
         Region region = new CuboidRegion(min, max);
         Location l = BukkitUtil.toLocation(getWorld(), region.getCenter().setY(groundLevel));
-        boss = (Giant) getWorld().spawnEntity(l, EntityType.GIANT);
+        boss = getWorld().spawn(l, Giant.class);
         boss.setMaxHealth(510 + (difficulty * 80));
         boss.setHealth(510 + (difficulty * 80));
         boss.setRemoveWhenFarAway(false);
@@ -222,7 +222,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
     public Runnable spawnXP = () -> {
         for (Location pt : spawnPts) {
             if (!ChanceUtil.getChance(6)) continue;
-            ThrownExpBottle bottle = (ThrownExpBottle) getWorld().spawnEntity(pt, EntityType.THROWN_EXP_BOTTLE);
+            ThrownExpBottle bottle = getWorld().spawn(pt, ThrownExpBottle.class);
             bottle.setVelocity(new Vector(
                             random.nextDouble() * 1.7 - 1.5,
                             random.nextDouble() * 1.5,

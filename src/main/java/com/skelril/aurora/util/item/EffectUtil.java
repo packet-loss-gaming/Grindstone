@@ -15,8 +15,6 @@ import com.skelril.aurora.util.EnvironmentUtil;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Server;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -116,22 +114,19 @@ public class EffectUtil {
 
     public static class Strange {
 
-        public static void mobBarrage(Location target, EntityType type) {
+        public static <T extends LivingEntity> void mobBarrage(Location target, Class<T> type) {
 
 
-            final List<Entity> entities = new ArrayList<>();
+            final List<T> entities = new ArrayList<>();
 
             for (int i = 0; i < 125; i++) {
-
-                Entity entity = target.getWorld().spawnEntity(target, type);
-                if (entity instanceof LivingEntity) {
-                    ((LivingEntity) entity).setRemoveWhenFarAway(true);
-                }
+                T entity = target.getWorld().spawn(target, type);
+                entity.setRemoveWhenFarAway(true);
                 entities.add(entity);
             }
 
             server.getScheduler().runTaskLater(inst, () -> {
-                for (Entity entity : entities) {
+                for (T entity : entities) {
                     if (entity.isValid()) {
                         entity.remove();
                         for (int i = 0; i < 20; i++) {

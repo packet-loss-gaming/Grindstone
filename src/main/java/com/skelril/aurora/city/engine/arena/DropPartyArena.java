@@ -23,7 +23,10 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.ExperienceOrb;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -152,7 +155,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 if (populate) {
                     // Throw in some xp cause why not
                     for (int s = ChanceUtil.getRandom(5); s > 0; s--) {
-                        ExperienceOrb e = (ExperienceOrb) getWorld().spawnEntity(l, EntityType.EXPERIENCE_ORB);
+                        ExperienceOrb e = getWorld().spawn(l, ExperienceOrb.class);
                         e.setExperience(8);
                     }
                 }

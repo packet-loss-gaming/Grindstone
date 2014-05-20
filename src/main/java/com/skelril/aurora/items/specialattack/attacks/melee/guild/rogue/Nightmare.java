@@ -12,7 +12,6 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
 import org.bukkit.Location;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Snowball;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -55,7 +54,7 @@ public class Nightmare extends EntityAttack implements MeleeSpecial {
             @Override
             public boolean run(int times) {
                 locations.stream().filter(location -> ChanceUtil.getChance(3)).forEach(location -> {
-                    Snowball snowball = (Snowball) location.getWorld().spawnEntity(location, EntityType.SNOWBALL);
+                    Snowball snowball = location.getWorld().spawn(location, Snowball.class);
                     snowball.setMetadata("rogue-snowball", new FixedMetadataValue(inst, true));
                     snowball.setMetadata("nightmare", new FixedMetadataValue(inst, true));
                     snowball.setShooter(owner);

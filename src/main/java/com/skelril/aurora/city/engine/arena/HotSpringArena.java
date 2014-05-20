@@ -24,8 +24,8 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -123,7 +123,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                             if (EnvironmentUtil.isWater(block) && ChanceUtil.getChance(200)) {
                                 getWorld().playEffect(block.getLocation(), Effect.ENDER_SIGNAL, 1);
                                 if (getWorld().isThundering() && ChanceUtil.getChance(50)) {
-                                    getWorld().spawnEntity(block.getLocation(), EntityType.ZOMBIE);
+                                    getWorld().spawn(block.getLocation(), Zombie.class);
                                 }
                                 break;
                             }

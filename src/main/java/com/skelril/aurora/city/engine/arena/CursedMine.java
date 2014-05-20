@@ -280,7 +280,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                 modifiable = previousLoc;
                             }
 
-                            getWorld().spawnEntity(modifiable, EntityType.BLAZE);
+                            getWorld().spawn(modifiable, Blaze.class);
                         }
                     }
                 }

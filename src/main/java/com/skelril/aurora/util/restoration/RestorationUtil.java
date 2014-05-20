@@ -16,7 +16,6 @@ import de.diddiz.LogBlock.Consumer;
 import de.diddiz.LogBlock.LogBlock;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -93,8 +92,7 @@ public class RestorationUtil extends BukkitComponent {
             block.setTypeId(0);
 
             if (xp > 0) {
-                ExperienceOrb orb = (ExperienceOrb) block.getWorld()
-                        .spawnEntity(block.getLocation(), EntityType.EXPERIENCE_ORB);
+                ExperienceOrb orb = block.getWorld().spawn(block.getLocation(), ExperienceOrb.class);
                 orb.setExperience(xp);
             }
 

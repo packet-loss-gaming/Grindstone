@@ -64,7 +64,6 @@ import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
-import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -598,7 +597,7 @@ public class JungleRaidComponent extends MinigameComponent {
                     if (testLoc.getBlock().getTypeId() != BlockID.AIR) continue;
 
                     if (gameFlags.contains('a') || suddenD) {
-                        TNTPrimed e = (TNTPrimed) world.spawnEntity(testLoc, EntityType.PRIMED_TNT);
+                        TNTPrimed e = world.spawn(testLoc, TNTPrimed.class);
                         e.setVelocity(new org.bukkit.util.Vector(
                                 random.nextDouble() * 2.0 - 1,
                                 random.nextDouble() * 2 * -1,
@@ -612,7 +611,7 @@ public class JungleRaidComponent extends MinigameComponent {
                             continue;
                         }
                         for (int ii = ChanceUtil.getRandom(5); ii > 0; --ii) {
-                            ThrownPotion potion = (ThrownPotion) world.spawnEntity(testLoc, EntityType.SPLASH_POTION);
+                            ThrownPotion potion = world.spawn(testLoc, ThrownPotion.class);
                             Potion brewedPotion = new Potion(type);
                             brewedPotion.setLevel(type.getMaxLevel());
                             brewedPotion.setSplash(true);
@@ -637,7 +636,7 @@ public class JungleRaidComponent extends MinigameComponent {
                     for (int i = 0; i < 5; i++) {
                         server.getScheduler().runTaskLater(inst, () -> {
                             Location targetLocation = player.getLocation();
-                            Firework firework = (Firework) targetLocation.getWorld().spawnEntity(targetLocation, EntityType.FIREWORK);
+                            Firework firework = targetLocation.getWorld().spawn(targetLocation, Firework.class);
                             FireworkMeta meta = firework.getFireworkMeta();
                             FireworkEffect.Builder builder = FireworkEffect.builder();
                             builder.flicker(ChanceUtil.getChance(2));
@@ -1128,7 +1127,7 @@ public class JungleRaidComponent extends MinigameComponent {
 
                 for (int i = 0; i < 12; i++) {
                     server.getScheduler().runTaskLater(inst, () -> {
-                        Firework firework = (Firework) world.spawnEntity(playerLoc, EntityType.FIREWORK);
+                        Firework firework = world.spawn(playerLoc, Firework.class);
                         FireworkMeta meta = firework.getFireworkMeta();
                         FireworkEffect.Builder builder = FireworkEffect.builder();
                         builder.flicker(ChanceUtil.getChance(2));

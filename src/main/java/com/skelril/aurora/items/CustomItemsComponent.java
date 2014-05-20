@@ -511,7 +511,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                             if (!e.isValid() || !(e instanceof LivingEntity)) continue;
                             // Pig Zombie
                             if (e instanceof Pig) {
-                                e.getWorld().spawnEntity(e.getLocation(), EntityType.PIG_ZOMBIE);
+                                e.getWorld().spawn(e.getLocation(), PigZombie.class);
                                 e.remove();
                                 continue;
                             }
@@ -556,7 +556,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                 if (!ChanceUtil.getChance(5)) return;
                 server.getScheduler().runTaskLater(inst, () -> {
-                    final Bat bat = (Bat) location.getWorld().spawnEntity(location, EntityType.BAT);
+                    final Bat bat = location.getWorld().spawn(location, Bat.class);
                     bat.setRemoveWhenFarAway(true);
                     server.getScheduler().runTaskLater(inst, () -> {
                         if (bat.isValid()) {
@@ -571,7 +571,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                 if (!ChanceUtil.getChance(5)) return;
                 server.getScheduler().runTaskLater(inst, () -> {
-                    final Chicken chicken = (Chicken) location.getWorld().spawnEntity(location, EntityType.CHICKEN);
+                    final Chicken chicken = location.getWorld().spawn(location, Chicken.class);
                     chicken.setRemoveWhenFarAway(true);
                     server.getScheduler().runTaskLater(inst, () -> {
                         if (chicken.isValid()) {

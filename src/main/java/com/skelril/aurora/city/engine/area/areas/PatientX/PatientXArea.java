@@ -229,7 +229,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
             case 3:
                 for (Player player : contained) {
                     for (double i = ChanceUtil.getRangedRandom(difficulty, Math.pow(2, difficulty)); i > 0; i--) {
-                        Entity e = getWorld().spawnEntity(player.getLocation(), EntityType.PRIMED_TNT);
+                        Entity e = getWorld().spawn(player.getLocation(), TNTPrimed.class);
                         e.setVelocity(new org.bukkit.util.Vector(
                                 random.nextDouble() * 1 - .5,
                                 random.nextDouble() * .8 + .2,

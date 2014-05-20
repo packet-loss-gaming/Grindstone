@@ -540,8 +540,8 @@ public class SkyWarsComponent extends MinigameComponent {
 
                 if (!ChanceUtil.getChance(10) && !gameFlags.contains('c')) continue;
 
-                Chicken c = (Chicken) world.spawnEntity(
-                        LocationUtil.pickLocation(world, region.getMaximumPoint().getY() - 10, checker), EntityType.CHICKEN);
+                Location target = LocationUtil.pickLocation(world, region.getMaximumPoint().getY() - 10, checker);
+                Chicken c = world.spawn(target, Chicken.class);
                 c.setRemoveWhenFarAway(true);
             }
 

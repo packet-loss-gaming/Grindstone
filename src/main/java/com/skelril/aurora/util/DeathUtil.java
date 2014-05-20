@@ -7,7 +7,6 @@
 package com.skelril.aurora.util;
 
 import org.bukkit.Location;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
@@ -26,7 +25,7 @@ public class DeathUtil {
 
     public static void throwSlashPotion(Location location) {
 
-        ThrownPotion potionEntity = (ThrownPotion) location.getWorld().spawnEntity(location, EntityType.SPLASH_POTION);
+        ThrownPotion potionEntity = location.getWorld().spawn(location, ThrownPotion.class);
         PotionType type = CollectionUtil.getElement(thrownTypes);
         Potion potion = new Potion(type);
         potion.setLevel(type.getMaxLevel());
