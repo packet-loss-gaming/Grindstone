@@ -243,6 +243,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
         return auditor;
     }
 
+    public boolean isAdmin(Player player, AdminState min) {
+        assert min != AdminState.MEMBER;
+        return getAdminState(player).isAbove(min);
+    }
+
     /**
      * This method is used to determine if the player is in Admin Mode.
      *
@@ -250,13 +255,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * @return - true if the player is in Admin Mode
      */
     public boolean isAdmin(Player player) {
-
-        return !getAdminState(player).equals(AdminState.MEMBER);
+        return isAdmin(player, AdminState.MODERATOR);
     }
 
     public boolean isSysop(Player player) {
-
-        return getAdminState(player).equals(AdminState.SYSOP);
+        return isAdmin(player, AdminState.SYSOP);
     }
 
     /**
@@ -698,6 +701,9 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 } else {
                     throw new CommandPermissionsException();
                 }
+
+                ChatUtil.sendDebug(getAdminState((Player) sender));
+
 
                 if (admin) {
                     ChatUtil.sendNotice(sender, "You have entered admin mode.");
