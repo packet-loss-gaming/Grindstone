@@ -482,11 +482,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             CustomItemSession session = getSession(owner);
 
             if (session.canSpec(SpecType.ANIMAL_BOW)) {
-                EntityType type = null;
+                Class<? extends LivingEntity> type = null;
                 if (ItemUtil.isItem(launcher, CustomItems.BAT_BOW)) {
-                    type = EntityType.BAT;
+                    type = Bat.class;
                 } else if (ItemUtil.isItem(launcher, CustomItems.CHICKEN_BOW)) {
-                    type = EntityType.CHICKEN;
+                    type = Chicken.class;
                 }
 
                 if (type != null) {

@@ -16,7 +16,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
-import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Bat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -49,7 +49,7 @@ public class DonationStoreComponent extends BukkitComponent implements Listener,
         Location pLoc = player.getLocation();
 
         if (inst.hasPermission(player, "aurora.deatheffects.bat")) {
-            EffectUtil.Strange.mobBarrage(pLoc, EntityType.BAT);
+            EffectUtil.Strange.mobBarrage(pLoc, Bat.class);
         }
     }
 

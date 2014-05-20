@@ -10,14 +10,14 @@ import com.skelril.aurora.items.specialattack.LocationAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.RangedSpecial;
 import com.skelril.aurora.util.item.EffectUtil;
 import org.bukkit.Location;
-import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Bat;
 import org.bukkit.entity.LivingEntity;
 
 public class MobAttack extends LocationAttack implements RangedSpecial {
 
-    private EntityType type;
+    private Class<? extends LivingEntity> type;
 
-    public MobAttack(LivingEntity owner, Location target, EntityType type) {
+    public <T extends LivingEntity> MobAttack(LivingEntity owner, Location target, Class<T> type) {
         super(owner, target);
         this.type = type;
     }
@@ -27,7 +27,7 @@ public class MobAttack extends LocationAttack implements RangedSpecial {
 
         EffectUtil.Strange.mobBarrage(target, type);
 
-        if (type == EntityType.BAT) {
+        if (type.isInstance(Bat.class)) {
             inform("Your bow releases a batty attack.");
         } else {
             inform("Your bow releases a " + type.getName().toLowerCase() + " attack.");
