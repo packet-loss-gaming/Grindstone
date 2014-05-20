@@ -11,14 +11,12 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.util.checker.RegionChecker;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,47 +28,6 @@ public class LocationUtil {
             BlockFace.SOUTH, BlockFace.WEST, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST, BlockFace.SOUTH_EAST,
             BlockFace.SOUTH_WEST
     };
-
-    @Deprecated
-    private static Location matchLocationFromId(int id) {
-
-        int trueId = id - 1;
-        Location[] TeleportLocations = new Location[5];
-        TeleportLocations[0] = new Location(Bukkit.getWorld("Destrio"), -594, 10, 1180);
-        TeleportLocations[1] = Bukkit.getWorld("Destrio").getSpawnLocation();
-        TeleportLocations[2] = new Location(Bukkit.getWorld("Destrio"), 36, 79, 1125);
-        TeleportLocations[3] = new Location(Bukkit.getWorld("Destrio"), -285, 140, -664);
-        TeleportLocations[4] = new Location(Bukkit.getWorld("Destrio"), -59, 98, -1698);
-        for (int i = 0; i < TeleportLocations.length; i++) {
-            if (i == trueId) return TeleportLocations[i];
-        }
-        return null;
-    }
-
-    @Deprecated
-    private static int getLocationId(String name) {
-
-        String[] LocationNames = new String[5];
-        LocationNames[0] = "THE BANK";
-        LocationNames[1] = "FLINT";
-        LocationNames[2] = "FORT";
-        LocationNames[3] = "SKY CITY";
-        LocationNames[4] = "MUSHROOM ISLE";
-
-
-        for (int i = 0; i < LocationNames.length; i++) {
-            if (LocationNames[i].equalsIgnoreCase(name)) {
-                return i + 1;
-            }
-        }
-        return 0;
-    }
-
-    @Deprecated
-    public static Location matchLocationFromText(String name) {
-
-        return matchLocationFromId(getLocationId(name));
-    }
 
     public static double distanceSquared2D(Location a, Location b) {
 
@@ -84,8 +41,8 @@ public class LocationUtil {
     }
 
     public static boolean toGround(Player player) {
-
-        return player.teleport(findFreePosition(player.getLocation()));
+        Location target = findFreePosition(player.getLocation());
+        return target != null && player.teleport(target);
     }
 
     public static Location findFreePosition(final Location pos) {
@@ -95,7 +52,7 @@ public class LocationUtil {
 
         // Null safety check
         if (mPos == null) {
-            return mPos;
+            return null;
         }
 
         // Add the offset to the location
@@ -107,64 +64,55 @@ public class LocationUtil {
         return mPos;
     }
 
+    private static boolean isBlockSafe(Block tb) {
+        tb = tb.getRelative(BlockFace.DOWN);
+        return tb.getType().isSolid() || EnvironmentUtil.isWater(tb);
+    }
+
+    /**
+     * Finds the y offset base for the start of the free space if it exist,
+     * otherwise returns -1
+     */
+    public static double findYSpace(Location pos, double amt, boolean up) {
+        final BlockFace targetFace = up ? BlockFace.UP : BlockFace.DOWN;
+
+        Block tb = pos.getBlock();
+
+        double free = 0;
+        double offset = 0;
+        while ((tb.getY() > 0 && tb.getY() < tb.getWorld().getMaxHeight()) && free < amt && !isBlockSafe(tb)) {
+            // Figure out the offset
+            double inheritedOffset = up && offset > 1 ? offset - 1: 0;
+            offset = BlockType.centralTopLimit(tb.getTypeId(), tb.getData());
+            if (up && offset == 0) offset = inheritedOffset;
+
+            // Adapt the free
+            if (offset > 0) free = up ? 0 : (1 - offset);
+            else ++free;
+
+            // Update the target block
+            tb = tb.getRelative(targetFace);
+        }
+        return free >= amt ? tb.getY() + offset : -1;
+    }
+
+    /**
+     * Finds free position for a player, checking downward, then upward,
+     * and returning null if it fails to find any suitable space
+     */
     public static Location findRawFreePosition(final Location pos) {
 
         World world = pos.getWorld();
-
-        // Let's try going down
-        Block block = pos.getBlock().getRelative(0, 1, 0);
-        if (!block.getChunk().isLoaded()) {
-            block.getChunk().load();
-        }
-        int free = 0;
-
-        // Look for ground
-        while (block.getY() > 1 && (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED)) {
-            free++;
-            block = block.getRelative(0, -1, 0);
+        // Load the chunk
+        Block tb = pos.getBlock().getRelative(0, 1, 0);
+        if (!tb.getChunk().isLoaded()) {
+            tb.getChunk().load();
         }
 
-        if (block.getY() == 0) return null; // No ground below!
-
-        if (free >= 2) {
-            if (block.getTypeId() == BlockID.LAVA || block.getTypeId() == BlockID.STATIONARY_LAVA) {
-                return null; // Not safe
-            }
-
-            Block tb = block.getRelative(0, 1, 0);
-            Location l = tb.getLocation();
-            l.add(new Vector(0, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0));
-            l.setPitch(pos.getPitch());
-            l.setYaw(pos.getYaw());
-            return l;
-        }
-
-        // Let's try going up
-        block = pos.getBlock().getRelative(0, -1, 0);
-        free = 0;
-        boolean foundGround = false;
-
-        while (block.getY() + 1 < world.getMaxHeight()) {
-            if (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED) {
-                free++;
-            } else {
-                free = 0;
-                foundGround = block.getTypeId() != BlockID.LAVA && block.getTypeId() != BlockID.STATIONARY_LAVA;
-            }
-
-            if (foundGround && free == 2) {
-                Block tb = block.getRelative(0, -1, 0);
-                Location l = tb.getLocation();
-                l.add(new Vector(0, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0));
-                l.setPitch(pos.getPitch());
-                l.setYaw(pos.getYaw());
-                return l;
-            }
-
-            block = block.getRelative(0, 1, 0);
-        }
-
-        return null;
+        // Check down, up, and then return the result
+        double y = findYSpace(tb.getLocation(), 1.8, false);
+        if (y == -1) y = findYSpace(tb.getLocation(), 1.8, true);
+        return y == -1 ? null : new Location(world, pos.getX(), y, pos.getZ());
     }
 
     public static Location findRandomLoc(Location searchFromLocation, final int radius) {
@@ -405,20 +353,6 @@ public class LocationUtil {
             }
         }
         return false;
-    }
-
-    public static Location parseLocation(String string) {
-
-        try {
-            String[] locationString = string.split(",");
-            return new Location(Bukkit.getWorld(locationString[3]),
-                    Integer.parseInt(locationString[0]),
-                    Integer.parseInt(locationString[1]),
-                    Integer.parseInt(locationString[2]));
-
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     public static boolean getBelowID(Location loc, int id) {
