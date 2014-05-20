@@ -17,6 +17,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +63,7 @@ public class LocationUtil {
         }
 
         // Add the offset to the location to negate it
-        mPos.add(pos.getX() - pos.getBlockX(), 0, pos.getZ() - pos.getBlockZ());
+        mPos.subtract(pos.getX() - pos.getBlockX(), 0, pos.getZ() - pos.getBlockZ());
 
         // Move to the center of the block if undefined
         if (mPos.getX() == mPos.getBlockX()) mPos.add(.5, 0, 0);
@@ -70,55 +71,64 @@ public class LocationUtil {
         return mPos;
     }
 
-    private static boolean isBlockSafe(Block tb) {
-        tb = tb.getRelative(BlockFace.DOWN);
-        return tb.getType().isSolid() || EnvironmentUtil.isWater(tb);
-    }
-
-    /**
-     * Finds the y offset base for the start of the free space if it exist,
-     * otherwise returns -1
-     */
-    public static double findYSpace(Location pos, double amt, boolean up) {
-        final BlockFace targetFace = up ? BlockFace.UP : BlockFace.DOWN;
-
-        Block tb = pos.getBlock();
-
-        double free = 0;
-        double offset = 0;
-        while ((tb.getY() > 0 && tb.getY() < tb.getWorld().getMaxHeight()) && free < amt && !isBlockSafe(tb)) {
-            // Figure out the offset
-            double inheritedOffset = up && offset > 1 ? offset - 1: 0;
-            offset = BlockType.centralTopLimit(tb.getTypeId(), tb.getData());
-            if (up && offset == 0) offset = inheritedOffset;
-
-            // Adapt the free
-            if (offset > 0) free = up ? 0 : (1 - offset);
-            else ++free;
-
-            // Update the target block
-            tb = tb.getRelative(targetFace);
-        }
-        return free >= amt ? tb.getY() + offset : -1;
-    }
-
-    /**
-     * Finds free position for a player, checking downward, then upward,
-     * and returning null if it fails to find any suitable space
-     */
     public static Location findRawFreePosition(final Location pos) {
 
         World world = pos.getWorld();
-        // Load the chunk
-        Block tb = pos.getBlock().getRelative(0, 1, 0);
-        if (!tb.getChunk().isLoaded()) {
-            tb.getChunk().load();
+
+        // Let's try going down
+        Block block = pos.getBlock().getRelative(0, 1, 0);
+        if (!block.getChunk().isLoaded()) {
+            block.getChunk().load();
+        }
+        int free = 0;
+
+        // Look for ground
+        while (block.getY() > 1 && (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED)) {
+            free++;
+            block = block.getRelative(0, -1, 0);
         }
 
-        // Check down, up, and then return the result
-        double y = findYSpace(tb.getLocation(), 1.8, false);
-        if (y == -1) y = findYSpace(tb.getLocation(), 1.8, true);
-        return y == -1 ? null : new Location(world, pos.getX(), y, pos.getZ());
+        if (block.getY() == 0) return null; // No ground below!
+
+        if (free >= 2) {
+            if (block.getTypeId() == BlockID.LAVA || block.getTypeId() == BlockID.STATIONARY_LAVA) {
+                return null; // Not safe
+            }
+
+            Block tb = block.getRelative(0, 1, 0);
+            Location l = tb.getLocation();
+            l.add(new Vector(0, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0));
+            l.setPitch(pos.getPitch());
+            l.setYaw(pos.getYaw());
+            return l;
+        }
+
+        // Let's try going up
+        block = pos.getBlock().getRelative(0, -1, 0);
+        free = 0;
+        boolean foundGround = false;
+
+        while (block.getY() + 1 < world.getMaxHeight()) {
+            if (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED) {
+                free++;
+            } else {
+                free = 0;
+                foundGround = block.getTypeId() != BlockID.LAVA && block.getTypeId() != BlockID.STATIONARY_LAVA;
+            }
+
+            if (foundGround && free == 2) {
+                Block tb = block.getRelative(0, -1, 0);
+                Location l = tb.getLocation();
+                l.add(new Vector(0, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0));
+                l.setPitch(pos.getPitch());
+                l.setYaw(pos.getYaw());
+                return l;
+            }
+
+            block = block.getRelative(0, 1, 0);
+        }
+
+        return null;
     }
 
     public static Location findRandomLoc(Location searchFromLocation, final int radius) {
