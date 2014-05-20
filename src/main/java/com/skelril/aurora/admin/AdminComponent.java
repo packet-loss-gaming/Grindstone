@@ -702,9 +702,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     throw new CommandPermissionsException();
                 }
 
-                ChatUtil.sendDebug(getAdminState((Player) sender));
-
-
                 if (admin) {
                     ChatUtil.sendNotice(sender, "You have entered admin mode.");
                 } else {
