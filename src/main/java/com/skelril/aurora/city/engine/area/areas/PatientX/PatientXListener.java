@@ -110,6 +110,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
         if (parent.contains(to) && !parent.contains(from)) {
             Player player = event.getPlayer();
+            if (parent.admin.isAdmin(player)) return;
             if (!ItemUtil.removeItemOfName(player, CustomItemCenter.build(CustomItems.PHANTOM_HYMN), 1, false)) {
                 ChatUtil.sendError(player, "You need a Phantom Hymn to sacrifice to enter that area.");
                 event.setCancelled(true);
