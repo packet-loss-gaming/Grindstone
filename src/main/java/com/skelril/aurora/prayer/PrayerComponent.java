@@ -321,7 +321,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
             uninfluencePlayer(player, prayer.getEffect().getType());
             return false;
-        } else if (prayer.getEffect().getType().isUnholy() && !adminComponent.standardizePlayer(player)) {
+        } else if (prayer.getEffect().getType().isUnholy() && !adminComponent.deadmin(player)) {
 
             uninfluencePlayer(player);
             return false;
