@@ -7,6 +7,7 @@
 package com.skelril.aurora.economic.store;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.commands.PaginatedResult;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
@@ -344,43 +345,27 @@ public class AdminStoreComponent extends BukkitComponent {
                     inst.hasPermission(sender, "aurora.admin.adminstore.disabled"));
             Collections.sort(itemPricePairCollection);
 
-            final int entryToShow = 9;
-            final int listSize = itemPricePairCollection.size();
+            new PaginatedResult<ItemPricePair>(ChatColor.GOLD + "Item List") {
+                @Override
+                public String format(ItemPricePair pair) {
+                    ChatColor color = pair.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
+                    String buy, sell;
+                    if (pair.isBuyable() || !pair.isEnabled()) {
+                        buy = ChatColor.WHITE + econ.format(pair.getPrice()) + ChatColor.YELLOW;
+                    } else {
+                        buy = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
+                    }
+                    if (pair.isSellable() || !pair.isEnabled()) {
+                        sell = ChatColor.WHITE + econ.format(pair.getSellPrice()) + ChatColor.YELLOW;
+                    } else {
+                        sell = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
+                    }
 
-            // Page info
-            int page = 0;
-            int maxPage = listSize / entryToShow;
-
-            if (args.hasFlag('p')) {
-                page = Math.min(maxPage, Math.max(0, args.getFlagInteger('p') - 1));
-            }
-
-            // Viewable record info
-            int min = entryToShow * page;
-            int max = Math.min(listSize, min + entryToShow);
-
-            // Result display
-            ChatUtil.sendNotice(sender, ChatColor.GOLD, "Item List - Page (" + Math.min(maxPage + 1, page + 1) + "/" + (maxPage + 1) + ")");
-            for (int i = min; i < max; i++) {
-                ItemPricePair pair = itemPricePairCollection.get(i);
-                ChatColor color = pair.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
-                String buy, sell;
-                if (pair.isBuyable() || !pair.isEnabled()) {
-                    buy = ChatColor.WHITE + econ.format(pair.getPrice()) + ChatColor.YELLOW;
-                } else {
-                    buy = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
+                    String message = color + pair.getName().toUpperCase()
+                            + ChatColor.YELLOW + " (Quick Price: " + buy + " - " + sell + ")";
+                    return message.replace(' ' + econ.currencyNamePlural(), "");
                 }
-                if (pair.isSellable() || !pair.isEnabled()) {
-                    sell = ChatColor.WHITE + econ.format(pair.getSellPrice()) + ChatColor.YELLOW;
-                } else {
-                    sell = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
-                }
-
-                String message = color + pair.getName().toUpperCase()
-                        + ChatColor.YELLOW + " (Quick Price: " + buy + " - " + sell + ")";
-                message = message.replace(' ' + econ.currencyNamePlural(), "");
-                ChatUtil.sendNotice(sender, message);
-            }
+            }.display(sender, itemPricePairCollection, args.getFlagInteger('p', 1));
         }
 
         @Command(aliases = {"lookup", "value", "info", "pc"},
