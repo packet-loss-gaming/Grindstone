@@ -8,7 +8,9 @@ package com.skelril.aurora.city.engine.area.areas.GiantBoss;
 
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.city.engine.area.AreaListener;
 import com.skelril.aurora.events.PrayerApplicationEvent;
@@ -27,10 +29,7 @@ import com.skelril.aurora.items.specialattack.attacks.ranged.fear.FearBomb;
 import com.skelril.aurora.items.specialattack.attacks.ranged.misc.MobAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.Famine;
 import com.skelril.aurora.items.specialattack.attacks.ranged.unleashed.GlowingFog;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.EntityUtil;
-import com.skelril.aurora.util.EnvironmentUtil;
+import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.item.BookUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -41,13 +40,17 @@ import com.skelril.aurora.util.timer.IntegratedRunnable;
 import com.skelril.aurora.util.timer.TimedRunnable;
 import com.skelril.aurora.util.timer.TimerUtil;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -171,6 +174,27 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
     public void onGemOfLifeUsage(GemOfLifeUsageEvent event) {
         if (parent.contains(event.getPlayer())) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getClickedBlock();
+        Action action = event.getAction();
+        if (parent.boss != null && action.equals(Action.PHYSICAL) && parent.contains(player, 1)) {
+            switch (block.getTypeId()) {
+                case BlockID.PRESSURE_PLATE_HEAVY:
+                    ProtectedRegion door;
+                    if (LocationUtil.isInRegion(parent.eastDoor, block.getRelative(BlockFace.WEST).getLocation())) {
+                        door = parent.eastDoor;
+                    } else {
+                        door = parent.westDoor;
+                    }
+                    parent.setDoor(door, BlockID.AIR, 0);
+                    server.getScheduler().runTaskLater(inst, () -> parent.setDoor(door, BlockID.SANDSTONE, 1), 20 * 10);
+                    break;
+            }
         }
     }
 
@@ -416,6 +440,8 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 for (int i = 0; i < 7; i++) {
                     server.getScheduler().runTaskLater(inst, parent.spawnXP, i * 2 * 20);
                 }
+                parent.setDoor(parent.eastDoor, BlockID.AIR, 0);
+                parent.setDoor(parent.westDoor, BlockID.AIR, 0);
                 // Buff babies
                 for (Entity entity : containedEntities) {
                     if (entity instanceof Zombie) ((Zombie) entity).addPotionEffects(Lists.newArrayList(effects));

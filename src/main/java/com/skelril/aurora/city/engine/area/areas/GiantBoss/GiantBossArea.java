@@ -12,6 +12,8 @@ import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.area.AreaComponent;
 import com.skelril.aurora.city.engine.area.PersistentArena;
@@ -23,6 +25,7 @@ import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.APIUtil;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.skelril.aurora.util.timer.IntegratedRunnable;
@@ -37,6 +40,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.Difficulty;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.*;
 import org.bukkit.potion.PotionEffect;
@@ -62,6 +67,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
     protected static final int groundLevel = 82;
     protected static final double scalOffst = 3;
 
+    protected ProtectedRegion eastDoor, westDoor;
+
     protected Giant boss = null;
     protected long lastAttack = 0;
     protected int lastAttackNumber = -1;
@@ -83,7 +90,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
         try {
             WorldGuardPlugin WG = APIUtil.getWorldGuard();
             world = server.getWorlds().get(0);
-            region = WG.getRegionManager(world).getRegion("vineam-district-giant-boss-area");
+            RegionManager manager = WG.getRegionManager(world);
+            region = manager.getRegion("vineam-district-giant-boss-area");
+            eastDoor = manager.getRegion("vineam-district-giant-boss-east-door");
+            westDoor = manager.getRegion("vineam-district-giant-boss-west-door");
             tick = 4 * 20;
             listener = new GiantBossListener(this);
             config = new GiantBossConfig();
@@ -180,6 +190,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
         } catch (UnsupportedFeatureException ex) {
             log.warning("Boss NMS attributes not properly set.");
         }
+        setDoor(eastDoor, BlockID.SANDSTONE, 1);
+        setDoor(westDoor, BlockID.SANDSTONE, 1);
         for (Player player : getContained(1, Player.class)) ChatUtil.sendWarning(player, "I live again!");
     }
 
@@ -552,5 +564,28 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                 }
             }
         }
+    }
+
+    public void setDoor(final ProtectedRegion door, int type, int data) {
+        Block sideOne = BukkitUtil.toLocation(world, door.getMaximumPoint()).getBlock();
+        Block sideTwo = BukkitUtil.toLocation(world, door.getMinimumPoint().setY(sideOne.getY())).getBlock();
+
+        doNextDoorBlock(door, sideOne, true, type, data, 1);
+        doNextDoorBlock(door, sideTwo, false, type, data, 1);
+    }
+
+    private BlockFace[] northFaces = new BlockFace[] {
+            BlockFace.NORTH, BlockFace.DOWN
+    };
+    private BlockFace[] southFaces = new BlockFace[] {
+            BlockFace.SOUTH, BlockFace.DOWN
+    };
+
+    private void doNextDoorBlock(ProtectedRegion limit, Block block, boolean north, int newType, int data, int depth) {
+        if (!LocationUtil.isInRegion(limit, block.getLocation())) return;
+        for (BlockFace face : (north ? northFaces : southFaces)) {
+            doNextDoorBlock(limit, block.getRelative(face), north, newType, data, depth + 1);
+        }
+        server.getScheduler().runTaskLater(inst, () -> block.setTypeIdAndData(newType, (byte) data, true), 9 * depth);
     }
 }
