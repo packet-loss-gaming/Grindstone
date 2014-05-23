@@ -11,6 +11,8 @@ import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.economic.ImpersonalComponent;
+import com.skelril.aurora.economic.lottery.mysql.MySQLLotteryTicketDatabase;
+import com.skelril.aurora.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
 import com.skelril.aurora.exceptions.NotFoundException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.CollectionUtil;
@@ -40,7 +42,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -75,11 +76,9 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         config = configure(new LocalConfiguration());
         MIN_WINNING = config.maxPerLotto * config.ticketPrice * 1.25;
 
-        File lotteryDirectory = new File(inst.getDataFolder().getPath() + "/lottery");
-        if (!lotteryDirectory.exists()) lotteryDirectory.mkdir();
-        lotteryTicketDatabase = new CSVLotteryTicketDatabase(lotteryDirectory);
+        lotteryTicketDatabase = new MySQLLotteryTicketDatabase();
         lotteryTicketDatabase.load();
-        lotteryWinnerDatabase = new CSVLotteryWinnerDatabase(lotteryDirectory);
+        lotteryWinnerDatabase = new MySQLLotteryWinnerDatabase();
         lotteryWinnerDatabase.load();
 
         //noinspection AccessStaticViaInstance
@@ -170,11 +169,12 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         public void lotteryLastCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             ChatUtil.sendNotice(sender, ChatColor.GRAY, "Lottery - Recent winners:");
-            List<String> winners = lotteryWinnerDatabase.getRecentWinner(5);
+            List<LotteryWinner> winners = lotteryWinnerDatabase.getRecentWinner(config.recentLength);
             short number = 0;
-            for (String player : winners) {
+            for (LotteryWinner winner : winners) {
                 number++;
-                ChatUtil.sendNotice(sender, "  " + ChatColor.GOLD + number + ". " + ChatColor.YELLOW + player);
+                ChatUtil.sendNotice(sender, "  " + ChatColor.GOLD + number + ". " + ChatColor.YELLOW
+                        + winner.getName() + ChatColor.GOLD + " - " + ChatColor.WHITE + economy.format(winner.getAmt()));
             }
         }
     }
@@ -255,17 +255,15 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
         if (recentList.contains(player)) return;
 
+        String playerName = player.getName();
+
         int b = 0;
         int m = 0;
         int sold = 0;
 
-        b = (int) (economy.getBalance(player.getName()) / config.ticketPrice);
+        b = (int) (economy.getBalance(playerName) / config.ticketPrice);
 
-        if (lotteryTicketDatabase.ticketExist(player)) {
-            m = config.maxPerLotto - lotteryTicketDatabase.getLotteryTicket(player).getValue();
-        } else {
-            m = config.maxPerLotto;
-        }
+        m = config.maxPerLotto - lotteryTicketDatabase.getTickets(playerName);
 
         if (b > m) {
             if (m > count) {
@@ -285,14 +283,14 @@ public class LotteryComponent extends BukkitComponent implements Listener {
             sold = 0;
         }
 
-        if (!economy.has(player.getName(), config.ticketPrice * sold)) {
+        if (!economy.has(playerName, config.ticketPrice * sold)) {
             throw new CommandException("You do not have enough " + economy.currencyNamePlural() + ".");
         }
 
         if (sold > 0) {
-            economy.withdrawPlayer(player.getName(), config.ticketPrice * sold);
+            economy.withdrawPlayer(playerName, config.ticketPrice * sold);
 
-            lotteryTicketDatabase.addTicket(player, sold);
+            lotteryTicketDatabase.addTickets(playerName, sold);
             lotteryTicketDatabase.save();
         }
 
@@ -328,8 +326,8 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         Bukkit.broadcastMessage(ChatColor.YELLOW + name + " has won: " +
                 ChatUtil.makeCountString(economy.format(cash), " via the lottery!"));
 
-        lotteryWinnerDatabase.addWinner(name + ChatColor.GOLD + " - " + ChatColor.WHITE + economy.format(cash));
-        lotteryWinnerDatabase.save(config.recentLength);
+        lotteryWinnerDatabase.addWinner(name, cash);
+        lotteryWinnerDatabase.save();
         lotteryTicketDatabase.clearTickets();
         lotteryTicketDatabase.save();
     }
@@ -338,7 +336,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
         for (CommandSender receiver : senders) {
             ChatUtil.sendNotice(receiver, "The lottery currently has: "
-                    + ChatUtil.makeCountString(getCount(), " tickets and is worth: ")
+                    + ChatUtil.makeCountString(lotteryTicketDatabase.getTicketCount(), " tickets and is worth: ")
                     + ChatUtil.makeCountString(economy.format(getWinnerCash()),
                     "."));
         }
@@ -346,27 +344,13 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
     public double getWinnerCash() {
 
-        double amt = getCount(lotteryTicketDatabase.getTickets()) * config.ticketPrice * .75;
+        double amt = lotteryTicketDatabase.getTicketCount() * config.ticketPrice * .75;
 
         EconomyResponse response = economy.bankBalance(LOTTERY_BANK_ACCOUNT);
         if (response.transactionSuccess()) {
             amt += response.balance;
         }
         return amt;
-    }
-
-    public int getCount() {
-
-        return getCount(lotteryTicketDatabase.getTickets());
-    }
-
-    public int getCount(List<GenericWealthStore> tickets) {
-
-        int count = 0;
-        for (GenericWealthStore lotteryTicket : tickets) {
-            count += lotteryTicket.getValue();
-        }
-        return count;
     }
 
     private String findNewMillionaire() throws NotFoundException {

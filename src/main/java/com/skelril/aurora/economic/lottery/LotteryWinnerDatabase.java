@@ -11,17 +11,13 @@ import java.util.List;
 /**
  * Author: Turtle9598
  */
-public interface LotteryWinnerDatabase extends Iterable<String> {
+public interface LotteryWinnerDatabase {
 
     public boolean load();
 
-    public boolean save(int max);
+    public boolean save();
 
-    public void addWinner(String name);
+    public void addWinner(String name, double amount);
 
-    public void addWinner(String name, long time);
-
-    public List<String> getRecentWinner();
-
-    public List<String> getRecentWinner(int limit);
+    public List<LotteryWinner> getRecentWinner(int limit);
 }
