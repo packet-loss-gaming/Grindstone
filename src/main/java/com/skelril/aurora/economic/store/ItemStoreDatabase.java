@@ -8,7 +8,7 @@ package com.skelril.aurora.economic.store;
 
 import java.util.List;
 
-public interface ItemStoreDatabase extends Iterable<ItemPricePair> {
+public interface ItemStoreDatabase {
 
     /**
      * Load the item database.

@@ -17,10 +17,10 @@ import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.economic.store.mysql.MySQLItemStoreDatabase;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.database.UnloadableDatabase;
 import com.skelril.aurora.util.item.ItemType;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
@@ -68,7 +68,7 @@ public class AdminStoreComponent extends BukkitComponent {
         File storeDirectory = new File(inst.getDataFolder().getPath() + "/store");
         if (!storeDirectory.exists()) storeDirectory.mkdir();
 
-        itemStoreDatabase = new CSVItemStoreDatabase(storeDirectory);
+        itemStoreDatabase = new MySQLItemStoreDatabase();
         itemStoreDatabase.load();
 
         // Setup external systems
@@ -88,16 +88,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
     @Override
     public void reload() {
-
         itemStoreDatabase.load();
-    }
-
-    @Override
-    public void disable() {
-
-        if (itemStoreDatabase instanceof UnloadableDatabase) {
-            ((UnloadableDatabase) itemStoreDatabase).unload();
-        }
     }
 
     private final String NOT_AVAILIBLE = "No item by that name is currently available!";
@@ -468,10 +459,11 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException("Cannot scale by 0.");
             }
 
-            for (ItemPricePair pair : itemStoreDatabase) {
-                pair.setPrice(pair.getPrice() * factor);
+            List<ItemPricePair> items = itemStoreDatabase.getItemList();
+            for (ItemPricePair item : items) {
+                itemStoreDatabase.addItem(sender.getName(), item.getName(),
+                        item.getPrice() * factor, !item.isBuyable(), !item.isSellable());
             }
-
             itemStoreDatabase.save();
 
             ChatUtil.sendNotice(sender, "Market Scaled by: " + factor + ".");
