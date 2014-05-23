@@ -222,6 +222,24 @@ public class BookUtil {
 
                 return General.generateBook("Tattered Book", "The Forge Knights", pages);
             }
+
+            public static ItemStack patientX() {
+
+                List<String> pages = new ArrayList<>();
+                pages.add("The patient seems to be growing significantly more powerful day by day. " +
+                        "I think the treatment for his insanity may be working.");
+
+                pages.add("Continuing the treatment I've grown quite fond of patient X, " +
+                        "he's quite the character. His bad puns can be quite frustrating at times though.");
+
+                pages.add("The patient is increasingly volatile... I fear he may soon break his restraints, " +
+                        "I'll have the nurses add an extra layer...");
+
+                pages.add("He has broken out! I fear I've created a monster, it's really quite " +
+                        "interesting... I'll document the symptoms on the next few pages.");
+
+                return General.generateBook("Frozen Book", "Fredrick Scar", pages);
+            }
         }
 
         public static class Areas {
