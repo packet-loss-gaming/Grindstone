@@ -40,7 +40,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -64,9 +63,6 @@ public class AdminStoreComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-
-        File storeDirectory = new File(inst.getDataFolder().getPath() + "/store");
-        if (!storeDirectory.exists()) storeDirectory.mkdir();
 
         itemStoreDatabase = new MySQLItemStoreDatabase();
         itemStoreDatabase.load();
