@@ -31,8 +31,6 @@ public interface ItemStoreDatabase {
 
     public void removeItem(String playerName, String itemName);
 
-    public void logTransaction(String playerName, String itemName, int amount);
-
     /**
      * Gets the item that was requested
      *

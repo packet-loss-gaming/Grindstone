@@ -38,7 +38,7 @@ public class MySQLHandle {
                 if (results.next()) return results.getInt(1);
             }
         }
-        throw new IllegalArgumentException(name + " is not in the table lb-players");
+        return -1;
     }
 
     public static String getPlayerName(int id) throws SQLException {
@@ -50,6 +50,6 @@ public class MySQLHandle {
                 if (results.next()) return results.getString(1);
             }
         }
-        throw new IllegalArgumentException("No players has the id of " + id + " in the table lb-players");
+        return null;
     }
 }

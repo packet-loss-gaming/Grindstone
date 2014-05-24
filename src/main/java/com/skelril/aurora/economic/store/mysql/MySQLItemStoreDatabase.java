@@ -39,20 +39,9 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
             try (PreparedStatement statement = connection.prepareStatement(mainSQL)) {
                 statement.executeUpdate();
             }
-
-            String tranSQL = "CREATE TABLE IF NOT EXISTS `market-transactions` (" +
-                    "`id` INT NOT NULL AUTO_INCREMENT," +
-                    "`date` DATETIME NOT NULL," +
-                    "`player` INT NOT NULL," +
-                    "`item` INT NOT NULL," +
-                    "`amount` INT NOT NULL," +
-                    "PRIMARY KEY (`id`)" +
-                    ") ENGINE=MyISAM;";
-            try (PreparedStatement statement = connection.prepareStatement(tranSQL)) {
-                statement.executeUpdate();
-            }
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
         return true;
     }
@@ -85,23 +74,8 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         queue.add(new ItemDeleteStatement(itemName));
     }
 
-    @Override
-    public void logTransaction(String playerName, String itemName, int amount) {
-        try {
-            int playerID = MySQLHandle.getPlayerId(playerName);
-            int itemID = getItemID(itemName);
-            ItemTransactionStatement transaction = new ItemTransactionStatement(playerID, itemID, amount);
-            try (Connection connection = MySQLHandle.getConnection()) {
-                transaction.setConnection(connection);
-                transaction.executeStatements();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public int getItemID(String name) throws SQLException {
-        try (Connection connection  = MySQLHandle.getConnection()) {
+    public static int getItemID(String name) throws SQLException {
+        try (Connection connection = MySQLHandle.getConnection()) {
             String sql = "SELECT `id` FROM `market-items` WHERE `name` = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, name.toUpperCase());
@@ -113,6 +87,21 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
             }
         }
         return -1;
+    }
+
+    public static String getItemName(int id) throws SQLException {
+        try (Connection connection = MySQLHandle.getConnection()) {
+            String sql = "SELECT `name` FROM `market-items` WHERE `id` = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, id);
+                try (ResultSet results = statement.executeQuery()) {
+                    if (results.next()) {
+                        return results.getString(1);
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     @Override

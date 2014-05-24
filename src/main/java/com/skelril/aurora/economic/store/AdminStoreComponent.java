@@ -18,6 +18,7 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.economic.store.mysql.MySQLItemStoreDatabase;
+import com.skelril.aurora.economic.store.mysql.MySQLMarketTransactionDatabase;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -56,7 +57,8 @@ public class AdminStoreComponent extends BukkitComponent {
     @InjectComponent
     private SessionComponent sessions;
 
-    private static ItemStoreDatabase itemStoreDatabase;
+    private static ItemStoreDatabase itemDatabase;
+    private static MarketTransactionDatabase transactionDatabase;
 
     private ProtectedRegion region = null;
     private Economy econ;
@@ -64,8 +66,10 @@ public class AdminStoreComponent extends BukkitComponent {
     @Override
     public void enable() {
 
-        itemStoreDatabase = new MySQLItemStoreDatabase();
-        itemStoreDatabase.load();
+        itemDatabase = new MySQLItemStoreDatabase();
+        itemDatabase.load();
+        transactionDatabase = new MySQLMarketTransactionDatabase();
+        transactionDatabase.load();
 
         // Setup external systems
         setupEconomy();
@@ -84,7 +88,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
     @Override
     public void reload() {
-        itemStoreDatabase.load();
+        itemDatabase.load();
     }
 
     private final String NOT_AVAILIBLE = "No item by that name is currently available!";
@@ -117,12 +121,13 @@ public class AdminStoreComponent extends BukkitComponent {
                 }
                 itemName = type.getName();
             }
-            ItemPricePair itemPricePair = itemStoreDatabase.getItem(itemName);
-            itemName = itemPricePair.getName();
+            ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
 
             if (itemPricePair == null || !itemPricePair.isBuyable()) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
+
+            itemName = itemPricePair.getName();
 
             int amt = 1;
             if (args.hasFlag('a')) {
@@ -155,7 +160,8 @@ public class AdminStoreComponent extends BukkitComponent {
 
             // Charge the money and send the sender some feedback
             econ.withdrawPlayer(playerName, price - rebate);
-            itemStoreDatabase.logTransaction(playerName, itemName, amt);
+            transactionDatabase.logTransaction(playerName, itemName, amt);
+            transactionDatabase.save();
             String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), "");
             ChatUtil.sendNotice(sender, "Item(s) purchased for " + priceString + "!");
             if (rebate >= 0.01) {
@@ -269,7 +275,7 @@ public class AdminStoreComponent extends BukkitComponent {
                     itemName = type.getName();
                 }
 
-                ItemPricePair itemPricePair = itemStoreDatabase.getItem(itemName);
+                ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
 
                 if (itemPricePair == null || !itemPricePair.isSellable()) {
                     if (singleItem) {
@@ -298,9 +304,9 @@ public class AdminStoreComponent extends BukkitComponent {
             }
 
             for (Map.Entry<String, Integer> entry : transactions.entrySet()) {
-
-                itemStoreDatabase.logTransaction(playerName, entry.getKey(), entry.getValue());
+                transactionDatabase.logTransaction(playerName, entry.getKey(), entry.getValue());
             }
+            transactionDatabase.save();
 
             econ.depositPlayer(playerName, payment);
             player.getInventory().setContents(itemStacks);
@@ -328,7 +334,7 @@ public class AdminStoreComponent extends BukkitComponent {
         public void listCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             String filterString = args.argsLength() > 0 ? args.getJoinedStrings(0) : null;
-            List<ItemPricePair> itemPricePairCollection = itemStoreDatabase.getItemList(filterString,
+            List<ItemPricePair> itemPricePairCollection = itemDatabase.getItemList(filterString,
                     inst.hasPermission(sender, "aurora.admin.adminstore.disabled"));
             Collections.sort(itemPricePairCollection);
 
@@ -397,7 +403,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 itemName = type.getName();
             }
 
-            ItemPricePair itemPricePair = itemStoreDatabase.getItem(itemName);
+            ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
 
             if (itemPricePair == null) {
                 throw new CommandException(NOT_AVAILIBLE);
@@ -443,6 +449,39 @@ public class AdminStoreComponent extends BukkitComponent {
 
     public class AdminStoreCommands {
 
+        @Command(aliases = {"log"},
+                usage = "[-i item] [-u user] [-p page]", desc = "Item database logs",
+                flags = "i:u:p:s", min = 0, max = 0)
+        @CommandPermissions("aurora.admin.adminstore.log")
+        public void logCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            String item = args.getFlag('i', null);
+            if (item != null && !hasItemOfName(item)) {
+                ItemType type = ItemType.lookup(item);
+                if (type == null) {
+                    throw new CommandException("No item by that name was found.");
+                }
+                item = type.getName();
+            }
+            String player = args.getFlag('u', null);
+
+            List<ItemTransaction> transactions = transactionDatabase.getTransactions(item, player);
+            new PaginatedResult<ItemTransaction>(ChatColor.GOLD + "Market Transactions") {
+                @Override
+                public String format(ItemTransaction trans) {
+                    String message = ChatColor.YELLOW + trans.getPlayer() + ' ';
+                    if (trans.getAmount() > 0) {
+                        message += ChatColor.RED + "bought";
+                    } else {
+                        message += ChatColor.DARK_GREEN + "sold";
+                    }
+                    message += " " + ChatColor.YELLOW + Math.abs(trans.getAmount())
+                            + ChatColor.BLUE + " " + trans.getItem().toUpperCase();
+                    return message;
+                }
+            }.display(sender, transactions, args.getFlagInteger('p', 1));
+        }
+
         @Command(aliases = {"scale"},
                 usage = "<amount>", desc = "Scale the item database",
                 flags = "", min = 1, max = 1)
@@ -455,12 +494,12 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException("Cannot scale by 0.");
             }
 
-            List<ItemPricePair> items = itemStoreDatabase.getItemList();
+            List<ItemPricePair> items = itemDatabase.getItemList();
             for (ItemPricePair item : items) {
-                itemStoreDatabase.addItem(sender.getName(), item.getName(),
+                itemDatabase.addItem(sender.getName(), item.getName(),
                         item.getPrice() * factor, !item.isBuyable(), !item.isSellable());
             }
-            itemStoreDatabase.save();
+            itemDatabase.save();
 
             ChatUtil.sendNotice(sender, "Market Scaled by: " + factor + ".");
         }
@@ -484,16 +523,13 @@ public class AdminStoreComponent extends BukkitComponent {
             boolean disableBuy = args.hasFlag('b');
             boolean disableSell = args.hasFlag('s');
 
-            double price = .1;
-            if (args.hasFlag('p')) {
-                price = Math.max(.01, args.getFlagDouble('p'));
-            }
+            double price = Math.max(.01, args.getFlagDouble('p', .1));
 
             // Database operations
-            ItemPricePair oldItem = itemStoreDatabase.getItem(itemName);
+            ItemPricePair oldItem = itemDatabase.getItem(itemName);
             itemName = itemName.replace('_', ' ');
-            itemStoreDatabase.addItem(sender.getName(), itemName, price, disableBuy, disableSell);
-            itemStoreDatabase.save();
+            itemDatabase.addItem(sender.getName(), itemName, price, disableBuy, disableSell);
+            itemDatabase.save();
 
             // Notification
             String noticeString = oldItem == null ? " added with a price of " : " is now ";
@@ -523,12 +559,12 @@ public class AdminStoreComponent extends BukkitComponent {
                 itemName = type.getName();
             }
 
-            if (itemStoreDatabase.getItem(itemName) == null) {
+            if (itemDatabase.getItem(itemName) == null) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
-            itemStoreDatabase.removeItem(sender.getName(), itemName);
-            itemStoreDatabase.save();
+            itemDatabase.removeItem(sender.getName(), itemName);
+            itemDatabase.save();
             ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName.toUpperCase() + ChatColor.YELLOW + " has been removed from the database!");
         }
     }
@@ -599,7 +635,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
         if (type == null) return 0;
 
-        ItemPricePair itemPricePair = itemStoreDatabase.getItem(type.getName());
+        ItemPricePair itemPricePair = itemDatabase.getItem(type.getName());
 
         if (itemPricePair == null) return 0;
 
@@ -647,7 +683,7 @@ public class AdminStoreComponent extends BukkitComponent {
             itemName = type.getName();
         }
 
-        ItemPricePair itemPricePair = itemStoreDatabase.getItem(itemName);
+        ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
 
         if (itemPricePair == null) {
             return -1;
