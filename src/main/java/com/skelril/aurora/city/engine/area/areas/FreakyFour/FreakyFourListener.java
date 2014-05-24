@@ -228,7 +228,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                     double loot = parent.economy.getBalance(killer.getName()) * parent.getConfig().bankPercent;
                     loot = Math.max(loot, parent.getConfig().minLoot);
                     parent.economy.depositPlayer(killer.getName(), loot);
-                    ChatUtil.sendNotice(killer, "The boss drops " + parent.economy.format(loot));
+                    ChatUtil.sendNotice(killer, "The boss drops " + ChatColor.WHITE + parent.economy.format(loot));
                 }
             }
             event.getDrops().clear();
