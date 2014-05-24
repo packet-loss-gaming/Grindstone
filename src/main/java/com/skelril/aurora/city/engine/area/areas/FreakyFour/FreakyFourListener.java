@@ -16,6 +16,7 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EntityUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.player.PlayerState;
+import org.bukkit.ChatColor;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -24,7 +25,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.logging.Logger;
@@ -49,7 +50,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             parent.validateBosses();
             if (LocationUtil.isInRegion(parent.charlotte_RG, player)) {
                 // Teleport to Magma Cubed
-                if (parent.charolette == null && parent.checkMagmaCubed()) {
+                if (parent.charlotte == null && parent.checkMagmaCubed()) {
                     parent.spawnMagmaCubed();
                     player.teleport(new Location(parent.getWorld(), 374.5, 79, -304), TeleportCause.UNKNOWN);
                 }
@@ -72,6 +73,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 }
             } else if (parent.checkCharlotte()) {
                 // Teleport to Charlotte
+                parent.cleanupCharlotte();
                 parent.spawnCharlotte();
                 player.teleport(new Location(parent.getWorld(), 398.5, 79, -304), TeleportCause.UNKNOWN);
             }
@@ -80,10 +82,9 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
-        Location from = event.getFrom();
         Location to = event.getTo();
 
-        if (parent.contains(to) && !parent.contains(from) && !event.getCause().equals(TeleportCause.UNKNOWN)) {
+        if (parent.contains(to) && !event.getCause().equals(TeleportCause.UNKNOWN)) {
             Player player = event.getPlayer();
             if (parent.admin.isAdmin(player, AdminState.ADMIN)) return;
             event.setCancelled(true);
@@ -95,12 +96,14 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
     public void onSlimeSplit(SlimeSplitEvent event) {
         Slime slime = event.getEntity();
         if (!parent.contains(slime)) return;
-        event.setCount((int) Math.pow(event.getCount(), 3));
+        event.setCount((int) Math.pow(event.getCount(), 2.5));
         server.getScheduler().runTaskLater(inst, () -> {
             for (MagmaCube cube : parent.getContained(MagmaCube.class)) {
+                if (parent.magmaCubed.contains(cube)) continue;
                 cube.setCustomName("Magma Cubed");
-                cube.setMaxHealth(parent.getConfig().magmaCubedHP);
-                cube.setHealth(parent.getConfig().magmaCubedHP);
+                double percentHealth = Math.max(1, slime.getMaxHealth() * .75);
+                cube.setMaxHealth(percentHealth);
+                cube.setHealth(percentHealth);
                 parent.magmaCubed.add(cube);
             }
         }, 1);
@@ -110,29 +113,77 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
     public void onEntityDamage(EntityDamageEvent event) {
         Entity entity = event.getEntity();
         if (!parent.contains(entity)) return;
-        if (entity instanceof Creeper) {
+        Projectile projectile = null;
+        Entity damager = null;
+        if (event instanceof EntityDamageByEntityEvent) {
+            damager = ((EntityDamageByEntityEvent) event).getDamager();
+            if (damager instanceof Projectile) {
+                projectile = (Projectile) damager;
+                if (projectile.getShooter() instanceof Entity) {
+                    damager = (Entity) projectile.getShooter();
+                } else {
+                    damager = null;
+                }
+            }
+        }
+        if (entity instanceof Creeper || entity instanceof Skeleton) {
             if (event.getCause().equals(DamageCause.BLOCK_EXPLOSION)) {
                 EntityUtil.heal(entity, event.getDamage());
                 event.setCancelled(true);
-            } else if (event instanceof EntityDamageByEntityEvent) {
-                Entity damager = ((EntityDamageByEntityEvent) event).getDamager();
-                if (damager instanceof Projectile) {
-                    ProjectileSource source = ((Projectile) damager).getShooter();
-                    if (source instanceof Entity) {
-                        entity.teleport((Entity) source);
-                    }
+            } else if (projectile != null && damager != null) {
+                double distSQ = 2;
+                double maxDist = 1;
+                if (entity instanceof Skeleton) {
+                    distSQ = entity.getLocation().distanceSquared(damager.getLocation());
+                    maxDist = parent.getConfig().snipeeTeleportDist;
+                }
+                if (distSQ > Math.pow(maxDist, 2)) {
+                    entity.teleport(damager);
+                    throwBack(entity);
                 }
             }
-        } else if (entity instanceof Player && event instanceof EntityDamageByEntityEvent) {
-            Entity damager = ((EntityDamageByEntityEvent) event).getDamager();
-            if (damager instanceof Projectile) {
+        }
+        if (entity instanceof Player) {
+            if (projectile != null) {
                 EntityUtil.forceDamage(entity, ((Player) entity).getMaxHealth() * parent.getConfig().snipeeDamage);
                 entity.playEffect(EntityEffect.HURT);
                 event.setCancelled(true);
             } else if (damager instanceof MagmaCube) {
                 event.setDamage(event.getDamage() * parent.getConfig().magmaCubedDamageModifier);
+            } else if (damager instanceof CaveSpider) {
+                EntityUtil.heal(parent.charlotte, event.getDamage());
             }
         }
+        if (damager instanceof Player) {
+            final Entity finalDamager = damager;
+            final int oldCurrent = (int) Math.ceil(((LivingEntity) entity).getHealth());
+
+            server.getScheduler().runTaskLater(inst, () -> {
+
+                int current = (int) Math.ceil(((LivingEntity) entity).getHealth());
+
+                if (oldCurrent == current) return;
+
+                int max = (int) Math.ceil(((LivingEntity) entity).getMaxHealth());
+
+                String message;
+
+                if (current > 0) {
+                    message = ChatColor.DARK_AQUA + "Entity Health: " + current + " / " + max;
+                } else {
+                    message = ChatColor.GOLD + String.valueOf(ChatColor.BOLD) + "KO!";
+                }
+
+                ChatUtil.sendNotice((Player) finalDamager, message);
+            }, 1);
+        }
+    }
+
+    private void throwBack(Entity entity) {
+        Vector vel = entity.getLocation().getDirection();
+        vel.multiply(-1.5);
+        vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
+        entity.setVelocity(vel);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -146,15 +197,16 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             int minZ = min.getBlockZ();
             int maxX = max.getBlockX();
             int maxZ = max.getBlockZ();
+            int dmgFact = (int) (Math.max(3, (((Creeper) entity).getHealth() / ((Creeper) entity).getMaxHealth())
+                    * parent.getConfig().daBombTNTStrength));
             for (int x = minX; x < maxX; ++x) {
                 for (int z = minZ; z < maxZ; ++z) {
                     if (ChanceUtil.getChance(parent.getConfig().daBombTNT)) {
-                        Location target = new Location(parent.getWorld(), x, 83, z);
-                        if (target.getBlock().getType().isSolid()) continue;
-                        parent.getWorld().spawn(target, TNTPrimed.class);
+                        parent.getWorld().createExplosion(x, FreakyFourArea.groundLevel, z, dmgFact, false, false);
                     }
                 }
             }
+            throwBack(entity);
             event.setCancelled(true);
         }
     }
@@ -163,17 +215,24 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
     public void onEntityDeath(EntityDeathEvent event) {
         if (parent.contains(event.getEntity())) {
             LivingEntity e = event.getEntity();
-            if (e.equals(parent.charolette)) {
-                parent.charolette = null;
+            if (e.equals(parent.charlotte)) {
+                parent.charlotte = null;
             } else if (e instanceof MagmaCube && parent.magmaCubed.contains(e)) {
                 parent.magmaCubed.remove(e);
             } else if (e.equals(parent.daBomb)) {
                 parent.daBomb = null;
             } else if (e.equals(parent.snipee)) {
                 parent.snipee = null;
-                // TOOD Reward code
-                ChatUtil.sendNotice(parent.getContained(Player.class), "Yippee you win!");
+                Player killer = e.getKiller();
+                if (killer != null) {
+                    double loot = parent.economy.getBalance(killer.getName()) * parent.getConfig().bankPercent;
+                    loot = Math.max(loot, parent.getConfig().minLoot);
+                    parent.economy.depositPlayer(killer.getName(), loot);
+                    ChatUtil.sendNotice(killer, "The boss drops " + parent.economy.format(loot));
+                }
             }
+            event.getDrops().clear();
+            event.setDroppedExp(0);
         }
     }
 

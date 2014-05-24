@@ -19,20 +19,28 @@ import com.skelril.aurora.city.engine.area.PersistentArena;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.APIUtil;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.database.IOUtil;
+import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
+import com.skelril.aurora.util.timer.IntegratedRunnable;
+import com.skelril.aurora.util.timer.TimedRunnable;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
+import org.bukkit.event.player.PlayerExpChangeEvent;
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 @ComponentInformation(friendlyName = "Freaky Four", desc = "The craziest bosses ever")
 @Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
@@ -43,9 +51,11 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
     @InjectComponent
     protected AdminComponent admin;
 
+    protected Economy economy;
+
     protected ProtectedRegion charlotte_RG, magmacubed_RG, dabomb_RG, snipee_RG;
 
-    protected Spider charolette;
+    protected Spider charlotte;
     protected Set<MagmaCube> magmaCubed = new HashSet<>();
     protected Creeper daBomb;
     protected Skeleton snipee;
@@ -69,6 +79,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
             config = new FreakyFourConfig();
 
             reloadData();
+            setupEconomy();
         } catch (UnknownPluginException e) {
             log.info("WorldGuard could not be found!");
         }
@@ -86,8 +97,11 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
 
     @Override
     public void run() {
-        if (!checkCharlotte())  {
-            runCharlotte();
+        if (!isEmpty()) {
+            fakeXPGain();
+            if (!checkCharlotte()) {
+                runCharlotte();
+            }
         }
         writeData(true);
     }
@@ -100,39 +114,157 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
         return BukkitUtil.toLocation(world, rg.getCenter().setY(groundLevel));
     }
 
+    public void fakeXPGain() {
+        for (Player player : getContained(Player.class)) {
+            if (!ItemUtil.hasNecrosArmour(player)) continue;
+            for (int i = ChanceUtil.getRandom(5); i > 0; --i) {
+                server.getPluginManager().callEvent(new PlayerExpChangeEvent(player,
+                        ChanceUtil.getRandom(config.fakeXP)));
+            }
+        }
+    }
+
     public void spawnCharlotte() {
-        charolette = getWorld().spawn(getCentralLoc(charlotte_RG), Spider.class);
+        charlotte = getWorld().spawn(getCentralLoc(charlotte_RG), Spider.class);
 
         // Handle vitals
-        charolette.setMaxHealth(config.charlotteHP);
-        charolette.setHealth(config.charlotteHP);
-        charolette.setRemoveWhenFarAway(true);
+        charlotte.setMaxHealth(config.charlotteHP);
+        charlotte.setHealth(config.charlotteHP);
+        charlotte.setRemoveWhenFarAway(true);
 
         // Handle name
-        charolette.setCustomName("Charlotte");
+        charlotte.setCustomName("Charlotte");
     }
 
     public boolean checkCharlotte() {
         return !LocationUtil.containsPlayer(world, charlotte_RG);
     }
 
-    public void runCharlotte() {
-        if (charolette == null) return;
-        Location target = getCentralLoc(charlotte_RG);
-        for (int i = ChanceUtil.getRandom(10); i > 0; --i) {
-            world.spawn(target, CaveSpider.class);
+    public void cleanupCharlotte() {
+        final BlockVector min = charlotte_RG.getMinimumPoint();
+        final BlockVector max = charlotte_RG.getMaximumPoint();
+        int minX = min.getBlockX();
+        int minY = min.getBlockY();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxY = max.getBlockY();
+        int maxZ = max.getBlockZ();
+
+        for (int y = minY; y <= maxY; ++y) {
+            for (int x = minX; x <= maxX; ++x) {
+                for (int z = minZ; z <= maxZ; ++z) {
+                    Block block = world.getBlockAt(x, y, z);
+                    if (block.getType() == Material.WEB) {
+                        block.setType(Material.AIR);
+                    }
+                }
+            }
         }
-        // TODO Add web attacks
+
+        for (CaveSpider spider : getContained(charlotte_RG, CaveSpider.class)) {
+            spider.remove();
+        }
+    }
+
+    public void runCharlotte() {
+        if (charlotte == null) return;
+        for (int i = ChanceUtil.getRandom(10); i > 0; --i) {
+            world.spawn(charlotte.getLocation(), CaveSpider.class);
+        }
+
+        final BlockVector min = charlotte_RG.getMinimumPoint();
+        final BlockVector max = charlotte_RG.getMaximumPoint();
+        int minX = min.getBlockX();
+        int minY = min.getBlockY();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxY = max.getBlockY();
+        int maxZ = max.getBlockZ();
+
+        switch (ChanceUtil.getRandom(3)) {
+            case 1:
+                int intialTimes = maxZ - minZ + 1;
+                IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
+                    @Override
+                    public boolean run(int times) {
+                        int startZ = minZ + (intialTimes - times) - 1;
+                        for (int y = minY; y <= maxY; ++y) {
+                            for (int x = minX; x <= maxX; ++x) {
+                                for (int z = startZ; z < startZ + 4; ++z) {
+                                    Block block = world.getBlockAt(x, y, z);
+                                    if (z == startZ && block.getType() == Material.WEB) {
+                                        block.setType(Material.AIR);
+                                    } else if (block.getType() == Material.AIR) {
+                                        block.setType(Material.WEB);
+                                    }
+                                }
+                            }
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    public void end() {
+                        for (int x = minX; x <= maxX; ++x) {
+                            for (int z = minZ; z <= maxZ; ++z) {
+                                if (!ChanceUtil.getChance(config.charlotteFloorWeb)) continue;
+                                Block block = world.getBlockAt(x, groundLevel, z);
+                                if (block.getType() == Material.AIR) {
+                                    block.setType(Material.WEB);
+                                }
+                            }
+                        }
+                    }
+                };
+                TimedRunnable timedRunnable = new TimedRunnable(integratedRunnable, intialTimes);
+                BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 5);
+                timedRunnable.setTask(task);
+                break;
+            case 2:
+                LivingEntity target = charlotte.getTarget();
+                if (target != null) {
+                    List<Location> queList = new ArrayList<>();
+                    for (Location loc : Arrays.asList(target.getLocation(), target.getEyeLocation())) {
+                        for (BlockFace face : EnvironmentUtil.getNearbyBlockFaces()) {
+                            if (face == BlockFace.SELF) continue;
+                            queList.add(loc.getBlock().getRelative(face).getLocation());
+                        }
+                    }
+                    for (Location loc : queList) {
+                        Block block = world.getBlockAt(loc);
+                        if (block.getType().isSolid()) continue;
+                        block.setType(Material.WEB);
+                    }
+                }
+                break;
+            case 3:
+                for (int y = minY; y <= maxY; ++y) {
+                    for (int x = minX; x <= maxX; ++x) {
+                        for (int z = minZ; z <= maxZ; ++z) {
+                            if (!ChanceUtil.getChance(config.charlotteWebSpider)) continue;
+                            Block block = world.getBlockAt(x, y, z);
+                            if (block.getType() == Material.WEB) {
+                                block.setType(Material.AIR);
+                                world.spawn(block.getLocation(), CaveSpider.class);
+                            }
+                        }
+                    }
+                }
+                break;
+        }
     }
 
     public void spawnMagmaCubed() {
-        MagmaCube cube = getWorld().spawn(getCentralLoc(magmacubed_RG), MagmaCube.class);
+        final MagmaCube cube = getWorld().spawn(getCentralLoc(magmacubed_RG), MagmaCube.class);
 
         // Handle vitals
-        cube.setMaxHealth(config.magmaCubedHP);
-        cube.setHealth(config.magmaCubedHP);
         cube.setRemoveWhenFarAway(true);
         cube.setSize(config.magmaCubedSize);
+        // Work around for health
+        server.getScheduler().runTaskLater(inst, () -> {
+            cube.setMaxHealth(config.magmaCubedHP);
+            cube.setHealth(config.magmaCubedHP);
+        }, 1);
 
         // Handle name
         cube.setCustomName("Magma Cubed");
@@ -177,14 +309,14 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
 
     // Cleans up empty arenas
     public void validateBosses() {
-        if (charolette != null) {
+        if (charlotte != null) {
             if (checkCharlotte()) {
-                if (charolette.isValid()) {
-                    charolette.remove();
+                if (charlotte.isValid()) {
+                    charlotte.remove();
                 }
-                charolette = null;
-            } else if (!charolette.isValid()) {
-                charolette = null;
+                charlotte = null;
+            } else if (!charlotte.isValid()) {
+                charlotte = null;
             }
         }
         if (!magmaCubed.isEmpty()) {
@@ -222,6 +354,17 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
                 snipee = null;
             }
         }
+    }
+
+    private boolean setupEconomy() {
+
+        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
+                .vault.economy.Economy.class);
+        if (economyProvider != null) {
+            economy = economyProvider.getProvider();
+        }
+
+        return (economy != null);
     }
 
     @Override

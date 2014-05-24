@@ -21,7 +21,6 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -78,9 +77,12 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
     public <T extends Entity> T[] getContained(int parentsUp, Class<T> clazz) {
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
-        final ProtectedRegion finalR = r;
+        return getContained(r, clazz);
+    }
+
+    public <T extends Entity> T[] getContained(ProtectedRegion region, Class<T> clazz) {
         List<T> returnedList = world.getEntitiesByClass(clazz).stream()
-                .filter(e -> e.isValid() && LocationUtil.isInRegion(finalR, e))
+                .filter(e -> e.isValid() && LocationUtil.isInRegion(region, e))
                 .collect(Collectors.toList());
 
         //noinspection unchecked
@@ -95,17 +97,20 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
         return getContained(parentsUp, Entity.class);
     }
 
-    public final Entity[] getContained(Class<?>... classes) {
+    public Entity[] getContained(Class<?>... classes) {
         return getContained(0, classes);
     }
 
-    public final Entity[] getContained(int parentsUp, Class<?>... classes) {
+    public Entity[] getContained(int parentsUp, Class<?>... classes) {
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
-        List<Entity> returnedList = new ArrayList<>();
-        for (Entity entity : world.getEntitiesByClasses(classes)) {
-            if (entity.isValid() && LocationUtil.isInRegion(r, entity)) returnedList.add(entity);
-        }
+        return getContained(r, classes);
+    }
+
+    public Entity[] getContained(ProtectedRegion region, Class<?>... classes) {
+        List<Entity> returnedList = world.getEntitiesByClasses(classes).stream()
+                .filter(e -> e.isValid() && LocationUtil.isInRegion(region, e))
+                .collect(Collectors.toList());
         return returnedList.toArray(new Entity[returnedList.size()]);
     }
 
