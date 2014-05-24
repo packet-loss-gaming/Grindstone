@@ -7,7 +7,11 @@
 package com.skelril.aurora.city.engine.area.areas.FreakyFour;
 
 import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.blocks.SkullBlock;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
+import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
@@ -53,7 +57,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
 
     protected Economy economy;
 
-    protected ProtectedRegion charlotte_RG, magmacubed_RG, dabomb_RG, snipee_RG;
+    protected ProtectedRegion charlotte_RG, magmacubed_RG, dabomb_RG, snipee_RG, heads;
 
     protected Spider charlotte;
     protected Set<MagmaCube> magmaCubed = new HashSet<>();
@@ -74,6 +78,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
             magmacubed_RG = manager.getRegion(base + "-magma-cubed");
             dabomb_RG = manager.getRegion(base + "-da-bomb");
             snipee_RG = manager.getRegion(base + "-snipee");
+            heads = manager.getRegion(base + "-heads");
             tick = 4 * 20;
             listener = new FreakyFourListener(this);
             config = new FreakyFourConfig();
@@ -104,6 +109,21 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
             }
         }
         writeData(true);
+    }
+
+    public void addSkull(Player player) {
+        final BlockVector min = heads.getMinimumPoint();
+        final BlockVector max = heads.getMaximumPoint();
+        int minX = min.getBlockX();
+        int minY = min.getBlockY();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxY = max.getBlockY();
+        int maxZ = max.getBlockZ();
+        com.sk89q.worldedit.Vector v = LocationUtil.pickLocation(minX, maxX, minY, maxY, minZ, maxZ);
+        BukkitWorld world = new BukkitWorld(this.world);
+        EditSession skullEditor = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, 1);
+        skullEditor.rawSetBlock(v, new SkullBlock(12, (byte) 12, player.getName()));
     }
 
     protected Location getCentralLoc(ProtectedRegion region) {

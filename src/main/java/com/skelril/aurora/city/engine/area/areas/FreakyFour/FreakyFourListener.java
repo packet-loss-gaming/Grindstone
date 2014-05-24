@@ -248,6 +248,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                     player.getLevel(),
                     player.getExp()));
             event.getDrops().clear();
+            parent.addSkull(player);
         }
     }
 
