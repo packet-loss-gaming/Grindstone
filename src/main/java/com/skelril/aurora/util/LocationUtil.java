@@ -177,10 +177,7 @@ public class LocationUtil {
     public static boolean containsPlayer(World world, ProtectedRegion region) {
 
         for (Player player : world.getPlayers()) {
-            Location loc = player.getLocation();
-            if (region.contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())) {
-                return true;
-            }
+            if (isInRegion(region, player)) return true;
         }
         return false;
     }
