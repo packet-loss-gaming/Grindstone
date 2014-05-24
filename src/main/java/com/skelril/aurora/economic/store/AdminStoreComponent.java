@@ -299,7 +299,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 itemStacks[i] = null;
             }
 
-            if (!(payment > 0)) {
+            if (transactions.isEmpty()) {
                 throw new CommandException("No sellable items found" + (filter != null ? " that matched the filter" : "") + "!");
             }
 
