@@ -60,7 +60,7 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
     public void reload() {
         super.reload();
         if (config != null) {
-            config = configure(config);
+            configure(config);
         }
     }
 
