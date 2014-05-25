@@ -127,17 +127,18 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             }
         }
         if (entity instanceof Creeper || entity instanceof Skeleton) {
+            boolean backTeleport = projectile == null && ChanceUtil.getChance(parent.getConfig().backTeleport);
             if (event.getCause().equals(DamageCause.BLOCK_EXPLOSION)) {
                 EntityUtil.heal(entity, event.getDamage());
                 event.setCancelled(true);
-            } else if (projectile != null && damager != null) {
+            } else if ((backTeleport || projectile != null) && damager != null) {
                 double distSQ = 2;
                 double maxDist = 1;
                 if (entity instanceof Skeleton) {
                     distSQ = entity.getLocation().distanceSquared(damager.getLocation());
                     maxDist = parent.getConfig().snipeeTeleportDist;
                 }
-                if (distSQ > Math.pow(maxDist, 2)) {
+                if (backTeleport || distSQ > Math.pow(maxDist, 2)) {
                     entity.teleport(damager);
                     throwBack(entity);
                 }

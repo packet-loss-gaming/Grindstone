@@ -16,6 +16,8 @@ public class FreakyFourConfig extends ConfigurationBase {
     public double minLoot = 50000;
     @Setting("bank-percent")
     public double bankPercent = .12;
+    @Setting("teleport-behind-chance")
+    public int backTeleport = 3;
     @Setting("charlotte-hp")
     public double charlotteHP = 180;
     @Setting("charlotte-floor-web-chance")
