@@ -20,6 +20,8 @@ import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
+import com.skelril.aurora.events.guild.RogueBlipEvent;
+import com.skelril.aurora.events.guild.RogueGrenadeEvent;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
@@ -125,6 +127,12 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
     public void blip(Player player, double modifier, boolean auto) {
 
+        RogueBlipEvent event = new RogueBlipEvent(player, modifier, auto);
+        server.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+
+        modifier = event.getModifier();
+
         sessions.getSession(RogueState.class, player).blip();
 
         server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
@@ -151,9 +159,13 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
     public void grenade(Player player) {
 
+        RogueGrenadeEvent event = new RogueGrenadeEvent(player, ChanceUtil.getRandom(5) + 4);
+        server.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+
         sessions.getSession(RogueState.class, player).grenade();
 
-        for (int i = ChanceUtil.getRandom(5) + 4; i > 0; --i) {
+        for (int i = event.getGrenadeCount(); i > 0; --i) {
             Snowball snowball = player.launchProjectile(Snowball.class);
             Vector vector = new Vector(ChanceUtil.getRandom(2.0), 1, ChanceUtil.getRandom(2.0));
             snowball.setVelocity(snowball.getVelocity().multiply(vector));

@@ -21,6 +21,8 @@ import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
+import com.skelril.aurora.events.guild.NinjaGrappleEvent;
+import com.skelril.aurora.events.guild.NinjaSmokeBombEvent;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
@@ -133,23 +135,27 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
     public void smokeBomb(final Player player) {
 
-        sessions.getSession(NinjaState.class, player).smokeBomb();
-
-        Location[] locations = new Location[]{
-                player.getLocation(),
-                player.getEyeLocation()
-        };
-        EnvironmentUtil.generateRadialEffect(locations, Effect.SMOKE);
-
         List<Entity> entities = player.getNearbyEntities(4, 4, 4);
-        if (entities.isEmpty()) return;
+        Collections.sort(entities, new EntityDistanceComparator(player.getLocation()));
+
+        Location oldLoc = null;
+        for (Entity entity : entities) {
+            if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
+            oldLoc = entity.getLocation();
+        }
+
+        if (oldLoc == null) return;
+
+        NinjaSmokeBombEvent event = new NinjaSmokeBombEvent(player, 3, 30, entities, oldLoc, player.getLocation());
+        server.getPluginManager().callEvent(event);
+        if (event.isCancelled() || entities.isEmpty()) return;
+
+        sessions.getSession(NinjaState.class, player).smokeBomb();
 
         Collections.sort(entities, new EntityDistanceComparator(player.getLocation()));
 
+        oldLoc = null;
         boolean modifyCamera = false;
-
-        Location oldLoc = null;
-        Location k = null;
         for (Entity entity : entities) {
             if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
 
@@ -157,22 +163,33 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
             if (entity instanceof Player) {
                 if (!PvPComponent.allowsPvP(player, (Player) entity)) return;
-                ChatUtil.sendWarning((Player) entity, "You hear a strange ticking sound...");
                 modifyCamera = true;
             } else if (entity instanceof Monster) {
                 modifyCamera = true;
             }
 
             oldLoc = entity.getLocation();
+        }
 
-            k = player.getLocation();
+        Location k = null;
+        for (Entity entity : entities) {
+            if (entity instanceof Player) {
+                ChatUtil.sendWarning((Player) entity, "You hear a strange ticking sound...");
+            }
+            k = event.getTargetLoc();
             k.setPitch((float) (ChanceUtil.getRandom(361.0) - 1));
             k.setYaw((float) (ChanceUtil.getRandom(181.0) - 91));
 
             entity.teleport(k, PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
 
-        if (oldLoc == null || k == null) return;
+        if (k == null) return;
+
+        Location[] locations = new Location[]{
+                player.getLocation(),
+                player.getEyeLocation()
+        };
+        EnvironmentUtil.generateRadialEffect(locations, Effect.SMOKE);
 
         // Offset by 1 so that the bomb is not messed up by blocks
         if (k.getBlock().getType() != Material.AIR) {
@@ -180,10 +197,14 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
 
         final Location finalK = k;
-        server.getScheduler().runTaskLater(inst, () -> finalK.getWorld().createExplosion(finalK, 3, false), 30);
+        server.getScheduler().runTaskLater(inst,
+                () -> finalK.getWorld().createExplosion(finalK, event.getExplosionPower(), false), event.getDelay());
 
-        oldLoc.setDirection(modifyCamera ? oldLoc.getDirection().multiply(-1) : player.getLocation().getDirection());
-        player.teleport(oldLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        if (oldLoc != null) {
+            oldLoc.setDirection(modifyCamera ? oldLoc.getDirection().multiply(-1) : player.getLocation().getDirection());
+        }
+        Location target = event.getTeleportLoc() == null ? oldLoc : event.getTeleportLoc();
+        player.teleport(target, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
     public boolean canGrapple(Player player) {
@@ -192,6 +213,10 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     }
 
     public void grapple(final Player player, Block block, BlockFace clickedFace, double maxClimb) {
+
+        NinjaGrappleEvent event = new NinjaGrappleEvent(player, maxClimb);
+        server.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
 
         Location k = player.getLocation();
 
@@ -220,7 +245,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         int i;
         Vector increment = new Vector(0, .1, 0);
-        for (i = 0; i < maxClimb && (i < z || block.getType().isSolid() || nextBlockIsSolid); i++) {
+        for (i = 0; i < event.getMaxClimb() && (i < z || block.getType().isSolid() || nextBlockIsSolid); i++) {
 
             // Determine whether we need to add more velocity
             double ctl = nextBlockIsSolid ? 1 : BlockType.centralTopLimit(block.getTypeId(), block.getData());
