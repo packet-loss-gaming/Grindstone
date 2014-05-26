@@ -64,6 +64,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
     protected Creeper daBomb;
     protected Skeleton snipee;
 
+    protected Location entrance;
     protected HashMap<String, PlayerState> playerState = new HashMap<>();
 
     @Override
@@ -71,6 +72,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
         try {
             WorldGuardPlugin WG = APIUtil.getWorldGuard();
             world = server.getWorlds().get(0);
+            entrance = new Location(world, 401.5, 79, -304, 270, 0);
             RegionManager manager = WG.getRegionManager(world);
             String base = "oblitus-district-freaky-four";
             region = manager.getRegion(base);

@@ -8,13 +8,14 @@ package com.skelril.aurora.city.engine.area.areas.FreakyFour;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.city.engine.area.AreaListener;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
+import com.skelril.aurora.events.guild.NinjaSmokeBombEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EntityUtil;
-import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import org.bukkit.ChatColor;
 import org.bukkit.EntityEffect;
@@ -22,12 +23,15 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -42,40 +46,68 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         super(parent);
     }
 
+    private ProtectedRegion getRegion(Location location) {
+        if (parent.contains(parent.charlotte_RG, location)) {
+            return parent.charlotte_RG;
+        } else if (parent.contains(parent.magmacubed_RG, location)) {
+            return parent.magmacubed_RG;
+        } else if (parent.contains(parent.dabomb_RG, location)) {
+            return parent.dabomb_RG;
+        } else if (parent.contains(parent.snipee_RG, location)) {
+            return parent.snipee_RG;
+        } else {
+            return null;
+        }
+    }
+    @EventHandler(ignoreCancelled = true)
+    public void onNinjaBomb(NinjaSmokeBombEvent event) {
+        Player player = event.getPlayer();
+        ProtectedRegion region = getRegion(player.getLocation());
+        if (region != null) {
+            Iterator<Entity> it = event.getEntities().iterator();
+            while (it.hasNext()) {
+                Entity next = it.next();
+                if (!region.equals(getRegion(next.getLocation()))) {
+                    it.remove();
+                }
+            }
+        }
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onHymnSing(HymnSingEvent event) {
         if (!event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) return;
         Player player = event.getPlayer();
         if (parent.contains(player)) {
             parent.validateBosses();
-            if (LocationUtil.isInRegion(parent.charlotte_RG, player)) {
+            if (parent.contains(parent.charlotte_RG, player)) {
                 // Teleport to Magma Cubed
                 if (parent.charlotte == null && parent.checkMagmaCubed()) {
                     parent.spawnMagmaCubed();
-                    player.teleport(new Location(parent.getWorld(), 374.5, 79, -304), TeleportCause.UNKNOWN);
+                    player.teleport(new Location(parent.getWorld(), 374.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
                 }
-            } else if (LocationUtil.isInRegion(parent.magmacubed_RG, player)) {
+            } else if (parent.contains(parent.magmacubed_RG, player)) {
                 // Teleport to Da Bomb
                 if (parent.magmaCubed.isEmpty() && parent.checkDaBomb()) {
                     parent.spawnDaBomb();
-                    player.teleport(new Location(parent.getWorld(), 350.5, 79, -304), TeleportCause.UNKNOWN);
+                    player.teleport(new Location(parent.getWorld(), 350.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
                 }
-            } else if (LocationUtil.isInRegion(parent.dabomb_RG, player)) {
+            } else if (parent.contains(parent.dabomb_RG, player)) {
                 // Teleport to Snipee
                 if (parent.daBomb == null && parent.checkSnipee()) {
                     parent.spawnSnipee();
-                    player.teleport(new Location(parent.getWorld(), 326.5, 79, -304), TeleportCause.UNKNOWN);
+                    player.teleport(new Location(parent.getWorld(), 326.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
                 }
-            } else if (LocationUtil.isInRegion(parent.snipee_RG, player)) {
+            } else if (parent.contains(parent.snipee_RG, player)) {
                 // Teleport to Spawn
                 if (parent.snipee == null) {
-                    player.teleport(parent.getWorld().getSpawnLocation());
+                    player.teleport(parent.entrance);
                 }
             } else if (parent.checkCharlotte()) {
                 // Teleport to Charlotte
                 parent.cleanupCharlotte();
                 parent.spawnCharlotte();
-                player.teleport(new Location(parent.getWorld(), 398.5, 79, -304), TeleportCause.UNKNOWN);
+                player.teleport(new Location(parent.getWorld(), 398.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
             }
         }
     }
@@ -87,8 +119,15 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         if (parent.contains(to) && !event.getCause().equals(TeleportCause.UNKNOWN)) {
             Player player = event.getPlayer();
             if (parent.admin.isAdmin(player, AdminState.ADMIN)) return;
-            event.setCancelled(true);
-            ChatUtil.sendError(player, "Your teleport is too weak to enter that area.");
+            event.setTo(parent.entrance);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        if (parent.contains(player)) {
+            player.teleport(parent.entrance);
         }
     }
 

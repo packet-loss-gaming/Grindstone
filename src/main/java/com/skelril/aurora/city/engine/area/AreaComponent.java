@@ -137,6 +137,10 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
         return contains(entity.getLocation(), parentsUp);
     }
 
+    public boolean contains(ProtectedRegion region, Entity entity) {
+        return contains(region, entity.getLocation());
+    }
+
     public boolean contains(Block block) {
         return contains(block.getLocation());
     }
@@ -145,14 +149,22 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
         return contains(block.getLocation(), parentsUp);
     }
 
+    public boolean contains(ProtectedRegion region, Block block) {
+        return contains(region, block.getLocation());
+    }
+
     public boolean contains(Location location) {
-        return LocationUtil.isInRegion(world, region, location);
+        return contains(region, location);
     }
 
     public boolean contains(Location location, int parentsUp) {
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
-        return LocationUtil.isInRegion(world, r, location);
+        return contains(r, location);
+    }
+
+    public boolean contains(ProtectedRegion region, Location location) {
+        return LocationUtil.isInRegion(world, region, location);
     }
 
     public ProtectedRegion getRegion() {
