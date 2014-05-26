@@ -568,15 +568,15 @@ public class SkyWarsComponent extends MinigameComponent {
 
     private static class LocalConfiguration extends ConfigurationBase {
 
-        @Setting("sky-wars-start-World")
+        @Setting("start.World")
         public String worldName = "City";
-        @Setting("sky-wars--start-X")
+        @Setting("start.X")
         public int x = 631;
-        @Setting("sky-wars-start-Y")
+        @Setting("start.Y")
         public int y = 81;
-        @Setting("sky-wars-start-Z")
+        @Setting("start.Z")
         public int z = 205;
-        @Setting("sky-wars-region")
+        @Setting("region")
         public String region = "vineam-district-sky-wars";
 
     }

@@ -80,11 +80,11 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
         @Setting("operator-loss-percent")
         public double operatorLossScale = .5;
 
-        @Setting("slot-payback-rate")
+        @Setting("slot.payback-rate")
         public double slotPaybackRate = .75;
-        @Setting("slot-winning-percentage")
+        @Setting("slot.winning-percentage")
         public double slotMultipler = 2770;
-        @Setting("roulette-multiplier")
+        @Setting("roulette.multiplier")
         public double rouletteMultiplier = 2;
     }
 

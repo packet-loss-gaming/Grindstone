@@ -76,13 +76,13 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
 
         @Setting("enable-lucky-diamond")
         public boolean luckyDiamond = true;
-        @Setting("first-region")
+        @Setting("first.region")
         public String firstRegion = "city-dung";
-        @Setting("first-teleport-x")
+        @Setting("first.teleport.x")
         public int firstTeleportX = 0;
-        @Setting("first-teleport-y")
+        @Setting("first.teleport.y")
         public int firstTeleportY = 0;
-        @Setting("first-teleport-z")
+        @Setting("first.teleport.z")
         public int firstTeleportZ = 0;
         @Setting("main-world")
         public String mainWorld = "City";

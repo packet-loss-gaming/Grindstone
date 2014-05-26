@@ -108,9 +108,9 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
         @Setting("ticket-price")
         public int ticketPrice = 20;
-        @Setting("max-sell-count")
+        @Setting("max.sell-count")
         public int maxSellCount = 50;
-        @Setting("max-per-lotto")
+        @Setting("max.per-lotto")
         public int maxPerLotto = 150;
         @Setting("recent-length")
         public int recentLength = 5;

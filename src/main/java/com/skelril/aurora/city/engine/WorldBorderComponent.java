@@ -107,15 +107,15 @@ public class WorldBorderComponent extends BukkitComponent implements Runnable {
 
     private static class LocalConfiguration extends ConfigurationBase {
 
-        @Setting("max-x")
+        @Setting("max.x")
         public int maxX = 100;
-        @Setting("min-x")
+        @Setting("min.x")
         public int minX = -100;
-        @Setting("max-y")
+        @Setting("max.y")
         public int maxY = 300;
-        @Setting("max-z")
+        @Setting("max.z")
         public int maxZ = 100;
-        @Setting("min-z")
+        @Setting("min.z")
         public int minZ = -100;
     }
 }

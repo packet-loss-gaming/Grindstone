@@ -872,15 +872,15 @@ public class JungleRaidComponent extends MinigameComponent {
 
     private static class LocalConfiguration extends ConfigurationBase {
 
-        @Setting("jungle-raid-start-World")
+        @Setting("start.World")
         public String worldName = "City";
-        @Setting("jungle-raid-start-X")
+        @Setting("start.X")
         public int x = -654;
-        @Setting("jungle-raid-start-Y")
+        @Setting("start.Y")
         public int y = 37;
-        @Setting("jungle-raid-start-Z")
+        @Setting("start.Z")
         public int z = -404;
-        @Setting("jungle-raid-region")
+        @Setting("region")
         public String region = "carpe-diem-district-jungle-raid";
 
     }
