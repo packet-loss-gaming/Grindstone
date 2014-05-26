@@ -11,10 +11,8 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.skelril.aurora.city.engine.minigame.games.JungleRaidComponent;
 import com.skelril.aurora.events.ServerShutdownEvent;
 import com.zachsthings.libcomponents.ComponentInformation;
-import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -33,9 +31,6 @@ public class ShutdownComponent extends BukkitComponent {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
-
-    @InjectComponent
-    JungleRaidComponent jungleRaid;
 
     @Override
     public void enable() {
