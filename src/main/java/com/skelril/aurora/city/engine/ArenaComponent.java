@@ -17,8 +17,10 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.arena.*;
+import com.skelril.aurora.city.engine.arena.factory.FactoryBrewer;
 import com.skelril.aurora.city.engine.arena.factory.FactoryFloor;
 import com.skelril.aurora.city.engine.arena.factory.FactoryMech;
+import com.skelril.aurora.city.engine.arena.factory.FactorySmelter;
 import com.skelril.aurora.economic.ImpersonalComponent;
 import com.skelril.aurora.jail.JailComponent;
 import com.skelril.aurora.prayer.PrayerComponent;
@@ -236,16 +238,22 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add factories
             for (String region : config.factories) {
                 try {
-                    ProtectedRegion[] PRs = new ProtectedRegion[2];
+                    ProtectedRegion[] PRs = new ProtectedRegion[4];
                     PRs[0] = mgr.get(world).getRegion(region);
                     PRs[1] = mgr.get(world).getRegion(region + "-producer");
+                    PRs[2] = mgr.get(world).getRegion(region + "-smelter-1");
+                    PRs[3] = mgr.get(world).getRegion(region + "-smelter-2");
 
                     List<FactoryMech> mechs = new ArrayList<>();
                     ProtectedRegion er;
                     for (String mech : config.factoryVats) {
                         er = mgr.get(world).getRegion(region + "-" + mech);
-                        mechs.add(new FactoryMech(world, er));
+                        mechs.add(new FactoryBrewer(world, er));
                     }
+                    ProtectedRegion furnace = mgr.get(world).getRegion(region + "-hopper-1");
+                    ProtectedRegion lava = mgr.get(world).getRegion(region + "-lava-input");
+                    ProtectedRegion lavaZ = mgr.get(world).getRegion(region + "-lava");
+                    mechs.add(new FactorySmelter(world, furnace, lava, lavaZ));
                     arenas.add(new FactoryFloor(world, PRs, mechs, adminComponent));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -258,10 +266,9 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
 
     @Override
     public void run() {
-
-        for (GenericArena arena : Collections.synchronizedList(arenas)) {
-            if (!(arena instanceof CommandTriggeredArena)) arena.run();
-        }
+        Collections.synchronizedList(arenas).stream()
+                .filter(arena -> !(arena instanceof CommandTriggeredArena))
+                .forEach(GenericArena::run);
     }
 
     public class Commands {

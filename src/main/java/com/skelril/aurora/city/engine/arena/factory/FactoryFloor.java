@@ -16,7 +16,6 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.arena.ArenaType;
 import com.skelril.aurora.city.engine.arena.GenericArena;
 import com.skelril.aurora.util.ChanceUtil;
-import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -34,22 +33,30 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
     private AdminComponent adminComponent;
 
     private List<FactoryMech> mechs;
-    private Random random = new Random();
     private Queue<ItemStack> que = new LinkedList<>();
 
     public FactoryFloor(World world, ProtectedRegion[] regions, List<FactoryMech> mechs,
                         AdminComponent adminComponent) {
-        super(world, regions[0], regions[1]);
+        super(world, regions[0], regions[1], Arrays.copyOfRange(regions, 2, 4));
         this.adminComponent = adminComponent;
-
         this.mechs = Lists.newArrayList(mechs);
     }
 
-    public void produce(ItemStack... products) {
+    public ChamberType getProductType(ItemStack product) {
+        switch (product.getType()) {
+            case POTION:
+                return ChamberType.POTION;
+            case IRON_INGOT:
+            case GOLD_INGOT:
+                return ChamberType.SMELTING;
+        }
+        return ChamberType.POTION;
+    }
 
-        Vector vec = new CuboidRegion(chamber.getMinimumPoint(), chamber.getMaximumPoint()).getCenter();
-        Location loc = BukkitUtil.toLocation(getWorld(), vec);
-        for (ItemStack product : products) getWorld().dropItem(loc, product);
+    public void produce(ItemStack product) {
+        ProtectedRegion region = getChamber(getProductType(product));
+        Vector vec = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint()).getCenter();
+        getWorld().dropItem(BukkitUtil.toLocation(getWorld(), vec), product);
     }
 
     @Override
@@ -58,38 +65,31 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
         for (FactoryMech mech : Collections.synchronizedList(mechs)) que.addAll(mech.process());
 
         if (que.isEmpty()) return;
-        List<ItemStack> shortList = new ArrayList<>();
-        for (int i = ChanceUtil.getRandom(9); i > 0; --i) {
+        for (int i = ChanceUtil.getRandom(getContainedPlayers().length * 9); i > 0; --i) {
             if (que.isEmpty()) break;
-            shortList.add(que.poll());
+            produce(que.poll());
         }
-        produce(shortList.toArray(new ItemStack[shortList.size()]));
     }
 
     @Override
     public void disable() {
-
         mechs.clear();
     }
 
     @Override
     public String getId() {
-
         return getRegion().getId();
     }
 
     @Override
     public void equalize() {
-
         for (Player player : getContainedPlayers()) {
-
             adminComponent.deadmin(player);
         }
     }
 
     @Override
     public ArenaType getArenaType() {
-
         return ArenaType.MONITORED;
     }
 }
