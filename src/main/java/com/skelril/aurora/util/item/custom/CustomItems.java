@@ -70,7 +70,7 @@ public enum CustomItems {
     PHANTOM_HYMN(ChatColor.DARK_RED, "Phantom Hymn"),
 
     // Ninja Guild
-    NINJA_STAR(ChatColor.BLACK, "Ninja Star"),
+    NINJA_STAR(ChatColor.DARK_GRAY, "Ninja Star"),
 
     // Flight Items
     PIXIE_DUST(ChatColor.GOLD, "Pixie Dust"),
