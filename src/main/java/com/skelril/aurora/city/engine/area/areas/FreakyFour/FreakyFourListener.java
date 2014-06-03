@@ -12,6 +12,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.city.engine.area.AreaListener;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
+import com.skelril.aurora.events.entity.HallowCreeperEvent;
 import com.skelril.aurora.events.guild.NinjaSmokeBombEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -59,6 +60,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             return null;
         }
     }
+
     @EventHandler(ignoreCancelled = true)
     public void onNinjaBomb(NinjaSmokeBombEvent event) {
         Player player = event.getPlayer();
@@ -71,6 +73,14 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                     it.remove();
                 }
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onHallowCreeper(HallowCreeperEvent event) {
+        Player player = event.getPlayer();
+        if (parent.contains(player)) {
+            event.setCancelled(true);
         }
     }
 
@@ -140,7 +150,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             for (MagmaCube cube : parent.getContained(MagmaCube.class)) {
                 if (parent.magmaCubed.contains(cube)) continue;
                 cube.setCustomName("Magma Cubed");
-                double percentHealth = Math.max(1, slime.getMaxHealth() * .75);
+                double percentHealth = Math.max(1, Math.round(slime.getMaxHealth() * .75));
                 cube.setMaxHealth(percentHealth);
                 cube.setHealth(percentHealth);
                 parent.magmaCubed.add(cube);
@@ -178,8 +188,11 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                     maxDist = parent.getConfig().snipeeTeleportDist;
                 }
                 if (backTeleport || distSQ > Math.pow(maxDist, 2)) {
-                    entity.teleport(damager);
-                    throwBack(entity);
+                    final Entity finalDamager = damager;
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        entity.teleport(finalDamager);
+                        throwBack(entity);
+                    }, 1);
                 }
             }
         }
@@ -221,7 +234,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
 
     private void throwBack(Entity entity) {
         Vector vel = entity.getLocation().getDirection();
-        vel.multiply(-1.5);
+        vel.multiply(-ChanceUtil.getRangedRandom(1.2, 1.5));
         vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
         entity.setVelocity(vel);
     }

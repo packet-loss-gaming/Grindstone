@@ -9,6 +9,7 @@ package com.skelril.aurora;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.skelril.aurora.city.engine.ApocalypseComponent;
+import com.skelril.aurora.events.entity.HallowCreeperEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -103,6 +104,9 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                     if (creeperChance != -1 && ChanceUtil.getChance(creeperChance)
                             && !inst.hasPermission(player, "aurora.hallow.immune")
                             && !hallowCreepersActive.contains(player)) {
+                        HallowCreeperEvent hallowEvent = new HallowCreeperEvent(player, (Creeper) entity);
+                        server.getPluginManager().callEvent(hallowEvent);
+                        if (hallowEvent.isCancelled()) return;
                         Location loc = entity.getLocation();
 
                         for (int i = ((ChanceUtil.getRandom(12) * ChanceUtil.getRandom(12)) + 6); i > 0; --i) {
