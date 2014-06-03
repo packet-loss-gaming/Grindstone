@@ -181,7 +181,7 @@ public class FactoryMech extends AbstractRegionedArena {
         }
 
         // Inflate potion quantity
-        max *= increased ? 4 : 3;
+        max *= increased ? 15 : 10;
 
         // Calculate damage
         int level = !duration && potency ? 2 : 1;
