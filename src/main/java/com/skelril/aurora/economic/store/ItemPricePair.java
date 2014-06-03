@@ -32,8 +32,8 @@ public class ItemPricePair implements Comparable<ItemPricePair> {
     }
 
     public double getSellPrice() {
-        price = price > 100000 ? price * .92 : price * .80;
-        return price < .01 ? 0 : price;
+        double sellPrice = price > 100000 ? price * .92 : price * .80;
+        return sellPrice < .01 ? 0 : sellPrice;
     }
 
     public boolean isEnabled() {
