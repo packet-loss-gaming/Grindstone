@@ -8,7 +8,7 @@ package com.skelril.aurora.ic.ics;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.craftbook.ChangedSign;
-import com.sk89q.craftbook.circuits.ic.*;
+import com.sk89q.craftbook.mechanics.ic.*;
 import org.bukkit.Server;
 
 import java.util.logging.Logger;
@@ -22,7 +22,6 @@ public class DelayedRepeater extends AbstractIC {
     private long delay;
 
     public DelayedRepeater(Server server, ChangedSign block, ICFactory factory) {
-
         super(server, block, factory);
     }
 

@@ -7,7 +7,7 @@
 package com.skelril.aurora.ic;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.craftbook.circuits.ic.ICManager;
+import com.sk89q.craftbook.mechanics.ic.ICManager;
 import com.skelril.aurora.ic.ics.DelayedRepeater;
 import com.skelril.aurora.ic.ics.GroupSentryGun;
 import com.skelril.aurora.ic.ics.NinjaStarSpawner;
@@ -17,8 +17,6 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
 
 import java.util.logging.Logger;
-
-;
 
 @ComponentInformation(friendlyName = "IC Component", desc = "Custom ICs!")
 @Depend(plugins = "CraftBook")

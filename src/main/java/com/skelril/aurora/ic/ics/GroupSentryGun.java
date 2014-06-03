@@ -8,7 +8,7 @@ package com.skelril.aurora.ic.ics;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.craftbook.ChangedSign;
-import com.sk89q.craftbook.circuits.ic.*;
+import com.sk89q.craftbook.mechanics.ic.*;
 import com.sk89q.craftbook.util.LocationUtil;
 import com.sk89q.craftbook.util.SearchArea;
 import com.sk89q.util.yaml.YAMLProcessor;
