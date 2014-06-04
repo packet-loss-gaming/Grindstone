@@ -244,7 +244,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
                 break;
             case 2:
                 LivingEntity target = charlotte.getTarget();
-                if (target != null) {
+                if (target != null && contains(target)) {
                     List<Location> queList = new ArrayList<>();
                     for (Location loc : Arrays.asList(target.getLocation(), target.getEyeLocation())) {
                         for (BlockFace face : EnvironmentUtil.getNearbyBlockFaces()) {
