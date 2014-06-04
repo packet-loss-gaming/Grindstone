@@ -21,10 +21,7 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.area.AreaComponent;
 import com.skelril.aurora.city.engine.area.PersistentArena;
 import com.skelril.aurora.exceptions.UnknownPluginException;
-import com.skelril.aurora.util.APIUtil;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
@@ -105,12 +102,28 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
     @Override
     public void run() {
         if (!isEmpty()) {
+            equalize();
             fakeXPGain();
             if (!checkCharlotte()) {
                 runCharlotte();
             }
         }
         writeData(true);
+    }
+
+    private void equalize() {
+        for (Player player : getContained(Player.class)) {
+            try {
+                if (!admin.isAdmin(player) && player.isFlying()) {
+                    EntityUtil.forceDamage(player, player.getMaxHealth() / 2);
+                    player.setFlying(false);
+                    player.setAllowFlight(false);
+                }
+                admin.deadmin(player);
+            } catch (Exception e) {
+                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
+            }
+        }
     }
 
     public void addSkull(Player player) {
