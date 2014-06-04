@@ -438,8 +438,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                         for (int y = minY; y <= maxY; y++) {
                             Block block = getWorld().getBlockAt(x, y, z);
                             if (!block.getChunk().isLoaded()) block.getChunk().load();
-                            if (block.getTypeId() == BlockID.AIR || EnvironmentUtil.isLiquid(block.getTypeId())) {
-                                block.setTypeId(floodBlockType);
+                            if (block.getTypeId() == BlockID.AIR) {
+                                block.setTypeIdAndData(floodBlockType, (byte) 0, false);
                                 break;
                             }
                         }
