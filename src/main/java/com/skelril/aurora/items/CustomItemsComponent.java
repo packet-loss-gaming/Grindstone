@@ -246,7 +246,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 prayers.influencePlayer((Player) damager, prayer);
                 ((Player) defender).chat("Taste necrosis!");
             } else {
-                EffectUtil.Ancient.powerBurst((Player) defender, Math.max(10, event.getDamage()));
+                EffectUtil.Necros.deathStrike((Player) defender, Math.max(5, event.getDamage()));
             }
         }
     }

@@ -11,6 +11,7 @@ import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.EntityUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -88,7 +89,7 @@ public class EffectUtil {
                 ChatUtil.sendNotice((Player) entity, "You are healed by an ancient force.");
             }
 
-            entity.setHealth(Math.min(entity.getHealth() + attackDamage, entity.getMaxHealth()));
+            EntityUtil.heal(entity, attackDamage);
 
             entity.getNearbyEntities(8, 8, 8).stream().filter(e -> e.isValid() && e instanceof LivingEntity).forEach(e -> {
                 if (e.getType() == entity.getType()) {
@@ -107,6 +108,29 @@ public class EffectUtil {
                             Math.random() * 3 - 1.5
                     ));
                     e.setFireTicks(ChanceUtil.getRandom(20 * 60));
+                }
+            });
+        }
+    }
+
+    public static class Necros {
+
+        public static void deathStrike(LivingEntity entity, double attackDamage) {
+
+            if (entity instanceof Player) {
+                ChatUtil.sendNotice((Player) entity, "You feel a necrotic power sweep over your soul.");
+            }
+
+            EntityUtil.heal(entity, attackDamage * 1.7);
+
+            entity.getNearbyEntities(8, 8, 8).stream().filter(e -> e.isValid() && e instanceof LivingEntity).forEach(e -> {
+                if (e.getType() == entity.getType()) {
+                    EntityUtil.heal(entity, attackDamage * 1.5);
+                    if (e instanceof Player) {
+                        ChatUtil.sendNotice((Player) e, "You feel a necrotic power sweep over your soul.");
+                    }
+                } else if (!(entity instanceof Player) || EnvironmentUtil.isHostileEntity(e)) {
+                    ((LivingEntity) e).damage(attackDamage * 1.9);
                 }
             });
         }
