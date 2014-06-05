@@ -228,7 +228,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
                 break;
             case 3:
                 for (Player player : contained) {
-                    for (double i = ChanceUtil.getRangedRandom(difficulty, Math.pow(2, difficulty)); i > 0; i--) {
+                    for (double i = ChanceUtil.getRangedRandom(difficulty, Math.pow(2, Math.min(9, difficulty))); i > 0; i--) {
                         Entity e = getWorld().spawn(player.getLocation(), TNTPrimed.class);
                         e.setVelocity(new org.bukkit.util.Vector(
                                 random.nextDouble() * 1 - .5,
