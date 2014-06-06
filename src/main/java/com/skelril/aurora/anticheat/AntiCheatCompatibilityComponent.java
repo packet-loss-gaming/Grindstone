@@ -7,28 +7,11 @@
 package com.skelril.aurora.anticheat;
 
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.aurora.events.PrayerApplicationEvent;
-import com.skelril.aurora.events.anticheat.FallBlockerEvent;
-import com.skelril.aurora.events.anticheat.RapidHitEvent;
-import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import com.zachsthings.libcomponents.config.ConfigurationBase;
-import com.zachsthings.libcomponents.config.Setting;
-import net.gravitydevelopment.anticheat.api.AntiCheatAPI;
-import net.gravitydevelopment.anticheat.check.CheckType;
-import org.bukkit.Bukkit;
 import org.bukkit.Server;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -36,23 +19,27 @@ import java.util.logging.Logger;
  */
 @ComponentInformation(friendlyName = "Anit-Cheat Compat", desc = "Compatibility layer for Anti-Cheat plugins.")
 @Depend(plugins = {"AntiCheat"})
-public class AntiCheatCompatibilityComponent extends BukkitComponent implements Listener, Runnable {
+public class AntiCheatCompatibilityComponent extends BukkitComponent /* implements Listener, Runnable*/ {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private LocalConfiguration config;
-    private ConcurrentHashMap<String, ConcurrentHashMap<CheckType, Long>> playerList = new ConcurrentHashMap<>();
+    //private LocalConfiguration config;
+    //private ConcurrentHashMap<String, ConcurrentHashMap<CheckType, Long>> playerList = new ConcurrentHashMap<>();
 
     @Override
     public void enable() {
 
+        /*
         config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 20, 20 * 5);
+        */
     }
+
+    /*
 
     @Override
     public void reload() {
@@ -171,4 +158,5 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent implements 
         }
         bypass(event.getPlayer(), checkTypes.toArray(new CheckType[checkTypes.size()]));
     }
+    */
 }

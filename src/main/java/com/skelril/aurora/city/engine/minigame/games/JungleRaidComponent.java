@@ -56,7 +56,6 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
-import net.gravitydevelopment.anticheat.check.CheckType;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.Location;
@@ -90,6 +89,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+//import net.gravitydevelopment.anticheat.check.CheckType;
 
 /**
  * @author Turtle9598
@@ -308,9 +309,9 @@ public class JungleRaidComponent extends MinigameComponent {
             titan = CollectionUtil.getElement(gameStates).getOwnerName();
             try {
                 Player aPlayer = Bukkit.getPlayerExact(titan);
-                antiCheat.exempt(aPlayer, CheckType.FAST_BREAK);
-                antiCheat.exempt(aPlayer, CheckType.NO_SWING);
-                antiCheat.exempt(aPlayer, CheckType.AUTOTOOL);
+                // antiCheat.exempt(aPlayer, CheckType.FAST_BREAK);
+                // antiCheat.exempt(aPlayer, CheckType.NO_SWING);
+                // antiCheat.exempt(aPlayer, CheckType.AUTOTOOL);
             } catch (Exception ex) {
                 ChatUtil.sendNotice(players, ChatColor.RED, "[ERROR] Cannot find titan.");
             }
@@ -1079,9 +1080,9 @@ public class JungleRaidComponent extends MinigameComponent {
 
                 if (isTitanEnabled && isTitan) {
                     Player aPlayer = Bukkit.getPlayerExact(titan);
-                    antiCheat.unexempt(aPlayer, CheckType.FAST_BREAK);
-                    antiCheat.unexempt(aPlayer, CheckType.NO_SWING);
-                    antiCheat.unexempt(aPlayer, CheckType.AUTOTOOL);
+                    // antiCheat.unexempt(aPlayer, CheckType.FAST_BREAK);
+                    // antiCheat.unexempt(aPlayer, CheckType.NO_SWING);
+                    // antiCheat.unexempt(aPlayer, CheckType.AUTOTOOL);
                 }
 
                 // Normal Jungle Raid fireworks and stuff
@@ -1095,9 +1096,9 @@ public class JungleRaidComponent extends MinigameComponent {
                             titan = killer.getName();
                             try {
                                 Player aPlayer = Bukkit.getPlayerExact(titan);
-                                antiCheat.exempt(aPlayer, CheckType.FAST_BREAK);
-                                antiCheat.exempt(aPlayer, CheckType.NO_SWING);
-                                antiCheat.exempt(aPlayer, CheckType.AUTOTOOL);
+                                // antiCheat.exempt(aPlayer, CheckType.FAST_BREAK);
+                                // antiCheat.exempt(aPlayer, CheckType.NO_SWING);
+                                // antiCheat.exempt(aPlayer, CheckType.AUTOTOOL);
                             } catch (Exception ex) {
                                 ChatUtil.sendNotice(getContainedPlayers(), ChatColor.RED, "[ERROR] Cannot find titan.");
                             }

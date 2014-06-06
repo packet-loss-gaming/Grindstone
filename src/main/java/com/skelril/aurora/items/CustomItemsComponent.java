@@ -50,7 +50,6 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import net.gravitydevelopment.anticheat.check.CheckType;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
@@ -70,6 +69,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.skelril.aurora.events.custom.item.HymnSingEvent.Hymn;
+
+//import net.gravitydevelopment.anticheat.check.CheckType;
 
 /**
  * Author: Turtle9598
@@ -674,11 +675,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             player.setAllowFlight(!player.getAllowFlight());
             if (player.getAllowFlight()) {
                 player.setFlySpeed(.4F);
-                antiCheat.exempt(player, CheckType.FLY);
+                // antiCheat.exempt(player, CheckType.FLY);
                 ChatUtil.sendNotice(player, "The bucket glows brightly.");
             } else {
                 player.setFlySpeed(.1F);
-                antiCheat.unexempt(player, CheckType.FLY);
+                // antiCheat.unexempt(player, CheckType.FLY);
                 ChatUtil.sendNotice(player, "The power of the bucket fades.");
             }
             return true;
@@ -694,7 +695,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
             player.setAllowFlight(true);
             player.setFlySpeed(.6F);
-            antiCheat.exempt(player, CheckType.FLY);
+            // antiCheat.exempt(player, CheckType.FLY);
 
             ChatUtil.sendNotice(player, "You use the Pixie Dust to gain flight.");
 
@@ -739,7 +740,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                     if (player.isValid()) {
                         if (player.getAllowFlight()) {
                             ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
-                            antiCheat.unexempt(player, CheckType.FLY);
+                            // antiCheat.unexempt(player, CheckType.FLY);
                         }
                         player.setFallDistance(0);
                         player.setAllowFlight(false);
@@ -766,7 +767,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             if (!ItemUtil.hasItem(player, CustomItems.PIXIE_DUST)) return;
 
             player.setAllowFlight(false);
-            antiCheat.unexempt(player, CheckType.FLY);
+            // antiCheat.unexempt(player, CheckType.FLY);
             ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
 
             final String playerName = player.getName();
@@ -790,7 +791,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                         ChatUtil.sendNotice(player, "The power of the bucket fades.");
                     }
                     player.setAllowFlight(false);
-                    antiCheat.unexempt(player, CheckType.FLY);
+                    // antiCheat.unexempt(player, CheckType.FLY);
                 }
             }, 1);
         }
@@ -866,7 +867,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 ChatUtil.sendNotice(player, "The power of the bucket fades.");
             }
             player.setAllowFlight(false);
-            antiCheat.unexempt(player, CheckType.FLY);
+            // antiCheat.unexempt(player, CheckType.FLY);
         }
     }
 
@@ -881,7 +882,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 ChatUtil.sendNotice(player, "The power of the bucket fades.");
             }
             player.setAllowFlight(false);
-            antiCheat.unexempt(player, CheckType.FLY);
+            // antiCheat.unexempt(player, CheckType.FLY);
         }
 
         getSession(player).addDeathPoint(player.getLocation());
