@@ -28,6 +28,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -59,6 +60,8 @@ public class DebugComponent extends BukkitComponent {
         // Fixes an issue where potion effects are not removed from players on death
         //noinspection AccessStaticViaInstance
         //inst.registerEvents(new PotionDeathFix());
+        //noinspection AccessStaticViaInstance
+        //inst.registerEvents(new ItemSpawnPrinter());
     }
 
     private class InventoryCorruptionFixer implements Listener {
@@ -134,6 +137,15 @@ public class DebugComponent extends BukkitComponent {
                     player.addPotionEffect(new PotionEffect(next.getType(), 0, 0), true);
                 }
             }, 1);
+        }
+    }
+
+    private class ItemSpawnPrinter implements Listener {
+
+        @EventHandler
+        public void onItemSpawn(final ItemSpawnEvent event) {
+            Location l = event.getEntity().getLocation();
+            ChatUtil.sendDebug("X: " + l.getX() + ", Y:" + l.getY() + ", Z: " + l.getZ());
         }
     }
 }

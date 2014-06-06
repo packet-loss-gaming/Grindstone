@@ -8,7 +8,6 @@ package com.skelril.aurora.city.engine.area.areas.PatientX;
 
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
@@ -27,12 +26,12 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import org.bukkit.ChatColor;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -274,13 +273,27 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
                 ChatUtil.sendWarning(spectator, "But only cause I'm a little batty...");
                 break;
             case 8:
-                for (Zombie zombie : getContained(Zombie.class)) {
-                    if (!zombie.isBaby()) continue;
-                    zombie.setHealth(0);
-                    world.dropItem(zombie.getLocation(), new ItemStack(ItemID.SUGAR));
-                }
-                attackDur = System.currentTimeMillis() + 20000;
-                ChatUtil.sendWarning(spectator, "I'm so sweet!");
+                server.getScheduler().runTaskLater(inst, () -> {
+                    for (int i = config.radiationTimes; i > 0; i--) {
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            if (boss != null) {
+                                for (Player player : adminKit.removeAdmin(getContained(Player.class))) {
+                                    for (int e = 0; e < 3; ++e) {
+                                        Location t = LocationUtil.findRandomLoc(player.getLocation(), 5, true);
+                                        for (int k = 0; k < 10; ++k) {
+                                            world.playEffect(t, Effect.MOBSPAWNER_FLAMES, 0);
+                                        }
+                                    }
+                                    if (player.getLocation().getBlock().getLightLevel() >= config.radiationLightLevel) {
+                                        player.damage(difficulty * config.radiationMultiplier);
+                                    }
+                                }
+                            }
+                        }, i * 10);
+                    }
+                }, 3 * 20);
+                attackDur = System.currentTimeMillis() + (config.radiationTimes * 500);
+                ChatUtil.sendWarning(spectator, "Ahhh not the radiation treatment!");
                 break;
             case 9:
                 final int burst = ChanceUtil.getRangedRandom(10, 20);

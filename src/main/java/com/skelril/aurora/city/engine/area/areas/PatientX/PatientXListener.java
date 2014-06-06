@@ -48,7 +48,6 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
@@ -117,19 +116,6 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 event.setCancelled(true);
             }
         }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onItemPickup(PlayerPickupItemEvent event) {
-        Player player = event.getPlayer();
-        ItemStack item = event.getItem().getItemStack();
-        if (parent.boss == null || !parent.contains(player) || item.getTypeId() != ItemID.SUGAR) return;
-        if (ChanceUtil.getChance(5)) {
-            EntityUtil.forceDamage(player, 1);
-            EntityUtil.heal(parent.boss, 1);
-            parent.modifyDifficulty(-.1);
-        }
-        event.setCancelled(true);
     }
 
     private static Set<Class> generalBlacklistedSpecs = new HashSet<>();
@@ -405,7 +391,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     deathMessage = " went batty";
                     break;
                 case 8:
-                    deathMessage = " has a big sweet tooth";
+                    deathMessage = " was irradiated";
                     break;
                 case 9:
                     deathMessage = " took a snowball to the face";

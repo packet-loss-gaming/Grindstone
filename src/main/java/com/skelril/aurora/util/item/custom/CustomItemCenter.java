@@ -186,6 +186,15 @@ public class CustomItemCenter {
         fearBow.addUse("Global Effects");
         addItem(fearBow);
 
+        // Shadow Items
+        CustomWeapon shadowSword = new CustomWeapon(SHADOW_SWORD, Material.DIAMOND_SWORD, 5);
+        fearBow.addUse("Slows your opponent with every hit.");
+        addItem(shadowSword);
+
+        CustomWeapon shadowBow = new CustomWeapon(SHADOW_BOW, Material.BOW, 5);
+        fearBow.addUse("Slows your opponent with every hit.");
+        addItem(shadowBow);
+
         // Red Items
         CustomItem redFeather = new CustomItem(RED_FEATHER, Material.FEATHER);
         redFeather.addSource(ItemSource.WILDERNESS_MOBS);

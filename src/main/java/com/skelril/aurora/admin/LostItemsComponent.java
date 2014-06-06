@@ -98,6 +98,12 @@ public class LostItemsComponent extends BukkitComponent {
 
         }
 
+        @Command(aliases = {"shadow"}, desc = "Lost Shadow items")
+        @NestedCommand({LostShadowItem.class})
+        public void lostShadowCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+
         @Command(aliases = {"red"}, desc = "Lost Red items")
         @NestedCommand({LostRedItem.class})
         public void lostRedCommands(CommandContext args, CommandSender sender) throws CommandException {
@@ -355,6 +361,39 @@ public class LostItemsComponent extends BukkitComponent {
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given a new unleashed bow.");
+        }
+    }
+
+    public class LostShadowItem {
+
+        @Command(aliases = {"sword"},
+                usage = "<player>", desc = "Return a player's Shadow Sword",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.shadow.sword"})
+        public void lostSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.SHADOW_SWORD));
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new shadow sword.");
+        }
+
+        @Command(aliases = {"bow"},
+                usage = "<player>", desc = "Return a player's Shadow Bow",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.shadow.bow"})
+        public void lostBowCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.SHADOW_BOW));
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new shadow bow.");
         }
     }
 

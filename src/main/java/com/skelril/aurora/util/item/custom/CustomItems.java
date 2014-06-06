@@ -35,6 +35,10 @@ public enum CustomItems {
     FEAR_SWORD(ChatColor.DARK_RED, "Fear Sword"),
     FEAR_BOW(ChatColor.DARK_RED, "Fear Bow"),
 
+    // Shadow Items
+    SHADOW_SWORD(ChatColor.DARK_RED, "Shadow Sword"),
+    SHADOW_BOW(ChatColor.DARK_RED, "Shadow Bow"),
+
     // Red Items
     RED_FEATHER(ChatColor.DARK_RED, "Red Feather"),
 

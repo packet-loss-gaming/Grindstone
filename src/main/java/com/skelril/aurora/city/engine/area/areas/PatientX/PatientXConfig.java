@@ -18,6 +18,12 @@ public class PatientXConfig extends ConfigurationBase {
     public int iceChance = 12;
     @Setting("ice.explosive-chance")
     public int iceChangeChance = 30;
+    @Setting("radiation.light-level")
+    public int radiationLightLevel = 8;
+    @Setting("radiation.times")
+    public int radiationTimes = 40;
+    @Setting("radiation.multiplier")
+    public double radiationMultiplier = 3;
     @Setting("snow-ball-chance")
     public int snowBallChance = 10;
     @Setting("player-value")
