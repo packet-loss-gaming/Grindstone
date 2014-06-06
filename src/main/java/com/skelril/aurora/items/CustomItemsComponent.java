@@ -394,7 +394,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 String modifierString = map.get(ChatColor.RED + "Damage Modifier");
                 if (modifierString != null) {
                     try {
-                        modifier = Integer.parseInt(modifierString);
+                        modifier = Double.parseDouble(modifierString);
                     } catch (NumberFormatException ignored) {
                     }
                 }
