@@ -278,6 +278,7 @@ public class JungleRaidComponent extends MinigameComponent {
 
         ChatUtil.sendNotice(players, ChatColor.GREEN + "The following flags are enabled: ");
         if (gameFlags.contains('H')) ChatUtil.sendNotice(players, "Hunter Mode");
+        if (gameFlags.contains('G')) ChatUtil.sendNotice(players, "Guilds Enabled");
         if (gameFlags.contains('T')) {
             ChatUtil.sendNotice(players, "Titan Mode");
 
@@ -525,12 +526,16 @@ public class JungleRaidComponent extends MinigameComponent {
             if (playerState.size() == 0 && !isGameInitialised()) return;
 
             if (isGameInitialised()) {
+                boolean guild = gameFlags.contains('G');
                 int min = gameFlags.contains('H') ? (isGameActive() ? 0 : 2) : 0;
 
                 for (PlayerGameState entry : playerState.values()) {
                     if (entry.getTeamNumber() < min) continue;
                     try {
                         Player player = Bukkit.getPlayerExact(entry.getOwnerName());
+                        if (!guild) {
+                            adminComponent.deguildPlayer(player);
+                        }
                         if (player == null) continue;
                         prayerComponent.uninfluencePlayer(player);
                         for (PotionEffectType potionEffectType : PotionEffectType.values()) {
@@ -888,6 +893,9 @@ public class JungleRaidComponent extends MinigameComponent {
 
     private class JungleRaidListener implements Listener {
 
+        private final String[] guildCmdList = new String[]{
+                "ninja", "rogue", "unninja", "derogue"
+        };
         private final String[] cmdWhiteList = new String[]{
                 "ar", "jr", "stopweather", "me", "say", "pm", "msg", "message", "whisper", "tell",
                 "reply", "r", "mute", "unmute", "debug", "dropclear", "dc", "auth", "toggleeditwand"
@@ -904,6 +912,14 @@ public class JungleRaidComponent extends MinigameComponent {
                     if (command.toLowerCase().startsWith("/" + cmd)) {
                         allowed = true;
                         break;
+                    }
+                }
+                if (!allowed && gameFlags.contains('G')) {
+                    for (String cmd : guildCmdList) {
+                        if (command.toLowerCase().startsWith("/" + cmd)) {
+                            allowed = true;
+                            break;
+                        }
                     }
                 }
                 if (!allowed) {
