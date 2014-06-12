@@ -196,7 +196,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 }
             }
         }
-        if (entity instanceof Player) {
+        if (entity instanceof Player && damager instanceof Creature) {
             if (projectile != null) {
                 EntityUtil.forceDamage(entity, ((Player) entity).getMaxHealth() * parent.getConfig().snipeeDamage);
                 entity.playEffect(EntityEffect.HURT);
