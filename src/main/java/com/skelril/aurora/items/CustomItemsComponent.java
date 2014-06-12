@@ -811,6 +811,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         if (type.equals(InventoryType.ANVIL)) {
             if (action.equals(InventoryAction.NOTHING)) return;
+            if (InventoryUtil.getMoveClicks().contains(event.getClick())) {
+                event.setResult(Event.Result.DENY);
+                ChatUtil.sendError(player, "You cannot move that here.");
+                return;
+            }
 
             int rawSlot = event.getRawSlot();
 

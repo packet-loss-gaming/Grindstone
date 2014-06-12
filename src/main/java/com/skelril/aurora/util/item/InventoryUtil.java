@@ -6,6 +6,7 @@
 
 package com.skelril.aurora.util.item;
 
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 
 import java.util.Collections;
@@ -75,5 +76,17 @@ public class InventoryUtil {
     public static Set<InventoryAction> getPickUpActions() {
 
         return Collections.unmodifiableSet(pickUpActions);
+    }
+
+    private static Set<ClickType> moveClicks = new HashSet<>();
+
+    static {
+        moveClicks.add(ClickType.SHIFT_LEFT);
+        moveClicks.add(ClickType.SHIFT_RIGHT);
+        moveClicks.add(ClickType.DOUBLE_CLICK);
+    }
+
+    public static Set<ClickType> getMoveClicks() {
+        return Collections.unmodifiableSet(moveClicks);
     }
 }
