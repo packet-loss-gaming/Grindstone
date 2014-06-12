@@ -107,6 +107,9 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
             if (!checkCharlotte()) {
                 runCharlotte();
             }
+            if (!checkSnipee()) {
+                runSnipee();
+            }
         }
         writeData(true);
     }
@@ -287,6 +290,11 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
                 }
                 break;
         }
+    }
+
+    public void runSnipee() {
+        if (snipee == null) return;
+        com.sk89q.commandbook.util.entity.EntityUtil.sendProjectilesFromEntity(snipee, 20, 1.6F, Arrow.class);
     }
 
     public void spawnMagmaCubed() {

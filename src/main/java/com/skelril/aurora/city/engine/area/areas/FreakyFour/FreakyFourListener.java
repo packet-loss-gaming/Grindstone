@@ -32,7 +32,9 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -158,6 +160,16 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         }, 1);
     }
 
+
+    private static Set<DamageCause> healable = new HashSet<>();
+
+    static {
+        healable.add(DamageCause.BLOCK_EXPLOSION);
+        healable.add(DamageCause.ENTITY_EXPLOSION);
+        healable.add(DamageCause.WITHER);
+    }
+
+
     @EventHandler(ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
         Entity entity = event.getEntity();
@@ -177,7 +189,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         }
         if (entity instanceof Creeper || entity instanceof Skeleton) {
             boolean backTeleport = projectile == null && ChanceUtil.getChance(parent.getConfig().backTeleport);
-            if (event.getCause().equals(DamageCause.BLOCK_EXPLOSION)) {
+            if (healable.contains(event.getCause())) {
                 EntityUtil.heal(entity, event.getDamage());
                 event.setCancelled(true);
             } else if ((backTeleport || projectile != null) && damager != null) {
