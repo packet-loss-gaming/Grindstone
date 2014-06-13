@@ -1,0 +1,34 @@
+/*
+ * Copyright (c) 2014 Wyatt Childers.
+ *
+ * All Rights Reserved
+ */
+
+package com.skelril.aurora.city.engine.area.areas.MirageArena;
+
+import com.sk89q.commandbook.session.PersistentSession;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+public class MirageSession extends PersistentSession {
+
+    private Set<String> ignored = new HashSet<>();
+
+    protected MirageSession() {
+        super(TimeUnit.MINUTES.toMillis(30));
+    }
+
+    public boolean isIgnored(String player) {
+        return ignored.contains(player);
+    }
+
+    public void ignore(String player) {
+        ignored.add(player);
+    }
+
+    public void unignore(String player) {
+        ignored.remove(player);
+    }
+}
