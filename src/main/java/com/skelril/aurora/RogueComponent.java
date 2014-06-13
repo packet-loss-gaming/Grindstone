@@ -138,13 +138,20 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
 
         Vector vel = player.getLocation().getDirection();
-        vel.multiply(3 * modifier);
+        vel.multiply(3 * modifier * Math.max(.1, player.getFoodLevel() / 20.0));
         if (auto || isYLimited(player)) {
             vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
         } else {
             vel.setY(Math.min(1.4, vel.getY()));
         }
         player.setVelocity(vel);
+        for (int i = ChanceUtil.getRandom(5); i > 0; --i) {
+            if (player.getSaturation() > 0) {
+                player.setSaturation(player.getSaturation() - 1);
+            } else if (player.getFoodLevel() > 0) {
+                player.setFoodLevel(player.getFoodLevel() - 1);
+            }
+        }
     }
 
     public void stallBlip(Player player) {

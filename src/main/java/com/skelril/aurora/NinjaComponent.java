@@ -50,6 +50,8 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.Collections;
@@ -173,7 +175,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         Location k = null;
         for (Entity entity : entities) {
+            EntityUtil.forceDamage(entity, 1);
+            if (ChanceUtil.getChance(7)) {
+                EntityUtil.heal(entity, ChanceUtil.getRandom(3));
+            }
             if (entity instanceof Player) {
+                ((Player) entity).addPotionEffect(new PotionEffect(
+                        PotionEffectType.BLINDNESS,
+                        20 * ChanceUtil.getRandom(3),
+                        1
+                ));
                 ChatUtil.sendWarning((Player) entity, "You hear a strange ticking sound...");
             }
             k = event.getTargetLoc();
