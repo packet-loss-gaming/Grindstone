@@ -6,6 +6,7 @@
 
 package com.skelril.aurora.city.engine.area.areas.MirageArena;
 
+import com.sk89q.commandbook.commands.PaginatedResult;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
@@ -33,6 +34,7 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 
 @ComponentInformation(friendlyName = "Mirage Arena", desc = "What will you see next?")
@@ -82,8 +84,8 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
         writeData(true);
     }
 
-    public File getFile(String name) {
-        return new File(getWorkingDir(), name + ".schematic");
+    public File getFile(String name, int number) {
+        return new File(getWorkingDir().getPath() + '/' + name + '/' + name + '-' + number + ".schematic");
     }
 
     public class Commands {
@@ -122,25 +124,56 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             }
         }
 
+        @Command(aliases = {"list"},
+                usage = "[prefix]", desc = "List all arena states",
+                flags = "", min = 0, max = 1)
+        @CommandPermissions("aurora.mirage.list")
+        public void areaList(CommandContext args, CommandSender sender) throws CommandException {
+            new PaginatedResult<File>("Arenas") {
+                @Override
+                public String format(File file) {
+                    return file.getName();
+                }
+            }.display(
+                    sender,
+                    Arrays.asList(getWorkingDir().listFiles((dir, name)
+                            -> (args.argsLength() < 1 || name.startsWith(args.getString(0)))
+                            && new File(dir, name).isDirectory())),
+                    args.getFlagInteger('p', 1)
+            );
+        }
+
         @Command(aliases = {"save"},
                 usage = "<name>", desc = "Save an arena state",
                 flags = "o", min = 1, max = 1)
         @CommandPermissions("aurora.mirage.save")
         public void areaSave(CommandContext args, CommandSender sender) throws CommandException {
             Vector min = region.getMinimumPoint();
-            Vector max = region.getMaximumPoint();
-            Vector size = max.subtract(min).add(1, 1, 1);
 
-            File file = getFile(args.getString(0));
+            String initFile = args.getString(0);
+            File file = getFile(initFile, 0);
             if (!args.hasFlag('o') && file.exists()) {
                 throw new CommandException("An arena state by that name already exist!");
             }
 
+            File directory = file.getParentFile();
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
             try {
-                CuboidClipboard clipboard = new CuboidClipboard(size, min);
-                clipboard.copy(new EditSession(new BukkitWorld(world), -1));
-                SchematicFormat.MCEDIT.save(clipboard, file);
+                EditSession editor = new EditSession(new BukkitWorld(world), -1);
+                int diff = region.getMaximumPoint().getBlockY() - min.getBlockY();
+                for (int base = 0; base < diff; base += 16) {
+                    Vector origin = min.add(0, base, 0);
+                    Vector size = region.getMaximumPoint().subtract(origin).setY(Math.min(diff - base, 16)).add(1, 1, 1);
+
+                    CuboidClipboard clipboard = new CuboidClipboard(size, origin);
+                    clipboard.copy(editor);
+                    SchematicFormat.MCEDIT.save(clipboard, getFile(initFile, base / 16));
+                }
             } catch (IOException | DataException e) {
+                e.printStackTrace();
                 throw new CommandException("That arena state could not be saved!");
             }
             ChatUtil.sendNotice(sender, "Successfully saved.");
@@ -152,18 +185,38 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
         @CommandPermissions("aurora.mirage.load")
         public void areaLoad(CommandContext args, CommandSender sender) throws CommandException {
 
-            File file = getFile(args.getString(0));
+            String initFile = args.getString(0);
+            File file = getFile(initFile, 0);
 
             if (!file.exists()) {
                 throw new CommandException("No arena state exist by that name!");
             }
 
-            try {
-                SchematicFormat.MCEDIT.load(file).place(new EditSession(new BukkitWorld(world), -1), region.getMinimumPoint(), false);
-            } catch (IOException | DataException | MaxChangedBlocksException e) {
-                throw new CommandException("That arena state could not be loaded!");
+            EditSession editor = new EditSession(new BukkitWorld(world), -1);
+            for (int base = 0; file.exists(); ++base) {
+
+                final File finalFile = file;
+                final int finalBase = base;
+
+                server.getScheduler().runTaskLater(inst, () -> {
+                    ChatUtil.sendNotice(sender, "Starting Editing...");
+                    try {
+                        SchematicFormat.MCEDIT.load(finalFile).place(
+                                editor,
+                                region.getMinimumPoint().add(0, finalBase * 16, 0),
+                                false
+                        );
+                    } catch (MaxChangedBlocksException | IOException | DataException e) {
+                        e.printStackTrace();
+                        ChatUtil.sendError(sender, "Error encountered, check console.");
+                        return;
+                    }
+                    ChatUtil.sendNotice(sender, "Done!");
+                }, 20 * base);
+
+                file = getFile(initFile, base + 1);
             }
-            ChatUtil.sendNotice(sender, "Successfully loaded.");
+            ChatUtil.sendNotice(sender, "Loading...");
         }
     }
 
