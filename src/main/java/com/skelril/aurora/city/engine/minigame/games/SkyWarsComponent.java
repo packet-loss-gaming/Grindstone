@@ -38,6 +38,8 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.checker.RegionChecker;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -581,6 +583,12 @@ public class SkyWarsComponent extends MinigameComponent {
 
     }
 
+    private static EDBEExtractor<Player, Player, Snowball> extractor = new EDBEExtractor<>(
+            Player.class,
+            Player.class,
+            Snowball.class
+    );
+
     private class SkyWarsListener implements Listener {
 
         private final String[] cmdWhiteList = new String[]{
@@ -838,21 +846,13 @@ public class SkyWarsComponent extends MinigameComponent {
         @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
         public void onEntityDamagedByEntity(EntityDamageByEntityEvent event) {
 
-            Entity attackingEntity = event.getDamager();
-            Entity defendingEntity = event.getEntity();
+            CombatantPair<Player, Player, Snowball> result = extractor.extractFrom(event);
 
-            if (!(defendingEntity instanceof Player)) return;
-            Player defendingPlayer = (Player) defendingEntity;
+            if (result == null) return;
 
-            Player attackingPlayer;
-            if (attackingEntity instanceof Player) {
-                attackingPlayer = (Player) attackingEntity;
-            } else if (attackingEntity instanceof Projectile) {
-                if (!(((Projectile) attackingEntity).getShooter() instanceof Player)) return;
-                attackingPlayer = (Player) ((Projectile) attackingEntity).getShooter();
-            } else {
-                return;
-            }
+            Player attackingPlayer = result.getAttacker();
+            Player defendingPlayer = result.getDefender();
+            Projectile projectile = result.getProjectile();
 
             if (getTeam(attackingPlayer) == -1 && getTeam(defendingPlayer) != -1) {
                 event.setCancelled(true);
@@ -870,7 +870,7 @@ public class SkyWarsComponent extends MinigameComponent {
                 event.setCancelled(true);
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
             } else {
-                if (attackingEntity instanceof Snowball) {
+                if (projectile instanceof Snowball) {
                     SkyWarSession session = sessions.getSession(SkyWarSession.class, defendingPlayer);
                     session.stopFlight(3000 + (1000 * ChanceUtil.getRandom(5)));
                     session.stopDefrost(15000);

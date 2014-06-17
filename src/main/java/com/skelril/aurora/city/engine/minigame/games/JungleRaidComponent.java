@@ -47,6 +47,8 @@ import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.checker.RegionChecker;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.hackbook.ChunkBook;
 import com.skelril.hackbook.exceptions.UnsupportedFeatureException;
@@ -891,6 +893,12 @@ public class JungleRaidComponent extends MinigameComponent {
 
     }
 
+    private static EDBEExtractor<Player, Player, Projectile> extractor = new EDBEExtractor<>(
+            Player.class,
+            Player.class,
+            Projectile.class
+    );
+
     private class JungleRaidListener implements Listener {
 
         private final String[] guildCmdList = new String[]{
@@ -1038,21 +1046,12 @@ public class JungleRaidComponent extends MinigameComponent {
         @EventHandler(ignoreCancelled = true)
         public void onEntityDamagedByEntity(EntityDamageByEntityEvent event) {
 
-            Entity attackingEntity = event.getDamager();
-            Entity defendingEntity = event.getEntity();
+            CombatantPair<Player, Player, Projectile> result = extractor.extractFrom(event);
 
-            if (!(defendingEntity instanceof Player)) return;
-            Player defendingPlayer = (Player) defendingEntity;
+            if (result == null) return;
 
-            Player attackingPlayer;
-            if (attackingEntity instanceof Player) {
-                attackingPlayer = (Player) attackingEntity;
-            } else if (attackingEntity instanceof Arrow) {
-                if (!(((Arrow) attackingEntity).getShooter() instanceof Player)) return;
-                attackingPlayer = (Player) ((Arrow) attackingEntity).getShooter();
-            } else {
-                return;
-            }
+            Player attackingPlayer = result.getAttacker();
+            Player defendingPlayer = result.getDefender();
 
             if (getTeam(attackingPlayer) == -1 && getTeam(defendingPlayer) != -1) {
                 event.setCancelled(true);
