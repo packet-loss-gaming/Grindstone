@@ -30,6 +30,8 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.item.BookUtil;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -782,17 +784,24 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
+    private static EDBEExtractor<LivingEntity, Player, Arrow> extractor = new EDBEExtractor<>(
+            LivingEntity.class,
+            Player.class,
+            Arrow.class
+    );
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
 
-        if (event.getEntity() instanceof Player) {
+        CombatantPair<LivingEntity, Player, Arrow> result = extractor.extractFrom(event);
 
-            Player player = (Player) event.getEntity();
+        if (result == null) return;
 
-            if (!contains(player)) return;
-            if (ChanceUtil.getChance(7) && ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD) && ItemUtil.hasAncientArmour(player)) {
-                EffectUtil.Master.ultimateStrength(player);
-            }
+        Player player = result.getDefender();
+
+        if (!contains(player)) return;
+        if (ChanceUtil.getChance(7) && ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD) && ItemUtil.hasAncientArmour(player)) {
+            EffectUtil.Master.ultimateStrength(player);
         }
     }
 
