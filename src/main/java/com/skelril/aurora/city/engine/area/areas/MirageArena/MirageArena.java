@@ -14,6 +14,7 @@ import com.sk89q.worldedit.CuboidClipboard;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.data.DataException;
 import com.sk89q.worldedit.schematic.SchematicFormat;
@@ -110,8 +111,8 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
         }
     }
 
-    public File getFile(String name, int number) {
-        return new File(getWorkingDir().getPath() + '/' + name + '/' + name + '-' + number + ".schematic");
+    public File getFile(String name) {
+        return new File(getWorkingDir().getPath() + '/' + name + '/' + "arena.schematic");
     }
 
     public class Commands {
@@ -177,7 +178,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             Vector min = region.getMinimumPoint();
 
             String initFile = args.getString(0);
-            File file = getFile(initFile, 0);
+            File file = getFile(initFile);
 
             File directory = file.getParentFile();
             if (!directory.exists()) {
@@ -185,24 +186,19 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             } else {
                 if (!args.hasFlag('o')) {
                     throw new CommandException("An arena state by that name already exist!");
-                } else {
-                    for (File aFile : directory.listFiles((dir, name) -> name.endsWith(".schematic"))) {
-                        aFile.delete();
-                    }
+                } else if (file.exists()) {
+                    file.delete();
                 }
             }
 
             try {
                 EditSession editor = new EditSession(new BukkitWorld(world), -1);
-                int diff = region.getMaximumPoint().getBlockY() - min.getBlockY();
-                for (int base = 0; base < diff; base += 4) {
-                    Vector origin = min.add(0, base, 0);
-                    Vector size = region.getMaximumPoint().subtract(origin).setY(Math.min(diff - base, 4)).add(1, 1, 1);
+                Vector size = region.getMaximumPoint().subtract(min).add(1, 1, 1);
 
-                    CuboidClipboard clipboard = new CuboidClipboard(size, origin);
-                    clipboard.copy(editor);
-                    SchematicFormat.MCEDIT.save(clipboard, getFile(initFile, base / 4));
-                }
+                CuboidClipboard clipboard = new CuboidClipboard(size, min);
+                clipboard.copy(editor);
+                SchematicFormat.MCEDIT.save(clipboard, getFile(initFile));
+
             } catch (IOException | DataException e) {
                 e.printStackTrace();
                 throw new CommandException("That arena state could not be saved!");
@@ -210,64 +206,85 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             ChatUtil.sendNotice(sender, "Successfully saved.");
         }
 
+        public void callEdit(CommandSender sender, EditSession editor, CuboidClipboard board,
+                             int cx, int cy, int maxX, int maxY, int maxZ) {
+
+            if (cy >= maxY) {
+                ChatUtil.sendNotice(sender, "Editing Completed.");
+                editing = false;
+                freePlayers();
+                return;
+            } else if (cx == 0 && cy % 10 == 0) {
+                ChatUtil.sendNotice(sender, "Editing Layer: " + cy + '/' + maxY);
+            }
+
+            long start = System.currentTimeMillis();
+
+            edit:
+            {
+                for (int x = cx; x < maxX; ++x) {
+                    for (int z = 0; z < maxZ; ++z) {
+                        Vector v = new Vector(x, cy, z);
+                        Vector target = v.add(region.getMinimumPoint());
+                        BaseBlock targetBlock = board.getBlock(v);
+                        try {
+                            editor.setBlock(target, targetBlock);
+                        } catch (MaxChangedBlocksException e) {
+                            e.printStackTrace();
+                            ChatUtil.sendError(sender, "Error encountered, check console.");
+                        }
+                    }
+                    if (System.currentTimeMillis() - start >= 100) {
+                        cx = x;
+                        break edit;
+                    }
+                }
+                cx = 0;
+                cy++;
+            }
+
+            long post = System.currentTimeMillis() - start;
+
+            final int finalCy = cy;
+            final int finalCx = cx;
+            server.getScheduler().runTaskLater(inst, () -> {
+                callEdit(sender, editor, board, finalCx, finalCy, maxX, maxY, maxZ);
+            }, post / 5);
+        }
+
         @Command(aliases = {"load"},
-                usage = "[parts] <name>", desc = "Load an arena state",
-                flags = "", min = 1, max = 2)
+                usage = "<name>", desc = "Load an arena state",
+                flags = "", min = 1, max = 1)
         @CommandPermissions("aurora.mirage.load")
         public void areaLoad(CommandContext args, CommandSender sender) throws CommandException {
 
-            final int parts;
-            String initFile;
-            if (args.argsLength() > 1) {
-                parts = args.getInteger(0);
-                initFile = args.getString(1);
-            } else {
-                parts = 4;
-                initFile = args.getString(0);
-            }
-            File file = getFile(initFile, 0);
+            String initFile = args.getString(0);
+            File file = getFile(initFile);
 
             if (!file.exists()) {
                 throw new CommandException("No arena state exist by that name!");
             }
 
+            if (editing) {
+                throw new CommandException("Editing is already in progress!");
+            }
+
             editing = true;
 
-            double start = System.currentTimeMillis();
-            int files = file.getParentFile().listFiles((dir, name) -> name.endsWith(".schematic")).length - 1;
-            EditSession editor = new EditSession(new BukkitWorld(world), -1);
-            for (int base = 0; file.exists() || base <= files; ++base) {
-
-                final File finalFile = file;
-                final int finalBase = base;
-
-                server.getScheduler().runTaskLater(inst, () -> {
-                    try {
-                        SchematicFormat.MCEDIT.load(finalFile).place(
-                                editor,
-                                region.getMinimumPoint().add(0, finalBase * parts, 0),
-                                false
-                        );
-                    } catch (MaxChangedBlocksException | IOException | DataException e) {
-                        e.printStackTrace();
-                        ChatUtil.sendError(sender, "Error encountered, check console.");
-                    }
-
-                    if (finalBase == files) {
-                        editing = false;
-                        freePlayers();
-
-                        double elapsed = System.currentTimeMillis() - start;
-                        double workTime = elapsed - (250 * finalBase);
-                        ChatUtil.sendNotice(sender, "Done loading.");
-                        ChatUtil.sendNotice(sender, " - Editing: " + workTime + "ms");
-                        ChatUtil.sendNotice(sender, " - Total: " + elapsed + "ms");
-                    }
-                }, 5 * base);
-
-                file = getFile(initFile, base + 1);
-            }
             ChatUtil.sendNotice(sender, "Loading...");
+
+            try {
+                EditSession editor = new EditSession(new BukkitWorld(world), -1);
+                CuboidClipboard clipboard = SchematicFormat.MCEDIT.load(file);
+                int maxX = clipboard.getWidth();
+                int maxY = clipboard.getHeight();
+                int maxZ = clipboard.getLength();
+
+                callEdit(sender, editor, clipboard, 0, 0, maxX, maxY, maxZ);
+            } catch (IOException | DataException e) {
+                e.printStackTrace();
+                ChatUtil.sendError(sender, "Error encountered, check console.");
+            }
         }
     }
 
