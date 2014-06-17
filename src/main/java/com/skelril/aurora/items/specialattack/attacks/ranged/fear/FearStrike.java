@@ -6,7 +6,7 @@
 
 package com.skelril.aurora.items.specialattack.attacks.ranged.fear;
 
-import com.skelril.aurora.city.engine.PvPComponent;
+import com.skelril.aurora.city.engine.pvp.PvPComponent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.items.specialattack.EntityAttack;

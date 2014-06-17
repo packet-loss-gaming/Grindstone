@@ -9,8 +9,6 @@ package com.skelril.aurora.city.engine.area.areas.MirageArena;
 import com.skelril.aurora.city.engine.area.AreaListener;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
-import com.skelril.aurora.events.guild.NinjaSmokeBombEvent;
-import com.skelril.aurora.events.guild.NinjaTormentArrowEvent;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
 import com.skelril.aurora.util.player.PlayerState;
@@ -28,7 +26,6 @@ import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 public class MirageArenaListener extends AreaListener<MirageArena> {
@@ -56,32 +53,6 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onNinjaSmokeBomb(NinjaSmokeBombEvent event) {
-        Player owner = event.getPlayer();
-        Iterator<Entity> it = event.getEntities().iterator();
-        while (it.hasNext()) {
-            Entity next = it.next();
-            if (!(next instanceof Player)) continue;
-            if (!parent.canFight(owner, (Player) next)) {
-                it.remove();
-            }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onNinjaTormentArrow(NinjaTormentArrowEvent event) {
-        Player owner = event.getPlayer();
-        Iterator<Entity> it = event.getEntities().iterator();
-        while (it.hasNext()) {
-            Entity next = it.next();
-            if (!(next instanceof Player)) continue;
-            if (!parent.canFight(owner, (Player) next)) {
-                it.remove();
-            }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
     public void onGemOfLifeUsage(GemOfLifeUsageEvent event) {
 
         if (parent.contains(event.getPlayer())) {
@@ -89,7 +60,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
         if (event instanceof EntityDamageByEntityEvent) {
             onPvP((EntityDamageByEntityEvent) event);
@@ -116,9 +87,9 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
         if (!(defender instanceof Player && attacker instanceof Player)) return;
 
-        if (!(parent.contains(defender) && parent.contains(attacker))) return;
-
-        parent.canFight((Player) attacker, (Player) defender);
+        if (!parent.scope.checkFor((Player) attacker, (Player) defender)) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler

@@ -19,7 +19,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
-import com.skelril.aurora.city.engine.PvPComponent;
+import com.skelril.aurora.city.engine.pvp.PvPComponent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.guild.NinjaGrappleEvent;
 import com.skelril.aurora.events.guild.NinjaSmokeBombEvent;

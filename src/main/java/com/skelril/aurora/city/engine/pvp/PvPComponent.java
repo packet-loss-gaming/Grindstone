@@ -4,7 +4,7 @@
  * All Rights Reserved
  */
 
-package com.skelril.aurora.city.engine;
+package com.skelril.aurora.city.engine.pvp;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
@@ -44,6 +44,8 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -60,6 +62,7 @@ public class PvPComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private PrayerComponent prayers;
 
+    private static List<PvPScope> pvpLimitors = new ArrayList<>();
     private static WorldGuardPlugin WG;
 
     @Override
@@ -199,6 +202,14 @@ public class PvPComponent extends BukkitComponent implements Listener {
         if (allowsPvP(event.getAttacker(), event.getDefender(), false)) event.setCancelled(true);
     }
 
+    public static void registerScope(PvPScope scope) {
+        pvpLimitors.add(scope);
+    }
+
+    public static void removeScope(PvPScope scope) {
+        pvpLimitors.remove(scope);
+    }
+
     public static boolean allowsPvP(Player attacker, Player defender) {
 
         return allowsPvP(attacker, defender, true);
@@ -217,6 +228,10 @@ public class PvPComponent extends BukkitComponent implements Listener {
 
         PvPSession attackerSession = sessions.getSession(PvPSession.class, attacker);
         PvPSession defenderSession = sessions.getSession(PvPSession.class, defender);
+
+        for (PvPScope scope : pvpLimitors) {
+            if (!scope.checkFor(attacker, defender)) return false;
+        }
 
         if (attackerSession.hasPvPOn() && defenderSession.hasPvPOn()) {
             if (attackerSession.useSafeSpots() || defenderSession.useSafeSpots()) {

@@ -6,6 +6,7 @@
 
 package com.skelril.aurora.prayer.PrayerFX;
 
+import com.skelril.aurora.city.engine.pvp.PvPComponent;
 import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.EntityUtil;
 import org.bukkit.entity.LivingEntity;
@@ -19,8 +20,13 @@ public class NecrosisFX extends AbstractEffect {
         this.beneficiary = beneficiary;
     }
 
+    private boolean checkBeneficiary() {
+        return beneficiary != null && beneficiary instanceof Player;
+    }
+
     @Override
     public void add(Player player) {
+        if (checkBeneficiary() && !PvPComponent.allowsPvP((Player) beneficiary, player)) return;
         EntityUtil.heal(beneficiary, 1);
         EntityUtil.forceDamage(player, 1);
     }

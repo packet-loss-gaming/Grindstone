@@ -21,6 +21,8 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.area.AreaComponent;
 import com.skelril.aurora.city.engine.area.PersistentArena;
+import com.skelril.aurora.city.engine.pvp.PvPComponent;
+import com.skelril.aurora.city.engine.pvp.PvPScope;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.APIUtil;
 import com.skelril.aurora.util.ChatUtil;
@@ -47,6 +49,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
     @InjectComponent
     protected SessionComponent sessions;
 
+    protected PvPScope scope;
     protected boolean editing = false;
     protected HashMap<String, PlayerState> playerState = new HashMap<>();
 
@@ -61,6 +64,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             config = new MirageArenaConfig();
             reloadData();
 
+            registerScope();
             registerCommands(Commands.class);
         } catch (UnknownPluginException e) {
             log.info("WorldGuard could not be found!");
@@ -84,6 +88,20 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             equalize();
         }
         writeData(true);
+    }
+
+    private void registerScope() {
+        PvPComponent.registerScope(scope = new PvPScope() {
+            @Override
+            public boolean isApplicable(Player player) {
+                return contains(player);
+            }
+
+            @Override
+            public boolean allowed(Player attacker, Player defender) {
+                return !sessions.getSession(MirageSession.class, attacker).isIgnored(defender.getName());
+            }
+        });
     }
 
     public void freePlayers() {
@@ -261,12 +279,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
                 log.warning("The player: " + player.getName() + " may have an unfair advantage.");
             }
         }
-    }
-
-    public boolean canFight(Player attacker, Player defender) {
-        return contains(attacker)
-            && contains(defender)
-            && !sessions.getSession(MirageSession.class, attacker).isIgnored(defender.getName());
     }
 
     @Override
