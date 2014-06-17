@@ -39,6 +39,8 @@ import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerFX.HulkFX;
 import com.skelril.aurora.prayer.PrayerFX.NecrosisFX;
 import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.InventoryUtil;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -226,61 +228,66 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
+    private static EDBEExtractor<LivingEntity, Player, Projectile> necrosisExtractor = new EDBEExtractor<>(
+            LivingEntity.class,
+            Player.class,
+            Projectile.class
+    );
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void necrosis(EntityDamageByEntityEvent event) {
-        Entity damager = event.getDamager();
-        if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
-            ProjectileSource source = ((Projectile) damager).getShooter();
-            if (source instanceof Entity) {
-                damager = (Entity) source;
-            }
-        }
 
-        Entity defender = event.getEntity();
-        if (!(defender instanceof Player)) return;
+        CombatantPair<LivingEntity, Player, Projectile> result = necrosisExtractor.extractFrom(event);
 
-        if (ItemUtil.hasNecrosArmour((Player) defender) && ChanceUtil.getChance(12)) {
-            if (damager instanceof Player) {
+        if (result == null) return;
+
+        Player defender = result.getDefender();
+        if (ItemUtil.hasNecrosArmour(defender) && ChanceUtil.getChance(12)) {
+            LivingEntity attacker = result.getAttacker();
+            if (attacker instanceof Player) {
                 NecrosisFX necrosis = new NecrosisFX();
-                necrosis.setBeneficiary((Player) defender);
-                Prayer prayer = PrayerComponent.constructPrayer((Player) damager, necrosis, 5000);
-                prayers.influencePlayer((Player) damager, prayer);
-                ((Player) defender).chat("Taste necrosis!");
+                necrosis.setBeneficiary(defender);
+                Prayer prayer = PrayerComponent.constructPrayer((Player) attacker, necrosis, 5000);
+                prayers.influencePlayer((Player) attacker, prayer);
+                defender.chat("Taste necrosis!");
             } else {
-                EffectUtil.Necros.deathStrike((Player) defender, Math.max(5, event.getDamage()));
+                EffectUtil.Necros.deathStrike(defender, Math.max(5, event.getDamage()));
             }
         }
     }
+
+    private static EDBEExtractor<Player, LivingEntity, Projectile> specExtractor = new EDBEExtractor<>(
+            Player.class,
+            LivingEntity.class,
+            Projectile.class
+    );
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void specAttack(EntityDamageByEntityEvent event) {
 
         if (DamageUtil.remove(event.getDamager(), event.getEntity())) return;
 
-        Entity damager = event.getDamager();
+        CombatantPair<Player, LivingEntity, Projectile> result = specExtractor.extractFrom(event);
+
+        if (result == null) return;
+
         ItemStack launcher = null;
-        if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
-            if (damager.hasMetadata("launcher")) {
-
-                Object test = damager.getMetadata("launcher").get(0).value();
-
+        if (result.hasProjectile()) {
+            Projectile projectile = result.getProjectile();
+            if (projectile.hasMetadata("launcher")) {
+                Object test = projectile.getMetadata("launcher").get(0).value();
                 if (test instanceof ItemStack) {
                     launcher = (ItemStack) test;
                 }
             }
 
             if (launcher == null) return;
-
-            ProjectileSource source = ((Projectile) damager).getShooter();
-            if (source instanceof Entity) {
-                damager = (Entity) source;
-            }
         }
 
-        Player owner = damager instanceof Player ? (Player) damager : null;
-        LivingEntity target = event.getEntity() instanceof LivingEntity ? (LivingEntity) event.getEntity() : null;
+        Player owner = result.getAttacker();
+        LivingEntity target = result.getDefender();
 
-        if (owner != null && target != null && owner != target) {
+        if (target != null && owner != target) {
 
             CustomItemSession session = getSession(owner);
 
