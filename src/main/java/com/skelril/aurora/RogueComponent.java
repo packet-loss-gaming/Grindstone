@@ -26,6 +26,8 @@ import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -51,7 +53,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import java.util.Collections;
@@ -80,59 +81,27 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     }
 
     // Player Management
-    public void roguePlayer(Player player) {
+    public RogueState roguePlayer(Player player) {
 
-        RogueState rogueState = sessions.getSession(RogueState.class, player);
+        RogueState rogueState = getState(player);
 
-        if (rogueState.isRogue()) return;
+        if (rogueState.isRogue()) return rogueState;
 
         rogueState.setIsRogue(true);
         rogueState.setOldSpeed(player.getWalkSpeed());
 
         double multiplier = inst.hasPermission(player, "aurora.rogue.master") ? 2.5 : 2;
 
-
         player.setWalkSpeed((float) (RogueState.getDefaultSpeed() * multiplier));
+        return rogueState;
+    }
+
+    public RogueState getState(Player player) {
+        return sessions.getSession(RogueState.class, player);
     }
 
     public boolean isRogue(Player player) {
-
-        return sessions.getSession(RogueState.class, player).isRogue();
-    }
-
-    public boolean isTraitorProtected(Player player) {
-
-        return sessions.getSession(RogueState.class, player).isTraitorProtected();
-    }
-
-    public void setTraitorProtected(Player player, boolean rogueTraitor) {
-
-        sessions.getSession(RogueState.class, player).setTraitorProtection(rogueTraitor);
-    }
-
-    public boolean canBacklash(Player player) {
-
-        return sessions.getSession(RogueState.class, player).canBacklash();
-    }
-
-    public void setBacklash(Player player, boolean enable) {
-
-        sessions.getSession(RogueState.class, player).setBacklash(enable);
-    }
-
-    public boolean isYLimited(Player player) {
-
-        return sessions.getSession(RogueState.class, player).isYLimited();
-    }
-
-    public void limitYVelocity(Player player, boolean limitYVelocity) {
-
-        sessions.getSession(RogueState.class, player).limitYVelocity(limitYVelocity);
-    }
-
-    public boolean canBlip(Player player) {
-
-        return sessions.getSession(RogueState.class, player).canBlip();
+        return getState(player).isRogue();
     }
 
     public void blip(Player player, double modifier, boolean auto) {
@@ -143,13 +112,14 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         modifier = event.getModifier();
 
-        sessions.getSession(RogueState.class, player).blip();
+        RogueState rogueSession = getState(player);
+        rogueSession.blip();
 
         server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
 
         Vector vel = player.getLocation().getDirection();
         vel.multiply(3 * modifier * Math.max(.1, player.getFoodLevel() / 20.0));
-        if (auto || isYLimited(player)) {
+        if (auto || rogueSession.isYLimited()) {
             vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
         } else {
             vel.setY(Math.min(1.4, vel.getY()));
@@ -164,14 +134,8 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
-    public void stallBlip(Player player) {
-
-        sessions.getSession(RogueState.class, player).blip(12000);
-    }
-
-    public boolean canGrenade(Player player) {
-
-        return sessions.getSession(RogueState.class, player).canGrenade();
+    public void stallBlip(RogueState session) {
+        session.blip(12000);
     }
 
     public void grenade(Player player) {
@@ -180,7 +144,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         server.getPluginManager().callEvent(event);
         if (event.isCancelled()) return;
 
-        sessions.getSession(RogueState.class, player).grenade();
+        getState(player).grenade();
 
         for (int i = event.getGrenadeCount(); i > 0; --i) {
             Snowball snowball = player.launchProjectile(Snowball.class);
@@ -192,7 +156,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
     public void deroguePlayer(Player player) {
 
-        RogueState rogueState = sessions.getSession(RogueState.class, player);
+        RogueState rogueState = getState(player);
         rogueState.setIsRogue(false);
         player.setWalkSpeed(rogueState.getOldSpeed());
     }
@@ -225,36 +189,34 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
+    private static EDBEExtractor<LivingEntity, LivingEntity, Arrow> extractor = new EDBEExtractor<>(
+            LivingEntity.class,
+            LivingEntity.class,
+            Arrow.class
+    );
+
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityDamageEntityEvent(EntityDamageByEntityEvent event) {
 
-        Entity damager = event.getDamager();
-        boolean wasArrow = false;
+        CombatantPair<LivingEntity, LivingEntity, Arrow> result = extractor.extractFrom(event);
 
-        if (damager instanceof Arrow) {
-            ProjectileSource source = ((Arrow) event.getDamager()).getShooter();
-            if (source instanceof Entity) {
-                damager = (Entity) source;
-                wasArrow = true;
-            } else {
-                return;
-            }
-        }
+        if (result == null) return;
 
-        if (wasArrow) {
-            if (event.getEntity() instanceof Player && ChanceUtil.getChance(3)) {
+        final LivingEntity attacker = result.getAttacker();
+        final LivingEntity defender = result.getDefender();
 
-                final Player defender = (Player) event.getEntity();
-                if (isRogue(defender) && canBacklash(defender) && canBlip(defender)) {
-                    if (damager instanceof Player && !PvPComponent.allowsPvP((Player) damager, defender)) return;
-                    final Entity finalDamager = damager;
+        if (result.hasProjectile()) {
+            if (defender instanceof Player && ChanceUtil.getChance(3)) {
+                RogueState rogueSession = getState((Player) defender);
+                if (rogueSession.isRogue() && rogueSession.canBacklash() && rogueSession.canBlip()) {
+                    if (attacker instanceof Player && !PvPComponent.allowsPvP((Player) attacker, (Player) defender)) return;
                     server.getScheduler().runTaskLater(inst, () -> {
-                        defender.teleport(finalDamager, PlayerTeleportEvent.TeleportCause.UNKNOWN);
-                        blip(defender, -.5, true);
+                        defender.teleport(attacker, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                        blip((Player) defender, -.5, true);
                     }, 1);
                 }
             }
-        } else if (damager instanceof Player && isRogue((Player) damager)) {
+        } else if (attacker instanceof Player && isRogue((Player) attacker)) {
             event.setDamage((event.getDamage() + 10) * 1.2);
         }
     }
@@ -295,7 +257,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                         final Player defender = (Player) entity;
                         if (!PvPComponent.allowsPvP(shooter, defender)) return;
 
-                        if (isTraitorProtected(defender)) {
+                        if (getState(defender).isTraitorProtected()) {
                             ChatUtil.sendWarning(shooter, defender.getName() + " sends a band of Rogue marauders after you.");
                             for (int i = ChanceUtil.getRandom(24) + 20; i > 0; --i) {
                                 server.getScheduler().runTaskLater(inst, () -> {
@@ -321,17 +283,18 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         final Player player = event.getPlayer();
         ItemStack stack = player.getItemInHand();
 
-        if (isRogue(player) && stack != null && ItemUtil.isSword(stack.getTypeId())) {
+        RogueState rogueSession = sessions.getSession(RogueState.class, player);
+        if (rogueSession.isRogue() && stack != null && ItemUtil.isSword(stack.getTypeId())) {
             switch (event.getAction()) {
                 case LEFT_CLICK_AIR:
                     server.getScheduler().runTaskLater(inst, () -> {
-                        if (canBlip(player) && !player.isSneaking()) {
+                        if (rogueSession.canBlip() && !player.isSneaking()) {
                             blip(player, 2, false);
                         }
                     }, 1);
                     break;
                 case RIGHT_CLICK_AIR:
-                    if (canGrenade(player)) {
+                    if (rogueSession.canGrenade()) {
                         grenade(player);
                     }
                     break;
@@ -345,12 +308,13 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (event.getEntity() instanceof Player) {
             final Player player = (Player) event.getEntity();
 
-            if (isRogue(player)) {
+            RogueState rogueSession = getState(player);
+            if (rogueSession.isRogue()) {
 
                 Entity p = event.getProjectile();
                 p.setVelocity(p.getVelocity().multiply(.9));
 
-                stallBlip(player);
+                stallBlip(rogueSession);
             }
         }
     }
@@ -365,7 +329,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             Player player = (Player) entity;
 
             if (isRogue(player)) {
-
                 blip(player, 1, true);
             }
         }
@@ -440,12 +403,12 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             final boolean isRogue = isRogue(player);
 
             // Enter Rogue Mode
-            roguePlayer(player);
+            RogueState rogueSession = roguePlayer(player);
 
             // Set flags
-            limitYVelocity(player, args.hasFlag('l'));
-            setBacklash(player, args.hasFlag('b'));
-            setTraitorProtected(player, args.hasFlag('t') && inst.hasPermission(player, "aurora.rogue.master"));
+            rogueSession.limitYVelocity(args.hasFlag('l'));
+            rogueSession.setBacklash(args.hasFlag('b'));
+            rogueSession.setTraitorProtection(args.hasFlag('t') && inst.hasPermission(player, "aurora.rogue.master"));
 
             if (!isRogue) {
                 ChatUtil.sendNotice(player, "You gain the power of a rogue warrior!");
