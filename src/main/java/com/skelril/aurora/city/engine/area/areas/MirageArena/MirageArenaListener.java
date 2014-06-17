@@ -6,10 +6,11 @@
 
 package com.skelril.aurora.city.engine.area.areas.MirageArena;
 
-import com.sk89q.commandbook.session.SessionComponent;
 import com.skelril.aurora.city.engine.area.AreaListener;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
+import com.skelril.aurora.events.guild.NinjaSmokeBombEvent;
+import com.skelril.aurora.events.guild.NinjaTormentArrowEvent;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
 import com.skelril.aurora.util.player.PlayerState;
@@ -20,12 +21,14 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 public class MirageArenaListener extends AreaListener<MirageArena> {
@@ -53,6 +56,32 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
     }
 
     @EventHandler(ignoreCancelled = true)
+    public void onNinjaSmokeBomb(NinjaSmokeBombEvent event) {
+        Player owner = event.getPlayer();
+        Iterator<Entity> it = event.getEntities().iterator();
+        while (it.hasNext()) {
+            Entity next = it.next();
+            if (!(next instanceof Player)) continue;
+            if (!parent.canFight(owner, (Player) next)) {
+                it.remove();
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onNinjaTormentArrow(NinjaTormentArrowEvent event) {
+        Player owner = event.getPlayer();
+        Iterator<Entity> it = event.getEntities().iterator();
+        while (it.hasNext()) {
+            Entity next = it.next();
+            if (!(next instanceof Player)) continue;
+            if (!parent.canFight(owner, (Player) next)) {
+                it.remove();
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onGemOfLifeUsage(GemOfLifeUsageEvent event) {
 
         if (parent.contains(event.getPlayer())) {
@@ -61,6 +90,17 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
     }
 
     @EventHandler
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (event instanceof EntityDamageByEntityEvent) {
+            onPvP((EntityDamageByEntityEvent) event);
+            return;
+        }
+
+        if (parent.editing) {
+            event.setCancelled(true);
+        }
+    }
+
     public void onPvP(EntityDamageByEntityEvent event) {
         Entity defender = event.getEntity();
         Entity attacker = event.getDamager();
@@ -78,10 +118,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
         if (!(parent.contains(defender) && parent.contains(attacker))) return;
 
-        SessionComponent sessions = parent.sessions;
-        if (sessions.getSession(MirageSession.class, (Player) attacker).isIgnored(((Player) defender).getName())) {
-            event.setCancelled(true);
-        }
+        parent.canFight((Player) attacker, (Player) defender);
     }
 
     @EventHandler

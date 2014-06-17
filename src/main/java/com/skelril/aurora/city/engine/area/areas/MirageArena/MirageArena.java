@@ -24,6 +24,7 @@ import com.skelril.aurora.city.engine.area.PersistentArena;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.APIUtil;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -46,6 +47,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
     @InjectComponent
     protected SessionComponent sessions;
 
+    protected boolean editing = false;
     protected HashMap<String, PlayerState> playerState = new HashMap<>();
 
     @Override
@@ -82,6 +84,12 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             equalize();
         }
         writeData(true);
+    }
+
+    public void freePlayers() {
+        for (Player player : getContained(Player.class)) {
+            LocationUtil.toGround(player);
+        }
     }
 
     public File getFile(String name, int number) {
@@ -152,25 +160,30 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
 
             String initFile = args.getString(0);
             File file = getFile(initFile, 0);
-            if (!args.hasFlag('o') && file.exists()) {
-                throw new CommandException("An arena state by that name already exist!");
-            }
 
             File directory = file.getParentFile();
             if (!directory.exists()) {
                 directory.mkdirs();
+            } else {
+                if (!args.hasFlag('o')) {
+                    throw new CommandException("An arena state by that name already exist!");
+                } else {
+                    for (File aFile : directory.listFiles((dir, name) -> name.endsWith(".schematic"))) {
+                        aFile.delete();
+                    }
+                }
             }
 
             try {
                 EditSession editor = new EditSession(new BukkitWorld(world), -1);
                 int diff = region.getMaximumPoint().getBlockY() - min.getBlockY();
-                for (int base = 0; base < diff; base += 16) {
+                for (int base = 0; base < diff; base += 4) {
                     Vector origin = min.add(0, base, 0);
-                    Vector size = region.getMaximumPoint().subtract(origin).setY(Math.min(diff - base, 16)).add(1, 1, 1);
+                    Vector size = region.getMaximumPoint().subtract(origin).setY(Math.min(diff - base, 4)).add(1, 1, 1);
 
                     CuboidClipboard clipboard = new CuboidClipboard(size, origin);
                     clipboard.copy(editor);
-                    SchematicFormat.MCEDIT.save(clipboard, getFile(initFile, base / 16));
+                    SchematicFormat.MCEDIT.save(clipboard, getFile(initFile, base / 4));
                 }
             } catch (IOException | DataException e) {
                 e.printStackTrace();
@@ -180,39 +193,59 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
         }
 
         @Command(aliases = {"load"},
-                usage = "<name>", desc = "Load an arena state",
-                flags = "", min = 1, max = 1)
+                usage = "[parts] <name>", desc = "Load an arena state",
+                flags = "", min = 1, max = 2)
         @CommandPermissions("aurora.mirage.load")
         public void areaLoad(CommandContext args, CommandSender sender) throws CommandException {
 
-            String initFile = args.getString(0);
+            final int parts;
+            String initFile;
+            if (args.argsLength() > 1) {
+                parts = args.getInteger(0);
+                initFile = args.getString(1);
+            } else {
+                parts = 4;
+                initFile = args.getString(0);
+            }
             File file = getFile(initFile, 0);
 
             if (!file.exists()) {
                 throw new CommandException("No arena state exist by that name!");
             }
 
+            editing = true;
+
+            double start = System.currentTimeMillis();
+            int files = file.getParentFile().listFiles((dir, name) -> name.endsWith(".schematic")).length - 1;
             EditSession editor = new EditSession(new BukkitWorld(world), -1);
-            for (int base = 0; file.exists(); ++base) {
+            for (int base = 0; file.exists() || base <= files; ++base) {
 
                 final File finalFile = file;
                 final int finalBase = base;
 
                 server.getScheduler().runTaskLater(inst, () -> {
-                    ChatUtil.sendNotice(sender, "Starting Editing...");
                     try {
                         SchematicFormat.MCEDIT.load(finalFile).place(
                                 editor,
-                                region.getMinimumPoint().add(0, finalBase * 16, 0),
+                                region.getMinimumPoint().add(0, finalBase * parts, 0),
                                 false
                         );
                     } catch (MaxChangedBlocksException | IOException | DataException e) {
                         e.printStackTrace();
                         ChatUtil.sendError(sender, "Error encountered, check console.");
-                        return;
                     }
-                    ChatUtil.sendNotice(sender, "Done!");
-                }, 20 * base);
+
+                    if (finalBase == files) {
+                        editing = false;
+                        freePlayers();
+
+                        double elapsed = System.currentTimeMillis() - start;
+                        double workTime = elapsed - (250 * finalBase);
+                        ChatUtil.sendNotice(sender, "Done loading.");
+                        ChatUtil.sendNotice(sender, " - Editing: " + workTime + "ms");
+                        ChatUtil.sendNotice(sender, " - Total: " + elapsed + "ms");
+                    }
+                }, 5 * base);
 
                 file = getFile(initFile, base + 1);
             }
@@ -228,6 +261,12 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
                 log.warning("The player: " + player.getName() + " may have an unfair advantage.");
             }
         }
+    }
+
+    public boolean canFight(Player attacker, Player defender) {
+        return contains(attacker)
+            && contains(defender)
+            && !sessions.getSession(MirageSession.class, attacker).isIgnored(defender.getName());
     }
 
     @Override
