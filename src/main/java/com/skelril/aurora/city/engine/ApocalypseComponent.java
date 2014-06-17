@@ -19,6 +19,8 @@ import com.skelril.aurora.homes.EnderPearlHomesComponent;
 import com.skelril.aurora.jail.JailComponent;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.checker.Checker;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItems;
@@ -123,21 +125,27 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
+    private static EDBEExtractor<LivingEntity, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
+            LivingEntity.class,
+            LivingEntity.class,
+            Projectile.class
+    );
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
-        Entity target = event.getEntity();
-        Entity attacker = event.getDamager();
+        CombatantPair<LivingEntity, LivingEntity, Projectile> result = extractor.extractFrom(event);
 
-        if (target == null || !(target instanceof LivingEntity) || !target.isValid()) return;
-        if (attacker == null || !(attacker instanceof LivingEntity) || !attacker.isValid()) return;
-        if (target.getType() == null || attacker.getType() == null) return;
+        if (result == null || result.hasProjectile()) return;
+
+        LivingEntity target = result.getDefender();
+        LivingEntity attacker = result.getAttacker();
 
         Player player;
         switch (target.getType()) {
             case PLAYER:
                 player = (Player) target;
-                if (ItemUtil.hasAncientArmour(player) && checkEntity((LivingEntity) attacker)) {
+                if (ItemUtil.hasAncientArmour(player) && checkEntity(attacker)) {
                     double diff = player.getMaxHealth() - player.getHealth();
                     if (ChanceUtil.getChance((int) Math.max(3, Math.round(player.getMaxHealth() - diff)))) {
                         EffectUtil.Ancient.powerBurst(player, event.getDamage());
@@ -145,13 +153,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 }
                 break;
             default:
-                LivingEntity defender = (LivingEntity) target;
                 if (attacker instanceof Player) {
                     player = (Player) attacker;
-                    if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD) && checkEntity(defender)) {
+                    if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD) && checkEntity(target)) {
 
                         if (ChanceUtil.getChance(10)) {
-                            EffectUtil.Master.healingLight(player, defender);
+                            EffectUtil.Master.healingLight(player, target);
                         }
 
                         if (ChanceUtil.getChance(18)) {
