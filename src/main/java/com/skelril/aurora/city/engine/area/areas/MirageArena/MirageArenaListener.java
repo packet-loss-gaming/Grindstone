@@ -11,9 +11,10 @@ import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.player.PlayerState;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -22,7 +23,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -72,22 +72,18 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         }
     }
 
+    private static EDBEExtractor<Player, Player, Projectile> extractor = new EDBEExtractor<>(
+            Player.class,
+            Player.class,
+            Projectile.class
+    );
+
     public void onPvP(EntityDamageByEntityEvent event) {
-        Entity defender = event.getEntity();
-        Entity attacker = event.getDamager();
+        CombatantPair<Player, Player, Projectile> result = extractor.extractFrom(event);
 
-        if (attacker instanceof Projectile) {
-            ProjectileSource source = ((Projectile) attacker).getShooter();
-            if (source instanceof Player) {
-                attacker = (Entity) source;
-            } else {
-                return;
-            }
-        }
+        if (result == null) return;
 
-        if (!(defender instanceof Player && attacker instanceof Player)) return;
-
-        if (!parent.scope.checkFor((Player) attacker, (Player) defender)) {
+        if (!parent.scope.checkFor(result.getAttacker(), result.getDefender())) {
             event.setCancelled(true);
         }
     }
