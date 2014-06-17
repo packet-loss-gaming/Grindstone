@@ -23,6 +23,7 @@ import com.skelril.aurora.city.engine.PvPComponent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.guild.NinjaGrappleEvent;
 import com.skelril.aurora.events.guild.NinjaSmokeBombEvent;
+import com.skelril.aurora.events.guild.NinjaTormentArrowEvent;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
@@ -366,7 +367,12 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
     private void tormentArrow(Arrow arrow) {
         Player shooter = (Player) arrow.getShooter();
-        for (Entity entity : arrow.getNearbyEntities(4, 2, 4)) {
+
+        List<Entity> nearby = arrow.getNearbyEntities(4, 2, 4);
+        NinjaTormentArrowEvent event = new NinjaTormentArrowEvent(shooter, nearby);
+        server.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+        for (Entity entity : event.getEntities()) {
             if (!entity.isValid() || entity.equals(shooter)) continue;
             if (entity instanceof LivingEntity) {
                 if (entity instanceof Player) {
