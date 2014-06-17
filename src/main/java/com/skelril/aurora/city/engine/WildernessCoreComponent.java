@@ -418,6 +418,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         if (defender instanceof Player) {
             if (scope.checkFor(attacker, (Player) defender)) {
                 event.setCancelled(true);
+            } else if (scope.checkFor((Player) defender, attacker)) {
+                // Auto unignore players when they successfully attack a player who is ignoring them
+                sessions.getSession(WildernessSession.class, (Player) defender).unignore(attacker.getName());
             }
             return true;
         }
@@ -647,8 +650,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             String[] targets = args.getString(0).split(",");
             for (String target : targets) {
                 session.ignore(target);
-                ChatUtil.sendNotice(sender, "You will no longer be able to damage " + target + ".");
-                ChatUtil.sendWarning(sender, target + " may still damage you though!");
+                ChatUtil.sendNotice(sender, "You will no longer be able to damage " + target + ", unless attacked first.");
             }
         }
 
