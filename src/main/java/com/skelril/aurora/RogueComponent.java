@@ -110,6 +110,16 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         sessions.getSession(RogueState.class, player).setTraitorProtection(rogueTraitor);
     }
 
+    public boolean canBacklash(Player player) {
+
+        return sessions.getSession(RogueState.class, player).canBacklash();
+    }
+
+    public void setBacklash(Player player, boolean enable) {
+
+        sessions.getSession(RogueState.class, player).setBacklash(enable);
+    }
+
     public boolean isYLimited(Player player) {
 
         return sessions.getSession(RogueState.class, player).isYLimited();
@@ -235,7 +245,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             if (event.getEntity() instanceof Player && ChanceUtil.getChance(3)) {
 
                 final Player defender = (Player) event.getEntity();
-                if (isRogue(defender) && canBlip(defender)) {
+                if (isRogue(defender) && canBacklash(defender) && canBlip(defender)) {
                     if (damager instanceof Player && !PvPComponent.allowsPvP((Player) damager, defender)) return;
                     final Entity finalDamager = damager;
                     server.getScheduler().runTaskLater(inst, () -> {
@@ -418,7 +428,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"rogue"}, desc = "Give a player the Rogue power",
-                flags = "plt", min = 0, max = 0)
+                flags = "pltb", min = 0, max = 0)
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -434,6 +444,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             // Set flags
             limitYVelocity(player, args.hasFlag('l'));
+            setBacklash(player, args.hasFlag('b'));
             setTraitorProtected(player, args.hasFlag('t') && inst.hasPermission(player, "aurora.rogue.master"));
 
             if (!isRogue) {
@@ -467,6 +478,8 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         private boolean isRogue = false;
         @Setting("rogue-y-limited")
         private boolean limitYVelocity = false;
+        @Setting("rogue-backlash")
+        private boolean rogueBacklash = true;
         @Setting("rogue-traitor")
         private boolean rogueTraitor = false;
 
@@ -529,6 +542,16 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         public void grenade() {
 
             nextGrenade = System.currentTimeMillis() + 3500;
+        }
+
+        public boolean canBacklash() {
+
+            return rogueBacklash;
+        }
+
+        public void setBacklash(boolean enabled) {
+
+            this.rogueBacklash = enabled;
         }
 
         public boolean isTraitorProtected() {
