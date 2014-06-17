@@ -13,10 +13,13 @@ import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
+import com.skelril.aurora.city.engine.pvp.PvPComponent;
+import com.skelril.aurora.city.engine.pvp.PvPScope;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
@@ -24,6 +27,8 @@ import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
 import com.skelril.aurora.util.item.custom.CustomItems;
@@ -54,7 +59,6 @@ import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.text.DecimalFormat;
@@ -80,7 +84,13 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     @InjectComponent
     private SessionComponent sessions;
 
+    private World city;
+    private World wilderness;
+    private World wildernessNether;
+    private Set<World> wildernessWorlds = new HashSet<>();
+
     private long nextDropTime = 0;
+    private PvPScope scope;
     private LocalConfiguration config;
 
     @Override
@@ -89,8 +99,13 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20 * 2);
 
+        // Make sure all worlds are loaded
+        server.getScheduler().runTaskLater(inst, this::grabWorlds, 1);
+        // Start TP/Sync task with 2 tick delay
+        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 2, 20 * 2);
+
+        registerScope();
         registerCommands(Commands.class);
     }
 
@@ -99,6 +114,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         super.reload();
         configure(config);
+        grabWorlds();
     }
 
     @Override
@@ -107,20 +123,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         sync:
         {
             if (!config.enableSync) break sync;
-
-            final World city = Bukkit.getWorld(config.cityWorld);
-            final World wilderness = Bukkit.getWorld(config.wildernessWorld);
-            boolean kill = false;
-
-            if (city == null) {
-                log.warning("Please verify the world: " + config.cityWorld + " exist.");
-                kill = true;
-            }
-            if (wilderness == null) {
-                log.warning("Please verify the world: " + config.wildernessWorld + " exist.");
-                kill = true;
-            }
-            if (kill) break sync;
 
             // Time
             if (wilderness.getTime() != city.getTime()) {
@@ -159,10 +161,37 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             if (wilderness.getThunderDuration() != city.getThunderDuration()) {
                 wilderness.setThunderDuration(city.getThunderDuration());
             }
-
-            city.getEntitiesByClasses(Horse.class).forEach(this::tryTeleport);
-            wilderness.getEntitiesByClasses(Horse.class).forEach(this::tryTeleport);
         }
+
+        city.getEntitiesByClasses(Horse.class).forEach(this::tryTeleport);
+        wilderness.getEntitiesByClasses(Horse.class).forEach(this::tryTeleport);
+    }
+
+    private void grabWorlds() {
+        city = Bukkit.getWorld(config.cityWorld);
+
+        // Update Wilderness Worlds
+        wildernessWorlds.clear();
+        wildernessWorlds.add(wilderness = Bukkit.getWorld(config.wildernessWorld));
+        wildernessWorlds.add(wildernessNether = Bukkit.getWorld(config.wildernessWorld + "_nether"));
+    }
+
+    private void registerScope() {
+        PvPComponent.registerScope(scope = new PvPScope() {
+            @Override
+            public boolean isApplicable(Player player) {
+                return isWildernessWorld(player.getWorld());
+            }
+
+            @Override
+            public boolean allowed(Player attacker, Player defender) {
+                return !sessions.getSession(WildernessSession.class, attacker).isIgnored(defender.getName());
+            }
+        });
+    }
+
+    public boolean isWildernessWorld(World world) {
+        return wildernessWorlds.contains(world);
     }
 
     private void tryTeleport(final Entity vehicle) {
@@ -209,34 +238,16 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         final Location from = event.getFrom();
         final Location to = event.getTo();
 
-        final World city = Bukkit.getWorld(config.cityWorld);
-        final World wilderness = Bukkit.getWorld(config.wildernessWorld);
-        final World wildernessNether = Bukkit.getWorld(config.wildernessWorld + "_nether");
-        boolean kill = false;
-
-        if (city == null) {
-            log.warning("Please verify the world: " + config.cityWorld + " exist.");
-            kill = true;
-        }
-        if (wilderness == null) {
-            log.warning("Please verify the world: " + config.wildernessWorld + " exist.");
-            kill = true;
-        }
-        if (wildernessNether == null) {
-            log.warning("Please verify the world: " + config.wildernessWorld + "_nether exist.");
-            kill = true;
-        }
-        if (kill) return;
-
+        World fromWorld = from.getWorld();
 
         switch (event.getCause()) {
             case END_PORTAL:
                 event.useTravelAgent(true);
                 agent.setCanCreatePortal(false);
                 event.setPortalTravelAgent(agent);
-                if (from.getWorld().equals(city)) {
+                if (fromWorld.equals(city)) {
                     event.setTo(wilderness.getSpawnLocation());
-                } else if (from.getWorld().equals(wilderness)) {
+                } else if (fromWorld.equals(wilderness)) {
                     event.setTo(city.getSpawnLocation());
                 }
                 break;
@@ -244,7 +255,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
                 // Wilderness Code
                 event.useTravelAgent(true);
-                if (from.getWorld().equals(wilderness)) {
+                if (fromWorld.equals(wilderness)) {
                     pLoc.setWorld(wildernessNether);
                     pLoc.setX(pLoc.getBlockX() / 8);
                     pLoc.setZ(pLoc.getBlockZ() / 8);
@@ -252,7 +263,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                     event.setPortalTravelAgent(agent);
                     event.setTo(agent.findOrCreate(pLoc));
                     return;
-                } else if (from.getWorld().getName().startsWith(config.wildernessWorld)) {
+                } else if (fromWorld.equals(wildernessNether)) {
                     pLoc.setWorld(wilderness);
                     pLoc.setX(pLoc.getBlockX() * 8);
                     pLoc.setZ(pLoc.getBlockZ() * 8);
@@ -263,11 +274,11 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 }
 
                 // City Code
-                if (from.getWorld().getName().startsWith(config.cityWorld)) {
+                if (from.getWorld().equals(city)) {
                     event.setTo(LocationUtil.grandBank(city));
                     agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);
-                } else if (to.getWorld().getName().startsWith(config.cityWorld)) {
+                } else if (to.getWorld().equals(city)) {
                     event.setTo(city.getSpawnLocation());
                     agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);
@@ -289,7 +300,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         World world = event.getPlayer().getWorld();
 
         if (event.getNewAdminState().equals(AdminState.SYSOP)) return;
-        if (!event.getNewAdminState().equals(AdminState.MEMBER) && world.getName().startsWith(config.wildernessWorld)) {
+        if (!event.getNewAdminState().equals(AdminState.MEMBER) && isWildernessWorld(world)) {
             event.setCancelled(true);
         }
     }
@@ -298,8 +309,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     public void onPlayerTeleport(PlayerTeleportEvent event) {
 
         if (event.getTo().getWorld() != event.getFrom().getWorld()) {
-
-            check(event.getPlayer(), event.getTo().getWorld().getName());
+            check(event.getPlayer(), event.getTo().getWorld());
         }
     }
 
@@ -308,13 +318,12 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Player player = event.getPlayer();
 
-        check(player, player.getWorld().getName());
+        check(player, player.getWorld());
     }
 
-    public void check(Player player, String to) {
+    public void check(Player player, World world) {
 
-        if (to.startsWith(config.wildernessWorld) && adminComponent.isAdmin(player)) {
-
+        if (isWildernessWorld(world) && adminComponent.isAdmin(player)) {
             adminComponent.deadmin(player);
         }
     }
@@ -325,8 +334,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Player player = event.getPlayer();
 
-        if (player.getWorld().getName().startsWith(config.wildernessWorld) && adminComponent.isAdmin(player)) {
-
+        if (isWildernessWorld(player.getWorld()) && adminComponent.isAdmin(player)) {
             adminComponent.deadmin(player);
         }
     }
@@ -340,7 +348,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Location location = event.getLocation();
         int level = getLevel(location);
-        if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
+        if (isWildernessWorld(location.getWorld()) && level > 1) {
             double max = entity.getMaxHealth();
 
             level--;
@@ -372,49 +380,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         final Entity entity = event.getEntity();
 
         Location location = entity.getLocation();
-        if (!location.getWorld().getName().startsWith(config.wildernessWorld)) return;
+        if (!isWildernessWorld(location.getWorld())) return;
 
         if (event instanceof EntityDamageByEntityEvent) {
-            Entity damager = ((EntityDamageByEntityEvent) event).getDamager();
-
-            if (damager instanceof Projectile && ((Projectile) damager).getShooter() != null) {
-                ProjectileSource source = ((Projectile) damager).getShooter();
-                if (source instanceof Entity) {
-                    damager = (Entity) source;
-                }
-            }
-
-            if (damager instanceof Player) {
-
-                if (entity instanceof Player) {
-                    return;
-                }
-
-                final Entity finalDamager = damager;
-                final int oldCurrent = (int) Math.ceil(((LivingEntity) entity).getHealth());
-
-                server.getScheduler().runTaskLater(inst, () -> {
-
-                    int current = (int) Math.ceil(((LivingEntity) entity).getHealth());
-
-                    if (oldCurrent == current) return;
-
-                    WildernessSession session = sessions.getSession(WildernessSession.class, (CommandSender) finalDamager);
-
-                    int max = (int) Math.ceil(((LivingEntity) entity).getMaxHealth());
-
-                    String message;
-
-                    if (current > 0) {
-                        message = ChatColor.DARK_AQUA
-                                + String.valueOf(session.checkLast(entity.getUniqueId()) ? ChatColor.ITALIC : "")
-                                + "Entity Health: " + current + " / " + max;
-                    } else {
-                        message = ChatColor.GOLD + String.valueOf(ChatColor.BOLD) + "KO!";
-                    }
-
-                    ChatUtil.sendNotice((Player) finalDamager, message);
-                }, 1);
+            if (onPlayerDamage((EntityDamageByEntityEvent) event)) {
                 return;
             }
         }
@@ -424,9 +393,60 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         int level = getLevel(location);
 
         if (level > 1) {
-
             event.setDamage(event.getDamage() * level);
         }
+    }
+
+    private static EDBEExtractor<Player, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
+            Player.class,
+            LivingEntity.class,
+            Projectile.class
+    );
+
+    public boolean onPlayerDamage(EntityDamageByEntityEvent event) {
+
+        CombatantPair<Player, LivingEntity, Projectile> result = extractor.extractFrom(event);
+
+        if (result == null) return false;
+
+        final Player attacker = result.getAttacker();
+        LivingEntity defender = result.getDefender();
+
+        // The defender is a player, we don't want to print the HP, but at the same time
+        // we don't want to allow the processing of onEntityDamage to continue,
+        // so we return true instead of false to end the cycle.
+        if (defender instanceof Player) {
+            if (scope.checkFor(attacker, (Player) defender)) {
+                event.setCancelled(true);
+            }
+            return true;
+        }
+
+        final int oldCurrent = (int) Math.ceil(defender.getHealth());
+
+        server.getScheduler().runTaskLater(inst, () -> {
+
+            int current = (int) Math.ceil(defender.getHealth());
+
+            if (oldCurrent == current) return;
+
+            WildernessSession session = sessions.getSession(WildernessSession.class, attacker);
+
+            int max = (int) Math.ceil(defender.getMaxHealth());
+
+            String message;
+
+            if (current > 0) {
+                message = ChatColor.DARK_AQUA
+                        + String.valueOf(session.checkLast(defender.getUniqueId()) ? ChatColor.ITALIC : "")
+                        + "Entity Health: " + current + " / " + max;
+            } else {
+                message = ChatColor.GOLD + String.valueOf(ChatColor.BOLD) + "KO!";
+            }
+
+            ChatUtil.sendNotice(attacker, message);
+        }, 1);
+        return true;
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -438,12 +458,16 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Location location = entity.getLocation();
         int level = getLevel(location);
-        if (location.getWorld().getName().startsWith(config.wildernessWorld) && level > 1) {
+        if (isWildernessWorld(location.getWorld()) && level > 1) {
 
             double diffLevel = Math.max(1, level * .63);
-            for (int i = 0; i < diffLevel * diffLevel * diffLevel; i++) {
-                if (ChanceUtil.getChance(100000)) event.getDrops().add(CustomItemCenter.build(CustomItems.RED_FEATHER));
-                if (ChanceUtil.getChance(2000)) event.getDrops().add(ItemUtil.MPotion.potionOfRestitution());
+            for (int i = 0; i < Math.pow(diffLevel, 3); i++) {
+                if (ChanceUtil.getChance(100000)) {
+                    event.getDrops().add(CustomItemCenter.build(CustomItems.RED_FEATHER));
+                }
+                if (ChanceUtil.getChance(2000)) {
+                    event.getDrops().add(CustomItemCenter.build(CustomItems.POTION_OF_RESTITUTION));
+                }
             }
 
             event.getDrops().addAll(
@@ -456,7 +480,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     public int getLevel(Location location) {
 
         // Not in Wilderness
-        if (!location.getWorld().getName().startsWith(config.wildernessWorld)) {
+        if (!isWildernessWorld(location.getWorld())) {
             return 0;
         }
 
@@ -470,7 +494,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         Player player = event.getPlayer();
         final BlockState block = event.getBlock().getState();
 
-        if (!player.getWorld().getName().startsWith(config.wildernessWorld)) return;
+        if (!isWildernessWorld(player.getWorld())) return;
 
         if (isEffectedOre(block.getTypeId())) {
 
@@ -526,7 +550,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         if (!(entity instanceof Creeper || entity instanceof Fireball)) return;
 
         Location loc = entity.getLocation();
-        if (!loc.getWorld().getName().startsWith(config.wildernessWorld)) return;
+        if (!isWildernessWorld(loc.getWorld())) return;
 
         float min = event.getRadius();
         event.setRadius(Math.min(entity instanceof Fireball ? 4 : 9, Math.max(min, (min + getLevel(loc)) / 2)));
@@ -536,7 +560,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityExplosion(EntityExplodeEvent event) {
 
-        if (!event.getLocation().getWorld().getName().startsWith(config.wildernessWorld)) return;
+        if (!isWildernessWorld(event.getLocation().getWorld())) return;
 
         event.setYield(.1F);
 
@@ -546,9 +570,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     @EventHandler
     public void onDropClearPulse(DropClearPulseEvent event) {
-
-        if (!event.getWorld().getName().startsWith(config.wildernessWorld)) return;
-        nextDropTime = System.currentTimeMillis() + (event.getSecondsLeft() * 1000);
+        if (isWildernessWorld(event.getWorld())) {
+            nextDropTime = System.currentTimeMillis() + (event.getSecondsLeft() * 1000);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -556,7 +580,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Location location = event.getLocation();
 
-        if (!location.getWorld().getName().startsWith(config.wildernessWorld)) return;
+        if (!isWildernessWorld(location.getWorld())) return;
 
         int level = getLevel(location);
         if (!ChanceUtil.getChance(level * level)) {
@@ -569,7 +593,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Player player = event.getPlayer();
 
-        if (player.getWorld().getName().startsWith(config.wildernessWorld)) {
+        if (isWildernessWorld(player.getWorld()) && !adminComponent.isAdmin(player)) {
             int typeId = event.getBlock().getTypeId();
             if (isEffectedOre(typeId)) {
                 event.setCancelled(true);
@@ -604,6 +628,42 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             ChatUtil.sendNotice(sender, "Ore Pool Modifier: " + df.format(Math.max(1, (level * 1.2) / 3)) + "x");
             ChatUtil.sendNotice(sender, "Mob Health Modifier: " + (level > 1 ? 5 * (level - 1) : 1) + "x");
         }
+
+        @Command(aliases = {"wparty", "wp"}, desc = "Mirage Commands")
+        @NestedCommand({PartyCommands.class})
+        public void partyCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
+
+    }
+
+    public class PartyCommands {
+
+        @Command(aliases = {"add"},
+                usage = "<player[, player]>", desc = "Ignore a player",
+                flags = "", min = 1, max = 1)
+        public void ignore(CommandContext args, CommandSender sender) throws CommandException {
+            WildernessSession session = sessions.getSession(WildernessSession.class, PlayerUtil.checkPlayer(sender));
+            String[] targets = args.getString(0).split(",");
+            for (String target : targets) {
+                session.ignore(target);
+                ChatUtil.sendNotice(sender, "You will no longer be able to damage " + target + ".");
+                ChatUtil.sendWarning(sender, target + " may still damage you though!");
+            }
+        }
+
+        @Command(aliases = {"remove"},
+                usage = "<player[, player]>", desc = "Unignore a player",
+                flags = "", min = 1, max = 1)
+        public void unignore(CommandContext args, CommandSender sender) throws CommandException {
+            WildernessSession session = sessions.getSession(WildernessSession.class, PlayerUtil.checkPlayer(sender));
+            String[] targets = args.getString(0).split(",");
+            for (String target : targets) {
+                session.unignore(target);
+                ChatUtil.sendNotice(sender, "You will now be able to damage " + target + ".");
+            }
+        }
+
     }
 
     private void addPool(final BlockState block, final int fortuneLevel, final boolean hasSilkTouch) {
@@ -663,6 +723,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
 
         private UUID lastAttacked = null;
+        private Set<String> ignored = new HashSet<>();
 
         protected WildernessSession() {
             super(MAX_AGE);
@@ -677,6 +738,18 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             this.lastAttacked = lastAttacked;
 
             return false;
+        }
+
+        public boolean isIgnored(String player) {
+            return ignored.contains(player);
+        }
+
+        public void ignore(String player) {
+            ignored.add(player);
+        }
+
+        public void unignore(String player) {
+            ignored.remove(player);
         }
     }
 }
