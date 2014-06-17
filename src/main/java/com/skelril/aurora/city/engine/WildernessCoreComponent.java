@@ -416,9 +416,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         // we don't want to allow the processing of onEntityDamage to continue,
         // so we return true instead of false to end the cycle.
         if (defender instanceof Player) {
-            if (scope.checkFor(attacker, (Player) defender)) {
+            if (!scope.checkFor(attacker, (Player) defender)) {
                 event.setCancelled(true);
-            } else if (scope.checkFor((Player) defender, attacker)) {
+            } else if (!scope.checkFor((Player) defender, attacker)) {
                 // Auto unignore players when they successfully attack a player who is ignoring them
                 sessions.getSession(WildernessSession.class, (Player) defender).unignore(attacker.getName());
             }
