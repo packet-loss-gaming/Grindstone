@@ -125,6 +125,11 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             vel.setY(Math.min(1.4, vel.getY()));
         }
         player.setVelocity(vel);
+
+
+        // Don't drain hunger of players in Creative Mode
+        if (player.getGameMode().equals(GameMode.CREATIVE)) return;
+
         for (int i = ChanceUtil.getRandom(5); i > 0; --i) {
             if (player.getSaturation() > 0) {
                 player.setSaturation(player.getSaturation() - 1);
