@@ -17,6 +17,8 @@ import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
 import com.skelril.aurora.events.environment.CreepSpeakEvent;
 import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.item.EffectUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
@@ -118,22 +120,30 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         excludedTypes.add(PotionEffectType.REGENERATION);
     }
 
+    private static EDBEExtractor<LivingEntity, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
+            LivingEntity.class,
+            LivingEntity.class,
+            Projectile.class
+    );
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        Entity aDefender = event.getEntity();
-        Entity aAttacker = event.getDamager();
-        if (!(aDefender instanceof LivingEntity)) return;
+
+        CombatantPair<LivingEntity, LivingEntity, Projectile> result = extractor.extractFrom(event);
+
+        if (result == null) return;
+        LivingEntity defender = result.getDefender();
+        LivingEntity attacker = result.getAttacker();
         if (parent.isHostileTempleArea(event.getEntity().getLocation())) {
             double damage = event.getDamage();
-            LivingEntity defender = (LivingEntity) aDefender;
             if (ItemUtil.hasAncientArmour(defender) && !(parent.getWorld().isThundering() && defender instanceof Player)) {
                 double diff = defender.getMaxHealth() - defender.getHealth();
                 if (ChanceUtil.getChance((int) Math.max(3, Math.round(defender.getMaxHealth() - diff)))) {
                     EffectUtil.Ancient.powerBurst(defender, damage);
                 }
             }
-            if (aAttacker instanceof Player) {
-                Player player = (Player) aAttacker;
+            if (attacker instanceof Player) {
+                Player player = (Player) attacker;
                 player.getActivePotionEffects().stream().filter(effect -> !excludedTypes.contains(effect.getType())).forEach(defender::addPotionEffect);
                 if (parent.getWorld().isThundering()) return;
                 if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
