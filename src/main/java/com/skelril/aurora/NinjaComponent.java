@@ -131,6 +131,32 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).hasTormentArrows();
     }
 
+    public void setLastArrow(Player player, Arrow arrow) {
+
+        sessions.getSession(NinjaState.class, player).setLastArrow(arrow);
+    }
+
+    public Arrow getLastArrow(Player player) {
+
+        Arrow arrow = sessions.getSession(NinjaState.class, player).getLastArrow();
+        return arrow != null && arrow.isValid() ? arrow : null;
+    }
+
+    public boolean canArrowBomb(Player player) {
+
+        return sessions.getSession(NinjaState.class, player).canArrowBomb();
+    }
+
+    public void arrowBomb(final Player player) {
+        Arrow arrow = getLastArrow(player);
+
+        if (arrow == null) return;
+
+        sessions.getSession(NinjaState.class, player).arrowBomb();
+        arrow.getWorld().createExplosion(arrow.getLocation(), 4);
+        arrow.remove();
+    }
+
     public boolean canSmokeBomb(Player player) {
 
         return sessions.getSession(NinjaState.class, player).canSmokeBomb();
@@ -316,6 +342,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         if (isNinja(player) && hasTormentArrows(player)) {
 
             if (p instanceof Arrow) {
+                setLastArrow(player, (Arrow) p);
                 p.setMetadata("ninja-arrow", new FixedMetadataValue(inst, true));
             }
         }
@@ -397,12 +424,17 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         if (isNinja(player)) {
             Block clicked = event.getClickedBlock();
-            if (clicked == null) return;
             BlockFace face = event.getBlockFace();
 
             boolean usingBow = stack != null && stack.getTypeId() == ItemID.BOW;
 
             switch (event.getAction()) {
+                case LEFT_CLICK_AIR:
+                    if (!canArrowBomb(player)) break;
+                    if (usingBow) {
+                        arrowBomb(player);
+                    }
+                    break;
                 case LEFT_CLICK_BLOCK:
                     if (!canSmokeBomb(player)) break;
                     if (usingBow) {
@@ -629,8 +661,11 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         @Setting("ninja-torment-arrows")
         private boolean tormentArrows = true;
 
+        private Arrow lastArrow = null;
+
         private long nextGrapple = 0;
         private long nextSmokeBomb = 0;
+        private long nextArrowBomb = 0;
 
         protected NinjaState() {
 
@@ -677,6 +712,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             this.tormentArrows = tormentArrows;
         }
 
+        public Arrow getLastArrow() {
+
+            return lastArrow;
+        }
+
+        public void setLastArrow(Arrow lastArrow) {
+
+            this.lastArrow = lastArrow;
+        }
+
         public boolean canGrapple() {
 
             return nextGrapple == 0 || System.currentTimeMillis() >= nextGrapple;
@@ -695,6 +740,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         public void smokeBomb() {
 
             nextSmokeBomb = System.currentTimeMillis() + 2750;
+        }
+
+        public boolean canArrowBomb() {
+
+            return nextArrowBomb == 0 || System.currentTimeMillis() >= nextArrowBomb;
+        }
+
+        public void arrowBomb() {
+
+            nextArrowBomb = System.currentTimeMillis() + 30000;
         }
 
         public Player getPlayer() {
