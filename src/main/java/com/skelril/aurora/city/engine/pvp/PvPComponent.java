@@ -26,14 +26,16 @@ import com.skelril.aurora.prayer.Prayer;
 import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -174,16 +176,21 @@ public class PvPComponent extends BukkitComponent implements Listener {
         session.setPvP(false);
     }
 
+    private static EDBEExtractor<Player, Player, Projectile> extractor = new EDBEExtractor<>(
+            Player.class,
+            Player.class,
+            Projectile.class
+    );
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
 
-        Entity entity = event.getEntity();
-        Entity damager = event.getDamager();
+        CombatantPair<Player, Player, Projectile> result = extractor.extractFrom(event);
 
-        if (!(entity instanceof Player) || !(damager instanceof Player)) return;
+        if (result == null) return;
 
-        sessions.getSession(PvPSession.class, (Player) entity).updateHit();
-        sessions.getSession(PvPSession.class, (Player) damager).updateHit();
+        sessions.getSession(PvPSession.class, result.getAttacker()).updateHit();
+        sessions.getSession(PvPSession.class, result.getDefender()).updateHit();
     }
 
     @EventHandler
