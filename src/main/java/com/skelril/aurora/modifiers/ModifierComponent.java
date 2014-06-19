@@ -7,12 +7,14 @@
 package com.skelril.aurora.modifiers;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.util.ChatUtil;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.*;
-import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.database.IOUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 
@@ -20,7 +22,7 @@ import java.io.File;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Modifiers", desc = "Commands and saving for the Modifier system.")
-public class ModifierComponent extends BukkitComponent implements Runnable {
+public class ModifierComponent extends BukkitComponent {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
@@ -32,13 +34,7 @@ public class ModifierComponent extends BukkitComponent implements Runnable {
     @Override
     public void enable() {
         load();
-        server.getScheduler().runTaskTimer(inst, this, interval, interval);
         registerCommands(Commands.class);
-    }
-
-    @Override
-    public void run() {
-        save();
     }
 
     @Override
@@ -73,7 +69,10 @@ public class ModifierComponent extends BukkitComponent implements Runnable {
             long amount = InputUtil.TimeParser.matchDate(args.getString(1));
 
             modifierCenter.extend(modifierType, amount);
-            ChatUtil.sendNotice(sender, modifierType.name() + " extended " + amount + "ms!");
+            save();
+
+            String friendlyTime = ChatUtil.getFriendlyTime(System.currentTimeMillis() + modifierCenter.status(modifierType));
+            Bukkit.broadcastMessage(ChatColor.GOLD + modifierType.name() + " enabled till " + friendlyTime + "!");
         }
     }
 

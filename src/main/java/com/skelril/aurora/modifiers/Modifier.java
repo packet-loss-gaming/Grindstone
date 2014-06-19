@@ -28,7 +28,11 @@ public class Modifier implements Serializable {
     }
 
     public boolean isActive(ModifierType type) {
+        return status(type) != 0;
+    }
+
+    public long status(ModifierType type) {
         Long time = times.get(type.id());
-        return time != null && time > System.currentTimeMillis();
+        return time != null ? Math.max(time - System.currentTimeMillis(), 0) : 0;
     }
 }
