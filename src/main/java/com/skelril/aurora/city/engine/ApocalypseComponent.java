@@ -253,9 +253,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     public void lightning(Location location) {
 
-        List<Player> applicable = getApplicable(location.getWorld());
+        Location strikeLoc = LocationUtil.findFreePosition(location);
 
-        spawnAndArm(LocationUtil.findFreePosition(location), attackMob, true);
+        if (strikeLoc == null) return;
+
+        List<Player> applicable = getApplicable(location.getWorld());
+        spawnAndArm(strikeLoc, attackMob, true);
 
         startle(applicable);
         bedSpawn(CollectionUtil.removalAll(applicable, new Checker<CommandBook, Player>(inst) {
