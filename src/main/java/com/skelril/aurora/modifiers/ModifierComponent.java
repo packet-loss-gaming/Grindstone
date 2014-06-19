@@ -66,8 +66,8 @@ public class ModifierComponent extends BukkitComponent implements Listener {
 
     public class ModifierCommands {
         @Command(aliases = {"extend"}, desc = "Extend the duration of a modifier",
-                usage = "<modifier> <time>",
-                flags = "", min = 2, max = 2)
+                usage = "<modifier> <time> [player]",
+                flags = "", min = 2, max = 3)
         @CommandPermissions("aurora.modifiers.extend")
         public void extendCmd(CommandContext args, CommandSender sender) throws CommandException {
             ModifierType modifierType;
@@ -78,11 +78,14 @@ public class ModifierComponent extends BukkitComponent implements Listener {
             }
             long amount = InputUtil.TimeParser.matchDate(args.getString(1));
 
+            boolean wasOn = modifierCenter.isActive(modifierType);
             modifierCenter.extend(modifierType, amount);
             save();
 
             String friendlyTime = ChatUtil.getFriendlyTime(System.currentTimeMillis() + modifierCenter.status(modifierType));
-            Bukkit.broadcastMessage(ChatColor.GOLD + modifierType.name() + " enabled till " + friendlyTime + "!");
+            String change = wasOn ? " extended" : " enabled";
+            String by = args.argsLength() > 2 ? " by " + args.getString(2) : "";
+            Bukkit.broadcastMessage(ChatColor.GOLD + modifierType.name() + change + by + " till " + friendlyTime + "!");
         }
     }
 
