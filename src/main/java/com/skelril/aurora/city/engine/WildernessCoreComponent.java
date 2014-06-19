@@ -676,7 +676,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     }
 
     private int getOreMod(int level) {
-        double modifier = Math.max(1, (level * 1.2) / 3);
+        double modifier = Math.max(1, (level * 1.5));
         if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_ORES)) {
             modifier *= 2;
         }
@@ -690,7 +690,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         ItemStack generalDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch);
         final int fortune = EnvironmentUtil.isOre(generalDrop.getTypeId()) ? 0 : fortuneLevel;
-        final int times = 3 * ChanceUtil.getRandom(getOreMod(getLevel(location)));
+        final int times = ChanceUtil.getRandom(getOreMod(getLevel(location)));
         final float vol = ((float) 1 / times);
         IntegratedRunnable dropper = new IntegratedRunnable() {
             @Override
