@@ -11,19 +11,25 @@ public enum ModifierType {
     // !!! IMPORTANT !!!
     // DO NOT CHANGE IDS HERE
     // ONCE THEY HAVE BEEN SET
-    DOUBLE_CURSED_ORES(0),
-    DOUBLE_WILD_ORES(1),
-    DOUBLE_WILD_DROPS(2),
-    DOUBLE_GOLD_RUSH(3),
-    TRIPLE_FACTORY_PRODUCTION(4),
-    HEXA_FACTORY_SPEED(5);
+    DOUBLE_CURSED_ORES(0, "Double Cursed Mine Ores"),
+    DOUBLE_WILD_ORES(1, "Double Wilderness Ores"),
+    DOUBLE_WILD_DROPS(2, "Double Wilderness Drops"),
+    DOUBLE_GOLD_RUSH(3, "Double Gold Rush"),
+    TRIPLE_FACTORY_PRODUCTION(4, "Triple Factory Production"),
+    HEXA_FACTORY_SPEED(5, "Hexa Factory Speed");
 
     final int id;
-    ModifierType(int id) {
+    final String fname;
+    ModifierType(int id, String fname) {
         this.id = id;
+        this.fname = fname;
     }
 
     public int id() {
         return id;
+    }
+
+    public String fname() {
+        return fname;
     }
 }

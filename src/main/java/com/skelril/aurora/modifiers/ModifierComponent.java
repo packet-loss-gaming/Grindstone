@@ -85,7 +85,7 @@ public class ModifierComponent extends BukkitComponent implements Listener {
             String friendlyTime = ChatUtil.getFriendlyTime(System.currentTimeMillis() + modifierCenter.status(modifierType));
             String change = wasOn ? " extended" : " enabled";
             String by = args.argsLength() > 2 ? " by " + args.getString(2) : "";
-            Bukkit.broadcastMessage(ChatColor.GOLD + modifierType.name() + change + by + " till " + friendlyTime + "!");
+            Bukkit.broadcastMessage(ChatColor.GOLD + modifierType.fname() + change + by + " till " + friendlyTime + "!");
         }
     }
 
@@ -96,7 +96,7 @@ public class ModifierComponent extends BukkitComponent implements Listener {
             long dur = modifierCenter.status(type);
             if (dur == 0) continue;
             String friendlyTime = ChatUtil.getFriendlyTime(System.currentTimeMillis() + dur);
-            messages.add(" - " + type.name() + " till " + friendlyTime);
+            messages.add(" - " + type.fname() + " till " + friendlyTime);
         }
         if (messages.isEmpty()) return;
 
