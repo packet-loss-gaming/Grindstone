@@ -9,6 +9,7 @@ package com.skelril.aurora.city.engine.arena.factory;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.BaseItem;
 import org.bukkit.Server;
@@ -24,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 public class FactoryBrewer extends FactoryMech {
 
@@ -181,6 +184,9 @@ public class FactoryBrewer extends FactoryMech {
 
         // Inflate potion quantity
         max *= (increased ? 15 : 10) * 3;
+        if (getModifierCenter().isActive(ModifierType.TRIPLE_FACTORY_PRODUCTION)) {
+            max *= 3;
+        }
 
         // Calculate damage
         int level = !duration && potency ? 2 : 1;

@@ -15,6 +15,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.city.engine.arena.ArenaType;
 import com.skelril.aurora.city.engine.arena.GenericArena;
+import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -23,6 +24,8 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 import java.util.logging.Logger;
+
+import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
 
@@ -65,7 +68,8 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
         for (FactoryMech mech : Collections.synchronizedList(mechs)) que.addAll(mech.process());
 
         if (que.isEmpty()) return;
-        for (int i = ChanceUtil.getRandom(getContainedPlayers().length * 9); i > 0; --i) {
+        boolean hexa = getModifierCenter().isActive(ModifierType.HEXA_FACTORY_SPEED);
+        for (int i = ChanceUtil.getRandom(getContainedPlayers().length * (hexa ? 54 : 9)); i > 0; --i) {
             if (que.isEmpty()) break;
             produce(que.poll());
         }

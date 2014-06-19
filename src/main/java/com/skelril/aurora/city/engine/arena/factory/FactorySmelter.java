@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChatUtil;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -23,6 +24,8 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 public class FactorySmelter extends FactoryMech {
 
@@ -134,6 +137,11 @@ public class FactorySmelter extends FactoryMech {
 
         maxIron *= 8;
         maxGold *= 8;
+
+        if (getModifierCenter().isActive(ModifierType.TRIPLE_FACTORY_PRODUCTION)) {
+            maxIron *= 3;
+            maxGold *= 3;
+        }
 
         // Tell the player what we are making
         if (maxIron > 0) {

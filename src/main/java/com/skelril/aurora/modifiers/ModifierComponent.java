@@ -46,7 +46,7 @@ public class ModifierComponent extends BukkitComponent implements Runnable {
         save();
     }
 
-    public Modifier getModifierCenter() {
+    public static Modifier getModifierCenter() {
         return modifierCenter;
     }
 

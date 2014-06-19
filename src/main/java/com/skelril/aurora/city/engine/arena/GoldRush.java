@@ -17,6 +17,7 @@ import com.skelril.aurora.economic.ImpersonalComponent;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
+import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
@@ -54,6 +55,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 public class GoldRush extends AbstractRegionedArena implements MonitoredArena, Listener {
 
@@ -555,6 +558,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             lootSplit /= players.size();
             if (ChanceUtil.getChance(35)) lootSplit *= 10;
             if (ChanceUtil.getChance(15)) lootSplit *= 2;
+            if (getModifierCenter().isActive(ModifierType.DOUBLE_GOLD_RUSH)) lootSplit *= 2;
             start(); // Start if someone was teleported
         }
         return 0;

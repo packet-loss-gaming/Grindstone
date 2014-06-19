@@ -23,6 +23,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.events.PrayerApplicationEvent;
 import com.skelril.aurora.exceptions.UnsupportedPrayerException;
+import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.prayer.PrayerFX.InventoryFX;
 import com.skelril.aurora.prayer.PrayerType;
@@ -66,6 +67,8 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 /**
  * Author: Turtle9598
@@ -704,6 +707,9 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                 }
 
                 player.getInventory().addItem(rawDrop);
+                if (getModifierCenter().isActive(ModifierType.DOUBLE_CURSED_ORES)) {
+                    player.getInventory().addItem(rawDrop.clone());
+                }
             }
             event.setExpToDrop((70 - player.getLocation().getBlockY()) / 2);
 

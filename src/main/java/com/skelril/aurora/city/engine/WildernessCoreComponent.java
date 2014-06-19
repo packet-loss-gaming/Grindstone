@@ -23,6 +23,7 @@ import com.skelril.aurora.city.engine.pvp.PvPScope;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
+import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.EnvironmentUtil;
@@ -67,6 +68,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 /**
  * Author: Turtle9598
@@ -476,6 +480,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             event.getDrops().addAll(
                     SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, Math.pow(level, 2) * 64)
             );
+            if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
+                event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
+            }
             event.setDroppedExp(event.getDroppedExp() * level);
         }
     }
@@ -628,7 +635,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             DecimalFormat df = new DecimalFormat("#.#");
 
             ChatUtil.sendNotice(sender, "Damage Modifier: " + level + "x");
-            ChatUtil.sendNotice(sender, "Ore Pool Modifier: " + df.format(Math.max(1, (level * 1.2) / 3)) + "x");
+            ChatUtil.sendNotice(sender, "Ore Pool Modifier: " + df.format(getOreMod(level)) + "x");
             ChatUtil.sendNotice(sender, "Mob Health Modifier: " + (level > 1 ? 5 * (level - 1) : 1) + "x");
         }
 
@@ -668,6 +675,14 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     }
 
+    private int getOreMod(int level) {
+        double modifier = Math.max(1, (level * 1.2) / 3);
+        if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_ORES)) {
+            modifier *= 2;
+        }
+        return (int) modifier;
+    }
+
     private void addPool(final BlockState block, final int fortuneLevel, final boolean hasSilkTouch) {
 
         final Location location = block.getLocation();
@@ -675,7 +690,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         ItemStack generalDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch);
         final int fortune = EnvironmentUtil.isOre(generalDrop.getTypeId()) ? 0 : fortuneLevel;
-        final int times = (int) ChanceUtil.getRangedRandom(3, Math.max(3, getLevel(location) * 1.2));
+        final int times = 3 * ChanceUtil.getRandom(getOreMod(getLevel(location)));
         final float vol = ((float) 1 / times);
         IntegratedRunnable dropper = new IntegratedRunnable() {
             @Override
