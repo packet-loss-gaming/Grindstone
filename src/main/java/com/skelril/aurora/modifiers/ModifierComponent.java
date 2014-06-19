@@ -17,12 +17,19 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Modifiers", desc = "Commands and saving for the Modifier system.")
-public class ModifierComponent extends BukkitComponent {
+public class ModifierComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
@@ -35,6 +42,9 @@ public class ModifierComponent extends BukkitComponent {
     public void enable() {
         load();
         registerCommands(Commands.class);
+
+        //noinspection AccessStaticViaInstance
+        inst.registerEvents(this);
     }
 
     @Override
@@ -74,6 +84,28 @@ public class ModifierComponent extends BukkitComponent {
             String friendlyTime = ChatUtil.getFriendlyTime(System.currentTimeMillis() + modifierCenter.status(modifierType));
             Bukkit.broadcastMessage(ChatColor.GOLD + modifierType.name() + " enabled till " + friendlyTime + "!");
         }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        List<String> messages = new ArrayList<>();
+        for (ModifierType type : ModifierType.values()) {
+            long dur = modifierCenter.status(type);
+            if (dur == 0) continue;
+            String friendlyTime = ChatUtil.getFriendlyTime(System.currentTimeMillis() + dur);
+            messages.add(" - " + type.name() + " till " + friendlyTime);
+        }
+        if (messages.isEmpty()) return;
+
+        Collections.sort(messages, String.CASE_INSENSITIVE_ORDER);
+        messages.add(0, "\n\nThe following donation perks are enabled:");
+
+        Player player = event.getPlayer();
+        server.getScheduler().runTaskLater(inst, () -> {
+            for (String message : messages) {
+                com.skelril.aurora.util.ChatUtil.sendNotice(player, ChatColor.GOLD, message);
+            }
+        }, 20);
     }
 
     public void load() {
