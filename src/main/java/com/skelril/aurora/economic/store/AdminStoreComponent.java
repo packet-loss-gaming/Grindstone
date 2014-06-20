@@ -33,8 +33,10 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -325,6 +327,67 @@ public class AdminStoreComponent extends BukkitComponent {
                 sess.updateNotice();
             }
             sess.updateSale();
+        }
+
+        @Command(aliases = {"enchant"},
+                usage = "<enchantment> <level>", desc = "Enchant an item",
+                flags = "f", min = 2, max = 2)
+        public void enchantCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.checkPlayer(sender);
+            boolean isAdmin = adminComponent.isAdmin(player);
+
+            if (!isAdmin) checkInArea(player);
+
+            Enchantment enchantment = Enchantment.getByName(args.getString(0));
+            int level = args.getInteger(1);
+
+            if (enchantment == null) {
+                throw new CommandException("That enchantment could not be found!");
+            }
+
+            int min = enchantment.getStartLevel();
+            int max = enchantment.getMaxLevel();
+
+            if (level < min || level > max) {
+                throw new CommandException("Enchantment level must be between " + min + " and " + max + '!');
+            }
+
+            ItemStack targetItem = player.getItemInHand();
+            if (targetItem == null || targetItem.getTypeId() == BlockID.AIR) {
+                throw new CommandException("You're not holding an item!");
+            }
+            if (!enchantment.canEnchantItem(targetItem)) {
+                throw new CommandException("You cannot give this item that enchantment!");
+            }
+
+            ItemMeta meta = targetItem.getItemMeta();
+            if (meta.hasEnchant(enchantment)) {
+                if (!args.hasFlag('f')) {
+                    throw new CommandException("That enchantment is already present, use -f to override this!");
+                } else {
+                    meta.removeEnchant(enchantment);
+                }
+            }
+
+            if (!meta.addEnchant(enchantment, level, false)) {
+                throw new CommandException("That enchantment could not be applied!");
+            }
+
+            double cost = AdminStoreComponent.priceCheck(targetItem, false) * .1 * level;
+
+            if (!isAdmin) {
+                if (cost < 0) {
+                    throw new CommandException("That item cannot be enchanted!");
+                }
+                if (!econ.has(player, cost)) {
+                    throw new CommandException("You don't have enough money!");
+                }
+                econ.withdrawPlayer(player, cost);
+            }
+
+            targetItem.setItemMeta(meta);
+            ChatUtil.sendNotice(player, "Enchanted successfully.");
         }
 
         @Command(aliases = {"list", "l"},
@@ -649,7 +712,10 @@ public class AdminStoreComponent extends BukkitComponent {
      * @return -1 if invalid, otherwise returns the price scaled to item stack quantity
      */
     public static double priceCheck(ItemStack stack) {
+        return priceCheck(stack, true);
+    }
 
+    public static double priceCheck(ItemStack stack, boolean percentDamage) {
         String itemName;
         double percentageSale = 1;
 
@@ -668,7 +734,7 @@ public class AdminStoreComponent extends BukkitComponent {
             itemName = ChatColor.stripColor(itemName);
         }
 
-        if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
+        if (percentDamage && stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
             if (stack.getAmount() > 1) {
                 return -1;
             }
@@ -700,12 +766,20 @@ public class AdminStoreComponent extends BukkitComponent {
             throw new CommandException("You cannot use this command while in admin mode.");
         }
 
-        Vector v = BukkitUtil.toVector(((Player) sender).getLocation());
-        if (!((Player) sender).getWorld().getName().equals("City") || region == null || !region.contains(v)) {
-            throw new CommandException("You call out, but no one hears your offer.");
-        }
+        checkInArea((Player) sender);
 
         return sender.getName();
+    }
+
+    public void checkInArea(Player player) throws CommandException {
+        if (!isInArea(player.getLocation())) {
+            throw new CommandException("You call out, but no one hears your offer.");
+        }
+    }
+
+    public boolean isInArea(Location location) {
+        Vector v = BukkitUtil.toVector(location);
+        return location.getWorld().getName().equals("City") && region != null && region.contains(v);
     }
 
     private WorldGuardPlugin getWorldGuard() throws UnknownPluginException {
