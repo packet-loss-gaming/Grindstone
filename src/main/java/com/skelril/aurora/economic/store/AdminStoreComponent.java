@@ -374,7 +374,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException("That enchantment could not be applied!");
             }
 
-            double cost = AdminStoreComponent.priceCheck(targetItem, false) * .1 * level;
+            double cost = Math.max(.01, AdminStoreComponent.priceCheck(targetItem, false) * .1 * level);
 
             if (!isAdmin) {
                 if (cost < 0) {
@@ -384,10 +384,13 @@ public class AdminStoreComponent extends BukkitComponent {
                     throw new CommandException("You don't have enough money!");
                 }
                 econ.withdrawPlayer(player, cost);
+                String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(cost), "");
+                ChatUtil.sendNotice(sender, "Item enchanted for " + priceString + "!");
             }
+            ChatUtil.sendNotice(sender, "Item enchanted!");
 
             targetItem.setItemMeta(meta);
-            ChatUtil.sendNotice(player, "Enchanted successfully.");
+            
         }
 
         @Command(aliases = {"list", "l"},
