@@ -51,13 +51,12 @@ public class FactorySmelter extends FactoryMech {
     public List<ItemStack> process() {
         Player[] playerList = getContainedPlayers(1);
 
-        Entity[] lavaContained = lavaSupply.getContainedEntities();
+        Entity[] lavaContained = lavaSupply.getContainedEntities(Item.class);
         if (lavaContained.length > 0) ChatUtil.sendNotice(playerList, "Adding lava...");
         int totalLava = items.containsKey(ItemID.LAVA_BUCKET) ? items.get(ItemID.LAVA_BUCKET) : 0;
         for (Entity e : lavaContained) {
-            // Kill contained living entities
+            // Ignore all contained living entities
             if (e instanceof LivingEntity) {
-                ((LivingEntity) e).setHealth(0);
                 continue;
             }
 
