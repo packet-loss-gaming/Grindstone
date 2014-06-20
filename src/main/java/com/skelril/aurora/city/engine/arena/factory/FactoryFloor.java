@@ -69,7 +69,8 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
 
         if (que.isEmpty()) return;
         boolean hexa = getModifierCenter().isActive(ModifierType.HEXA_FACTORY_SPEED);
-        for (int i = ChanceUtil.getRandom(getContainedPlayers().length * (hexa ? 54 : 9)); i > 0; --i) {
+        int max = getContainedPlayers().length * (hexa ? 54 : 9);
+        for (int i = ChanceUtil.getRangedRandom(max / 3, max); i > 0; --i) {
             if (que.isEmpty()) break;
             produce(que.poll());
         }
