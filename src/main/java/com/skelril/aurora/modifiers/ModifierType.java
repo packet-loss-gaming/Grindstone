@@ -14,9 +14,9 @@ public enum ModifierType {
     DOUBLE_CURSED_ORES(0, "Double Cursed Mine Ores"),
     DOUBLE_WILD_ORES(1, "Double Wilderness Ores"),
     DOUBLE_WILD_DROPS(2, "Double Wilderness Drops"),
-    DOUBLE_GOLD_RUSH(3, "Double Gold Rush"),
+    QUAD_GOLD_RUSH(3, "Quadruple Gold Rush"),
     TRIPLE_FACTORY_PRODUCTION(4, "Triple Factory Production"),
-    HEXA_FACTORY_SPEED(5, "Hexa Factory Speed");
+    HEXA_FACTORY_SPEED(5, "Hextuple Factory Speed");
 
     final int id;
     final String fname;

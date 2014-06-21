@@ -558,7 +558,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             lootSplit /= players.size();
             if (ChanceUtil.getChance(35)) lootSplit *= 10;
             if (ChanceUtil.getChance(15)) lootSplit *= 2;
-            if (getModifierCenter().isActive(ModifierType.DOUBLE_GOLD_RUSH)) lootSplit *= 2;
+            if (getModifierCenter().isActive(ModifierType.QUAD_GOLD_RUSH)) lootSplit *= 4;
             start(); // Start if someone was teleported
         }
         return 0;
