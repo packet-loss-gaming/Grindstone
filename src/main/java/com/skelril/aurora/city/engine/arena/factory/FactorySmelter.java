@@ -82,10 +82,8 @@ public class FactorySmelter extends FactoryMech {
         if (contained.length > 0) ChatUtil.sendNotice(playerList, "Processing...");
 
         for (Entity e : contained) {
-
-            // Kill contained living entities
+            // Ignore all contained living entities
             if (e instanceof LivingEntity) {
-                ((LivingEntity) e).setHealth(0);
                 continue;
             }
 
