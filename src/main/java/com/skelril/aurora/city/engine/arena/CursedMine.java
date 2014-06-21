@@ -700,11 +700,10 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                 }
 
                 if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(rawDrop.getTypeId())) {
-                    rawDrop.setAmount(rawDrop.getAmount() * ChanceUtil.getRangedRandom(4, 8)
+                    rawDrop.setAmount(rawDrop.getAmount()
                             * ItemUtil.fortuneModifier(typeId, ItemUtil.fortuneLevel(itemInHand)));
-                } else {
-                    rawDrop.setAmount(rawDrop.getAmount() * ChanceUtil.getRangedRandom(4, 16));
                 }
+                rawDrop.setAmount(rawDrop.getAmount() * ChanceUtil.getRangedRandom(4, 8));
 
                 player.getInventory().addItem(rawDrop);
                 if (getModifierCenter().isActive(ModifierType.DOUBLE_CURSED_ORES)) {
