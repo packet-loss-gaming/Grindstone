@@ -339,7 +339,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
             if (!isAdmin) checkInArea(player);
 
-            Enchantment enchantment = Enchantment.getByName(args.getString(0));
+            Enchantment enchantment = Enchantment.getByName(args.getString(0).toUpperCase());
             int level = args.getInteger(1);
 
             if (enchantment == null) {
