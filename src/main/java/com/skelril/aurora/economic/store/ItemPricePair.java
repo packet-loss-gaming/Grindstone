@@ -37,7 +37,7 @@ public class ItemPricePair implements Comparable<ItemPricePair> {
     }
 
     public boolean isEnabled() {
-        return isBuyable() && isSellable();
+        return isBuyable() || isSellable();
     }
 
     public boolean isBuyable() {
