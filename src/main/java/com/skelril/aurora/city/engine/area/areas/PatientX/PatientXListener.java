@@ -199,6 +199,13 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             } else if (!(attacker instanceof LivingEntity)) return;
         }
 
+        if (defender instanceof Player && blockedDamage.contains(event.getCause())) {
+            if (event.isApplicable(EntityDamageEvent.DamageModifier.ARMOR)) {
+                event.setDamage(EntityDamageEvent.DamageModifier.ARMOR,
+                        event.getOriginalDamage(EntityDamageEvent.DamageModifier.ARMOR) * .5);
+            }
+        }
+
         if (defender.equals(parent.boss) && blockedDamage.contains(event.getCause())) {
             event.setCancelled(true);
             return;

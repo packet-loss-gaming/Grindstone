@@ -226,8 +226,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
                 ChatUtil.sendWarning(spectator, "This special attack will be a \"smashing hit\"!");
                 break;
             case 3:
+                double tntQuantity = Math.max(2, difficulty / 2.4);
                 for (Player player : contained) {
-                    for (double i = ChanceUtil.getRangedRandom(difficulty, Math.pow(2, Math.min(9, difficulty))); i > 0; i--) {
+                    for (double i = ChanceUtil.getRangedRandom(tntQuantity, Math.pow(2, Math.min(9, tntQuantity))); i > 0; i--) {
                         Entity e = getWorld().spawn(player.getLocation(), TNTPrimed.class);
                         e.setVelocity(new org.bukkit.util.Vector(
                                 random.nextDouble() * 1 - .5,
