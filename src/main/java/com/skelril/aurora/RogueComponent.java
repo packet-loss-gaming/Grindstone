@@ -200,7 +200,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             Arrow.class
     );
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onEntityDamageEntityEvent(EntityDamageByEntityEvent event) {
 
         CombatantPair<LivingEntity, LivingEntity, Arrow> result = extractor.extractFrom(event);
