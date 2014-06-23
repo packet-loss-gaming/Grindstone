@@ -23,7 +23,7 @@ public enum PrayerType {
     STARVATION(1001, 35, StarvationFX.class),
     INVENTORY(1002, 35, InventoryFX.class),
     RACKET(1003, 35, RacketFX.class),
-    SMOKE(1004, 35, StarvationFX.class),
+    SMOKE(1004, 35, SmokeFX.class),
     TNT(1005, 35, TNTFX.class),
     WALK(1006, 35, WalkFX.class),
     SLAP(1007, 35, SlapFX.class),
