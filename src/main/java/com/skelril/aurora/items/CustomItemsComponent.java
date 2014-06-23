@@ -152,18 +152,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             CustomItemSession session = getSession(player);
             ItemStack[] contents = player.getInventory().getContents();
 
-            // WORK AROUND (This is really stupid that I have to do this)
-            Entity damager = null;
-            if (event instanceof EntityDamageByEntityEvent) {
-                damager = ((EntityDamageByEntityEvent) event).getDamager();
-            }
-
-            if (session.isProtectedAgainst(damager)) {
-                event.setCancelled(true);
-                return;
-            }
-            // END WORK AROUND
-
             if (session.canSpec(SpecType.RED_FEATHER) && ItemUtil.hasItem(player, CustomItems.RED_FEATHER)) {
 
                 final int redQD = ItemUtil.countItemsOfType(contents, ItemID.REDSTONE_DUST);
@@ -217,12 +205,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
                     // Update the session
                     session.updateSpec(SpecType.RED_FEATHER, (long) (blocked * 75));
-
-                    // WORK AROUND
-                    if (damager != null) {
-                        session.protectAgainst(damager);
-                    }
-                    // END WORK AROUND
                 }
             }
         }
@@ -983,24 +965,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         private static final long MAX_AGE = TimeUnit.DAYS.toMillis(3);
 
-        private Set<Entity> protectedAgainst = new HashSet<>();
         private HashMap<SpecType, Long> specMap = new HashMap<>();
         private LinkedList<Location> recentDeathLocations = new LinkedList<>();
 
         protected CustomItemSession() {
             super(MAX_AGE);
-        }
-
-        public boolean isProtectedAgainst(Entity entity) {
-
-            return protectedAgainst.contains(entity);
-        }
-
-        public void protectAgainst(final Entity entity) {
-
-            protectedAgainst.add(entity);
-
-            server.getScheduler().runTaskLater(inst, () -> protectedAgainst.remove(entity), 5);
         }
 
         public void updateSpec(SpecType type) {
