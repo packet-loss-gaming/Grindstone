@@ -336,7 +336,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 if (attacker != null) {
                     if (attacker instanceof Zombie) {
                         Zombie zombie = (Zombie) attacker;
-                        if (zombie.isBaby() && ChanceUtil.getChance(parent.difficulty * 5)) {
+                        if (zombie.isBaby() && ChanceUtil.getChance(parent.difficulty * 4)) {
                             ChatUtil.sendNotice(player, "Your armour weakens the zombies.");
                             player.getNearbyEntities(8, 8, 8).stream().filter(e -> e.isValid() && e instanceof Zombie && ((Zombie) e).isBaby()).forEach(e -> ((Zombie) e).damage(18));
                         }

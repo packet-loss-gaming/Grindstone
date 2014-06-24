@@ -805,7 +805,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         Player player = result.getDefender();
 
         if (!contains(player)) return;
-        if (ChanceUtil.getChance(7) && ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD) && ItemUtil.hasAncientArmour(player)) {
+        if (ChanceUtil.getChance(5) && ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD) && ItemUtil.hasAncientArmour(player)) {
             EffectUtil.Master.ultimateStrength(player);
         }
     }
