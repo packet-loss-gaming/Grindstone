@@ -94,7 +94,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         HashMap<String, PlayerState> playerState = parent.playerState;
 
         Player player = event.getEntity();
-        if (!playerState.containsKey(player.getName()) && parent.contains(player, 1) && !parent.admin.isAdmin(player)) {
+        if (!playerState.containsKey(player.getName()) && parent.contains(player) && !parent.admin.isAdmin(player)) {
 
             playerState.put(player.getName(), new PlayerState(player.getName(),
                     player.getInventory().getContents(),
