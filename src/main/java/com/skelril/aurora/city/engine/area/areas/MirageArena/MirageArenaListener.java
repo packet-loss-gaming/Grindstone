@@ -14,6 +14,7 @@ import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
 import com.skelril.aurora.util.extractor.entity.CombatantPair;
 import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.player.PlayerState;
+import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -58,6 +59,12 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         if (parent.contains(event.getPlayer())) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockChangePreLog(BlockChangePreLogEvent event) {
+
+        if (parent.contains(event.getLocation())) event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
