@@ -25,6 +25,8 @@ import com.skelril.aurora.events.guild.NinjaGrappleEvent;
 import com.skelril.aurora.events.guild.NinjaSmokeBombEvent;
 import com.skelril.aurora.events.guild.NinjaTormentArrowEvent;
 import com.skelril.aurora.util.*;
+import com.skelril.aurora.util.extractor.entity.CombatantPair;
+import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
 import com.skelril.aurora.util.item.custom.CustomItems;
@@ -41,10 +43,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityShootBowEvent;
-import org.bukkit.event.entity.HorseJumpEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -272,8 +271,15 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         vel.multiply(.5);
         vel.setY(.6);
 
+        int playerY = player.getLocation().getBlockY();
         int z;
-        for (z = 0; block.getY() > player.getLocation().getY(); z++) {
+        for (z = 0; block.getY() >= playerY; z++) {
+            if (block.getY() == playerY) {
+                if (EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN))) {
+                    vel.setY(vel.getY() * 2);
+                }
+                break;
+            }
             block = block.getRelative(BlockFace.DOWN);
         }
 
@@ -356,13 +362,14 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         if (!isNinja(player)) return;
 
+        if (event instanceof EntityDamageByEntityEvent) {
+            entityDamage((EntityDamageByEntityEvent) event);
+            return;
+        }
+
         switch (event.getCause()) {
             case FALL:
                 event.setDamage(event.getDamage() * .5);
-                break;
-            case PROJECTILE:
-            case ENTITY_ATTACK:
-                event.setDamage(event.getDamage() * .8);
                 break;
             case DROWNING:
                 player.setRemainingAir(player.getMaximumAir());
@@ -374,6 +381,26 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 player.setFireTicks(0);
                 event.setCancelled(true);
                 break;
+        }
+    }
+
+    private static EDBEExtractor<LivingEntity, Player, Arrow> extractor = new EDBEExtractor<>(
+            LivingEntity.class,
+            Player.class,
+            Arrow.class
+    );
+
+    public void entityDamage(EntityDamageByEntityEvent event) {
+
+        CombatantPair<LivingEntity, Player, Arrow> result = extractor.extractFrom(event);
+
+        if (result == null) return;
+
+        final LivingEntity attacker = result.getAttacker();
+        final Player defender = result.getDefender();
+
+        if (isNinja(defender)) {
+            event.setDamage(attacker instanceof Player ? event.getDamage() - 1 : event.getDamage() - 10);
         }
     }
 
@@ -548,6 +575,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             Location pLoc = player.getLocation();
             Location k = player.getLocation();
 
+            double distanceRatio = Math.max(SNEAK_WATCH_DISTANCE_SQ,
+                    (player.getHealth() / player.getMaxHealth()) * WATCH_DISTANCE_SQ);
+
             for (Player otherPlayer : server.getOnlinePlayers()) {
                 if (otherPlayer.equals(player)) continue;
 
@@ -558,7 +588,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
                     double dist = pLoc.distanceSquared(k);
 
-                    if ((player.isSneaking() && dist >= SNEAK_WATCH_DISTANCE_SQ) || dist >= WATCH_DISTANCE_SQ) {
+                    if ((player.isSneaking() && dist >= SNEAK_WATCH_DISTANCE_SQ) || dist >= distanceRatio) {
                         if (otherPlayer.canSee(player)
                                 && !(guildCanSee(player) && inst.hasPermission(otherPlayer, "aurora.ninja"))
                                 && !inst.hasPermission(otherPlayer, "aurora.ninja.master")) {

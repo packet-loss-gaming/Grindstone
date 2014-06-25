@@ -26,8 +26,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -62,6 +65,8 @@ public class DebugComponent extends BukkitComponent {
         //inst.registerEvents(new PotionDeathFix());
         //noinspection AccessStaticViaInstance
         //inst.registerEvents(new ItemSpawnPrinter());
+        //noinspection AccessStaticViaInstance
+        //inst.registerEvents(new DamageSys());
     }
 
     private class InventoryCorruptionFixer implements Listener {
@@ -146,6 +151,25 @@ public class DebugComponent extends BukkitComponent {
         public void onItemSpawn(final ItemSpawnEvent event) {
             Location l = event.getEntity().getLocation();
             ChatUtil.sendDebug("X: " + l.getX() + ", Y:" + l.getY() + ", Z: " + l.getZ());
+        }
+    }
+
+    private class DamageSys implements Listener {
+
+        @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+        public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event) {
+
+            double damage = event.getDamage(EntityDamageEvent.DamageModifier.BASE);
+            double origDamage = event.getOriginalDamage(EntityDamageEvent.DamageModifier.BASE);
+
+            if (damage == origDamage) return;
+
+            for (EntityDamageEvent.DamageModifier modifier : EntityDamageEvent.DamageModifier.values()) {
+                if (modifier == EntityDamageEvent.DamageModifier.BASE) continue;
+                if (!event.isApplicable(modifier)) continue;
+
+                event.setDamage(modifier, event.getDamage(modifier) * (damage / origDamage));
+            }
         }
     }
 }

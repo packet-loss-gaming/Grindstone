@@ -389,7 +389,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 }
             }
 
-            event.setDamage(event.getDamage() * modifier);
+            event.setDamage(target instanceof Player ? event.getDamage() + modifier : event.getDamage() * modifier);
 
             if (spec != null && session.canSpec(specType)) {
 
