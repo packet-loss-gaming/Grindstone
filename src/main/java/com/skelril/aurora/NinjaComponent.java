@@ -778,7 +778,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         public void arrowBomb() {
 
-            nextArrowBomb = System.currentTimeMillis() + 30000;
+            nextArrowBomb = System.currentTimeMillis() + 20000;
         }
 
         public Player getPlayer() {
