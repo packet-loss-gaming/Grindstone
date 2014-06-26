@@ -197,7 +197,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
 
         @Command(aliases = {"list"},
                 usage = "[prefix]", desc = "List all arena states",
-                flags = "", min = 0, max = 1)
+                flags = "p:", min = 0, max = 1)
         @CommandPermissions("aurora.mirage.list")
         public void areaList(CommandContext args, CommandSender sender) throws CommandException {
             new PaginatedResult<File>("Arenas") {
