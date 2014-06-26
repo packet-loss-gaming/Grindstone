@@ -6,16 +6,23 @@
 
 package com.skelril.aurora.city.engine.area.areas.MirageArena;
 
+import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.city.engine.area.AreaListener;
 import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
+import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.extractor.entity.CombatantPair;
 import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
+import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.player.PlayerState;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -23,13 +30,21 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class MirageArenaListener extends AreaListener<MirageArena> {
+
+    private final CommandBook inst = CommandBook.inst();
+    private final Logger log = CommandBook.logger();
+    private final Server server = CommandBook.server();
+
     public MirageArenaListener(MirageArena parent) {
         super(parent);
     }
@@ -67,7 +82,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         if (parent.contains(event.getLocation())) event.setCancelled(true);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
         if (event instanceof EntityDamageByEntityEvent) {
             onPvP((EntityDamageByEntityEvent) event);
@@ -92,6 +107,55 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
         if (!parent.scope.checkFor(result.getAttacker(), result.getDefender())) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void dropGold(EntityDamageByEntityEvent event) {
+        CombatantPair<Player, Player, Projectile> result = extractor.extractFrom(event);
+
+        if (result == null || !parent.contains(result.getDefender())) return;
+
+        Location defLoc = result.getDefender().getLocation();
+        World world = defLoc.getWorld();
+        for (double i = ChanceUtil.getRandom(event.getFinalDamage()); i > 0; --i) {
+            if (ChanceUtil.getChance(27)) {
+                world.dropItem(defLoc, new ItemStack(ItemID.GOLD_BAR));
+            }
+            world.dropItem(defLoc, new ItemStack(ItemID.GOLD_NUGGET));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void onItemPickup(PlayerPickupItemEvent event) {
+
+        final Player player = event.getPlayer();
+        ItemStack itemStack = event.getItem().getItemStack();
+
+        if (itemStack.getTypeId() == ItemID.GOLD_BAR || itemStack.getTypeId() == ItemID.GOLD_NUGGET) {
+
+            if (!parent.contains(player)) {
+                return;
+            }
+
+            server.getScheduler().runTaskLater(inst, () -> {
+                int nugget = ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_NUGGET);
+                while (nugget / 9 > 0 && player.getInventory().firstEmpty() != -1) {
+                    player.getInventory().removeItem(new ItemStack(ItemID.GOLD_NUGGET, 9));
+                    player.getInventory().addItem(new ItemStack(ItemID.GOLD_BAR));
+                    nugget -= 9;
+                }
+
+                int bar = ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_BAR);
+                while (bar / 9 > 0 && player.getInventory().firstEmpty() != -1) {
+                    player.getInventory().removeItem(new ItemStack(ItemID.GOLD_BAR, 9));
+                    player.getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK));
+                    bar -= 9;
+                }
+
+                //noinspection deprecation
+                player.updateInventory();
+            }, 1);
         }
     }
 
