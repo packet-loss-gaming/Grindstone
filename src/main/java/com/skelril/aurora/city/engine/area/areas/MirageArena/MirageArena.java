@@ -30,11 +30,16 @@ import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.database.IOUtil;
 import com.skelril.aurora.util.player.PlayerState;
+import com.skelril.aurora.util.timer.IntegratedRunnable;
+import com.skelril.aurora.util.timer.TimedRunnable;
+import com.skelril.aurora.util.timer.TimerUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -103,6 +108,28 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
                 return !sessions.getSession(MirageSession.class, attacker).isIgnored(defender.getName());
             }
         });
+    }
+
+    public void clearItems() {
+        IntegratedRunnable normal = new IntegratedRunnable() {
+            @Override
+            public boolean run(int times) {
+                if (TimerUtil.matchesFilter(times, 10, 5)) {
+                    ChatUtil.sendWarning(getContained(Player.class), "Clearing all arena items in: " + times + " seconds.");
+                }
+                return true;
+            }
+            @Override
+            public void end() {
+                ChatUtil.sendWarning(getContained(Player.class), "Clearing arena items!");
+                for (Item item : getContained(Item.class)) {
+                    item.remove();
+                }
+            }
+        };
+        TimedRunnable timed = new TimedRunnable(normal, 30);
+        BukkitTask task = server.getScheduler().runTaskTimer(inst, timed, 0, 20);
+        timed.setTask(task);
     }
 
     public void freePlayers() {
@@ -270,6 +297,14 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             }, post / 5);
         }
 
+        @Command(aliases = {"cleardrops", "dc"},
+                usage = "", desc = "Clear drops in the arena",
+                flags = "", min = 0, max = 0)
+        @CommandPermissions("aurora.mirage.cleardrops")
+        public void areaDC(CommandContext args, CommandSender sender) throws CommandException {
+            clearItems();
+        }
+
         @Command(aliases = {"load"},
                 usage = "<name>", desc = "Load an arena state",
                 flags = "", min = 1, max = 1)
@@ -299,6 +334,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
                 int maxY = clipboard.getHeight();
                 int maxZ = clipboard.getLength();
 
+                clearItems();
                 callEdit(sender, editor, clipboard, 0, 0, maxX, maxY, maxZ);
             } catch (IOException | DataException e) {
                 e.printStackTrace();
