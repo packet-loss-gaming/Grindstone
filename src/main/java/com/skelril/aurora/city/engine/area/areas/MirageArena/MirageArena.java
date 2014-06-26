@@ -111,6 +111,23 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
         }
     }
 
+    public void resendChunks() {
+
+        com.sk89q.worldedit.Vector min = getRegion().getMinimumPoint();
+        com.sk89q.worldedit.Vector max = getRegion().getMaximumPoint();
+
+        int minX = min.getBlockX();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxZ = max.getBlockZ();
+
+        for (int x = minX; x < maxX; x += 16) {
+            for (int z = minZ; z < maxZ; z += 16) {
+                world.refreshChunk(x / 16, z / 16);
+            }
+        }
+    }
+
     public File getFile(String name) {
         return new File(getWorkingDir().getPath() + '/' + name + '/' + "arena.schematic");
     }
@@ -210,12 +227,13 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
                              int cx, int cy, int maxX, int maxY, int maxZ) {
 
             if (cy >= maxY) {
-                ChatUtil.sendNotice(sender, "Editing Completed.");
+                ChatUtil.sendNotice(getContained(Player.class), "Editing Completed.");
                 editing = false;
+                resendChunks();
                 freePlayers();
                 return;
             } else if (cx == 0 && cy % 10 == 0) {
-                ChatUtil.sendNotice(sender, "Editing Layer: " + cy + '/' + maxY);
+                ChatUtil.sendNotice(getContained(Player.class), "Editing Layer: " + cy + '/' + maxY);
             }
 
             long start = System.currentTimeMillis();
@@ -275,6 +293,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
 
             try {
                 EditSession editor = new EditSession(new BukkitWorld(world), -1);
+                editor.setFastMode(true);
                 CuboidClipboard clipboard = SchematicFormat.MCEDIT.load(file);
                 int maxX = clipboard.getWidth();
                 int maxY = clipboard.getHeight();
