@@ -55,7 +55,8 @@ public class DebugComponent extends BukkitComponent {
         //noinspection AccessStaticViaInstance
         //inst.registerEvents(new BlockDebug());
 
-        registerCommands(ChunkLighter.class);
+        //registerCommands(FoodInfo.class);
+        //registerCommands(ChunkLighter.class);
         //registerCommands(LocationDebug.class);
 
         // Bug fixes
@@ -82,6 +83,21 @@ public class DebugComponent extends BukkitComponent {
             player.getInventory().setContents(inventory);
         }
     }
+
+    public class FoodInfo {
+
+        @Command(aliases = {"foodstats"}, desc = "Report hunger info",
+                flags = "", min = 0, max = 0)
+        @CommandPermissions("aurora.debug.foodstats")
+        public void myLocCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.checkPlayer(sender);
+            ChatUtil.sendNotice(player, "Food level: " + player.getFoodLevel());
+            ChatUtil.sendNotice(player, "Sat. level: " + player.getSaturation());
+            ChatUtil.sendNotice(player, "Exh. level: " + player.getExhaustion());
+        }
+    }
+
 
     public class ChunkLighter {
 
