@@ -36,7 +36,12 @@ public class Response {
         if (!pattern.matcher(string).matches()) return false;
 
         Bukkit.broadcastMessage(ChatColor.YELLOW + "[Auto Reply] @" + player.getName());
-        response.forEach(msg -> Bukkit.broadcastMessage("   " + ChatColor.YELLOW + msg));
+        response.forEach(msg -> {
+            String finalMessage = msg
+                    .replaceAll("%player%", player.getName())
+                    .replaceAll("%world%", player.getWorld().getName());
+            Bukkit.broadcastMessage("   " + ChatColor.YELLOW + finalMessage);
+        });
         return true;
     }
 }
