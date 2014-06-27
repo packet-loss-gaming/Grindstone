@@ -247,8 +247,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void specAttack(EntityDamageByEntityEvent event) {
 
-        if (DamageUtil.remove(event.getDamager(), event.getEntity())) return;
-
         CombatantPair<Player, LivingEntity, Projectile> result = specExtractor.extractFrom(event);
 
         if (result == null) return;
@@ -369,28 +367,6 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 }
             }
 
-            double modifier = 1.0;
-
-            ItemStack targetItem = launcher;
-
-            if (targetItem == null) {
-                targetItem = owner.getItemInHand();
-            }
-
-            Map<String, String> map = ItemUtil.getItemTags(targetItem);
-
-            if (map != null) {
-                String modifierString = map.get(ChatColor.RED + "Damage Modifier");
-                if (modifierString != null) {
-                    try {
-                        modifier = Double.parseDouble(modifierString);
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-            }
-
-            event.setDamage(target instanceof Player ? event.getDamage() + modifier : event.getDamage() * modifier);
-
             if (spec != null && session.canSpec(specType)) {
 
                 SpecialAttackEvent specEvent = callSpec(owner, specType, spec);
@@ -401,6 +377,54 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 }
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void damageModifier(EntityDamageByEntityEvent event) {
+
+        if (DamageUtil.remove(event.getDamager(), event.getEntity())) return;
+
+        CombatantPair<Player, LivingEntity, Projectile> result = specExtractor.extractFrom(event);
+
+        if (result == null) return;
+
+        ItemStack launcher = null;
+        if (result.hasProjectile()) {
+            Projectile projectile = result.getProjectile();
+            if (projectile.hasMetadata("launcher")) {
+                Object test = projectile.getMetadata("launcher").get(0).value();
+                if (test instanceof ItemStack) {
+                    launcher = (ItemStack) test;
+                }
+            }
+
+            if (launcher == null) return;
+        }
+
+        Player owner = result.getAttacker();
+        LivingEntity target = result.getDefender();
+
+        double modifier = 1.0;
+
+        ItemStack targetItem = launcher;
+
+        if (targetItem == null) {
+            targetItem = owner.getItemInHand();
+        }
+
+        Map<String, String> map = ItemUtil.getItemTags(targetItem);
+
+        if (map != null) {
+            String modifierString = map.get(ChatColor.RED + "Damage Modifier");
+            if (modifierString != null) {
+                try {
+                    modifier = Double.parseDouble(modifierString);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        event.setDamage(target instanceof Player ? event.getDamage() + modifier : event.getDamage() * modifier);
     }
 
     @EventHandler

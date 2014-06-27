@@ -23,7 +23,6 @@ import com.skelril.aurora.city.engine.pvp.PvPComponent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.guild.NinjaGrappleEvent;
 import com.skelril.aurora.events.guild.NinjaSmokeBombEvent;
-import com.skelril.aurora.events.guild.NinjaTormentArrowEvent;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.extractor.entity.CombatantPair;
 import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
@@ -43,12 +42,14 @@ import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.*;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.entity.HorseJumpEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -348,7 +349,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
             if (p instanceof Arrow) {
                 setLastArrow(player, (Arrow) p);
-                p.setMetadata("ninja-arrow", new FixedMetadataValue(inst, true));
+                // p.setMetadata("ninja-arrow", new FixedMetadataValue(inst, true));
             }
         }
     }
@@ -360,12 +361,12 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         Player player = (Player) event.getEntity();
 
-        if (!isNinja(player)) return;
-
         if (event instanceof EntityDamageByEntityEvent) {
             entityDamage((EntityDamageByEntityEvent) event);
             return;
         }
+
+        if (!isNinja(player)) return;
 
         switch (event.getCause()) {
             case FALL:
@@ -384,61 +385,22 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
-    private static EDBEExtractor<LivingEntity, Player, Arrow> extractor = new EDBEExtractor<>(
-            LivingEntity.class,
+    private static EDBEExtractor<Player, LivingEntity, Arrow> extractor = new EDBEExtractor<>(
             Player.class,
+            LivingEntity.class,
             Arrow.class
     );
 
     public void entityDamage(EntityDamageByEntityEvent event) {
 
-        CombatantPair<LivingEntity, Player, Arrow> result = extractor.extractFrom(event);
+        CombatantPair<Player, LivingEntity, Arrow> result = extractor.extractFrom(event);
 
         if (result == null) return;
 
-        final LivingEntity attacker = result.getAttacker();
-        final Player defender = result.getDefender();
+        final Player attacker = result.getAttacker();
 
-        if (isNinja(defender)) {
-            event.setDamage(attacker instanceof Player ? event.getDamage() - 1 : event.getDamage() - 10);
-        }
-    }
-
-    @EventHandler
-    public void onProjectileLand(ProjectileHitEvent event) {
-
-        Projectile p = event.getEntity();
-        if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
-        if (p instanceof Arrow && p.hasMetadata("ninja-arrow") && p.hasMetadata("launch-force")) {
-            Object test = p.getMetadata("launch-force").get(0).value();
-
-            if (!(test instanceof Float) || (Float) test < .85) return;
-
-            tormentArrow((Arrow) p);
-        }
-    }
-
-    private void tormentArrow(Arrow arrow) {
-        Player shooter = (Player) arrow.getShooter();
-
-        List<Entity> nearby = arrow.getNearbyEntities(4, 2, 4);
-        NinjaTormentArrowEvent event = new NinjaTormentArrowEvent(shooter, nearby);
-        server.getPluginManager().callEvent(event);
-        if (event.isCancelled()) return;
-        for (Entity entity : event.getEntities()) {
-            if (!entity.isValid() || entity.equals(shooter)) continue;
-            if (entity instanceof LivingEntity) {
-                if (entity instanceof Player) {
-                    if (((Player) entity).getGameMode().equals(GameMode.CREATIVE)) continue;
-                    if (!PvPComponent.allowsPvP((Player) arrow.getShooter(), (Player) entity)) continue;
-                }
-
-                if (!shooter.hasLineOfSight(entity) || ((LivingEntity) entity).getHealth() < 2) continue;
-
-                EntityUtil.heal(shooter, 1);
-                EntityUtil.forceDamage(entity, 1);
-                entity.playEffect(EntityEffect.HURT);
-            }
+        if (isNinja(attacker) && result.hasProjectile()) {
+            EntityUtil.heal(attacker, ChanceUtil.getRandom(Math.pow(event.getFinalDamage(), 2)));
         }
     }
 
