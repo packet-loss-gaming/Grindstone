@@ -91,6 +91,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 //import net.gravitydevelopment.anticheat.check.CheckType;
 
@@ -156,7 +157,7 @@ public class JungleRaidComponent extends MinigameComponent {
 
         start = System.currentTimeMillis();
 
-        Player[] players = getContainedPlayers();
+        Collection<Player> players = getContainedPlayers();
 
         if (gameFlags.contains('H')) {
             ChatUtil.sendNotice(players, "Team two can now run.");
@@ -169,7 +170,7 @@ public class JungleRaidComponent extends MinigameComponent {
     public void start() {
         super.start();
 
-        Player[] players = getContainedPlayers();
+        Collection<Player> players = getContainedPlayers();
 
         if (gameFlags.contains('H')) {
             ChatUtil.sendNotice(players, "All players can now run.");
@@ -276,7 +277,7 @@ public class JungleRaidComponent extends MinigameComponent {
     @Override
     public void printFlags() {
 
-        Player[] players = getContainedPlayers();
+        Collection<Player> players = getContainedPlayers();
 
         ChatUtil.sendNotice(players, ChatColor.GREEN + "The following flags are enabled: ");
         if (gameFlags.contains('H')) ChatUtil.sendNotice(players, "Hunter Mode");
@@ -436,22 +437,19 @@ public class JungleRaidComponent extends MinigameComponent {
     }
 
     @Override
-    public Player[] getContainedPlayers() {
+    public Collection<Player> getContainedPlayers() {
 
         return getContainedPlayers(0);
     }
 
-    public Player[] getContainedPlayers(int parentsUp) {
-
-        List<Player> returnedList = new ArrayList<>();
+    public Collection<Player> getContainedPlayers(int parentsUp) {
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
 
-        for (Player player : server.getOnlinePlayers()) {
-
-            if (LocationUtil.isInRegion(world, r, player)) returnedList.add(player);
-        }
-        return returnedList.toArray(new Player[returnedList.size()]);
+        final ProtectedRegion finalR = r;
+        return server.getOnlinePlayers().stream()
+                .filter(p -> LocationUtil.isInRegion(world, finalR, p))
+                .collect(Collectors.toList());
     }
 
     public boolean contains(Location location) {

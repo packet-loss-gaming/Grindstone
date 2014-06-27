@@ -15,13 +15,12 @@ import com.skelril.aurora.util.ChatUtil;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -49,58 +48,42 @@ public class FactorySmelter extends FactoryMech {
 
     @Override
     public List<ItemStack> process() {
-        Player[] playerList = getContainedPlayers(1);
+        Collection<Player> playerList = getContained(1, Player.class);
 
-        Entity[] lavaContained = lavaSupply.getContainedEntities(Item.class);
-        if (lavaContained.length > 0) ChatUtil.sendNotice(playerList, "Adding lava...");
+        Collection<Item> lavaContained = lavaSupply.getContained(Item.class);
+        if (lavaContained.size() > 0) ChatUtil.sendNotice(playerList, "Adding lava...");
         int totalLava = items.containsKey(ItemID.LAVA_BUCKET) ? items.get(ItemID.LAVA_BUCKET) : 0;
-        for (Entity e : lavaContained) {
-            // Ignore all contained living entities
-            if (e instanceof LivingEntity) {
-                continue;
-            }
-
+        for (Item e : lavaContained) {
             // Find items and destroy those unwanted
-            if (e instanceof Item) {
+            ItemStack workingStack = e.getItemStack();
 
-                ItemStack workingStack = ((Item) e).getItemStack();
-
-                // Add the item to the list
-                if (workingStack.getType().equals(Material.LAVA_BUCKET)) {
-                    int total = workingStack.getAmount();
-                    if (items.containsKey(workingStack.getTypeId())) {
-                        total += items.get(workingStack.getTypeId());
-                    }
-                    items.put(workingStack.getTypeId(), totalLava = total);
+            // Add the item to the list
+            if (workingStack.getType().equals(Material.LAVA_BUCKET)) {
+                int total = workingStack.getAmount();
+                if (items.containsKey(workingStack.getTypeId())) {
+                    total += items.get(workingStack.getTypeId());
                 }
+                items.put(workingStack.getTypeId(), totalLava = total);
             }
             e.remove();
         }
         items.put(ItemID.LAVA_BUCKET, lavaSupply.addLava(totalLava));
 
-        Entity[] contained = getContainedEntities();
-        if (contained.length > 0) ChatUtil.sendNotice(playerList, "Processing...");
+        Collection<Item> contained = getContained(Item.class);
+        if (!contained.isEmpty()) ChatUtil.sendNotice(playerList, "Processing...");
 
-        for (Entity e : contained) {
-            // Ignore all contained living entities
-            if (e instanceof LivingEntity) {
-                continue;
-            }
-
+        for (Item e : contained) {
             // Find items and destroy those unwanted
-            if (e instanceof Item) {
+            ItemStack workingStack = e.getItemStack();
 
-                ItemStack workingStack = ((Item) e).getItemStack();
-
-                // Add the item to the list
-                if (wanted.contains(workingStack.getTypeId())) {
-                    int total = workingStack.getAmount();
-                    ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
-                    if (items.containsKey(workingStack.getTypeId())) {
-                        total += items.get(workingStack.getTypeId());
-                    }
-                    items.put(workingStack.getTypeId(), total);
+            // Add the item to the list
+            if (wanted.contains(workingStack.getTypeId())) {
+                int total = workingStack.getAmount();
+                ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
+                if (items.containsKey(workingStack.getTypeId())) {
+                    total += items.get(workingStack.getTypeId());
                 }
+                items.put(workingStack.getTypeId(), total);
             }
             e.remove();
         }

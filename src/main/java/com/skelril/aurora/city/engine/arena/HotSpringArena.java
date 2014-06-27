@@ -137,7 +137,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
     public void effect() {
 
-        for (final Player player : getContainedPlayers()) {
+        for (final Player player : getContained(Player.class)) {
             try {
 
                 player.removePotionEffect(PotionEffectType.CONFUSION);

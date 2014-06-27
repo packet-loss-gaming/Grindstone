@@ -400,7 +400,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     }
 
     private void checkFloodType() {
-        for (Player player : getContainedPlayers()) {
+        for (Player player : getContained(Player.class)) {
             if (!players.contains(player.getName())) continue;
             if (ItemUtil.findItemOfName(player.getInventory().getContents(), CustomItems.PHANTOM_HYMN.toString())) {
                 drainAll(); // Force away all water
@@ -502,10 +502,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     private void killAll() {
 
-        for (Player player : getContainedPlayers()) {
-
-            if (!lobby.contains(BukkitUtil.toVector(player.getLocation()))) player.setHealth(0);
-        }
+        getContained(Player.class).stream()
+                .filter(player -> !lobby.contains(BukkitUtil.toVector(player.getLocation())))
+                .forEach(player -> player.setHealth(0));
     }
 
     public void start() {
@@ -600,14 +599,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     @Override
     public void equalize() {
-
-        for (Player player : getContainedPlayers()) {
-            try {
-                adminComponent.standardizePlayer(player);
-            } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
-            }
-        }
+        getContained(Player.class).forEach(adminComponent::standardizePlayer);
     }
 
     @Override

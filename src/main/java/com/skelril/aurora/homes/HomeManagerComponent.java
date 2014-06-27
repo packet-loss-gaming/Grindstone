@@ -48,6 +48,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -512,9 +513,9 @@ public class HomeManagerComponent extends BukkitComponent {
 
             double size = (selection.getLength() * selection.getWidth()) / (16D * 16D);
 
-            CommandSender[] target = new CommandSender[]{
+            List<CommandSender> target = Arrays.asList(
                     sender, player
-            };
+            );
 
             ChatUtil.sendNotice(target, "Chunks: " + size);
 

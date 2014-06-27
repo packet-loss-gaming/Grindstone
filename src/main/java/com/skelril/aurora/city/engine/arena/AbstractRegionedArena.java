@@ -17,9 +17,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Author: Turtle9598
@@ -40,53 +40,45 @@ public abstract class AbstractRegionedArena {
         this.region = region;
     }
 
-    public Player[] getContainedPlayers() {
-        return getContainedPlayers(0);
+
+    public <T extends Entity> Collection<T> getContained(Class<T> clazz) {
+        return getContained(0, clazz);
     }
 
-    public Player[] getContainedPlayers(int parentsUp) {
-
-        List<Player> returnedList = new ArrayList<>();
-
+    public <T extends Entity> Collection<T> getContained(int parentsUp, Class<T> clazz) {
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
-
-        for (Player player : server.getOnlinePlayers()) {
-
-            if (player.isValid() && LocationUtil.isInRegion(world, r, player)) returnedList.add(player);
-        }
-        return returnedList.toArray(new Player[returnedList.size()]);
+        return getContained(r, clazz);
     }
 
-    public Entity[] getContainedEntities() {
-
-        //noinspection unchecked
-        return getContainedEntities(Entity.class);
+    public <T extends Entity> Collection<T> getContained(ProtectedRegion region, Class<T> clazz) {
+        return world.getEntitiesByClass(clazz).stream()
+                .filter(e -> e.isValid() && LocationUtil.isInRegion(region, e))
+                .collect(Collectors.toList());
     }
 
-    public Entity[] getContainedEntities(int parentsUp) {
-
-        //noinspection unchecked
-        return getContainedEntities(parentsUp, Entity.class);
+    public Collection<Entity> getContained() {
+        return getContained(Entity.class);
     }
 
-    public Entity[] getContainedEntities(Class<?>... classes) {
-
-        return getContainedEntities(0, classes);
+    public Collection<Entity> getContained(int parentsUp) {
+        return getContained(parentsUp, Entity.class);
     }
 
-    public Entity[] getContainedEntities(int parentsUp, Class<?>... classes) {
+    public Collection<Entity> getContained(Class<?>... classes) {
+        return getContained(0, classes);
+    }
 
-        List<Entity> returnedList = new ArrayList<>();
-
+    public Collection<Entity> getContained(int parentsUp, Class<?>... classes) {
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
+        return getContained(r, classes);
+    }
 
-        for (Entity entity : world.getEntitiesByClasses(classes)) {
-
-            if (entity.isValid() && LocationUtil.isInRegion(r, entity)) returnedList.add(entity);
-        }
-        return returnedList.toArray(new Entity[returnedList.size()]);
+    public Collection<Entity> getContained(ProtectedRegion region, Class<?>... classes) {
+        return world.getEntitiesByClasses(classes).stream()
+                .filter(e -> e.isValid() && LocationUtil.isInRegion(region, e))
+                .collect(Collectors.toList());
     }
 
     public boolean isEmpty() {

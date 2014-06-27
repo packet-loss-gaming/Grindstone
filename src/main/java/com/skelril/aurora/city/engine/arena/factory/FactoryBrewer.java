@@ -22,6 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionType;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -65,10 +66,10 @@ public class FactoryBrewer extends FactoryMech {
     @Override
     public List<ItemStack> process() {
 
-        Player[] playerList = getContainedPlayers(1);
+        Collection<Player> playerList = getContained(1, Player.class);
 
-        Entity[] contained = getContainedEntities();
-        if (contained.length > 0) ChatUtil.sendNotice(playerList, "Processing...");
+        Collection<Entity> contained = getContained(Entity.class);
+        if (!contained.isEmpty()) ChatUtil.sendNotice(playerList, "Processing...");
 
         for (Entity e : contained) {
 

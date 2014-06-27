@@ -266,7 +266,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             }
         }
         if (attacker != null && !parent.contains(attacker, 1) || !parent.contains(defender, 1)) return;
-        final Player[] contained = parent.getContained(Player.class);
+        final Collection<Player> contained = parent.getContained(Player.class);
         if (defender instanceof Giant) {
             final Giant boss = (Giant) defender;
             // Schedule a task to change the display name to show HP
@@ -306,7 +306,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     if (oldHP < boss.getHealth()) return;
                     for (Location spawnPt : parent.spawnPts) {
                         if (ChanceUtil.getChance(11)) {
-                            for (int i = 0; i < Math.max(3, contained.length); i++) {
+                            for (int i = 0; i < Math.max(3, contained.size()); i++) {
                                 Zombie z = parent.getWorld().spawn(spawnPt, Zombie.class);
                                 z.setBaby(true);
                                 EntityEquipment equipment = z.getEquipment();
@@ -369,9 +369,9 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         Entity e = event.getEntity();
         if (parent.contains(e)) {
             if (parent.boss != null && e instanceof Giant) {
-                Player[] players = parent.getContained(Player.class);
+                Collection<Player> players = parent.getContained(Player.class);
                 Player player = null;
-                int amt = players != null ? players.length : 0;
+                int amt = players.size();
                 int required = ChanceUtil.getRandom(13) + 3;
                 // Figure out if someone has Barbarian Bones
                 if (amt != 0) {
@@ -434,7 +434,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 // Reset respawn mechanics
                 parent.lastDeath = System.currentTimeMillis();
                 parent.boss = null;
-                Entity[] containedEntities = parent.getContained(Zombie.class, ExperienceOrb.class);
+                Collection<Entity> containedEntities = parent.getContained(Zombie.class, ExperienceOrb.class);
                 // Remove remaining XP and que new xp
                 parent.removeXP(containedEntities, true);
                 for (int i = 0; i < 7; i++) {
@@ -443,9 +443,9 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 parent.setDoor(parent.eastDoor, BlockID.AIR, 0);
                 parent.setDoor(parent.westDoor, BlockID.AIR, 0);
                 // Buff babies
-                for (Entity entity : containedEntities) {
-                    if (entity instanceof Zombie) ((Zombie) entity).addPotionEffects(Lists.newArrayList(effects));
-                }
+                containedEntities.stream()
+                        .filter(entity -> entity instanceof Zombie)
+                        .forEach(entity -> ((Zombie) entity).addPotionEffects(Lists.newArrayList(effects)));
                 IntegratedRunnable normal = new IntegratedRunnable() {
                     @Override
                     public boolean run(int times) {

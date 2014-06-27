@@ -287,13 +287,13 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     return;
                 }
 
-                Player[] spectator = parent.getContained(Player.class);
-                Player[] contained = parent.adminKit.removeAdmin(spectator);
+                Collection<Player> spectator = parent.getContained(Player.class);
+                Collection<Player> contained = parent.adminKit.removeAdmin(spectator);
                 ChatUtil.sendWarning(spectator, "So you think you've won? Ha!");
                 ChatUtil.sendWarning(spectator, "I'll get you next time...");
 
                 List<ItemStack> drops = new ArrayList<>();
-                int playerCount = spectator.length < 1 ? 1 : contained.length;
+                int playerCount = spectator.isEmpty() ? 1 : contained.size();
                 int dropVal = parent.getConfig().playerVal * playerCount;
                 drops.addAll(SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), -1, dropVal));
 

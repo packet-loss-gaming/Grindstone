@@ -6,8 +6,10 @@
 
 package com.skelril.aurora.util;
 
+import com.google.common.collect.Lists;
 import com.skelril.aurora.util.checker.Checker;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +19,13 @@ public class CollectionUtil {
      */
     public static <T> T getElement(List<T> list) {
         return list.get(ChanceUtil.getRandom(list.size()) - 1);
+    }
+
+    /**
+     * Obtains a random element from the provided {@link java.util.Collection}
+     */
+    public static <T> T getElement(Collection<T> collection) {
+        return getElement(Lists.newArrayList(collection));
     }
 
     /**

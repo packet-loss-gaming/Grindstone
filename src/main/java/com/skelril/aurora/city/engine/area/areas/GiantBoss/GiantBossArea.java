@@ -50,10 +50,8 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Giant Boss", desc = "Giant, and a true boss")
 @Depend(components = {AdminComponent.class, PrayerComponent.class}, plugins = {"WorldGuard"})
@@ -99,7 +97,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
             config = new GiantBossConfig();
 
             mobDestroyer = server.getScheduler().runTaskTimer(inst, () -> {
-                Entity[] contained = getContained(1, Zombie.class, ExperienceOrb.class);
+                Collection<Entity> contained = getContained(1, Zombie.class, ExperienceOrb.class);
                 if (!getWorld().isThundering()) removeOutsideZombies(contained);
                 if (isBossSpawned()) {
                     buffBabies(contained);
@@ -159,11 +157,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
             }
         }
         if (second) {
-            for (Giant e : getContained(Giant.class)) {
-                if (e.isValid() && !e.equals(boss)) {
-                    e.remove();
-                }
-            }
+            getContained(Giant.class).stream().filter(e -> e.isValid() && !e.equals(boss)).forEach(Entity::remove);
         }
         return boss != null && boss.isValid();
     }
@@ -243,13 +237,12 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
         }
     };
 
-    public void buffBabies(Entity[] contained) {
-        List<Zombie> que = new ArrayList<>();
-        for (Entity entity : contained) {
-            if (entity.isValid() && entity instanceof Zombie && ((Zombie) entity).isBaby()) {
-                que.add((Zombie) entity);
-            }
-        }
+    public void buffBabies(Collection<? extends Entity> contained) {
+        List<Zombie> que = contained.stream()
+                .filter(entity -> entity.isValid() && entity instanceof Zombie && ((Zombie) entity).isBaby())
+                .map(entity -> (Zombie) entity)
+                .collect(Collectors.toList());
+
         if (que.size() < 45) {
             flagged = false;
             return;
@@ -263,30 +256,31 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
         }
     }
 
-    public void removeXP(Entity[] contained) {
+    public void removeXP(Collection<? extends Entity> contained) {
         removeXP(contained, false);
     }
 
-    public void removeXP(Entity[] contained, boolean force) {
-        for (Entity e : contained) {
-            if (e.isValid() && e instanceof ExperienceOrb && (force || e.getTicksLived() > 20 * 13)) e.remove();
-        }
+    public void removeXP(Collection<? extends Entity> contained, boolean force) {
+        contained.stream()
+                .filter(e -> e.isValid() && e instanceof ExperienceOrb && (force || e.getTicksLived() > 20 * 13))
+                .forEach(Entity::remove);
     }
 
     public void removeMobs() {
-        for (Monster e : getContained(1, Monster.class)) {
+        getContained(1, Monster.class).forEach(e -> {
             for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
             e.remove();
-        }
+        });
     }
 
-    public void removeOutsideZombies(Entity[] contained) {
-        for (Entity e : contained) {
-            if (e instanceof Zombie && ((Zombie) e).isBaby() && !contains(e)) {
-                for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
-                e.remove();
-            }
-        }
+    public void removeOutsideZombies(Collection<? extends Entity> contained) {
+        contained.stream()
+                .filter(e -> e instanceof Zombie && ((Zombie) e).isBaby() && !contains(e))
+                .forEach(e -> {
+                        for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
+                        e.remove();
+                    }
+                );
     }
 
     public void equalize() {
@@ -329,9 +323,9 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
     public void runAttack(int attackCase) {
         int delay = ChanceUtil.getRangedRandom(13000, 17000);
         if (lastAttack != 0 && System.currentTimeMillis() - lastAttack <= delay) return;
-        Player[] containedP = getContained(1, Player.class);
-        Player[] contained = getContained(Player.class);
-        if (contained == null || contained.length <= 0) return;
+        Collection<Player> containedP = getContained(1, Player.class);
+        Collection<Player> contained = getContained(Player.class);
+        if (contained == null || contained.size() <= 0) return;
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
         // AI system
         if (attackCase != 4) {
@@ -350,7 +344,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
             if (boss.getHealth() < boss.getMaxHealth() * .3 && ChanceUtil.getChance(2)) {
                 attackCase = 9;
             }
-            if (((attackCase == 3 || attackCase == 6) && boss.getHealth() < boss.getMaxHealth() * .3) || (attackCase == 7 && contained.length < 2)) {
+            if (((attackCase == 3 || attackCase == 6) && boss.getHealth() < boss.getMaxHealth() * .3) || (attackCase == 7 && contained.size() < 2)) {
                 runAttack(ChanceUtil.getRandom(OPTION_COUNT));
                 return;
             }
@@ -430,7 +424,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                 server.getScheduler().runTaskLater(inst, () -> {
                     if (!isBossSpawned()) return;
                     // Set defaults
-                    boolean baskInGlory = getContained(Player.class).length == 0;
+                    boolean baskInGlory = getContained(Player.class).size() == 0;
                     damageHeals = true;
                     // Check Players
                     for (Player player : getContained(Player.class)) {
@@ -463,16 +457,14 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                 server.getScheduler().runTaskLater(inst, () -> {
                     if (!isBossSpawned()) return;
                     ChatUtil.sendWarning(getContained(1, Player.class), "May those who appose me die a death like no other...");
-                    for (Player player : getContained(Player.class)) {
-                        if (boss.hasLineOfSight(player)) {
-                            ChatUtil.sendWarning(getContained(1, Player.class), "Perish " + player.getName() + "!");
-                            try {
-                                prayer.influencePlayer(player, PrayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
-                            } catch (UnsupportedPrayerException e) {
-                                e.printStackTrace();
-                            }
+                    getContained(Player.class).stream().filter(boss::hasLineOfSight).forEach(player -> {
+                        ChatUtil.sendWarning(getContained(1, Player.class), "Perish " + player.getName() + "!");
+                        try {
+                            prayer.influencePlayer(player, PrayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
+                        } catch (UnsupportedPrayerException e) {
+                            e.printStackTrace();
                         }
-                    }
+                    });
                 }, 20 * (difficulty == 1 ? 14 : 7));
                 break;
             case 9:

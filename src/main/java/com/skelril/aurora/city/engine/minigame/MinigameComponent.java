@@ -24,12 +24,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @TemplateComponent
 public abstract class MinigameComponent extends BukkitComponent implements Runnable {
@@ -155,7 +153,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         return progress == GameProgress.ACTIVE;
     }
 
-    public abstract Player[] getContainedPlayers();
+    public abstract Collection<Player> getContainedPlayers();
 
     // Team Methods
     public boolean enqueue(Player player, int team, Set<Character> flags) {
@@ -400,15 +398,25 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
             ChatUtil.sendNotice(sender, targetPlayer.getName() + " has joined the " + casualName + ".");
         }
 
-        Player[] containedPlayers = getContainedPlayers();
-        if (containedPlayers.length > 1) {
+        final Player finalTargetPlayer = targetPlayer;
+        Collection<Player> containedPlayers = getContainedPlayers().stream()
+                .filter(p -> !finalTargetPlayer.equals(p))
+                .collect(Collectors.toList());
+
+        if (containedPlayers.isEmpty()) {
             ChatUtil.sendNotice(targetPlayer, ChatColor.DARK_GREEN, "Currently present players:");
-            for (Player player : containedPlayers) {
-                if (!player.isValid() || targetPlayer.equals(player)) continue;
-                ChatUtil.sendNotice(targetPlayer, ChatColor.GREEN, player.getName());
-                ChatUtil.sendNotice(player, ChatColor.DARK_GREEN,
-                        targetPlayer.getName() + " has joined the " + casualName + ".");
-            }
+            containedPlayers.forEach(p -> {
+                ChatUtil.sendNotice(
+                        finalTargetPlayer,
+                        ChatColor.GREEN,
+                        p.getName()
+                );
+                ChatUtil.sendNotice(
+                        p,
+                        ChatColor.DARK_GREEN,
+                        finalTargetPlayer.getName() + " has joined the " + casualName + "."
+                );
+            });
         }
     }
 
@@ -436,11 +444,9 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
             ChatUtil.sendNotice(sender, targetPlayer.getName() + " has left the " + casualName + ".");
         }
 
-        for (Player player : getContainedPlayers()) {
-            if (!player.isValid() || targetPlayer.equals(player)) continue;
-            ChatUtil.sendNotice(player, ChatColor.DARK_GREEN,
-                    targetPlayer.getName() + " has left the " + casualName + ".");
-        }
+        getContainedPlayers().stream().filter(p -> !p.equals(targetPlayer)).forEach(p -> {
+            ChatUtil.sendNotice(p, ChatColor.DARK_GREEN, targetPlayer.getName() + " has left the " + casualName + ".");
+        });
     }
 
     public void resetCmd(CommandContext args, CommandSender sender) throws CommandException {

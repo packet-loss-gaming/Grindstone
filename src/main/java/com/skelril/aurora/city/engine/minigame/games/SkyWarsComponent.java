@@ -71,6 +71,7 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * @author Turtle9598
@@ -103,19 +104,16 @@ public class SkyWarsComponent extends MinigameComponent {
     public void initialize(Set<Character> flags) {
         super.initialize(flags);
 
-        Player[] players = getContainedPlayers();
-
-        ChatUtil.sendNotice(players, "Get ready...");
+        ChatUtil.sendNotice(getContainedPlayers(), "Get ready...");
     }
 
     @Override
     public void start() {
         super.start();
 
-        Player[] players = getContainedPlayers();
+        Collection<Player> players = getContainedPlayers();
 
         for (Player player : players) {
-
             launchPlayer(player, 1);
             sessions.getSession(SkyWarSession.class, player).stopPushBack();
         }
@@ -370,7 +368,7 @@ public class SkyWarsComponent extends MinigameComponent {
     @Override
     public void printFlags() {
 
-        Player[] players = getContainedPlayers();
+        Collection<Player> players = getContainedPlayers();
 
         ChatUtil.sendNotice(players, ChatColor.GREEN + "The following flags are enabled: ");
 
@@ -415,22 +413,19 @@ public class SkyWarsComponent extends MinigameComponent {
     }
 
     @Override
-    public Player[] getContainedPlayers() {
+    public Collection<Player> getContainedPlayers() {
 
         return getContainedPlayers(0);
     }
 
-    public Player[] getContainedPlayers(int parentsUp) {
-
-        List<Player> returnedList = new ArrayList<>();
+    public Collection<Player> getContainedPlayers(int parentsUp) {
         ProtectedRegion r = region;
         for (int i = parentsUp; i > 0; i--) r = r.getParent();
 
-        for (Player player : server.getOnlinePlayers()) {
-
-            if (LocationUtil.isInRegion(world, r, player)) returnedList.add(player);
-        }
-        return returnedList.toArray(new Player[returnedList.size()]);
+        final ProtectedRegion finalR = r;
+        return server.getOnlinePlayers().stream()
+                .filter(p -> LocationUtil.isInRegion(world, finalR, p))
+                .collect(Collectors.toList());
     }
 
     public Entity[] getContainedEntities(Class<?>... classes) {

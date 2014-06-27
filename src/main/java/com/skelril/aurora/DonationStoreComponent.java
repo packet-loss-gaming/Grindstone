@@ -24,6 +24,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import java.util.Collection;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Donation Store", desc = "Effect manager for donations.")
@@ -56,11 +57,11 @@ public class DonationStoreComponent extends BukkitComponent implements Listener,
     @Override
     public void run() {
 
-        Player[] players = server.getOnlinePlayers();
+        Collection<? extends Player> players = server.getOnlinePlayers();
         butterBoot(players);
     }
 
-    private void butterBoot(final Player[] players) {
+    private void butterBoot(final Collection<? extends Player> players) {
 
         for (Player player : players) {
 

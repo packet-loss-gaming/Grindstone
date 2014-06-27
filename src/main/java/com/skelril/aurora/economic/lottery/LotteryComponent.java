@@ -43,7 +43,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -156,10 +155,10 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
             que.add(sender);
             if (args.hasFlag('b') && sender.hasPermission("aurora.lottery.pot.broadcast")) {
-                Collections.addAll(que, server.getOnlinePlayers());
+                que.addAll(server.getOnlinePlayers());
             }
 
-            broadcastLottery(que.toArray(new CommandSender[que.size()]));
+            broadcastLottery(que);
         }
 
         @Command(aliases = {"recent", "last", "previous"},
@@ -332,7 +331,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         lotteryTicketDatabase.save();
     }
 
-    public void broadcastLottery(CommandSender... senders) {
+    public void broadcastLottery(Iterable<? extends CommandSender> senders) {
 
         for (CommandSender receiver : senders) {
             ChatUtil.sendNotice(receiver, "The lottery currently has: "

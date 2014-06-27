@@ -157,7 +157,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     @Override
     public void equalize() {
 
-        for (Player player : getContainedPlayers()) {
+        for (Player player : getContained(Player.class)) {
             try {
                 adminComponent.deadmin(player);
             } catch (Exception e) {
@@ -263,7 +263,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         Location modifiable = new Location(getWorld(), 0, 0, 0);
         Location previousLoc;
 
-        for (Entity e : getContainedEntities(InventoryHolder.class)) {
+        for (Entity e : getContained(InventoryHolder.class)) {
             try {
                 Inventory eInventory = ((InventoryHolder) e).getInventory();
 
@@ -444,9 +444,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             break;
                         case 5:
                             ChatUtil.sendNotice(player, "Tim teleports items to you.");
-                            for (Entity e : getContainedEntities(Item.class)) {
-                                e.teleport(player);
-                            }
+                            getContained(Item.class).forEach(i -> i.teleport(player));
 
                             // Add in some extra drops just in case the loot wasn't very juicy
                             player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(64)));

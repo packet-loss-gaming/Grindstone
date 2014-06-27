@@ -110,7 +110,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     @Override
     public void equalize() {
 
-        for (Player player : getContainedPlayers()) {
+        for (Player player : getContained(Player.class)) {
             try {
                 adminComponent.deadmin(player);
             } catch (Exception e) {
@@ -226,7 +226,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     ChatUtil.sendNotice(player, "The fairies throws your stuff all over the place");
                     break;
                 case 4:
-                    for (final Player aPlayer : getContainedPlayers()) {
+                    for (final Player aPlayer : getContained(Player.class)) {
                         ChatUtil.sendWarning(aPlayer, "The fairies turn rabid!");
                         IntegratedRunnable runnable = new IntegratedRunnable() {
                             @Override

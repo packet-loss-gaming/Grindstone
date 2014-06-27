@@ -37,10 +37,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @ComponentInformation(friendlyName = "Patient X Arena", desc = "The mad boss of Ice")
 @Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
@@ -151,8 +148,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
     }
 
     private void spawnCreatures() {
-        LivingEntity[] entities = adminKit.removeAdmin(getContained(LivingEntity.class));
-        if (entities.length > 500) {
+        Collection<LivingEntity> entities = adminKit.removeAdmin(getContained(LivingEntity.class));
+        if (entities.size() > 500) {
             ChatUtil.sendWarning(getContained(Player.class), "Ring-a-round the rosie, a pocket full of posies...");
             boss.setHealth(boss.getMaxHealth());
             for (Entity entity : entities) {
@@ -165,7 +162,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
             return;
         }
 
-        double amt = adminKit.removeAdmin(getContained(Player.class)).length * difficulty;
+        double amt = adminKit.removeAdmin(getContained(Player.class)).size() * difficulty;
         Location l = getCentralLoc();
         for (int i = 0; i < amt; i++) {
             Zombie zombie = getWorld().spawn(l, Zombie.class);
@@ -194,9 +191,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
 
         if (!isBossSpawned()) return;
 
-        Player[] spectator = getContained(Player.class);
-        Player[] contained = adminKit.removeAdmin(spectator);
-        if (contained == null || contained.length <= 0) return;
+        Collection<Player> spectator = getContained(Player.class);
+        Collection<Player> contained = adminKit.removeAdmin(spectator);
+        if (contained.isEmpty()) return;
 
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
 

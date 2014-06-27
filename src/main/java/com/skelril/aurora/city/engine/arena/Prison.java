@@ -108,14 +108,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
 
     @Override
     public void equalize() {
-
-        for (Player player : getContainedPlayers()) {
-            try {
-                adminComponent.standardizePlayer(player);
-            } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
-            }
-        }
+        getContained(Player.class).forEach(adminComponent::standardizePlayer);
     }
 
     @Override

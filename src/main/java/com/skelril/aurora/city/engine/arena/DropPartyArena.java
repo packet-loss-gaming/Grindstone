@@ -13,10 +13,7 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.LocationUtil;
-import com.skelril.aurora.util.TimeUtil;
+import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.checker.RegionChecker;
 import com.skelril.aurora.util.item.ItemUtil;
 import org.bukkit.*;
@@ -105,7 +102,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     public void drop(int populatorValue, int modifier) {
 
         // Check for online players
-        final int playerCount = server.getOnlinePlayers().length;
+        final int playerCount = server.getOnlinePlayers().size();
 
         if (playerCount < 1) return;
 
@@ -121,7 +118,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             for (int i = 0; i < playerCount * modifier; i++) {
                 drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
             }
-            drops.add(ItemUtil.makeSkull(server.getOnlinePlayers()[ChanceUtil.getRandom(playerCount) - 1].getName()));
+            drops.add(ItemUtil.makeSkull(CollectionUtil.getElement(server.getOnlinePlayers()).getName()));
         }
 
         // Remove null drops and shuffle all other drops
@@ -176,8 +173,8 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
         if (task != null) {
             lastDropPulse = System.currentTimeMillis();
-            ChatUtil.sendNotice(getContainedPlayers(1), "Drop Party temporarily suspended for: Drop Clear.");
-            for (Entity entity : getContainedEntities(1, Item.class, ExperienceOrb.class)) {
+            ChatUtil.sendNotice(getContained(1, Player.class), "Drop Party temporarily suspended for: Drop Clear.");
+            for (Entity entity : getContained(1, Item.class, ExperienceOrb.class)) {
                 if (entity instanceof Item) {
                     drops.add(((Item) entity).getItemStack());
                 }

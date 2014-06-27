@@ -51,6 +51,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -162,7 +163,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                         }
 
                         if (ChanceUtil.getChance(18)) {
-                            List<LivingEntity> entities = player.getNearbyEntities(6, 4, 6).stream().filter(EnvironmentUtil::isHostileEntity).map(e -> (LivingEntity) e).collect(Collectors.toList());
+                            Set<LivingEntity> entities = player.getNearbyEntities(6, 4, 6).stream().filter(EnvironmentUtil::isHostileEntity).map(e -> (LivingEntity) e).collect(Collectors.toSet());
                             EffectUtil.Master.doomBlade(player, entities);
                         }
                     }

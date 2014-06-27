@@ -10,9 +10,8 @@ import com.skelril.aurora.admin.AdminComponent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class AdminToolkit {
 
@@ -22,13 +21,9 @@ public class AdminToolkit {
         this.admin = admin;
     }
 
-    public <T extends Entity> T[] removeAdmin(T[] entities) {
-        List<T> returned = new ArrayList<>();
-        for (T e : entities) {
-            if (e instanceof Player && admin.isAdmin((Player) e)) continue;
-            returned.add(e);
-        }
-        //noinspection unchecked
-        return returned.toArray((T[]) Array.newInstance(entities.getClass().getComponentType(), returned.size()));
+    public <T extends Entity> Collection<T> removeAdmin(Collection<T> entities) {
+        return entities.stream()
+                .filter(e -> !(e instanceof Player && admin.isAdmin((Player) e)))
+                .collect(Collectors.toSet());
     }
 }

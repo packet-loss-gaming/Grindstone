@@ -43,7 +43,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -178,12 +177,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }, 0, 5);
     }
 
-    public <T extends Entity> T[] getTempleContained(Class<T> clazz) {
-        List<T> returnedList = world.getEntitiesByClass(clazz).stream()
+    public <T extends Entity> Collection<T> getTempleContained(Class<T> clazz) {
+        return world.getEntitiesByClass(clazz).stream()
                 .filter(entity -> entity.isValid() && isHostileTempleArea(entity.getLocation()))
                 .collect(Collectors.toList());
-        //noinspection unchecked
-        return returnedList.toArray((T[]) Array.newInstance(clazz, returnedList.size()));
     }
 
     public void equalize() {

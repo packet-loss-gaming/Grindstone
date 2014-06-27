@@ -250,7 +250,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                         player.teleport(cell.getLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     }
 
-                    if (server.getMaxPlayers() - server.getOnlinePlayers().length <= config.freeSpotsHeld) {
+                    if (server.getMaxPlayers() - server.getOnlinePlayers().size() <= config.freeSpotsHeld) {
                         player.kickPlayer("You are not currently permitted to be online!");
                     }
                 }
