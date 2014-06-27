@@ -8,94 +8,88 @@ package com.skelril.aurora.util;
 
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.CommandException;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+
+import java.util.Collection;
 
 /**
  * @author Turtle9598
  */
 public class ChatUtil {
 
-    public static void sendDebug(Object o) {
+    public enum MessageType {
+        NOTICE(ChatColor.YELLOW),
+        ERROR(ChatColor.RED),
+        WARNING(ChatColor.RED);
 
-        sendDebug(String.valueOf(o));
+        private final ChatColor color;
+        MessageType(ChatColor color) {
+            this.color = color;
+        }
+
+        public ChatColor getColor() {
+            return color;
+        }
     }
 
-    public static void sendDebug(String message) {
+    public static void message(CommandSender sender, MessageType type, String message) {
+        sender.sendMessage(type.getColor() + message);
+    }
 
+    public static void message(Collection<? extends CommandSender> targets, MessageType type, String message) {
+        for (CommandSender target : targets) {
+            message(target, type, message);
+        }
+    }
+
+    public static void sendDebug(Object o) {
+        Bukkit.broadcast(
+                ChatColor.BLACK + "[" + ChatColor.DARK_RED + "DEBUG" + ChatColor.BLACK + "] "
+                        + ChatColor.GRAY + String.valueOf(o),
+                "aurora.debug");
+    }
+
+    public static void sendNotice(String playerName, String notice) {
         try {
-            Player player = InputUtil.PlayerParser.matchPlayerExactly(null, "Dark_Arc");
-            StringBuilder builder = new StringBuilder();
-            builder.append(ChatColor.BLACK).append("[");
-            builder.append(ChatColor.DARK_RED).append("DEBUG");
-            builder.append(ChatColor.BLACK).append("] ");
-            builder.append(ChatColor.GRAY).append(message);
-            player.sendMessage(builder.toString());
+            sendNotice(InputUtil.PlayerParser.matchPlayerExactly(null, playerName), notice);
         } catch (CommandException ignored) {
         }
     }
 
     public static void sendNotice(CommandSender sender, String notice) {
-
-        sender.sendMessage(ChatColor.YELLOW + notice);
+        message(sender, MessageType.NOTICE, notice);
     }
 
-    public static void sendNotice(String playerName, String notice) {
-
-        try {
-            Player player = InputUtil.PlayerParser.matchPlayerExactly(null, playerName);
-            player.sendMessage(ChatColor.YELLOW + notice);
-        } catch (CommandException ignored) {
-        }
+    public static void sendNotice(Collection<? extends CommandSender> senders, String notice) {
+        message(senders, MessageType.NOTICE, notice);
     }
 
-    public static void sendNotice(CommandSender[] senders, String notice) {
-
-        for (CommandSender sender : senders) {
-
-            if (sender == null) continue;
-            sendNotice(sender, notice);
-        }
-    }
-
+    @Deprecated
     public static void sendNotice(CommandSender sender, ChatColor chatColor, String notice) {
-
         sender.sendMessage(chatColor + notice);
     }
 
-    public static void sendNotice(CommandSender[] senders, ChatColor chatColor, String notice) {
-
-        for (CommandSender sender : senders) {
-
-            if (sender == null) continue;
-            sendNotice(sender, chatColor, notice);
-        }
+    @Deprecated
+    public static void sendNotice(Collection<? extends CommandSender> senders, ChatColor chatColor, String notice) {
+        senders.forEach(s -> sendNotice(s, chatColor, notice));
     }
 
     public static void sendError(CommandSender sender, String error) {
-
-        sender.sendMessage(ChatColor.RED + error);
+        message(sender, MessageType.ERROR, error);
     }
 
-    public static void sendError(CommandSender[] senders, String error) {
-
-        for (CommandSender sender : senders) {
-
-            sendError(sender, error);
-        }
+    public static void sendError(Collection<? extends CommandSender> senders, String error) {
+        message(senders, MessageType.ERROR, error);
     }
 
     public static void sendWarning(CommandSender sender, String warning) {
-
-        sender.sendMessage(ChatColor.RED + warning);
+        message(sender, MessageType.WARNING, warning);
     }
 
-    public static void sendWarning(CommandSender[] senders, String warning) {
-
-        for (CommandSender sender : senders) {
-            sendWarning(sender, warning);
-        }
+    public static void sendWarning(Collection<? extends CommandSender> senders, String warning) {
+        message(senders, MessageType.WARNING, warning);
     }
 
     public static String makeCountString(int value, String currencyName) {
