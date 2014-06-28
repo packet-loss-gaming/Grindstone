@@ -357,14 +357,14 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     @EventHandler(ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
 
-        if (!(event.getEntity() instanceof Player)) return;
-
-        Player player = (Player) event.getEntity();
-
         if (event instanceof EntityDamageByEntityEvent) {
             entityDamage((EntityDamageByEntityEvent) event);
             return;
         }
+
+        if (!(event.getEntity() instanceof Player)) return;
+
+        Player player = (Player) event.getEntity();
 
         if (!isNinja(player)) return;
 
