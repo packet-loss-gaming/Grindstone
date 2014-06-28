@@ -396,9 +396,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         int level = getLevel(location);
 
-        if (level > 1) {
-            event.setDamage(event.getDamage() * level);
-        }
+        event.setDamage(event.getDamage() + ChanceUtil.getRandom(level) - 1);
     }
 
     private static EDBEExtractor<Player, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
@@ -467,22 +465,24 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         int level = getLevel(location);
         if (isWildernessWorld(location.getWorld()) && level > 1) {
 
+            Set<ItemStack> drops = new HashSet<>();
             double diffLevel = Math.max(1, level * .63);
             for (int i = 0; i < Math.pow(diffLevel, 3); i++) {
                 if (ChanceUtil.getChance(100000)) {
-                    event.getDrops().add(CustomItemCenter.build(CustomItems.RED_FEATHER));
+                    drops.add(CustomItemCenter.build(CustomItems.RED_FEATHER));
                 }
                 if (ChanceUtil.getChance(2000)) {
-                    event.getDrops().add(CustomItemCenter.build(CustomItems.POTION_OF_RESTITUTION));
+                    drops.add(CustomItemCenter.build(CustomItems.POTION_OF_RESTITUTION));
                 }
             }
 
-            event.getDrops().addAll(
+            drops.addAll(
                     SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, Math.pow(level, 2) * 64)
             );
             if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
-                event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
+                drops.addAll(drops.stream().map(ItemStack::clone).collect(Collectors.toSet()));
             }
+            event.getDrops().addAll(drops);
             event.setDroppedExp(event.getDroppedExp() * level);
         }
     }
@@ -634,7 +634,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
             DecimalFormat df = new DecimalFormat("#.#");
 
-            ChatUtil.sendNotice(sender, "Damage Modifier: " + level + "x");
+            ChatUtil.sendNotice(sender, "Damage Modifier: +" + (level - 1));
             ChatUtil.sendNotice(sender, "Ore Pool Modifier: " + df.format(getOreMod(level)) + "x");
             ChatUtil.sendNotice(sender, "Mob Health Modifier: " + (level > 1 ? 5 * (level - 1) : 1) + "x");
         }
