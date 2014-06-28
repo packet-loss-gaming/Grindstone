@@ -258,7 +258,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 60, 2));
                 }
                 attackDur = System.currentTimeMillis() + 20000;
-                ChatUtil.sendWarning(spectator, "What's the mater, got cold feet?");
+                ChatUtil.sendWarning(spectator, "What's the matter, got cold feet?");
                 break;
             case 7:
                 for (Player player : contained) {
