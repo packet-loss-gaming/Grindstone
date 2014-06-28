@@ -35,6 +35,7 @@ public class ChatUtil {
     }
 
     public static void message(CommandSender sender, MessageType type, String message) {
+        if (sender == null) return;
         sender.sendMessage(type.getColor() + message);
     }
 
