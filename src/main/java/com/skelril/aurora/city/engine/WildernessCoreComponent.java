@@ -402,7 +402,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
 
-        event.setDamage(event.getDamage() + ChanceUtil.getRandom(level) - 1);
+        event.setDamage(event.getDamage() + ChanceUtil.getRandom(ChanceUtil.getRandom(level)) - 1);
         if (((Player) entity).isFlying() && event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
             DamageUtil.multiplyFinalDamage(event, 2);
         }
