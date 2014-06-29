@@ -7,9 +7,11 @@
 package com.skelril.aurora.util;
 
 import com.sk89q.commandbook.CommandBook;
+import net.minecraft.util.org.apache.commons.lang3.Validate;
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.entity.EntityDamageEvent;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,5 +37,10 @@ public class DamageUtil {
         Entity testDefender = entries.remove(attacker);
 
         return testDefender != null && testDefender.equals(defender);
+    }
+
+    public static void multiplyFinalDamage(EntityDamageEvent event, double multiplier) {
+        Validate.isTrue(multiplier > 1, "Multiplier must be > 1");
+        event.setDamage(event.getDamage() + (event.getFinalDamage() * (multiplier - 1)));
     }
 }

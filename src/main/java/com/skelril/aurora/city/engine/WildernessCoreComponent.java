@@ -24,10 +24,7 @@ import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
 import com.skelril.aurora.modifiers.ModifierType;
-import com.skelril.aurora.util.ChanceUtil;
-import com.skelril.aurora.util.ChatUtil;
-import com.skelril.aurora.util.EnvironmentUtil;
-import com.skelril.aurora.util.LocationUtil;
+import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.extractor.entity.CombatantPair;
 import com.skelril.aurora.util.extractor.entity.EDBEExtractor;
 import com.skelril.aurora.util.item.ItemUtil;
@@ -406,8 +403,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
 
         event.setDamage(event.getDamage() + ChanceUtil.getRandom(level) - 1);
-        if (event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
-            event.setDamage(event.getDamage() * 2);
+        if (((Player) entity).isFlying() && event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
+            DamageUtil.multiplyFinalDamage(event, 2);
         }
     }
 

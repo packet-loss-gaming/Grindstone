@@ -17,6 +17,7 @@ import com.skelril.aurora.city.engine.arena.ArenaType;
 import com.skelril.aurora.city.engine.arena.GenericArena;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.DamageUtil;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -97,8 +98,8 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
 
         if (!(entity instanceof Player) || !contains(entity)) return;
 
-        if (event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
-            event.setDamage(event.getDamage() * 2);
+        if (((Player) entity).isFlying() && event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
+            DamageUtil.multiplyFinalDamage(event, 2);
         }
     }
 
