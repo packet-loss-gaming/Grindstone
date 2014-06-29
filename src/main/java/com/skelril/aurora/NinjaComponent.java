@@ -178,7 +178,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         server.getPluginManager().callEvent(event);
         if (event.isCancelled() || entities.isEmpty()) return;
 
-        sessions.getSession(NinjaState.class, player).smokeBomb();
+        NinjaState session = sessions.getSession(NinjaState.class, player);
+        session.smokeBomb();
 
         Collections.sort(entities, new EntityDistanceComparator(player.getLocation()));
 
@@ -242,6 +243,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
         Location target = event.getTeleportLoc() == null ? oldLoc : event.getTeleportLoc();
         player.teleport(target, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        session.hide(2500);
     }
 
     public boolean canGrapple(Player player) {
@@ -400,7 +402,12 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         final Player attacker = result.getAttacker();
 
         if (isNinja(attacker) && result.hasProjectile()) {
-            EntityUtil.heal(attacker, ChanceUtil.getRandom(Math.pow(event.getFinalDamage(), 2)));
+            EntityDamageEvent lastEvent = attacker.getLastDamageCause();
+            if (lastEvent != null) {
+                double lastDamage = lastEvent.getFinalDamage();
+                double scale = ((attacker.getMaxHealth() - attacker.getHealth()) / attacker.getMaxHealth());
+                EntityUtil.heal(attacker, ChanceUtil.getRandom(scale * lastDamage));
+            }
         }
     }
 
@@ -550,7 +557,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
                     double dist = pLoc.distanceSquared(k);
 
-                    if ((player.isSneaking() && dist >= SNEAK_WATCH_DISTANCE_SQ) || dist >= distanceRatio) {
+                    if ((player.isSneaking() && dist >= SNEAK_WATCH_DISTANCE_SQ)
+                            || dist >= distanceRatio
+                            || !ninjaState.showPlayer()) {
                         if (otherPlayer.canSee(player)
                                 && !(guildCanSee(player) && inst.hasPermission(otherPlayer, "aurora.ninja"))
                                 && !inst.hasPermission(otherPlayer, "aurora.ninja.master")) {
@@ -654,6 +663,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         private Arrow lastArrow = null;
 
+        private long nextSeen = 0;
         private long nextGrapple = 0;
         private long nextSmokeBomb = 0;
         private long nextArrowBomb = 0;
@@ -713,6 +723,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             this.lastArrow = lastArrow;
         }
 
+        public boolean showPlayer() {
+
+            return nextSeen == 0 || System.currentTimeMillis() >= nextSeen;
+        }
+
+        public void hide(long time) {
+
+            nextSeen = System.currentTimeMillis() + time;
+        }
+
         public boolean canGrapple() {
 
             return nextGrapple == 0 || System.currentTimeMillis() >= nextGrapple;
@@ -730,7 +750,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         public void smokeBomb() {
 
-            nextSmokeBomb = System.currentTimeMillis() + 2750;
+            nextSmokeBomb = System.currentTimeMillis() + 5000;
         }
 
         public boolean canArrowBomb() {
