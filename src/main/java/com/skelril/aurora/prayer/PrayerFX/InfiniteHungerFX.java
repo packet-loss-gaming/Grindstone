@@ -24,7 +24,7 @@ public class InfiniteHungerFX extends AbstractEffect {
     public void add(Player player) {
 
         player.setFoodLevel(20);
-        player.setSaturation(5);
+        player.setSaturation(20);
         player.setExhaustion(0);
     }
 
