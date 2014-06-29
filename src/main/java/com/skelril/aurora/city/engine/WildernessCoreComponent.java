@@ -394,6 +394,15 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         int level = getLevel(location);
 
+        // Make Skeletons & Zombies burn faster
+        if (entity instanceof Zombie || entity instanceof Skeleton) {
+            if (event.getCause().equals(EntityDamageEvent.DamageCause.FIRE_TICK)
+                    && location.getBlock().getLightFromSky() == 15) {
+                event.setDamage(event.getDamage() * 5 * level);
+                return;
+            }
+        }
+
         if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
 
         event.setDamage(event.getDamage() + ChanceUtil.getRandom(level) - 1);
