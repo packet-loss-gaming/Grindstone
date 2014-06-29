@@ -47,6 +47,9 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
         super(world, regions[0], regions[1], Arrays.copyOfRange(regions, 2, 4));
         this.adminComponent = adminComponent;
         this.mechs = Lists.newArrayList(mechs);
+
+        //noinspection AccessStaticViaInstance
+        inst.registerEvents(this);
     }
 
     public ChamberType getProductType(ItemStack product) {
