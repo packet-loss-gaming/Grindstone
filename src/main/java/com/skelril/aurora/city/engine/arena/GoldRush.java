@@ -44,6 +44,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Lever;
@@ -617,6 +618,15 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
             event.setCancelled(true);
             ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport to that location.");
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        if (event.isFlying() && players.contains(player.getName())) {
+            event.setCancelled(true);
+            ChatUtil.sendNotice(player, "You cannot fly here!");
         }
     }
 

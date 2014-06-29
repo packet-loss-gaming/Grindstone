@@ -392,11 +392,14 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             }
         }
 
-        if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
-
         int level = getLevel(location);
 
+        if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
+
         event.setDamage(event.getDamage() + ChanceUtil.getRandom(level) - 1);
+        if (event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
+            event.setDamage(event.getDamage() * 2);
+        }
     }
 
     private static EDBEExtractor<Player, LivingEntity, Projectile> extractor = new EDBEExtractor<>(

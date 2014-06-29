@@ -157,13 +157,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     @Override
     public void equalize() {
 
-        for (Player player : getContained(Player.class)) {
-            try {
-                adminComponent.deadmin(player);
-            } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
-            }
-        }
+        getContained(Player.class).stream().filter(adminComponent::isAdmin).forEach(adminComponent::deadmin);
     }
 
     @Override
@@ -482,6 +476,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         ChatUtil.sendNotice(player, ChatColor.AQUA, "Your armour blocks an incoming ghost attack.");
                         return;
                     }
+
+                    adminComponent.depowerPlayer(player);
 
                     Location modifiedLoc = null;
 

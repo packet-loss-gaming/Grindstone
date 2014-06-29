@@ -172,6 +172,15 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     }
 
     @EventHandler(ignoreCancelled = true)
+    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        if (event.isFlying() && parent.contains(player) && !parent.admin.isAdmin(player)) {
+            event.setCancelled(true);
+            ChatUtil.sendNotice(player, "You cannot fly here!");
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onPotionSplash(PotionSplashEvent event) {
         event.getAffectedEntities().stream().filter(entity -> entity != null && entity instanceof Player && ChanceUtil.getChance(14)).forEach(entity -> {
             if (ChanceUtil.getChance(14)) {

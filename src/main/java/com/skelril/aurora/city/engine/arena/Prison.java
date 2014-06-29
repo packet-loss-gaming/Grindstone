@@ -26,6 +26,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -138,6 +139,15 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
                 server.getScheduler().runTaskLater(inst, () -> players.remove(name), 1);
             }
             ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport to that location.");
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        if (event.isFlying() && contains(player) && !adminComponent.isAdmin(player)) {
+            event.setCancelled(true);
+            ChatUtil.sendNotice(player, "You cannot fly here!");
         }
     }
 

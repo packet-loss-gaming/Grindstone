@@ -19,7 +19,11 @@ import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
@@ -27,7 +31,7 @@ import java.util.logging.Logger;
 
 import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
-public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
+public class FactoryFloor extends AbstractFactoryArea implements GenericArena, Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -65,6 +69,8 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
     @Override
     public void run() {
 
+        equalize();
+
         for (FactoryMech mech : Collections.synchronizedList(mechs)) que.addAll(mech.process());
 
         if (que.isEmpty()) return;
@@ -81,6 +87,18 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
         mechs.clear();
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamage(EntityDamageEvent event) {
+
+        final Entity entity = event.getEntity();
+
+        if (!(entity instanceof Player) || !contains(entity)) return;
+
+        if (event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
+            event.setDamage(event.getDamage() * 2);
+        }
+    }
+
     @Override
     public String getId() {
         return getRegion().getId();
@@ -88,7 +106,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena {
 
     @Override
     public void equalize() {
-        getContained(Player.class).forEach(adminComponent::deadmin);
+        getContained(Player.class).stream().filter(adminComponent::isAdmin).forEach(adminComponent::deadmin);
     }
 
     @Override

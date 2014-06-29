@@ -50,6 +50,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
@@ -115,6 +116,15 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 ChatUtil.sendError(player, "You need a Phantom Hymn to sacrifice to enter that area.");
                 event.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        if (event.isFlying() && parent.contains(player) && !parent.admin.isAdmin(player)) {
+            event.setCancelled(true);
+            ChatUtil.sendNotice(player, "You cannot fly here!");
         }
     }
 

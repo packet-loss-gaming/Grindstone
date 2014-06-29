@@ -29,6 +29,7 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
@@ -132,6 +133,15 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             Player player = event.getPlayer();
             if (parent.admin.isAdmin(player, AdminState.ADMIN)) return;
             event.setTo(parent.entrance);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        if (event.isFlying() && parent.contains(player) && !parent.admin.isAdmin(player)) {
+            event.setCancelled(true);
+            ChatUtil.sendNotice(player, "You cannot fly here!");
         }
     }
 

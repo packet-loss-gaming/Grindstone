@@ -40,10 +40,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerBucketFillEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
@@ -255,6 +252,15 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     server.getScheduler().runTaskLater(inst, () -> noTeeth.remove(player), 20 * 60 * 2);
                     break;
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        if (event.isFlying() && contains(player) && !adminComponent.isAdmin(player)) {
+            event.setCancelled(true);
+            ChatUtil.sendNotice(player, "You cannot fly here!");
         }
     }
 
