@@ -847,7 +847,6 @@ public class SkyWarsComponent extends MinigameComponent {
 
             Player attackingPlayer = result.getAttacker();
             Player defendingPlayer = result.getDefender();
-            Projectile projectile = result.getProjectile();
 
             if (getTeam(attackingPlayer) == -1 && getTeam(defendingPlayer) != -1) {
                 event.setCancelled(true);
@@ -865,11 +864,10 @@ public class SkyWarsComponent extends MinigameComponent {
                 event.setCancelled(true);
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
             } else {
-                if (projectile instanceof Snowball) {
+                if (result.hasProjectile()) {
                     SkyWarSession session = sessions.getSession(SkyWarSession.class, defendingPlayer);
                     session.stopFlight(3000 + (1000 * ChanceUtil.getRandom(5)));
                     session.stopDefrost(15000);
-
                 }
                 ChatUtil.sendNotice(attackingPlayer, "You've hit " + defendingPlayer.getName() + "!");
             }
