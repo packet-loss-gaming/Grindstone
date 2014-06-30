@@ -403,7 +403,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
                 .filter(p -> !finalTargetPlayer.equals(p))
                 .collect(Collectors.toList());
 
-        if (containedPlayers.isEmpty()) {
+        if (!containedPlayers.isEmpty()) {
             ChatUtil.sendNotice(targetPlayer, ChatColor.DARK_GREEN, "Currently present players:");
             containedPlayers.forEach(p -> {
                 ChatUtil.sendNotice(
