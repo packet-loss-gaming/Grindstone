@@ -6,43 +6,49 @@
 
 package com.skelril.aurora;
 
+import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
+import com.sk89q.commandbook.commands.PaginatedResult;
+import com.sk89q.commandbook.session.PersistentSession;
+import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.minecraft.util.commands.*;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.timer.IntegratedRunnable;
+import com.skelril.aurora.util.timer.TimedRunnable;
+import com.skelril.aurora.util.timer.TimerUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.text.DecimalFormat;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
  * @author Turtle9598
  */
 @ComponentInformation(friendlyName = "Auto Clear", desc = "Automatically clears items on the ground.")
+@Depend(components = {SessionComponent.class})
 public class AutoClearComponent extends BukkitComponent implements Runnable {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
 
+    @InjectComponent
+    private SessionComponent sessions;
+
     private LocalConfiguration config;
-    private HashMap<World, Integer> activeWorlds = new HashMap<>();
-    private HashMap<World, Integer> worldTimer = new HashMap<>();
-    private List<World> recentList = new ArrayList<>();
+    private HashMap<World, TimedRunnable> worldTimer = new HashMap<>();
+    private Map<World, Collection<ChunkStats>> lastClear = new HashMap<>();
 
     @Override
     public void enable() {
@@ -67,22 +73,40 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
         public int maxDelay = 120;
     }
 
+    private static Set<EntityType> checkedEntities = new HashSet<>();
+
+    static {
+        checkedEntities.add(EntityType.DROPPED_ITEM);
+        checkedEntities.add(EntityType.ARROW);
+        checkedEntities.add(EntityType.EXPERIENCE_ORB);
+    }
+
     @Override
     public void run() {
-
         for (World world : server.getWorlds()) {
-
-            if (recentList.contains(world)) continue;
-
-            int itemCount = world.getEntitiesByClasses(Item.class, Arrow.class, ExperienceOrb.class).size();
-
-            // Don't spam
-            if (itemCount >= (config.itemCountMin * 3) && !activeWorlds.containsKey(world)) {
-                dropClear(world, 0);
-            } else if ((itemCount >= config.itemCountMin) && !activeWorlds.containsKey(world)) {
-                dropClear(world, 10);
+            int itemCount = checkEntities(world).getEntities().size();
+            if (itemCount >= config.itemCountMin) {
+                dropClear(world, itemCount >= (config.itemCountMin * 3) ? 0 : 10, false);
             }
         }
+    }
+
+    private CheckProfile checkEntities(World world) {
+        Set<Entity> entities = new HashSet<>();
+        Set<ChunkStats> stats = new HashSet<>();
+        Chunk[] loaded = world.getLoadedChunks();
+        for (Chunk chunk : loaded) {
+            ChunkStats cs = new ChunkStats(chunk);
+            for (Entity e : chunk.getEntities()) {
+                checkedEntities.stream().filter(eType -> eType == e.getType()).forEach(eType -> {
+                    cs.increase(eType, 1);
+                    entities.add(e);
+                });
+            }
+            if (cs.total() < 1) continue;
+            stats.add(cs);
+        }
+        return new CheckProfile(entities, stats);
     }
 
     public class Commands {
@@ -91,105 +115,323 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
                 usage = "[seconds] [world] or <world> [seconds]", desc = "Clear all drops",
                 min = 0, max = 2)
         @CommandPermissions({"aurora.dropclear"})
-        public void dropClearCmd(CommandContext args, CommandSender sender) {
+        public void dropClearCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            String secondsString = "10";
-            World world = null;
+            World world;
+            int seconds = 10;
 
-            // Important Check
-            if ((sender instanceof Player)) {
-                String senderName = sender.getName();
-                Player player = Bukkit.getPlayerExact(senderName);
-                world = player.getWorld();
-                if (args.argsLength() == 0) {
-                    world = player.getWorld();
-                } else if (args.argsLength() == 1) {
-                    secondsString = args.getString(0);
-                } else {
+            if (sender instanceof Player) {
+                world = ((Player) sender).getWorld();
+                if (args.argsLength() > 1) {
                     world = Bukkit.getWorld(args.getString(1));
-                    secondsString = args.getString(0);
+                    seconds = args.getInteger(0);
+                } else if (args.argsLength() == 1) {
+                    seconds = args.getInteger(0);
                 }
             } else {
                 if (args.argsLength() == 0) {
-                    ChatUtil.sendError(sender, "You are not a player and must specify a world!");
+                    throw new CommandException("You are not a player and must specify a world!");
                 } else if (args.argsLength() == 1) {
                     world = Bukkit.getWorld(args.getString(0));
                 } else {
                     world = Bukkit.getWorld(args.getString(0));
-                    secondsString = args.getString(1);
+                    seconds = args.getInteger(1);
                 }
             }
 
-            int seconds = Integer.parseInt(secondsString);
+            if (world == null) {
+                throw new CommandException("No world by that name found!");
+            }
+            dropClear(world, Math.max(0, Math.min(seconds, config.maxDelay)), true);
+        }
 
-            // Don't send a fake world
-            if (Bukkit.getWorlds().contains(world)) {
+        @Command(aliases = {"dropstats", "ds"}, desc = "Drop statistics")
+        @NestedCommand(DropStatsCommands.class)
+        @CommandPermissions({"aurora.dropclear.stats"})
+        public void dropStatsCmds(CommandContext args, CommandSender sender) {
 
-                if (seconds > config.maxDelay) {
-                    dropClear(world, config.maxDelay);
-                } else {
-                    dropClear(world, seconds);
+        }
+    }
+
+    public class DropStatsCommands {
+        @Command(aliases = {"update"},
+                usage = "<world>", desc = "Updates your copy of stats for that world",
+                min = 1, max = 1)
+        public void updateCmd(CommandContext args, CommandSender sender) throws CommandException {
+            World world = Bukkit.getWorld(args.getString(0));
+            if (world == null) {
+                throw new CommandException("No world by that name found!");
+            }
+
+            sessions.getSession(DropClearObserver.class, sender).setStats(world, checkEntities(world).getStats());
+            ChatUtil.sendNotice(sender, "Stats updated.");
+        }
+
+        @Command(aliases = {"info"},
+                usage = "<world> <drop|last> <x> <z>", desc = "View details of a certain chunk",
+                min = 4, max = 4)
+        public void infoCmd(CommandContext args, CommandSender sender) throws CommandException {
+            World world = Bukkit.getWorld(args.getString(0));
+            if (world == null) {
+                throw new CommandException("No world by that name found!");
+            }
+
+            Collection<ChunkStats> stats;
+            String typeString = args.getString(1);
+            if (typeString.equalsIgnoreCase("drop")) {
+                stats = lastClear.get(world);
+                if (stats == null) {
+                    throw new CommandException("No recent drop clears on record.");
+                }
+            } else if (typeString.equalsIgnoreCase("last")) {
+                stats = sessions.getSession(DropClearObserver.class, sender).getStats(world);
+                if (stats == null) {
+                    throw new CommandException("No snapshots on record.");
                 }
             } else {
-                ChatUtil.sendError(sender, "Invalid world name.");
+                throw new CommandException("Unsupported stats specified!");
+            }
+
+            int x = args.getInteger(2);
+            int z = args.getInteger(3);
+
+            ChunkStats target = null;
+            for (ChunkStats cs : stats) {
+                if (cs.getX() == x && cs.getZ() == z) {
+                    target = cs;
+                    break;
+                }
+            }
+
+            if (target == null) {
+                throw new CommandException("That chunk could not be found in the specified record");
+            }
+
+            ChatUtil.sendNotice(sender, ChatColor.GOLD, "Chunk stats: (X: " + ChatColor.WHITE + target.getX()
+                    + "%p%, Z: " + ChatColor.WHITE + target.getZ()
+                    + "%p%)");
+            ChatUtil.sendNotice(sender, "Total Drops: " + target.total());
+            for (Map.Entry<EntityType, Integer> entry : target.getStats().entrySet()) {
+                ChatUtil.sendNotice(sender, entry.getKey().name() + ": " + entry.getValue());
+            }
+        }
+
+        @Command(aliases = {"chunks"},
+                usage = "<world> <drop|last>", desc = "View chunk stats",
+                flags = "p:", min = 2, max = 2)
+        public void chunksCmd(CommandContext args, CommandSender sender) throws CommandException {
+            World world = Bukkit.getWorld(args.getString(0));
+            if (world == null) {
+                throw new CommandException("No world by that name found!");
+            }
+
+            Collection<ChunkStats> stats;
+            String typeString = args.getString(1);
+            if (typeString.equalsIgnoreCase("drop")) {
+                stats = lastClear.get(world);
+                if (stats == null) {
+                    throw new CommandException("No recent drop clears on record.");
+                }
+            } else if (typeString.equalsIgnoreCase("last")) {
+                stats = sessions.getSession(DropClearObserver.class, sender).getStats(world);
+                if (stats == null) {
+                    throw new CommandException("No snapshots on record.");
+                }
+            } else {
+                throw new CommandException("Unsupported stats specified!");
+            }
+
+            List<ChunkStats> statsList = Lists.newArrayList(stats);
+            statsList.sort((o1, o2) -> o2.total() - o1.total());
+
+            new PaginatedResult<ChunkStats>(ChatColor.GOLD + "Chunk Stats") {
+                @Override
+                public String format(ChunkStats chunkStats) {
+                    int total = chunkStats.total();
+                    ChatColor recordColor = total >= config.itemCountMin / 8 ? ChatColor.RED : ChatColor.BLUE;
+                    return recordColor + String.valueOf(total)
+                            + ChatColor.YELLOW + " (X: " + ChatColor.WHITE + chunkStats.getX()
+                            + ChatColor.YELLOW + ", Z: " + ChatColor.WHITE + chunkStats.getZ()
+                            + ChatColor.YELLOW + ')';
+                }
+            }.display(sender, statsList, args.getFlagInteger('p', 1));
+        }
+
+        @Command(aliases = {"composition", "comp"},
+                usage = "<world> <drop|last>", desc = "View composition stats",
+                min = 2, max = 2)
+        public void compositionCmd(CommandContext args, CommandSender sender) throws CommandException {
+            World world = Bukkit.getWorld(args.getString(0));
+            if (world == null) {
+                throw new CommandException("No world by that name found!");
+            }
+
+            Collection<ChunkStats> stats;
+            String typeString = args.getString(1);
+            if (typeString.equalsIgnoreCase("drop")) {
+                stats = lastClear.get(world);
+                if (stats == null) {
+                    throw new CommandException("No recent drop clears on record.");
+                }
+            } else if (typeString.equalsIgnoreCase("last")) {
+                stats = sessions.getSession(DropClearObserver.class, sender).getStats(world);
+                if (stats == null) {
+                    throw new CommandException("No snapshots on record.");
+                }
+            } else {
+                throw new CommandException("Unsupported stats specified!");
+            }
+
+            Map<EntityType, Integer> totals = new HashMap<>();
+            for (ChunkStats cs : stats) {
+                Map<EntityType, Integer> mapping = cs.getStats();
+                for (EntityType type : checkedEntities) {
+                    Integer newVal = mapping.get(type);
+                    if (newVal == null) continue;
+                    Integer curVal = totals.get(type);
+                    if (curVal != null) {
+                        newVal += curVal;
+                    }
+                    totals.put(type, newVal);
+                }
+            }
+
+            int total = 0;
+            for (Integer i : totals.values()) {
+                total += i;
+            }
+
+            ChatUtil.sendNotice(sender, ChatColor.GOLD, "Drop Composition Report");
+            DecimalFormat formatter = new DecimalFormat("#.##");
+            for (Map.Entry<EntityType, Integer> entry : totals.entrySet()) {
+                ChatUtil.sendNotice(sender, ChatColor.YELLOW, entry.getKey().name() + " (Quantity: "
+                        + ChatColor.WHITE + entry.getValue()
+                        + "%p% - "
+                        + ChatColor.WHITE + formatter.format(((double) entry.getValue() / total) * 100)
+                        + "%p%%)");
             }
         }
     }
 
-    private void dropClear(final World world, final int seconds) {
+    private void dropClear(World world, int seconds, boolean overwrite) {
 
-        int delay = 0;
-        if (seconds > 0) {
-            Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " +
-                    world.getName() + " drops in " + seconds + " seconds!");
-            delay = 20;
-        }
-        worldTimer.put(world, seconds);
+        TimedRunnable runnable = worldTimer.get(world);
 
-        // New Task
-        int taskId = inst.getServer().getScheduler().scheduleSyncRepeatingTask(inst, () -> {
-
-            final Collection<Entity> entityCollection = world.getEntitiesByClasses(Item.class, Arrow.class,
-                    ExperienceOrb.class);
-            final int clearCount = entityCollection.size();
-
-            int timerSeconds = 0;
-            if (worldTimer.containsKey(world)) {
-                timerSeconds = worldTimer.get(world) - 1;
-                worldTimer.put(world, timerSeconds);
-
-                DropClearPulseEvent event = new DropClearPulseEvent(world, timerSeconds);
-                server.getPluginManager().callEvent(event);
-                timerSeconds = event.getSecondsLeft();
+        // Check for old task, and overwrite if allowed
+        if (runnable != null && !runnable.isComplete()) {
+            if (overwrite) {
+                runnable.setTimes(seconds);
             }
+            return;
+        }
 
+        IntegratedRunnable dropClear = new IntegratedRunnable() {
 
-            boolean force = clearCount > config.itemCountMin * 3;
-            if ((timerSeconds > 0 && timerSeconds % 5 == 0 || timerSeconds <= 10 && timerSeconds > 0) && !force) {
-                Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops in "
-                        + timerSeconds + " seconds!");
-            } else if (timerSeconds < 1 || force) {
-                Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops!");
-
-                // Remove Entities
-                entityCollection.stream().filter(Entity::isValid).forEach(Entity::remove);
-                Bukkit.broadcastMessage(ChatColor.GREEN + "" + clearCount + " drops cleared!");
-
-                // Add to recent List
-                recentList.add(world);
-                server.getScheduler().runTaskLater(inst, () -> recentList.remove(world), 20 * 3);
-
-                // Shut down
-                if (activeWorlds.containsKey(world)) {
-                    server.getScheduler().cancelTask(activeWorlds.get(world));
-                    activeWorlds.remove(world);
+            @Override
+            public boolean run(int times) {
+                if (TimerUtil.matchesFilter(times, 10, 5)) {
+                    Bukkit.broadcastMessage(ChatColor.RED + "Clearing all "
+                            + world.getName() + " drops in "
+                            + times + " seconds!");
                 }
-                if (worldTimer.containsKey(world)) worldTimer.remove(world);
+                return true;
             }
-        }, delay, 20); // Multiply seconds by 20 to convert to ticks
-        if (activeWorlds.containsKey(world)) {
-            server.getScheduler().cancelTask(activeWorlds.get(world));
+
+            @Override
+            public void end() {
+                Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops!");
+                CheckProfile profile = checkEntities(world);
+                lastClear.put(world, profile.getStats());
+                Collection<Entity> entities = profile.getEntities();
+                entities.stream().forEach(Entity::remove);
+                Bukkit.broadcastMessage(String.valueOf(ChatColor.GREEN) + entities.size() + " drops cleared!");
+            }
+        };
+
+        // Setup new task
+        runnable = new TimedRunnable(dropClear, seconds);
+        runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 0, 20));
+        worldTimer.put(world, runnable);
+    }
+
+    private class CheckProfile {
+        private final Collection<Entity> entities;
+        private final Collection<ChunkStats> stats;
+
+        private CheckProfile(Collection<Entity> entities, Collection<ChunkStats> stats) {
+            this.entities = entities;
+            this.stats = stats;
         }
-        activeWorlds.put(world, taskId);
+
+        public Collection<Entity> getEntities() {
+            return entities;
+        }
+
+        public Collection<ChunkStats> getStats() {
+            return stats;
+        }
+    }
+
+    private class ChunkStats {
+        private Map<EntityType, Integer> counterQuantity = new HashMap<>();
+        private final int x;
+        private final int z;
+
+        public ChunkStats(Chunk chunk) {
+            x = chunk.getX();
+            z = chunk.getZ();
+        }
+
+        public void increase(EntityType type, int amt) {
+            Integer count = counterQuantity.get(type);
+            if (count != null) {
+                count += amt;
+            } else {
+                count = amt;
+            }
+            counterQuantity.put(type, count);
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getZ() {
+            return z;
+        }
+
+        public int total() {
+            int total = 0;
+            for (Integer i : counterQuantity.values()) {
+                total += i;
+            }
+            return total;
+        }
+
+        public Map<EntityType, Integer> getStats() {
+            return Collections.unmodifiableMap(counterQuantity);
+        }
+    }
+
+    private static class DropClearObserver extends PersistentSession {
+
+        private Map<World, Collection<ChunkStats>> lastSnapshot = new HashMap<>();
+
+        public DropClearObserver() {
+            super(THIRTY_MINUTES);
+        }
+
+        public void setStats(World world, Collection<ChunkStats> stats) {
+            lastSnapshot.put(world, stats);
+        }
+
+        public boolean hasStats(World world) {
+            return lastSnapshot.containsKey(world);
+        }
+
+        public Collection<ChunkStats> getStats(World world) {
+            Collection<ChunkStats> stats = lastSnapshot.get(world);
+            return stats == null ? null : Collections.unmodifiableCollection(stats);
+        }
     }
 }
