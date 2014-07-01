@@ -71,12 +71,12 @@ public class ItemCondenser {
                 final ItemStack stack = itemStacks[i];
                 int startingAmt = stack == null ? 0 : stack.getAmount();
                 int quantity;
-                if (newAmt > 0 && (startingAmt == 0 || newStack.isSimilar(stack))) {
-                    quantity = Math.min(newAmt, newStack.getMaxStackSize());
+                if (newAmt > 0 && (startingAmt == 0 || startingAmt != 0 && newStack.isSimilar(stack))) {
+                    quantity = Math.min(newAmt + startingAmt, newStack.getMaxStackSize());
                     newAmt -= quantity - startingAmt;
                     itemStacks[i] = newStack.clone();
-                } else if (oldAmt > 0 && (startingAmt == 0 || oldStack.isSimilar(stack))) {
-                    quantity = Math.min(oldAmt, oldStack.getMaxStackSize());
+                } else if (oldAmt > 0 && (startingAmt == 0 || startingAmt != 0 && oldStack.isSimilar(stack))) {
+                    quantity = Math.min(oldAmt + startingAmt, oldStack.getMaxStackSize());
                     oldAmt -= quantity - startingAmt;
                     itemStacks[i] = oldStack.clone();
                 } else if (newAmt == 0 && oldAmt == 0) {
