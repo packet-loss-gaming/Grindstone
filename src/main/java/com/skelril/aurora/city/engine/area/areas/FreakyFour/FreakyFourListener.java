@@ -224,7 +224,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 entity.playEffect(EntityEffect.HURT);
                 event.setCancelled(true);
             } else if (damager instanceof MagmaCube) {
-                event.setDamage(event.getDamage() * parent.getConfig().magmaCubedDamageModifier);
+                event.setDamage(event.getDamage() + parent.getConfig().magmaCubedDamageModifier);
             } else if (damager instanceof CaveSpider) {
                 EntityUtil.heal(parent.charlotte, event.getDamage());
             }
