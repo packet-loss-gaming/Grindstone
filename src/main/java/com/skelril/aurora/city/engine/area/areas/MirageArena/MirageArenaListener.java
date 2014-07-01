@@ -118,8 +118,9 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
         Location defLoc = result.getDefender().getLocation();
         World world = defLoc.getWorld();
-        for (double i = ChanceUtil.getRandom(event.getFinalDamage()); i > 0; --i) {
-            if (ChanceUtil.getChance(27)) {
+        MirageArenaConfig config = parent.getConfig();
+        for (double i = Math.max(config.goldCap, ChanceUtil.getRandom(event.getFinalDamage())); i > 0; --i) {
+            if (ChanceUtil.getChance(config.goldBarChance)) {
                 world.dropItem(defLoc, new ItemStack(ItemID.GOLD_BAR));
             }
             world.dropItem(defLoc, new ItemStack(ItemID.GOLD_NUGGET));
