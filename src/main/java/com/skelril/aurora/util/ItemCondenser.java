@@ -64,25 +64,26 @@ public class ItemCondenser {
                 itemStacks[pos] = null;
             }
 
-            ItemStack newStack = step.getNewItem();
-            ItemStack oldStack = step.getOldItem();
+            final ItemStack newStack = step.getNewItem();
+            final ItemStack oldStack = step.getOldItem();
 
             for (int i = 0; i < itemStacks.length; ++i) {
-                ItemStack stack = itemStacks[i];
+                final ItemStack stack = itemStacks[i];
                 int startingAmt = stack == null ? 0 : stack.getAmount();
                 int quantity;
                 if (newAmt > 0 && (startingAmt == 0 || newStack.isSimilar(stack))) {
                     quantity = Math.min(newAmt, newStack.getMaxStackSize());
                     newAmt -= quantity - startingAmt;
+                    itemStacks[i] = newStack.clone();
                 } else if (oldAmt > 0 && (startingAmt == 0 || oldStack.isSimilar(stack))) {
                     quantity = Math.min(oldAmt, oldStack.getMaxStackSize());
                     oldAmt -= quantity - startingAmt;
+                    itemStacks[i] = oldStack.clone();
                 } else if (newAmt == 0 && oldAmt == 0) {
                     break;
                 } else {
                     continue;
                 }
-                itemStacks[i] = newStack.clone();
                 itemStacks[i].setAmount(quantity);
             }
             // There is an illegal remainder
