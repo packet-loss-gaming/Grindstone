@@ -191,7 +191,7 @@ public class FactoryBrewer extends FactoryMech {
         save(); // Update save for new Potion resource values
 
         // Inflate potion quantity
-        max *= (increased ? 15 : 10) * 3;
+        max *= (increased ? 6 : 5);
         if (getModifierCenter().isActive(ModifierType.TRIPLE_FACTORY_PRODUCTION)) {
             max *= 3;
         }

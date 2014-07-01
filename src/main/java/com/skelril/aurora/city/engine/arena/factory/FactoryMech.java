@@ -47,6 +47,7 @@ public abstract class FactoryMech extends AbstractRegionedArena {
     }
 
     public void save() {
+        processor.removeProperty(data);
         for (Map.Entry<Integer, Integer> entry : items.entrySet()) {
             YAMLNode node = processor.addNode(data + '.' + entry.getKey());
             node.setProperty("amt", entry.getValue());

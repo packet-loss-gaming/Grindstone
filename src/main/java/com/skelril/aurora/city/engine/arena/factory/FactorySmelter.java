@@ -71,7 +71,12 @@ public class FactorySmelter extends FactoryMech {
             }
             e.remove();
         }
-        items.put(ItemID.LAVA_BUCKET, lavaSupply.addLava(totalLava));
+        int lavaRemainder = lavaSupply.addLava(totalLava);
+        if (lavaRemainder < 1) {
+            items.remove(ItemID.LAVA_BUCKET);
+        } else {
+            items.put(ItemID.LAVA_BUCKET, lavaRemainder);
+        }
 
         Collection<Item> contained = getContained(Item.class);
         if (!contained.isEmpty()) ChatUtil.sendNotice(playerList, "Processing...");
