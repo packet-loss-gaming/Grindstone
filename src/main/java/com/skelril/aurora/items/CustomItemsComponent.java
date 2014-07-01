@@ -601,30 +601,30 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     }
 
 
-    private static ItemCondenser scrollOfSummation = new ItemCondenser();
+    private static ItemCondenser summationCondenser = new ItemCondenser();
 
     static {
         // Coal
-        scrollOfSummation.addSupport(new ItemStack(ItemID.COAL, 9), new ItemStack(BlockID.COAL_BLOCK, 1));
+        summationCondenser.addSupport(new ItemStack(ItemID.COAL, 9), new ItemStack(BlockID.COAL_BLOCK, 1));
 
         // Iron
-        scrollOfSummation.addSupport(new ItemStack(ItemID.IRON_BAR, 9), new ItemStack(BlockID.IRON_BLOCK, 1));
+        summationCondenser.addSupport(new ItemStack(ItemID.IRON_BAR, 9), new ItemStack(BlockID.IRON_BLOCK, 1));
 
         // Gold
-        scrollOfSummation.addSupport(new ItemStack(ItemID.GOLD_NUGGET, 9), new ItemStack(ItemID.GOLD_BAR, 1));
-        scrollOfSummation.addSupport(new ItemStack(ItemID.GOLD_BAR, 9), new ItemStack(BlockID.GOLD_BLOCK, 1));
+        summationCondenser.addSupport(new ItemStack(ItemID.GOLD_NUGGET, 9), new ItemStack(ItemID.GOLD_BAR, 1));
+        summationCondenser.addSupport(new ItemStack(ItemID.GOLD_BAR, 9), new ItemStack(BlockID.GOLD_BLOCK, 1));
 
         // Redstone
-        scrollOfSummation.addSupport(new ItemStack(ItemID.REDSTONE_DUST, 9), new ItemStack(BlockID.REDSTONE_BLOCK, 1));
+        summationCondenser.addSupport(new ItemStack(ItemID.REDSTONE_DUST, 9), new ItemStack(BlockID.REDSTONE_BLOCK, 1));
 
         // Lapis
-        scrollOfSummation.addSupport(new ItemStack(ItemID.INK_SACK, 9, (byte) 4), new ItemStack(BlockID.LAPIS_LAZULI_BLOCK, 1));
+        summationCondenser.addSupport(new ItemStack(ItemID.INK_SACK, 9, (byte) 4), new ItemStack(BlockID.LAPIS_LAZULI_BLOCK, 1));
 
         // Diamond
-        scrollOfSummation.addSupport(new ItemStack(ItemID.DIAMOND, 9), new ItemStack(BlockID.DIAMOND_BLOCK, 1));
+        summationCondenser.addSupport(new ItemStack(ItemID.DIAMOND, 9), new ItemStack(BlockID.DIAMOND_BLOCK, 1));
 
         // Emerald
-        scrollOfSummation.addSupport(new ItemStack(ItemID.EMERALD, 9), new ItemStack(BlockID.EMERALD_BLOCK, 1));
+        summationCondenser.addSupport(new ItemStack(ItemID.EMERALD, 9), new ItemStack(BlockID.EMERALD_BLOCK, 1));
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -637,14 +637,17 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             // Hymns
             boolean isPhantomH = ItemUtil.isItem(itemStack, CustomItems.PHANTOM_HYMN);
             boolean isChickenH = ItemUtil.isItem(itemStack, CustomItems.CHICKEN_HYMN);
+            boolean isSummatiH = ItemUtil.isItem(itemStack, CustomItems.HYMN_OF_SUMMATION);
             // Scrolls
             boolean isScrollOfSummation = ItemUtil.isItem(itemStack, CustomItems.SCROLL_OF_SUMMATION);
             if (handleRightClick(player, event.getClickedBlock().getLocation(), itemStack)) {
                 event.setCancelled(true);
-            } else if (isPhantomH || isChickenH) {
+            } else if (isPhantomH || isChickenH || isSummatiH) {
                 ChatUtil.sendNotice(player, "You sing the hymn...");
                 Event e;
-                if (isPhantomH) {
+                if (isSummatiH) {
+                    e = new HymnSingEvent(player, Hymn.SUMMATION);
+                } else if (isPhantomH) {
                     e = new HymnSingEvent(player, Hymn.PHANTOM);
                 } else {
                     e = new HymnSingEvent(player, Hymn.CHICKEN);
@@ -652,7 +655,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 //noinspection AccessStaticViaInstance
                 inst.callEvent(e);
             } else if (isScrollOfSummation) {
-                ItemStack[] result = scrollOfSummation.operate(player.getInventory().getContents());
+                ItemStack[] result = summationCondenser.operate(player.getInventory().getContents());
                 if (result != null) {
                     player.getInventory().setContents(result);
                     ItemUtil.removeItemOfName(player, CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION), 1, false);
@@ -686,6 +689,15 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                         e.remove();
                     }
                 });
+                break;
+            case SUMMATION:
+                ItemStack[] result = summationCondenser.operate(player.getInventory().getContents());
+                if (result != null) {
+                    player.getInventory().setContents(result);
+                    //noinspection deprecation
+                    player.updateInventory();
+                    ChatUtil.sendNotice(player, ChatColor.GOLD, "The hymn glows brightly...");
+                }
                 break;
         }
     }

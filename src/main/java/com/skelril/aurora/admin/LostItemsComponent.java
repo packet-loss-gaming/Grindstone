@@ -451,6 +451,26 @@ public class LostItemsComponent extends BukkitComponent {
                     + player.getDisplayName() + " has been given " + stack.getAmount() + " Scroll(s) of Summation.");
         }
 
+        @Command(aliases = {"hymnosum"},
+                usage = "<player>", desc = "Give a player a Hymn of Summation",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.misc.hymnofsummation"})
+        public void lostHymnOfSumCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+            int amount = 1;
+            if (args.argsLength() > 1) {
+                amount = args.getInteger(1);
+            }
+
+            ItemStack stack = CustomItemCenter.build(CustomItems.HYMN_OF_SUMMATION, Math.max(0, Math.min(64, amount)));
+            player.getInventory().addItem(stack);
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: "
+                    + player.getDisplayName() + " has been given " + stack.getAmount() + " Hymn(s) of Summation.");
+        }
+
         @Command(aliases = {"gemofdarkness"},
                 usage = "<player> [amount]", desc = "Give a player some Gems of Darkness",
                 flags = "", min = 1, max = 2)

@@ -47,6 +47,7 @@ public class HymnSingEvent extends PlayerEvent implements Cancellable {
 
     public enum Hymn {
         PHANTOM,
-        CHICKEN
+        CHICKEN,
+        SUMMATION
     }
 }

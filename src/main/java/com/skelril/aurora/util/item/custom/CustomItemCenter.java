@@ -372,6 +372,8 @@ public class CustomItemCenter {
         phantomHymn.addSource(ItemSource.MARKET);
         phantomHymn.addLore(ChatColor.RED + "A hymn of dark origins...");
         phantomHymn.addUse("Teleports the player through directly to the end of the Grave Yard maze.");
+        phantomHymn.addUse("Teleports the player between rooms in the Freaky Four fight.");
+        phantomHymn.addUse("At the cost of the item, teleports the player into Patient X's room.");
         addItem(phantomHymn);
 
         // Ninja Guild
@@ -443,9 +445,16 @@ public class CustomItemCenter {
         CustomItem scrollOfSummation = new CustomItem(SCROLL_OF_SUMMATION, Material.PAPER);
         scrollOfSummation.addSource(ItemSource.WILDERNESS_MOBS);
         scrollOfSummation.addSource(ItemSource.DROP_PARTY);
+        scrollOfSummation.addSource(ItemSource.PATIENT_X);
         scrollOfSummation.addSource(ItemSource.MARKET);
-        scrollOfSummation.addUse("Upon use, will convert coal, iron, gold, redstone, lapis, diamonds, and emerald.");
+        scrollOfSummation.addUse("At the cost of the item, will convert coal, iron, gold, redstone, lapis, diamonds, and emerald.");
         addItem(scrollOfSummation);
+
+        CustomItem hymnOfSummation = new CustomItem(HYMN_OF_SUMMATION, Material.BOOK);
+        hymnOfSummation.addSource(ItemSource.PATIENT_X);
+        hymnOfSummation.addSource(ItemSource.MARKET);
+        hymnOfSummation.addUse("Upon use, will convert coal, iron, gold, redstone, lapis, diamonds, and emerald.");
+        addItem(hymnOfSummation);
     }
 
     public static Collection<CustomItem> values() {

@@ -322,6 +322,14 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                         break;
                 }
 
+                if (ChanceUtil.getChance(100)) {
+                    drops.add(CustomItemCenter.build(CustomItems.HYMN_OF_SUMMATION));
+                }
+
+                for (int i = 0; i < 8 * playerCount; ++i) {
+                    drops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION, ChanceUtil.getRandom(16)));
+                }
+
                 LocalDate date = LocalDate.now().with(Month.APRIL).withDayOfMonth(6);
                 if (date.equals(LocalDate.now())) {
                     ChatUtil.sendNotice(parent.getContained(Player.class), ChatColor.GOLD, "DROPS DOUBLED!");
