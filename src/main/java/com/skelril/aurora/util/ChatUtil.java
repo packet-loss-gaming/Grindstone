@@ -67,12 +67,10 @@ public class ChatUtil {
         message(senders, MessageType.NOTICE, notice);
     }
 
-    @Deprecated
     public static void sendNotice(CommandSender sender, ChatColor chatColor, String notice) {
-        sender.sendMessage(chatColor + notice);
+        sender.sendMessage(chatColor + notice.replace("%p%", chatColor.toString()));
     }
 
-    @Deprecated
     public static void sendNotice(Collection<? extends CommandSender> senders, ChatColor chatColor, String notice) {
         senders.forEach(s -> sendNotice(s, chatColor, notice));
     }
