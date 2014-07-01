@@ -350,7 +350,8 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
 
         // Setup new task
         runnable = new TimedRunnable(dropClear, seconds);
-        runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 0, 20));
+        // Offset this by one to prevent the drop clear from triggering twice
+        runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 1, 20));
         worldTimer.put(world, runnable);
     }
 
