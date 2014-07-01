@@ -74,23 +74,24 @@ public class FactorySmelter extends FactoryMech {
         items.put(ItemID.LAVA_BUCKET, lavaSupply.addLava(totalLava));
 
         Collection<Item> contained = getContained(Item.class);
-        if (!contained.isEmpty()) {
-            ChatUtil.sendNotice(playerList, "Processing...");
-            for (Item e : contained) {
-                // Find items and destroy those unwanted
-                ItemStack workingStack = e.getItemStack();
+        if (!contained.isEmpty()) ChatUtil.sendNotice(playerList, "Processing...");
+        for (Item e : contained) {
+            // Find items and destroy those unwanted
+            ItemStack workingStack = e.getItemStack();
 
-                // Add the item to the list
-                if (wanted.contains(workingStack.getTypeId())) {
-                    int total = workingStack.getAmount();
-                    ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
-                    if (items.containsKey(workingStack.getTypeId())) {
-                        total += items.get(workingStack.getTypeId());
-                    }
-                    items.put(workingStack.getTypeId(), total);
+            // Add the item to the list
+            if (wanted.contains(workingStack.getTypeId())) {
+                int total = workingStack.getAmount();
+                ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
+                if (items.containsKey(workingStack.getTypeId())) {
+                    total += items.get(workingStack.getTypeId());
                 }
-                e.remove();
+                items.put(workingStack.getTypeId(), total);
             }
+            e.remove();
+        }
+
+        if (!contained.isEmpty() || !lavaContained.isEmpty()) {
             save(); // Update save for new Iron & Gold values
         }
 
