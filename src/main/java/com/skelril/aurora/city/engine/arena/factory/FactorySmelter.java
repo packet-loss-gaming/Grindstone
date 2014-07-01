@@ -7,6 +7,7 @@
 package com.skelril.aurora.city.engine.arena.factory;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -28,6 +29,8 @@ import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 public class FactorySmelter extends FactoryMech {
 
+    private static int count = 0;
+
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
@@ -41,8 +44,9 @@ public class FactorySmelter extends FactoryMech {
         wanted.add(BlockID.GOLD_ORE);
     }
 
-    public FactorySmelter(World world, ProtectedRegion region, ProtectedRegion lavaSupply, ProtectedRegion lavaZone) {
-        super(world, region);
+    public FactorySmelter(World world, ProtectedRegion region, YAMLProcessor processor,
+                          ProtectedRegion lavaSupply, ProtectedRegion lavaZone) {
+        super(world, region, processor, "ores-" + count++);
         this.lavaSupply = new LavaSupply(world, lavaSupply, lavaZone);
     }
 
@@ -70,22 +74,24 @@ public class FactorySmelter extends FactoryMech {
         items.put(ItemID.LAVA_BUCKET, lavaSupply.addLava(totalLava));
 
         Collection<Item> contained = getContained(Item.class);
-        if (!contained.isEmpty()) ChatUtil.sendNotice(playerList, "Processing...");
+        if (!contained.isEmpty()) {
+            ChatUtil.sendNotice(playerList, "Processing...");
+            for (Item e : contained) {
+                // Find items and destroy those unwanted
+                ItemStack workingStack = e.getItemStack();
 
-        for (Item e : contained) {
-            // Find items and destroy those unwanted
-            ItemStack workingStack = e.getItemStack();
-
-            // Add the item to the list
-            if (wanted.contains(workingStack.getTypeId())) {
-                int total = workingStack.getAmount();
-                ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
-                if (items.containsKey(workingStack.getTypeId())) {
-                    total += items.get(workingStack.getTypeId());
+                // Add the item to the list
+                if (wanted.contains(workingStack.getTypeId())) {
+                    int total = workingStack.getAmount();
+                    ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
+                    if (items.containsKey(workingStack.getTypeId())) {
+                        total += items.get(workingStack.getTypeId());
+                    }
+                    items.put(workingStack.getTypeId(), total);
                 }
-                items.put(workingStack.getTypeId(), total);
+                e.remove();
             }
-            e.remove();
+            save(); // Update save for new Iron & Gold values
         }
 
         int maxIron = items.containsKey(BlockID.IRON_ORE) ? items.get(BlockID.IRON_ORE) : 0;
@@ -109,6 +115,7 @@ public class FactorySmelter extends FactoryMech {
         } else {
             items.put(BlockID.GOLD_ORE, goldRemainder);
         }
+        save(); // Update save for new Iron & Gold values
 
         if (availableLava < requestedLava) {
             if (maxIron > 0) maxIron = maxIron - ironRemainder;

@@ -11,6 +11,8 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
+import com.sk89q.util.yaml.YAMLFormat;
+import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.GlobalRegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -39,6 +41,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
+import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -244,17 +247,22 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     PRs[2] = mgr.get(world).getRegion(region + "-smelter-1");
                     PRs[3] = mgr.get(world).getRegion(region + "-smelter-2");
 
+                    YAMLProcessor processor = new YAMLProcessor(
+                            new File(inst.getDataFolder() + "/area/" + PRs[0] .getId()+ "/data.yml"),
+                            false,
+                            YAMLFormat.EXTENDED
+                    );
                     List<FactoryMech> mechs = new ArrayList<>();
                     ProtectedRegion er;
                     for (String mech : config.factoryVats) {
                         er = mgr.get(world).getRegion(region + "-" + mech);
-                        mechs.add(new FactoryBrewer(world, er));
+                        mechs.add(new FactoryBrewer(world, er, processor));
                     }
                     ProtectedRegion furnace = mgr.get(world).getRegion(region + "-hopper-1");
                     ProtectedRegion lava = mgr.get(world).getRegion(region + "-lava-input");
                     ProtectedRegion lavaZ = mgr.get(world).getRegion(region + "-lava");
-                    mechs.add(new FactorySmelter(world, furnace, lava, lavaZ));
-                    arenas.add(new FactoryFloor(world, PRs, mechs, adminComponent));
+                    mechs.add(new FactorySmelter(world, furnace, processor, lava, lavaZ));
+                    arenas.add(new FactoryFloor(world, PRs, mechs, processor, adminComponent));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");

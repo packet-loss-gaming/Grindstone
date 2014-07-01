@@ -7,6 +7,7 @@
 package com.skelril.aurora.city.engine.arena.factory;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.modifiers.ModifierType;
@@ -31,12 +32,14 @@ import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 public class FactoryBrewer extends FactoryMech {
 
+    private static int count = 0;
+
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    public FactoryBrewer(World world, ProtectedRegion region) {
-        super(world, region);
+    public FactoryBrewer(World world, ProtectedRegion region, YAMLProcessor processor) {
+        super(world, region, processor, "pot-ingredients-" + count++);
     }
 
     private static final List<BaseItem> wanted = new ArrayList<>();
@@ -69,32 +72,35 @@ public class FactoryBrewer extends FactoryMech {
         Collection<Player> playerList = getContained(1, Player.class);
 
         Collection<Entity> contained = getContained(Entity.class);
-        if (!contained.isEmpty()) ChatUtil.sendNotice(playerList, "Processing...");
+        if (!contained.isEmpty()) {
+            ChatUtil.sendNotice(playerList, "Processing...");
 
-        for (Entity e : contained) {
+            for (Entity e : contained) {
 
-            // Kill contained living entities
-            if (e instanceof LivingEntity) {
-                ((LivingEntity) e).setHealth(0);
-                continue;
-            }
-
-            // Find items and destroy those unwanted
-            if (e instanceof Item) {
-
-                ItemStack workingStack = ((Item) e).getItemStack();
-
-                // Add the item to the list
-                if (wanted.contains(new BaseItem(workingStack.getTypeId(), workingStack.getData().getData()))) {
-                    int total = workingStack.getAmount();
-                    ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
-                    if (items.containsKey(workingStack.getTypeId())) {
-                        total += items.get(workingStack.getTypeId());
-                    }
-                    items.put(workingStack.getTypeId(), total);
+                // Kill contained living entities
+                if (e instanceof LivingEntity) {
+                    ((LivingEntity) e).setHealth(0);
+                    continue;
                 }
+
+                // Find items and destroy those unwanted
+                if (e instanceof Item) {
+
+                    ItemStack workingStack = ((Item) e).getItemStack();
+
+                    // Add the item to the list
+                    if (wanted.contains(new BaseItem(workingStack.getTypeId(), workingStack.getData().getData()))) {
+                        int total = workingStack.getAmount();
+                        ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
+                        if (items.containsKey(workingStack.getTypeId())) {
+                            total += items.get(workingStack.getTypeId());
+                        }
+                        items.put(workingStack.getTypeId(), total);
+                    }
+                }
+                e.remove();
             }
-            e.remove();
+            save(); // Update save for new Potion resource values
         }
 
         // Check these to avoid doing more calculations than need be
@@ -182,6 +188,7 @@ public class FactoryBrewer extends FactoryMech {
                 else items.remove(entry.getKey());
             }
         }
+        save(); // Update save for new Potion resource values
 
         // Inflate potion quantity
         max *= (increased ? 15 : 10) * 3;
