@@ -218,15 +218,17 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 }
             }
         }
-        if (entity instanceof Player && damager instanceof Creature) {
-            if (projectile != null) {
-                EntityUtil.forceDamage(entity, ((Player) entity).getMaxHealth() * parent.getConfig().snipeeDamage);
-                entity.playEffect(EntityEffect.HURT);
-                event.setCancelled(true);
-            } else if (damager instanceof MagmaCube) {
+        if (entity instanceof Player) {
+            if (damager instanceof MagmaCube) {
                 event.setDamage(event.getDamage() + parent.getConfig().magmaCubedDamageModifier);
-            } else if (damager instanceof CaveSpider) {
-                EntityUtil.heal(parent.charlotte, event.getDamage());
+            } else if (damager instanceof Creature) {
+                if (projectile != null) {
+                    EntityUtil.forceDamage(entity, ((Player) entity).getMaxHealth() * parent.getConfig().snipeeDamage);
+                    entity.playEffect(EntityEffect.HURT);
+                    event.setCancelled(true);
+                } else if (damager instanceof CaveSpider) {
+                    EntityUtil.heal(parent.charlotte, event.getDamage());
+                }
             }
         }
         if (damager instanceof Player) {
