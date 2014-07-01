@@ -314,7 +314,7 @@ public class HomeManagerComponent extends BukkitComponent {
             // Get the price and send it to the player
             Double price = region.getFlag(DefaultFlag.PRICE);
 
-            if (price == null || price < 1) {
+            if (price == null) {
                 throw new CommandException("This house cannot currently be bought.");
             }
 
