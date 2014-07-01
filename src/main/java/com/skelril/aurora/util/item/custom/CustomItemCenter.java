@@ -447,13 +447,13 @@ public class CustomItemCenter {
         scrollOfSummation.addSource(ItemSource.DROP_PARTY);
         scrollOfSummation.addSource(ItemSource.PATIENT_X);
         scrollOfSummation.addSource(ItemSource.MARKET);
-        scrollOfSummation.addUse("At the cost of the item, will convert coal, iron, gold, redstone, lapis, diamonds, and emerald.");
+        scrollOfSummation.addUse("At the cost of the item, will compact coal, iron, gold, redstone, lapis, diamonds, and emerald.");
         addItem(scrollOfSummation);
 
         CustomItem hymnOfSummation = new CustomItem(HYMN_OF_SUMMATION, Material.BOOK);
         hymnOfSummation.addSource(ItemSource.PATIENT_X);
         hymnOfSummation.addSource(ItemSource.MARKET);
-        hymnOfSummation.addUse("Upon use, will convert coal, iron, gold, redstone, lapis, diamonds, and emerald.");
+        hymnOfSummation.addUse("Upon use, will compact coal, iron, gold, redstone, lapis, diamonds, and emerald.");
         addItem(hymnOfSummation);
     }
 
