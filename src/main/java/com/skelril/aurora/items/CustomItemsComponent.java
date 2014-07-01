@@ -404,7 +404,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Player owner = result.getAttacker();
         LivingEntity target = result.getDefender();
 
-        double modifier = 1.0;
+        double modifier = target instanceof Player ? 0 : 1;
 
         ItemStack targetItem = launcher;
 
