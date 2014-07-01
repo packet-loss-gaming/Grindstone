@@ -224,7 +224,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         if (result == null) return;
 
         Player defender = result.getDefender();
-        if (ItemUtil.hasNecrosArmour(defender) && ChanceUtil.getChance(8)) {
+        if (ItemUtil.hasNecrosArmour(defender) && ChanceUtil.getChance(4)) {
             LivingEntity attacker = result.getAttacker();
             if (attacker instanceof Player) {
                 NecrosisFX necrosis = new NecrosisFX();
