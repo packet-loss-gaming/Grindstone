@@ -92,7 +92,8 @@ public enum CustomItems {
     GOD_FISH(ChatColor.BLUE, "God Fish"),
     OVERSEER_BOW(ChatColor.RED, "Overseer's Bow"),
     BARBARIAN_BONE(ChatColor.DARK_RED, "Barbarian Bone"),
-    POTION_OF_RESTITUTION(ChatColor.DARK_RED, "Potion of Restitution");
+    POTION_OF_RESTITUTION(ChatColor.DARK_RED, "Potion of Restitution"),
+    SCROLL_OF_SUMMATION(ChatColor.GOLD, "Scroll of Summation");
 
     private ChatColor color;
     private String name;

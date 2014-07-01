@@ -483,6 +483,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 if (ChanceUtil.getChance(2000)) {
                     drops.add(CustomItemCenter.build(CustomItems.POTION_OF_RESTITUTION));
                 }
+                if (ChanceUtil.getChance(2000)) {
+                    drops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
+                }
             }
 
             drops.addAll(

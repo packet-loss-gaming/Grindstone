@@ -439,6 +439,13 @@ public class CustomItemCenter {
         potionOfRestitution.addSource(ItemSource.MARKET);
         potionOfRestitution.addUse("Returns you to your last death point if a teleport can reach the location.");
         addItem(potionOfRestitution);
+
+        CustomItem scrollOfSummation = new CustomItem(SCROLL_OF_SUMMATION, Material.PAPER);
+        scrollOfSummation.addSource(ItemSource.WILDERNESS_MOBS);
+        scrollOfSummation.addSource(ItemSource.DROP_PARTY);
+        scrollOfSummation.addSource(ItemSource.MARKET);
+        scrollOfSummation.addUse("Upon use, will convert coal, iron, gold, redstone, lapis, diamonds, and emerald.");
+        addItem(scrollOfSummation);
     }
 
     public static Collection<CustomItem> values() {

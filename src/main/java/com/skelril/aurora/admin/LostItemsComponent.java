@@ -431,6 +431,26 @@ public class LostItemsComponent extends BukkitComponent {
                     + player.getDisplayName() + " has been given a Potion of Restitution.");
         }
 
+        @Command(aliases = {"scrollosum"},
+                usage = "<player> [amt]", desc = "Give a player a Scroll of Summation",
+                flags = "", min = 1, max = 2)
+        @CommandPermissions({"aurora.lost.misc.scrollofsummation"})
+        public void scrollOfSumCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+            int amount = 1;
+            if (args.argsLength() > 1) {
+                amount = args.getInteger(1);
+            }
+
+            ItemStack stack = CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION, Math.max(0, Math.min(64, amount)));
+            player.getInventory().addItem(stack);
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: "
+                    + player.getDisplayName() + " has been given " + stack.getAmount() + " Scroll(s) of Summation.");
+        }
+
         @Command(aliases = {"gemofdarkness"},
                 usage = "<player> [amount]", desc = "Give a player some Gems of Darkness",
                 flags = "", min = 1, max = 2)
@@ -522,12 +542,17 @@ public class LostItemsComponent extends BukkitComponent {
         public void lostPhantomHymnCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+            int amount = 1;
+            if (args.argsLength() > 1) {
+                amount = args.getInteger(1);
+            }
 
-            player.getInventory().addItem(CustomItemCenter.build(CustomItems.PHANTOM_HYMN));
+            ItemStack stack = CustomItemCenter.build(CustomItems.PHANTOM_HYMN, Math.max(0, Math.min(64, amount)));
+            player.getInventory().addItem(stack);
 
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: "
-                    + player.getDisplayName() + " has been given a Phantom Hymn.");
+                    + player.getDisplayName() + " has been given " + stack.getAmount() + " Phantom Hymn(s).");
         }
 
         @Command(aliases = {"gemoflife"},

@@ -600,6 +600,33 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
+
+    private static ItemCondenser scrollOfSummation = new ItemCondenser();
+
+    static {
+        // Coal
+        scrollOfSummation.addSupport(new ItemStack(ItemID.COAL, 9), new ItemStack(BlockID.COAL_BLOCK, 1));
+
+        // Iron
+        scrollOfSummation.addSupport(new ItemStack(ItemID.IRON_BAR, 9), new ItemStack(BlockID.IRON_BLOCK, 1));
+
+        // Gold
+        scrollOfSummation.addSupport(new ItemStack(ItemID.GOLD_NUGGET, 9), new ItemStack(ItemID.GOLD_BAR, 1));
+        scrollOfSummation.addSupport(new ItemStack(ItemID.GOLD_BAR, 9), new ItemStack(BlockID.GOLD_BLOCK, 1));
+
+        // Redstone
+        scrollOfSummation.addSupport(new ItemStack(ItemID.REDSTONE_DUST, 9), new ItemStack(BlockID.REDSTONE_BLOCK, 1));
+
+        // Lapis
+        scrollOfSummation.addSupport(new ItemStack(ItemID.INK_SACK, 9, (byte) 4), new ItemStack(BlockID.LAPIS_LAZULI_BLOCK, 1));
+
+        // Diamond
+        scrollOfSummation.addSupport(new ItemStack(ItemID.DIAMOND, 9), new ItemStack(BlockID.DIAMOND_BLOCK, 1));
+
+        // Emerald
+        scrollOfSummation.addSupport(new ItemStack(ItemID.EMERALD, 9), new ItemStack(BlockID.EMERALD_BLOCK, 1));
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
 
@@ -607,8 +634,11 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         ItemStack itemStack = event.getItem();
 
         if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
+            // Hymns
             boolean isPhantomH = ItemUtil.isItem(itemStack, CustomItems.PHANTOM_HYMN);
             boolean isChickenH = ItemUtil.isItem(itemStack, CustomItems.CHICKEN_HYMN);
+            // Scrolls
+            boolean isScrollOfSummation = ItemUtil.isItem(itemStack, CustomItems.SCROLL_OF_SUMMATION);
             if (handleRightClick(player, event.getClickedBlock().getLocation(), itemStack)) {
                 event.setCancelled(true);
             } else if (isPhantomH || isChickenH) {
@@ -621,7 +651,13 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 }
                 //noinspection AccessStaticViaInstance
                 inst.callEvent(e);
-
+            } else if (isScrollOfSummation) {
+                ItemStack[] result = scrollOfSummation.operate(player.getInventory().getContents());
+                if (result != null) {
+                    player.getInventory().setContents(result);
+                    ItemUtil.removeItemOfName(player, CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION), 1, false);
+                    ChatUtil.sendNotice(player, ChatColor.GOLD, "The scroll glows brightly before turning to dust...");
+                }
             }
         }
     }
