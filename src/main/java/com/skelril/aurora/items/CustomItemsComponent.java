@@ -1000,6 +1000,13 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
+    private static ItemCondenser goldCondenser = new ItemCondenser();
+
+    static {
+        goldCondenser.addSupport(new ItemStack(ItemID.GOLD_NUGGET, 9), new ItemStack(ItemID.GOLD_BAR, 1));
+        goldCondenser.addSupport(new ItemStack(ItemID.GOLD_BAR, 9), new ItemStack(BlockID.GOLD_BLOCK, 1));
+    }
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onItemPickup(PlayerPickupItemEvent event) {
 
@@ -1013,22 +1020,12 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
                 return;
             }
             server.getScheduler().runTaskLater(inst, () -> {
-                int nugget = ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_NUGGET);
-                while (nugget / 9 > 0 && player.getInventory().firstEmpty() != -1) {
-                    player.getInventory().removeItem(new ItemStack(ItemID.GOLD_NUGGET, 9));
-                    player.getInventory().addItem(new ItemStack(ItemID.GOLD_BAR));
-                    nugget -= 9;
+                ItemStack[] result = goldCondenser.operate(player.getInventory().getContents());
+                if (result != null) {
+                    player.getInventory().setContents(result);
+                    //noinspection deprecation
+                    player.updateInventory();
                 }
-
-                int bar = ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_BAR);
-                while (bar / 9 > 0 && player.getInventory().firstEmpty() != -1) {
-                    player.getInventory().removeItem(new ItemStack(ItemID.GOLD_BAR, 9));
-                    player.getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK));
-                    bar -= 9;
-                }
-
-                //noinspection deprecation
-                player.updateInventory();
             }, 1);
         }
     }
