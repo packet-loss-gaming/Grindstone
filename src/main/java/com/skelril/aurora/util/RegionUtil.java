@@ -18,6 +18,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.economic.store.AdminStoreComponent;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -69,6 +70,9 @@ public class RegionUtil {
     }
 
     public static double calcBlockPrice(ProtectedRegion region, World world) {
+
+        Map<BaseBlock, Integer> blockMapping = new HashMap<>();
+
         double bp = 0;
         //noinspection ConstantConditions
         if (region instanceof ProtectedCuboidRegion) {
@@ -89,9 +93,23 @@ public class RegionUtil {
                     for (int z = minZ; z <= maxZ; ++z) {
                         Vector pt = new Vector(x, y, z);
                         BaseBlock b = world.getBlock(pt);
-                        bp += AdminStoreComponent.priceCheck(b.getId(), b.getData());
+                        Integer count = blockMapping.get(b);
+                        if (count != null) {
+                            count++;
+                        } else {
+                            count = 1;
+                        }
+                        blockMapping.put(b, count);
                     }
                 }
+            }
+
+            for (Map.Entry<BaseBlock, Integer> entry : blockMapping.entrySet()) {
+                BaseBlock b = entry.getKey();
+                bp += AdminStoreComponent.priceCheck(
+                        b.getId(),
+                        b.getData()
+                ) * entry.getValue();
             }
         } else {
             bp = -1;
