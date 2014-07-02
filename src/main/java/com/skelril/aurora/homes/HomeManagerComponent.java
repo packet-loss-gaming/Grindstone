@@ -46,6 +46,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -61,7 +64,7 @@ import java.util.logging.Logger;
  */
 @ComponentInformation(friendlyName = "Home Manager", desc = "Home ECS")
 @Depend(plugins = {"WorldEdit", "WorldGuard"}, components = AdminStoreComponent.class)
-public class HomeManagerComponent extends BukkitComponent {
+public class HomeManagerComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -87,6 +90,9 @@ public class HomeManagerComponent extends BukkitComponent {
         setUpWorldEdit();
         setUpWorldGuard();
         setUpEconomy();
+
+        //noinspection AccessStaticViaInstance
+        inst.registerEvents(this);
     }
 
     private void setUpWorldEdit() {
@@ -119,6 +125,22 @@ public class HomeManagerComponent extends BukkitComponent {
                 .vault.economy.Economy.class);
         if (economyProvider != null) {
             econ = economyProvider.getProvider();
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void playerPreProcess(PlayerCommandPreprocessEvent event) {
+        Player player = event.getPlayer();
+        if (event.getMessage().contains("%cur-house%")) {
+            RegionManager manager = WG.getRegionManager(player.getWorld());
+
+            for (ProtectedRegion region : manager.getApplicableRegions(player.getLocation())) {
+                if (region.getId().endsWith("-s") && region.getFlag(DefaultFlag.PRICE) != null) {
+                    event.setMessage(event.getMessage().replace("%cur-house%", region.getId()));
+                    ChatUtil.sendNotice(player, "Injected region: " + region.getId() + " as current house.");
+                    return;
+                }
+            }
         }
     }
 
@@ -510,6 +532,37 @@ public class HomeManagerComponent extends BukkitComponent {
                 log.info(admin.getName() + " created a home for: " + player
                         + " in the district: " + district + ".");
             }
+        }
+
+        @Command(aliases = {"recompile"}, usage = "", desc = "Re evaluates all purchasable plots " +
+                "in the location the admin is standing",
+                min = 0, max = 0)
+        @CommandPermissions({"aurora.home.admin.recompile"})
+        public void recompileHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player admin = PlayerUtil.checkPlayer(sender);
+
+            RegionManager manager = WG.getRegionManager(admin.getWorld());
+
+            for (ProtectedRegion region : manager.getApplicableRegions(admin.getLocation())) {
+                if (region.getId().endsWith("-s") && region.getFlag(DefaultFlag.PRICE) != null) {
+                    region.setFlag(
+                            DefaultFlag.PRICE,
+                            RegionUtil.calcBlockPrice(
+                                    region,
+                                    new BukkitWorld(admin.getWorld())
+                            )
+                    );
+                    outliner.outline(admin.getWorld(), region);
+                }
+            }
+            try {
+                manager.save();
+            } catch (ProtectionDatabaseException e) {
+                throw new CommandException("Failed to save the database.");
+            }
+
+            ChatUtil.sendNotice(admin, "Region(s) recalculated successfully.");
         }
 
         @Command(aliases = {"pc"}, desc = "Price Checker",
