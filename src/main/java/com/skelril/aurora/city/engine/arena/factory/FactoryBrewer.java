@@ -20,7 +20,9 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionType;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -110,34 +112,36 @@ public class FactoryBrewer extends FactoryMech {
 
         // Figure out the potion the player is trying to make
         List<Integer> using = new ArrayList<>();
-        PotionType target;
+        PotionEffectType target;
         if (items.containsKey(ItemID.MAGMA_CREAM)) {
-            target = PotionType.FIRE_RESISTANCE;
+            target = PotionEffectType.FIRE_RESISTANCE;
             using.add(ItemID.MAGMA_CREAM);
         } else if (items.containsKey(ItemID.SUGAR)) {
-            target = PotionType.SPEED;
+            target = PotionEffectType.SPEED;
             using.add(ItemID.SUGAR);
         } else if (items.containsKey(ItemID.GLISTERING_MELON)) {
-            target = PotionType.INSTANT_HEAL;
+            target = PotionEffectType.HEAL;
             using.add(ItemID.GLISTERING_MELON);
         } else if (items.containsKey(ItemID.SPIDER_EYE)) {
-            target = PotionType.POISON;
+            target = PotionEffectType.POISON;
             using.add(ItemID.SPIDER_EYE);
         } else if (items.containsKey(ItemID.GHAST_TEAR)) {
-            target = PotionType.REGEN;
+            target = PotionEffectType.REGENERATION;
             using.add(ItemID.GHAST_TEAR);
         } else if (items.containsKey(ItemID.BLAZE_POWDER)) {
-            target = PotionType.STRENGTH;
+            target = PotionEffectType.INCREASE_DAMAGE;
             using.add(ItemID.BLAZE_POWDER);
         } else if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
-            target = PotionType.WEAKNESS;
+            target = PotionEffectType.WEAKNESS;
             using.add(ItemID.FERMENTED_SPIDER_EYE);
         } else if (items.containsKey(ItemID.GOLDEN_CARROT)) {
-            target = PotionType.NIGHT_VISION;
+            target = PotionEffectType.NIGHT_VISION;
             using.add(ItemID.GOLDEN_CARROT);
         } else if (items.containsKey(ItemID.RAW_FISH)) {
-            target = PotionType.WATER_BREATHING;
+            target = PotionEffectType.WATER_BREATHING;
             using.add(ItemID.RAW_FISH);
+        } else if (items.containsKey(ItemID.POISONOUS_POTATO)) {
+            target = PotionEffectType.FAST_DIGGING;
         } else return new ArrayList<>();
 
         // Always used
@@ -198,42 +202,46 @@ public class FactoryBrewer extends FactoryMech {
 
         // Calculate damage
         int level = !duration && potency ? 2 : 1;
-        short dmg = toDamageValue(target, level, splash, duration && !target.isInstant());
+        ItemStack potion = makePotion(target, level, splash, duration);
 
         // Tell the player what we are making
-        ChatUtil.sendNotice(playerList, "Brewing: " + max + " " + target.toString() + " "
-                + (level == 1 ? "I" : "II") + " " + (splash ? "splash" : "") + " potions.");
+        ChatUtil.sendNotice(playerList, "Brewing: " + max + " " + target.getName() + " "
+                + (level == 1 ? "I" : "II") + (splash ? " splash" : "") + " potions.");
         // Return the product for the que
         List<ItemStack> product = new ArrayList<>();
-        for (int i = 0; i < max; i++) product.add(new ItemStack(ItemID.POTION, 1, dmg));
+        for (int i = 0; i < max; i++) product.add(potion.clone());
         return product;
     }
 
     /**
-     * Copied from the Bukkit potion class
-     * <p>
-     * Converts this potion to a valid potion damage short, usable for potion
-     * item stacks.
+     * Creates a ItemStack for the potion
      *
-     * @return The damage value of this potion
+     * @return The new Item Stack
      */
-    public short toDamageValue(PotionType type, int level, boolean splash, boolean extended) {
-        short damage;
-        if (type == PotionType.WATER) {
-            return 0;
-        } else if (type == null) {
-            damage = 0;
-        } else {
-            damage = (short) (level - 1);
-            damage <<= 5;
-            damage |= (short) type.getDamageValue();
+    public ItemStack makePotion(PotionEffectType type, int level, boolean splash, boolean extended) {
+        double ticks = 0;
+        if (!type.isInstant()) {
+            // Default is 3 minutes worth of ticks
+            ticks = 20 * 60 * 3 * type.getDurationModifier();
+            // A potion cannot be extended and amplified
+            if (extended) {
+                ticks *= (double) 8/3; // Cast to double to avoid integer division
+            } else if (level == 2) {
+                ticks *= (double) 1/2; // Cast to double to avoid integer division
+            }
+
+            if (splash) {
+                ticks *= (double) 3/4; // Cast to double to avoid integer division
+            }
         }
-        if (splash) {
-            damage |= 0x4000;
-        }
-        if (extended) {
-            damage |= 0x40;
-        }
-        return damage;
+
+        // Drinkable: 8192
+        // Splash: 16384
+        ItemStack potion = new ItemStack(ItemID.POTION, 1, (short) (splash ? 16384 : 8192));
+        PotionMeta pMeta = (PotionMeta) potion.getItemMeta();
+        pMeta.setMainEffect(type);
+        pMeta.addCustomEffect(new PotionEffect(type, (int) ticks, level - 1), true);
+        potion.setItemMeta(pMeta);
+        return potion;
     }
 }

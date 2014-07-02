@@ -21,6 +21,7 @@ import com.skelril.aurora.city.engine.arena.PersistentArena;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.DamageUtil;
+import com.skelril.aurora.util.item.itemstack.StackSerializer;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -137,9 +138,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
         for (int i = 0; i < que.size(); ++i) {
             YAMLNode node = processor.addNode("products." + i);
             ItemStack stack = que.get(i);
-            node.setProperty("type", stack.getTypeId());
-            node.setProperty("data", stack.getDurability());
-            node.setProperty("amt", stack.getAmount());
+            node.setProperty("stack-data", StackSerializer.getMap(stack));
         }
         processor.save();
     }
@@ -171,11 +170,14 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
             Map<String, YAMLNode> nodes = processor.getNodes("products");
             if (nodes != null) {
                 for (Map.Entry<String, YAMLNode> entry : nodes.entrySet()) {
-                    YAMLNode node = entry.getValue();
-                    int type = node.getInt("type");
-                    short data = node.getInt("data").shortValue();
-                    int amt = node.getInt("amt");
-                    que.add(Integer.parseInt(entry.getKey()), new ItemStack(type, amt, data));
+                    try {
+                        YAMLNode node = entry.getValue();
+                        //noinspection unchecked
+                        ItemStack is = StackSerializer.fromMap((Map<String, Object>) node.getProperty("stack-data"));
+                        que.add(Integer.parseInt(entry.getKey()), is);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
                 }
             }
 
