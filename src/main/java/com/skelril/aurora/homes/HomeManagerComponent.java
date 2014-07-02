@@ -13,6 +13,8 @@ import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BaseBlock;
+import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
@@ -49,7 +51,9 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -66,6 +70,15 @@ public class HomeManagerComponent extends BukkitComponent {
     private WorldEditPlugin WE;
     private WorldGuardPlugin WG;
     private Economy econ;
+
+    private static Map<BaseBlock, BaseBlock> blockMapping = new HashMap<>();
+
+    static {
+        blockMapping.put(new BaseBlock(BlockID.GRASS), new BaseBlock(BlockID.STAINED_CLAY, 11));
+        blockMapping.put(new BaseBlock(BlockID.SAND), new BaseBlock(BlockID.STAINED_CLAY, 3));
+    }
+
+    private static PlotOutliner outliner = new PlotOutliner(blockMapping, BlockType::isNaturalTerrainBlock);
 
     @Override
     public void enable() {
@@ -342,6 +355,8 @@ public class HomeManagerComponent extends BukkitComponent {
                         manager.addRegion(region);
                         manager.save();
 
+                        outliner.revert(player.getWorld(), region);
+
                         econ.withdrawPlayer(player.getName(), price);
                         ChatUtil.sendNotice(player, "Home successfully purchased!");
 
@@ -396,6 +411,8 @@ public class HomeManagerComponent extends BukkitComponent {
                         region.setFlag(DefaultFlag.PRICE, blockPrice * 1.1);
                         manager.addRegion(region);
                         manager.save();
+
+                        outliner.outline(player.getWorld(), region);
 
                         econ.depositPlayer(player.getName(), price);
                         ChatUtil.sendNotice(player, "Home successfully sold!");
@@ -478,6 +495,8 @@ public class HomeManagerComponent extends BukkitComponent {
             manager.addRegion(region);
             try {
                 manager.save();
+
+                outliner.outline(admin.getWorld(), region);
             } catch (ProtectionDatabaseException e) {
                 throw new CommandException("Failed to create the region: " + regionString + ".");
             }
