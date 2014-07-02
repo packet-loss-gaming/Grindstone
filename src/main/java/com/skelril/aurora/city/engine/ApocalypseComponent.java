@@ -7,6 +7,8 @@
 package com.skelril.aurora.city.engine;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.session.PersistentSession;
+import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.admin.AdminComponent;
@@ -72,6 +74,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private AdminComponent adminComponent;
     @InjectComponent
     private EnderPearlHomesComponent homesComponent;
+    @InjectComponent
+    private SessionComponent sessions;
 
     private static final Class<Zombie> attackMob = Zombie.class;
 
@@ -110,6 +114,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public boolean enableSafeRespawn = true;
         @Setting("safe-respawn-radius")
         public int safeRespawnRadius = 10;
+        @Setting("death-grace")
+        public long deathGrace = 60000 * 5;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -187,6 +193,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 if (entity.getLocation().distanceSquared(respawnLoc) < safeRespawnRadius) entity.remove();
             }
         }
+        sessions.getSession(ApocalypseSession.class, event.getPlayer()).updateDeath(config.deathGrace);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -265,13 +272,15 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         bedSpawn(CollectionUtil.removalAll(applicable, new Checker<CommandBook, Player>(inst) {
             @Override
             public Boolean evaluate(Player player) {
-                return get().hasPermission(player, "aurora.apocalypse.bedsafe");
+                return sessions.getSession(ApocalypseSession.class, player).recentlyDied()
+                        || get().hasPermission(player, "aurora.apocalypse.bedsafe");
             }
         }), config.multiplier * (ChanceUtil.getRandom(6)));
         localSpawn(CollectionUtil.removalAll(applicable, new Checker<CommandBook, Player>(inst) {
             @Override
             public Boolean evaluate(Player player) {
-                return get().hasPermission(player, "aurora.apocalypse.huntsafe");
+                return sessions.getSession(ApocalypseSession.class, player).recentlyDied()
+                        || get().hasPermission(player, "aurora.apocalypse.huntsafe");
             }
         }));
     }
@@ -414,6 +423,23 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             equipment.setChestplateDropChance(.55F);
             equipment.setLeggingsDropChance(.55F);
             equipment.setBootsDropChance(.55F);
+        }
+    }
+
+    private static class ApocalypseSession extends PersistentSession {
+
+        private long nextAttack = 0;
+
+        protected ApocalypseSession() {
+            super(THIRTY_MINUTES);
+        }
+
+        public boolean recentlyDied() {
+            return nextAttack != 0 && nextAttack < System.currentTimeMillis();
+        }
+
+        public void updateDeath(long time) {
+            nextAttack = System.currentTimeMillis() + time;
         }
     }
 }
