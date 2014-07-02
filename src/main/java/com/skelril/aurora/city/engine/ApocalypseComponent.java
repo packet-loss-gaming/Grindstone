@@ -264,13 +264,13 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         startle(applicable);
         bedSpawn(CollectionUtil.removalAll(applicable, new Checker<CommandBook, Player>(inst) {
             @Override
-            public boolean check(Player player) {
+            public Boolean evaluate(Player player) {
                 return get().hasPermission(player, "aurora.apocalypse.bedsafe");
             }
         }), config.multiplier * (ChanceUtil.getRandom(6)));
         localSpawn(CollectionUtil.removalAll(applicable, new Checker<CommandBook, Player>(inst) {
             @Override
-            public boolean check(Player player) {
+            public Boolean evaluate(Player player) {
                 return get().hasPermission(player, "aurora.apocalypse.huntsafe");
             }
         }));

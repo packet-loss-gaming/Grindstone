@@ -6,7 +6,7 @@
 
 package com.skelril.aurora.util.checker;
 
-public abstract class Checker<T, K> {
+public abstract class Checker<T, K> implements Expression<K, Boolean> {
 
     private T main;
 
@@ -17,6 +17,4 @@ public abstract class Checker<T, K> {
     public T get() {
         return main;
     }
-
-    public abstract boolean check(K k);//
 }

@@ -313,7 +313,7 @@ public class LocationUtil {
         com.sk89q.worldedit.Vector v;
         do {
             v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ()).setY(y);
-        } while (!checker.check(v));
+        } while (!checker.evaluate(v));
 
         return new Location(world, v.getX(), y, v.getZ());
     }

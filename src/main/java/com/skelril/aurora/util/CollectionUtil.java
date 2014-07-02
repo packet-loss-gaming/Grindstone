@@ -39,6 +39,6 @@ public class CollectionUtil {
      * Removes elements where the checker evaluates true
      */
     public static <T> List<T> removalAll(List<T> collection, Checker<?, T> checker) {
-        return collection.stream().filter(element -> !checker.check(element)).collect(Collectors.toList());
+        return collection.stream().filter(element -> !checker.evaluate(element)).collect(Collectors.toList());
     }
 }

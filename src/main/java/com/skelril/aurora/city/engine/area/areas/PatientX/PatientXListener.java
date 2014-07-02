@@ -354,9 +354,9 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 CuboidRegion rg = new CuboidRegion(parent.drops.getMinimumPoint(), parent.drops.getMaximumPoint());
                 DropPartyTask task = new DropPartyTask(parent.getWorld(), rg, drops, new RegionChecker(rg) {
                     @Override
-                    public boolean check(com.sk89q.worldedit.Vector v) {
+                    public Boolean evaluate(com.sk89q.worldedit.Vector v) {
                         Location l = new Location(parent.getWorld(), v.getX(), v.getY(), v.getZ());
-                        return super.check(v) && !l.getBlock().getType().isSolid();
+                        return super.evaluate(v) && !l.getBlock().getType().isSolid();
                     }
                 });
                 task.setXPChance(5);
