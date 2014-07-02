@@ -343,7 +343,8 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             }
 
             if (region == null) {
-                throw new CommandException("You are not currently standing in any regions available for purchase.");
+                throw new CommandException("No plots for purchase were found where you're standing." +
+                        "\nAvailable plots will have a blue outline around them.");
             }
 
             // Get the price and send it to the player
