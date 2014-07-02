@@ -96,18 +96,21 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             if (parent.contains(parent.charlotte_RG, player)) {
                 // Teleport to Magma Cubed
                 if (parent.charlotte == null && parent.checkMagmaCubed()) {
+                    parent.cleanupMagmaCubed();
                     parent.spawnMagmaCubed();
                     player.teleport(new Location(parent.getWorld(), 374.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
                 }
             } else if (parent.contains(parent.magmacubed_RG, player)) {
                 // Teleport to Da Bomb
                 if (parent.magmaCubed.isEmpty() && parent.checkDaBomb()) {
+                    parent.cleanupDaBomb();
                     parent.spawnDaBomb();
                     player.teleport(new Location(parent.getWorld(), 350.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
                 }
             } else if (parent.contains(parent.dabomb_RG, player)) {
                 // Teleport to Snipee
                 if (parent.daBomb == null && parent.checkSnipee()) {
+                    parent.cleanupSnipee();
                     parent.spawnSnipee();
                     player.teleport(new Location(parent.getWorld(), 326.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
                 }

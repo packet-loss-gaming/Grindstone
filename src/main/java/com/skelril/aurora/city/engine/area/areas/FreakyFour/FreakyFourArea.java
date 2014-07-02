@@ -197,7 +197,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
             }
         }
 
-        for (CaveSpider spider : getContained(charlotte_RG, CaveSpider.class)) {
+        for (Entity spider : getContained(charlotte_RG, Spider.class, CaveSpider.class)) {
             spider.remove();
         }
     }
@@ -290,11 +290,6 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
         }
     }
 
-    public void runSnipee() {
-        if (snipee == null) return;
-        com.sk89q.commandbook.util.entity.EntityUtil.sendProjectilesFromEntity(snipee, 20, 1.6F, Arrow.class);
-    }
-
     public void spawnMagmaCubed() {
         final MagmaCube cube = getWorld().spawn(getCentralLoc(magmacubed_RG), MagmaCube.class);
 
@@ -316,6 +311,12 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
         return !LocationUtil.containsPlayer(world, magmacubed_RG);
     }
 
+    public void cleanupMagmaCubed() {
+        for (MagmaCube cube : getContained(magmacubed_RG, MagmaCube.class)) {
+            cube.remove();
+        }
+    }
+
     public void spawnDaBomb() {
         daBomb = getWorld().spawn(getCentralLoc(dabomb_RG), Creeper.class);
 
@@ -332,6 +333,12 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
         return !LocationUtil.containsPlayer(world, dabomb_RG);
     }
 
+    public void cleanupDaBomb() {
+        for (Creeper creeper : getContained(dabomb_RG, Creeper.class)) {
+            creeper.remove();
+        }
+    }
+
     public void spawnSnipee() {
         snipee = getWorld().spawn(getCentralLoc(snipee_RG), Skeleton.class);
 
@@ -346,6 +353,17 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
 
     public boolean checkSnipee() {
         return !LocationUtil.containsPlayer(world, snipee_RG);
+    }
+
+    public void cleanupSnipee() {
+        for (Skeleton skeleton : getContained(snipee_RG, Skeleton.class)) {
+            skeleton.remove();
+        }
+    }
+
+    public void runSnipee() {
+        if (snipee == null) return;
+        com.sk89q.commandbook.util.entity.EntityUtil.sendProjectilesFromEntity(snipee, 20, 1.6F, Arrow.class);
     }
 
     // Cleans up empty arenas
