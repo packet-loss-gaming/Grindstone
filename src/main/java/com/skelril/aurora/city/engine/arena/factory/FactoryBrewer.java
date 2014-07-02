@@ -66,6 +66,7 @@ public class FactoryBrewer extends FactoryMech {
 
         // Special - Non-Vanilla
         wanted.add(new BaseItem(ItemID.NETHER_QUARTZ));
+        wanted.add(new BaseItem(ItemID.POISONOUS_POTATO));
     }
 
     @Override
