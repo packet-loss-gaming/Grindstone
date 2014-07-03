@@ -115,26 +115,53 @@ public class FactoryBrewer extends FactoryMech {
         List<Integer> using = new ArrayList<>();
         PotionEffectType target;
         if (items.containsKey(ItemID.MAGMA_CREAM)) {
-            target = PotionEffectType.FIRE_RESISTANCE;
+            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
+                target = PotionEffectType.SLOW;
+                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            } else {
+                target = PotionEffectType.FIRE_RESISTANCE;
+            }
             using.add(ItemID.MAGMA_CREAM);
         } else if (items.containsKey(ItemID.SUGAR)) {
-            target = PotionEffectType.SPEED;
+            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
+                target = PotionEffectType.SLOW;
+                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            } else {
+                target = PotionEffectType.SPEED;
+            }
             using.add(ItemID.SUGAR);
         } else if (items.containsKey(ItemID.GLISTERING_MELON)) {
-            target = PotionEffectType.HEAL;
+            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
+                target = PotionEffectType.HARM;
+                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            } else {
+                target = PotionEffectType.HEAL;
+            }
             using.add(ItemID.GLISTERING_MELON);
         } else if (items.containsKey(ItemID.SPIDER_EYE)) {
-            target = PotionEffectType.POISON;
+            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
+                target = PotionEffectType.HARM;
+                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            } else {
+                target = PotionEffectType.POISON;
+            }
             using.add(ItemID.SPIDER_EYE);
         } else if (items.containsKey(ItemID.GHAST_TEAR)) {
-            target = PotionEffectType.REGENERATION;
+            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
+                target = PotionEffectType.WEAKNESS;
+                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            } else {
+                target = PotionEffectType.REGENERATION;
+            }
             using.add(ItemID.GHAST_TEAR);
         } else if (items.containsKey(ItemID.BLAZE_POWDER)) {
-            target = PotionEffectType.INCREASE_DAMAGE;
+            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
+                target = PotionEffectType.WEAKNESS;
+                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            } else {
+                target = PotionEffectType.INCREASE_DAMAGE;
+            }
             using.add(ItemID.BLAZE_POWDER);
-        } else if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
-            target = PotionEffectType.WEAKNESS;
-            using.add(ItemID.FERMENTED_SPIDER_EYE);
         } else if (items.containsKey(ItemID.GOLDEN_CARROT)) {
             target = PotionEffectType.NIGHT_VISION;
             using.add(ItemID.GOLDEN_CARROT);
