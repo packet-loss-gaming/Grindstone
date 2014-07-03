@@ -544,8 +544,13 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             Location pLoc = player.getLocation();
             Location k = player.getLocation();
 
-            double distanceRatio = Math.max(SNEAK_WATCH_DISTANCE_SQ,
-                    (player.getHealth() / player.getMaxHealth()) * WATCH_DISTANCE_SQ);
+            double sneakRatio = SNEAK_WATCH_DISTANCE_SQ;
+            double standRatio = Math.max(sneakRatio, (player.getHealth() / player.getMaxHealth()) * WATCH_DISTANCE_SQ);
+
+            if (player.isFlying()) {
+                sneakRatio *= sneakRatio;
+                standRatio *= standRatio;
+            }
 
             for (Player otherPlayer : server.getOnlinePlayers()) {
                 if (otherPlayer.equals(player)) continue;
@@ -557,9 +562,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
                     double dist = pLoc.distanceSquared(k);
 
-                    if ((player.isSneaking() && dist >= SNEAK_WATCH_DISTANCE_SQ)
-                            || dist >= distanceRatio
-                            || !ninjaState.showPlayer()) {
+                    if ((player.isSneaking() && dist >= sneakRatio) || dist >= standRatio || !ninjaState.showPlayer()) {
                         if (otherPlayer.canSee(player)
                                 && !(guildCanSee(player) && inst.hasPermission(otherPlayer, "aurora.ninja"))
                                 && !inst.hasPermission(otherPlayer, "aurora.ninja.master")) {
