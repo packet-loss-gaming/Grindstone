@@ -35,7 +35,7 @@ public class EDBEExtractor<Attacker extends Entity, Defender extends Entity, Thr
         if (attacker instanceof Projectile) {
             ProjectileSource shooter = ((Projectile) attacker).getShooter();
             projectile = (Projectile) attacker;
-            if (shooter == null || !thrownClass.isInstance(projectile)) {
+            if (shooter == null || !attackerType.isInstance(shooter) || !thrownClass.isInstance(projectile)) {
                 return null;
             }
             attacker = (Entity) shooter;
