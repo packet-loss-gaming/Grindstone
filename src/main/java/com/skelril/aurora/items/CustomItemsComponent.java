@@ -238,14 +238,19 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
     }
 
+    private static Queue<EntityDamageByEntityEvent> attackQueue = new LinkedList<>();
+
     private static EDBEExtractor<Player, LivingEntity, Projectile> specExtractor = new EDBEExtractor<>(
             Player.class,
             LivingEntity.class,
             Projectile.class
     );
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void specAttack(EntityDamageByEntityEvent event) {
+
+        // Handle cancellation here so that we don't end up with a memory leak from the queue
+        if (attackQueue.poll() != null || event.isCancelled()) return;
 
         CombatantPair<Player, LivingEntity, Projectile> result = specExtractor.extractFrom(event);
 
@@ -382,7 +387,10 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void damageModifier(EntityDamageByEntityEvent event) {
 
-        if (DamageUtil.remove(event.getDamager(), event.getEntity())) return;
+        if (DamageUtil.remove(event.getDamager(), event.getEntity())) {
+            attackQueue.add(event);
+            return;
+        }
 
         CombatantPair<Player, LivingEntity, Projectile> result = specExtractor.extractFrom(event);
 
