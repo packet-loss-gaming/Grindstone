@@ -83,6 +83,9 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         autoBreakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
     }
 
+    // Last Phantom Hymn Reset
+    protected long nextTStorm;
+
     // Head Stones
     protected List<Location> headStones = new ArrayList<>();
 

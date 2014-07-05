@@ -50,6 +50,8 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static com.sk89q.commandbook.util.ChatUtil.getFriendlyTime;
+
 public class GraveYardListener extends AreaListener<GraveYardArea> {
     protected final CommandBook inst = CommandBook.inst();
     protected final Logger log = inst.getLogger();
@@ -521,8 +523,14 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 ChatUtil.sendNotice(player, "A spirit carries you through the maze!");
                 player.teleport(new Location(parent.getWorld(), -162.5, 52, -704), PlayerTeleportEvent.TeleportCause.UNKNOWN);
             } else if (LocationUtil.isInRegion(parent.getWorld(), parent.rewards, player) && !parent.getWorld().isThundering()) {
-                ChatUtil.sendNotice(player, "A monstrous thunderstorm begins!");
-                parent.getWorld().setThundering(true);
+                if (parent.nextTStorm < System.currentTimeMillis()) {
+                    ChatUtil.sendNotice(player, "A monstrous thunderstorm begins!");
+                    parent.getWorld().setThundering(true);
+                    parent.nextTStorm = System.currentTimeMillis() + parent.getConfig().tStormCoolDown;
+                } else {
+                    ChatUtil.sendError(player, "The book glows a stubborn blood red.");
+                    ChatUtil.sendError(player, "The Phantom Hymn can next start a thunderstorm:\n" + getFriendlyTime(parent.nextTStorm) + ".");
+                }
             }
         }
     }
