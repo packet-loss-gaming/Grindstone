@@ -412,7 +412,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             // Set flags
             rogueSession.limitYVelocity(args.hasFlag('l'));
-            rogueSession.setBacklash(args.hasFlag('b'));
+            rogueSession.setBacklash(!args.hasFlag('b'));
             rogueSession.setTraitorProtection(args.hasFlag('t') && inst.hasPermission(player, "aurora.rogue.master"));
 
             if (!isRogue) {
