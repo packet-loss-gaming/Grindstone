@@ -151,7 +151,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         if (arrow == null) return;
 
+
         sessions.getSession(NinjaState.class, player).arrowBomb();
+
+        for (Entity entity : arrow.getNearbyEntities(7, 7, 7)) {
+            if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
+            if (entity instanceof Player) {
+                final Player defender = (Player) entity;
+                if (!PvPComponent.allowsPvP(player, defender)) return;
+            }
+        }
         arrow.getWorld().createExplosion(arrow.getLocation(), 4);
         arrow.remove();
     }
