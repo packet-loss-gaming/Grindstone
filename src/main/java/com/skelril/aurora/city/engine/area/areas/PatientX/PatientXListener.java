@@ -210,10 +210,15 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         }
 
         if (defender instanceof Player && blockedDamage.contains(event.getCause())) {
-            if (event.isApplicable(EntityDamageEvent.DamageModifier.ARMOR)) {
-                event.setDamage(EntityDamageEvent.DamageModifier.ARMOR,
-                        event.getOriginalDamage(EntityDamageEvent.DamageModifier.ARMOR) * .5);
+            // Explosive damage formula: (1 × 1 + 1) × 8 × power + 1
+            // Use 49, snowball power is 3
+            double ratio = event.getDamage() / 49;
+            for (EntityDamageEvent.DamageModifier modifier : EntityDamageEvent.DamageModifier.values()) {
+                if (event.isApplicable(modifier)) {
+                    event.setDamage(modifier, 0);
+                }
             }
+            event.setDamage(ratio * (parent.difficulty));
         }
 
         if (defender.equals(parent.boss) && blockedDamage.contains(event.getCause())) {
@@ -269,7 +274,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         if (p instanceof Snowball) {
             if (parent.boss != null && parent.boss.equals(p.getShooter())) {
                 Location pt = p.getLocation();
-                p.getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), Math.round(parent.difficulty), false, false);
+                p.getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), 3, false, false);
             }
         }
     }
