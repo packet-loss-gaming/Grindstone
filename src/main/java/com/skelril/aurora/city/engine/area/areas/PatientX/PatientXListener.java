@@ -249,13 +249,16 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
             if (attacker.equals(parent.boss)) {
-                if (!ItemUtil.hasNecrosArmour(player)) {
-                    if (inst.hasPermission(player, "aurora.prayer.intervention") && ChanceUtil.getChance(parent.difficulty)) {
-                        ChatUtil.sendNotice(player, "A divine force protects you.");
-                        return;
-                    }
-                    event.setDamage(parent.difficulty * parent.getConfig().baseBossHit);
+                if (inst.hasPermission(player, "aurora.prayer.intervention") && ChanceUtil.getChance(parent.difficulty)) {
+                    ChatUtil.sendNotice(player, "A divine force protects you.");
+                    return;
                 }
+                for (EntityDamageEvent.DamageModifier modifier : EntityDamageEvent.DamageModifier.values()) {
+                    if (event.isApplicable(modifier)) {
+                        event.setDamage(modifier, 0);
+                    }
+                }
+                event.setDamage(parent.difficulty * parent.getConfig().baseBossHit);
                 return;
             }
             if (ItemUtil.hasAncientArmour(player)) {

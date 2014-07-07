@@ -13,7 +13,7 @@ public class PatientXConfig extends ConfigurationBase {
     @Setting("boss.health")
     public int bossHealth = 1000;
     @Setting("boss.base-hit")
-    public double baseBossHit = 175;
+    public double baseBossHit = 1.7;
     @Setting("ice.chance")
     public int iceChance = 12;
     @Setting("ice.explosive-chance")
