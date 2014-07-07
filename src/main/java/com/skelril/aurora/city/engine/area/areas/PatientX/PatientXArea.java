@@ -201,7 +201,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
             case 1:
                 ChatUtil.sendWarning(spectator, "Let's play musical chairs!");
                 for (Player player : contained) {
-                    player.teleport(getRandomDest());
+                    do {
+                        player.teleport(getRandomDest());
+                    } while (player.getLocation().distanceSquared(boss.getLocation()) <= 5 * 5);
                     if (boss.hasLineOfSight(player)) {
                         player.setHealth(ChanceUtil.getRandom(player.getMaxHealth()));
                         ChatUtil.sendWarning(player, "Don't worry, I have a medical degree...");
