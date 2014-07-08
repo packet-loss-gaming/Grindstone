@@ -16,6 +16,7 @@ import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.bosses.Fangz;
+import com.skelril.aurora.bosses.FearKnight;
 import com.skelril.aurora.bosses.LostRogue;
 import com.skelril.aurora.city.engine.pvp.PvPComponent;
 import com.skelril.aurora.city.engine.pvp.PvPScope;
@@ -95,6 +96,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     // Boss Handlers
     private Fangz fangz;
+    private FearKnight fearKnight;
     private LostRogue rogue;
 
     @Override
@@ -228,9 +230,11 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         @Setting("enable-sync")
         public boolean enableSync = true;
         @Setting("mini-bosses.lost-rogue")
-        public int lostRogueChance = 10;
+        public int lostRogueChance = 1000;
+        @Setting("mini-bosses.fear-knight")
+        public int fearKnightChance = 100;
         @Setting("mini-bosses.fangz")
-        public int fangzChance = 10;
+        public int fangzChance = 100;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -370,6 +374,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             if (entity instanceof Zombie) {
                 if (ChanceUtil.getChance(config.lostRogueChance)) {
                     rogue.bind(entity);
+                } else if (ChanceUtil.getChance(config.fearKnightChance)) {
+                    fearKnight.bind(entity);
                 }
             } else if (entity instanceof Spider) {
                 if (ChanceUtil.getChance(config.fangzChance)) {
@@ -731,6 +737,15 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             Player player = PlayerUtil.checkPlayer(sender);
             Spider spider = player.getLocation().getWorld().spawn(player.getLocation(), Spider.class);
             fangz.bind(spider);
+        }
+
+        @Command(aliases = {"fearknight"},
+                usage = "", desc = "Spawn a Fear Knight",
+                flags = "", min = 0, max = 0)
+        public void fearKnight(CommandContext args, CommandSender sender) throws CommandException {
+            Player player = PlayerUtil.checkPlayer(sender);
+            Zombie zombie = player.getLocation().getWorld().spawn(player.getLocation(), Zombie.class);
+            fearKnight.bind(zombie);
         }
     }
 
