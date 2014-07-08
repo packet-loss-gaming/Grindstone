@@ -137,7 +137,7 @@ public class PvPComponent extends BukkitComponent implements Listener {
             try {
                 Prayer[] targetPrayers = new Prayer[]{
                         PrayerComponent.constructPrayer(player, PrayerType.GLASSBOX, 1000 * 60 * 3),
-                        PrayerComponent.constructPrayer(player, PrayerType.STARVATION, 1000 * 60 * 3)
+                        PrayerComponent.constructPrayer(player, PrayerType.NECROSIS, 1000 * 60 * 3),
                 };
 
                 prayers.influencePlayer(player, targetPrayers);
@@ -196,10 +196,17 @@ public class PvPComponent extends BukkitComponent implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
 
-        PvPSession session = sessions.getSession(PvPSession.class, event.getEntity());
+        Player player = event.getEntity();
+        PvPSession pSession = sessions.getSession(PvPSession.class, player);
+        pSession.resetHit();
 
-        if (session.punishNextLogin()) {
-            session.punishNextLogin(false);
+        if (pSession.punishNextLogin()) {
+            pSession.punishNextLogin(false);
+        }
+
+        Player killer = player.getKiller();
+        if (killer != null) {
+            sessions.getSession(PvPSession.class, killer).resetHit();
         }
     }
 
@@ -334,6 +341,8 @@ public class PvPComponent extends BukkitComponent implements Listener {
             nextFreePoint = System.currentTimeMillis() + 7000;
         }
 
-
+        public void resetHit() {
+            nextFreePoint = 0;
+        }
     }
 }
