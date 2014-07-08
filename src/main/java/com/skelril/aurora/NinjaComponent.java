@@ -216,6 +216,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 EntityUtil.heal(entity, ChanceUtil.getRandom(3));
             }
             if (entity instanceof Player) {
+                if (rogueComponent.isRogue((Player) entity)) {
+                    rogueComponent.getState((Player) entity).blip(1250);
+                }
                 ((Player) entity).addPotionEffect(new PotionEffect(
                         PotionEffectType.BLINDNESS,
                         20 * ChanceUtil.getRandom(3),

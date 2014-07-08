@@ -452,7 +452,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     }
 
     // Rogue Session
-    private static class RogueState extends PersistentSession {
+    public static class RogueState extends PersistentSession {
 
         public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
         private static final float DEFAULT_SPEED = .2F;
