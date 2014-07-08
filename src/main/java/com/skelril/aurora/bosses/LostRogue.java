@@ -109,12 +109,7 @@ public class LostRogue {
                 LivingEntity toHit = getLivingEntity(0, objects);
                 AttackDamage damage = getDamage(1, objects);
 
-                EntityDamageEvent event = getEvent(damage);
-                if (!event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
-                    DamageUtil.multiplyFinalDamage(event, -1);
-                } else {
-                    event.setCancelled(true);
-                }
+                DamageUtil.multiplyFinalDamage(getEvent(damage), 1.5);
 
                 toHit.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 15, 2), true);
                 return null;

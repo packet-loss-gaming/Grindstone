@@ -194,16 +194,16 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
-    private static EDBEExtractor<LivingEntity, LivingEntity, Arrow> extractor = new EDBEExtractor<>(
+    private static EDBEExtractor<LivingEntity, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
             LivingEntity.class,
             LivingEntity.class,
-            Arrow.class
+            Projectile.class
     );
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onEntityDamageEntityEvent(EntityDamageByEntityEvent event) {
 
-        CombatantPair<LivingEntity, LivingEntity, Arrow> result = extractor.extractFrom(event);
+        CombatantPair<LivingEntity, LivingEntity, Projectile> result = extractor.extractFrom(event);
 
         if (result == null) return;
 
@@ -211,6 +211,11 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         final LivingEntity defender = result.getDefender();
 
         if (result.hasProjectile()) {
+            Projectile projectile = result.getProjectile();
+            if (projectile.hasMetadata("nightmare")) {
+                event.setCancelled(true);
+                return;
+            }
             if (defender instanceof Player && ChanceUtil.getChance(3)) {
                 RogueState rogueSession = getState((Player) defender);
                 if (rogueSession.isRogue() && rogueSession.canBacklash() && rogueSession.canBlip()) {
