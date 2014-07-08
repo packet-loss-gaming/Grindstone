@@ -95,9 +95,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private LocalConfiguration config;
 
     // Boss Handlers
-    private Fangz fangz;
-    private FearKnight fearKnight;
-    private LostRogue rogue;
+    private Fangz fangz = new Fangz();
+    private FearKnight fearKnight = new FearKnight();
+    private LostRogue rogue = new LostRogue();
 
     @Override
     public void enable() {
@@ -110,9 +110,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         server.getScheduler().runTaskLater(inst, this::grabWorlds, 1);
         // Start TP/Sync task with 2 tick delay
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 2, 20 * 2);
-
-        fangz = new Fangz();
-        rogue = new LostRogue();
 
         registerScope();
         registerCommands(Commands.class);
