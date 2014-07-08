@@ -42,7 +42,13 @@ public class LostRogue {
     private BukkitBossDeclaration lostRogue;
 
     public LostRogue() {
-        lostRogue = new BukkitBossDeclaration(inst);
+        lostRogue = new BukkitBossDeclaration(inst) {
+            @Override
+            public boolean matchesBind(LocalEntity entity) {
+                Entity anEntity = BukkitUtil.getBukkitEntity(entity);
+                return anEntity instanceof LivingEntity && ((LivingEntity) anEntity).getCustomName().equals("Lost Rogue");
+            }
+        };
         setupLostRogue();
     }
 

@@ -44,7 +44,13 @@ public class Fangz {
     private BukkitBossDeclaration fangz;
 
     public Fangz() {
-        fangz = new BukkitBossDeclaration(inst);
+        fangz = new BukkitBossDeclaration(inst) {
+            @Override
+            public boolean matchesBind(LocalEntity entity) {
+                Entity anEntity = BukkitUtil.getBukkitEntity(entity);
+                return anEntity instanceof LivingEntity && ((LivingEntity) anEntity).getCustomName().equals("Fangz");
+            }
+        };
         setupFangz();
     }
 

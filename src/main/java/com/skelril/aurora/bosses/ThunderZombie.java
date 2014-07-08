@@ -35,7 +35,13 @@ public class ThunderZombie {
     private BukkitBossDeclaration thunderZombie;
 
     public ThunderZombie() {
-        thunderZombie = new BukkitBossDeclaration(inst);
+        thunderZombie = new BukkitBossDeclaration(inst) {
+            @Override
+            public boolean matchesBind(LocalEntity entity) {
+                Entity anEntity = BukkitUtil.getBukkitEntity(entity);
+                return anEntity instanceof LivingEntity && ((LivingEntity) anEntity).getCustomName().equals("Thor Zombie");
+            }
+        };
         setupThunderZombie();
     }
 
