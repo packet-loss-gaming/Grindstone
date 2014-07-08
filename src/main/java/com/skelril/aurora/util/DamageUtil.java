@@ -7,7 +7,6 @@
 package com.skelril.aurora.util;
 
 import com.sk89q.commandbook.CommandBook;
-import net.minecraft.util.org.apache.commons.lang3.Validate;
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -40,7 +39,6 @@ public class DamageUtil {
     }
 
     public static void multiplyFinalDamage(EntityDamageEvent event, double multiplier) {
-        Validate.isTrue(multiplier > 1, "Multiplier must be > 1");
-        event.setDamage(event.getDamage() + (event.getFinalDamage() * (multiplier - 1)));
+        event.setDamage(Math.max(0, event.getDamage() + (event.getFinalDamage() * (multiplier - 1))));
     }
 }

@@ -10,14 +10,13 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandException;
-import com.sk89q.minecraft.util.commands.NestedCommand;
+import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
+import com.skelril.aurora.bosses.Fangz;
+import com.skelril.aurora.bosses.LostRogue;
 import com.skelril.aurora.city.engine.pvp.PvPComponent;
 import com.skelril.aurora.city.engine.pvp.PvPScope;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
@@ -94,6 +93,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private PvPScope scope;
     private LocalConfiguration config;
 
+    // Boss Handlers
+    private Fangz fangz;
+    private LostRogue rogue;
+
     @Override
     public void enable() {
 
@@ -105,6 +108,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         server.getScheduler().runTaskLater(inst, this::grabWorlds, 1);
         // Start TP/Sync task with 2 tick delay
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 2, 20 * 2);
+
+        fangz = new Fangz();
+        rogue = new LostRogue();
 
         registerScope();
         registerCommands(Commands.class);
@@ -221,6 +227,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         public String wildernessWorld = "Wilderness";
         @Setting("enable-sync")
         public boolean enableSync = true;
+        @Setting("mini-bosses.lost-rogue")
+        public int lostRogueChance = 10;
+        @Setting("mini-bosses.fangz")
+        public int fangzChance = 10;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -356,6 +366,16 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
             entity.setMaxHealth(max * 5 * level);
             entity.setHealth(max * 5 * level);
+
+            if (entity instanceof Zombie) {
+                if (ChanceUtil.getChance(config.lostRogueChance)) {
+                    rogue.bind(entity);
+                }
+            } else if (entity instanceof Spider) {
+                if (ChanceUtil.getChance(config.fangzChance)) {
+                    fangz.bind(entity);
+                }
+            }
         }
     }
 
@@ -651,12 +671,18 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             ChatUtil.sendNotice(sender, "Mob Health Modifier: " + (level > 1 ? 5 * (level - 1) : 1) + "x");
         }
 
-        @Command(aliases = {"wparty", "wp"}, desc = "Mirage Commands")
+        @Command(aliases = {"wparty", "wp"}, desc = "Party Commands")
         @NestedCommand({PartyCommands.class})
         public void partyCommands(CommandContext args, CommandSender sender) throws CommandException {
 
         }
 
+        @Command(aliases = {"wboss"}, desc = "Boss Commands")
+        @NestedCommand({BossCommands.class})
+        @CommandPermissions("aurora.wilderness.boss")
+        public void bossCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+        }
     }
 
     public class PartyCommands {
@@ -685,6 +711,27 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             }
         }
 
+    }
+
+    public class BossCommands {
+
+        @Command(aliases = {"lostrogue"},
+                usage = "", desc = "Spawn a lost rogue",
+                flags = "", min = 0, max = 0)
+        public void lostRogue(CommandContext args, CommandSender sender) throws CommandException {
+            Player player = PlayerUtil.checkPlayer(sender);
+            Zombie zombie = player.getLocation().getWorld().spawn(player.getLocation(), Zombie.class);
+            rogue.bind(zombie);
+        }
+
+        @Command(aliases = {"fangz"},
+                usage = "", desc = "Spawn a fangz",
+                flags = "", min = 0, max = 0)
+        public void fangz(CommandContext args, CommandSender sender) throws CommandException {
+            Player player = PlayerUtil.checkPlayer(sender);
+            Spider spider = player.getLocation().getWorld().spawn(player.getLocation(), Spider.class);
+            fangz.bind(spider);
+        }
     }
 
     private int getOreMod(int level) {

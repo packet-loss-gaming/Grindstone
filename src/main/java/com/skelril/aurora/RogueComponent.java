@@ -230,22 +230,25 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public void onProjectileLand(ProjectileHitEvent event) {
 
         Projectile p = event.getEntity();
-        if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
+        if (p.getShooter() == null || !(p.getShooter() instanceof LivingEntity)) return;
         if (p instanceof Snowball && p.hasMetadata("rogue-snowball")) {
 
             // Create the explosion if no players are around that don't allow PvP
-            final Player shooter = (Player) p.getShooter();
-
+            final LivingEntity shooter = (LivingEntity) p.getShooter();
             if (p.hasMetadata("nightmare")) {
 
-                server.getPluginManager().callEvent(new RapidHitEvent(shooter));
+                if (shooter instanceof Player) {
+                    server.getPluginManager().callEvent(new RapidHitEvent((Player) shooter));
+                }
 
                 for (Entity entity : p.getNearbyEntities(3, 3, 3)) {
                     if (!entity.isValid() || entity.equals(shooter) || !(entity instanceof LivingEntity)) continue;
 
                     if (entity instanceof Player) {
                         if (((Player) entity).getGameMode().equals(GameMode.CREATIVE)) continue;
-                        if (!PvPComponent.allowsPvP(shooter, (Player) entity)) continue;
+                        if (shooter instanceof Player) {
+                            if (!PvPComponent.allowsPvP((Player) shooter, (Player) entity)) continue;
+                        }
                     }
 
                     if (((LivingEntity) entity).getHealth() < 2) continue;
@@ -260,10 +263,17 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                     if (entity.equals(shooter) || !(entity instanceof LivingEntity)) continue;
                     if (entity instanceof Player) {
                         final Player defender = (Player) entity;
-                        if (!PvPComponent.allowsPvP(shooter, defender)) return;
+                        if (shooter instanceof Player) {
+                            if (!PvPComponent.allowsPvP((Player) shooter, defender)) return;
+                        }
 
                         if (getState(defender).isTraitorProtected()) {
-                            ChatUtil.sendWarning(shooter, defender.getName() + " sends a band of Rogue marauders after you.");
+                            if (shooter instanceof Player) {
+                                ChatUtil.sendWarning(
+                                        (Player) shooter,
+                                        defender.getName() + " sends a band of Rogue marauders after you."
+                                );
+                            }
                             for (int i = ChanceUtil.getRandom(24) + 20; i > 0; --i) {
                                 server.getScheduler().runTaskLater(inst, () -> {
                                     if (defender.getLocation().distanceSquared(shooter.getLocation()) > 2500) {
