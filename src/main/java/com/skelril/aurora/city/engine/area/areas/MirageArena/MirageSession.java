@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class MirageSession extends PersistentSession {
 
     private Set<String> ignored = new HashSet<>();
+    private double dmgTaken = 0;
 
     protected MirageSession() {
         super(TimeUnit.MINUTES.toMillis(30));
@@ -30,5 +31,17 @@ public class MirageSession extends PersistentSession {
 
     public void unignore(String player) {
         ignored.remove(player);
+    }
+
+    public double getDamage() {
+        return dmgTaken;
+    }
+
+    public void resetDamage() {
+        dmgTaken = 0;
+    }
+
+    public void addDamage(double amt) {
+        dmgTaken += amt;
     }
 }

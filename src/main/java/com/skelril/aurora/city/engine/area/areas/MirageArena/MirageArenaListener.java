@@ -116,15 +116,9 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
         if (result == null || !parent.contains(result.getDefender())) return;
 
-        Location defLoc = result.getDefender().getLocation();
-        World world = defLoc.getWorld();
         MirageArenaConfig config = parent.getConfig();
-        for (double i = Math.min(config.goldCap, ChanceUtil.getRandom(event.getFinalDamage())); i > 0; --i) {
-            if (ChanceUtil.getChance(config.goldBarChance)) {
-                world.dropItem(defLoc, new ItemStack(ItemID.GOLD_BAR));
-            }
-            world.dropItem(defLoc, new ItemStack(ItemID.GOLD_NUGGET));
-        }
+        MirageSession session = parent.sessions.getSession(MirageSession.class, result.getDefender());
+        session.addDamage(Math.min(config.goldCap, ChanceUtil.getRandom(event.getFinalDamage())));
     }
 
     private static ItemCondenser goldCondenser = new ItemCondenser();
@@ -164,6 +158,20 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
         Player player = event.getEntity();
         if (!playerState.containsKey(player.getName()) && parent.contains(player) && !parent.admin.isAdmin(player)) {
+
+            Location loc = player.getLocation();
+            World world = loc.getWorld();
+            MirageArenaConfig config = parent.getConfig();
+            MirageSession session = parent.sessions.getSession(MirageSession.class, player);
+
+            for (double i = session.getDamage(); i > 0; --i) {
+                if (ChanceUtil.getChance(config.goldBarChance)) {
+                    world.dropItem(loc, new ItemStack(ItemID.GOLD_BAR));
+                }
+                world.dropItem(loc, new ItemStack(ItemID.GOLD_NUGGET));
+            }
+
+            session.resetDamage();
 
             playerState.put(player.getName(), new PlayerState(player.getName(),
                     player.getInventory().getContents(),
