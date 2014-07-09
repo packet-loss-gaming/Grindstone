@@ -21,7 +21,8 @@ public class Confuse extends EntityAttack implements MeleeSpecial {
     @Override
     public void activate() {
 
-        target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, (int) (owner.getHealth() * 18), 1), true);
+        int duration = (int) Math.min(1200, owner.getHealth() * 18);
+        target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, duration, 1), true);
 
         inform("Your sword confuses its victim.");
     }

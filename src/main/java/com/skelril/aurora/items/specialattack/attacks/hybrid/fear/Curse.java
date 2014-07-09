@@ -22,7 +22,8 @@ public class Curse extends EntityAttack implements MeleeSpecial, RangedSpecial {
     @Override
     public void activate() {
 
-        target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, (int) (owner.getHealth() * 24), 2), true);
+        int duration = (int) Math.min(20 * 60 * 5, owner.getHealth() * 24);
+        target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, duration, 2), true);
 
         inform("Your weapon curses its victim.");
     }
