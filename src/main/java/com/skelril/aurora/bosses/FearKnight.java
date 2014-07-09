@@ -9,12 +9,11 @@ package com.skelril.aurora.bosses;
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.OSBL.bukkit.BukkitBossDeclaration;
 import com.skelril.OSBL.bukkit.entity.BukkitBoss;
-import com.skelril.OSBL.bukkit.entity.BukkitEntity;
 import com.skelril.OSBL.bukkit.util.BukkitAttackDamage;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
+import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.entity.LocalEntity;
-import com.skelril.OSBL.instruction.Instruction;
-import com.skelril.OSBL.instruction.InstructionResult;
+import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.hybrid.fear.Curse;
@@ -47,7 +46,7 @@ public class FearKnight {
     private BukkitBossDeclaration fearKnight;
 
     public FearKnight() {
-        fearKnight = new BukkitBossDeclaration(inst) {
+        fearKnight = new BukkitBossDeclaration(inst, new SimpleInstructionDispatch()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(entity);
@@ -62,11 +61,11 @@ public class FearKnight {
     }
 
     private void setupFearKnight() {
-        List<Instruction> bindInstructions = fearKnight.bindInstructions;
-        bindInstructions.add(new Instruction() {
+        List<BindInstruction> bindInstructions = fearKnight.bindInstructions;
+        bindInstructions.add(new BindInstruction() {
             @Override
-            public InstructionResult execute(LocalEntity entity, Object... objects) {
-                Entity anEntity = BukkitUtil.getBukkitEntity(entity);
+            public InstructionResult<BindInstruction> process(LocalControllable controllable) {
+                Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
                     ((LivingEntity) anEntity).setCustomName("Fear Knight");
                     double hp = ((LivingEntity) anEntity).getMaxHealth();
@@ -90,11 +89,11 @@ public class FearKnight {
             }
         });
 
-        List<Instruction> unbindInstructions = fearKnight.unbindInstructions;
-        unbindInstructions.add(new Instruction() {
+        List<UnbindInstruction> unbindInstructions = fearKnight.unbindInstructions;
+        unbindInstructions.add(new UnbindInstruction() {
             @Override
-            public InstructionResult execute(LocalEntity entity, Object... objects) {
-                Entity boss = BukkitUtil.getBukkitEntity(entity);
+            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+                Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 double baseLevel = getBaseLevel(boss);
                 List<ItemStack> itemStacks = new ArrayList<>();
@@ -125,10 +124,10 @@ public class FearKnight {
                 return null;
             }
         });
-        unbindInstructions.add(new Instruction() {
+        unbindInstructions.add(new UnbindInstruction() {
             @Override
-            public InstructionResult execute(LocalEntity entity, Object... objects) {
-                Entity boss = BukkitUtil.getBukkitEntity(entity);
+            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+                Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 double baseLevel = getBaseLevel(boss);
                 List<ItemStack> itemStacks = new ArrayList<>();
@@ -144,10 +143,10 @@ public class FearKnight {
                 return null;
             }
         });
-        unbindInstructions.add(new Instruction() {
+        unbindInstructions.add(new UnbindInstruction() {
             @Override
-            public InstructionResult execute(LocalEntity entity, Object... objects) {
-                Entity boss = BukkitUtil.getBukkitEntity(entity);
+            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+                Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 double baseLevel = getBaseLevel(boss);
                 List<ItemStack> itemStacks = new ArrayList<>();
@@ -163,10 +162,10 @@ public class FearKnight {
                 return null;
             }
         });
-        List<Instruction> damageInstructions = fearKnight.damageInstructions;
-        damageInstructions.add(new Instruction() {
+        List<DamageInstruction> damageInstructions = fearKnight.damageInstructions;
+        damageInstructions.add(new DamageInstruction() {
             @Override
-            public InstructionResult execute(LocalEntity entity, Object... objects) {
+            public InstructionResult<DamageInstruction> process(LocalControllable controllable, LocalEntity entity, AttackDamage damage) {
                 Entity attacker = BukkitUtil.getBukkitEntity(entity);
                 LivingEntity boss;
                 if (attacker instanceof LivingEntity) {
@@ -174,8 +173,9 @@ public class FearKnight {
                 } else {
                     return null;
                 }
-                LivingEntity toHit = getLivingEntity(0, objects);
-                AttackDamage damage = getDamage(1, objects);
+                Entity eToHit = BukkitUtil.getBukkitEntity(entity);
+                if (!(eToHit instanceof LivingEntity)) return null;
+                LivingEntity toHit = (LivingEntity) eToHit;
 
                 EntityAttack spec;
                 switch (ChanceUtil.getRandom(6)) {
@@ -217,27 +217,6 @@ public class FearKnight {
     private EntityDamageEvent getEvent(AttackDamage damage) {
         if (damage instanceof BukkitAttackDamage) {
             return ((BukkitAttackDamage) damage).getBukkitEvent();
-        }
-        return null;
-    }
-
-    private LivingEntity getLivingEntity(int index, Object... objects) {
-        if (objects != null && objects.length > index) {
-            if (objects[index] instanceof BukkitEntity) {
-                Entity entity = BukkitUtil.getBukkitEntity(objects[index]);
-                if (entity instanceof LivingEntity) {
-                    return (LivingEntity) entity;
-                }
-            }
-        }
-        return null;
-    }
-
-    private AttackDamage getDamage(int index, Object... objects) {
-        if (objects != null && objects.length > index) {
-            if (objects[index] instanceof AttackDamage) {
-                return (AttackDamage) objects[index];
-            }
         }
         return null;
     }

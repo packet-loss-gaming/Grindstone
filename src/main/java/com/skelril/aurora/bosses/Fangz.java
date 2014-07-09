@@ -9,12 +9,11 @@ package com.skelril.aurora.bosses;
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.OSBL.bukkit.BukkitBossDeclaration;
 import com.skelril.OSBL.bukkit.entity.BukkitBoss;
-import com.skelril.OSBL.bukkit.entity.BukkitEntity;
 import com.skelril.OSBL.bukkit.util.BukkitAttackDamage;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
+import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.entity.LocalEntity;
-import com.skelril.OSBL.instruction.Instruction;
-import com.skelril.OSBL.instruction.InstructionResult;
+import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
@@ -49,7 +48,7 @@ public class Fangz {
     private BukkitBossDeclaration fangz;
 
     public Fangz() {
-        fangz = new BukkitBossDeclaration(inst) {
+        fangz = new BukkitBossDeclaration(inst, new SimpleInstructionDispatch()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(entity);
@@ -64,11 +63,11 @@ public class Fangz {
     }
 
     private void setupFangz() {
-        List<Instruction> bindInstructions = fangz.bindInstructions;
-        bindInstructions.add(new Instruction() {
+        List<BindInstruction> bindInstructions = fangz.bindInstructions;
+        bindInstructions.add(new BindInstruction() {
             @Override
-            public InstructionResult execute(LocalEntity entity, Object... objects) {
-                Entity anEntity = BukkitUtil.getBukkitEntity(entity);
+            public InstructionResult<BindInstruction> process(LocalControllable controllable) {
+                Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
                     ((LivingEntity) anEntity).setCustomName("Fangz");
                     double hp = ((LivingEntity) anEntity).getMaxHealth();
@@ -79,11 +78,11 @@ public class Fangz {
             }
         });
 
-        List<Instruction> unbindInstructions = fangz.unbindInstructions;
-        unbindInstructions.add(new Instruction() {
+        List<UnbindInstruction> unbindInstructions = fangz.unbindInstructions;
+        unbindInstructions.add(new UnbindInstruction() {
             @Override
-            public InstructionResult execute(LocalEntity entity, Object... objects) {
-                Entity boss = BukkitUtil.getBukkitEntity(entity);
+            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+                Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 for (Entity aEntity : boss.getNearbyEntities(7, 4, 7)) {
                     if (!(aEntity instanceof LivingEntity)) continue;
                     ((LivingEntity) aEntity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 30, 1), true);
@@ -92,10 +91,10 @@ public class Fangz {
                 return null;
             }
         });
-        unbindInstructions.add(new Instruction() {
+        unbindInstructions.add(new UnbindInstruction() {
             @Override
-            public InstructionResult execute(LocalEntity entity, Object... objects) {
-                Entity boss = BukkitUtil.getBukkitEntity(entity);
+            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+                Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 double baseLevel = getBaseLevel(boss);
                 List<ItemStack> itemStacks = new ArrayList<>();
@@ -115,13 +114,14 @@ public class Fangz {
             }
         });
 
-        List<Instruction> damageInstructions = fangz.damageInstructions;
-        damageInstructions.add(new Instruction() {
+        List<DamageInstruction> damageInstructions = fangz.damageInstructions;
+        damageInstructions.add(new DamageInstruction() {
             @Override
-            public InstructionResult execute(LocalEntity entity, Object... objects) {
+            public InstructionResult<DamageInstruction> process(LocalControllable controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(entity);
-                LivingEntity toHit = getLivingEntity(0, objects);
-                AttackDamage damage = getDamage(1, objects);
+                Entity eToHit = BukkitUtil.getBukkitEntity(entity);
+                if (!(eToHit instanceof LivingEntity)) return null;
+                LivingEntity toHit = (LivingEntity) eToHit;
 
                 DamageUtil.multiplyFinalDamage(getEvent(damage), 2);
                 EntityUtil.heal(boss, damage.getDamage());
@@ -144,27 +144,6 @@ public class Fangz {
     private EntityDamageEvent getEvent(AttackDamage damage) {
         if (damage instanceof BukkitAttackDamage) {
             return ((BukkitAttackDamage) damage).getBukkitEvent();
-        }
-        return null;
-    }
-
-    private LivingEntity getLivingEntity(int index, Object... objects) {
-        if (objects != null && objects.length > index) {
-            if (objects[index] instanceof BukkitEntity) {
-                Entity entity = BukkitUtil.getBukkitEntity(objects[index]);
-                if (entity instanceof LivingEntity) {
-                    return (LivingEntity) entity;
-                }
-            }
-        }
-        return null;
-    }
-
-    private AttackDamage getDamage(int index, Object... objects) {
-        if (objects != null && objects.length > index) {
-            if (objects[index] instanceof AttackDamage) {
-                return (AttackDamage) objects[index];
-            }
         }
         return null;
     }
