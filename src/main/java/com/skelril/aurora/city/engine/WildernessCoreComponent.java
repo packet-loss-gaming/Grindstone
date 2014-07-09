@@ -12,6 +12,7 @@ import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldguard.bukkit.WGBukkit;
 import com.skelril.aurora.SacrificeComponent;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
@@ -42,6 +43,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -56,6 +58,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.PortalCreateEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -65,6 +68,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static com.skelril.aurora.economic.store.AdminStoreComponent.priceCheck;
 import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 /**
@@ -518,6 +522,79 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             event.getDrops().addAll(drops);
             event.setDroppedExp(event.getDroppedExp() * level);
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+
+        Player player = event.getEntity();
+
+        if (!isWildernessWorld(player.getWorld()) || adminComponent.isAdmin(player)) return;
+
+        boolean hasChest = false;
+
+        List<ItemStack> grave = new ArrayList<>();
+        event.getDrops().sort((o1, o2) -> (int) (priceCheck(o2) - priceCheck(o1)));
+        Iterator<ItemStack> it = event.getDrops().iterator();
+        int kept = 9;
+        while (it.hasNext()) {
+            ItemStack next = it.next();
+            if (next.getTypeId() == BlockID.CHEST) {
+                hasChest = true;
+                if (next.getAmount() > 1) {
+                    next.setAmount(next.getAmount() - 1);
+                } else {
+                    it.remove();
+                    continue;
+                }
+            }
+            if (kept > 0) {
+                it.remove();
+                grave.add(next);
+                kept--;
+            }
+        }
+
+        Location location = player.getLocation();
+        Block block = location.getBlock();
+        if (hasChest && WGBukkit.getPlugin().canBuild(player, block)) {
+            try {
+                graveSupplier:
+                {
+                    checkGrave:
+                    {
+                        for (BlockFace face : BlockFace.values()) {
+                            if (face.getModY() != 0) continue;
+                            Block aBlock = block.getRelative(face);
+                            if (aBlock.getTypeId() == BlockID.CHEST) {
+                                block = aBlock;
+                                break checkGrave;
+                            }
+                        }
+                        block.setTypeIdAndData(BlockID.CHEST, (byte) 0, true);
+                    }
+                    Chest chest = (Chest) block.getState();
+                    it = grave.iterator();
+                    Inventory blockInv = chest.getInventory();
+                    for (int i = 0; it.hasNext(); ++i) {
+                        while (blockInv.getItem(i) != null) {
+                            ++i;
+                            if (i >= blockInv.getSize()) {
+                                ChatUtil.sendError(player, "Some items could not be added to your grave!");
+                                break graveSupplier;
+                            }
+                        }
+                        blockInv.setItem(i, it.next());
+                        it.remove();
+                    }
+                    ChatUtil.sendNotice(player, "A grave has been created where you died.");
+                }
+            } catch (Exception ex) {
+                log.warning("Location could not be found to create a grave for: " + player.getName());
+                ex.printStackTrace();
+            }
+        }
+        event.getDrops().addAll(grave);
     }
 
     public int getLevel(Location location) {
