@@ -974,7 +974,16 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         } else if (ItemUtil.isItem(stack, CustomItems.POTION_OF_RESTITUTION)) {
             Location lastLoc = getSession(player).getRecentDeathPoint();
             if (lastLoc != null) {
-                player.teleport(lastLoc);
+                if (!player.teleport(lastLoc)) {
+                    ChatUtil.sendError(player, "Location Information: X: "
+                            + lastLoc.getBlockX() + ", Y: "
+                            + lastLoc.getBlockY() + ", Z: "
+                            + lastLoc.getBlockZ() + " in "
+                            + lastLoc.getWorld().getName() + '.'
+                    );
+                }
+            } else {
+                ChatUtil.sendError(player, "No previous death points are known the the potion.");
             }
         }
     }
