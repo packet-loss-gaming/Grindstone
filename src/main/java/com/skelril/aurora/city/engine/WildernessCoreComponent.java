@@ -60,9 +60,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.text.DecimalFormat;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -497,7 +495,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         int level = getLevel(location);
         if (isWildernessWorld(location.getWorld()) && level > 1) {
 
-            Set<ItemStack> drops = new HashSet<>();
+            List<ItemStack> drops = new ArrayList<>();
             double diffLevel = Math.max(1, level * .63);
             for (int i = 0; i < Math.pow(diffLevel, 3); i++) {
                 if (ChanceUtil.getChance(100000)) {
@@ -515,7 +513,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                     SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, Math.pow(level, 2) * 64)
             );
             if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
-                drops.addAll(drops.stream().map(ItemStack::clone).collect(Collectors.toSet()));
+                drops.addAll(drops.stream().map(ItemStack::clone).collect(Collectors.toList()));
             }
             event.getDrops().addAll(drops);
             event.setDroppedExp(event.getDroppedExp() * level);
