@@ -10,6 +10,12 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
 public class EntityUtil {
+    public static boolean nameMatches(Entity entity, String name) {
+        if (entity == null || !(entity instanceof LivingEntity)) return false;
+        String customName = ((LivingEntity) entity).getCustomName();
+        return customName != null && customName.equals(name);
+    }
+
     public static void heal(Entity entity, double amt) {
         if (entity == null || !entity.isValid() || !(entity instanceof LivingEntity)) return;
         double cur = ((LivingEntity) entity).getHealth();

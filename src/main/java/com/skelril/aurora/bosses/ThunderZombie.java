@@ -16,6 +16,7 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.EntityUtil;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Damageable;
@@ -38,8 +39,7 @@ public class ThunderZombie {
         thunderZombie = new BukkitBossDeclaration(inst, new SimpleInstructionDispatch()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
-                Entity anEntity = BukkitUtil.getBukkitEntity(entity);
-                return anEntity instanceof LivingEntity && ((LivingEntity) anEntity).getCustomName().equals("Thor Zombie");
+                return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Thor Zombie");
             }
         };
         setupThunderZombie();

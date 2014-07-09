@@ -51,8 +51,7 @@ public class Fangz {
         fangz = new BukkitBossDeclaration(inst, new SimpleInstructionDispatch()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
-                Entity anEntity = BukkitUtil.getBukkitEntity(entity);
-                return anEntity instanceof LivingEntity && ((LivingEntity) anEntity).getCustomName().equals("Fangz");
+                return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Fangz");
             }
         };
         setupFangz();

@@ -20,6 +20,7 @@ import com.skelril.aurora.items.specialattack.attacks.hybrid.fear.Curse;
 import com.skelril.aurora.items.specialattack.attacks.melee.fear.*;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.EntityUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -49,8 +50,7 @@ public class FearKnight {
         fearKnight = new BukkitBossDeclaration(inst, new SimpleInstructionDispatch()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
-                Entity anEntity = BukkitUtil.getBukkitEntity(entity);
-                return anEntity instanceof LivingEntity && ((LivingEntity) anEntity).getCustomName().equals("Fear Knight");
+                return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Fear Knight");
             }
         };
         setupFearKnight();

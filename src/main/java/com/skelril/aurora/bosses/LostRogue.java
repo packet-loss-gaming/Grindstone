@@ -21,6 +21,7 @@ import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmar
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.DamageUtil;
+import com.skelril.aurora.util.EntityUtil;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Damageable;
@@ -50,8 +51,7 @@ public class LostRogue {
         lostRogue = new BukkitBossDeclaration(inst, new SimpleInstructionDispatch()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
-                Entity anEntity = BukkitUtil.getBukkitEntity(entity);
-                return anEntity instanceof LivingEntity && ((LivingEntity) anEntity).getCustomName().equals("Lost Rogue");
+                return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Lost Rogue");
             }
         };
         setupLostRogue();
