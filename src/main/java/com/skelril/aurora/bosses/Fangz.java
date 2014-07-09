@@ -117,7 +117,7 @@ public class Fangz {
         damageInstructions.add(new DamageInstruction() {
             @Override
             public InstructionResult<DamageInstruction> process(LocalControllable controllable, LocalEntity entity, AttackDamage damage) {
-                Entity boss = BukkitUtil.getBukkitEntity(entity);
+                Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Entity eToHit = BukkitUtil.getBukkitEntity(entity);
                 if (!(eToHit instanceof LivingEntity)) return null;
                 LivingEntity toHit = (LivingEntity) eToHit;

@@ -166,7 +166,7 @@ public class FearKnight {
         damageInstructions.add(new DamageInstruction() {
             @Override
             public InstructionResult<DamageInstruction> process(LocalControllable controllable, LocalEntity entity, AttackDamage damage) {
-                Entity attacker = BukkitUtil.getBukkitEntity(entity);
+                Entity attacker = BukkitUtil.getBukkitEntity(controllable);
                 LivingEntity boss;
                 if (attacker instanceof LivingEntity) {
                     boss = (LivingEntity) attacker;

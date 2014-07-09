@@ -91,7 +91,7 @@ public class ThunderZombie {
         damageInstructions.add(new DamageInstruction() {
             @Override
             public InstructionResult<DamageInstruction> process(LocalControllable controllable, LocalEntity entity, AttackDamage damage) {
-                Entity boss = BukkitUtil.getBukkitEntity(entity);
+                Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 final Entity toHit = BukkitUtil.getBukkitEntity(entity);
                 toHit.setVelocity(boss.getLocation().getDirection().multiply(2));
 
