@@ -16,6 +16,7 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.Instruction;
 import com.skelril.OSBL.instruction.InstructionResult;
 import com.skelril.OSBL.util.AttackDamage;
+import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.DamageUtil;
 import com.skelril.aurora.util.EntityUtil;
@@ -26,12 +27,16 @@ import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 import static com.skelril.aurora.util.item.custom.CustomItems.POTION_OF_RESTITUTION;
 import static com.skelril.aurora.util.item.custom.CustomItems.SCROLL_OF_SUMMATION;
 
@@ -93,11 +98,18 @@ public class Fangz {
                 Entity boss = BukkitUtil.getBukkitEntity(entity);
                 Location target = boss.getLocation();
                 double baseLevel = getBaseLevel(boss);
+                List<ItemStack> itemStacks = new ArrayList<>();
                 for (int i = 0; i < baseLevel * ChanceUtil.getRandom(3); i++) {
-                    target.getWorld().dropItem(target, CustomItemCenter.build(POTION_OF_RESTITUTION));
+                    itemStacks.add(CustomItemCenter.build(POTION_OF_RESTITUTION));
                 }
                 for (int i = 0; i < baseLevel * ChanceUtil.getRandom(10); i++) {
-                    target.getWorld().dropItem(target, CustomItemCenter.build(SCROLL_OF_SUMMATION));
+                    itemStacks.add(CustomItemCenter.build(SCROLL_OF_SUMMATION));
+                }
+                if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
+                    itemStacks.addAll(itemStacks.stream().map(ItemStack::clone).collect(Collectors.toList()));
+                }
+                for (ItemStack itemStack : itemStacks) {
+                    target.getWorld().dropItem(target, itemStack);
                 }
                 return null;
             }

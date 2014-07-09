@@ -18,6 +18,7 @@ import com.skelril.OSBL.instruction.Instruction;
 import com.skelril.OSBL.instruction.InstructionResult;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
+import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.DamageUtil;
 import org.bukkit.Location;
@@ -31,8 +32,12 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 public class LostRogue {
     private final CommandBook inst = CommandBook.inst();
@@ -94,8 +99,15 @@ public class LostRogue {
                 Entity boss = BukkitUtil.getBukkitEntity(entity);
                 Location target = boss.getLocation();
                 double baseLevel = getBaseLevel(boss);
+                List<ItemStack> itemStacks = new ArrayList<>();
                 for (int i = 0; i < baseLevel * ChanceUtil.getRangedRandom(30, 100); i++) {
-                    target.getWorld().dropItem(target, new ItemStack(BlockID.GOLD_BLOCK));
+                    itemStacks.add(new ItemStack(BlockID.GOLD_BLOCK));
+                }
+                if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
+                    itemStacks.addAll(itemStacks.stream().map(ItemStack::clone).collect(Collectors.toList()));
+                }
+                for (ItemStack itemStack : itemStacks) {
+                    target.getWorld().dropItem(target, itemStack);
                 }
                 return null;
             }

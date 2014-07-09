@@ -19,6 +19,7 @@ import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.hybrid.fear.Curse;
 import com.skelril.aurora.items.specialattack.attacks.melee.fear.*;
+import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.item.custom.CustomItemCenter;
 import org.bukkit.Location;
@@ -30,9 +31,12 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 import static com.skelril.aurora.util.item.custom.CustomItems.*;
 
 public class FearKnight {
@@ -93,6 +97,7 @@ public class FearKnight {
                 Entity boss = BukkitUtil.getBukkitEntity(entity);
                 Location target = boss.getLocation();
                 double baseLevel = getBaseLevel(boss);
+                List<ItemStack> itemStacks = new ArrayList<>();
                 for (int i = 0; i < baseLevel; i++) {
                     ItemStack stack;
                     switch (ChanceUtil.getRandom(3)) {
@@ -108,8 +113,14 @@ public class FearKnight {
                         default:
                             return null;
                     }
-                    target.getWorld().dropItem(target, stack);
-                    target.getWorld().dropItem(target, CustomItemCenter.build(PHANTOM_GOLD));
+                    itemStacks.add(stack);
+                    itemStacks.add(CustomItemCenter.build(PHANTOM_GOLD));
+                }
+                if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
+                    itemStacks.addAll(itemStacks.stream().map(ItemStack::clone).collect(Collectors.toList()));
+                }
+                for (ItemStack itemStack : itemStacks) {
+                    target.getWorld().dropItem(target, itemStack);
                 }
                 return null;
             }
@@ -120,8 +131,15 @@ public class FearKnight {
                 Entity boss = BukkitUtil.getBukkitEntity(entity);
                 Location target = boss.getLocation();
                 double baseLevel = getBaseLevel(boss);
+                List<ItemStack> itemStacks = new ArrayList<>();
                 if (ChanceUtil.getChance(5 * (100 - baseLevel))) {
-                    target.getWorld().dropItem(target, CustomItemCenter.build(PHANTOM_HYMN));
+                    itemStacks.add(CustomItemCenter.build(PHANTOM_HYMN));
+                }
+                if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
+                    itemStacks.addAll(itemStacks.stream().map(ItemStack::clone).collect(Collectors.toList()));
+                }
+                for (ItemStack itemStack : itemStacks) {
+                    target.getWorld().dropItem(target, itemStack);
                 }
                 return null;
             }
@@ -132,8 +150,15 @@ public class FearKnight {
                 Entity boss = BukkitUtil.getBukkitEntity(entity);
                 Location target = boss.getLocation();
                 double baseLevel = getBaseLevel(boss);
+                List<ItemStack> itemStacks = new ArrayList<>();
                 if (ChanceUtil.getChance(10 * (100 - baseLevel))) {
-                    target.getWorld().dropItem(target, CustomItemCenter.build(PHANTOM_CLOCK));
+                    itemStacks.add(CustomItemCenter.build(PHANTOM_CLOCK));
+                }
+                if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
+                    itemStacks.addAll(itemStacks.stream().map(ItemStack::clone).collect(Collectors.toList()));
+                }
+                for (ItemStack itemStack : itemStacks) {
+                    target.getWorld().dropItem(target, itemStack);
                 }
                 return null;
             }
