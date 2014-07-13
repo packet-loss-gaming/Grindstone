@@ -390,7 +390,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             // Stop this from breaking if the player isn't here
             if (player == null) {
-                rogueState.setIsRogue(false);
                 continue;
             }
 
