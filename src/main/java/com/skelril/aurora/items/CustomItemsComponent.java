@@ -410,9 +410,8 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         }
 
         Player owner = result.getAttacker();
-        LivingEntity target = result.getDefender();
 
-        double modifier = target instanceof Player ? 0 : 1;
+        double modifier = 1;
 
         ItemStack targetItem = launcher;
 
@@ -432,7 +431,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             }
         }
 
-        event.setDamage(target instanceof Player ? event.getDamage() + modifier : event.getDamage() * modifier);
+        event.setDamage(event.getDamage() * modifier);
     }
 
     @EventHandler
