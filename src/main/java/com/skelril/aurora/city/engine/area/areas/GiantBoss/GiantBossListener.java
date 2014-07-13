@@ -277,7 +277,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             final Giant boss = (Giant) defender;
             // Schedule a task to change the display name to show HP
             server.getScheduler().runTaskLater(inst, () -> {
-                if (parent.getWorld().getTime() % 2 != 0 || !boss.isValid()) return;
+                if (!boss.isValid()) return;
                 parent.printBossHealth();
             }, 1);
             if (parent.damageHeals) {
