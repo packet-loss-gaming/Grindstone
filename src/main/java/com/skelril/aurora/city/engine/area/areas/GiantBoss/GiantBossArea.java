@@ -408,7 +408,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                             if (!isBossSpawned()) return;
                             ChatUtil.sendNotice(getContained(1, Player.class), "Thank you for your assistance.");
                         }
-                    }, 20 * (difficulty * 10));
+                    }, 20 * (difficulty * 5));
                     break;
                 }
                 runAttack(ChanceUtil.getRandom(OPTION_COUNT));
