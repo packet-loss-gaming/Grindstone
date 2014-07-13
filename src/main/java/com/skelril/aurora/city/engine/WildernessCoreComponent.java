@@ -70,6 +70,7 @@ import java.util.stream.Collectors;
 
 import static com.skelril.aurora.economic.store.AdminStoreComponent.priceCheck;
 import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
+import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 
 /**
  * Author: Turtle9598
@@ -427,7 +428,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         if (!(entity instanceof Player) || ignoredDamage.contains(event.getCause())) return;
 
-        event.setDamage(event.getDamage() + ChanceUtil.getRandom(ChanceUtil.getRandom(level)) - 1);
+        event.setDamage(DamageModifier.BASE, event.getDamage() + ChanceUtil.getRandom(ChanceUtil.getRandom(level)) - 1);
         if (((Player) entity).isFlying() && event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
             DamageUtil.multiplyFinalDamage(event, 2);
         }

@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier.BASE;
+
 public class DamageUtil {
 
     private static final CommandBook inst = CommandBook.inst();
@@ -39,6 +41,6 @@ public class DamageUtil {
     }
 
     public static void multiplyFinalDamage(EntityDamageEvent event, double multiplier) {
-        event.setDamage(Math.max(0, event.getDamage() + (event.getFinalDamage() * (multiplier - 1))));
+        event.setDamage(BASE, Math.max(0, event.getDamage() + (event.getFinalDamage() * (multiplier - 1))));
     }
 }

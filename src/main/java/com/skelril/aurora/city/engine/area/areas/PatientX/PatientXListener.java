@@ -61,6 +61,8 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
+
 public class PatientXListener extends AreaListener<PatientXArea> {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -213,12 +215,12 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             // Explosive damage formula: (1 × 1 + 1) × 8 × power + 1
             // Use 49, snowball power is 3
             double ratio = event.getDamage() / 49;
-            for (EntityDamageEvent.DamageModifier modifier : EntityDamageEvent.DamageModifier.values()) {
+            for (DamageModifier modifier : DamageModifier.values()) {
                 if (event.isApplicable(modifier)) {
                     event.setDamage(modifier, 0);
                 }
             }
-            event.setDamage(ratio * (parent.difficulty));
+            event.setDamage(DamageModifier.BASE, ratio * parent.difficulty);
         }
 
         if (defender.equals(parent.boss) && blockedDamage.contains(event.getCause())) {
@@ -253,12 +255,12 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     ChatUtil.sendNotice(player, "A divine force protects you.");
                     return;
                 }
-                for (EntityDamageEvent.DamageModifier modifier : EntityDamageEvent.DamageModifier.values()) {
+                for (DamageModifier modifier : DamageModifier.values()) {
                     if (event.isApplicable(modifier)) {
                         event.setDamage(modifier, 0);
                     }
                 }
-                event.setDamage(parent.difficulty * parent.getConfig().baseBossHit);
+                event.setDamage(DamageModifier.BASE, parent.difficulty * parent.getConfig().baseBossHit);
                 return;
             }
             if (ItemUtil.hasAncientArmour(player)) {

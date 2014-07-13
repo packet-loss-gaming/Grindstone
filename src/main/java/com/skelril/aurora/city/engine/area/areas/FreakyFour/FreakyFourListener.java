@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 public class FreakyFourListener extends AreaListener<FreakyFourArea> {
@@ -223,7 +224,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         }
         if (entity instanceof Player) {
             if (damager instanceof MagmaCube) {
-                event.setDamage(event.getDamage() + parent.getConfig().magmaCubedDamageModifier);
+                event.setDamage(DamageModifier.BASE, event.getDamage() + parent.getConfig().magmaCubedDamageModifier);
             } else if (damager instanceof Creature) {
                 if (projectile != null) {
                     EntityUtil.forceDamage(entity, ((Player) entity).getMaxHealth() * parent.getConfig().snipeeDamage);
