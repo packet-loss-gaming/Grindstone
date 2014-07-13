@@ -326,6 +326,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 Zombie zombie = spawn(ls, Zombie.class, "Guardian Zombie");
                 zombie.setCanPickupItems(false);
                 EntityEquipment equipment = zombie.getEquipment();
+                equipment.setItemInHand(new ItemStack(ItemID.DIAMOND_SWORD));
                 equipment.setArmorContents(new ItemStack[]{
                         CustomItemCenter.build(CustomItems.ANCIENT_BOOTS),
                         CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS),

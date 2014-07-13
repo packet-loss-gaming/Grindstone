@@ -138,7 +138,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         LivingEntity attacker = result.getAttacker();
         if (parent.isHostileTempleArea(event.getEntity().getLocation())) {
             double damage = event.getDamage();
-            if (ItemUtil.hasAncientArmour(defender) && !(parent.getWorld().isThundering() && defender instanceof Player)) {
+            if (ItemUtil.hasAncientArmour(defender) && (parent.getWorld().isThundering() || !(defender instanceof Player))) {
                 double diff = defender.getMaxHealth() - defender.getHealth();
                 if (ChanceUtil.getChance((int) Math.max(3, Math.round(defender.getMaxHealth() - diff)))) {
                     EffectUtil.Ancient.powerBurst(defender, damage);
@@ -322,7 +322,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     drops.add(CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL));
                 }
                 if (ChanceUtil.getChance(60) || world.isThundering() && ChanceUtil.getChance(40)) {
-                    drops.add(CustomItemCenter.build(CustomItems.BAT_BOW));
+                    drops.add(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(16)));
                 }
                 if (ChanceUtil.getChance(60) || world.isThundering() && ChanceUtil.getChance(40)) {
                     drops.add(CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS));
@@ -349,6 +349,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                             break;
                     }
                 }
+                event.setDroppedExp(event.getDroppedExp() * 5);
             }
         } else if (parent.contains(entity)) {
             if (entity instanceof CaveSpider) {
