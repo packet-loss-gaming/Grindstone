@@ -403,7 +403,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                     ChatUtil.sendWarning(containedP, "I am everlasting!");
                     damageHeals = true;
                     server.getScheduler().runTaskLater(inst, () -> {
-                        if (!damageHeals) {
+                        if (damageHeals) {
                             damageHeals = false;
                             if (!isBossSpawned()) return;
                             ChatUtil.sendNotice(getContained(1, Player.class), "Thank you for your assistance.");
