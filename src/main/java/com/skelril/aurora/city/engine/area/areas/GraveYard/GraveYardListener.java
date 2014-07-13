@@ -167,7 +167,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     }
                 }
                 if (ItemUtil.findItemOfName(player.getInventory().getContents(), CustomItems.PHANTOM_HYMN.toString())) {
-                    event.setDamage(event.getDamage() + 1);
+                    event.setDamage(event.getDamage() * 1.5);
                 }
             }
         }
