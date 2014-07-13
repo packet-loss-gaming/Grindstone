@@ -227,7 +227,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                 }
             }
         } else if (attacker instanceof Player && isRogue((Player) attacker)) {
-            event.setDamage(defender instanceof Player ? event.getDamage() + 1 : event.getDamage() + 10);
+            event.setDamage((event.getDamage() + 10) * 1.2);
         }
     }
 
