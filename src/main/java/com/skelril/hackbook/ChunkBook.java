@@ -8,7 +8,7 @@ package com.skelril.hackbook;
 
 import com.skelril.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Chunk;
-import org.bukkit.craftbukkit.v1_7_R3.CraftChunk;
+import org.bukkit.craftbukkit.v1_7_R4.CraftChunk;
 
 public class ChunkBook {
 

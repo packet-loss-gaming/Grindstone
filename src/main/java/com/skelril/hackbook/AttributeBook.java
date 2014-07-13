@@ -7,17 +7,17 @@
 package com.skelril.hackbook;
 
 import com.skelril.hackbook.exceptions.UnsupportedFeatureException;
-import net.minecraft.server.v1_7_R3.EntityInsentient;
-import net.minecraft.server.v1_7_R3.GenericAttributes;
-import net.minecraft.server.v1_7_R3.IAttribute;
-import org.bukkit.craftbukkit.v1_7_R3.entity.CraftLivingEntity;
+import net.minecraft.server.v1_7_R4.EntityInsentient;
+import net.minecraft.server.v1_7_R4.GenericAttributes;
+import net.minecraft.server.v1_7_R4.IAttribute;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 
 public class AttributeBook {
 
     public enum Attribute {
 
-        MAX_HEALTH(GenericAttributes.a),
+        MAX_HEALTH(GenericAttributes.maxHealth),
         FOLLOW_RANGE(GenericAttributes.b),
         KNOCKBACK_RESISTANCE(GenericAttributes.c),
         MOVEMENT_SPEED(GenericAttributes.d),
