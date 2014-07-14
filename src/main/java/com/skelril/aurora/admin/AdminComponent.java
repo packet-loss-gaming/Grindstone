@@ -32,6 +32,9 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Dispenser;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -40,6 +43,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -59,6 +63,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * @author Turtle9598
@@ -588,6 +593,26 @@ public class AdminComponent extends BukkitComponent implements Listener {
         if (EnvironmentUtil.isValuableBlock(block) && !isAdmin(player) || isAdmin(player) && isDisabledBlock(block)) {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You cannot place that block.");
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockDispense(BlockDispenseEvent event) {
+        Block block = event.getBlock();
+        BlockState state = block.getState();
+        if (state instanceof Dispenser) {
+            BlockFace dir = ((org.bukkit.material.Dispenser) state.getData()).getFacing();
+            Location location = block.getRelative(dir).getLocation();
+            Set<Player> found = server.getOnlinePlayers().stream()
+                    .filter(p -> p.getLocation().distanceSquared(location) < 1.5 * 1.5)
+                    .collect(Collectors.toSet());
+            
+            for (Player p : found) {
+                if (isAdmin(p)) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
         }
     }
 
