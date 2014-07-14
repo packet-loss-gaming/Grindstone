@@ -603,10 +603,10 @@ public class AdminComponent extends BukkitComponent implements Listener {
         if (state instanceof Dispenser) {
             BlockFace dir = ((org.bukkit.material.Dispenser) state.getData()).getFacing();
             Location location = block.getRelative(dir).getLocation();
-            Set<Player> found = server.getOnlinePlayers().stream()
+            Set<Player> found = block.getWorld().getPlayers().stream()
                     .filter(p -> p.getLocation().distanceSquared(location) < 1.5 * 1.5)
                     .collect(Collectors.toSet());
-            
+
             for (Player p : found) {
                 if (isAdmin(p)) {
                     event.setCancelled(true);
