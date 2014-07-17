@@ -36,6 +36,7 @@ import com.skelril.aurora.util.timer.TimerUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -196,11 +197,11 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
         }
 
         @Command(aliases = {"list"},
-                usage = "[prefix]", desc = "List all arena states",
+                usage = "[-p page] [prefix]", desc = "List all arena states",
                 flags = "p:", min = 0, max = 1)
         @CommandPermissions("aurora.mirage.list")
         public void areaList(CommandContext args, CommandSender sender) throws CommandException {
-            new PaginatedResult<File>("Arenas") {
+            new PaginatedResult<File>(ChatColor.GOLD + "Arenas") {
                 @Override
                 public String format(File file) {
                     return file.getName();
