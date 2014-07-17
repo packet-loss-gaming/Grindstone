@@ -9,6 +9,7 @@ package com.skelril.aurora.admin;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.GodComponent;
 import com.sk89q.commandbook.InfoComponent;
+import com.sk89q.commandbook.commands.PaginatedResult;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.BlockID;
@@ -58,6 +59,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -835,6 +837,25 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 throw new CommandException("The profile: " + profileName + ", is corrupt!");
             }
             ChatUtil.sendNotice(sender, "Profile loaded, and successfully applied!");
+        }
+
+        @Command(aliases = {"list"},
+                usage = "[-p page] [prefix]", desc = "List saved inventory profiles",
+                flags = "p:", min = 0, max = 1)
+        @CommandPermissions({"aurora.admin.profiles.list"})
+        public void profileListCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            new PaginatedResult<File>(ChatColor.GOLD + "Profiles") {
+                @Override
+                public String format(File file) {
+                    return file.getName().replace(".dat", "");
+                }
+            }.display(
+                    sender,
+                    Arrays.asList(new File(profilesDirectory).listFiles((dir, name) ->
+                            (args.argsLength() < 1 || name.startsWith(args.getString(0))) && name.endsWith(".dat"))),
+                    args.getFlagInteger('p', 1)
+            );
         }
 
         @Command(aliases = {"delete"},
