@@ -535,7 +535,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         boolean hasChest = false;
 
         List<ItemStack> grave = new ArrayList<>();
-        event.getDrops().sort((o1, o2) -> (int) (priceCheck(o2) - priceCheck(o1)));
+        event.getDrops().sort((o1, o2) -> (int) (priceCheck(o2, false) - priceCheck(o1, false)));
         Iterator<ItemStack> it = event.getDrops().iterator();
         int kept = 9;
         while (it.hasNext()) {
