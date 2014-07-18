@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.ChatUtil;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.*;
+import com.skelril.aurora.util.CollectionUtil;
 import com.skelril.aurora.util.database.IOUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -72,7 +73,12 @@ public class ModifierComponent extends BukkitComponent implements Listener {
         public void extendCmd(CommandContext args, CommandSender sender) throws CommandException {
             ModifierType modifierType;
             try {
-                modifierType = ModifierType.valueOf(args.getString(0));
+                String modifierStr = args.getString(0);
+                if (modifierStr.equalsIgnoreCase("rand")) {
+                    modifierType = CollectionUtil.getElement(ModifierType.values());
+                } else {
+                    modifierType = ModifierType.valueOf(modifierStr);
+                }
             } catch (IllegalArgumentException ex) {
                 throw new CommandException("No modifier by that name could be found!");
             }
