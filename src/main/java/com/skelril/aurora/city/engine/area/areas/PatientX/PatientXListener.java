@@ -319,16 +319,29 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
                 switch (ChanceUtil.getRandom(4)) {
                     case 1:
-                        drops.add(CustomItemCenter.build(CustomItems.NECROS_HELMET));
+                        if (ChanceUtil.getChance(8)) {
+                            drops.add(CustomItemCenter.build(CustomItems.NECROS_HELMET));
+                            break;
+                        }
+                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_HELMET));
                         break;
                     case 2:
-                        drops.add(CustomItemCenter.build(CustomItems.NECROS_CHESTPLATE));
+                        if (ChanceUtil.getChance(8)) {
+                            drops.add(CustomItemCenter.build(CustomItems.NECROS_CHESTPLATE));
+                        }
+                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_CHESTPLATE));
                         break;
                     case 3:
-                        drops.add(CustomItemCenter.build(CustomItems.NECROS_LEGGINGS));
+                        if (ChanceUtil.getChance(8)) {
+                            drops.add(CustomItemCenter.build(CustomItems.NECROS_LEGGINGS));
+                        }
+                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_LEGGINGS));
                         break;
                     case 4:
-                        drops.add(CustomItemCenter.build(CustomItems.NECROS_BOOTS));
+                        if (ChanceUtil.getChance(8)) {
+                            drops.add(CustomItemCenter.build(CustomItems.NECROS_BOOTS));
+                        }
+                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_BOOTS));
                         break;
                 }
 
