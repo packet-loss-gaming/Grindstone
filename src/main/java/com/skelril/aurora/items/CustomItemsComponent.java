@@ -851,7 +851,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
 
         if (event.isSneaking() && player.getAllowFlight() && player.isOnGround() && !admin.isAdmin(player)) {
 
-            if (!ItemUtil.hasItem(player, CustomItems.PIXIE_DUST)) return;
+            if (player.getFlySpeed() != .6F || !ItemUtil.hasItem(player, CustomItems.PIXIE_DUST)) return;
 
             player.setAllowFlight(false);
             // antiCheat.unexempt(player, CheckType.FLY);
