@@ -14,11 +14,20 @@ import java.util.concurrent.TimeUnit;
 
 public class MirageSession extends PersistentSession {
 
+    private String vote;
     private Set<String> ignored = new HashSet<>();
     private double dmgTaken = 0;
 
     protected MirageSession() {
         super(TimeUnit.MINUTES.toMillis(30));
+    }
+
+    public void vote(String vote) {
+        this.vote = vote;
+    }
+
+    public String getVote() {
+        return vote;
     }
 
     public boolean isIgnored(String player) {
