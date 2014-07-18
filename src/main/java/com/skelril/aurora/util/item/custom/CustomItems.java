@@ -99,6 +99,7 @@ public enum CustomItems {
     HYMN_OF_SUMMATION(ChatColor.GOLD, "Hymn of Summation"),
 
     // Miscellaneous
+    MAD_MILK(ChatColor.DARK_AQUA, "Mad Milk"),
     GOD_FISH(ChatColor.BLUE, "God Fish"),
     OVERSEER_BOW(ChatColor.RED, "Overseer's Bow"),
     BARBARIAN_BONE(ChatColor.DARK_RED, "Barbarian Bone"),

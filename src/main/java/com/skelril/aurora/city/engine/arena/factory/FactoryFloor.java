@@ -26,12 +26,16 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
@@ -42,11 +46,14 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    protected static FactoryFloor factInst;
+
     private AdminComponent adminComponent;
 
     private YAMLProcessor processor;
     private List<FactoryMech> mechs;
     private LinkedList<ItemStack> que = new LinkedList<>();
+    private long nextMobSpawn = 0L;
 
     public FactoryFloor(World world, ProtectedRegion[] regions, List<FactoryMech> mechs, YAMLProcessor processor,
                         AdminComponent adminComponent) {
@@ -59,6 +66,13 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+        factInst = this;
+    }
+
+    public void madMilk() {
+        nextMobSpawn = Math.max(nextMobSpawn, System.currentTimeMillis()) + TimeUnit.MINUTES.toMillis(10);
+        getContained(Zombie.class, Skeleton.class).stream().forEach(Entity::remove);
+        writePrime();
     }
 
     public ChamberType getProductType(ItemStack product) {
@@ -118,6 +132,13 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onEntitySpawn(CreatureSpawnEvent event) {
+        if (System.currentTimeMillis() < nextMobSpawn && contains(event.getEntity())) {
+            event.setCancelled(true);
+        }
+    }
+
     @Override
     public String getId() {
         return getRegion().getId();
@@ -134,6 +155,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     }
 
     public void writePrime() {
+        processor.setProperty("mob-delay-timer", nextMobSpawn);
         processor.removeProperty("products");
         for (int i = 0; i < que.size(); ++i) {
             YAMLNode node = processor.addNode("products." + i);
@@ -167,6 +189,10 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     public void reloadData() {
         try {
             processor.load();
+            Object timerO = processor.getProperty("mob-delay-timer");
+            if (timerO instanceof Long) {
+                nextMobSpawn = (long) timerO;
+            }
             Map<String, YAMLNode> nodes = processor.getNodes("products");
             if (nodes != null) {
                 for (Map.Entry<String, YAMLNode> entry : nodes.entrySet()) {

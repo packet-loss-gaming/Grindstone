@@ -448,6 +448,7 @@ public class CustomItemCenter {
         magicbucket.addSource(ItemSource.GIANT_BOSS);
         magicbucket.addSource(ItemSource.MARKET);
         magicbucket.addUse("Allows the player to fly indefinitely in permitted areas.");
+        magicbucket.addUse("When used on a cow, it will turn into Mad Milk.");
         addItem(magicbucket);
 
         // Animal Bows
@@ -508,6 +509,12 @@ public class CustomItemCenter {
         hymnOfSummation.addSource(ItemSource.MARKET);
         hymnOfSummation.addUse("Upon use, will compact coal, iron, gold, redstone, lapis, diamonds, and emerald.");
         addItem(hymnOfSummation);
+
+        CustomItem madMilk = new CustomItem(MAD_MILK, Material.MILK_BUCKET);
+        madMilk.addSource(ItemSource.MARKET);
+        madMilk.addUse("If thrown into a brewing vat at the factory, a melt down will occur in which all undead creatures die.");
+        madMilk.addUse("When drank, it will turn into a Magic Bucket.");
+        addItem(madMilk);
     }
 
     public static Collection<CustomItem> values() {

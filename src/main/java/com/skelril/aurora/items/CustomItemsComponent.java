@@ -715,9 +715,21 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         ItemStack itemStack = player.getItemInHand();
 
+        if (event.getRightClicked() instanceof Cow && ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
+            server.getScheduler().runTaskLater(inst, () -> player.getInventory().setItemInHand(CustomItemCenter.build(CustomItems.MAD_MILK)), 1);
+            if (player.getAllowFlight()) {
+                ChatUtil.sendNotice(player, "The power of the bucket fades.");
+            }
+            player.setAllowFlight(false);
+            event.setCancelled(true);
+            return;
+        }
+
         if (handleRightClick(player, event.getRightClicked().getLocation(), itemStack)) {
             event.setCancelled(true);
         }
+        //noinspection deprecation
+        server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -730,7 +742,7 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             event.setCancelled(true);
         }
         //noinspection deprecation
-        player.updateInventory();
+        server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
     }
 
     public boolean handleRightClick(final Player player, Location location, ItemStack itemStack) {
@@ -984,6 +996,9 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
             } else {
                 ChatUtil.sendError(player, "No previous death points are known the the potion.");
             }
+        } else if (ItemUtil.isItem(stack, CustomItems.MAD_MILK)) {
+            server.getScheduler().runTaskLater(inst, () -> player.getInventory().setItemInHand(CustomItemCenter.build(CustomItems.MAGIC_BUCKET)), 1);
+            event.setCancelled(true);
         }
     }
 

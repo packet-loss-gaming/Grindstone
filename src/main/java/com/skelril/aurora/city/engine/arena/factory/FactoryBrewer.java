@@ -13,6 +13,8 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.item.BaseItem;
+import com.skelril.aurora.util.item.ItemUtil;
+import com.skelril.aurora.util.item.custom.CustomItems;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -99,6 +101,10 @@ public class FactoryBrewer extends FactoryMech {
                             total += items.get(workingStack.getTypeId());
                         }
                         items.put(workingStack.getTypeId(), total);
+                    } else if (ItemUtil.isItem(workingStack, CustomItems.MAD_MILK)) {
+                        FactoryFloor.factInst.madMilk();
+                        ChatUtil.sendWarning(playerList, "The milk is too much for the vat to handle!");
+                        ChatUtil.sendNotice(playerList, "The nearby mobs die... but strangely, you're okay.");
                     }
                 }
                 e.remove();
