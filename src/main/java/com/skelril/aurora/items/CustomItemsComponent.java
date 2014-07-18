@@ -716,11 +716,18 @@ public class CustomItemsComponent extends BukkitComponent implements Listener {
         ItemStack itemStack = player.getItemInHand();
 
         if (event.getRightClicked() instanceof Cow && ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
-            server.getScheduler().runTaskLater(inst, () -> player.getInventory().setItemInHand(CustomItemCenter.build(CustomItems.MAD_MILK)), 1);
-            if (player.getAllowFlight()) {
-                ChatUtil.sendNotice(player, "The power of the bucket fades.");
-            }
-            player.setAllowFlight(false);
+            server.getScheduler().runTaskLater(inst, () -> {
+                if (!ItemUtil.swapItem(player.getInventory(), CustomItems.MAGIC_BUCKET, CustomItems.MAD_MILK)) {
+                    ChatUtil.sendError(player, "Your inventory is too full!");
+                    return;
+                }
+                if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
+                    if (player.getAllowFlight()) {
+                        ChatUtil.sendNotice(player, "The power of the bucket fades.");
+                    }
+                    player.setAllowFlight(false);
+                }
+            }, 1);
             event.setCancelled(true);
             return;
         }

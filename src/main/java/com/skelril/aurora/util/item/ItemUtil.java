@@ -9,6 +9,7 @@ package com.skelril.aurora.util.item;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.util.ChanceUtil;
+import com.skelril.aurora.util.item.custom.CustomItemCenter;
 import com.skelril.aurora.util.item.custom.CustomItems;
 import com.skelril.aurora.util.item.itemstack.SerializableItemStack;
 import org.bukkit.ChatColor;
@@ -16,10 +17,7 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EntityEquipment;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
@@ -306,6 +304,15 @@ public class ItemUtil {
         return matchesFilter(stack, type.toString());
     }
 
+    public static boolean swapItem(Inventory target, CustomItems oldItem, CustomItems newItem) {
+        if (target.removeItem(CustomItemCenter.build(oldItem)).isEmpty()) {
+            if (target.addItem(CustomItemCenter.build(newItem)).isEmpty()) {
+                return true;
+            }
+            target.addItem(CustomItemCenter.build(oldItem));
+        }
+        return false;
+    }
     public static boolean hasAncientArmour(LivingEntity entity) {
 
         if (!entity.isValid()) return false;
