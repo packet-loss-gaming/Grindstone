@@ -70,7 +70,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     }
 
     public void madMilk() {
-        nextMobSpawn = Math.max(nextMobSpawn, System.currentTimeMillis()) + TimeUnit.MINUTES.toMillis(10);
+        nextMobSpawn = Math.max(nextMobSpawn, System.currentTimeMillis()) + TimeUnit.MINUTES.toMillis(25);
         getContained(Zombie.class, Skeleton.class).stream().forEach(Entity::remove);
         writePrime();
     }
