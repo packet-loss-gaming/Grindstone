@@ -103,8 +103,7 @@ public class FactoryBrewer extends FactoryMech {
                         items.put(workingStack.getTypeId(), total);
                     } else if (ItemUtil.isItem(workingStack, CustomItems.MAD_MILK)) {
                         FactoryFloor.factInst.madMilk();
-                        ChatUtil.sendWarning(playerList, "The milk is too much for the vat to handle!");
-                        ChatUtil.sendNotice(playerList, "The nearby mobs die... but strangely, you're okay.");
+                        ChatUtil.sendWarning(playerList, "The milk is too much for the vat to handle, strange things start happening...");
                     }
                 }
                 e.remove();

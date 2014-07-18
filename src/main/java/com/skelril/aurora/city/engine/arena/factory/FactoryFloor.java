@@ -22,17 +22,16 @@ import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.DamageUtil;
 import com.skelril.aurora.util.item.itemstack.StackSerializer;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Skeleton;
-import org.bukkit.entity.Zombie;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionType;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -70,9 +69,31 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     }
 
     public void madMilk() {
-        nextMobSpawn = Math.max(nextMobSpawn, System.currentTimeMillis()) + TimeUnit.MINUTES.toMillis(25);
-        getContained(Zombie.class, Skeleton.class).stream().forEach(Entity::remove);
+        nextMobSpawn = Math.max(nextMobSpawn, System.currentTimeMillis()) + TimeUnit.MINUTES.toMillis(40);
         writePrime();
+    }
+
+    public void throwPotions() {
+        Random random = new Random();
+        PotionType type = PotionType.INSTANT_HEAL;
+        getContained(Zombie.class, Skeleton.class).stream().forEach(e -> {
+            for (int i = ChanceUtil.getRandom(3); i > 0; --i) {
+                Location tg = e.getLocation().add(0, ChanceUtil.getRangedRandom(2, 6), 0);
+                if (tg.getBlock().getType().isSolid()) continue;
+                ThrownPotion potion = e.getWorld().spawn(
+                        tg,
+                        ThrownPotion.class
+                );
+                Potion brewedPotion = new Potion(type);
+                brewedPotion.setLevel(type.getMaxLevel());
+                brewedPotion.setSplash(true);
+                potion.setItem(brewedPotion.toItemStack(1));
+                potion.setVelocity(new org.bukkit.util.Vector(
+                        random.nextDouble() * 2.0 - 1,
+                        0,
+                        random.nextDouble() * 2.0 - 1));
+            }
+        });
     }
 
     public ChamberType getProductType(ItemStack product) {
@@ -95,7 +116,12 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     @Override
     public void run() {
 
+        if (isEmpty()) return;
+
         equalize();
+        if (System.currentTimeMillis() < nextMobSpawn) {
+            throwPotions();
+        }
 
         int queueSize = que.size();
         for (FactoryMech mech : Collections.synchronizedList(mechs)) que.addAll(mech.process());
@@ -129,13 +155,6 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
 
         if (((Player) entity).isFlying() && event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
             DamageUtil.multiplyFinalDamage(event, 2);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onEntitySpawn(CreatureSpawnEvent event) {
-        if (System.currentTimeMillis() < nextMobSpawn && contains(event.getEntity())) {
-            event.setCancelled(true);
         }
     }
 
