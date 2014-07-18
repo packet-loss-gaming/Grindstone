@@ -27,6 +27,7 @@ import com.skelril.aurora.city.engine.pvp.PvPComponent;
 import com.skelril.aurora.city.engine.pvp.PvPScope;
 import com.skelril.aurora.exceptions.UnknownPluginException;
 import com.skelril.aurora.util.APIUtil;
+import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ChatUtil;
 import com.skelril.aurora.util.LocationUtil;
 import com.skelril.aurora.util.database.IOUtil;
@@ -41,6 +42,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
@@ -95,6 +97,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
     public void run() {
         if (!isEmpty()) {
             equalize();
+            fakeXPGain();
             shiftMirage();
         }
         writeData(true);
@@ -112,6 +115,15 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
                 return !sessions.getSession(MirageSession.class, attacker).isIgnored(defender.getName());
             }
         });
+    }
+
+    public void fakeXPGain() {
+        for (Player player : getContained(Player.class)) {
+            for (int i = ChanceUtil.getRandom(5); i > 0; --i) {
+                server.getPluginManager().callEvent(new PlayerExpChangeEvent(player,
+                        ChanceUtil.getRandom(config.fakeXP)));
+            }
+        }
     }
 
     public void shiftMirage() {
