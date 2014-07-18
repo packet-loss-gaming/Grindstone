@@ -50,6 +50,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
@@ -60,6 +61,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.Torch;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.text.DecimalFormat;
@@ -343,14 +345,34 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         }
     }
 
-    // Catch possible escapes
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
 
         Player player = event.getPlayer();
 
-        if (isWildernessWorld(player.getWorld()) && adminComponent.isAdmin(player)) {
-            adminComponent.deadmin(player);
+        if (isWildernessWorld(player.getWorld())) {
+            // Catch possible escapes
+            if (adminComponent.isAdmin(player)) {
+                adminComponent.deadmin(player);
+                return;
+            }
+
+            if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) return;
+            ItemStack held = player.getItemInHand();
+            if (held == null || !ItemUtil.isPickAxe(held.getTypeId())) return;
+            Block origin = event.getClickedBlock();
+            Block target = origin.getRelative(event.getBlockFace());
+            if (origin.getType().isSolid() && target.getType() == Material.AIR && WGBukkit.getPlugin().canBuild(player, target)) {
+                if (!player.getInventory().removeItem(new ItemStack(BlockID.TORCH)).isEmpty()) return;
+                player.updateInventory();
+                target.setType(Material.TORCH);
+                BlockState torchState = target.getState();
+                if (torchState.getData() instanceof Torch) {
+                    Torch torch = (Torch) torchState.getData();
+                    torch.setFacingDirection(event.getBlockFace());
+                    torchState.update();
+                }
+            }
         }
     }
 
