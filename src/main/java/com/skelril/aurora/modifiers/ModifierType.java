@@ -16,7 +16,8 @@ public enum ModifierType {
     DOUBLE_WILD_DROPS(2, "Double Wilderness Drops"),
     QUAD_GOLD_RUSH(3, "Quadruple Gold Rush"),
     TRIPLE_FACTORY_PRODUCTION(4, "Triple Factory Production"),
-    HEXA_FACTORY_SPEED(5, "Hextuple Factory Speed");
+    HEXA_FACTORY_SPEED(5, "Hextuple Factory Speed"),
+    NONUPLE_MIRAGE_GOLD(6, "Nonuple Mirage Arena Gold");
 
     final int id;
     final String fname;

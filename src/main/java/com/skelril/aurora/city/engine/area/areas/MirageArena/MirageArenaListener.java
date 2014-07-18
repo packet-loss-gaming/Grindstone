@@ -14,6 +14,7 @@ import com.skelril.aurora.events.apocalypse.GemOfLifeUsageEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.fear.Disarm;
+import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.ItemCondenser;
 import com.skelril.aurora.util.extractor.entity.CombatantPair;
@@ -38,6 +39,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
+
+import static com.skelril.aurora.modifiers.ModifierComponent.getModifierCenter;
 
 public class MirageArenaListener extends AreaListener<MirageArena> {
 
@@ -164,11 +167,21 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
             MirageArenaConfig config = parent.getConfig();
             MirageSession session = parent.sessions.getSession(MirageSession.class, player);
 
+            int lowEnd, highEnd;
+
+            if (getModifierCenter().isActive(ModifierType.NONUPLE_MIRAGE_GOLD)) {
+                lowEnd = ItemID.GOLD_BAR;
+                highEnd = BlockID.GOLD_BLOCK;
+            } else {
+                lowEnd = ItemID.GOLD_NUGGET;
+                highEnd = ItemID.GOLD_BAR;
+            }
+
             for (double i = session.getDamage(); i > 0; --i) {
                 if (ChanceUtil.getChance(config.goldBarChance)) {
-                    world.dropItem(loc, new ItemStack(ItemID.GOLD_BAR));
+                    world.dropItem(loc, new ItemStack(highEnd));
                 }
-                world.dropItem(loc, new ItemStack(ItemID.GOLD_NUGGET));
+                world.dropItem(loc, new ItemStack(lowEnd));
             }
 
             session.resetDamage();
