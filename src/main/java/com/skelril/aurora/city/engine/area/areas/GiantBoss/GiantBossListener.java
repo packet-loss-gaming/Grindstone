@@ -393,8 +393,8 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 int m = parent.getWorld().isThundering() ? 3 : 1;
                 m *= player != null ? 3 : 1;
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m, 400000));
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 4000));
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 400));
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 15000));
+                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 4000));
                 // Gold drops
                 for (int i = 0; i < Math.sqrt(amt + m) + GiantBossArea.scalOffst; i++) {
                     event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRangedRandom(32, 64)));
