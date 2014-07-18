@@ -173,6 +173,11 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
             session.resetDamage();
 
+            Player killer = player.getKiller();
+            if (killer != null) {
+                killer.setHealth(killer.getMaxHealth());
+            }
+
             playerState.put(player.getName(), new PlayerState(player.getName(),
                     player.getInventory().getContents(),
                     player.getInventory().getArmorContents(),
