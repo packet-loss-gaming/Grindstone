@@ -331,7 +331,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
         @Command(aliases = {"enchant"},
                 usage = "<enchantment> <level>", desc = "Enchant an item",
-                flags = "f", min = 2, max = 2)
+                flags = "fy", min = 2, max = 2)
         public void enchantCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.checkPlayer(sender);
@@ -374,7 +374,7 @@ public class AdminStoreComponent extends BukkitComponent {
                 throw new CommandException("That enchantment could not be applied!");
             }
 
-            double cost = Math.max(.01, AdminStoreComponent.priceCheck(targetItem, false) * .1 * level);
+            double cost = Math.max(1000, AdminStoreComponent.priceCheck(targetItem, false) * .1) * level;
 
             if (!isAdmin) {
                 if (cost < 0) {
@@ -383,11 +383,24 @@ public class AdminStoreComponent extends BukkitComponent {
                 if (!econ.has(player, cost)) {
                     throw new CommandException("You don't have enough money!");
                 }
-                econ.withdrawPlayer(player, cost);
                 String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(cost), "");
-                ChatUtil.sendNotice(sender, "Item enchanted for " + priceString + "!");
+                if (args.hasFlag('y')) {
+                    ChatUtil.sendNotice(sender, "Item enchanted for " + priceString + "!");
+                    econ.withdrawPlayer(player, cost);
+                } else {
+                    ChatUtil.sendNotice(sender, "That will cost " + priceString + '.');
+                    ChatUtil.sendNotice(sender, "To confirm, use:");
+                    String command = "/market enchant -y";
+                    for (Character aChar : args.getFlags()) {
+                        command += aChar;
+                    }
+                    command += ' ' + enchantment.getName() + ' ' + level;
+                    ChatUtil.sendNotice(sender, command);
+                    return;
+                }
+            } else {
+                ChatUtil.sendNotice(sender, "Item enchanted!");
             }
-            ChatUtil.sendNotice(sender, "Item enchanted!");
 
             targetItem.setItemMeta(meta);
             
