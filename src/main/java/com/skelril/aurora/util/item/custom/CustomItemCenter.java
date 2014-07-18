@@ -44,6 +44,7 @@ public class CustomItemCenter {
         ancientCrown.addUse("Acts as an Imbued Crystal");
         ancientCrown.addUse("Acts as a Gem of Darkness");
         ancientCrown.addUse("Acts as an Ancient Helmet");
+        ancientCrown.addUse("Repaired with XP");
         addItem(ancientCrown);
 
         CustomEquipment ancientHelmet = new CustomEquipment(ANCIENT_HELMET, Material.CHAINMAIL_HELMET);
@@ -57,6 +58,7 @@ public class CustomItemCenter {
         ancientHelmet.addSource(ItemSource.GRAVE_YARD);
         ancientHelmet.addSource(ItemSource.MARKET);
         ancientHelmet.addUse("Set Effect: Ancient Armor");
+        ancientHelmet.addUse("Repaired with XP");
         addItem(ancientHelmet);
 
         CustomEquipment ancientChestplate = new CustomEquipment(ANCIENT_CHESTPLATE, Material.CHAINMAIL_CHESTPLATE);
@@ -68,6 +70,7 @@ public class CustomItemCenter {
         ancientChestplate.addSource(ItemSource.GRAVE_YARD);
         ancientChestplate.addSource(ItemSource.MARKET);
         ancientChestplate.addUse("Set Effect: Ancient Armor");
+        ancientChestplate.addUse("Repaired with XP");
         addItem(ancientChestplate);
 
         CustomEquipment ancientLeggings = new CustomEquipment(ANCIENT_LEGGINGS, Material.CHAINMAIL_LEGGINGS);
@@ -79,6 +82,7 @@ public class CustomItemCenter {
         ancientLeggings.addSource(ItemSource.GRAVE_YARD);
         ancientLeggings.addSource(ItemSource.MARKET);
         ancientLeggings.addUse("Set Effect: Ancient Armor");
+        ancientLeggings.addUse("Repaired with XP");
         addItem(ancientLeggings);
 
         CustomEquipment ancientBoots = new CustomEquipment(ANCIENT_BOOTS, Material.CHAINMAIL_BOOTS);
@@ -91,7 +95,52 @@ public class CustomItemCenter {
         ancientBoots.addSource(ItemSource.GRAVE_YARD);
         ancientBoots.addSource(ItemSource.MARKET);
         ancientBoots.addUse("Set Effect: Ancient Armor");
+        ancientBoots.addUse("Repaired with XP");
         addItem(ancientBoots);
+
+        // Nectric Armor
+        CustomEquipment nectricHelmet = new CustomEquipment(NECTRIC_HELMET, Material.DIAMOND_HELMET);
+        nectricHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+        nectricHelmet.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
+        nectricHelmet.addEnchant(Enchantment.PROTECTION_FIRE, 4);
+        nectricHelmet.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        nectricHelmet.addEnchant(Enchantment.OXYGEN, 3);
+        nectricHelmet.addEnchant(Enchantment.WATER_WORKER, 1);
+        nectricHelmet.addSource(ItemSource.MARKET);
+        nectricHelmet.addSource(ItemSource.PATIENT_X);
+        nectricHelmet.addUse("Set Effect: Necrotic Armor");
+        addItem(nectricHelmet);
+
+        CustomEquipment nectricChestplate = new CustomEquipment(NECTRIC_CHESTPLATE, Material.DIAMOND_CHESTPLATE);
+        nectricChestplate.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+        nectricChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
+        nectricChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
+        nectricChestplate.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        nectricChestplate.addSource(ItemSource.MARKET);
+        nectricChestplate.addSource(ItemSource.PATIENT_X);
+        nectricChestplate.addUse("Set Effect: Necrotic Armor");
+        addItem(nectricChestplate);
+
+        CustomEquipment nectricLeggings = new CustomEquipment(NECTRIC_LEGGINGS, Material.DIAMOND_LEGGINGS);
+        nectricLeggings.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+        nectricLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
+        nectricLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
+        nectricLeggings.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        nectricLeggings.addSource(ItemSource.MARKET);
+        nectricLeggings.addSource(ItemSource.PATIENT_X);
+        nectricLeggings.addUse("Set Effect: Necrotic Armor");
+        addItem(nectricLeggings);
+
+        CustomEquipment nectricBoots = new CustomEquipment(NECTRIC_BOOTS, Material.DIAMOND_BOOTS);
+        nectricBoots.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+        nectricBoots.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
+        nectricBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
+        nectricBoots.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        nectricBoots.addEnchant(Enchantment.PROTECTION_FALL, 4);
+        nectricBoots.addSource(ItemSource.MARKET);
+        nectricBoots.addSource(ItemSource.PATIENT_X);
+        nectricBoots.addUse("Set Effect: Necrotic Armor");
+        addItem(nectricBoots);
 
         // Necros Armor
         CustomEquipment necrosHelmet = new CustomEquipment(NECROS_HELMET, Material.DIAMOND_HELMET);
@@ -103,7 +152,8 @@ public class CustomItemCenter {
         necrosHelmet.addEnchant(Enchantment.WATER_WORKER, 1);
         necrosHelmet.addSource(ItemSource.MARKET);
         necrosHelmet.addSource(ItemSource.PATIENT_X);
-        necrosHelmet.addUse("Set Effect: Necros Armor");
+        necrosHelmet.addUse("Set Effect: Necrotic Armor");
+        necrosHelmet.addUse("Repaired with XP");
         addItem(necrosHelmet);
 
         CustomEquipment necrosChestplate = new CustomEquipment(NECROS_CHESTPLATE, Material.DIAMOND_CHESTPLATE);
@@ -113,7 +163,8 @@ public class CustomItemCenter {
         necrosChestplate.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
         necrosChestplate.addSource(ItemSource.MARKET);
         necrosChestplate.addSource(ItemSource.PATIENT_X);
-        necrosChestplate.addUse("Set Effect: Necros Armor");
+        necrosChestplate.addUse("Set Effect: Necrotic Armor");
+        necrosChestplate.addUse("Repaired with XP");
         addItem(necrosChestplate);
 
         CustomEquipment necrosLeggings = new CustomEquipment(NECROS_LEGGINGS, Material.DIAMOND_LEGGINGS);
@@ -123,7 +174,8 @@ public class CustomItemCenter {
         necrosLeggings.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
         necrosLeggings.addSource(ItemSource.MARKET);
         necrosLeggings.addSource(ItemSource.PATIENT_X);
-        necrosLeggings.addUse("Set Effect: Necros Armor");
+        necrosLeggings.addUse("Set Effect: Necrotic Armor");
+        necrosLeggings.addUse("Repaired with XP");
         addItem(necrosLeggings);
 
         CustomEquipment necrosBoots = new CustomEquipment(NECROS_BOOTS, Material.DIAMOND_BOOTS);
@@ -134,7 +186,8 @@ public class CustomItemCenter {
         necrosBoots.addEnchant(Enchantment.PROTECTION_FALL, 4);
         necrosBoots.addSource(ItemSource.MARKET);
         necrosBoots.addSource(ItemSource.PATIENT_X);
-        necrosBoots.addUse("Set Effect: Necros Armor");
+        necrosBoots.addUse("Set Effect: Necrotic Armor");
+        necrosBoots.addUse("Repaired with XP");
         addItem(necrosBoots);
 
         // Master Weapons

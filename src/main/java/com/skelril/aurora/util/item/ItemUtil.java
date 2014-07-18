@@ -340,6 +340,23 @@ public class ItemUtil {
         return b[0] && b[1] && b[2] && b[3];
     }
 
+    public static boolean hasNectricArmour(LivingEntity entity) {
+
+        if (!entity.isValid()) return false;
+
+        ItemStack[] armour;
+        EntityEquipment equipment = entity.getEquipment();
+        if (equipment != null) armour = equipment.getArmorContents();
+        else return false;
+
+        boolean[] b = new boolean[]{false, false, false, false};
+
+        for (int i = 0; i < 4; i++) {
+            b[i] = matchesFilter(armour[i], ChatColor.DARK_RED + "Nectric");
+        }
+        return b[0] && b[1] && b[2] && b[3];
+    }
+
     public static boolean isNamed(ItemStack stack) {
 
         return stack != null && stack.hasItemMeta() && stack.getItemMeta().hasDisplayName();

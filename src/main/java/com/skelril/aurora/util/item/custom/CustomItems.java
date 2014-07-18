@@ -17,6 +17,13 @@ public enum CustomItems {
     ANCIENT_LEGGINGS(ChatColor.GOLD, "Ancient Leggings"),
     ANCIENT_BOOTS(ChatColor.GOLD, "Ancient Boots"),
 
+
+    // Nectric Armor
+    NECTRIC_HELMET(ChatColor.DARK_RED, "Nectric Helmet"),
+    NECTRIC_CHESTPLATE(ChatColor.DARK_RED, "Nectric Chestplate"),
+    NECTRIC_LEGGINGS(ChatColor.DARK_RED, "Nectric Leggings"),
+    NECTRIC_BOOTS(ChatColor.DARK_RED, "Nectric Boots"),
+
     // Necros Armor
     NECROS_HELMET(ChatColor.DARK_RED, "Necros Helmet"),
     NECROS_CHESTPLATE(ChatColor.DARK_RED, "Necros Chestplate"),
