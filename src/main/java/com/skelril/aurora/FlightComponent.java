@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 /**
  * @author Turtle9598
  */
-@ComponentInformation(friendlyName = "Flight", desc = "Fly like the wind!")
+@ComponentInformation(friendlyName = "Wing", desc = "Fly like the wind!")
 public class FlightComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
