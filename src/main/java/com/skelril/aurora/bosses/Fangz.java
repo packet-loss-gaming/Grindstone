@@ -67,7 +67,7 @@ public class Fangz {
         List<BindInstruction<WBossDetail>> bindInstructions = fangz.bindInstructions;
         bindInstructions.add(new BindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<BindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
+            public InstructionResult<WBossDetail, BindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
                     ((LivingEntity) anEntity).setCustomName("Fangz");
@@ -82,7 +82,7 @@ public class Fangz {
         List<UnbindInstruction<WBossDetail>> unbindInstructions = fangz.unbindInstructions;
         unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
+            public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 for (Entity aEntity : boss.getNearbyEntities(7, 4, 7)) {
                     if (!(aEntity instanceof LivingEntity)) continue;
@@ -94,7 +94,7 @@ public class Fangz {
         });
         unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
+            public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 double baseLevel = controllable.getDetail().getLevel();
@@ -119,7 +119,7 @@ public class Fangz {
         damageInstructions.add(new WDamageModifier());
         damageInstructions.add(new DamageInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
+            public InstructionResult<WBossDetail, DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Entity eToHit = BukkitUtil.getBukkitEntity(entity);
                 if (!(eToHit instanceof LivingEntity)) return null;

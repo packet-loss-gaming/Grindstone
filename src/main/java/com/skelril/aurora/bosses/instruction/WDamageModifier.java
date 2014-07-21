@@ -18,7 +18,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 
 public class WDamageModifier extends DamageInstruction<WBossDetail> {
     @Override
-    public InstructionResult<DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
+    public InstructionResult<WBossDetail, DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
         EntityDamageEvent event = getEvent(damage);
         if (event == null) return null;
         double origDmg = event.getOriginalDamage(EntityDamageEvent.DamageModifier.BASE);

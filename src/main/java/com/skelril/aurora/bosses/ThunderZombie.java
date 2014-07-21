@@ -54,7 +54,7 @@ public class ThunderZombie {
         List<BindInstruction<GenericDetail>> bindInstructions = thunderZombie.bindInstructions;
         bindInstructions.add(new BindInstruction<GenericDetail>() {
             @Override
-            public InstructionResult<BindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+            public InstructionResult<GenericDetail, BindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
                     ((LivingEntity) anEntity).setCustomName("Thor Zombie");
@@ -66,7 +66,7 @@ public class ThunderZombie {
         List<UnbindInstruction<GenericDetail>> unbindInstructions = thunderZombie.unbindInstructions;
         unbindInstructions.add(new UnbindInstruction<GenericDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+            public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 double x = target.getX();
@@ -78,7 +78,7 @@ public class ThunderZombie {
         });
         unbindInstructions.add(new UnbindInstruction<GenericDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+            public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 for (int i = 0; i < ChanceUtil.getRangedRandom(12, 150); i++) {
@@ -91,7 +91,7 @@ public class ThunderZombie {
         List<DamageInstruction<GenericDetail>> damageInstructions = thunderZombie.damageInstructions;
         damageInstructions.add(new DamageInstruction<GenericDetail>() {
             @Override
-            public InstructionResult<DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
+            public InstructionResult<GenericDetail, DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 final Entity toHit = BukkitUtil.getBukkitEntity(entity);
                 toHit.setVelocity(boss.getLocation().getDirection().multiply(2));

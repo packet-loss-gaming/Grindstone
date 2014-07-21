@@ -66,7 +66,7 @@ public class FearKnight {
         List<BindInstruction<WBossDetail>> bindInstructions = fearKnight.bindInstructions;
         bindInstructions.add(new BindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<BindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
+            public InstructionResult<WBossDetail, BindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
                     ((LivingEntity) anEntity).setCustomName("Fear Knight");
@@ -94,7 +94,7 @@ public class FearKnight {
         List<UnbindInstruction<WBossDetail>> unbindInstructions = fearKnight.unbindInstructions;
         unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
+            public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 double baseLevel = controllable.getDetail().getLevel();
@@ -128,7 +128,7 @@ public class FearKnight {
         });
         unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
+            public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 double baseLevel = controllable.getDetail().getLevel();
@@ -147,7 +147,7 @@ public class FearKnight {
         });
         unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
+            public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 double baseLevel = controllable.getDetail().getLevel();
@@ -168,7 +168,7 @@ public class FearKnight {
         damageInstructions.add(new WDamageModifier());
         damageInstructions.add(new DamageInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
+            public InstructionResult<WBossDetail, DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity attacker = BukkitUtil.getBukkitEntity(controllable);
                 LivingEntity boss;
                 if (attacker instanceof LivingEntity) {
