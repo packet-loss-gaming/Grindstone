@@ -16,6 +16,7 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.bosses.detail.WBossDetail;
+import com.skelril.aurora.bosses.instruction.WDamageModifier;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.DamageUtil;
@@ -115,6 +116,7 @@ public class Fangz {
         });
 
         List<DamageInstruction<WBossDetail>> damageInstructions = fangz.damageInstructions;
+        damageInstructions.add(new WDamageModifier());
         damageInstructions.add(new DamageInstruction<WBossDetail>() {
             @Override
             public InstructionResult<DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {

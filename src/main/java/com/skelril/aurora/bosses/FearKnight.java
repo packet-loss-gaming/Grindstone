@@ -16,6 +16,7 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.bosses.detail.WBossDetail;
+import com.skelril.aurora.bosses.instruction.WDamageModifier;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.hybrid.fear.Curse;
 import com.skelril.aurora.items.specialattack.attacks.melee.fear.*;
@@ -164,6 +165,7 @@ public class FearKnight {
             }
         });
         List<DamageInstruction<WBossDetail>> damageInstructions = fearKnight.damageInstructions;
+        damageInstructions.add(new WDamageModifier());
         damageInstructions.add(new DamageInstruction<WBossDetail>() {
             @Override
             public InstructionResult<DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {

@@ -18,6 +18,7 @@ import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.OSBL.util.DamageSource;
 import com.skelril.aurora.bosses.detail.WBossDetail;
+import com.skelril.aurora.bosses.instruction.WDamageModifier;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
@@ -115,6 +116,7 @@ public class LostRogue {
         });
 
         List<DamageInstruction<WBossDetail>> damageInstructions = lostRogue.damageInstructions;
+        damageInstructions.add(new WDamageModifier());
         damageInstructions.add(new DamageInstruction<WBossDetail>() {
             @Override
             public InstructionResult<DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
