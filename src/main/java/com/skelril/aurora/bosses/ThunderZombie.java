@@ -58,6 +58,8 @@ public class ThunderZombie {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
                     ((LivingEntity) anEntity).setCustomName("Thor Zombie");
+                    ((LivingEntity) anEntity).setMaxHealth(500);
+                    ((LivingEntity) anEntity).setHealth(500);
                 }
                 return null;
             }
