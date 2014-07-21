@@ -304,7 +304,9 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         ItemStack stack = player.getItemInHand();
 
         RogueState rogueSession = sessions.getSession(RogueState.class, player);
-        if (rogueSession.isRogue() && stack != null && ItemUtil.isSword(stack.getTypeId())) {
+        if (rogueSession.isRogue() && stack != null
+                && ((!rogueSession.hasActionItem() && ItemUtil.isSword(stack.getTypeId()))
+                || (rogueSession.hasActionItem() && stack.getTypeId() == rogueSession.getActionItem()))) {
             switch (event.getAction()) {
                 case LEFT_CLICK_AIR:
                     server.getScheduler().runTaskLater(inst, () -> {
@@ -410,7 +412,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"rogue"}, desc = "Give a player the Rogue power",
-                flags = "pltb", min = 0, max = 0)
+                flags = "pltbl:", min = 0, max = 0)
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -428,6 +430,12 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             rogueSession.limitYVelocity(args.hasFlag('l'));
             rogueSession.setBacklash(!args.hasFlag('b'));
             rogueSession.setTraitorProtection(args.hasFlag('t') && inst.hasPermission(player, "aurora.rogue.master"));
+
+            if (args.hasFlag('l')) {
+                rogueSession.setActionItem(args.getFlagInteger('l'));
+            } else {
+                rogueSession.resetActionItem();
+            }
 
             if (!isRogue) {
                 ChatUtil.sendNotice(player, "You gain the power of a rogue warrior!");
@@ -465,6 +473,8 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         @Setting("rogue-traitor")
         private boolean rogueTraitor = false;
 
+        @Setting("rogue-action-item")
+        private int rogueActionItem = -1;
         @Setting("rogue-old-speed")
         private float oldSpeed = DEFAULT_SPEED;
 
@@ -499,6 +509,22 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         public void setOldSpeed(float oldSpeed) {
 
             this.oldSpeed = oldSpeed;
+        }
+
+        public boolean hasActionItem() {
+            return rogueActionItem != -1;
+        }
+
+        public int getActionItem() {
+            return rogueActionItem;
+        }
+
+        public void setActionItem(int rogueActionItem) {
+            this.rogueActionItem = rogueActionItem;
+        }
+
+        public void resetActionItem() {
+            rogueActionItem = -1;
         }
 
         public boolean canBlip() {
