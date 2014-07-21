@@ -102,8 +102,8 @@ public class LostRogue {
                 Location target = boss.getLocation();
                 int baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
-                for (int i = baseLevel * ChanceUtil.getRangedRandom(30, 100); i > 0; --i) {
-                    itemStacks.add(new ItemStack(BlockID.GOLD_BLOCK));
+                for (int i = ChanceUtil.getRandom(baseLevel) * ChanceUtil.getRandom(5); i > 0; --i) {
+                    itemStacks.add(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRandom(32)));
                 }
                 if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
                     itemStacks.addAll(itemStacks.stream().map(ItemStack::clone).collect(Collectors.toList()));
