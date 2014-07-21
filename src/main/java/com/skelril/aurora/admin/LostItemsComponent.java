@@ -703,7 +703,7 @@ public class LostItemsComponent extends BukkitComponent {
     public class LostAdminItem {
 
         @Command(aliases = {"pwngbow"},
-                usage = "<player>", desc = "Return a player's pwngbow",
+                usage = "<player>", desc = "Return a player's Pwng Bow",
                 flags = "", min = 1, max = 1)
         @CommandPermissions({"aurora.lost.admin.pwngbow"})
         public void lostPwngBowCmd(CommandContext args, CommandSender sender) throws CommandException {
@@ -712,7 +712,7 @@ public class LostItemsComponent extends BukkitComponent {
 
             ItemStack pwngBowStack = new ItemStack(Material.BOW);
             ItemMeta pwngBow = pwngBowStack.getItemMeta();
-            pwngBow.addEnchant(Enchantment.ARROW_DAMAGE, 10000, true);
+            pwngBow.addEnchant(Enchantment.ARROW_DAMAGE, 30000, true);
             pwngBow.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
             pwngBow.setDisplayName(ChatColor.DARK_PURPLE + "Pwng Bow");
             pwngBowStack.setItemMeta(pwngBow);
@@ -721,6 +721,46 @@ public class LostItemsComponent extends BukkitComponent {
             // Tell Admin
             ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
                     + " has been given a new pwng bow.");
+        }
+
+        @Command(aliases = {"pwngsword"},
+                usage = "<player>", desc = "Return a player's Pwng Sword",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.admin.pwngsword"})
+        public void lostPwngSwordCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+
+            ItemStack pwngSwordStack = new ItemStack(Material.DIAMOND_SWORD);
+            ItemMeta pwngSword = pwngSwordStack.getItemMeta();
+            pwngSword.addEnchant(Enchantment.DAMAGE_ALL, 30000, true);
+            pwngSword.setDisplayName(ChatColor.DARK_PURPLE + "Pwng Sword");
+            pwngSwordStack.setItemMeta(pwngSword);
+            player.getInventory().addItem(pwngSwordStack);
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new pwng sword.");
+        }
+
+        @Command(aliases = {"doomfeather"},
+                usage = "<player>", desc = "Return a player's Doom Feather",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.lost.admin.doomfeather"})
+        public void lostDoomFeatherCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
+
+            ItemStack doomFeatherStack = new ItemStack(Material.FEATHER);
+            ItemMeta doomFeather = doomFeatherStack.getItemMeta();
+            doomFeather.addEnchant(Enchantment.KNOCKBACK, 1000, true);
+            doomFeather.setDisplayName(ChatColor.DARK_RED + "Doom Feather");
+            doomFeatherStack.setItemMeta(doomFeather);
+            player.getInventory().addItem(doomFeatherStack);
+
+            // Tell Admin
+            ChatUtil.sendNotice(sender, "The player: " + player.getDisplayName()
+                    + " has been given a new Doom Feather.");
         }
     }
 }
