@@ -824,6 +824,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             Player player = PlayerUtil.checkPlayer(sender);
             Zombie zombie = player.getLocation().getWorld().spawn(player.getLocation(), Zombie.class);
             int level = args.argsLength() < 1 ? getLevel(zombie.getLocation()) : args.getInteger(0);
+            if (level < 1) {
+                throw new CommandException("You are not in a Wilderness world, please specify a level.");
+            }
             WBossDetail detail = new WBossDetail(level);
             rogue.bind(zombie, detail);
         }
@@ -835,6 +838,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             Player player = PlayerUtil.checkPlayer(sender);
             Spider spider = player.getLocation().getWorld().spawn(player.getLocation(), Spider.class);
             int level = args.argsLength() < 1 ? getLevel(spider.getLocation()) : args.getInteger(0);
+            if (level < 1) {
+                throw new CommandException("You are not in a Wilderness world, please specify a level.");
+            }
             WBossDetail detail = new WBossDetail(level);
             fangz.bind(spider, detail);
         }
@@ -846,6 +852,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             Player player = PlayerUtil.checkPlayer(sender);
             Zombie zombie = player.getLocation().getWorld().spawn(player.getLocation(), Zombie.class);
             int level = args.argsLength() < 1 ? getLevel(zombie.getLocation()) : args.getInteger(0);
+            if (level < 1) {
+                throw new CommandException("You are not in a Wilderness world, please specify a level.");
+            }
             WBossDetail detail = new WBossDetail(level);
             fearKnight.bind(zombie, detail);
         }
