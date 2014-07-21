@@ -19,6 +19,7 @@ import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.bosses.Fangz;
 import com.skelril.aurora.bosses.FearKnight;
 import com.skelril.aurora.bosses.LostRogue;
+import com.skelril.aurora.bosses.detail.WBossDetail;
 import com.skelril.aurora.city.engine.pvp.PvPComponent;
 import com.skelril.aurora.city.engine.pvp.PvPScope;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
@@ -388,20 +389,20 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         if (isWildernessWorld(location.getWorld()) && level > 1) {
             double max = entity.getMaxHealth();
 
-            level--;
-
-            entity.setMaxHealth(max * 5 * level);
-            entity.setHealth(max * 5 * level);
+            // We want the health to be boosted only after level 1
+            // but not skip an increment
+            entity.setMaxHealth(max * 5 * (level - 1));
+            entity.setHealth(max * 5 * (level - 1));
 
             if (entity instanceof Zombie) {
                 if (ChanceUtil.getChance(config.lostRogueChance)) {
-                    rogue.bind(entity);
+                    rogue.bind(entity, new WBossDetail(level));
                 } else if (ChanceUtil.getChance(config.fearKnightChance)) {
-                    fearKnight.bind(entity);
+                    fearKnight.bind(entity, new WBossDetail(level));
                 }
             } else if (entity instanceof Spider) {
                 if (ChanceUtil.getChance(config.fangzChance)) {
-                    fangz.bind(entity);
+                    fangz.bind(entity, new WBossDetail(level));
                 }
             }
         }
@@ -817,30 +818,36 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     public class BossCommands {
 
         @Command(aliases = {"lostrogue"},
-                usage = "", desc = "Spawn a lost rogue",
-                flags = "", min = 0, max = 0)
+                usage = "[level]", desc = "Spawn a lost rogue",
+                flags = "", min = 0, max = 1)
         public void lostRogue(CommandContext args, CommandSender sender) throws CommandException {
             Player player = PlayerUtil.checkPlayer(sender);
             Zombie zombie = player.getLocation().getWorld().spawn(player.getLocation(), Zombie.class);
-            rogue.bind(zombie);
+            int level = args.argsLength() < 1 ? getLevel(zombie.getLocation()) : args.getInteger(0);
+            WBossDetail detail = new WBossDetail(level);
+            rogue.bind(zombie, detail);
         }
 
         @Command(aliases = {"fangz"},
-                usage = "", desc = "Spawn a fangz",
-                flags = "", min = 0, max = 0)
+                usage = "[level]", desc = "Spawn a fangz",
+                flags = "", min = 0, max = 1)
         public void fangz(CommandContext args, CommandSender sender) throws CommandException {
             Player player = PlayerUtil.checkPlayer(sender);
             Spider spider = player.getLocation().getWorld().spawn(player.getLocation(), Spider.class);
-            fangz.bind(spider);
+            int level = args.argsLength() < 1 ? getLevel(spider.getLocation()) : args.getInteger(0);
+            WBossDetail detail = new WBossDetail(level);
+            fangz.bind(spider, detail);
         }
 
         @Command(aliases = {"fearknight"},
-                usage = "", desc = "Spawn a Fear Knight",
-                flags = "", min = 0, max = 0)
+                usage = "[level]", desc = "Spawn a Fear Knight",
+                flags = "", min = 0, max = 1)
         public void fearKnight(CommandContext args, CommandSender sender) throws CommandException {
             Player player = PlayerUtil.checkPlayer(sender);
             Zombie zombie = player.getLocation().getWorld().spawn(player.getLocation(), Zombie.class);
-            fearKnight.bind(zombie);
+            int level = args.argsLength() < 1 ? getLevel(zombie.getLocation()) : args.getInteger(0);
+            WBossDetail detail = new WBossDetail(level);
+            fearKnight.bind(zombie, detail);
         }
     }
 

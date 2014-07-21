@@ -17,6 +17,7 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.OSBL.util.DamageSource;
+import com.skelril.aurora.bosses.detail.WBossDetail;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
@@ -45,10 +46,10 @@ public class LostRogue {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private BukkitBossDeclaration lostRogue;
+    private BukkitBossDeclaration<WBossDetail> lostRogue;
 
     public LostRogue() {
-        lostRogue = new BukkitBossDeclaration(inst, new SimpleInstructionDispatch()) {
+        lostRogue = new BukkitBossDeclaration<WBossDetail>(inst, new SimpleInstructionDispatch<>()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
                 return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Lost Rogue");
@@ -57,30 +58,30 @@ public class LostRogue {
         setupLostRogue();
     }
 
-    public void bind(Damageable entity) {
-        lostRogue.bind(new BukkitBoss(entity));
+    public void bind(Damageable entity, WBossDetail detail) {
+        lostRogue.bind(new BukkitBoss<>(entity, detail));
     }
 
     private void setupLostRogue() {
-        List<BindInstruction> bindInstructions = lostRogue.bindInstructions;
-        bindInstructions.add(new BindInstruction() {
+        List<BindInstruction<WBossDetail>> bindInstructions = lostRogue.bindInstructions;
+        bindInstructions.add(new BindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<BindInstruction> process(LocalControllable controllable) {
+            public InstructionResult<BindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
                     ((LivingEntity) anEntity).setCustomName("Lost Rogue");
-                    double hp = ((LivingEntity) anEntity).getMaxHealth();
-                    ((LivingEntity) anEntity).setMaxHealth(hp * 15);
-                    ((LivingEntity) anEntity).setHealth(hp * 15);
+                    int level = controllable.getDetail().getLevel();
+                    ((LivingEntity) anEntity).setMaxHealth(20 * 75 * level);
+                    ((LivingEntity) anEntity).setHealth(20 * 75 * level);
                 }
                 return null;
             }
         });
 
-        List<UnbindInstruction> unbindInstructions = lostRogue.unbindInstructions;
-        unbindInstructions.add(new UnbindInstruction() {
+        List<UnbindInstruction<WBossDetail>> unbindInstructions = lostRogue.unbindInstructions;
+        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
                 double x = target.getX();
@@ -88,17 +89,17 @@ public class LostRogue {
                 double z = target.getZ();
                 double min = 4;
                 double max = 9;
-                float force = (float) Math.min(max, Math.max(min, (min + getBaseLevel(boss)) / 2));
+                float force = (float) Math.min(max, Math.max(min, (min + controllable.getDetail().getLevel()) / 2));
                 boss.getWorld().createExplosion(x, y, z, force, false, true);
                 return null;
             }
         });
-        unbindInstructions.add(new UnbindInstruction() {
+        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
-                double baseLevel = getBaseLevel(boss);
+                double baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
                 for (int i = 0; i < baseLevel * ChanceUtil.getRangedRandom(30, 100); i++) {
                     itemStacks.add(new ItemStack(BlockID.GOLD_BLOCK));
@@ -113,10 +114,10 @@ public class LostRogue {
             }
         });
 
-        List<DamageInstruction> damageInstructions = lostRogue.damageInstructions;
-        damageInstructions.add(new DamageInstruction() {
+        List<DamageInstruction<WBossDetail>> damageInstructions = lostRogue.damageInstructions;
+        damageInstructions.add(new DamageInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<DamageInstruction> process(LocalControllable controllable, LocalEntity entity, AttackDamage damage) {
+            public InstructionResult<DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Entity eToHit = BukkitUtil.getBukkitEntity(entity);
                 if (!(eToHit instanceof LivingEntity)) return null;
@@ -127,9 +128,9 @@ public class LostRogue {
                 return null;
             }
         });
-        damageInstructions.add(new DamageInstruction() {
+        damageInstructions.add(new DamageInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<DamageInstruction> process(LocalControllable controllable, LocalEntity entity, AttackDamage damage) {
+            public InstructionResult<DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Entity eToHit = BukkitUtil.getBukkitEntity(entity);
                 if (!(eToHit instanceof LivingEntity)) return null;
@@ -143,10 +144,10 @@ public class LostRogue {
             }
         });
 
-        List<DamagedInstruction> damagedInstructions = lostRogue.damagedInstructions;
-        damagedInstructions.add(new DamagedInstruction() {
+        List<DamagedInstruction<WBossDetail>> damagedInstructions = lostRogue.damagedInstructions;
+        damagedInstructions.add(new DamagedInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<DamagedInstruction> process(LocalControllable controllable, DamageSource damageSource, AttackDamage damage) {
+            public InstructionResult<DamagedInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, DamageSource damageSource, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 LocalEntity localToHit = damageSource.getDamagingEntity();
                 if (localToHit == null) return null;
@@ -161,9 +162,9 @@ public class LostRogue {
                 return null;
             }
         });
-        damagedInstructions.add(new DamagedInstruction() {
+        damagedInstructions.add(new DamagedInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<DamagedInstruction> process(LocalControllable controllable, DamageSource damageSource, AttackDamage damage) {
+            public InstructionResult<DamagedInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, DamageSource damageSource, AttackDamage damage) {
                 if (ChanceUtil.getChance(5)) {
                     Entity boss = BukkitUtil.getBukkitEntity(controllable);
                     Vector vel = boss.getLocation().getDirection();
@@ -174,14 +175,6 @@ public class LostRogue {
                 return null;
             }
         });
-    }
-
-    private int getBaseLevel(Entity e) {
-        return getLevel(e.getLocation());
-    }
-
-    private int getLevel(Location location) {
-        return Math.max(0, Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ())) / 1000) + 1;
     }
 
     private EntityDamageEvent getEvent(AttackDamage damage) {

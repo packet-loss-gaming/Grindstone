@@ -15,6 +15,7 @@ import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
+import com.skelril.aurora.bosses.detail.WBossDetail;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.hybrid.fear.Curse;
 import com.skelril.aurora.items.specialattack.attacks.melee.fear.*;
@@ -44,10 +45,10 @@ public class FearKnight {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private BukkitBossDeclaration fearKnight;
+    private BukkitBossDeclaration<WBossDetail> fearKnight;
 
     public FearKnight() {
-        fearKnight = new BukkitBossDeclaration(inst, new SimpleInstructionDispatch()) {
+        fearKnight = new BukkitBossDeclaration<WBossDetail>(inst, new SimpleInstructionDispatch<>()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
                 return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Fear Knight");
@@ -56,21 +57,21 @@ public class FearKnight {
         setupFearKnight();
     }
 
-    public void bind(Damageable entity) {
-        fearKnight.bind(new BukkitBoss(entity));
+    public void bind(Damageable entity, WBossDetail detail) {
+        fearKnight.bind(new BukkitBoss<>(entity, detail));
     }
 
     private void setupFearKnight() {
-        List<BindInstruction> bindInstructions = fearKnight.bindInstructions;
-        bindInstructions.add(new BindInstruction() {
+        List<BindInstruction<WBossDetail>> bindInstructions = fearKnight.bindInstructions;
+        bindInstructions.add(new BindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<BindInstruction> process(LocalControllable controllable) {
+            public InstructionResult<BindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
                     ((LivingEntity) anEntity).setCustomName("Fear Knight");
-                    double hp = ((LivingEntity) anEntity).getMaxHealth();
-                    ((LivingEntity) anEntity).setMaxHealth(hp * 6);
-                    ((LivingEntity) anEntity).setHealth(hp * 6);
+                    int level = controllable.getDetail().getLevel();
+                    ((LivingEntity) anEntity).setMaxHealth(20 * 30 * level);
+                    ((LivingEntity) anEntity).setHealth(20 * 30 * level);
 
                     EntityEquipment equipment = ((LivingEntity) anEntity).getEquipment();
                     equipment.setHelmet(CustomItemCenter.build(GOD_HELMET));
@@ -89,13 +90,13 @@ public class FearKnight {
             }
         });
 
-        List<UnbindInstruction> unbindInstructions = fearKnight.unbindInstructions;
-        unbindInstructions.add(new UnbindInstruction() {
+        List<UnbindInstruction<WBossDetail>> unbindInstructions = fearKnight.unbindInstructions;
+        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
-                double baseLevel = getBaseLevel(boss);
+                double baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
                 for (int i = 0; i < baseLevel; i++) {
                     ItemStack stack;
@@ -124,12 +125,12 @@ public class FearKnight {
                 return null;
             }
         });
-        unbindInstructions.add(new UnbindInstruction() {
+        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
-                double baseLevel = getBaseLevel(boss);
+                double baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
                 if (ChanceUtil.getChance(5 * (100 - baseLevel))) {
                     itemStacks.add(CustomItemCenter.build(PHANTOM_HYMN));
@@ -143,12 +144,12 @@ public class FearKnight {
                 return null;
             }
         });
-        unbindInstructions.add(new UnbindInstruction() {
+        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
-                double baseLevel = getBaseLevel(boss);
+                double baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
                 if (ChanceUtil.getChance(10 * (100 - baseLevel))) {
                     itemStacks.add(CustomItemCenter.build(PHANTOM_CLOCK));
@@ -162,10 +163,10 @@ public class FearKnight {
                 return null;
             }
         });
-        List<DamageInstruction> damageInstructions = fearKnight.damageInstructions;
-        damageInstructions.add(new DamageInstruction() {
+        List<DamageInstruction<WBossDetail>> damageInstructions = fearKnight.damageInstructions;
+        damageInstructions.add(new DamageInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<DamageInstruction> process(LocalControllable controllable, LocalEntity entity, AttackDamage damage) {
+            public InstructionResult<DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity attacker = BukkitUtil.getBukkitEntity(controllable);
                 LivingEntity boss;
                 if (attacker instanceof LivingEntity) {
@@ -204,14 +205,6 @@ public class FearKnight {
                 return null;
             }
         });
-    }
-
-    private int getBaseLevel(Entity e) {
-        return getLevel(e.getLocation());
-    }
-
-    private int getLevel(Location location) {
-        return Math.max(0, Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ())) / 1000) + 1;
     }
 
     private EntityDamageEvent getEvent(AttackDamage damage) {

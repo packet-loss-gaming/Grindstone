@@ -15,6 +15,7 @@ import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
+import com.skelril.aurora.bosses.detail.WBossDetail;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.DamageUtil;
@@ -45,10 +46,10 @@ public class Fangz {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private BukkitBossDeclaration fangz;
+    private BukkitBossDeclaration<WBossDetail> fangz;
 
     public Fangz() {
-        fangz = new BukkitBossDeclaration(inst, new SimpleInstructionDispatch()) {
+        fangz = new BukkitBossDeclaration<WBossDetail>(inst, new SimpleInstructionDispatch<>()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
                 return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Fangz");
@@ -57,30 +58,30 @@ public class Fangz {
         setupFangz();
     }
 
-    public void bind(Damageable entity) {
-        fangz.bind(new BukkitBoss(entity));
+    public void bind(Damageable entity, WBossDetail detail) {
+        fangz.bind(new BukkitBoss<>(entity, detail));
     }
 
     private void setupFangz() {
-        List<BindInstruction> bindInstructions = fangz.bindInstructions;
-        bindInstructions.add(new BindInstruction() {
+        List<BindInstruction<WBossDetail>> bindInstructions = fangz.bindInstructions;
+        bindInstructions.add(new BindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<BindInstruction> process(LocalControllable controllable) {
+            public InstructionResult<BindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
                     ((LivingEntity) anEntity).setCustomName("Fangz");
-                    double hp = ((LivingEntity) anEntity).getMaxHealth();
-                    ((LivingEntity) anEntity).setMaxHealth(hp * 10);
-                    ((LivingEntity) anEntity).setHealth(hp * 10);
+                    int level = controllable.getDetail().getLevel();
+                    ((LivingEntity) anEntity).setMaxHealth(20 * 50 * level);
+                    ((LivingEntity) anEntity).setHealth(20 * 50 * level);
                 }
                 return null;
             }
         });
 
-        List<UnbindInstruction> unbindInstructions = fangz.unbindInstructions;
-        unbindInstructions.add(new UnbindInstruction() {
+        List<UnbindInstruction<WBossDetail>> unbindInstructions = fangz.unbindInstructions;
+        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 for (Entity aEntity : boss.getNearbyEntities(7, 4, 7)) {
                     if (!(aEntity instanceof LivingEntity)) continue;
@@ -90,12 +91,12 @@ public class Fangz {
                 return null;
             }
         });
-        unbindInstructions.add(new UnbindInstruction() {
+        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<UnbindInstruction> process(LocalControllable controllable) {
+            public InstructionResult<UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
-                double baseLevel = getBaseLevel(boss);
+                double baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
                 for (int i = 0; i < baseLevel * ChanceUtil.getRandom(3); i++) {
                     itemStacks.add(CustomItemCenter.build(POTION_OF_RESTITUTION));
@@ -113,10 +114,10 @@ public class Fangz {
             }
         });
 
-        List<DamageInstruction> damageInstructions = fangz.damageInstructions;
-        damageInstructions.add(new DamageInstruction() {
+        List<DamageInstruction<WBossDetail>> damageInstructions = fangz.damageInstructions;
+        damageInstructions.add(new DamageInstruction<WBossDetail>() {
             @Override
-            public InstructionResult<DamageInstruction> process(LocalControllable controllable, LocalEntity entity, AttackDamage damage) {
+            public InstructionResult<DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Entity eToHit = BukkitUtil.getBukkitEntity(entity);
                 if (!(eToHit instanceof LivingEntity)) return null;
@@ -130,14 +131,6 @@ public class Fangz {
                 return null;
             }
         });
-    }
-
-    private int getBaseLevel(Entity e) {
-        return getLevel(e.getLocation());
-    }
-
-    private int getLevel(Location location) {
-        return Math.max(0, Math.max(Math.abs(location.getBlockX()), Math.abs(location.getBlockZ())) / 1000) + 1;
     }
 
     private EntityDamageEvent getEvent(AttackDamage damage) {
