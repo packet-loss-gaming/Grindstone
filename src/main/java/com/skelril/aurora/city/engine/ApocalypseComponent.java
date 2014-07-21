@@ -110,6 +110,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public int armourChance = 100;
         @Setting("weapon-chance")
         public int weaponChance = 100;
+        @Setting("effect-lightning-chance")
+        public int effectLightning = 50;
         @Setting("enable-safe-respawn-location")
         public boolean enableSafeRespawn = true;
         @Setting("safe-respawn-radius")
@@ -254,7 +256,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (mobCount >= mobCountMax || world.getEntities().size() > (mobCountMax * 2)) return;
 
         // Do we care?
-        if (world.isThundering()) {
+        if (world.isThundering() && (!lightning.isEffect() || ChanceUtil.getChance(config.effectLightning))) {
             lightning(lightningStrikeLoc);
         }
     }
