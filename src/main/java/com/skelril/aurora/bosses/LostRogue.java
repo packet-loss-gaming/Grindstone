@@ -100,9 +100,9 @@ public class LostRogue {
             public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
-                double baseLevel = controllable.getDetail().getLevel();
+                int baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
-                for (int i = 0; i < baseLevel * ChanceUtil.getRangedRandom(30, 100); i++) {
+                for (int i = baseLevel * ChanceUtil.getRangedRandom(30, 100); i > 0; --i) {
                     itemStacks.add(new ItemStack(BlockID.GOLD_BLOCK));
                 }
                 if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {

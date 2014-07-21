@@ -78,13 +78,13 @@ public class StormBringer {
             public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
-                double baseLevel = controllable.getDetail().getLevel();
+                int baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
                 itemStacks.add(CustomItemCenter.build(BAT_BOW));
-                for (int i = 0; i < baseLevel * ChanceUtil.getRandom(3); i++) {
+                for (int i = baseLevel * ChanceUtil.getRandom(3); i > 0; --i) {
                     itemStacks.add(CustomItemCenter.build(BARBARIAN_BONE));
                 }
-                for (int i = 0; i < baseLevel * ChanceUtil.getRandom(9); i++) {
+                for (int i = baseLevel * ChanceUtil.getRandom(9); i > 0; --i) {
                     itemStacks.add(CustomItemCenter.build(GOD_FISH));
                 }
                 if (getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {

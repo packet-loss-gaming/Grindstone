@@ -97,7 +97,7 @@ public class FearKnight {
             public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
-                double baseLevel = controllable.getDetail().getLevel();
+                int baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
                 for (int i = 0; i < baseLevel; i++) {
                     ItemStack stack;
