@@ -19,6 +19,7 @@ import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.bosses.Fangz;
 import com.skelril.aurora.bosses.FearKnight;
 import com.skelril.aurora.bosses.LostRogue;
+import com.skelril.aurora.bosses.StormBringer;
 import com.skelril.aurora.bosses.detail.WBossDetail;
 import com.skelril.aurora.city.engine.pvp.PvPComponent;
 import com.skelril.aurora.city.engine.pvp.PvPScope;
@@ -104,6 +105,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private Fangz fangz = new Fangz();
     private FearKnight fearKnight = new FearKnight();
     private LostRogue rogue = new LostRogue();
+    private StormBringer stormBringer = new StormBringer();
 
     @Override
     public void enable() {
@@ -238,6 +240,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         public int fearKnightChance = 100;
         @Setting("mini-bosses.fangz")
         public int fangzChance = 100;
+        @Setting("mini-bosses.stormbringer")
+        public int stormBringerChance = 100;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -403,6 +407,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             } else if (entity instanceof Spider) {
                 if (ChanceUtil.getChance(config.fangzChance)) {
                     fangz.bind(entity, new WBossDetail(level));
+                }
+            } else if (entity instanceof Skeleton) {
+                if (ChanceUtil.getChance(config.stormBringerChance)) {
+                    stormBringer.bind(entity, new WBossDetail(level));
                 }
             }
         }
@@ -857,6 +865,21 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             Zombie zombie = player.getLocation().getWorld().spawn(player.getLocation(), Zombie.class);
             WBossDetail detail = new WBossDetail(level);
             fearKnight.bind(zombie, detail);
+        }
+
+        @Command(aliases = {"stormbringer"},
+                usage = "[level]", desc = "Spawn a Storm Bringer",
+                flags = "", min = 0, max = 1)
+        public void stormBringer(CommandContext args, CommandSender sender) throws CommandException {
+            Player player = PlayerUtil.checkPlayer(sender);
+            int level = args.argsLength() < 1 ? getLevel(player.getLocation()) : args.getInteger(0);
+            if (level < 1) {
+                throw new CommandException("You are not in a Wilderness world, please specify a level.");
+            }
+            Skeleton skeleton = player.getLocation().getWorld().spawn(player.getLocation(), Skeleton.class);
+            skeleton.getEquipment().setItemInHand(new ItemStack(Material.BOW));
+            WBossDetail detail = new WBossDetail(level);
+            stormBringer.bind(skeleton, detail);
         }
     }
 
