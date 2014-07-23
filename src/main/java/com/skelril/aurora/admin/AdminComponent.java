@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.GodComponent;
 import com.sk89q.commandbook.InfoComponent;
 import com.sk89q.commandbook.commands.PaginatedResult;
+import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.BlockID;
@@ -796,12 +797,18 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
 
         @Command(aliases = {"load"},
-                usage = "<profile name>", desc = "Load a saved inventory profile",
-                flags = "ef", min = 1, max = 1)
+                usage = "<profile name> [target]", desc = "Load a saved inventory profile",
+                flags = "ef", min = 1, max = 2)
         @CommandPermissions({"aurora.admin.profiles.load"})
         public void profileLoadCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-            Player player = PlayerUtil.checkPlayer(sender);
+            Player player;
+
+            if (args.argsLength() > 1) {
+                player = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(1));
+            } else {
+                player = PlayerUtil.checkPlayer(sender);
+            }
 
             if (!isAdmin(player) && !(args.hasFlag('f')
                     && inst.hasPermission(player, "aurora.admin.adminmode.sysop"))) {
