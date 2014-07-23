@@ -718,8 +718,19 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         event.setYield(.1F);
 
-        event.blockList().stream().filter(block -> isEffectedOre(block.getTypeId()))
-                .forEach(block -> addPool(block.getState(), 0, false));
+        Iterator<Block> it = event.blockList().iterator();
+        while (it.hasNext()) {
+            Block next = it.next();
+            if (isEffectedOre(next.getTypeId())) {
+                addPool(next.getState(), 0, false);
+                continue;
+            }
+
+            if (next.getTypeId() == BlockID.CHEST) {
+                it.remove();
+                continue;
+            }
+        }
     }
 
     @EventHandler
