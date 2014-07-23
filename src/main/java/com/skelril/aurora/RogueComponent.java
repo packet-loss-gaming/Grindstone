@@ -23,7 +23,6 @@ import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.guild.RogueBlipEvent;
 import com.skelril.aurora.events.guild.RogueGrenadeEvent;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
-import com.skelril.aurora.items.specialattack.attacks.melee.MeleeSpecial;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import com.skelril.aurora.util.*;
 import com.skelril.aurora.util.extractor.entity.CombatantPair;
@@ -58,6 +57,8 @@ import org.bukkit.util.Vector;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static com.skelril.aurora.items.CustomItemsComponent.SpecType;
 
 @ComponentInformation(friendlyName = "Rogue", desc = "Speed and strength is always the answer.")
 @Depend(plugins = {"Pitfall"}, components = {SessionComponent.class, NinjaComponent.class, PvPComponent.class})
@@ -364,7 +365,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (isRogue(player)) {
             SpecialAttack attack = event.getSpec();
 
-            if (attack instanceof MeleeSpecial && ChanceUtil.getChance(14)) {
+            if (event.getContext().equals(SpecType.MELEE) && ChanceUtil.getChance(14)) {
                 event.setSpec(new Nightmare(attack.getOwner(), attack.getTarget()));
             }
         }
