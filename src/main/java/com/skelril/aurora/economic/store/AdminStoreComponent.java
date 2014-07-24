@@ -380,13 +380,13 @@ public class AdminStoreComponent extends BukkitComponent {
                 if (cost < 0) {
                     throw new CommandException("That item cannot be enchanted!");
                 }
-                if (!econ.has(player, cost)) {
+                if (!econ.has(player.getName(), cost)) {
                     throw new CommandException("You don't have enough money!");
                 }
                 String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(cost), "");
                 if (args.hasFlag('y')) {
                     ChatUtil.sendNotice(sender, "Item enchanted for " + priceString + "!");
-                    econ.withdrawPlayer(player, cost);
+                    econ.withdrawPlayer(player.getName(), cost);
                 } else {
                     ChatUtil.sendNotice(sender, "That will cost " + priceString + '.');
                     ChatUtil.sendNotice(sender, "To confirm, use:");
