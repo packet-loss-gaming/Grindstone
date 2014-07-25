@@ -9,10 +9,7 @@ package com.skelril.aurora.util;
 import com.skelril.aurora.util.item.ItemUtil;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ItemCondenser {
 
@@ -40,6 +37,7 @@ public class ItemCondenser {
      */
     public ItemStack[] operate(ItemStack[] itemStacks) {
         itemStacks = ItemUtil.clone(itemStacks); // Make sure we're working in our domain here
+        List<Remainder> remainders = new ArrayList<>();
         int modified = 0;
         for (Step step : conversionSteps) {
             int total = 0;
@@ -50,6 +48,16 @@ public class ItemCondenser {
                 if (target.isSimilar(cur)) {
                     total += cur.getAmount();
                     positions.add(i);
+                }
+            }
+
+            // Add in any remainders from prior steps
+            Iterator<Remainder> it = remainders.iterator();
+            while (it.hasNext()) {
+                Remainder remainder = it.next();
+                if (step.getOldItem().isSimilar(remainder.getItem())) {
+                    total += remainder.getAmount();
+                    it.remove();
                 }
             }
 
@@ -66,29 +74,32 @@ public class ItemCondenser {
 
             final ItemStack newStack = step.getNewItem();
             final ItemStack oldStack = step.getOldItem();
+            
+            remainders.add(new Remainder(oldStack, oldAmt));
+            remainders.add(new Remainder(newStack, newAmt));
 
+            ++modified;
+        }
+
+        for (Remainder remainder : remainders) {
+            ItemStack rStack = remainder.getItem();
             for (int i = 0; i < itemStacks.length; ++i) {
                 final ItemStack stack = itemStacks[i];
                 int startingAmt = stack == null ? 0 : stack.getAmount();
+                int rAmt = remainder.getAmount();
                 int quantity;
-                if (newAmt > 0 && (startingAmt == 0 || startingAmt != 0 && newStack.isSimilar(stack))) {
-                    quantity = Math.min(newAmt + startingAmt, newStack.getMaxStackSize());
-                    newAmt -= quantity - startingAmt;
-                    itemStacks[i] = newStack.clone();
-                } else if (oldAmt > 0 && (startingAmt == 0 || startingAmt != 0 && oldStack.isSimilar(stack))) {
-                    quantity = Math.min(oldAmt + startingAmt, oldStack.getMaxStackSize());
-                    oldAmt -= quantity - startingAmt;
-                    itemStacks[i] = oldStack.clone();
-                } else if (newAmt == 0 && oldAmt == 0) {
+                if (rAmt > 0 && (startingAmt == 0 || rStack.isSimilar(stack))) {
+                    quantity = Math.min(rAmt + startingAmt, rStack.getMaxStackSize());
+                    rAmt -= quantity - startingAmt;
+                    itemStacks[i] = rStack.clone();
+                    itemStacks[i].setAmount(quantity);
+                    remainder.setAmount(rAmt);
+                } else if (rAmt == 0) {
                     break;
-                } else {
-                    continue;
                 }
-                itemStacks[i].setAmount(quantity);
             }
-            // There is an illegal remainder
-            if (newAmt > 0 || oldAmt > 0) return null;
-            ++modified;
+            // We couldn't place all items
+            if (remainder.getAmount() > 0) return null;
         }
         return modified == 0 ? null : itemStacks;
     }
@@ -126,6 +137,28 @@ public class ItemCondenser {
 
         public ItemStack getNewItem() {
             return newItem.clone();
+        }
+    }
+
+    private static class Remainder {
+        private final ItemStack item;
+        private int amount;
+
+        public Remainder(ItemStack item, int amount) {
+            this.item = item.clone();
+            this.amount = amount;
+        }
+
+        public ItemStack getItem() {
+            return item.clone();
+        }
+
+        public int getAmount() {
+            return amount;
+        }
+
+        public void setAmount(int amt) {
+            this.amount = amt;
         }
     }
 }
