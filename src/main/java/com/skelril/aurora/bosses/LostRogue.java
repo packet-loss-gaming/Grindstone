@@ -18,6 +18,7 @@ import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.OSBL.util.DamageSource;
 import com.skelril.aurora.bosses.detail.WBossDetail;
+import com.skelril.aurora.bosses.instruction.ExplosiveUnbind;
 import com.skelril.aurora.bosses.instruction.WDamageModifier;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import com.skelril.aurora.modifiers.ModifierType;
@@ -80,19 +81,12 @@ public class LostRogue {
         });
 
         List<UnbindInstruction<WBossDetail>> unbindInstructions = lostRogue.unbindInstructions;
-        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
+        unbindInstructions.add(new ExplosiveUnbind<WBossDetail>(true, false) {
             @Override
-            public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
-                Entity boss = BukkitUtil.getBukkitEntity(controllable);
-                Location target = boss.getLocation();
-                double x = target.getX();
-                double y = target.getY();
-                double z = target.getZ();
+            public float getExplosionStrength(WBossDetail wBossDetail) {
                 double min = 4;
                 double max = 9;
-                float force = (float) Math.min(max, Math.max(min, (min + controllable.getDetail().getLevel()) / 2));
-                boss.getWorld().createExplosion(x, y, z, force, false, true);
-                return null;
+                return (float) Math.min(max, Math.max(min, (min + wBossDetail.getLevel()) / 2));
             }
         });
         unbindInstructions.add(new UnbindInstruction<WBossDetail>() {

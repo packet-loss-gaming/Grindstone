@@ -16,6 +16,7 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.bosses.detail.GenericDetail;
+import com.skelril.aurora.bosses.instruction.ExplosiveUnbind;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.EntityUtil;
 import org.bukkit.Location;
@@ -66,16 +67,10 @@ public class ThunderZombie {
         });
 
         List<UnbindInstruction<GenericDetail>> unbindInstructions = thunderZombie.unbindInstructions;
-        unbindInstructions.add(new UnbindInstruction<GenericDetail>() {
+        unbindInstructions.add(new ExplosiveUnbind<GenericDetail>(false, false) {
             @Override
-            public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
-                Entity boss = BukkitUtil.getBukkitEntity(controllable);
-                Location target = boss.getLocation();
-                double x = target.getX();
-                double y = target.getY();
-                double z = target.getZ();
-                boss.getWorld().createExplosion(x, y, z, 4F, false, false);
-                return null;
+            public float getExplosionStrength(GenericDetail genericDetail) {
+                return 4F;
             }
         });
         unbindInstructions.add(new UnbindInstruction<GenericDetail>() {
