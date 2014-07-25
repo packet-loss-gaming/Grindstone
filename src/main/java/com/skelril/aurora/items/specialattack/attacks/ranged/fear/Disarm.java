@@ -9,7 +9,6 @@ package com.skelril.aurora.items.specialattack.attacks.ranged.fear;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.ranged.RangedSpecial;
 import com.skelril.aurora.util.ChanceUtil;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
@@ -24,7 +23,7 @@ public class Disarm extends EntityAttack implements RangedSpecial {
     @Override
     public void activate() {
 
-        ItemStack held = getItemStack();
+        final ItemStack held = getItemStack();
 
         if (held == null) return;
 
@@ -41,8 +40,11 @@ public class Disarm extends EntityAttack implements RangedSpecial {
             ((Player) target).getInventory().setContents(items);
         } else {
             target.getEquipment().setItemInHand(null);
-            Item item = target.getWorld().dropItem(target.getLocation(), held);
-            item.setPickupDelay(25);
+            server.getScheduler().runTaskLater(inst, () -> {
+                if (target.isValid()) {
+                    target.getEquipment().setItemInHand(held);
+                }
+            }, 20 * 3);
         }
 
         inform("Your bow disarms its victim.");
