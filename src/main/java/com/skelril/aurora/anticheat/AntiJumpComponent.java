@@ -73,31 +73,26 @@ public class AntiJumpComponent extends BukkitComponent implements Listener {
             final int blockY = blockLoc.getBlockY();
 
             if (Math.abs(player.getVelocity().getY()) > config.upwardsVelocity && y > blockY) {
-                server.getScheduler().runTaskLater(inst, new Runnable() {
+                server.getScheduler().runTaskLater(inst, () -> {
+                    if (player.getLocation().getY() >= (blockY + config.leapDistance)) {
 
-                    @Override
-                    public void run() {
+                        Location basePlayerLoc = playerLoc.clone();
+                        basePlayerLoc.setY(0);
+                        Location baseBlockLoc = blockLoc.clone();
+                        baseBlockLoc.setY(0);
 
-                        if (player.getLocation().getY() >= (blockY + config.leapDistance)) {
-
-                            Location basePlayerLoc = playerLoc.clone();
-                            basePlayerLoc.setY(0);
-                            Location baseBlockLoc = blockLoc.clone();
-                            baseBlockLoc.setY(0);
-
-                            if (basePlayerLoc.distanceSquared(baseBlockLoc) > config.radius * config.radius) {
-                                return;
-                            }
-
-                            ChatUtil.sendWarning(player, "Hack jumping detected.");
-
-                            Location playerLoc = player.getLocation();
-                            playerLoc.setX(x);
-                            playerLoc.setY(blockY);
-                            playerLoc.setZ(z);
-
-                            player.teleport(playerLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                        if (basePlayerLoc.distanceSquared(baseBlockLoc) > config.radius * config.radius) {
+                            return;
                         }
+
+                        ChatUtil.sendWarning(player, "Hack jumping detected.");
+
+                        Location playerLoc1 = player.getLocation();
+                        playerLoc1.setX(x);
+                        playerLoc1.setY(blockY);
+                        playerLoc1.setZ(z);
+
+                        player.teleport(playerLoc1, PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     }
                 }, 4);
             }
