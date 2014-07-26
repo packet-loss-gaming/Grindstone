@@ -6,7 +6,7 @@
 
 package com.skelril.aurora.prayer.PrayerFX;
 
-import com.skelril.aurora.city.engine.pvp.PvPComponent;
+import com.skelril.aurora.city.engine.combat.PvPComponent;
 import com.skelril.aurora.prayer.PrayerType;
 import com.skelril.aurora.util.EntityUtil;
 import org.bukkit.entity.LivingEntity;

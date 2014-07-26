@@ -13,7 +13,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
-import com.skelril.aurora.city.engine.pvp.PvPComponent;
+import com.skelril.aurora.city.engine.combat.PvPComponent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;

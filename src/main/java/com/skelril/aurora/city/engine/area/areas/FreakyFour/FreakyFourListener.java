@@ -11,6 +11,7 @@ import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.city.engine.area.AreaListener;
+import com.skelril.aurora.city.engine.combat.PvMComponent;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
 import com.skelril.aurora.events.entity.HallowCreeperEvent;
 import com.skelril.aurora.events.guild.NinjaSmokeBombEvent;
@@ -235,28 +236,8 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 }
             }
         }
-        if (damager instanceof Player) {
-            final Entity finalDamager = damager;
-            final int oldCurrent = (int) Math.ceil(((LivingEntity) entity).getHealth());
-
-            server.getScheduler().runTaskLater(inst, () -> {
-
-                int current = (int) Math.ceil(((LivingEntity) entity).getHealth());
-
-                if (oldCurrent == current) return;
-
-                int max = (int) Math.ceil(((LivingEntity) entity).getMaxHealth());
-
-                String message;
-
-                if (current > 0) {
-                    message = ChatColor.DARK_AQUA + "Entity Health: " + current + " / " + max;
-                } else {
-                    message = ChatColor.GOLD + String.valueOf(ChatColor.BOLD) + "KO!";
-                }
-
-                ChatUtil.sendNotice((Player) finalDamager, message);
-            }, 1);
+        if (damager instanceof Player && entity instanceof LivingEntity) {
+            PvMComponent.printHealth((Player) damager, (LivingEntity) entity);
         }
     }
 

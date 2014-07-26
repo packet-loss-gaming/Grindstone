@@ -16,6 +16,7 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.bosses.detail.WBossDetail;
+import com.skelril.aurora.bosses.instruction.HealthPrint;
 import com.skelril.aurora.bosses.instruction.WDamageModifier;
 import com.skelril.aurora.items.specialattack.EntityAttack;
 import com.skelril.aurora.items.specialattack.attacks.hybrid.fear.Curse;
@@ -207,6 +208,9 @@ public class FearKnight {
                 return null;
             }
         });
+
+        List<DamagedInstruction<WBossDetail>> damagedInstructions = fearKnight.damagedInstructions;
+        damagedInstructions.add(new HealthPrint<>());
     }
 
     private EntityDamageEvent getEvent(AttackDamage damage) {

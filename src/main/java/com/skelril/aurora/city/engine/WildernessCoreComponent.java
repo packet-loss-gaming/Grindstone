@@ -18,8 +18,9 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.admin.AdminState;
 import com.skelril.aurora.bosses.*;
 import com.skelril.aurora.bosses.detail.WBossDetail;
-import com.skelril.aurora.city.engine.pvp.PvPComponent;
-import com.skelril.aurora.city.engine.pvp.PvPScope;
+import com.skelril.aurora.city.engine.combat.PvMComponent;
+import com.skelril.aurora.city.engine.combat.PvPComponent;
+import com.skelril.aurora.city.engine.combat.PvPScope;
 import com.skelril.aurora.events.PlayerAdminModeChangeEvent;
 import com.skelril.aurora.events.apocalypse.ApocalypseLocalSpawnEvent;
 import com.skelril.aurora.events.entity.item.DropClearPulseEvent;
@@ -92,7 +93,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private World city;
     private World wilderness;
     private World wildernessNether;
-    private Set<World> wildernessWorlds = new HashSet<>();
+    private static Set<World> wildernessWorlds = new HashSet<>();
 
     private long nextDropTime = 0;
     private PvPScope scope;
@@ -202,7 +203,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         });
     }
 
-    public boolean isWildernessWorld(World world) {
+    public static boolean isWildernessWorld(World world) {
         return wildernessWorlds.contains(world);
     }
 
@@ -495,30 +496,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             return true;
         }
 
-        final int oldCurrent = (int) Math.ceil(defender.getHealth());
-
-        server.getScheduler().runTaskLater(inst, () -> {
-
-            int current = (int) Math.ceil(defender.getHealth());
-
-            if (oldCurrent == current) return;
-
-            WildernessSession session = sessions.getSession(WildernessSession.class, attacker);
-
-            int max = (int) Math.ceil(defender.getMaxHealth());
-
-            String message;
-
-            if (current > 0) {
-                message = ChatColor.DARK_AQUA
-                        + String.valueOf(session.checkLast(defender.getUniqueId()) ? ChatColor.ITALIC : "")
-                        + "Entity Health: " + current + " / " + max;
-            } else {
-                message = ChatColor.GOLD + String.valueOf(ChatColor.BOLD) + "KO!";
-            }
-
-            ChatUtil.sendNotice(attacker, message);
-        }, 1);
+        PvMComponent.printHealth(attacker, defender);
         return true;
     }
 

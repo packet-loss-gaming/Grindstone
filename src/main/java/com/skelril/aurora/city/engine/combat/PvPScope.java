@@ -4,7 +4,7 @@
  * All Rights Reserved
  */
 
-package com.skelril.aurora.city.engine.pvp;
+package com.skelril.aurora.city.engine.combat;
 
 import org.bukkit.entity.Player;
 

@@ -17,6 +17,7 @@ import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.bosses.detail.GenericDetail;
 import com.skelril.aurora.bosses.instruction.ExplosiveUnbind;
+import com.skelril.aurora.bosses.instruction.HealthPrint;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.EntityUtil;
 import org.bukkit.Location;
@@ -102,5 +103,8 @@ public class ThunderZombie {
                 return null;
             }
         });
+
+        List<DamagedInstruction<GenericDetail>> damagedInstructions = thunderZombie.damagedInstructions;
+        damagedInstructions.add(new HealthPrint<>());
     }
 }

@@ -16,6 +16,7 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.bosses.detail.WBossDetail;
+import com.skelril.aurora.bosses.instruction.HealthPrint;
 import com.skelril.aurora.bosses.instruction.WDamageModifier;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
@@ -131,6 +132,9 @@ public class StormBringer {
                 return null;
             }
         });
+
+        List<DamagedInstruction<WBossDetail>> damagedInstructions = stormBringer.damagedInstructions;
+        damagedInstructions.add(new HealthPrint<>());
     }
 
     private EntityDamageEvent getEvent(AttackDamage damage) {

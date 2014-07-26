@@ -16,7 +16,7 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
-import com.skelril.aurora.city.engine.pvp.PvPComponent;
+import com.skelril.aurora.city.engine.combat.PvPComponent;
 import com.skelril.aurora.events.anticheat.RapidHitEvent;
 import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
