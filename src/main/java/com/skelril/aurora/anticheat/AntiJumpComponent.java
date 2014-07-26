@@ -8,6 +8,7 @@ package com.skelril.aurora.anticheat;
 
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.aurora.util.ChatUtil;
+import com.skelril.aurora.util.LocationUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
@@ -65,34 +66,22 @@ public class AntiJumpComponent extends BukkitComponent implements Listener {
             final Player player = event.getPlayer();
             final Location playerLoc = player.getLocation();
 
-            final double x = playerLoc.getX();
-            final double y = playerLoc.getY();
-            final double z = playerLoc.getZ();
-
             final Location blockLoc = event.getBlock().getLocation();
             final int blockY = blockLoc.getBlockY();
 
-            if (Math.abs(player.getVelocity().getY()) > config.upwardsVelocity && y > blockY) {
+            if (Math.abs(player.getVelocity().getY()) > config.upwardsVelocity && playerLoc.getY() > blockY) {
                 server.getScheduler().runTaskLater(inst, () -> {
                     if (player.getLocation().getY() >= (blockY + config.leapDistance)) {
 
-                        Location basePlayerLoc = playerLoc.clone();
-                        basePlayerLoc.setY(0);
-                        Location baseBlockLoc = blockLoc.clone();
-                        baseBlockLoc.setY(0);
-
-                        if (basePlayerLoc.distanceSquared(baseBlockLoc) > config.radius * config.radius) {
+                        if (LocationUtil.distanceSquared2D(playerLoc, blockLoc) > config.radius * config.radius) {
                             return;
                         }
 
                         ChatUtil.sendWarning(player, "Hack jumping detected.");
 
-                        Location playerLoc1 = player.getLocation();
-                        playerLoc1.setX(x);
-                        playerLoc1.setY(blockY);
-                        playerLoc1.setZ(z);
+                        playerLoc.setY(blockY);
 
-                        player.teleport(playerLoc1, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                        player.teleport(playerLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     }
                 }, 4);
             }
