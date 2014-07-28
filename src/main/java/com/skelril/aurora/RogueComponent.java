@@ -22,6 +22,7 @@ import com.skelril.aurora.events.anticheat.ThrowPlayerEvent;
 import com.skelril.aurora.events.custom.item.SpecialAttackEvent;
 import com.skelril.aurora.events.guild.RogueBlipEvent;
 import com.skelril.aurora.events.guild.RogueGrenadeEvent;
+import com.skelril.aurora.items.specialattack.SpecType;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import com.skelril.aurora.util.*;
@@ -57,9 +58,6 @@ import org.bukkit.util.Vector;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static com.skelril.aurora.items.CustomItemsComponent.SpecType;
-
 @ComponentInformation(friendlyName = "Rogue", desc = "Speed and strength is always the answer.")
 @Depend(plugins = {"Pitfall"}, components = {SessionComponent.class, NinjaComponent.class, PvPComponent.class})
 public class RogueComponent extends BukkitComponent implements Listener, Runnable {

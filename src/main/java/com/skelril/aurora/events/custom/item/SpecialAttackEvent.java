@@ -6,14 +6,13 @@
 
 package com.skelril.aurora.events.custom.item;
 
+import com.skelril.aurora.items.specialattack.SpecType;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
-
-import static com.skelril.aurora.items.CustomItemsComponent.SpecType;
 
 public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
 
