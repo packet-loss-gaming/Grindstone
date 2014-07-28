@@ -92,6 +92,7 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
                 for (Map.Entry<CustomItems, SpecWeaponImpl> entry : rangedWeapons.entrySet()) {
                     if (ItemUtil.isItem(launcher, entry.getKey())) {
                         spec = entry.getValue().getSpecial(owner, target);
+                        break;
                     }
                 }
             } else {
@@ -101,6 +102,7 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
                 for (Map.Entry<CustomItems, SpecWeaponImpl> entry : meleeWeapons.entrySet()) {
                     if (ItemUtil.isHoldingItem(owner, entry.getKey())) {
                         spec = entry.getValue().getSpecial(owner, target);
+                        break;
                     }
                 }
             }
