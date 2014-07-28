@@ -27,10 +27,10 @@ public class MobAttack extends LocationAttack implements RangedSpecial {
 
         EffectUtil.Strange.mobBarrage(target, type);
 
-        if (type.isInstance(Bat.class)) {
+        if (Bat.class.equals(type)) {
             inform("Your bow releases a batty attack.");
         } else {
-            inform("Your bow releases a " + type.getName().toLowerCase() + " attack.");
+            inform("Your bow releases a " + type.getSimpleName().toLowerCase() + " attack.");
         }
     }
 }
