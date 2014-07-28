@@ -14,6 +14,7 @@ import com.skelril.aurora.admin.AdminComponent;
 import com.skelril.aurora.anticheat.AntiCheatCompatibilityComponent;
 import com.skelril.aurora.city.engine.combat.PvPComponent;
 import com.skelril.aurora.events.custom.item.HymnSingEvent;
+import com.skelril.aurora.items.generic.AbstractItemFeatureImpl;
 import com.skelril.aurora.items.implementations.*;
 import com.skelril.aurora.prayer.PrayerComponent;
 import com.skelril.aurora.util.ChatUtil;
@@ -23,6 +24,7 @@ import com.skelril.aurora.util.item.ItemUtil;
 import com.skelril.aurora.util.item.custom.CustomItems;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -47,6 +49,13 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
     private static final CommandBook inst = CommandBook.inst();
     private static final Server server = CommandBook.server();
+
+    @InjectComponent
+    protected static AdminComponent admin;
+    @InjectComponent
+    protected static SessionComponent sessions;
+    @InjectComponent
+    protected static PrayerComponent prayers;
 
     private static ItemCondenser goldCondenser = new ItemCondenser();
 
@@ -86,6 +95,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+        loadResources();
         registerSpecWeapons();
         registerHymns();
         registerGeneral();
@@ -95,6 +105,12 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         //noinspection AccessStaticViaInstance
         inst.registerEvents(component);
         return component;
+    }
+
+    private void loadResources() {
+        AbstractItemFeatureImpl.applyResource(admin);
+        AbstractItemFeatureImpl.applyResource(sessions);
+        AbstractItemFeatureImpl.applyResource(prayers);
     }
 
     private void registerSpecWeapons() {

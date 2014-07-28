@@ -14,7 +14,6 @@ import com.skelril.aurora.items.CustomItemSession;
 import com.skelril.aurora.items.specialattack.SpecType;
 import com.skelril.aurora.items.specialattack.SpecialAttack;
 import com.skelril.aurora.prayer.PrayerComponent;
-import com.zachsthings.libcomponents.InjectComponent;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -27,12 +26,19 @@ public abstract class AbstractItemFeatureImpl implements Listener {
     protected final Logger log = CommandBook.logger();
     protected final Server server = CommandBook.server();
 
-    @InjectComponent
-    protected AdminComponent admin;
-    @InjectComponent
-    protected SessionComponent sessions;
-    @InjectComponent
-    protected PrayerComponent prayers;
+    protected static AdminComponent admin;
+    protected static SessionComponent sessions;
+    protected static PrayerComponent prayers;
+
+    public static void applyResource(AdminComponent admin) {
+        AbstractItemFeatureImpl.admin = admin;
+    }
+    public static void applyResource(SessionComponent sessions) {
+        AbstractItemFeatureImpl.sessions = sessions;
+    }
+    public static void applyResource(PrayerComponent prayers) {
+        AbstractItemFeatureImpl.prayers = prayers;
+    }
 
     public CustomItemSession getSession(Player player) {
         return sessions.getSession(CustomItemSession.class, player);
