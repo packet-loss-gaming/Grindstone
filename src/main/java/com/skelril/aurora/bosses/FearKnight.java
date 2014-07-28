@@ -18,9 +18,7 @@ import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.aurora.bosses.detail.WBossDetail;
 import com.skelril.aurora.bosses.instruction.HealthPrint;
 import com.skelril.aurora.bosses.instruction.WDamageModifier;
-import com.skelril.aurora.items.specialattack.EntityAttack;
-import com.skelril.aurora.items.specialattack.attacks.hybrid.fear.Curse;
-import com.skelril.aurora.items.specialattack.attacks.melee.fear.*;
+import com.skelril.aurora.items.implementations.FearSwordImpl;
 import com.skelril.aurora.modifiers.ModifierType;
 import com.skelril.aurora.util.ChanceUtil;
 import com.skelril.aurora.util.EntityUtil;
@@ -167,6 +165,7 @@ public class FearKnight {
         });
         List<DamageInstruction<WBossDetail>> damageInstructions = fearKnight.damageInstructions;
         damageInstructions.add(new WDamageModifier());
+        FearSwordImpl sword = new FearSwordImpl();
         damageInstructions.add(new DamageInstruction<WBossDetail>() {
             @Override
             public InstructionResult<WBossDetail, DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
@@ -179,32 +178,7 @@ public class FearKnight {
                 }
                 Entity eToHit = BukkitUtil.getBukkitEntity(entity);
                 if (!(eToHit instanceof LivingEntity)) return null;
-                LivingEntity toHit = (LivingEntity) eToHit;
-
-                EntityAttack spec;
-                switch (ChanceUtil.getRandom(6)) {
-                    case 1:
-                        spec = new Confuse(boss, toHit);
-                        break;
-                    case 2:
-                        spec = new FearBlaze(boss, toHit);
-                        break;
-                    case 3:
-                        spec = new Curse(boss, toHit);
-                        break;
-                    case 4:
-                        spec = new Weaken(boss, toHit);
-                        break;
-                    case 5:
-                        spec = new Decimate(boss, toHit);
-                        break;
-                    case 6:
-                        spec = new SoulSmite(boss, toHit);
-                        break;
-                    default:
-                        return null;
-                }
-                spec.activate();
+                sword.getSpecial(boss, (LivingEntity) eToHit).activate();
                 return null;
             }
         });
