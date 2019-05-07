@@ -17,6 +17,7 @@ import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.skelril.aurora.admin.AdminComponent;
+import com.skelril.aurora.data.DataBaseComponent;
 import com.skelril.aurora.economic.store.mysql.MySQLItemStoreDatabase;
 import com.skelril.aurora.economic.store.mysql.MySQLMarketTransactionDatabase;
 import com.skelril.aurora.exceptions.UnknownPluginException;
@@ -47,7 +48,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Admin Store", desc = "Admin Store system.")
-@Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, SessionComponent.class})
+@Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, DataBaseComponent.class, SessionComponent.class})
 public class AdminStoreComponent extends BukkitComponent {
 
     private final CommandBook inst = CommandBook.inst();
@@ -67,24 +68,26 @@ public class AdminStoreComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-
-        itemDatabase = new MySQLItemStoreDatabase();
-        itemDatabase.load();
-        transactionDatabase = new MySQLMarketTransactionDatabase();
-        transactionDatabase.load();
-
-        // Setup external systems
-        setupEconomy();
-        // Register commands
-        registerCommands(Commands.class);
-
-        // Get the region
+        // FIXME: Work around for database load order issue.
         server.getScheduler().runTaskLater(inst, () -> {
-            try {
-                region = getWorldGuard().getGlobalRegionManager().get(Bukkit.getWorld("City")).getRegion("vineam-district-bank");
-            } catch (UnknownPluginException e) {
-                e.printStackTrace();
-            }
+            itemDatabase = new MySQLItemStoreDatabase();
+            itemDatabase.load();
+            transactionDatabase = new MySQLMarketTransactionDatabase();
+            transactionDatabase.load();
+
+            // Setup external systems
+            setupEconomy();
+            // Register commands
+            registerCommands(Commands.class);
+
+            // Get the region
+            server.getScheduler().runTaskLater(inst, () -> {
+                try {
+                    region = getWorldGuard().getGlobalRegionManager().get(Bukkit.getWorld("City")).getRegion("vineam-district-bank");
+                } catch (UnknownPluginException e) {
+                    e.printStackTrace();
+                }
+            }, 1);
         }, 1);
     }
 

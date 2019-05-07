@@ -11,8 +11,8 @@ import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.LocalPlayer;
-import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -135,7 +135,7 @@ public class RegionUtil {
     }
 
     public static boolean renameRegion(RegionManager manager, String oldName, String newName, boolean cleanPersonal)
-            throws ProtectionDatabaseException, ProtectedRegion.CircularInheritanceException {
+        throws ProtectedRegion.CircularInheritanceException, StorageException {
 
         // Check for old conflicting regions
         ProtectedRegion oldRegion = manager.getRegion(oldName);

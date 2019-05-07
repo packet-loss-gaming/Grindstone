@@ -6,6 +6,8 @@
 
 package com.skelril.aurora.homes;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
@@ -26,13 +28,16 @@ import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.bukkit.BukkitPlayer;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
-import com.sk89q.worldguard.protection.databases.RegionDBUtil;
+import com.sk89q.worldguard.bukkit.commands.AsyncCommandHelper;
+import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.sk89q.worldguard.protection.util.DomainInputResolver;
+import com.sk89q.worldguard.protection.util.DomainInputResolver.UserLocatorPolicy;
 import com.skelril.aurora.District;
 import com.skelril.aurora.economic.store.AdminStoreComponent;
 import com.skelril.aurora.util.ChatUtil;
@@ -252,13 +257,20 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             if (region == null) {
                 throw new CommandException("You are not currently standing in a house you own.");
             }
-            RegionDBUtil.addToDomain(region.getMembers(), args.getPaddedSlice(1, 0), 0);
-            try {
-                manager.save();
-            } catch (ProtectionDatabaseException e) {
-                ChatUtil.sendError(sender, "Failed to add player to your home.");
-            }
-            ChatUtil.sendNotice(player, "Home successfully updated!");
+            // Resolve members asynchronously
+            DomainInputResolver resolver = new DomainInputResolver(
+                WG.getProfileService(), args.getParsedPaddedSlice(1, 0));
+            resolver.setLocatorPolicy(args.hasFlag('n') ? UserLocatorPolicy.NAME_ONLY : UserLocatorPolicy.UUID_ONLY);
+
+            // Then add it to the members
+            ListenableFuture<DefaultDomain> future = Futures.transform(
+                WG.getExecutorService().submit(resolver),
+                resolver.createAddAllFunction(region.getMembers()));
+
+            AsyncCommandHelper.wrap(future, WG, sender)
+                .registerWithSupervisor("Adding members to your home")
+                .sendMessageAfterDelay("(Please wait... querying player names...)")
+                .thenRespondWith("Home '%s' updated with new members.", "Failed to add new members");
         }
 
         @Command(aliases = {"removeplayer"}, usage = "<player>", desc = "Remove a player from your home",
@@ -273,13 +285,20 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             if (region == null) {
                 throw new CommandException("You are not currently standing in a house you own.");
             }
-            RegionDBUtil.removeFromDomain(region.getMembers(), args.getPaddedSlice(1, 0), 0);
-            try {
-                manager.save();
-            } catch (ProtectionDatabaseException e) {
-                ChatUtil.sendError(sender, "Failed to remove players from your home.");
-            }
-            ChatUtil.sendNotice(player, "Home successfully updated!");
+            // Resolve members asynchronously
+            DomainInputResolver resolver = new DomainInputResolver(
+                WG.getProfileService(), args.getParsedPaddedSlice(1, 0));
+            resolver.setLocatorPolicy(args.hasFlag('n') ? UserLocatorPolicy.NAME_ONLY : UserLocatorPolicy.UUID_AND_NAME);
+
+            // Then remove it from the members
+            ListenableFuture<?> future = Futures.transform(
+                WG.getExecutorService().submit(resolver),
+                resolver.createRemoveAllFunction(region.getMembers()));
+
+            AsyncCommandHelper.wrap(future, WG, sender)
+                .registerWithSupervisor("Removing members from your home")
+                .sendMessageAfterDelay("(Please wait... querying player names...)")
+                .thenRespondWith("Home '%s' updated with members removed.", "Failed to remove members");
         }
 
         @Command(aliases = {"flag"}, usage = "<flag>", desc = "Flag a home",
@@ -520,7 +539,8 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                 manager.save();
 
                 outliner.outline(admin.getWorld(), region);
-            } catch (ProtectionDatabaseException e) {
+            } catch (StorageException e) {
+                e.printStackTrace();
                 throw new CommandException("Failed to create the region: " + regionString + ".");
             }
 
@@ -559,7 +579,8 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             }
             try {
                 manager.save();
-            } catch (ProtectionDatabaseException e) {
+            } catch (StorageException e) {
+                e.printStackTrace();
                 throw new CommandException("Failed to save the database.");
             }
 

@@ -12,6 +12,7 @@ import com.skelril.aurora.util.EnvironmentUtil;
 import com.skelril.aurora.util.item.ItemUtil;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import de.diddiz.LogBlock.Actor;
 import de.diddiz.LogBlock.Consumer;
 import de.diddiz.LogBlock.LogBlock;
 import org.bukkit.Server;
@@ -87,7 +88,7 @@ public class RestorationUtil extends BukkitComponent {
             } else {
                 return;
             }
-            consumer.queueBlockBreak(player.getName(), block.getState());
+            consumer.queueBlockBreak(new Actor(player.getName(), player.getUniqueId()), block.getState());
 
             block.setTypeId(0);
 

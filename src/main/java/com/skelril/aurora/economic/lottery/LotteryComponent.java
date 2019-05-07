@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.ItemID;
+import com.skelril.aurora.data.DataBaseComponent;
 import com.skelril.aurora.economic.ImpersonalComponent;
 import com.skelril.aurora.economic.lottery.mysql.MySQLLotteryTicketDatabase;
 import com.skelril.aurora.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
@@ -50,7 +51,7 @@ import java.util.logging.Logger;
  * Author: Turtle9598
  */
 @ComponentInformation(friendlyName = "Lottery", desc = "Can you win it big?")
-@Depend(plugins = {"Vault"}, components = {ImpersonalComponent.class})
+@Depend(plugins = {"Vault"}, components = {DataBaseComponent.class, ImpersonalComponent.class})
 public class LotteryComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -71,24 +72,26 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
     @Override
     public void enable() {
+        // FIXME: Work around for database load order issue.
+        server.getScheduler().runTaskLater(inst, () -> {
+            config = configure(new LocalConfiguration());
+            MIN_WINNING = config.maxPerLotto * config.ticketPrice * 1.25;
 
-        config = configure(new LocalConfiguration());
-        MIN_WINNING = config.maxPerLotto * config.ticketPrice * 1.25;
+            lotteryTicketDatabase = new MySQLLotteryTicketDatabase();
+            lotteryTicketDatabase.load();
+            lotteryWinnerDatabase = new MySQLLotteryWinnerDatabase();
+            lotteryWinnerDatabase.load();
 
-        lotteryTicketDatabase = new MySQLLotteryTicketDatabase();
-        lotteryTicketDatabase.load();
-        lotteryWinnerDatabase = new MySQLLotteryWinnerDatabase();
-        lotteryWinnerDatabase.load();
+            //noinspection AccessStaticViaInstance
+            inst.registerEvents(this);
+            registerCommands(Commands.class);
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
-        registerCommands(Commands.class);
+            setupEconomy();
 
-        setupEconomy();
-
-        long ticks = TimeUtil.getTicksTill(17), nextHour = TimeUtil.getTicksTillHour();
-        server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, broadcastLottery, nextHour, 20 * 60 * 60);
+            long ticks = TimeUtil.getTicksTill(17), nextHour = TimeUtil.getTicksTillHour();
+            server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24);
+            server.getScheduler().scheduleSyncRepeatingTask(inst, broadcastLottery, nextHour, 20 * 60 * 60);
+        }, 1);
     }
 
     @Override
