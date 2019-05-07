@@ -270,7 +270,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             AsyncCommandHelper.wrap(future, WG, sender)
                 .registerWithSupervisor("Adding members to your home")
                 .sendMessageAfterDelay("(Please wait... querying player names...)")
-                .thenRespondWith("Home '%s' updated with new members.", "Failed to add new members");
+                .thenRespondWith("Home updated with new members.", "Failed to add new members");
         }
 
         @Command(aliases = {"removeplayer"}, usage = "<player>", desc = "Remove a player from your home",
@@ -298,7 +298,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             AsyncCommandHelper.wrap(future, WG, sender)
                 .registerWithSupervisor("Removing members from your home")
                 .sendMessageAfterDelay("(Please wait... querying player names...)")
-                .thenRespondWith("Home '%s' updated with members removed.", "Failed to remove members");
+                .thenRespondWith("Home updated with members removed.", "Failed to remove members");
         }
 
         @Command(aliases = {"flag"}, usage = "<flag>", desc = "Flag a home",
@@ -799,7 +799,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     }
 
     public static boolean isPlayerHouse(ProtectedRegion region, LocalPlayer player) {
-        return region.getId().endsWith("-house") && region.getOwners().contains(player.getName());
+        return region.getId().endsWith("-house") && region.getOwners().contains(player);
     }
 
     public static boolean isPlayerHouse(ProtectedRegion region, Player player) {

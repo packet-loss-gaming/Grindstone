@@ -28,7 +28,7 @@ public class RegionUtil {
 
     public static Stream<ProtectedRegion> getHouseStream(LocalPlayer player, RegionManager manager) {
         return manager.getRegions().entrySet().stream()
-                .filter(e -> e.getValue().getOwners().contains(player.getName()))
+                .filter(e -> e.getValue().getOwners().contains(player))
                 .filter(e -> e.getKey().endsWith("-house"))
                 .map(Map.Entry::getValue);
     }
