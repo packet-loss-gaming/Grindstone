@@ -154,7 +154,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
             }
 
             // Greeting
-            ChatUtil.sendNotice(player, "Welcome to Skelril!");
+            ChatUtil.sendNotice(player, "Welcome to the Packet Loss Gaming Minecraft server!");
             inventory.addItem(startKit);
 
             // Surprise!
@@ -188,16 +188,6 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler
-    public void onPlayerConnect(PlayerLoginEvent event) {
-
-        if (event.getHostname().contains("arrowcraft") && event.getResult().equals(PlayerLoginEvent.Result.ALLOWED)) {
-
-            event.setKickMessage("Please use \"server.skelril.com\" from now on.");
-            event.setResult(PlayerLoginEvent.Result.KICK_OTHER);
-        }
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
 
@@ -219,7 +209,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
                         firstLoc.setPitch(2);
                         player.teleport(firstLoc);
 
-                        ChatUtil.sendNotice(player, "Welcome to Skelril!");
+                        ChatUtil.sendNotice(player, "Welcome to Packet Loss Gaming Minecraft server!");
                         ChatUtil.sendNotice(player, "Follow the path to begin your adventure!");
                         if (!blockedPlayers.contains(player)) blockedPlayers.add(player);
                     } catch (Exception e) {
