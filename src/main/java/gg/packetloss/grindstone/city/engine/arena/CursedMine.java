@@ -37,7 +37,7 @@ import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.item.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import gg.packetloss.grindstone.util.restoration.PlayerMappedBlockRecordIndex;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;

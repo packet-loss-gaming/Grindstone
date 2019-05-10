@@ -15,7 +15,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.item.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.WeatherType;

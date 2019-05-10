@@ -20,7 +20,7 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearStri
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.MagicChain;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.item.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.util.item.custom;
+package gg.packetloss.grindstone.items.custom;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -17,7 +17,7 @@ import org.bukkit.potion.PotionType;
 import java.util.Collection;
 import java.util.HashMap;
 
-import static gg.packetloss.grindstone.util.item.custom.CustomItems.*;
+import static gg.packetloss.grindstone.items.custom.CustomItems.*;
 
 public class CustomItemCenter {
     private static HashMap<CustomItems, CustomItem> items = new HashMap<>();

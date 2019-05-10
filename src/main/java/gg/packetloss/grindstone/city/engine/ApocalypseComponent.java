@@ -31,7 +31,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.item.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;

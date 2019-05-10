@@ -9,7 +9,7 @@ package gg.packetloss.grindstone.items.implementations;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.item.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

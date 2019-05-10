@@ -18,7 +18,7 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Glo
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.item.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.Effect;

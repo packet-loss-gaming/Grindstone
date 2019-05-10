@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.util.item.custom;
+package gg.packetloss.grindstone.items.custom;
 
 import org.bukkit.potion.PotionEffectType;
 
