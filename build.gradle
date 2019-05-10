@@ -1,0 +1,68 @@
+apply plugin: 'java'
+
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    jcenter()
+
+    maven {
+        name 'Packet Loss Gaming Repository'
+        url 'http://service.packetloss.gg/maven/'
+    }
+    maven {
+        name 'Spigot Repository'
+        url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+    maven {
+        name 'sk89q Repository'
+        url 'http://maven.sk89q.com/repo/'
+    }
+    maven {
+        name 'md_5 Repository'
+        url 'http://repo.md-5.net/content/repositories/public/'
+    }
+    maven {
+        name 'Comphenix Repository'
+        url 'http://repo.comphenix.net/content/groups/public/'
+    }
+    maven {
+        name 'Vault Repository'
+        url 'http://nexus.theyeticave.net/content/repositories/pub_releases'
+    }
+}
+
+dependencies {
+    // FIXME: These should be moved into a maven repository
+    shade files('lib/OSBL.jar')
+    compile files('lib/MobArena.jar')
+    compile files('lib/Pitfall.jar')
+
+    compile group: 'org.bukkit', name: 'bukkit', version: '1.8.8-R0.1-SNAPSHOT'
+    compile group: 'org.bukkit', name: 'craftbukkit', version: '1.8.8-R0.1-SNAPSHOT'
+
+    compile group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '6.1'
+    compile group: 'com.sk89q', name: 'worldguard', version: '6.1'
+    compile group: 'com.sk89q', name: 'commandbook', version: '2.3.1-SNAPSHOT'
+    compile group: 'com.sk89q.craftbook', name: 'craftbook', version: '3.9-SNAPSHOT'
+
+    compile group: 'net.milkbowl.vault', name: 'Vault', version: '1.4.1'
+    compile group: 'fr.neatmonster', name: 'nocheatplus', version: '3.13.7-RC'
+    compile group: 'de.diddiz', name: 'logblock', version: 'dev-SNAPSHOT'
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+version = '1.0'
+
+jar {
+    configurations.shade.each { dep ->
+        from(project.zipTree(dep)){
+            exclude 'META-INF', 'META-INF/**'
+        }
+    }
+}

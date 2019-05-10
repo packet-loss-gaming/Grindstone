@@ -5,18 +5,19 @@
 .idea/
 
 # Eclipse
-/.classpath
-/.project
-/.settings
+.classpath
+.project
+.settings/
 
 # Netbeans
-/nbproject
+nbproject/
 
-# Maven
-/target
+# Gradle
+.gradle
+build/
 
 # vim
 .*.sw[a-p]
 
 # OSX
-/.DS_Store
+.DS_Store
