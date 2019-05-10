@@ -9,46 +9,19 @@ package gg.packetloss.grindstone;
 
 public enum District {
 
-    GLOBAL("City", new String[]{"Dark_Arc", "RichRick18", "digilue"}),
-    CARPE_DIEM("Carpe Diem", new String[]{"darkkrai13", "XxSerionAllorxX"}),
-    GLACIES_MARE("Glacies Mare", new String[]{}),
-    OBLITUS("Oblitus", new String[]{"Dark_Arc"}),
-    VINEAM("Vineam", new String[]{"RichRick18"});
+    GLOBAL("City"),
+    CARPE_DIEM("Carpe Diem"),
+    GLACIES_MARE("Glacies Mare"),
+    OBLITUS("Oblitus"),
+    VINEAM("Vineam");
 
     private final String properName;
-    private final String[] managers;
 
-    District(String properName, String[] managers) {
-
+    District(String properName) {
         this.properName = properName;
-        this.managers = managers;
     }
 
     public String toProperName() {
-
         return properName;
-    }
-
-    public String[] getManagers() {
-
-        return managers;
-    }
-
-    public String getManagersFriendly() {
-
-        if (managers.length < 1) {
-
-            return "UNKNOWN";
-        }
-
-        String managersString = "";
-        for (int i = 0; i < managers.length; i++) {
-            if (i + 1 == managers.length) {
-                managersString += managers[i];
-            } else {
-                managersString += managers[i] + ", ";
-            }
-        }
-        return managersString;
     }
 }
