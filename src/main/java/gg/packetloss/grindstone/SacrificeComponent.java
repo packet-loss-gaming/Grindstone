@@ -169,7 +169,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         List<ItemStack> loot = new ArrayList<>();
 
         // Calculate the modifier
-        int k = inst.hasPermission(sender, "aurora.sacrifice.efficiency") ? 100 : 125;
+        int baseChance = 125;
         int modifier = calculateModifier(value);
 
         value *= .9;
@@ -178,7 +178,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
             ItemStack itemStack;
 
-            if (ChanceUtil.getChance(Math.max(1, k - modifier))) {
+            if (ChanceUtil.getChance(Math.max(1, baseChance - modifier))) {
                 itemStack = getValuableItem(sender, modifier);
             } else {
                 itemStack = getCommonItemStack(sender, modifier);

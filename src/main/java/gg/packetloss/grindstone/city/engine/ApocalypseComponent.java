@@ -275,18 +275,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 return sessions.getSession(ApocalypseSession.class, player).recentlyDied();
             }
         });
-        bedSpawn(CollectionUtil.removalAll(applicable, new Checker<CommandBook, Player>(inst) {
-            @Override
-            public Boolean evaluate(Player player) {
-                return get().hasPermission(player, "aurora.apocalypse.bedsafe");
-            }
-        }), config.multiplier * (ChanceUtil.getRandom(6)));
-        localSpawn(CollectionUtil.removalAll(applicable, new Checker<CommandBook, Player>(inst) {
-            @Override
-            public Boolean evaluate(Player player) {
-                return get().hasPermission(player, "aurora.apocalypse.huntsafe");
-            }
-        }));
+        bedSpawn(applicable, config.multiplier * ChanceUtil.getRandom(6));
+        localSpawn(applicable);
     }
 
     public List<Player> getApplicable(World world) {

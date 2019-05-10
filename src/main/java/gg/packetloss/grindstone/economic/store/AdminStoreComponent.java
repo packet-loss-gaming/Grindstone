@@ -142,10 +142,6 @@ public class AdminStoreComponent extends BukkitComponent {
             double rebate = 0;
             double lottery = price * .03;
 
-            if (inst.hasPermission(sender, "aurora.market.rebate.onepointseven")) {
-                rebate = price * .017;
-            }
-
             if (!econ.has(playerName, price)) {
                 throw new CommandException("You do not have enough money to purchase that item(s).");
             }

@@ -100,7 +100,6 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                     int creeperChance = isFriday && isThirteenth ? 1 : config.hallowCreeperChance;
                     // Hallow Feature
                     if (creeperChance != -1 && ChanceUtil.getChance(creeperChance)
-                            && !inst.hasPermission(player, "aurora.hallow.immune")
                             && !hallowCreepersActive.contains(player)) {
                         HallowCreeperEvent hallowEvent = new HallowCreeperEvent(player, (Creeper) entity);
                         server.getPluginManager().callEvent(hallowEvent);

@@ -216,17 +216,6 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
                     }
                 }, 5);
             }
-
-            // Surprise!
-            if (ChanceUtil.getChance(1000) && config.luckyDiamond && inst.hasPermission(player,
-                    "aurora.loginkit.diamond")) {
-
-                // Give Items
-                inventory.addItem(new ItemStack(ItemID.DIAMOND, 1));
-
-                // Notify Player
-                ChatUtil.sendNotice(player, ChatColor.GOLD + "What's this, a diamond! You are very luck!");
-            }
         } catch (Exception e) {
             log.warning("Please ensure the following region exists: "
                     + config.firstRegion + " and has a parent in the world: " + config.mainWorld + ".");

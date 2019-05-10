@@ -147,17 +147,9 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                 player.removePotionEffect(PotionEffectType.SPEED);
                 player.removePotionEffect(PotionEffectType.JUMP);
 
-                int duration[] = new int[]{300, 180, 180};
-                if (inst.hasPermission(player, "aurora.prayer.intervention")) {
-                    for (int i = 0; i < duration.length; i++) {
-                        duration[i] *= 2;
-                    }
-                    ChatUtil.sendNotice(player, "The gods double the effectiveness of the spring.");
-                }
-
-                player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * duration[0], 2));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * duration[1], 1));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20 * duration[2], 1));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 300, 2));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 180, 1));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20 * 180, 1));
 
                 Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
                 if (downward.getTypeId() != BlockID.LAPIS_LAZULI_BLOCK) {

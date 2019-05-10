@@ -66,7 +66,6 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-        registerCommands(Commands.class);
 
         setUpWorldGuard();
 
@@ -161,8 +160,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         int blockType = block.getTypeId();
 
         if (EnvironmentUtil.isShrubBlock(blockType)) {
-            if ((LocalDate.now().getMonth().equals(Month.APRIL)
-                    || inst.hasPermission(player, "aurora.egg.easter"))
+            if (LocalDate.now().getMonth().equals(Month.APRIL)
                     && allowedEggs(player, EggType.EASTER)
                     && config.enableEasterEggs && !ChanceUtil.getChance(5, 6)) {
 
@@ -203,8 +201,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
                 }
             }
 
-            if ((LocalDate.now().getMonth().equals(Month.OCTOBER)
-                    || inst.hasPermission(event.getPlayer(), "aurora.egg.halloween"))
+            if (LocalDate.now().getMonth().equals(Month.OCTOBER)
                     && allowedEggs(player, EggType.HALLOWEEN)
                     && config.enableHalloweenEggs && !ChanceUtil.getChance(7, 8)) {
 
@@ -243,80 +240,6 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
                         world.dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toSpawnEgg());
                     }
                 }
-            }
-        }
-    }
-
-    public class Commands {
-
-        @Command(aliases = {"egg"}, desc = "Toggle Egg Drop")
-        @NestedCommand(ToggleCommands.class)
-        public void eggCommand(CommandContext args, CommandSender sender) throws CommandException {
-
-        }
-    }
-
-    public class ToggleCommands {
-
-        @Command(aliases = {"all"},
-                usage = "<on/off>", desc = "Toggle Egg Drop",
-                flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.egg.easter", "aurora.egg.halloween"})
-        public void eggAllCommand(CommandContext args, CommandSender sender) throws CommandException {
-
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            switch (args.getString(0).toLowerCase()) {
-                case "on":
-                    eggOn(player, EggType.INVALID);
-                    ChatUtil.sendNotice(sender, "You are filled with holiday spirit.");
-                    break;
-                case "off":
-                    eggOff(player, EggType.INVALID);
-                    ChatUtil.sendNotice(sender, "I guess the holidays aren't for everyone...");
-                    break;
-                default:
-                    throw new CommandUsageException("Invalid egg dropping state.", "[on/off]");
-            }
-        }
-
-        @Command(aliases = {"easter"},
-                usage = "<on/off>", desc = "Toggle Egg Drop",
-                flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.egg.easter"})
-        public void eggEasterCommand(CommandContext args, CommandSender sender) throws CommandException {
-
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            switch (args.getString(0).toLowerCase()) {
-                case "on":
-                    eggOn(player, EggType.EASTER);
-                    break;
-                case "off":
-                    eggOff(player, EggType.EASTER);
-                    break;
-                default:
-                    throw new CommandUsageException("Invalid egg dropping state.", "[on/off]");
-            }
-        }
-
-        @Command(aliases = {"halloween"},
-                usage = "<on/off>", desc = "Toggle Egg Drop",
-                flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.egg.halloween"})
-        public void eggHalloweenCommand(CommandContext args, CommandSender sender) throws CommandException {
-
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            switch (args.getString(0).toLowerCase()) {
-                case "on":
-                    eggOn(player, EggType.HALLOWEEN);
-                    break;
-                case "off":
-                    eggOff(player, EggType.HALLOWEEN);
-                    break;
-                default:
-                    throw new CommandUsageException("Invalid egg dropping state.", "[on/off]");
             }
         }
     }

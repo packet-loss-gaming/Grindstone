@@ -231,13 +231,7 @@ public class FishingComponent extends BukkitComponent implements Listener {
         int dropFish = config.fishDropChance;
 
         if (event.hasLaunchForce()) {
-
-            Player shooter = arrow.getShooter() instanceof Player ? (Player) arrow.getShooter() : null;
             dropFish = ChanceUtil.getRandom(dropFish);
-
-            if (shooter != null && inst.hasPermission(shooter, "aurora.fishing.arrow.master")) {
-                dropFish = (int) Math.sqrt(dropFish);
-            }
         } else {
             dropFish = ChanceUtil.getRandom(dropFish * dropFish);
         }

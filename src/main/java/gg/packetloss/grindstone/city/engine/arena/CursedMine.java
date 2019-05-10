@@ -327,9 +327,6 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     }
 
     private boolean checkInventory(Player player, ItemStack[] itemStacks) {
-
-        if (!inst.hasPermission(player, "aurora.prayer.intervention")) return false;
-
         for (int aItem : items) {
             if (player.getInventory().containsAtLeast(new ItemStack(aItem), 1)) return true;
         }
@@ -677,17 +674,6 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
             if (ChanceUtil.getChance(4)) {
                 ItemStack rawDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch(itemInHand));
-
-                if (inst.hasPermission(player, "aurora.mining.burningember") && !hasSilkTouch(itemInHand)) {
-                    switch (typeId) {
-                        case BlockID.GOLD_ORE:
-                            rawDrop.setTypeId(ItemID.GOLD_BAR);
-                            break;
-                        case BlockID.IRON_ORE:
-                            rawDrop.setTypeId(ItemID.IRON_BAR);
-                            break;
-                    }
-                }
 
                 if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(rawDrop.getTypeId())) {
                     rawDrop.setAmount(rawDrop.getAmount()

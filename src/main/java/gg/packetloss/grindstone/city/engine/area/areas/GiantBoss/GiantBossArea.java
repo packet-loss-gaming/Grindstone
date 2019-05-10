@@ -428,10 +428,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                     damageHeals = true;
                     // Check Players
                     for (Player player : getContained(Player.class)) {
-                        if (inst.hasPermission(player, "aurora.prayer.intervention") && ChanceUtil.getChance(3)) {
-                            ChatUtil.sendNotice(player, "A divine wind hides you from the boss.");
-                            continue;
-                        }
                         if (boss.hasLineOfSight(player)) {
                             ChatUtil.sendWarning(player, ChatColor.DARK_RED + "You!");
                             baskInGlory = true;
