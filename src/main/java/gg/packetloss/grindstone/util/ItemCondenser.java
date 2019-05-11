@@ -41,13 +41,12 @@ public class ItemCondenser {
         int modified = 0;
         for (Step step : conversionSteps) {
             int total = 0;
-            List<Integer> positions = new ArrayList<>();
             ItemStack target = step.getOldItem();
             for (int i = 0; i < itemStacks.length; ++i) {
                 ItemStack cur = itemStacks[i];
                 if (target.isSimilar(cur)) {
                     total += cur.getAmount();
-                    positions.add(i);
+                    itemStacks[i] = null;
                 }
             }
 
@@ -62,23 +61,20 @@ public class ItemCondenser {
             }
 
             int divisor = step.getOldItem().getAmount();
+
             int newAmt = (total / divisor) * step.getNewItem().getAmount();
-
-            if (newAmt < 1) continue;
-
-            int oldAmt = total % divisor;
-
-            for (Integer pos : positions) {
-                itemStacks[pos] = null;
+            if (newAmt > 0) {
+                final ItemStack newStack = step.getNewItem();
+                remainders.add(new Remainder(newStack, newAmt));
             }
 
-            final ItemStack newStack = step.getNewItem();
-            final ItemStack oldStack = step.getOldItem();
-            
-            remainders.add(new Remainder(oldStack, oldAmt));
-            remainders.add(new Remainder(newStack, newAmt));
+            int oldAmt = total % divisor;
+            if (oldAmt > 0) {
+                ItemStack oldStack = step.getOldItem();
+                remainders.add(new Remainder(oldStack, oldAmt));
+            }
 
-            ++modified;
+            modified += newAmt;
         }
 
         for (Remainder remainder : remainders) {
@@ -87,15 +83,18 @@ public class ItemCondenser {
                 final ItemStack stack = itemStacks[i];
                 int startingAmt = stack == null ? 0 : stack.getAmount();
                 int rAmt = remainder.getAmount();
-                int quantity;
+
                 if (rAmt > 0 && (startingAmt == 0 || rStack.isSimilar(stack))) {
-                    quantity = Math.min(rAmt + startingAmt, rStack.getMaxStackSize());
+                    int quantity = Math.min(rAmt + startingAmt, rStack.getMaxStackSize());
                     rAmt -= quantity - startingAmt;
                     itemStacks[i] = rStack.clone();
                     itemStacks[i].setAmount(quantity);
                     remainder.setAmount(rAmt);
-                } else if (rAmt == 0) {
-                    break;
+
+                    // Stop early if we no longer have anything to add
+                    if (rAmt == 0) {
+                        break;
+                    }
                 }
             }
             // We couldn't place all items
