@@ -70,6 +70,8 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     @InjectComponent
     private NinjaComponent ninjaComponent;
 
+    private static final float DEFAULT_SPEED = .2F;
+
     @Override
     public void enable() {
 
@@ -87,11 +89,10 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (rogueState.isRogue()) return rogueState;
 
         rogueState.setIsRogue(true);
-        rogueState.setOldSpeed(player.getWalkSpeed());
 
         double multiplier = inst.hasPermission(player, "aurora.rogue.master") ? 2.5 : 2;
 
-        player.setWalkSpeed((float) (RogueState.getDefaultSpeed() * multiplier));
+        player.setWalkSpeed((float) (DEFAULT_SPEED * multiplier));
         return rogueState;
     }
 
@@ -162,7 +163,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         RogueState rogueState = getState(player);
         rogueState.setIsRogue(false);
-        player.setWalkSpeed(rogueState.getOldSpeed());
+        player.setWalkSpeed(DEFAULT_SPEED);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -461,7 +462,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public static class RogueState extends PersistentSession {
 
         public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
-        private static final float DEFAULT_SPEED = .2F;
 
         @Setting("rogue-enabled")
         private boolean isRogue = false;
@@ -474,8 +474,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         @Setting("rogue-action-item")
         private int rogueActionItem = -1;
-        @Setting("rogue-old-speed")
-        private float oldSpeed = DEFAULT_SPEED;
 
         private long nextBlip = 0;
         private long nextGrenade = 0;
@@ -493,21 +491,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         public void setIsRogue(boolean isRogue) {
 
             this.isRogue = isRogue;
-        }
-
-        public static float getDefaultSpeed() {
-
-            return DEFAULT_SPEED;
-        }
-
-        public float getOldSpeed() {
-
-            return oldSpeed;
-        }
-
-        public void setOldSpeed(float oldSpeed) {
-
-            this.oldSpeed = oldSpeed;
         }
 
         public boolean hasActionItem() {
