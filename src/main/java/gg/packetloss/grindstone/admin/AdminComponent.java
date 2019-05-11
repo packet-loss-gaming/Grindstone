@@ -611,27 +611,18 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
-    private boolean handleExplosion(List<Block> blockList) {
-        for (Block block : blockList) {
-            if (EnvironmentUtil.isValuableBlock(block)) {
-                return true;
-            }
-        }
-        return false;
+    private void handleExplosion(List<Block> blockList) {
+        blockList.removeIf(EnvironmentUtil::isValuableBlock);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityExplosion(EntityExplodeEvent event) {
-        if (handleExplosion(event.blockList())) {
-            event.setYield(0);
-        }
+        handleExplosion(event.blockList());
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockExplosion(BlockExplodeEvent event) {
-        if (handleExplosion(event.blockList())) {
-            event.setYield(0);
-        }
+        handleExplosion(event.blockList());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
