@@ -54,6 +54,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -149,7 +150,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
                     if (item.getTicksLived() > 20 * 60 && stack.getTypeId() == BlockID.SAPLING) {
                         item.getLocation().getBlock().setTypeIdAndData(stack.getTypeId(),
-                                stack.getData().getData(), true);
+                          stack.getData().getData(), true);
                         item.remove();
                     }
                 }
@@ -467,7 +468,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         // Make Skeletons & Zombies burn faster
         if (entity instanceof Zombie || entity instanceof Skeleton) {
             if (event.getCause().equals(EntityDamageEvent.DamageCause.FIRE_TICK)
-                    && location.getBlock().getLightFromSky() == 15) {
+              && location.getBlock().getLightFromSky() == 15) {
                 event.setDamage(event.getDamage() * 5 * level);
                 return;
             }
@@ -482,9 +483,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     }
 
     private static EDBEExtractor<Player, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
-            Player.class,
-            LivingEntity.class,
-            Projectile.class
+      Player.class,
+      LivingEntity.class,
+      Projectile.class
     );
 
     public boolean onPlayerDamage(EntityDamageByEntityEvent event) {
@@ -539,7 +540,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             }
 
             drops.addAll(
-                    SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, Math.pow(level, 2) * 64)
+              SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, Math.pow(level, 2) * 64)
             );
             if (ModifierComponent.getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
                 drops.addAll(drops.stream().map(ItemStack::clone).collect(Collectors.toList()));
@@ -702,14 +703,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onEntityExplosion(EntityExplodeEvent event) {
-
-        if (!isWildernessWorld(event.getLocation().getWorld())) return;
-
-        event.setYield(.1F);
-
-        Iterator<Block> it = event.blockList().iterator();
+    private void handleExplosion(List<Block> blockList) {
+        Iterator<Block> it = blockList.iterator();
         while (it.hasNext()) {
             Block next = it.next();
             if (isEffectedOre(next.getTypeId())) {
@@ -722,6 +717,24 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 continue;
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityExplosion(EntityExplodeEvent event) {
+        if (!isWildernessWorld(event.getLocation().getWorld())) return;
+
+        event.setYield(.1F);
+
+        handleExplosion(event.blockList());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockExplosion(BlockExplodeEvent event) {
+        if (!isWildernessWorld(event.getBlock().getWorld())) return;
+
+        event.setYield(.1F);
+
+        handleExplosion(event.blockList());
     }
 
     @EventHandler

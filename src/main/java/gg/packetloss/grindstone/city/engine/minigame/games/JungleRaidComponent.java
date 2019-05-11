@@ -68,10 +68,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockDamageEvent;
-import org.bukkit.event.block.BlockIgniteEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -1245,14 +1242,26 @@ public class JungleRaidComponent extends MinigameComponent {
             }
         }
 
-        @EventHandler
-        public void onTNTExplode(EntityExplodeEvent event) {
-
-            for (Block block : event.blockList()) {
+        private boolean handleExplosion(List<Block> blockList) {
+            for (Block block : blockList) {
                 if (contains(block.getLocation())) {
-                    event.setYield(0);
-                    break;
+                    return true;
                 }
+            }
+            return false;
+        }
+
+        @EventHandler
+        public void onEntityExplode(EntityExplodeEvent event) {
+            if (handleExplosion(event.blockList())) {
+                event.setYield(0);
+            }
+        }
+
+        @EventHandler
+        public void onBlockExplode(BlockExplodeEvent event) {
+            if (handleExplosion(event.blockList())) {
+                event.setYield(0);
             }
         }
 

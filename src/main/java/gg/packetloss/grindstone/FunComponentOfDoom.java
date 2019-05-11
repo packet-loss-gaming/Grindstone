@@ -68,13 +68,13 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
         public void onEntityExplode(EntityExplodeEvent event) {
 
             Entity e = event.getEntity();
-            if (e != null && e.getType().equals(EntityType.FIREBALL)) {
+            if (e.getType().equals(EntityType.FIREBALL)) {
                 for (ItemStack aDrop : SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 16, 1500)) {
                     Item item = e.getWorld().dropItem(event.getLocation(), aDrop);
                     item.setVelocity(new org.bukkit.util.Vector(
-                            r.nextDouble() * 2 - 1,
-                            r.nextDouble() * 1,
-                            r.nextDouble() * 2 - 1
+                      r.nextDouble() * 2 - 1,
+                      r.nextDouble() * 1,
+                      r.nextDouble() * 2 - 1
                     ));
                 }
                 event.blockList().clear();

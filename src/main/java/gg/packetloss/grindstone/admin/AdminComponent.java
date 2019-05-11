@@ -43,10 +43,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockDispenseEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryAction;
@@ -60,10 +57,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -617,14 +611,26 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
+    private boolean handleExplosion(List<Block> blockList) {
+        for (Block block : blockList) {
+            if (EnvironmentUtil.isValuableBlock(block)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onEntityExplosion(EntityExplodeEvent event) {
+        if (handleExplosion(event.blockList())) {
+            event.setYield(0);
+        }
+    }
 
-        for (Block block : event.blockList()) {
-            if (EnvironmentUtil.isValuableBlock(block)) {
-                event.blockList().clear();
-                return;
-            }
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockExplosion(BlockExplodeEvent event) {
+        if (handleExplosion(event.blockList())) {
+            event.setYield(0);
         }
     }
 
