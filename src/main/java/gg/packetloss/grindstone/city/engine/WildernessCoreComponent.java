@@ -252,7 +252,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
 
-        TravelAgent agent = event.getPortalTravelAgent();
 
         final Player player = event.getPlayer();
         final Location pLoc = player.getLocation().clone();
@@ -263,20 +262,27 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         switch (event.getCause()) {
             case END_PORTAL:
-                event.useTravelAgent(true);
-                agent.setCanCreatePortal(false);
-                event.setPortalTravelAgent(agent);
+                event.useTravelAgent(false);
+
                 if (fromWorld.equals(city)) {
                     event.setTo(wilderness.getSpawnLocation());
                 } else if (fromWorld.equals(wilderness)) {
                     event.setTo(city.getSpawnLocation());
                 }
+
+                // Prevent players from getting damaged falling into end portals
+                // this appears to normally be handled by the travel agent, but since
+                // we don't want to use it here, we must do it ourselves.
+                player.setFallDistance(0);
+
                 break;
-            case NETHER_PORTAL:
+            case NETHER_PORTAL: {
+                TravelAgent agent = event.getPortalTravelAgent();
 
                 // Wilderness Code
-                event.useTravelAgent(true);
                 if (fromWorld.equals(wilderness)) {
+                    event.useTravelAgent(true);
+
                     pLoc.setWorld(wildernessNether);
                     pLoc.setX(pLoc.getBlockX() / 8);
                     pLoc.setZ(pLoc.getBlockZ() / 8);
@@ -285,6 +291,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                     event.setTo(agent.findOrCreate(pLoc));
                     return;
                 } else if (fromWorld.equals(wildernessNether)) {
+                    event.useTravelAgent(true);
+
                     pLoc.setWorld(wilderness);
                     pLoc.setX(pLoc.getBlockX() * 8);
                     pLoc.setZ(pLoc.getBlockZ() * 8);
@@ -294,17 +302,24 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                     return;
                 }
 
+                // FIXME: This should be in its own component.
                 // City Code
                 if (from.getWorld().equals(city)) {
-                    event.setTo(LocationUtil.grandBank(city));
-                    agent.setCanCreatePortal(false);
-                    event.setPortalTravelAgent(agent);
+                    event.useTravelAgent(false);
+
+                    // Add 1 block to the 1 position for the city bank, for whatever
+                    // reason this seems to be using the player's head location, rather
+                    // than the location of their feet.
+                    event.setTo(LocationUtil.grandBank(city).add(0, 1, 0));
                 } else if (to.getWorld().equals(city)) {
+                    event.useTravelAgent(true);
+
                     event.setTo(city.getSpawnLocation());
                     agent.setCanCreatePortal(false);
                     event.setPortalTravelAgent(agent);
                 }
                 break;
+            }
         }
     }
 

@@ -38,7 +38,7 @@ public class LocationUtil {
     public static Location grandBank(World world) {
 
         if (!world.getName().equals("City")) return null;
-        return new Location(world, 592, 83, 1176.5);
+        return new Location(world, 592, 83, 1176.5, 180, 0);
     }
 
     public static boolean toGround(Player player) {
