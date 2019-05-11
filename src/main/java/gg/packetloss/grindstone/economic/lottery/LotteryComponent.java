@@ -21,10 +21,7 @@ import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryTicketDatabase;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
 import gg.packetloss.grindstone.exceptions.NotFoundException;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.CollectionUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.TimeUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.player.GenericWealthStore;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -352,17 +349,47 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         return amt;
     }
 
+    private class WeightedTicket {
+        String ticketOwner;
+        int weight;
+
+        public WeightedTicket(String ticketOwner, int weight) {
+            this.ticketOwner = ticketOwner;
+            this.weight = weight;
+        }
+
+        public String getTicketOwner() {
+            return ticketOwner;
+        }
+
+        public int getWeight() {
+            return weight;
+        }
+    }
+
+
     private String findNewMillionaire() throws NotFoundException {
 
         List<GenericWealthStore> ticketDB = lotteryTicketDatabase.getTickets();
         if (ticketDB.size() < 2) throw new NotFoundException();
 
-        List<String> tickets = new ArrayList<>();
+        List<WeightedTicket> tickets = new ArrayList<>();
         for (GenericWealthStore lotteryTicket : ticketDB) {
-            for (int i = 0; i < lotteryTicket.getValue(); i++) {
-                tickets.add(lotteryTicket.getOwnerName());
+            int lastTicketValue = tickets.isEmpty() ? 0 : tickets.get(tickets.size() - 1).getWeight();
+            int weightedValue = lotteryTicket.getValue() + lastTicketValue;
+            tickets.add(new WeightedTicket(lotteryTicket.getOwnerName(), weightedValue));
+        }
+
+        int maxWeight = tickets.get(tickets.size() - 1).getWeight();
+        int randomValue = ChanceUtil.getRandom(maxWeight);
+
+        for (WeightedTicket weightedTicket : tickets) {
+            randomValue -= weightedTicket.getWeight();
+            if (randomValue <= 0) {
+                return weightedTicket.getTicketOwner();
             }
         }
-        return CollectionUtil.getElement(tickets);
+
+        throw new IllegalStateException("Probability failed to resolve a winner, this should never happen.");
     }
 }
