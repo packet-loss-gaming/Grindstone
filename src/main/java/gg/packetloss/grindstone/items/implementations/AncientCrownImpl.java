@@ -63,7 +63,7 @@ public class AncientCrownImpl extends AbstractCondenserImpl {
             }
 
             server.getScheduler().runTaskLater(inst, () -> {
-                ItemStack[] result = condenser.operate(player.getInventory().getContents());
+                ItemStack[] result = condenser.operate(player.getInventory().getContents(), true);
                 if (result != null) {
                     player.getInventory().setContents(result);
                     //noinspection deprecation

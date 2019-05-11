@@ -143,7 +143,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
             }
 
             server.getScheduler().runTaskLater(inst, () -> {
-                ItemStack[] result = goldCondenser.operate(player.getInventory().getContents());
+                ItemStack[] result = goldCondenser.operate(player.getInventory().getContents(), true);
                 if (result != null) {
                     player.getInventory().setContents(result);
                     //noinspection deprecation

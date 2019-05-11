@@ -35,18 +35,24 @@ public class ItemCondenser {
      * @param itemStacks - the old item stacks
      * @return the new item stacks, or null if the operation could not be completed/did nothing
      */
-    public ItemStack[] operate(ItemStack[] itemStacks) {
+    public ItemStack[] operate(ItemStack[] itemStacks, boolean enableSpaceSaving) {
         itemStacks = ItemUtil.clone(itemStacks); // Make sure we're working in our domain here
         List<Remainder> remainders = new ArrayList<>();
         int modified = 0;
         for (Step step : conversionSteps) {
-            int total = 0;
-            ItemStack target = step.getOldItem();
+            int sourceTotal = 0;
+            List<Integer> destStackPos = new ArrayList<>();
+
+            ItemStack source = step.getOldItem();
+            ItemStack dest = step.getNewItem();
+
             for (int i = 0; i < itemStacks.length; ++i) {
                 ItemStack cur = itemStacks[i];
-                if (target.isSimilar(cur)) {
-                    total += cur.getAmount();
+                if (source.isSimilar(cur)) {
+                    sourceTotal += cur.getAmount();
                     itemStacks[i] = null;
+                } else if (dest.isSimilar(cur) && cur.getAmount() < cur.getMaxStackSize()) {
+                    destStackPos.add(i);
                 }
             }
 
@@ -55,20 +61,40 @@ public class ItemCondenser {
             while (it.hasNext()) {
                 Remainder remainder = it.next();
                 if (step.getOldItem().isSimilar(remainder.getItem())) {
-                    total += remainder.getAmount();
+                    sourceTotal += remainder.getAmount();
                     it.remove();
                 }
             }
 
             int divisor = step.getOldItem().getAmount();
 
-            int newAmt = (total / divisor) * step.getNewItem().getAmount();
+            int newAmt = (sourceTotal / divisor) * step.getNewItem().getAmount();
+
+            // If we're adding any items to the players inventory, include any stacks
+            // of the destination type that already exist.
+            //
+            // Similarly, if we've got more than 1 stack of the destination type, even
+            // if we're not adding any new items because of compaction, compress by
+            // reducing the number of used slots in the inventory.
+            //
+            // If this is a limited use item, only activate this in the first case
+            // -- where we are already making changes -- this prevents the item from being
+            // used accidentally in situations where it would not be beneficial for instance
+            // two stacks of 36 / 64, while we can make one 64, and one 28 that would be an
+            // extremely unfortunate activation and certainly annoying.
+            if (newAmt > 0 || (destStackPos.size() > 1 && enableSpaceSaving)) {
+                for (int position : destStackPos) {
+                    newAmt += itemStacks[position].getAmount();
+                    itemStacks[position] = null;
+                }
+            }
+
             if (newAmt > 0) {
-                final ItemStack newStack = step.getNewItem();
+                ItemStack newStack = step.getNewItem();
                 remainders.add(new Remainder(newStack, newAmt));
             }
 
-            int oldAmt = total % divisor;
+            int oldAmt = sourceTotal % divisor;
             if (oldAmt > 0) {
                 ItemStack oldStack = step.getOldItem();
                 remainders.add(new Remainder(oldStack, oldAmt));
@@ -80,15 +106,18 @@ public class ItemCondenser {
         for (Remainder remainder : remainders) {
             ItemStack rStack = remainder.getItem();
             for (int i = 0; i < itemStacks.length; ++i) {
-                final ItemStack stack = itemStacks[i];
+                // Use an insertion position which prefers to declutter the hotbar.
+                int insertionPos = (i + 9) % itemStacks.length;
+
+                final ItemStack stack = itemStacks[insertionPos];
                 int startingAmt = stack == null ? 0 : stack.getAmount();
                 int rAmt = remainder.getAmount();
 
                 if (rAmt > 0 && (startingAmt == 0 || rStack.isSimilar(stack))) {
                     int quantity = Math.min(rAmt + startingAmt, rStack.getMaxStackSize());
                     rAmt -= quantity - startingAmt;
-                    itemStacks[i] = rStack.clone();
-                    itemStacks[i].setAmount(quantity);
+                    itemStacks[insertionPos] = rStack.clone();
+                    itemStacks[insertionPos].setAmount(quantity);
                     remainder.setAmount(rAmt);
 
                     // Stop early if we no longer have anything to add

@@ -28,7 +28,7 @@ public class SummationHymnImpl extends AbstractCondenserImpl {
 
         switch (hymn) {
             case SUMMATION:
-                ItemStack[] result = condenser.operate(player.getInventory().getContents());
+                ItemStack[] result = condenser.operate(player.getInventory().getContents(), true);
                 if (result != null) {
                     player.getInventory().setContents(result);
                     //noinspection deprecation

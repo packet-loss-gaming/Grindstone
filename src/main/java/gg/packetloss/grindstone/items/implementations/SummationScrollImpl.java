@@ -35,7 +35,7 @@ public class SummationScrollImpl extends AbstractCondenserImpl {
             // Scrolls
             boolean isScrollOfSummation = ItemUtil.isItem(itemStack, CustomItems.SCROLL_OF_SUMMATION);
             if (isScrollOfSummation) {
-                ItemStack[] result = condenser.operate(player.getInventory().getContents());
+                ItemStack[] result = condenser.operate(player.getInventory().getContents(), false);
                 if (result != null) {
                     player.getInventory().setContents(result);
                     ItemUtil.removeItemOfName(player, CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION), 1, false);
