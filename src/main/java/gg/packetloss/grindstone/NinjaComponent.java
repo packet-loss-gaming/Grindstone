@@ -324,7 +324,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         player.setVelocity(vel);
         player.setFallDistance(0F);
 
-        sessions.getSession(NinjaState.class, player).grapple(i * 200);
+        sessions.getSession(NinjaState.class, player).grapple(Math.max(i, 3) * 200);
     }
 
     public void teleport(Player player) {
