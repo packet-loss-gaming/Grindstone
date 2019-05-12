@@ -13,6 +13,7 @@ import org.bukkit.Location;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
@@ -243,14 +244,25 @@ public class EnvironmentUtil {
         interactiveBlocks.add(BlockID.TRAP_DOOR);
     }
 
-    public static boolean isInteractiveBlock(Block block) {
-
-        return isInteractiveBlock(block.getTypeId());
-    }
-
-    public static boolean isInteractiveBlock(int block) {
+    private static boolean isInteractiveBlock(int block) {
 
         return interactiveBlocks.contains(block) || isContainer(block);
+    }
+
+    public static boolean isInteractiveBlock(Block block) {
+        if (isInteractiveBlock(block.getTypeId()))
+            return true;
+
+        if (block.getState() instanceof Sign) {
+            Sign signState = (Sign) block.getState();
+            for (String line : signState.getLines()) {
+                if (line.matches("\\[.*\\]")) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static final Set<Integer> signBlocks = new HashSet<>();
