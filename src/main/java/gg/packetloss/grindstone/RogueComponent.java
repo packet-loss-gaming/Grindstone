@@ -412,7 +412,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"rogue"}, desc = "Give a player the Rogue power",
-                flags = "pltbl:", min = 0, max = 0)
+                flags = "tbl:", min = 0, max = 0)
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
