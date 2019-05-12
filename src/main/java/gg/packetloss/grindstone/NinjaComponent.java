@@ -449,7 +449,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                     break;
                 case RIGHT_CLICK_BLOCK:
                     // Check cool player specific components
-                    if (!canGrapple(player) || usingBow || player.isSneaking()) break;
+                    if (!canGrapple(player) || usingBow) break;
+
                     if (EnvironmentUtil.isInteractiveBlock(clicked) || EnvironmentUtil.isShrubBlock(clicked)) break;
                     if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN) && stack != null) {
 
@@ -466,7 +467,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
                         // Check the 2D distance between the block and the player
                         if (LocationUtil.distanceSquared2D(clicked.getLocation().add(.5, 0, .5), player.getLocation()) <= 4) {
-                            grapple(player, clicked, face, 9);
+                            // If the player is sneaking treat this as a "slowing" option,
+                            // if not sneaking, treat this as a proper grapple.
+                            grapple(player, clicked, face,  player.isSneaking() ? 0 : 9);
                         }
                     }
                     break;
