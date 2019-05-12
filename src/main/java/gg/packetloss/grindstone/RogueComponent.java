@@ -320,6 +320,11 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                         grenade(player);
                     }
                     break;
+                case RIGHT_CLICK_BLOCK:
+                    if (rogueSession.canGrenade() && rogueSession.getGrenadeSafety()) {
+                        grenade(player);
+                    }
+                    break;
             }
         }
     }
@@ -403,7 +408,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             }
 
             Entity vehicle = player.getVehicle();
-            if (vehicle != null && vehicle instanceof Horse) {
+            if (vehicle instanceof Horse) {
                 ((Horse) vehicle).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 2), true);
             }
         }
@@ -412,7 +417,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"rogue"}, desc = "Give a player the Rogue power",
-                flags = "pltbl:", min = 0, max = 0)
+                flags = "gtbl:", min = 0, max = 0)
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -430,6 +435,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             rogueSession.limitYVelocity(args.hasFlag('l'));
             rogueSession.setBacklash(!args.hasFlag('b'));
             rogueSession.setTraitorProtection(args.hasFlag('t') && inst.hasPermission(player, "aurora.rogue.master"));
+            rogueSession.setGrenadeSafety(!args.hasFlag('g'));
 
             if (args.hasFlag('l')) {
                 rogueSession.setActionItem(args.getFlagInteger('l'));
@@ -474,6 +480,9 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         @Setting("rogue-action-item")
         private int rogueActionItem = -1;
+
+        @Setting("rogue-grenade-safety")
+        private boolean grenadeSafety = true;
 
         private long nextBlip = 0;
         private long nextGrenade = 0;
@@ -568,6 +577,14 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             CommandSender sender = super.getOwner();
             return sender instanceof Player ? (Player) sender : null;
+        }
+
+        public boolean getGrenadeSafety() {
+            return grenadeSafety;
+        }
+
+        public void setGrenadeSafety(boolean grenadeSafety) {
+            this.grenadeSafety = grenadeSafety;
         }
     }
 }
