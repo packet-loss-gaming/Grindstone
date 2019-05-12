@@ -432,7 +432,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             Block clicked = event.getClickedBlock();
             BlockFace face = event.getBlockFace();
 
-            boolean usingBow = stack != null && stack.getTypeId() == ItemID.BOW;
+            boolean usingBow = stack.getType() == Material.BOW;
 
             switch (event.getAction()) {
                 case LEFT_CLICK_AIR:
@@ -450,17 +450,11 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 case RIGHT_CLICK_BLOCK: {
                     if (!canGrapple(player)) break;
 
-                    boolean isClimbableItem = stack == null || ItemUtil.isSword(stack.getTypeId());
+                    boolean isClimbableItem = stack.getType() == Material.AIR || ItemUtil.isSword(stack.getTypeId());
                     if (!isClimbableItem) break;
 
                     if (EnvironmentUtil.isInteractiveBlock(clicked) || EnvironmentUtil.isShrubBlock(clicked)) break;
-                    if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN) && stack != null) {
-
-                        // Check types
-                        Material type = stack.getType();
-                        if ((type != Material.AIR && type.isBlock()) || type.isEdible() && player.getFoodLevel() < 20)
-                            break;
-
+                    if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN)) {
                         // Check for possible misclick
                         if (EnvironmentUtil.isInteractiveBlock(clicked.getRelative(face))) break;
 
