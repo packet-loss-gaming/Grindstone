@@ -447,9 +447,11 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                         smokeBomb(player);
                     }
                     break;
-                case RIGHT_CLICK_BLOCK:
-                    // Check cool player specific components
-                    if (!canGrapple(player) || usingBow) break;
+                case RIGHT_CLICK_BLOCK: {
+                    if (!canGrapple(player)) break;
+
+                    boolean isClimbableItem = stack == null || ItemUtil.isSword(stack.getTypeId());
+                    if (!isClimbableItem) break;
 
                     if (EnvironmentUtil.isInteractiveBlock(clicked) || EnvironmentUtil.isShrubBlock(clicked)) break;
                     if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN) && stack != null) {
@@ -469,10 +471,11 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                         if (LocationUtil.distanceSquared2D(clicked.getLocation().add(.5, 0, .5), player.getLocation()) <= 4) {
                             // If the player is sneaking treat this as a "slowing" option,
                             // if not sneaking, treat this as a proper grapple.
-                            grapple(player, clicked, face,  player.isSneaking() ? 0 : 9);
+                            grapple(player, clicked, face, player.isSneaking() ? 0 : 9);
                         }
                     }
                     break;
+                }
             }
         }
 
