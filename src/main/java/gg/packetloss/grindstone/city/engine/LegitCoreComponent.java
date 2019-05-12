@@ -91,18 +91,22 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     }
 
     public Location getBedLocation(Player player) {
-
-        Location bedLocation = null;
         if (homeDatabase.houseExist(player.getName())) {
-            bedLocation = LocationUtil.findFreePosition(homeDatabase.getHouse(player.getName()).getLocation());
+            return LocationUtil.findFreePosition(homeDatabase.getHouse(player.getName()).getLocation());
         }
-        return bedLocation != null ? bedLocation : null;
+
+        return null;
     }
 
     public Location getRespawnLocation(Player player) {
+        Location respawnLoc = getBedLocation(player);
 
-        Location respawnLoc = Bukkit.getWorld(config.legitWorld).getSpawnLocation();
-        return getBedLocation(player) != null ? getBedLocation(player) : respawnLoc;
+        // Fallback to the world spawn
+        if (respawnLoc == null) {
+            respawnLoc = Bukkit.getWorld(config.legitWorld).getSpawnLocation();
+        }
+
+        return respawnLoc;
     }
 
     private static class LocalConfiguration extends ConfigurationBase {

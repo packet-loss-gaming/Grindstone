@@ -24,18 +24,20 @@ import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.homes.EnderPearlHomesComponent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomPotion;
+import gg.packetloss.grindstone.items.custom.Potion;
 import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.util.*;
-import gg.packetloss.grindstone.util.checker.Checker;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -49,9 +51,9 @@ import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -98,10 +100,20 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         @Setting("boss-chance")
         public int bossChance = 100;
-        @Setting("multiplier")
-        public int multiplier = 6;
-        @Setting("local-de-multiplier")
-        public int deMultiplier = 4;
+        @Setting("baby-chance")
+        public int babyChance = 16;
+        @Setting("amplification-noise")
+        public int amplificationNoise = 12;
+        @Setting("amplification-descale")
+        public int amplificationDescale = 3;
+        @Setting("strike-multiplier")
+        public int strikeMultiplier = 5;
+        @Setting("bed-multiplier")
+        public int bedMultiplier = 3;
+        @Setting("local-multiplier")
+        public int localMultiplier = 1;
+        @Setting("local-spawn-chance")
+        public int localSpawnChance = 3;
         @Setting("max-mobs")
         public int maxMobs = 1000;
         @Setting("armour-chance")
@@ -178,20 +190,36 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerDeath(PlayerRespawnEvent event) {
-        if (config.enableSafeRespawn) {
-            int safeRespawnRadius = config.safeRespawnRadius * config.safeRespawnRadius;
+    private void cleanupRespawnPoint(Location respawnPoint) {
+        int safeRespawnRadius = config.safeRespawnRadius * config.safeRespawnRadius;
 
-            // Ensure the radius is at least 2
-            if (safeRespawnRadius < 4) safeRespawnRadius = 4;
+        // Ensure the radius is at least 2
+        if (safeRespawnRadius < 4) safeRespawnRadius = 4;
 
-            Location respawnLoc = event.getRespawnLocation();
-            for (Entity entity : respawnLoc.getWorld().getEntitiesByClass(attackMob)) {
+        for (Entity entity : respawnPoint.getWorld().getEntitiesByClass(attackMob)) {
+            if (!(entity instanceof LivingEntity) || !checkEntity((LivingEntity) entity)) continue;
+            if (entity.getLocation().distanceSquared(respawnPoint) < safeRespawnRadius) entity.remove();
 
-                if (!(entity instanceof LivingEntity) || !checkEntity((LivingEntity) entity)) continue;
-                if (entity.getLocation().distanceSquared(respawnLoc) < safeRespawnRadius) entity.remove();
+            for (int i = 0; i < 20; i++) {
+                entity.getWorld().playEffect(entity.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
             }
+        }
+    }
+
+    private void boostPlayer(Player player) {
+        server.getScheduler().scheduleSyncDelayedTask(inst, () -> {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 30, 2));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 45, 2));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 45, 2));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 60, 1));
+        }, 1);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        if (config.enableSafeRespawn) {
+            cleanupRespawnPoint(event.getRespawnLocation());
+            boostPlayer(event.getPlayer());
         }
         sessions.getSession(ApocalypseSession.class, event.getPlayer()).updateDeath(config.deathGrace);
     }
@@ -215,12 +243,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
 
         if (checkEntity((LivingEntity) ent)) {
-
-            Iterator<ItemStack> dropIterator = event.getDrops().iterator();
-            while (dropIterator.hasNext()) {
-                ItemStack next = dropIterator.next();
-                if (next != null && next.getTypeId() == ItemID.ROTTEN_FLESH) dropIterator.remove();
-            }
+            event.getDrops().removeIf(next -> next != null && next.getTypeId() == ItemID.ROTTEN_FLESH);
 
             if (attackMob.isInstance(ent) && ChanceUtil.getChance(5)) {
                 event.setDroppedExp(event.getDroppedExp() * 3);
@@ -265,32 +288,24 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         if (strikeLoc == null) return;
 
-        List<Player> applicable = getApplicable(location.getWorld());
-        spawnAndArm(strikeLoc, attackMob, true);
+        // Spawn zombies at the strike location.
+        strikeSpawn(strikeLoc);
 
-        startle(applicable);
-        applicable = CollectionUtil.removalAll(applicable, new Checker<CommandBook, Player>(inst) {
-            @Override
-            public Boolean evaluate(Player player) {
-                return sessions.getSession(ApocalypseSession.class, player).recentlyDied();
-            }
-        });
-        bedSpawn(applicable, config.multiplier * ChanceUtil.getRandom(6));
+        // Get players on this world.
+        List<Player> applicable = location.getWorld().getPlayers();
+
+        // Kill the flight of all players. They've been "startled" by the lighting strike.
+        disableFlight(applicable);
+
+        // Remove any players that have recently died from the list of applicable players.
+        applicable.removeIf((player) -> sessions.getSession(ApocalypseSession.class, player).recentlyDied());
+
+        // Spawn to all remaining players.
+        bedSpawn(applicable);
         localSpawn(applicable);
     }
 
-    public List<Player> getApplicable(World world) {
-        List<Player> applicablePlayers = new ArrayList<>();
-        for (Player player : server.getOnlinePlayers()) {
-            if (!player.getWorld().equals(world) || jailComponent.isJailed(player) || adminComponent.isAdmin(player)) {
-                continue;
-            }
-            applicablePlayers.add(player);
-        }
-        return applicablePlayers;
-    }
-
-    private void startle(List<Player> applicable) {
+    private void disableFlight(List<Player> applicable) {
         applicable.stream().filter(Player::isFlying).forEach(player -> {
             player.setFlying(false);
             player.setAllowFlight(false);
@@ -298,41 +313,84 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         });
     }
 
-    public void bedSpawn(List<Player> players, int multiplier) {
+    public void bedSpawn(Player player, int multiplier) {
+        // Find a free position at or near the player's bed.
+        Location bedLocation = homesComponent.getBedLocation(player);
+        Location freeBedLocation = LocationUtil.findFreePosition(homesComponent.getBedLocation(player));
 
-        for (int i = 0; i < players.size() * multiplier; i++) {
-            if (ChanceUtil.getChance((multiplier / config.deMultiplier) * players.size())) {
-                for (Player player : players) {
-                    Location bedLocation = homesComponent.getBedLocation(player);
-                    if (bedLocation == null) continue;
+        // If the player has a bed location, but there's no "free" location, redirect and give them
+        // an extra local spawn, they probably tried to out smart the mechanic.
+        if (bedLocation != null && freeBedLocation == null) {
+            ChatUtil.sendWarning(player, "The zombies spawning at your bed couldn't find anywhere to spawn!");
+            ChatUtil.sendWarning(player, "So... Instead they came to you!");
 
-                    ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(player, LocationUtil.findFreePosition(bedLocation));
-                    server.getPluginManager().callEvent(apocalypseEvent);
+            localSpawn(player, multiplier);
 
-                    if (apocalypseEvent.isCancelled()) continue;
+            return;
+        }
 
-                    spawnAndArm(apocalypseEvent.getLocation(), attackMob, true);
-                }
+        // Fire an event for the bed spawn.
+        ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(
+          player, bedLocation, ChanceUtil.getRandom(multiplier)
+        );
+        server.getPluginManager().callEvent(apocalypseEvent);
+        if (apocalypseEvent.isCancelled()) {
+            return;
+        }
+
+        // Spawn however many zombies we determined need spawned.
+        ZombieSpawnConfig bedSpawnConfig = new ZombieSpawnConfig();
+        for (int i = 0; i < apocalypseEvent.getNumberOfZombies(); i++) {
+            spawnAndArm(apocalypseEvent.getLocation(), attackMob, bedSpawnConfig);
+        }
+    }
+
+    public int getAmplification() {
+        int amplification = config.amplificationNoise;
+        for (int i = 0; i < config.amplificationDescale; ++i) {
+            amplification = ChanceUtil.getRandom(amplification);
+        }
+        return amplification;
+    }
+
+    public void strikeSpawn(Location strikeLocation) {
+        ZombieSpawnConfig strikeSpawnConfig = new ZombieSpawnConfig();
+        strikeSpawnConfig.allowItemPickup = true;
+        strikeSpawnConfig.allowMiniBoss = true;
+
+        int multiplier = config.strikeMultiplier * config.amplificationNoise;
+        for (int i = 0; i < multiplier; ++i) {
+            spawnAndArm(strikeLocation, attackMob, strikeSpawnConfig);
+        }
+    }
+
+    public void bedSpawn(List<Player> players) {
+        for (Player player : players) {
+            bedSpawn(player, config.bedMultiplier * getAmplification());
+        }
+    }
+
+    public void localSpawn(Player player, int multiplier) {
+        ZombieSpawnConfig localSpawnConfig = new ZombieSpawnConfig();
+        for (int i = 0; i < multiplier; ++i) {
+            Location l = findLocation(player.getLocation());
+
+            ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, l);
+            server.getPluginManager().callEvent(apocalypseEvent);
+            if (apocalypseEvent.isCancelled()) {
+                continue;
             }
+
+            spawnAndArm(apocalypseEvent.getLocation(), attackMob, localSpawnConfig);
         }
     }
 
     public void localSpawn(List<Player> players) {
         for (Player player : players) {
-            if (ChanceUtil.getChance(2)) continue;
-            Block playerBlock = player.getLocation().getBlock();
+            if (ChanceUtil.getChance(config.localSpawnChance))
+                continue;
 
-            for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
-
-                Location l = findLocation(player.getLocation());
-
-                ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, l);
-                server.getPluginManager().callEvent(apocalypseEvent);
-
-                if (apocalypseEvent.isCancelled()) continue;
-
-                spawnAndArm(apocalypseEvent.getLocation(), attackMob, false);
-            }
+            localSpawn(player, config.localMultiplier * getAmplification());
         }
     }
 
@@ -347,36 +405,38 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 || (e.getCustomName() != null && e.getCustomName().equals("Apocalyptic Zombie"));
     }
 
-    private <T extends LivingEntity> void spawnAndArm(Location location, Class<T> clazz, boolean allowItemPickup) {
-
+    private <T extends LivingEntity> void spawnAndArm(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
         if (!location.getChunk().isLoaded()) return;
 
-        Entity e = spawn(location, clazz);
+        Entity e = spawn(location, clazz, spawnConfig);
         if (e == null) return;
-        if (e instanceof Zombie && ChanceUtil.getChance(16)) {
+        if (e instanceof Zombie && ChanceUtil.getChance(config.babyChance)) {
             ((Zombie) e).setBaby(true);
         }
-        // Disabled until there is a better way to do it
-        arm(e, false);
+
+        arm(e, spawnConfig);
     }
 
-    private <T extends LivingEntity> T spawn(Location location, Class<T> clazz) {
+    private <T extends LivingEntity> T spawn(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
         if (location == null) return null;
         T entity = location.getWorld().spawn(location, clazz);
+
         entity.setCustomName("Apocalyptic Zombie");
         entity.setCustomNameVisible(false);
-        if (ChanceUtil.getChance(config.bossChance)) {
+
+        if (ChanceUtil.getChance(config.bossChance) && spawnConfig.allowMiniBoss) {
             bossManager.bind(entity);
         }
+
         return entity;
     }
 
-    private void arm(Entity e, boolean allowItemPickup) {
+    private void arm(Entity e, ZombieSpawnConfig spawnConfig) {
 
         if (!(e instanceof LivingEntity)) return;
 
         EntityEquipment equipment = ((LivingEntity) e).getEquipment();
-        ((LivingEntity) e).setCanPickupItems(allowItemPickup);
+        ((LivingEntity) e).setCanPickupItems(spawnConfig.allowItemPickup);
 
         if (ChanceUtil.getChance(config.armourChance)) {
             if (ChanceUtil.getChance(35)) {
@@ -405,19 +465,18 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             equipment.setItemInHand(sword);
         }
 
-        if (allowItemPickup) {
-            equipment.setItemInHandDropChance(1);
-            equipment.setHelmetDropChance(1);
-            equipment.setChestplateDropChance(1);
-            equipment.setLeggingsDropChance(1);
-            equipment.setBootsDropChance(1);
-        } else {
-            equipment.setItemInHandDropChance(.55F);
-            equipment.setHelmetDropChance(.55F);
-            equipment.setChestplateDropChance(.55F);
-            equipment.setLeggingsDropChance(.55F);
-            equipment.setBootsDropChance(.55F);
-        }
+        equipment.setItemInHandDropChance(0.1F);
+        equipment.setHelmetDropChance(0.1F);
+        equipment.setChestplateDropChance(0.1F);
+        equipment.setLeggingsDropChance(0.1F);
+        equipment.setBootsDropChance(0.1F);
+    }
+
+    private static class ZombieSpawnConfig {
+        public boolean allowItemPickup = false;
+        public boolean allowMiniBoss = false;
+
+        public ZombieSpawnConfig() { }
     }
 
     private static class ApocalypseSession extends PersistentSession {
