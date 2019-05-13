@@ -28,11 +28,11 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.database.IOUtil;
-import gg.packetloss.grindstone.util.database.InventoryAuditLogger;
 import gg.packetloss.grindstone.util.item.InventoryUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import net.milkbowl.vault.permission.Permission;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -52,6 +52,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
+import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -79,10 +80,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private GodComponent godComponent;
 
-    private InventoryAuditLogger auditor;
-
     private final String stateDir = inst.getDataFolder().getPath() + "/admin/states/";
-    private final FilenameFilter stateFilter = (dir, name) -> !name.startsWith("old-") && name.endsWith(".dat");
     String profilesDirectory = stateDir + "/profiles/";
 
     private static Permission permission = null;
@@ -90,11 +88,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     @Override
     public void enable() {
-
-        File auditorDirectory = new File(inst.getDataFolder().getPath() + "/admin");
-        if (!auditorDirectory.exists()) auditorDirectory.mkdir();
-        auditor = new InventoryAuditLogger(auditorDirectory);
-
         registerCommands(Commands.class);
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -134,60 +127,15 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     public boolean hasInventoryLoaded(UUID playerID) {
-
         return playerState.get(playerID) != null;
     }
 
-    public void loadInventories() {
-
-        File workingDir = new File(stateDir);
-
-        if (!workingDir.exists()) return;
-
-        for (File file : workingDir.listFiles(stateFilter)) {
-
-            Object o = IOUtil.readBinaryFile(file);
-            if (o instanceof PlayerState) {
-                PlayerState aPlayerState = (PlayerState) o;
-                playerState.put(UUID.fromString(aPlayerState.getOwnerName()), aPlayerState);
-            } else {
-                log.warning("Invalid player state file encountered: " + file.getName() + "!");
-            }
-        }
+    private File getUUIDStateFile(UUID playerID) {
+        return new File(stateDir + "/" + playerID + ".dat");
     }
 
-    /**
-     * A thread safe method to load an inventory into the system
-     *
-     * @param player - The player who's state should be loaded
-     */
-    public void loadInventory(final OfflinePlayer player) {
-
-        File UUIDFile = new File(stateDir + "/" + player.getUniqueId() + ".dat");
-
-        if (UUIDFile.exists()) {
-            loadInventory(player.getUniqueId());
-            return;
-        }
-
-        File nameFile = new File(stateDir + "/" + player.getName() + ".dat");
-        File oldNameFile = new File(stateDir + "/old-" + player.getName() + ".dat");
-
-        if (!nameFile.exists()) return;
-
-        Object o = IOUtil.readBinaryFile(nameFile);
-        if (o instanceof PlayerState) {
-            PlayerState aPlayerState = (PlayerState) o;
-            aPlayerState.setOwnerName(player.getUniqueId().toString());
-            writeInventory(aPlayerState);
-            playerState.put(player.getUniqueId(), aPlayerState);
-            nameFile.delete();
-            if (oldNameFile.exists()) {
-                oldNameFile.delete();
-            }
-        } else {
-            log.warning("Invalid player state file encountered: " + nameFile.getName() + "!");
-        }
+    boolean hasPersistedInventory(UUID playerID) {
+        return getUUIDStateFile(playerID).exists();
     }
 
     /**
@@ -196,34 +144,31 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * @param playerID - The ID of the player who should be loaded
      */
     public void loadInventory(final UUID playerID) {
+        Object o = IOUtil.readBinaryFile(getUUIDStateFile(playerID));
+        Validate.isInstanceOf(PlayerState.class, o);
 
-        File file = new File(stateDir + "/" + playerID + ".dat");
+        PlayerState aPlayerState = (PlayerState) o;
+        playerState.put(playerID, aPlayerState);
+    }
 
-        if (!file.exists()) return;
+    public void loadInventoryIfUnloaded(UUID playerID) {
+        // If the inventory is already loaded, we're good.
+        if (hasInventoryLoaded(playerID)) {
+            return;
+        }
 
-        Object o = IOUtil.readBinaryFile(file);
-        if (o instanceof PlayerState) {
-            PlayerState aPlayerState = (PlayerState) o;
-            playerState.put(playerID, aPlayerState);
-        } else {
-            log.warning("Invalid player state file encountered: " + file.getName() + "!");
+        // Try and load the player's inventory, they may have just logged in before
+        // we were listening for admin logins.
+        if (hasPersistedInventory(playerID)) {
+            loadInventory(playerID);
         }
     }
 
     public void unloadInventory(final UUID playerID) {
-
         playerState.remove(playerID);
     }
 
-    public void writeInventories() {
-
-        playerState.values().forEach(this::writeInventory);
-    }
-
     public void writeInventory(UUID playerID) {
-
-        if (!playerState.containsKey(playerID)) return;
-
         writeInventory(playerState.get(playerID));
     }
 
@@ -237,11 +182,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         server.getScheduler().runTaskAsynchronously(inst,
                 () -> IOUtil.toBinaryFile(new File(stateDir), state.getOwnerName(), state));
-    }
-
-    public InventoryAuditLogger getInventoryDumpLogger() {
-
-        return auditor;
     }
 
     public boolean isAdmin(Player player, AdminState min) {
@@ -328,9 +268,13 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 player.getInventory().clear();
                 player.getInventory().setArmorContents(null);
 
+                // Make a last attempt to ensure the inventory is loaded. While the deadmin command
+                // will run this call as well, this is here for cases where automatic depermission
+                // occurs.
+                loadInventoryIfUnloaded(player.getUniqueId());
+
                 // Restore their inventory if they have one stored
                 if (playerState.containsKey(player.getUniqueId())) {
-
                     PlayerState identity = playerState.get(player.getUniqueId());
 
                     // Restore the contents
@@ -438,13 +382,14 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
-
-        loadInventory(Bukkit.getOfflinePlayer(event.getUniqueId()));
+        UUID playerID = event.getUniqueId();
+        if (hasPersistedInventory(playerID)) {
+            loadInventory(playerID);
+        }
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-
         unloadInventory(event.getPlayer().getUniqueId());
     }
 
@@ -721,26 +666,36 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             Player player = PlayerUtil.checkPlayer(sender);
 
-            if (!isAdmin(player)) {
-                boolean admin;
-                if (args.hasFlag('e') && inst.hasPermission(player, "aurora.admin.adminmode.sysop")) {
-                    admin = admin(player, AdminState.SYSOP);
-                } else if (inst.hasPermission(player, "aurora.admin.adminmode.admin")) {
-                    admin = admin(player, AdminState.ADMIN);
-                } else if (inst.hasPermission(player, "aurora.admin.adminmode.moderator")) {
-                    admin = admin(player, AdminState.MODERATOR);
-                } else {
-                    throw new CommandPermissionsException();
-                }
-
-                if (admin) {
-                    ChatUtil.sendNotice(sender, "You have entered admin mode.");
-                } else {
-                    throw new CommandException("You fail to enter admin mode.");
-                }
-            } else {
+            if (isAdmin(player)) {
                 throw new CommandException("You were already in admin mode!");
             }
+
+            boolean admin;
+            if (args.hasFlag('e') && inst.hasPermission(player, "aurora.admin.adminmode.sysop")) {
+                admin = admin(player, AdminState.SYSOP);
+            } else if (inst.hasPermission(player, "aurora.admin.adminmode.admin")) {
+                admin = admin(player, AdminState.ADMIN);
+            } else if (inst.hasPermission(player, "aurora.admin.adminmode.moderator")) {
+                admin = admin(player, AdminState.MODERATOR);
+            } else {
+                throw new CommandPermissionsException();
+            }
+
+            if (admin) {
+                ChatUtil.sendNotice(sender, "You have entered admin mode.");
+            } else {
+                throw new CommandException("You fail to enter admin mode.");
+            }
+        }
+
+        /**
+         * @return true if there's a problem
+         */
+        private boolean checkInventoryLoaded(UUID playerID) {
+            loadInventoryIfUnloaded(playerID);
+
+            // We have a problem if the inventory is still not loaded.
+            return !hasInventoryLoaded(playerID);
         }
 
         @Command(aliases = {"deadmin"},
@@ -750,18 +705,20 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             Player player = PlayerUtil.checkPlayer(sender);
 
-            if (isAdmin(player)) {
-                if (!args.hasFlag('k') && !hasInventoryLoaded(player.getUniqueId())) {
-                    throw new CommandException("Your inventory is not loaded! \nLeaving admin mode will result in item loss! " +
-                            "\nUse \"/deadmin -k\" to ignore this warning and continue anyways.");
-                }
-                if (deadmin(player, true)) {
-                    ChatUtil.sendNotice(sender, "You have left admin mode.");
-                } else {
-                    throw new CommandException("You fail to leave admin mode.");
-                }
-            } else {
+            if (!isAdmin(player)) {
                 throw new CommandException("You were not in admin mode!");
+            }
+
+            UUID playerID = player.getUniqueId();
+            if (!args.hasFlag('k') && checkInventoryLoaded(playerID)) {
+                throw new CommandException("Your inventory is not loaded! \nLeaving admin mode will result in item loss! " +
+                  "\nUse \"/deadmin -k\" to ignore this warning and continue anyways.");
+            }
+
+            if (deadmin(player, true)) {
+                ChatUtil.sendNotice(sender, "You have left admin mode.");
+            } else {
+                throw new CommandException("You fail to leave admin mode.");
             }
         }
     }
