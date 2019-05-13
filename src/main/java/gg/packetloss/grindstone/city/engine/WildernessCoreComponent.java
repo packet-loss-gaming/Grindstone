@@ -39,6 +39,7 @@ import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.util.portal.NoOPTravelAgent;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.*;
@@ -73,6 +74,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.util.portal.NoOPTravelAgent.overwriteDestination;
 import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 
 
@@ -252,8 +254,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
-
-
         final Player player = event.getPlayer();
         final Location pLoc = player.getLocation().clone();
         final Location from = event.getFrom();
@@ -263,12 +263,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         switch (event.getCause()) {
             case END_PORTAL:
-                event.useTravelAgent(false);
-
                 if (fromWorld.equals(city)) {
-                    event.setTo(wilderness.getSpawnLocation());
+                    overwriteDestination(event, wilderness.getSpawnLocation());
                 } else if (fromWorld.equals(wilderness)) {
-                    event.setTo(city.getSpawnLocation());
+                    overwriteDestination(event, city.getSpawnLocation());
                 }
 
                 // Prevent players from getting damaged falling into end portals
@@ -282,23 +280,27 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
                 // Wilderness Code
                 if (fromWorld.equals(wilderness)) {
-                    event.useTravelAgent(true);
 
                     pLoc.setWorld(wildernessNether);
                     pLoc.setX(pLoc.getBlockX() / 8);
                     pLoc.setZ(pLoc.getBlockZ() / 8);
                     agent.setCanCreatePortal(true);
+
+                    event.useTravelAgent(true);
                     event.setPortalTravelAgent(agent);
+
                     event.setTo(agent.findOrCreate(pLoc));
                     return;
                 } else if (fromWorld.equals(wildernessNether)) {
-                    event.useTravelAgent(true);
 
                     pLoc.setWorld(wilderness);
                     pLoc.setX(pLoc.getBlockX() * 8);
                     pLoc.setZ(pLoc.getBlockZ() * 8);
                     agent.setCanCreatePortal(true);
+
+                    event.useTravelAgent(true);
                     event.setPortalTravelAgent(agent);
+
                     event.setTo(agent.findOrCreate(pLoc));
                     return;
                 }
@@ -306,18 +308,14 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 // FIXME: This should be in its own component.
                 // City Code
                 if (from.getWorld().equals(city)) {
-                    event.useTravelAgent(false);
-
                     // Add 1 block to the 1 position for the city bank, for whatever
                     // reason this seems to be using the player's head location, rather
                     // than the location of their feet.
-                    event.setTo(LocationUtil.grandBank(city).add(0, 1, 0));
-                } else if (to.getWorld().equals(city)) {
-                    event.useTravelAgent(true);
 
-                    event.setTo(city.getSpawnLocation());
-                    agent.setCanCreatePortal(false);
-                    event.setPortalTravelAgent(agent);
+                    // noinspection ConstantConditions
+                    overwriteDestination(event, LocationUtil.grandBank(city));
+                } else if (to.getWorld().equals(city)) {
+                    overwriteDestination(event, city.getSpawnLocation());
                 }
                 break;
             }

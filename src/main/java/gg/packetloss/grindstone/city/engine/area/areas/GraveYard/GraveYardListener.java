@@ -51,6 +51,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static com.sk89q.commandbook.util.ChatUtil.getFriendlyTime;
+import static gg.packetloss.grindstone.util.portal.NoOPTravelAgent.overwriteDestination;
 
 public class GraveYardListener extends AreaListener<GraveYardArea> {
     protected final CommandBook inst = CommandBook.inst();
@@ -456,8 +457,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             Location tg = CollectionUtil.getElement(parent.headStones);
             tg = LocationUtil.findFreePosition(tg);
             if (tg == null) tg = parent.getWorld().getSpawnLocation();
-            event.setTo(tg);
-            event.useTravelAgent(false);
+            overwriteDestination(event, tg);
         }
     }
 
