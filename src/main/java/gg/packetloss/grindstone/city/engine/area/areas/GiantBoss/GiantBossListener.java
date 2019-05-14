@@ -206,8 +206,12 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityTarget(EntityTargetLivingEntityEvent event) {
-        Entity entity = event.getEntity();
         LivingEntity target = event.getTarget();
+        if (target == null) {
+            return;
+        }
+
+        Entity entity = event.getEntity();
         if (parent.contains(entity) && !parent.contains(target)) {
             event.setCancelled(true);
         }
