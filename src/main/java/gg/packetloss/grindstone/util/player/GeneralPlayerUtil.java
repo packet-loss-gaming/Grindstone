@@ -11,10 +11,12 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -22,7 +24,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class GeneralPlayerUtil {
-
     /**
      * Make a player state
      */
@@ -37,6 +38,25 @@ public class GeneralPlayerUtil {
                 player.getExhaustion(),
                 player.getLevel(),
                 player.getExp());
+    }
+
+    public static boolean isFlyingGamemode(GameMode gameMode) {
+        List<GameMode> flyingGamemodes = Arrays.asList(
+          GameMode.CREATIVE,
+          GameMode.SPECTATOR
+        );
+
+        return flyingGamemodes.contains(gameMode);
+    }
+
+    /**
+     * Checks if the player has a gamemode that provides flight.
+     *
+     * @param player The target player
+     * @return true - if player has flight from gamemode
+     */
+    public static boolean hasFlyingGamemode(Player player) {
+        return isFlyingGamemode(player.getGameMode());
     }
 
     public static void findSafeSpot(Player player) {

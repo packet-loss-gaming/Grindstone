@@ -6,11 +6,12 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.entity.Player;
@@ -24,10 +25,11 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class PixieDustImpl extends AbstractItemFeatureImpl {
 
-    private List<String> players = new ArrayList<>();
+    private List<UUID> players = new ArrayList<>();
 
     public boolean handleRightClick(final Player player) {
 
@@ -37,7 +39,7 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
 
         if (player.getAllowFlight()) return false;
 
-        if (players.contains(player.getName())) {
+        if (players.contains(player.getUniqueId())) {
             ChatUtil.sendError(player, "You need to wait to regain your faith, and trust.");
             return false;
         }
@@ -51,11 +53,14 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
         IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
             @Override
             public boolean run(int times) {
-
                 // Just get out of here you stupid players who don't exist!
                 if (!player.isValid()) return true;
 
-                if (player.getAllowFlight()) {
+                // If the player does not have flight enabled, we do not need to remove any pixie dust.
+                if (!player.getAllowFlight()) return true;
+
+                // If the player is not in a flying gamemode, use some pixie dust to sustain them.
+                if (!GeneralPlayerUtil.isFlyingGamemode(player.getGameMode())) {
                     int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.PIXIE_DUST.toString()) - 1;
 
                     if (c >= 0) {
@@ -91,9 +96,13 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
                         ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
                         // antiCheat.unexempt(player, CheckType.FLY);
                     }
-                    player.setFallDistance(0);
-                    player.setAllowFlight(false);
-                    player.setFlySpeed(.1F);
+
+                    // Only reset flight information if the player is not now in a gamemode where they can fly.
+                    if (!GeneralPlayerUtil.isFlyingGamemode(player.getGameMode())) {
+                        player.setFallDistance(0);
+                        player.setAllowFlight(false);
+                        player.setFlySpeed(.1F);
+                    }
                 }
             }
         };
@@ -144,11 +153,9 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
             // antiCheat.unexempt(player, CheckType.FLY);
             ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
 
-            final String playerName = player.getName();
-
-            players.add(playerName);
-
-            server.getScheduler().runTaskLater(inst, () -> players.remove(playerName), 20 * 30);
+            UUID playerID = player.getUniqueId();
+            players.add(playerID);
+            server.getScheduler().runTaskLater(inst, () -> players.remove(playerID), 20 * 30);
         }
     }
 }
