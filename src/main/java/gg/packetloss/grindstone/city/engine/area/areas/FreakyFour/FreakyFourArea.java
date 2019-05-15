@@ -105,7 +105,6 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
     @Override
     public void run() {
         if (!isEmpty()) {
-            equalize();
             fakeXPGain();
             if (!checkCharlotte()) {
                 runCharlotte();
@@ -115,16 +114,6 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
             }
         }
         writeData(true);
-    }
-
-    private void equalize() {
-        for (Player player : getContained(Player.class)) {
-            try {
-                admin.deadmin(player);
-            } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
-            }
-        }
     }
 
     public void addSkull(Player player) {

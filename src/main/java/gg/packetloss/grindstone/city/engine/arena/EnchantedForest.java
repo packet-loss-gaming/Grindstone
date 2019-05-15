@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.city.engine.arena;
 
-import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
@@ -14,6 +13,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.egg.EggHatchEvent;
+import gg.packetloss.grindstone.prayer.PrayerFX.ButterFingersFX;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
@@ -102,16 +102,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     }
 
     @Override
-    public void equalize() {
-
-        for (Player player : getContained(Player.class)) {
-            try {
-                adminComponent.deadmin(player);
-            } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
-            }
-        }
-    }
+    public void equalize() { }
 
     @Override
     public ArenaType getArenaType() {
@@ -204,19 +195,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     ChatUtil.sendWarning(player, "You cut your hand on the poisonous bark.");
                     break;
                 case 3:
-                    List<ItemStack> toDrop = Lists.newArrayList(pInv.getArmorContents());
-                    toDrop.addAll(Arrays.asList(pInv.getContents()));
-                    for (ItemStack aDrop : toDrop) {
-                        if (aDrop == null || aDrop.getTypeId() == BlockID.AIR) continue;
-                        Item item = getWorld().dropItem(player.getLocation(), aDrop);
-                        item.setVelocity(new Vector(
-                                random.nextDouble() * 2 - 1,
-                                random.nextDouble() * 1,
-                                random.nextDouble() * 2 - 1
-                        ));
-                    }
-                    pInv.setArmorContents(null);
-                    pInv.clear();
+                    new ButterFingersFX().add(player);
                     ChatUtil.sendNotice(player, "The fairies throws your stuff all over the place");
                     break;
                 case 4:

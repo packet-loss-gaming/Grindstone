@@ -23,6 +23,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -37,7 +38,6 @@ import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import gg.packetloss.grindstone.util.restoration.PlayerMappedBlockRecordIndex;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
@@ -151,10 +151,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     }
 
     @Override
-    public void equalize() {
-
-        getContained(Player.class).stream().filter(adminComponent::isAdmin).forEach(adminComponent::deadmin);
-    }
+    public void equalize() { }
 
     @Override
     public ArenaType getArenaType() {

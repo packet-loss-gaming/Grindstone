@@ -24,7 +24,6 @@ import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.util.HashMap;
@@ -69,20 +68,9 @@ public class SandArena extends AreaComponent<SandArenaConfig> implements Persist
     public void run() {
         if (!isEmpty()) {
             addBlocks();
-            equalize();
         }
         removeBlocks();
         writeData(true);
-    }
-
-    private void equalize() {
-        for (Player player : getContained(Player.class)) {
-            try {
-                admin.deadmin(player);
-            } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
-            }
-        }
     }
 
     public void addBlocks() {

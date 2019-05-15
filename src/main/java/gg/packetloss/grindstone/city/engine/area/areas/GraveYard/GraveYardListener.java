@@ -16,13 +16,13 @@ import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
@@ -464,7 +464,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         Player player = event.getPlayer();
-        if (parent.isHostileTempleArea(event.getTo()) && !parent.admin.isSysop(player)) {
+        if (parent.isHostileTempleArea(event.getTo()) && !parent.admin.isAdmin(player)) {
             if (!watchedCauses.contains(event.getCause())) return;
             if (parent.contains(event.getFrom())) {
                 event.setCancelled(true);

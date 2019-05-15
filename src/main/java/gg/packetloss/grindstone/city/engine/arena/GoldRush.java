@@ -12,17 +12,15 @@ import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.admin.AdminState;
 import gg.packetloss.grindstone.economic.ImpersonalComponent;
-import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -626,14 +624,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         if (event.isFlying() && players.contains(player.getName())) {
             event.setCancelled(true);
             ChatUtil.sendNotice(player, "You cannot fly here!");
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onAdminModeChange(PlayerAdminModeChangeEvent event) {
-
-        if (!event.getNewAdminState().equals(AdminState.MEMBER) && players.contains(event.getPlayer().getName())) {
-            event.setCancelled(true);
         }
     }
 

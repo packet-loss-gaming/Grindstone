@@ -14,7 +14,6 @@ import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -22,6 +21,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.NinjaComponent;
 import gg.packetloss.grindstone.RogueComponent;
+import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePlayerEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -44,21 +44,23 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.*;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.*;
-import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -184,9 +186,14 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 () -> IOUtil.toBinaryFile(new File(stateDir), state.getOwnerName(), state));
     }
 
-    public boolean isAdmin(Player player, AdminState min) {
-        assert min != AdminState.MEMBER;
-        return getAdminState(player).isAbove(min);
+    /**
+     * This method is used to determine if a player can enter Admin Mode.
+     *
+     * @param player - The player to check
+     * @return - true if the player can enter Admin Mode
+     */
+    public boolean canEnterAdminMode(Player player) {
+        return permission.playerHas(player, "aurora.admin.adminmode");
     }
 
     /**
@@ -196,60 +203,25 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * @return - true if the player is in Admin Mode
      */
     public boolean isAdmin(Player player) {
-        return isAdmin(player, AdminState.MODERATOR);
-    }
-
-    public boolean isSysop(Player player) {
-        return isAdmin(player, AdminState.SYSOP);
-    }
-
-    /**
-     * This method is used to determine the {@link AdminState} of the player.
-     *
-     * @param player - The player to check
-     * @return - The {@link AdminState} of the player
-     */
-    public AdminState getAdminState(Player player) {
-
-        if (permission.has((World) null, player.getName(), "aurora.admin.adminmode.sysop.active")) {
-            return AdminState.SYSOP;
-        } else if (permission.playerInGroup((World) null, player.getName(), "Admin")) {
-            return AdminState.ADMIN;
-        } else if (permission.playerInGroup((World) null, player.getName(), "Mod")) {
-            return AdminState.MODERATOR;
-        } else {
-            return AdminState.MEMBER;
-        }
+        return permission.playerInGroup(player, "Admin");
     }
 
     /**
      * This method is used to make a player enter a level of Admin Mode.
      *
      * @param player     - The player to execute this for
-     * @param adminState - The {@link AdminState} to attempt to achieve
      * @return - true if the player entered a level of Admin Mode
      */
-    public boolean admin(Player player, AdminState adminState) {
+    public boolean admin(Player player) {
+        Validate.isTrue(canEnterAdminMode(player));
 
         if (!isAdmin(player)) {
-            PlayerAdminModeChangeEvent event = new PlayerAdminModeChangeEvent(player, adminState);
+            PlayerAdminModeChangeEvent event = new PlayerAdminModeChangeEvent(player, true);
             server.getPluginManager().callEvent(event);
 
             if (!event.isCancelled()) {
                 playerState.put(player.getUniqueId(), GeneralPlayerUtil.makeComplexState(player));
-                switch (adminState) {
-                    case SYSOP:
-                        permission.playerAdd((World) null, player.getName(), "aurora.admin.adminmode.sysop.active");
-                    case ADMIN:
-                        permission.playerAddGroup((World) null, player.getName(), "Admin");
-                        break;
-                    case MODERATOR:
-                        permission.playerAddGroup((World) null, player.getName(), "Mod");
-                        break;
-                    default:
-                        break;
-                }
-
+                permission.playerAddGroup((World) null, player.getName(), "Admin");
                 writeInventory(player.getUniqueId());
             }
         }
@@ -258,9 +230,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     // This is only used internally because no one should leave an Admin Mode without being depowered.
     private boolean depermission(Player player) {
-
         if (isAdmin(player)) {
-            PlayerAdminModeChangeEvent event = new PlayerAdminModeChangeEvent(player, AdminState.MEMBER);
+            PlayerAdminModeChangeEvent event = new PlayerAdminModeChangeEvent(player, false);
             server.getPluginManager().callEvent(event);
 
             if (!event.isCancelled()) {
@@ -291,20 +262,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 }
 
                 // Change Permissions
-                do {
-                    switch (getAdminState(player)) {
-                        case SYSOP:
-                            permission.playerRemove((World) null, player.getName(), "aurora.admin.adminmode.sysop.active");
-                        case ADMIN:
-                            permission.playerRemoveGroup((World) null, player.getName(), "Admin");
-                            break;
-                        case MODERATOR:
-                            permission.playerRemoveGroup((World) null, player.getName(), "Mod");
-                            break;
-                        default:
-                            return false;
-                    }
-                } while (isAdmin(player));
+                permission.playerRemoveGroup((World) null, player.getName(), "Admin");
+                Validate.isTrue(!isAdmin(player));
             }
         }
         return !isAdmin(player);
@@ -331,21 +290,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     /**
-     * This method is used when removing a player from Admin Mode. Their {@link AdminState} will be set to the
-     * lowest level possible.
+     * This method is used when removing a player from Admin Mode.
      *
      * @param player - The player to remove from Admin Mode
      * @return - true if all active powers and elevated permission levels have been removed
      */
     public boolean deadmin(Player player) {
-
-        return deadmin(player, false);
-    }
-
-    public boolean deadmin(Player player, boolean force) {
-
-        //noinspection SimplifiableIfStatement
-        if (isSysop(player) && !force) return false;
         return depowerPlayer(player) && depermission(player);
     }
 
@@ -357,7 +307,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * @return - true if all active guild powers have been disabled
      */
     public boolean deguildPlayer(Player player) {
-
         if (ninjaComponent.isNinja(player)) ninjaComponent.unninjaPlayer(player);
         if (rogueComponent.isRogue(player)) rogueComponent.deroguePlayer(player);
         return true;
@@ -368,16 +317,10 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * deguildPlayer method supports.
      *
      * @param player - The player to remove from Admin Mode and remove guild and admin powers for
-     * @return - true if all active guild and admin powers have been disabled
+     * @return - true if all active guild powers have been disabled
      */
     public boolean standardizePlayer(Player player) {
-
-        return standardizePlayer(player, false);
-    }
-
-    public boolean standardizePlayer(Player player, boolean force) {
-
-        return deadmin(player, force) && deguildPlayer(player);
+        return deguildPlayer(player);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -394,21 +337,17 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPlayerDropItem(PlayerDropItemEvent event) {
-
+    public void onPlayerInventoryDump(DumpPlayerInventoryEvent event) {
         Player player = event.getPlayer();
-
-        if (isSysop(player)) return;
 
         if (isAdmin(player)) {
             event.setCancelled(true);
-            ChatUtil.sendWarning(player, "You cannot drop items while in admin mode.");
+            ChatUtil.sendNotice(player, "Inventory dump prevented due to use of admin mode.");
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerPickupItem(PlayerPickupItemEvent event) {
-
         Player player = event.getPlayer();
 
         if (isAdmin(player)) {
@@ -429,16 +368,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerClick(InventoryClickEvent event) {
-
         if (!(event.getWhoClicked() instanceof Player)) return;
 
         Player player = (Player) event.getWhoClicked();
 
-        if (isSysop(player)) return;
-
-        //InventoryType.SlotType st = event.getSlotType();
         if (isAdmin(player) && !accepted.contains(event.getInventory().getType())) {
-
             if (event.getAction().equals(InventoryAction.NOTHING)) return;
             if (InventoryUtil.getAcceptedActions().contains(event.getAction())) {
                 if (event.getRawSlot() + 1 > event.getInventory().getSize()) {
@@ -458,10 +392,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         Player player = (Player) event.getWhoClicked();
 
-        if (isSysop(player)) return;
-
         if (isAdmin(player) && !accepted.contains(event.getInventory().getType())) {
-
             for (int i : event.getRawSlots()) {
                 if (i + 1 <= event.getInventory().getSize()) {
                     event.setResult(Event.Result.DENY);
@@ -472,68 +403,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerInteract(PlayerInteractEvent event) {
-
-        Player player = event.getPlayer();
-        Block block = event.getClickedBlock();
-
-        if (isSysop(player)) return;
-
-        if (isAdmin(player) && block.getTypeId() == BlockID.JUKEBOX
-                && event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
-            event.setCancelled(true);
-            event.setUseInteractedBlock(Event.Result.DENY);
-            ChatUtil.sendWarning(player, "You cannot use this while in admin mode.");
-        } else if (isAdmin(player) && event.getAction().equals(Action.RIGHT_CLICK_BLOCK)
-                && player.getItemInHand().getTypeId() == ItemID.SPAWN_EGG) {
-            event.setCancelled(true);
-            ChatUtil.sendWarning(player, "You cannot use this while in admin mode.");
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-
-        Player player = event.getPlayer();
-
-        if (isSysop(player)) return;
-
-        if (isAdmin(player) && player.getItemInHand().getTypeId() == ItemID.SPAWN_EGG) {
-            event.setCancelled(true);
-            ChatUtil.sendWarning(player, "You cannot use this while in admin mode.");
-        }
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
-
-        Player player = event.getPlayer();
         Block block = event.getBlock();
 
-        if (EnvironmentUtil.isValuableBlock(block) || isAdmin(player) && isDisabledBlock(block)
-                || block.getTypeId() == BlockID.STONE_BRICK && block.getData() == 3) {
-            // Temporary work around
-            if (isAdmin(player) && block.getTypeId() == BlockID.TNT) {
-                block.setTypeId(0);
-                event.setCancelled(true);
-            } else {
-                block.breakNaturally(null);
-            }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent event) {
-
-        Player player = event.getPlayer();
-        Block block = event.getBlock();
-
-        if (isSysop(player)) return;
-
-        if (EnvironmentUtil.isValuableBlock(block) && !isAdmin(player) || isAdmin(player) && isDisabledBlock(block)) {
-            event.setCancelled(true);
-            ChatUtil.sendWarning(player, "You cannot place that block.");
+        if (isDisabledBlock(block) || block.getTypeId() == BlockID.STONE_BRICK && block.getData() == 3) {
+            block.breakNaturally(null);
         }
     }
 
@@ -594,7 +469,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         if (event.getPlayer() instanceof Player) {
             Player player = (Player) event.getPlayer();
-            event.addWhoisInformation("User Level", getAdminState(player));
+            event.addWhoisInformation("Is Admin", isAdmin(player));
         }
     }
 
@@ -661,27 +536,19 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         @Command(aliases = {"admin", "alivemin"},
                 usage = "", desc = "Enter Admin Mode",
-                flags = "e", min = 0, max = 0)
+                flags = "", min = 0, max = 0)
         public void adminModeCmd(CommandContext args, CommandSender sender) throws CommandException {
-
             Player player = PlayerUtil.checkPlayer(sender);
+
+            if (!canEnterAdminMode(player)) {
+                throw new CommandPermissionsException();
+            }
 
             if (isAdmin(player)) {
                 throw new CommandException("You were already in admin mode!");
             }
 
-            boolean admin;
-            if (args.hasFlag('e') && inst.hasPermission(player, "aurora.admin.adminmode.sysop")) {
-                admin = admin(player, AdminState.SYSOP);
-            } else if (inst.hasPermission(player, "aurora.admin.adminmode.admin")) {
-                admin = admin(player, AdminState.ADMIN);
-            } else if (inst.hasPermission(player, "aurora.admin.adminmode.moderator")) {
-                admin = admin(player, AdminState.MODERATOR);
-            } else {
-                throw new CommandPermissionsException();
-            }
-
-            if (admin) {
+            if (admin(player)) {
                 ChatUtil.sendNotice(sender, "You have entered admin mode.");
             } else {
                 throw new CommandException("You fail to enter admin mode.");
@@ -715,7 +582,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                   "\nUse \"/deadmin -k\" to ignore this warning and continue anyways.");
             }
 
-            if (deadmin(player, true)) {
+            if (deadmin(player)) {
                 ChatUtil.sendNotice(sender, "You have left admin mode.");
             } else {
                 throw new CommandException("You fail to leave admin mode.");
@@ -770,8 +637,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 player = PlayerUtil.checkPlayer(sender);
             }
 
-            if (!isAdmin(player) && !(args.hasFlag('f')
-                    && inst.hasPermission(player, "aurora.admin.adminmode.sysop"))) {
+            if (!isAdmin(player)) {
                 throw new CommandException("You can only use this command while in Admin Mode!");
             }
 

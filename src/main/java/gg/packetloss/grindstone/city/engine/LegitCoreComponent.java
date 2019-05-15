@@ -21,9 +21,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.admin.AdminState;
 import gg.packetloss.grindstone.events.HomeTeleportEvent;
-import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
@@ -127,17 +125,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
             Player player = PlayerUtil.checkPlayer(sender);
 
             player.teleport(getTo(player, player.getWorld().getName().contains(config.legitWorld)));
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onAdminModeChange(PlayerAdminModeChangeEvent event) {
-
-        World world = event.getPlayer().getWorld();
-
-        if (event.getNewAdminState().equals(AdminState.SYSOP)) return;
-        if (!event.getNewAdminState().equals(AdminState.MEMBER) && world.getName().contains(config.legitWorld)) {
-            event.setCancelled(true);
         }
     }
 
@@ -311,7 +298,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         }
 
         if (result) {
-            adminComponent.deadmin(player, true);
+            adminComponent.deadmin(player);
 
             final File fromDir = fromMain ? normalFileDir : legitFileDir;
             final File toDir = fromMain ? legitFileDir : normalFileDir;
@@ -353,15 +340,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
                 player.setExp(0);
             }
         }
-    }
-
-    // Catch possible escapes
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-
-        Player player = event.getPlayer();
-
-        if (player.getWorld().getName().contains(config.legitWorld)) adminComponent.deadmin(player);
     }
 
     @EventHandler

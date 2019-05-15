@@ -78,8 +78,7 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
                 if (e instanceof Projectile) source = ((Projectile) e).getShooter();
                 if (source != null && source instanceof Player) {
                     e = (Entity) source;
-                    if (admin.isSysop((Player) e)) return;
-                    ChatUtil.sendError((Player) e, "You cannot currently hurt that " + event.getEntityType().toString().toLowerCase() + ".");
+                    ChatUtil.sendError((Player) e, "You cannot hurt a " + event.getEntityType().toString().toLowerCase() + " that you don't own.");
                 }
             }
             event.setCancelled(true);

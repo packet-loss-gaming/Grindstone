@@ -6,7 +6,9 @@
 
 package gg.packetloss.grindstone.prayer.PrayerFX;
 
+import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
+import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -21,6 +23,11 @@ public class ButterFingersFX extends AbstractEffect {
 
     @Override
     public void add(Player player) {
+        DumpPlayerInventoryEvent event = new DumpPlayerInventoryEvent(player);
+        CommandBook.server().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
 
         for (ItemStack itemStack : player.getInventory().getArmorContents()) {
             if (itemStack != null && itemStack.getTypeId() != BlockID.AIR) {

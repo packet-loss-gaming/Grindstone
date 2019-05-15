@@ -21,25 +21,22 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.admin.AdminState;
 import gg.packetloss.grindstone.bosses.*;
 import gg.packetloss.grindstone.bosses.detail.WBossDetail;
 import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPScope;
 import gg.packetloss.grindstone.economic.store.AdminStoreComponent;
-import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.entity.item.DropClearPulseEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.util.portal.NoOPTravelAgent;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.*;
@@ -58,10 +55,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -330,51 +325,11 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     }
 
     @EventHandler
-    public void onAdminModeChange(PlayerAdminModeChangeEvent event) {
-
-        World world = event.getPlayer().getWorld();
-
-        if (event.getNewAdminState().equals(AdminState.SYSOP)) return;
-        if (!event.getNewAdminState().equals(AdminState.MEMBER) && isWildernessWorld(world)) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-
-        if (event.getTo().getWorld() != event.getFrom().getWorld()) {
-            check(event.getPlayer(), event.getTo().getWorld());
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onWorldChange(PlayerChangedWorldEvent event) {
-
-        Player player = event.getPlayer();
-
-        check(player, player.getWorld());
-    }
-
-    public void check(Player player, World world) {
-
-        if (isWildernessWorld(world) && adminComponent.isAdmin(player)) {
-            adminComponent.deadmin(player);
-        }
-    }
-
-    @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
 
         Player player = event.getPlayer();
 
         if (isWildernessWorld(player.getWorld())) {
-            // Catch possible escapes
-            if (adminComponent.isAdmin(player)) {
-                adminComponent.deadmin(player);
-                return;
-            }
-
             if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) return;
             ItemStack held = player.getItemInHand();
             if (held == null || !ItemUtil.isPickAxe(held.getTypeId())) return;

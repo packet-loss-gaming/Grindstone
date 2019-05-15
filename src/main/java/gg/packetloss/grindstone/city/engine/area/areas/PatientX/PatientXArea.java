@@ -128,8 +128,6 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
     private void equalize() {
         for (Player player : getContained(Player.class)) {
             try {
-                admin.deadmin(player);
-
                 if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
                     ChatUtil.sendWarning(player, "Your defensive potion enrages me!");
                     modifyDifficulty(1);

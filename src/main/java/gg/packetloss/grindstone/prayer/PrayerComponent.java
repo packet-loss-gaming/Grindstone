@@ -274,8 +274,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
             // Check for valid nameType
             try {
-
-                if (player.getName().equals(sender.getName()) && !adminComponent.isSysop(player)) {
+                if (player.getName().equals(sender.getName()) && !adminComponent.isAdmin(player)) {
                     player.getWorld().strikeLightningEffect(player.getLocation());
                     throw new CommandException("The gods don't take kindly to using their power on yourself.");
                 }
@@ -315,12 +314,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
     private boolean integrityTest(Player player, Prayer prayer) {
         // Continue if the prayer is out of date
         if (System.currentTimeMillis() - prayer.getStartTime() >= prayer.getMaxDuration()) {
-
             uninfluencePlayer(player, prayer.getEffect().getType());
-            return false;
-        } else if (prayer.getEffect().getType().isUnholy() && !adminComponent.deadmin(player)) {
-
-            uninfluencePlayer(player);
             return false;
         }
 

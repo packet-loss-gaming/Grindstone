@@ -9,7 +9,6 @@ package gg.packetloss.grindstone.city.engine.area.areas.FreakyFour;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.admin.AdminState;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
@@ -136,7 +135,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
 
         if (parent.contains(to) && !event.getCause().equals(TeleportCause.UNKNOWN)) {
             Player player = event.getPlayer();
-            if (parent.admin.isAdmin(player, AdminState.ADMIN)) return;
+            if (parent.admin.isAdmin(player)) return;
             event.setTo(parent.entrance);
         }
     }

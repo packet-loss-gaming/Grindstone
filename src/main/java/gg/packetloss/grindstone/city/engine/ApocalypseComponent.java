@@ -18,22 +18,20 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.admin.AdminState;
 import gg.packetloss.grindstone.bosses.ThunderZombie;
-import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.homes.EnderPearlHomesComponent;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomPotion;
-import gg.packetloss.grindstone.items.custom.Potion;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.jail.JailComponent;
-import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -249,14 +247,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 event.setDroppedExp(event.getDroppedExp() * 3);
                 event.getDrops().add(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(8)));
             } else event.setDroppedExp(event.getDroppedExp() * 2);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onAdminChange(PlayerAdminModeChangeEvent event) {
-        if (event.getNewAdminState().equals(AdminState.SYSOP)) return;
-        if (!event.getNewAdminState().equals(AdminState.MEMBER) && event.getPlayer().getWorld().isThundering()) {
-            event.setCancelled(true);
         }
     }
 

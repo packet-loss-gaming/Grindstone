@@ -163,9 +163,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     }
 
     @Override
-    public void equalize() {
-        getContained(Player.class).stream().filter(adminComponent::isAdmin).forEach(adminComponent::deadmin);
-    }
+    public void equalize() { }
 
     @Override
     public ArenaType getArenaType() {

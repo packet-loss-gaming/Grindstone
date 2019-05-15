@@ -10,7 +10,6 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import gg.packetloss.grindstone.SacrificeComponent;
-import gg.packetloss.grindstone.admin.AdminState;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.area.areas.DropParty.DropPartyTask;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
@@ -19,6 +18,8 @@ import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.unleashed.LifeLeech;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.Decimate;
@@ -37,8 +38,6 @@ import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -113,7 +112,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
         if (parent.contains(to) && !parent.contains(from)) {
             Player player = event.getPlayer();
-            if (parent.admin.isAdmin(player, AdminState.ADMIN)) return;
+            if (parent.admin.isAdmin(player)) return;
             if (!ItemUtil.removeItemOfName(player, CustomItemCenter.build(CustomItems.PHANTOM_HYMN), 1, false)) {
                 ChatUtil.sendError(player, "You need a Phantom Hymn to sacrifice to enter that area.");
                 event.setCancelled(true);

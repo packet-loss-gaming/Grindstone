@@ -50,7 +50,6 @@ public class MobArenaCLComponent extends BukkitComponent implements Listener {
 
         Player player = event.getPlayer();
 
-        admin.deadmin(player, true);
         if (!playerList.contains(player)) playerList.add(player);
     }
 

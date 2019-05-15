@@ -221,16 +221,14 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
         for (Player player : server.getOnlinePlayers()) {
             try {
-
                 if (isJailed(player)) {
-
                     JailCell cell = cells.get(player);
                     Inmate inmate = inmates.getInmate(player.getUniqueId());
                     if (cell == null || !cell.getPrisonName().equals(inmate.getPrisonName())) {
                         cell = assignCell(player, inmate.getPrisonName());
                     }
 
-                    adminComponent.standardizePlayer(player, true);
+                    adminComponent.standardizePlayer(player);
                     player.setFoodLevel(5);
 
                     if (cell == null) {

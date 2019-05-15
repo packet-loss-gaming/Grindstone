@@ -96,7 +96,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
     @Override
     public void run() {
         if (!isEmpty()) {
-            equalize();
             fakeXPGain();
             shiftMirage();
         }
@@ -426,16 +425,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             } catch (IOException | DataException e) {
                 e.printStackTrace();
                 ChatUtil.sendError(sender, "Error encountered, check console.");
-            }
-        }
-    }
-
-    private void equalize() {
-        for (Player player : getContained(Player.class)) {
-            try {
-                admin.deadmin(player);
-            } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
             }
         }
     }
