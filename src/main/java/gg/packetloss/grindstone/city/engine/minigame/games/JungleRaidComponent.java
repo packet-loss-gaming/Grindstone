@@ -176,7 +176,9 @@ public class JungleRaidComponent extends MinigameComponent {
     // Player Management
     @Override
     public boolean addToTeam(Player player, int teamNumber, Set<Character> flags) {
-        super.addToTeam(player, teamNumber, flags);
+        if (!super.addToTeam(player, teamNumber, flags)) {
+            return false;
+        }
 
         PlayerInventory playerInventory = player.getInventory();
         playerInventory.clear();

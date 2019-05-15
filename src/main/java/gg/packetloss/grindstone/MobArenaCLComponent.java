@@ -15,6 +15,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.util.ChatUtil;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -50,6 +51,11 @@ public class MobArenaCLComponent extends BukkitComponent implements Listener {
 
         Player player = event.getPlayer();
 
+        if (!admin.deadmin(player)) {
+            ChatUtil.sendError(player, "Failed to disable admin mode, mob arena add cancelled.");
+            event.setCancelled(true);
+            return;
+        }
         if (!playerList.contains(player)) playerList.add(player);
     }
 

@@ -11,8 +11,10 @@ import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.TemplateComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
@@ -47,6 +49,9 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     protected ConcurrentHashMap<String, PlayerGameState> playerState = new ConcurrentHashMap<>();
     protected ConcurrentHashMap<String, PlayerGameState> goneState = new ConcurrentHashMap<>();
     protected Set<Character> gameFlags = new HashSet<>();
+
+    @InjectComponent
+    protected AdminComponent adminComponent;
 
     public MinigameComponent(String casualName, String name, int maxTeams) {
 
@@ -168,6 +173,10 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     }
 
     public boolean addToTeam(Player player, int team, Set<Character> flags) {
+        if (!adminComponent.deadmin(player)) {
+            ChatUtil.sendError(player, "Failed to disable admin mode, team add cancelled.");
+            return false;
+        }
 
         PlayerState state = GeneralPlayerUtil.makeComplexState(player);
         state.setOwnerName(player.getName());
