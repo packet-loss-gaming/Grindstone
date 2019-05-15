@@ -126,6 +126,10 @@ public enum CustomItems {
         return color + name;
     }
 
+    public String getSnakecaseName() {
+        return this.name().toLowerCase();
+    }
+
     @Override
     public String toString() {
         return color + name;

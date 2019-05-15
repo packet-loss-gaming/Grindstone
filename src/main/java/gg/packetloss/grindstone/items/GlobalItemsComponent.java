@@ -6,6 +6,11 @@
 
 package gg.packetloss.grindstone.items;
 
+import com.avaje.ebean.text.json.JsonElementString;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.worldedit.blocks.BlockID;
@@ -18,6 +23,7 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
+import gg.packetloss.grindstone.items.custom.CustomItem;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -36,6 +42,13 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 
 @ComponentInformation(friendlyName = "Global Items Component", desc = "Global Custom Item effects")
@@ -88,6 +101,25 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         summationCondenser.addSupport(new ItemStack(ItemID.EMERALD, 9), new ItemStack(BlockID.EMERALD_BLOCK, 1));
     }
 
+    private JsonObject buildItemManifest() {
+        JsonArray itemNames = new JsonArray();
+        for (CustomItems item : CustomItems.values()) {
+            itemNames.add(new JsonPrimitive(item.getSnakecaseName()));
+        }
+        JsonObject manifest = new JsonObject();
+        manifest.add("names", itemNames);
+        return manifest;
+    }
+
+    private void writeItemManifest() {
+        String manifestFile = inst.getDataFolder().getPath() + "/item_manifest.json";
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(manifestFile))) {
+            writer.write(new Gson().toJson(buildItemManifest()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void enable() {
 
@@ -97,6 +129,8 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         registerSpecWeapons();
         registerHymns();
         registerGeneral();
+
+        writeItemManifest();
     }
 
     private <T extends Listener> T handle(T component) {
