@@ -453,10 +453,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                     boolean isClimbableItem = stack.getType() == Material.AIR || ItemUtil.isSword(stack.getTypeId());
                     if (!isClimbableItem) break;
 
-                    if (EnvironmentUtil.isInteractiveBlock(clicked) || EnvironmentUtil.isShrubBlock(clicked)) break;
+                    // Do not attempt to climb shrubs.
+                    if (EnvironmentUtil.isShrubBlock(clicked)) {
+                        break;
+                    }
                     if (!face.equals(BlockFace.UP) && !face.equals(BlockFace.DOWN)) {
-                        // Check for possible misclick
-                        if (EnvironmentUtil.isInteractiveBlock(clicked.getRelative(face))) break;
+                        // Never climb if the clicked block was interactive, or could've been a misclick
+                        // of a nearby interactive block.
+                        if (EnvironmentUtil.isMaybeInteractiveBlock(clicked, face)) {
+                            break;
+                        }
 
                         // Check if the block is higher than the player
                         if (clicked.getLocation().getY() < player.getLocation().getY()) break;

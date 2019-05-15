@@ -265,6 +265,18 @@ public class EnvironmentUtil {
         return false;
     }
 
+    public static boolean isMaybeInteractiveBlock(Block clicked, BlockFace clickedFace) {
+        if (EnvironmentUtil.isInteractiveBlock(clicked)) {
+            return true;
+        }
+
+        if (EnvironmentUtil.isInteractiveBlock(clicked.getRelative(clickedFace))) {
+            return true;
+        }
+
+        return false;
+    }
+
     private static final Set<Integer> signBlocks = new HashSet<>();
 
     static {

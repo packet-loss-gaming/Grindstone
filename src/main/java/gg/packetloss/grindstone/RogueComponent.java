@@ -38,6 +38,8 @@ import org.bukkit.EntityEffect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -322,6 +324,15 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                     break;
                 case RIGHT_CLICK_BLOCK:
                     if (rogueSession.canGrenade() && rogueSession.getGrenadeSafety()) {
+                        Block clicked = event.getClickedBlock();
+                        BlockFace face = event.getBlockFace();
+
+                        // Never throw grenades if the clicked block was interactive, or could've been a misclick
+                        // of a nearby interactive block.
+                        if (EnvironmentUtil.isMaybeInteractiveBlock(clicked, face)) {
+                            break;
+                        }
+
                         grenade(player);
                     }
                     break;
@@ -417,7 +428,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"rogue"}, desc = "Give a player the Rogue power",
-                flags = "gtbl:", min = 0, max = 0)
+                flags = "lgtbl:", min = 0, max = 0)
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
