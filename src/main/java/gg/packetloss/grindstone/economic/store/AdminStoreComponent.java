@@ -25,12 +25,12 @@ import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.economic.store.mysql.MySQLItemStoreDatabase;
 import gg.packetloss.grindstone.economic.store.mysql.MySQLMarketTransactionDatabase;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemType;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -139,7 +139,6 @@ public class AdminStoreComponent extends BukkitComponent {
                 amt = Math.max(1, args.getFlagInteger('a'));
             }
             double price = itemPricePair.getPrice() * amt;
-            double rebate = 0;
             double lottery = price * .03;
 
             if (!econ.has(playerName, price)) {
@@ -160,15 +159,11 @@ public class AdminStoreComponent extends BukkitComponent {
             econ.bankDeposit("Lottery", lottery);
 
             // Charge the money and send the sender some feedback
-            econ.withdrawPlayer(playerName, price - rebate);
+            econ.withdrawPlayer(playerName, price);
             transactionDatabase.logTransaction(playerName, itemName, amt);
             transactionDatabase.save();
             String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), "");
             ChatUtil.sendNotice(sender, "Item(s) purchased for " + priceString + "!");
-            if (rebate >= 0.01) {
-                String rebateString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(rebate), "");
-                ChatUtil.sendNotice(sender, "You get " + rebateString + " back.");
-            }
 
             // Market Command Help
             StoreSession sess = sessions.getSession(StoreSession.class, player);
