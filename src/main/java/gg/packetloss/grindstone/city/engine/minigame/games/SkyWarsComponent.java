@@ -129,6 +129,11 @@ public class SkyWarsComponent extends MinigameComponent {
     // Player Management
     @Override
     public boolean addToTeam(Player player, int teamNumber, Set<Character> flags) {
+        if (!adminComponent.deadmin(player)) {
+            ChatUtil.sendError(player, "Failed to disable admin mode, team add cancelled.");
+            return false;
+        }
+
         if (!super.addToTeam(player, teamNumber, flags)) {
             return false;
         }
