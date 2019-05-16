@@ -28,16 +28,12 @@ import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
 import gg.packetloss.grindstone.util.item.ItemType;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -117,17 +113,13 @@ public class AdminStoreComponent extends BukkitComponent {
             String playerName = checkPlayer(sender);
             Player player = (Player) sender;
 
-            String itemName = args.getJoinedStrings(0).toLowerCase();
-
-            if (!hasItemOfName(itemName)) {
-                ItemType type = ItemType.lookup(itemName);
-                if (type == null) {
-                    throw new CommandException(NOT_AVAILIBLE);
-                }
-                itemName = type.getName();
+            Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0).toLowerCase());
+            if (!optItemName.isPresent()) {
+                throw new CommandException(NOT_AVAILIBLE);
             }
-            ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
 
+            String itemName = optItemName.get();
+            ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
             if (itemPricePair == null || !itemPricePair.isBuyable()) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
@@ -184,9 +176,6 @@ public class AdminStoreComponent extends BukkitComponent {
 
             ItemStack[] itemStacks = player.getInventory().getContents();
 
-            HashMap<String, Integer> transactions = new HashMap<>();
-            double payment = 0;
-
             ItemStack filter = null;
 
             boolean singleItem = false;
@@ -206,198 +195,93 @@ public class AdminStoreComponent extends BukkitComponent {
             }
 
             if (!singleItem && !args.hasFlag('u')) {
-                filter = player.getItemInHand().clone();
-                if (!ItemType.usesDamageValue(filter.getTypeId())) {
-                    filter.setDurability((short) 0);
-                }
+                filter = player.getItemInHand();
+                verifyValidItemCommand(filter);
             }
 
-            for (int i = min; i < max; i++) {
+            InventoryView view = new InventoryView(min, max, filter);
 
-                ItemStack stack = itemStacks[i];
+            Set<String> itemNamesInFilter = new HashSet<>();
 
-                if (stack == null || stack.getTypeId() == 0) {
-                    if (singleItem) {
-                        throw new CommandException("That's not a valid item!");
-                    } else {
-                        continue;
-                    }
-                }
+            view.operateOnInventory(itemStacks, (item) -> {
+                computeItemName(item).ifPresent(itemNamesInFilter::add);
+                return item;
+            });
 
-                if (filter != null) {
-                    ItemStack testStack = stack.clone();
-                    if (!ItemType.usesDamageValue(testStack.getTypeId())) {
-                        testStack.setDurability((short) 0);
-                    }
+            // FIXME: This is a rat's nest.
+            server.getScheduler().runTaskAsynchronously(inst, () -> {
+                Map<String, ItemPricePair> nameItemMapping = itemDatabase.getItems(itemNamesInFilter);
+                server.getScheduler().runTask(inst, () -> {
+                    double[] payment = {0}; // hack to update payment from inside lambda
+                    HashMap<String, Integer> transactions = new HashMap<>();
 
-                    if (!filter.isSimilar(testStack)) continue;
-                }
-
-                ItemMeta stackMeta = stack.getItemMeta();
-                String itemName = stack.getTypeId() + ":" + stack.getDurability();
-                if (stackMeta.hasDisplayName()) {
-                    itemName = stackMeta.getDisplayName();
-                    if (!ItemUtil.isAuthenticCustomItem(itemName)) {
-                        if (singleItem) {
-                            throw new CommandException("You cannot sell items that have been renamed here!");
-                        } else {
-                            continue;
+                    // Calculate the payment and transactions using the new inventory.
+                    ItemStack[] newInventory = player.getInventory().getContents();
+                    view.operateOnInventory(newInventory, (item) -> {
+                        Optional<Double> optPercentageSale = computePercentageSale(item);
+                        if (!optPercentageSale.isPresent()) {
+                            return item;
                         }
-                    }
-                    itemName = ChatColor.stripColor(itemName);
-                }
 
-                double percentageSale = 1;
-                if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
-                    if (stack.getAmount() > 1) {
-                        if (singleItem) {
-                            throw new CommandException(NOT_AVAILIBLE);
-                        } else {
-                            continue;
+                        Optional<String> optItemName = computeItemName(item);
+                        if (!optItemName.isPresent()) {
+                            return item;
                         }
-                    }
-                    percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
-                }
 
-                if (!hasItemOfName(itemName)) {
-                    ItemType type = ItemType.lookup(itemName);
-                    if (type == null) {
-                        if (singleItem) {
-                            throw new CommandException(NOT_AVAILIBLE);
-                        } else {
-                            continue;
+                        final double percentageSale = optPercentageSale.get();
+                        final String itemName = optItemName.get();
+
+                        ItemPricePair itemPricePair = nameItemMapping.get(itemName.toUpperCase());
+                        if (itemPricePair == null || !itemPricePair.isSellable()) {
+                            return item;
                         }
+
+                        int amt = item.getAmount();
+                        payment[0] += itemPricePair.getSellPrice() * amt * percentageSale;
+
+                        // Multiply the amount by -1 since this is selling
+                        amt *= -1;
+
+                        if (transactions.containsKey(itemName)) {
+                            amt += transactions.get(itemName);
+                        }
+                        transactions.put(itemName, amt);
+
+                        return null;
+                    });
+
+                    if (transactions.isEmpty()) {
+                        ChatUtil.sendError(player, "No sellable items found" + (view.hasFilter() ? " that matched the filter" : "") + "!");
+                        return;
                     }
-                    itemName = type.getName();
-                }
 
-                ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
+                    server.getScheduler().runTaskAsynchronously(inst, () -> {
+                        for (Map.Entry<String, Integer> entry : transactions.entrySet()) {
+                            transactionDatabase.logTransaction(playerName, entry.getKey(), entry.getValue());
+                        }
+                        transactionDatabase.save();
+                    });
 
-                if (itemPricePair == null || !itemPricePair.isSellable()) {
-                    if (singleItem) {
-                        throw new CommandException(NOT_AVAILIBLE);
-                    } else {
-                        continue;
+                    econ.depositPlayer(player, payment[0]);
+
+                    player.getInventory().setContents(newInventory);
+
+                    String paymentString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(payment[0]), "");
+                    ChatUtil.sendNotice(player, "Item(s) sold for: " + paymentString + "!");
+
+                    // Market Command Help
+                    StoreSession sess = sessions.getSession(StoreSession.class, player);
+                    if (view.isSingleItem() && sess.recentSale() && !sess.recentNotice()) {
+                        ChatUtil.sendNotice(sender, "Did you know you can sell more than one stack at a time?");
+                        ChatUtil.sendNotice(sender, "To sell all of what you're holding:");
+                        ChatUtil.sendNotice(sender, "/market sell -a");
+                        ChatUtil.sendNotice(sender, "To sell everything in your inventory:");
+                        ChatUtil.sendNotice(sender, "/market sell -au");
+                        sess.updateNotice();
                     }
-                }
-
-                int amt = stack.getAmount();
-                payment += itemPricePair.getSellPrice() * amt * percentageSale;
-
-                // Multiply the amount by -1 since this is selling
-                amt *= -1;
-
-                if (transactions.containsKey(itemName)) {
-                    amt += transactions.get(itemName);
-                }
-                transactions.put(itemName, amt);
-
-                itemStacks[i] = null;
-            }
-
-            if (transactions.isEmpty()) {
-                throw new CommandException("No sellable items found" + (filter != null ? " that matched the filter" : "") + "!");
-            }
-
-            for (Map.Entry<String, Integer> entry : transactions.entrySet()) {
-                transactionDatabase.logTransaction(playerName, entry.getKey(), entry.getValue());
-            }
-            transactionDatabase.save();
-
-            econ.depositPlayer(playerName, payment);
-            player.getInventory().setContents(itemStacks);
-
-            String paymentString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(payment), "");
-            ChatUtil.sendNotice(player, "Item(s) sold for: " + paymentString + "!");
-
-            // Market Command Help
-            StoreSession sess = sessions.getSession(StoreSession.class, player);
-            if (singleItem && sess.recentSale() && !sess.recentNotice()) {
-                ChatUtil.sendNotice(sender, "Did you know you can sell more than one stack at a time?");
-                ChatUtil.sendNotice(sender, "To sell all of what you're holding:");
-                ChatUtil.sendNotice(sender, "/market sell -a");
-                ChatUtil.sendNotice(sender, "To sell everything in your inventory:");
-                ChatUtil.sendNotice(sender, "/market sell -au");
-                sess.updateNotice();
-            }
-            sess.updateSale();
-        }
-
-        @Command(aliases = {"enchant"},
-                usage = "<enchantment> <level>", desc = "Enchant an item",
-                flags = "fy", min = 2, max = 2)
-        public void enchantCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            Player player = PlayerUtil.checkPlayer(sender);
-            boolean isAdmin = adminComponent.isAdmin(player);
-
-            if (!isAdmin) checkInArea(player);
-
-            Enchantment enchantment = Enchantment.getByName(args.getString(0).toUpperCase());
-            int level = args.getInteger(1);
-
-            if (enchantment == null) {
-                throw new CommandException("That enchantment could not be found!");
-            }
-
-            int min = enchantment.getStartLevel();
-            int max = enchantment.getMaxLevel();
-
-            if (level < min || level > max) {
-                throw new CommandException("Enchantment level must be between " + min + " and " + max + '!');
-            }
-
-            ItemStack targetItem = player.getItemInHand();
-            if (targetItem == null || targetItem.getTypeId() == BlockID.AIR) {
-                throw new CommandException("You're not holding an item!");
-            }
-            if (!enchantment.canEnchantItem(targetItem)) {
-                throw new CommandException("You cannot give this item that enchantment!");
-            }
-
-            ItemMeta meta = targetItem.getItemMeta();
-            if (meta.hasEnchant(enchantment)) {
-                if (!args.hasFlag('f')) {
-                    throw new CommandException("That enchantment is already present, use -f to override this!");
-                } else {
-                    meta.removeEnchant(enchantment);
-                }
-            }
-
-            if (!meta.addEnchant(enchantment, level, false)) {
-                throw new CommandException("That enchantment could not be applied!");
-            }
-
-            double cost = Math.max(1000, AdminStoreComponent.priceCheck(targetItem, false) * .1) * level;
-
-            if (!isAdmin) {
-                if (cost < 0) {
-                    throw new CommandException("That item cannot be enchanted!");
-                }
-                if (!econ.has(player.getName(), cost)) {
-                    throw new CommandException("You don't have enough money!");
-                }
-                String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(cost), "");
-                if (args.hasFlag('y')) {
-                    ChatUtil.sendNotice(sender, "Item enchanted for " + priceString + "!");
-                    econ.withdrawPlayer(player.getName(), cost);
-                } else {
-                    ChatUtil.sendNotice(sender, "That will cost " + priceString + '.');
-                    ChatUtil.sendNotice(sender, "To confirm, use:");
-                    String command = "/market enchant -y";
-                    for (Character aChar : args.getFlags()) {
-                        command += aChar;
-                    }
-                    command += ' ' + enchantment.getName() + ' ' + level;
-                    ChatUtil.sendNotice(sender, command);
-                    return;
-                }
-            } else {
-                ChatUtil.sendNotice(sender, "Item enchanted!");
-            }
-
-            targetItem.setItemMeta(meta);
-            
+                    sess.updateSale();
+                });
+            });
         }
 
         @Command(aliases = {"list", "l"},
@@ -438,46 +322,30 @@ public class AdminStoreComponent extends BukkitComponent {
                 usage = "[item name]", desc = "Value an item",
                 flags = "", min = 0)
         public void valueCmd(CommandContext args, CommandSender sender) throws CommandException {
-
             String itemName;
             double percentageSale = 1;
             if (args.argsLength() > 0) {
                 itemName = args.getJoinedStrings(0).toLowerCase();
             } else {
                 ItemStack stack = PlayerUtil.checkPlayer(sender).getInventory().getItemInHand();
-                if (stack == null || stack.getTypeId() == 0) {
-                    throw new CommandException("That's not a valid item!");
-                }
+                verifyValidItemCommand(stack);
 
-
-                itemName = stack.getTypeId() + ":" + stack.getDurability();
-                ItemMeta stackMeta = stack.getItemMeta();
-                if (stackMeta.hasDisplayName()) {
-                    itemName = stackMeta.getDisplayName();
-                    if (!ItemUtil.isAuthenticCustomItem(itemName)) {
-                        throw new CommandException(NOT_AVAILIBLE);
-                    }
-                    itemName = ChatColor.stripColor(itemName);
-                }
-
-                if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
-                    if (stack.getAmount() > 1) {
-                        throw new CommandException(NOT_AVAILIBLE);
-                    }
-                    percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
-                }
-            }
-
-            if (!hasItemOfName(itemName)) {
-                ItemType type = ItemType.lookup(itemName);
-                if (type == null) {
+                Optional<String> optItemName = computeItemName(stack);
+                if (optItemName.isPresent()) {
+                    itemName = optItemName.get();
+                } else {
                     throw new CommandException(NOT_AVAILIBLE);
                 }
-                itemName = type.getName();
+
+                Optional<Double> optPercentageSale = computePercentageSale(stack);
+                if (optPercentageSale.isPresent()) {
+                    percentageSale = optPercentageSale.get();
+                } else {
+                    throw new CommandException(NOT_AVAILIBLE);
+                }
             }
 
             ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
-
             if (itemPricePair == null) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
@@ -527,14 +395,14 @@ public class AdminStoreComponent extends BukkitComponent {
                 flags = "i:u:p:s", min = 0, max = 0)
         @CommandPermissions("aurora.admin.adminstore.log")
         public void logCmd(CommandContext args, CommandSender sender) throws CommandException {
-
             String item = args.getFlag('i', null);
-            if (item != null && !hasItemOfName(item)) {
-                ItemType type = ItemType.lookup(item);
-                if (type == null) {
+            if (item != null) {
+                Optional<String> optItemName = matchItemFromNameOrId(item);
+                if (optItemName.isPresent()) {
+                    item = optItemName.get();
+                } else {
                     throw new CommandException("No item by that name was found.");
                 }
-                item = type.getName();
             }
             String player = args.getFlag('u', null);
 
@@ -560,21 +428,22 @@ public class AdminStoreComponent extends BukkitComponent {
                 flags = "", min = 1, max = 1)
         @CommandPermissions("aurora.admin.adminstore.scale")
         public void scaleCmd(CommandContext args, CommandSender sender) throws CommandException {
-
             double factor = args.getDouble(0);
 
             if (factor == 0) {
                 throw new CommandException("Cannot scale by 0.");
             }
 
-            List<ItemPricePair> items = itemDatabase.getItemList();
-            for (ItemPricePair item : items) {
-                itemDatabase.addItem(sender.getName(), item.getName(),
-                        item.getPrice() * factor, !item.isBuyable(), !item.isSellable());
-            }
-            itemDatabase.save();
+            server.getScheduler().runTaskAsynchronously(inst, () -> {
+                List<ItemPricePair> items = itemDatabase.getItemList();
+                for (ItemPricePair item : items) {
+                    itemDatabase.addItem(sender.getName(), item.getName(),
+                      item.getPrice() * factor, !item.isBuyable(), !item.isSellable());
+                }
+                itemDatabase.save();
 
-            ChatUtil.sendNotice(sender, "Market Scaled by: " + factor + ".");
+                ChatUtil.sendNotice(sender, "Market Scaled by: " + factor + ".");
+            });
         }
 
         @Command(aliases = {"add"},
@@ -582,16 +451,11 @@ public class AdminStoreComponent extends BukkitComponent {
                 flags = "bsp:", min = 1)
         @CommandPermissions("aurora.admin.adminstore.add")
         public void addCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            String itemName = args.getJoinedStrings(0);
-
-            if (!hasItemOfName(itemName)) {
-                ItemType type = ItemType.lookup(itemName);
-                if (type == null) {
-                    throw new CommandException("No item by that name was found.");
-                }
-                itemName = type.getName();
+            Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
+            if (!optItemName.isPresent()) {
+                throw new CommandException("No item by that name was found.");
             }
+            String itemName = optItemName.get();
 
             boolean disableBuy = args.hasFlag('b');
             boolean disableSell = args.hasFlag('s');
@@ -621,17 +485,12 @@ public class AdminStoreComponent extends BukkitComponent {
                 flags = "", min = 1)
         @CommandPermissions("aurora.admin.adminstore.remove")
         public void removeCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            String itemName = args.getJoinedStrings(0);
-
-            if (!hasItemOfName(itemName)) {
-                ItemType type = ItemType.lookup(itemName);
-                if (type == null) {
-                    throw new CommandException(NOT_AVAILIBLE);
-                }
-                itemName = type.getName();
+            Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
+            if (!optItemName.isPresent()) {
+                throw new CommandException(NOT_AVAILIBLE);
             }
 
+            String itemName = optItemName.get();
             if (itemDatabase.getItem(itemName) == null) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
@@ -700,16 +559,85 @@ public class AdminStoreComponent extends BukkitComponent {
         ignored.add(BlockID.BEDROCK);
     }
 
-    public static double priceCheck(int blockID, int data) {
+    private static boolean verifyValidItemStack(ItemStack stack) {
+        return stack != null && stack.getType() != Material.AIR;
+    }
 
-        if (ignored.contains(blockID) || EnvironmentUtil.isValuableBlock(blockID)) return 0;
+    private static boolean verifyValidCustomItem(ItemMeta stackMeta) {
+        String itemName = stackMeta.getDisplayName();
+        return ItemUtil.isAuthenticCustomItem(itemName);
+    }
+
+    private static boolean verifyValidCustomItem(ItemStack stack) {
+        ItemMeta stackMeta = stack.getItemMeta();
+        if (!stackMeta.hasDisplayName()) {
+            return true;
+        }
+
+        return verifyValidCustomItem(stackMeta);
+    }
+
+    private static void verifyValidItemCommand(ItemStack stack) throws CommandException {
+        if (!verifyValidItemStack(stack)) {
+            throw new CommandException("That's not a valid item!");
+        }
+
+        if (!verifyValidCustomItem(stack)) {
+            throw new CommandException("Renamed items are unsupported!");
+        }
+
+    }
+
+    private static Optional<String> matchItemFromNameOrId(String itemName) {
+        // If this isn't a custom item, return that.
+        if (hasItemOfName(itemName)) {
+            return Optional.of(itemName);
+        }
+
+        // Otherwise try to find a builtin item.
+        ItemType type = ItemType.lookup(itemName);
+        if (type == null) {
+            // Return no result, we found no custom item, and no builtin item.
+            return Optional.empty();
+        }
+        return Optional.of(type.getName());
+    }
+
+    private static Optional<String> computeItemName(ItemStack stack) {
+        String itemName = stack.getTypeId() + ":" + stack.getDurability();
+
+        // Check for custom item name overrides.
+        ItemMeta stackMeta = stack.getItemMeta();
+        if (stackMeta.hasDisplayName()) {
+            if (verifyValidCustomItem(stackMeta)) {
+                itemName = ChatColor.stripColor(stackMeta.getDisplayName());
+            } else {
+                // Return no result, we found an invalid custom item.
+                return Optional.empty();
+            }
+        }
+
+        return matchItemFromNameOrId(itemName);
+    }
+
+    private static Optional<Double> computePercentageSale(ItemStack stack) {
+        double percentageSale = 1;
+        if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
+            if (stack.getAmount() > 1) {
+                return Optional.empty();
+            }
+            percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
+        }
+        return Optional.of(percentageSale);
+    }
+
+    public static double priceCheck(int blockID, int data) {
+        if (ignored.contains(blockID)) return 0;
 
         ItemType type = ItemType.fromNumberic(blockID, data);
-
         if (type == null) return 0;
 
         ItemPricePair itemPricePair = itemDatabase.getItem(type.getName());
-
         if (itemPricePair == null) return 0;
 
         return itemPricePair.getPrice();
@@ -726,41 +654,24 @@ public class AdminStoreComponent extends BukkitComponent {
     }
 
     public static double priceCheck(ItemStack stack, boolean percentDamage) {
-        String itemName;
-        double percentageSale = 1;
-
-        if (stack == null || stack.getTypeId() == 0) {
+        if (!verifyValidItemStack(stack)) {
             return -1;
         }
 
-
-        itemName = stack.getTypeId() + ":" + stack.getDurability();
-        ItemMeta stackMeta = stack.getItemMeta();
-        if (stackMeta.hasDisplayName()) {
-            itemName = stackMeta.getDisplayName();
-            if (!ItemUtil.isAuthenticCustomItem(itemName)) {
-                return -1;
-            }
-            itemName = ChatColor.stripColor(itemName);
+        Optional<Double> optPercentageSale = percentDamage ? computePercentageSale(stack) : Optional.of(1D);
+        if (!optPercentageSale.isPresent()) {
+            return -1;
         }
 
-        if (percentDamage && stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
-            if (stack.getAmount() > 1) {
-                return -1;
-            }
-            percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
+        Optional<String> optItemName = computeItemName(stack);
+        if (!optItemName.isPresent()) {
+            return -1;
         }
 
-        if (!hasItemOfName(itemName)) {
-            ItemType type = ItemType.lookup(itemName);
-            if (type == null) {
-                return -1;
-            }
-            itemName = type.getName();
-        }
+        final double percentageSale = optPercentageSale.get();
+        final String itemName = optItemName.get();
 
         ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
-
         if (itemPricePair == null) {
             return -1;
         }

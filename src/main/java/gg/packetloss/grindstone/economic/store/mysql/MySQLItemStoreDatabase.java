@@ -15,10 +15,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     private static final String columns = "`name`, `price`, `buyable`, `sellable`";
@@ -125,6 +123,49 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
             e.printStackTrace();
         }
         return null;
+    }
+
+    // FIXME: This should be in a more general place.
+
+    private String preparePlaceHolders(int length) {
+        return String.join(",", Collections.nCopies(length, "?"));
+    }
+
+    private void setValues(PreparedStatement preparedStatement, List<String> values) throws SQLException {
+        for (int i = 0; i < values.size(); i++) {
+            preparedStatement.setString(i + 1, values.get(i));
+        }
+    }
+
+    @Override
+    public Map<String, ItemPricePair> getItems(Collection<String> names) {
+        Map<String, ItemPricePair> nameItemMapping = new HashMap<>();
+
+        try (Connection connection  = MySQLHandle.getConnection()) {
+            String sql = "SELECT " + columns + " FROM `market-items` WHERE `name` IN (" + preparePlaceHolders(names.size()) + ")";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                List<String> uppercaseNames = names.stream().map(String::toUpperCase).collect(Collectors.toList());
+                setValues(statement, uppercaseNames);
+
+                try (ResultSet results = statement.executeQuery()) {
+                    while (results.next()) {
+                        nameItemMapping.put(
+                            results.getString(1).toUpperCase(),
+                            new ItemPricePair(
+                                results.getString(1),
+                                results.getDouble(2),
+                                !results.getBoolean(3),
+                                !results.getBoolean(4)
+                            )
+                        );
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return nameItemMapping;
     }
 
     @Override

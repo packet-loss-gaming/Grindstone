@@ -6,7 +6,9 @@
 
 package gg.packetloss.grindstone.economic.store;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface ItemStoreDatabase {
 
@@ -40,9 +42,16 @@ public interface ItemStoreDatabase {
     public ItemPricePair getItem(String name);
 
     /**
+     * Gets the items that were requested.
+     *
+     * @param names the names of the items to lookup
+     * @return a mapping of names to ItemPricePairs
+     */
+    public Map<String, ItemPricePair> getItems(Collection<String> names);
+
+    /**
      * Returns a list of items
      *
-     * @param filter the item name must start with this to be returned
      * @return A list of items
      */
     public List<ItemPricePair> getItemList();

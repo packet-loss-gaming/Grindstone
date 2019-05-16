@@ -6,12 +6,15 @@
 
 package gg.packetloss.grindstone.util.item;
 
+import org.bukkit.Material;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 
 public class InventoryUtil {
 
@@ -88,5 +91,59 @@ public class InventoryUtil {
 
     public static Set<ClickType> getMoveClicks() {
         return Collections.unmodifiableSet(moveClicks);
+    }
+
+    public static class InventoryView {
+        private final int min;
+        private final int max;
+        private ItemStack filter;
+
+        public InventoryView(int min, int max, ItemStack filter) {
+            this.min = min;
+            this.max = max;
+
+            if (filter != null) {
+                this.filter = filter.clone();
+                if (!ItemType.usesDamageValue(this.filter.getTypeId())) {
+                    this.filter.setDurability((short) 0);
+                }
+            }
+        }
+
+        public boolean hasFilter() {
+            return filter != null;
+        }
+
+        public boolean isSingleItem() {
+            return max - min == 1;
+        }
+
+        public boolean filterItem(ItemStack item) {
+            if (item == null || item.getType() == Material.AIR) {
+                return true;
+            }
+
+            if (filter != null) {
+                ItemStack testStack = item.clone();
+                if (!ItemType.usesDamageValue(testStack.getTypeId())) {
+                    testStack.setDurability((short) 0);
+                }
+
+                if (!filter.isSimilar(testStack)) return true;
+            }
+
+            return false;
+        }
+
+        public void operateOnInventory(ItemStack[] items, Function<ItemStack, ItemStack> remapper) {
+            for (int i = min; i < max; ++i) {
+                ItemStack stack = items[i];
+
+                if (filterItem(stack))
+                    continue;
+
+                items[i] = remapper.apply(stack);
+            }
+        }
     }
 }
