@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.util.player;
 
 import com.google.common.collect.Lists;
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
@@ -16,6 +17,9 @@ import org.bukkit.entity.Player;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class GeneralPlayerUtil {
 
@@ -102,5 +106,11 @@ public class GeneralPlayerUtil {
             return true;
         }
         return false;
+    }
+
+    public static Set<UUID> getOnlinePlayerUUIDs() {
+        return CommandBook.server().getOnlinePlayers().stream()
+          .map(Player::getUniqueId)
+          .collect(Collectors.toSet());
     }
 }
