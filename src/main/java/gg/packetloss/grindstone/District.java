@@ -7,6 +7,8 @@
 package gg.packetloss.grindstone;
 
 
+import java.util.Optional;
+
 public enum District {
 
     GLOBAL("City"),
@@ -23,5 +25,13 @@ public enum District {
 
     public String toProperName() {
         return properName;
+    }
+
+    public static Optional<District> fromName(String name) {
+        try {
+            return Optional.of(valueOf(name.replace(' ', '_').replace('-', '_').toUpperCase()));
+        } catch (IllegalArgumentException ex) {
+            return Optional.empty();
+        }
     }
 }

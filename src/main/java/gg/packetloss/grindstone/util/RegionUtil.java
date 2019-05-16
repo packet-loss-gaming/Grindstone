@@ -6,9 +6,13 @@
 
 package gg.packetloss.grindstone.util;
 
+import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BaseBlock;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Polygonal2DRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -21,10 +25,29 @@ import gg.packetloss.grindstone.economic.store.MarketComponent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RegionUtil {
+    public static Optional<Region> convert(ProtectedRegion region) {
+        if (region instanceof ProtectedCuboidRegion) {
+            ProtectedCuboidRegion cuboid = (ProtectedCuboidRegion)region;
+            Vector pt1 = cuboid.getMinimumPoint();
+            Vector pt2 = cuboid.getMaximumPoint();
+            return Optional.of(new CuboidRegion(pt1, pt2));
+        } else if (region instanceof ProtectedPolygonalRegion) {
+            ProtectedPolygonalRegion poly2d = (ProtectedPolygonalRegion)region;
+            return Optional.of(new Polygonal2DRegion(
+                    null, poly2d.getPoints(),
+                    poly2d.getMinimumPoint().getBlockY(),
+                    poly2d.getMaximumPoint().getBlockY())
+            );
+        } else {
+            return Optional.empty();
+        }
+    }
 
     public static Stream<ProtectedRegion> getHouseStream(LocalPlayer player, RegionManager manager) {
         return manager.getRegions().entrySet().stream()
@@ -37,18 +60,22 @@ public class RegionUtil {
         return getHouseStream(player, manager).collect(Collectors.toList());
     }
 
-    public static int sumChunks(LocalPlayer player, RegionManager manager) {
-        return sumChunks(getHouseStream(player, manager));
+    public static Optional<Integer> sumChunks(List<ProtectedRegion> regions) {
+        int total = 0;
+
+        for (ProtectedRegion house : regions) {
+            Optional<Integer> chunkCount = countChunks(house);
+            if (!chunkCount.isPresent()) {
+                return Optional.empty();
+            }
+            total += chunkCount.get();
+        }
+
+        return Optional.of(total);
     }
 
-    public static int sumChunks(Stream<ProtectedRegion> regionStream) {
-        return regionStream.mapToInt(RegionUtil::countChunks).sum();
-    }
-
-    public static int countChunks(ProtectedRegion region) {
-        double size = -1;
-        double length, width;
-        if (region instanceof ProtectedCuboidRegion) {
+    public static Optional<Integer> countChunks(Region region) {
+        if (region instanceof CuboidRegion) {
             Vector min = region.getMinimumPoint();
             Vector max = region.getMaximumPoint();
 
@@ -57,25 +84,32 @@ public class RegionUtil {
             int maxX = max.getBlockX();
             int maxZ = max.getBlockZ();
 
-            length = (maxX - minX) + 1;
-            width = (maxZ - minZ) + 1;
+            int length = (maxX - minX) + 1;
+            int width = (maxZ - minZ) + 1;
 
-            size = (length * width) / (16 * 16);
+            return Optional.of((length * width) / (16 * 16));
         }
-        return (int) Math.ceil(size);
+        return Optional.empty();
+    }
+
+    public static Optional<Integer> countChunks(ProtectedRegion region) {
+        Optional<Region> convertedRegion = convert(region);
+        if (convertedRegion.isPresent()) {
+            return countChunks(convertedRegion.get());
+        }
+
+        return Optional.empty();
     }
 
     public static double calcChunkPrice(double chunkCount) {
         return Math.pow(chunkCount, 4) * (chunkCount / 2);
     }
 
-    public static double calcBlockPrice(ProtectedRegion region, World world) {
-
+    public static CompletableFuture<Optional<Double>> calcBlockPrice(Region region, World world) {
         Map<BaseBlock, Integer> blockMapping = new HashMap<>();
 
-        double bp = 0;
         //noinspection ConstantConditions
-        if (region instanceof ProtectedCuboidRegion) {
+        if (region instanceof CuboidRegion) {
 
             // Doing this for speed
             Vector min = region.getMinimumPoint();
@@ -104,34 +138,64 @@ public class RegionUtil {
                 }
             }
 
-            for (Map.Entry<BaseBlock, Integer> entry : blockMapping.entrySet()) {
-                BaseBlock b = entry.getKey();
-                bp += MarketComponent.priceCheck(
-                        b.getId(),
-                        b.getData()
-                ) * entry.getValue();
-            }
+            CompletableFuture<Optional<Double>> future = new CompletableFuture<>();
+
+            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+                double bp = 0;
+
+                for (Map.Entry<BaseBlock, Integer> entry : blockMapping.entrySet()) {
+                    BaseBlock b = entry.getKey();
+                    bp += MarketComponent.priceCheck(
+                      b.getId(),
+                      b.getData()
+                    ) * entry.getValue();
+                }
+
+                future.complete(Optional.of(bp));
+            });
+
+            return future;
         } else {
-            bp = -1;
+            return CompletableFuture.completedFuture(Optional.empty());
         }
-        return bp;
     }
 
-    // TODO Some more optimization
-    public static double getPrice(ProtectedRegion region, World world, boolean commission) {
-
-        double size = countChunks(region);
-
-        if (size == -1) {
-            return -1;
+    public static CompletableFuture<Optional<Double>> calcBlockPrice(ProtectedRegion region, World world) {
+        Optional<Region> convertedRegion = convert(region);
+        if (convertedRegion.isPresent()) {
+            return calcBlockPrice(convertedRegion.get(), world);
         }
 
-        double total = calcChunkPrice(size) + calcBlockPrice(region, world);
-        if (commission) {
-            total *= 1.1;
+        return CompletableFuture.completedFuture(Optional.empty());
+    }
+
+    public static CompletableFuture<Optional<Double>> getPrice(Region region, World world, boolean commission) {
+        CompletableFuture<Optional<Double>> future = new CompletableFuture<>();
+
+        Optional<Integer> size = countChunks(region);
+        if (!size.isPresent()) {
+            future.complete(Optional.empty());
+            return future;
         }
 
-        return total;
+        CompletableFuture<Optional<Double>> blockPriceFuture = calcBlockPrice(region, world);
+        blockPriceFuture.thenAccept((optBlockPrice) -> {
+            if (!optBlockPrice.isPresent()) {
+                future.complete(Optional.empty());
+                return;
+            }
+
+            double chunkPrice = calcChunkPrice(size.get());
+            double blockPrice = optBlockPrice.get();
+
+            double total = chunkPrice + blockPrice;
+            if (commission) {
+                total *= 1.1;
+            }
+            future.complete(Optional.of(total));
+        });
+
+        return future;
     }
 
     public static boolean renameRegion(RegionManager manager, String oldName, String newName, boolean cleanPersonal)
