@@ -46,7 +46,6 @@ public class GeneralPlayerUtil {
      * @param player The target player
      * @return true - if player has flight from gamemode
      */
-
     public static boolean hasFlyingGamemode(Player player) {
         return isFlyingGamemode(player.getGameMode());
     }
