@@ -28,8 +28,8 @@ import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.homes.CSVHomeDatabase;
 import gg.packetloss.grindstone.homes.EnderPearlHomesComponent;
 import gg.packetloss.grindstone.homes.HomeDatabase;
+import gg.packetloss.grindstone.homes.HomeManager;
 import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.*;
@@ -48,7 +48,6 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Legit Core", desc = "Operate the legit world.")
 @Depend(components = {AdminComponent.class, SessionComponent.class, EnderPearlHomesComponent.class})
 public class LegitCoreComponent extends BukkitComponent implements Listener {
-
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
@@ -64,11 +63,10 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     private final File normalFileDir = new File(inst.getDataFolder().getPath() + "/legit/main");
 
     private LocalConfiguration config;
-    private HomeDatabase homeDatabase;
+    private HomeManager homeManager;
 
     @Override
     public void enable() {
-
         config = configure(new LocalConfiguration());
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -77,23 +75,20 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         File homeDirectory = new File(inst.getDataFolder().getPath() + "/home");
         if (!homeDirectory.exists()) homeDirectory.mkdir();
 
-        homeDatabase = new CSVHomeDatabase("legithomes", homeDirectory);
+        HomeDatabase homeDatabase = new CSVHomeDatabase("legithomes", homeDirectory);
         homeDatabase.load();
+
+        homeManager = new HomeManager(homeDatabase);
     }
 
     @Override
     public void reload() {
-
         super.reload();
         configure(config);
     }
 
     public Location getBedLocation(Player player) {
-        if (homeDatabase.houseExist(player.getName())) {
-            return LocationUtil.findFreePosition(homeDatabase.getHouse(player.getName()).getLocation());
-        }
-
-        return null;
+        return homeManager.getPlayerHome(player).orElse(null);
     }
 
     public Location getRespawnLocation(Player player) {
@@ -108,7 +103,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     }
 
     private static class LocalConfiguration extends ConfigurationBase {
-
         @Setting("city-world")
         public String cityWorld = "City";
         @Setting("wilderness-world")
@@ -116,7 +110,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     }
 
     public class Commands {
-
         @Command(aliases = {"legit", "seemslegit"}, desc = "Enter Legit World",
                 flags = "", min = 0, max = 0)
         @CommandPermissions({"multiverse.access.Legit", "multiverse.access.Legit_nether"})
@@ -130,7 +123,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPrayerApplication(PrayerApplicationEvent event) {
-
         World world = event.getPlayer().getWorld();
 
         if (world.getName().contains(config.legitWorld) && event.getCause().getEffect().getType().isHoly()) {
@@ -141,7 +133,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onEggDrop(EggDropEvent event) {
-
         World world = event.getLocation().getWorld();
 
         if (world.getName().contains(config.legitWorld)) {
@@ -152,7 +143,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerPortal(PlayerPortalEvent event) {
-
         TravelAgent agent = event.getPortalTravelAgent();
 
         final Player player = event.getPlayer();
@@ -201,7 +191,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent event) {
-
         Location from = event.getFrom();
         Location to = event.getTo();
 
@@ -219,7 +208,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onWorldChange(PlayerChangedWorldEvent event) {
-
         Player player = event.getPlayer();
 
         check(player, event.getFrom().getName(), player.getWorld().getName());
@@ -227,7 +215,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onHomeTeleport(HomeTeleportEvent event) {
-
         Player player = event.getPlayer();
 
         if (player.getWorld().getName().contains(config.legitWorld)) {
@@ -238,7 +225,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onApocalypseBedSpawn(ApocalypseBedSpawnEvent event) {
-
         Player player = event.getPlayer();
 
         if (player.getWorld().getName().contains(config.legitWorld) && getBedLocation(player) != null) {
@@ -249,29 +235,16 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler
     public void onPlayerBedEnter(PlayerBedEnterEvent event) {
-
         Player player = event.getPlayer();
         Location bedLoc = event.getBed().getLocation();
 
         if (player == null || bedLoc == null) return;
         if (!player.getWorld().getName().toLowerCase().contains("legit")) return;
 
-        boolean overWritten = false;
-
-        if (homeDatabase.houseExist(player.getName())) {
-            homeDatabase.deleteHouse(player.getName());
-            overWritten = homeDatabase.save();
-        }
-
-        homeDatabase.saveHouse(player, bedLoc.getWorld().getName(), bedLoc.getBlockX(), bedLoc.getBlockY(), bedLoc.getBlockZ());
-        if (homeDatabase.save()) {
-            if (!overWritten) ChatUtil.sendNotice(player, "Your bed location has been set.");
-            else ChatUtil.sendNotice(player, "Your bed location has been changed.");
-        }
+        homeManager.setPlayerHomeAndNotify(player, bedLoc);
     }
 
     public void check(final Player player, String from, String to) {
-
         boolean result = false;
         boolean fromMain = false;
         if (to.contains(config.legitWorld) && !from.contains(config.legitWorld)) {
@@ -344,7 +317,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler
     public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
-
         Player player = event.getPlayer();
 
         if (adminComponent.isAdmin(player)) return;
@@ -352,7 +324,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     }
 
     public Location getTo(Player player, boolean fromLegit) {
-
         LegitSession session = sessions.getSession(LegitSession.class, player);
         if (fromLegit) {
             if (session.isSet()) {
@@ -378,7 +349,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     }
 
     private static class LegitSession extends PersistentSession {
-
         private static final long MAX_AGE = TimeUnit.DAYS.toMillis(3);
 
         @Setting("is-from-set")
@@ -415,17 +385,14 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         }
 
         public boolean isSet() {
-
             return isFromSet && isLegitSet;
         }
 
         public Location getFromIndex() {
-
             return new Location(Bukkit.getWorld(from_world), from_x, from_y, from_z, from_yaw, from_pitch);
         }
 
         public void setFromIndex(Location legitIndex) {
-
             from_world = legitIndex.getWorld().getName();
             from_x = legitIndex.getX();
             from_y = legitIndex.getY();
@@ -437,12 +404,10 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         }
 
         public Location getLegitIndex() {
-
             return new Location(Bukkit.getWorld("Legit"), legit_x, legit_y, legit_z, legit_yaw, legit_pitch);
         }
 
         public void setLegitIndex(Location legitIndex) {
-
             legit_x = legitIndex.getX();
             legit_y = legitIndex.getY();
             legit_z = legitIndex.getZ();

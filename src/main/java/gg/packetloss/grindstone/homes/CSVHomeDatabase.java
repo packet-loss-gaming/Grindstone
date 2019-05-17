@@ -13,10 +13,7 @@ import org.bukkit.entity.Player;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class CSVHomeDatabase implements HomeDatabase {
@@ -25,12 +22,12 @@ public class CSVHomeDatabase implements HomeDatabase {
     protected final File homeFile;
 
     /**
-     * Used to lookup inmates by name
+     * Used to lookup homes by name.
      */
-    protected Map<String, Home> nameHome = new HashMap<>();
+    protected Map<UUID, Home> playerIDHome = new HashMap<>();
 
     /**
-     * A set of all inmates
+     * A set of all homes.
      */
     protected final Set<Home> homes = new HashSet<>();
 
@@ -38,7 +35,6 @@ public class CSVHomeDatabase implements HomeDatabase {
             new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
     public CSVHomeDatabase(String name, File storageDir) {
-
         homeFile = new File(storageDir, name + ".csv");
     }
 
@@ -60,17 +56,17 @@ public class CSVHomeDatabase implements HomeDatabase {
                     continue;
                 }
                 try {
-                    String name = line[0].toLowerCase();
+                    String playerIDStr = line[0];
+                    UUID playerID = UUID.fromString(playerIDStr);
+
                     String world = line[1];
                     int x = Integer.parseInt(line[2]);
                     int y = Integer.parseInt(line[3]);
                     int z = Integer.parseInt(line[4]);
 
-                    if ("".equals(name) || "null".equals(name)) name = null;
+                    Home home = new Home(playerID, world, x, y, z);
 
-                    Home home = new Home(name, world, x, y, z);
-
-                    if (name != null) nameHome.put(name, home);
+                    playerIDHome.put(playerID, home);
                     homes.add(home);
                 } catch (NumberFormatException e) {
                     log.warning("Incorrect int found in home entry!");
@@ -81,7 +77,7 @@ public class CSVHomeDatabase implements HomeDatabase {
             log.info(homes.size() + " houses loaded.");
         } catch (FileNotFoundException ignored) {
         } catch (IOException e) {
-            nameHome = new HashMap<>();
+            playerIDHome = new HashMap<>();
             log.warning("Failed to load " + homeFile.getAbsolutePath()
                     + ": " + e.getMessage());
             successful = false;
@@ -109,7 +105,7 @@ public class CSVHomeDatabase implements HomeDatabase {
 
             for (Home home : homes) {
                 line = new String[]{
-                        home.getPlayerName().toLowerCase(),
+                        home.getPlayerID().toString(),
                         home.getWorldName(),
                         String.valueOf(home.getX()),
                         String.valueOf(home.getY()),
@@ -135,27 +131,26 @@ public class CSVHomeDatabase implements HomeDatabase {
     }
 
     @Override
-    public boolean houseExist(String name) {
-
-        return nameHome.containsKey(name.toLowerCase());
+    public boolean houseExist(UUID playerID) {
+        return playerIDHome.containsKey(playerID);
     }
 
     @Override
     public void saveHouse(Player player, String world, int x, int y, int z) {
+        // Remove the old home if it exists.
+        Home oldHome = playerIDHome.remove(player.getUniqueId());
+        if (oldHome != null) {
+            homes.remove(oldHome);
+        }
 
-        Home home = new Home(player.getName().toLowerCase(), world, x, y, z);
-        nameHome.put(player.getName().toLowerCase(), home);
+        Home home = new Home(player.getUniqueId(), world, x, y, z);
+        playerIDHome.put(player.getUniqueId(), home);
         homes.add(home);
     }
 
     @Override
-    public boolean deleteHouse(String player) {
-
-        Home home = null;
-        if (nameHome.containsKey(player.toLowerCase())) {
-            home = nameHome.remove(player.toLowerCase());
-        }
-
+    public boolean deleteHouse(UUID playerID) {
+        Home home = playerIDHome.remove(playerID);
         if (home != null) {
             homes.remove(home);
             return true;
@@ -164,8 +159,7 @@ public class CSVHomeDatabase implements HomeDatabase {
     }
 
     @Override
-    public Home getHouse(String name) {
-
-        return nameHome.containsKey(name.toLowerCase()) ? nameHome.get(name.toLowerCase()) : null;
+    public Home getHouse(UUID playerID) {
+        return playerIDHome.get(playerID);
     }
 }

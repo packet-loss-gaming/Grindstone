@@ -8,6 +8,8 @@ package gg.packetloss.grindstone.homes;
 
 import org.bukkit.entity.Player;
 
+import java.util.UUID;
+
 
 public interface HomeDatabase {
 
@@ -28,34 +30,34 @@ public interface HomeDatabase {
     /**
      * Checks if a player has a house
      *
-     * @param name The name to check
+     * @param playerID The playerID who's house to find
      * @return Whether the player has a house
      */
-    public boolean houseExist(String name);
+    public boolean houseExist(UUID playerID);
 
     /**
-     * Jails a player
+     * Add a house for a player
      *
-     * @param player
-     * @param world
-     * @param x
-     * @param y
-     * @param z
+     * @param player the player who's house to add
+     * @param world the world the house is in
+     * @param x the house's x loc
+     * @param y the house's y loc
+     * @param z the house's z loc
      */
     public void saveHouse(Player player, String world, int x, int y, int z);
 
     /**
-     * Unjails a player by name
+     * Returns a player's house
      *
-     * @param player
+     * @param playerID The playerID who's house to delete
      */
-    public boolean deleteHouse(String player);
+    public boolean deleteHouse(UUID playerID);
 
     /**
      * Returns the home with the given name
      *
-     * @param name The name given to the ban.
+     * @param playerID The playerID who's house to find
      * @return The applicable player
      */
-    public Home getHouse(String name);
+    public Home getHouse(UUID playerID);
 }
