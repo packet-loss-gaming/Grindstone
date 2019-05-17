@@ -10,7 +10,7 @@ import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import org.bukkit.GameMode;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -68,7 +68,7 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
                     ChatUtil.sendError(player, "Your inventory is too full!");
                     return;
                 }
-                if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET) && player.getGameMode() != GameMode.CREATIVE) {
+                if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET) && !GeneralPlayerUtil.hasFlyingGamemode(player)) {
                     if (player.getAllowFlight()) {
                         ChatUtil.sendNotice(player, "The power of the bucket fades.");
                     }
