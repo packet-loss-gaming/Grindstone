@@ -32,10 +32,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -245,7 +242,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
             if (attackMob.isInstance(ent) && ChanceUtil.getChance(5)) {
                 event.setDroppedExp(event.getDroppedExp() * 3);
-                event.getDrops().add(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(8)));
+                event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandomNTimes(16, 7)));
             } else event.setDroppedExp(event.getDroppedExp() * 2);
         }
     }
@@ -336,11 +333,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     public int getAmplification() {
-        int amplification = config.amplificationNoise;
-        for (int i = 0; i < config.amplificationDescale; ++i) {
-            amplification = ChanceUtil.getRandom(amplification);
-        }
-        return amplification;
+        return ChanceUtil.getRandomNTimes(config.amplificationNoise, config.amplificationDescale);
     }
 
     public void strikeSpawn(Location strikeLocation) {
@@ -455,11 +448,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             equipment.setItemInHand(sword);
         }
 
-        equipment.setItemInHandDropChance(0.1F);
-        equipment.setHelmetDropChance(0.1F);
-        equipment.setChestplateDropChance(0.1F);
-        equipment.setLeggingsDropChance(0.1F);
-        equipment.setBootsDropChance(0.1F);
+        equipment.setItemInHandDropChance(0.005F);
+        equipment.setHelmetDropChance(0.005F);
+        equipment.setChestplateDropChance(0.005F);
+        equipment.setLeggingsDropChance(0.005F);
+        equipment.setBootsDropChance(0.005F);
     }
 
     private static class ZombieSpawnConfig {

@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.bosses;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.skelril.OSBL.bukkit.BukkitBossDeclaration;
 import com.skelril.OSBL.bukkit.entity.BukkitBoss;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
@@ -21,6 +20,7 @@ import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
@@ -79,8 +79,8 @@ public class ThunderZombie {
             public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
-                for (int i = 0; i < ChanceUtil.getRangedRandom(12, 150); i++) {
-                    target.getWorld().dropItem(target, new ItemStack(ItemID.GOLD_BAR));
+                for (int i = ChanceUtil.getRangedRandom(12, 150); i > 0; --i) {
+                    target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT));
                 }
                 return null;
             }
