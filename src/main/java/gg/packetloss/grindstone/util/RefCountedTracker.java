@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.util.player;
+package gg.packetloss.grindstone.util;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.util.player;
 
 import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.grindstone.util.RefCountedTracker;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
