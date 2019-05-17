@@ -300,7 +300,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                     return;
                 }
 
-                // FIXME: This should be in its own component.
+                // FIXME: This should be in the City Core component.
                 // City Code
                 if (from.getWorld().equals(city)) {
                     // Add 1 block to the 1 position for the city bank, for whatever
