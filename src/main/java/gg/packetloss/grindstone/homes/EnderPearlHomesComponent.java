@@ -55,7 +55,7 @@ public class EnderPearlHomesComponent extends BukkitComponent implements Listene
     }
 
     public Location getBedLocation(Player player) {
-        return homeManager.getPlayerHome(player).orElse(null);
+        return homeManager.getSafePlayerHome(player).orElse(null);
     }
 
     public Location getRespawnLocation(Player player) {

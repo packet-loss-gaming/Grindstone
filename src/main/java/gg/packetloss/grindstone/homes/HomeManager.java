@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.homes;
 
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.LocationUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -22,6 +23,14 @@ public class HomeManager {
     public Optional<Location> getPlayerHome(Player player) {
         Home home = homeDatabase.getHouse(player.getUniqueId());
         return home != null ? Optional.of(home.getLocation()) : Optional.empty();
+    }
+
+    public Optional<Location> getSafePlayerHome(Player player) {
+        Optional<Location> optPlayerHome = getPlayerHome(player);
+        if (optPlayerHome.isPresent()) {
+            return Optional.ofNullable(LocationUtil.findFreePosition(optPlayerHome.get()));
+        }
+        return Optional.empty();
     }
 
     public void setPlayerHome(Player player, Location loc) {
