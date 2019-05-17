@@ -11,17 +11,23 @@ import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
+import gg.packetloss.grindstone.util.player.FallDamageDeathBlocker;
 import gg.packetloss.grindstone.util.player.PlayerState;
+import gg.packetloss.grindstone.util.player.RefCountedTracker;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public class SandArenaListener extends AreaListener<SandArena> {
     public SandArenaListener(SandArena parent) {
@@ -52,6 +58,26 @@ public class SandArenaListener extends AreaListener<SandArena> {
 
         if (parent.contains(event.getPlayer())) {
             event.setCancelled(true);
+        }
+    }
+
+    private RefCountedTracker<UUID> protectedPlayers = new RefCountedTracker<>();
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDamage(EntityDamageEvent event) {
+        Entity injuredEntity = event.getEntity();
+        if (!(injuredEntity instanceof Player)) {
+            return;
+        }
+
+        Player defender = (Player) injuredEntity;
+        if (event.getCause() == DamageCause.FALL && protectedPlayers.contains(defender.getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (parent.contains(defender)) {
+            FallDamageDeathBlocker.protectPlayer(defender, protectedPlayers);
         }
     }
 
