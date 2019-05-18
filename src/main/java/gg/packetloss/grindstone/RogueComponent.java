@@ -57,6 +57,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -389,6 +390,35 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
+    private void metabolizeBadPotions(Player player) {
+        List<PotionEffectType> affectedTypes = Arrays.asList(
+          PotionEffectType.SLOW, PotionEffectType.SLOW_DIGGING, PotionEffectType.BLINDNESS,
+          PotionEffectType.POISON, PotionEffectType.CONFUSION, PotionEffectType.WEAKNESS,
+          PotionEffectType.WITHER
+        );
+
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            if (!affectedTypes.contains(effect.getType())) {
+                continue;
+            }
+
+            int newDuration = (int) (effect.getDuration() * ChanceUtil.getRangedRandom(.5, 1.0));
+            if (newDuration == 0) {
+                player.removePotionEffect(effect.getType());
+                continue;
+            }
+
+            PotionEffect newEffect = new PotionEffect(
+              effect.getType(),
+              newDuration,
+              effect.getAmplifier(),
+              effect.isAmbient(),
+              effect.hasParticles()
+            );
+            player.addPotionEffect(newEffect, true);
+        }
+    }
+
     @Override
     public void run() {
 
@@ -409,6 +439,10 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
             if (!inst.hasPermission(player, "aurora.rogue")) {
                 deroguePlayer(player);
                 continue;
+            }
+
+            if (ChanceUtil.getChance(10)) {
+                metabolizeBadPotions(player);
             }
 
             Entity vehicle = player.getVehicle();
