@@ -368,8 +368,13 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (isRogue(player)) {
             SpecialAttack attack = event.getSpec();
 
-            if (event.getContext().equals(SpecType.MELEE) && ChanceUtil.getChance(14)) {
-                event.setSpec(new Nightmare(attack.getOwner(), attack.getTarget()));
+            if (event.getContext().equals(SpecType.MELEE)) {
+                if (ChanceUtil.getChance(14)) {
+                    event.setSpec(new Nightmare(attack.getOwner(), attack.getTarget()));
+                } else {
+                    float remainingCooldownPercentage = ChanceUtil.getChance(10) ? .1F : .66F;
+                    event.setContextCooldown((long) (event.getContextCoolDown() * remainingCooldownPercentage));
+                }
             }
         }
     }
