@@ -71,7 +71,8 @@ public class SandArenaListener extends AreaListener<SandArena> {
         }
 
         Player defender = (Player) injuredEntity;
-        if (event.getCause() == DamageCause.FALL && protectedPlayers.contains(defender.getUniqueId())) {
+        boolean isFallDamage = event.getCause() == DamageCause.FALL;
+        if (isFallDamage && !parent.contains(defender) && protectedPlayers.contains(defender.getUniqueId())) {
             event.setCancelled(true);
             return;
         }
