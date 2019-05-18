@@ -13,6 +13,10 @@ import java.util.Random;
 public class ChanceUtil {
     private static Random r = new Random(System.currentTimeMillis());
 
+    public static void reseedWithRandom(Random r) {
+        ChanceUtil.r = r;
+    }
+
     public static int getRandom(int highestValue) {
         return highestValue == 0 ? 1 : highestValue < 0 ? (r.nextInt(highestValue * -1) + 1) * -1 : r.nextInt(highestValue) + 1;
     }

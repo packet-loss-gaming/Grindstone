@@ -9,12 +9,15 @@ package gg.packetloss.grindstone;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import org.junit.Test;
 
+import java.util.Random;
+
 import static org.junit.Assert.assertTrue;
 
 public class ChanceTest {
 
     @Test
     public void testInteger() {
+        ChanceUtil.reseedWithRandom(new Random(1));
 
         int x = 100;
 
@@ -35,6 +38,7 @@ public class ChanceTest {
 
     @Test
     public void testDouble() {
+        ChanceUtil.reseedWithRandom(new Random(1));
 
         double x = 100.2;
 
@@ -59,6 +63,7 @@ public class ChanceTest {
 
     @Test
     public void testRangedRandomEquality() {
+        ChanceUtil.reseedWithRandom(new Random(1));
 
         int x = 10;
         int result = ChanceUtil.getRangedRandom(x, x);
@@ -68,6 +73,7 @@ public class ChanceTest {
 
     @Test
     public void testIntegerRangedRandomMinAndMax() {
+        ChanceUtil.reseedWithRandom(new Random(1));
 
         final int oMin = 1;
         final int oMax = 10;
@@ -89,6 +95,7 @@ public class ChanceTest {
 
     @Test
     public void testDoubleRangedRandomMinAndMax() {
+        ChanceUtil.reseedWithRandom(new Random(1));
 
         final double oMin = -.7;
         final double oMax = 12.3;
