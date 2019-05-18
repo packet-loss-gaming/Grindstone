@@ -20,7 +20,9 @@ import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.bosses.ThunderZombie;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseRespawnBoostEvent;
 import gg.packetloss.grindstone.homes.EnderPearlHomesComponent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.jail.JailComponent;
@@ -201,8 +203,15 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
-    private void boostPlayer(Player player) {
-        if (player.getWorld().getThunderDuration() == 0) {
+    private void boostPlayer(Player player, Location respawnLocation) {
+        World world = respawnLocation.getWorld();
+        if (!world.isThundering()) {
+            return;
+        }
+
+        ApocalypseRespawnBoostEvent apocalypseEvent = new ApocalypseRespawnBoostEvent(player, respawnLocation);
+        server.getPluginManager().callEvent(apocalypseEvent);
+        if (apocalypseEvent.isCancelled()) {
             return;
         }
 
@@ -218,7 +227,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         if (config.enableSafeRespawn) {
             cleanupRespawnPoint(event.getRespawnLocation());
-            boostPlayer(event.getPlayer());
+            boostPlayer(event.getPlayer(), event.getRespawnLocation());
         }
         sessions.getSession(ApocalypseSession.class, event.getPlayer()).updateDeath(config.deathGrace);
     }
@@ -341,6 +350,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     public void strikeSpawn(Location strikeLocation) {
+        ApocalypseLightningStrikeSpawnEvent apocalypseEvent = new ApocalypseLightningStrikeSpawnEvent(strikeLocation);
+        server.getPluginManager().callEvent(apocalypseEvent);
+        if (apocalypseEvent.isCancelled()) {
+            return;
+        }
+
         ZombieSpawnConfig strikeSpawnConfig = new ZombieSpawnConfig();
         strikeSpawnConfig.allowItemPickup = true;
         strikeSpawnConfig.allowMiniBoss = true;

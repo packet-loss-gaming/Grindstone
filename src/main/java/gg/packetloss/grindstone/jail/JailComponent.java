@@ -18,7 +18,7 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypsePlayerEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.CollectionUtil;
 import org.bukkit.ChatColor;
@@ -328,7 +328,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onApocalypseSpawn(ApocalypsePlayerEvent event) {
+    public void onApocalypseSpawn(ApocalypsePersonalSpawnEvent event) {
         if (isJailed(event.getPlayer())) {
             event.setCancelled(true);
         }

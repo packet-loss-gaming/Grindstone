@@ -7,10 +7,13 @@
 package gg.packetloss.grindstone.events.apocalypse;
 
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import org.bukkit.World;
+import org.bukkit.event.Cancellable;
 
-public class ApocalypseLocalSpawnEvent extends ApocalypsePersonalSpawnEvent {
-    public ApocalypseLocalSpawnEvent(Player player, Location spawnLocation) {
-        super(player, spawnLocation);
+public interface ApocalypseEvent extends Cancellable {
+    Location getLocation();
+
+    default World getWorld() {
+        return getLocation().getWorld();
     }
 }

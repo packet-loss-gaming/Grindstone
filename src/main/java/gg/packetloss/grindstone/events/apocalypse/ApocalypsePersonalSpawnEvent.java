@@ -9,24 +9,24 @@ package gg.packetloss.grindstone.events.apocalypse;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
-public class ApocalypsePlayerEvent extends PlayerEvent implements Cancellable {
+public class ApocalypsePersonalSpawnEvent extends PlayerEvent implements ApocalypseEvent {
   private static final HandlerList handlers = new HandlerList();
 
   private boolean cancelled = false;
   private Location spawnLocation;
 
-  public ApocalypsePlayerEvent(final Player player, Location spawnLocation) {
+  public ApocalypsePersonalSpawnEvent(final Player player, Location spawnLocation) {
     super(player);
     this.spawnLocation = spawnLocation;
   }
 
   /**
-   * @return the event location, may return null
+   * @return the event location
    */
+  @Override
   public Location getLocation() {
     return spawnLocation;
   }

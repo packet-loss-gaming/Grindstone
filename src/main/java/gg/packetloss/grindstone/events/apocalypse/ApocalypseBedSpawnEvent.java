@@ -10,7 +10,7 @@ import org.apache.commons.lang3.Validate;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-public class ApocalypseBedSpawnEvent extends ApocalypsePlayerEvent {
+public class ApocalypseBedSpawnEvent extends ApocalypsePersonalSpawnEvent {
     private int numberOfZombies;
 
     public ApocalypseBedSpawnEvent(Player player, Location spawnLocation, int numberOfZombies) {

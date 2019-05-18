@@ -16,12 +16,12 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypsePlayerEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.*;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
@@ -169,7 +169,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onApocalypseSpawn(ApocalypsePlayerEvent event) {
+    public void onApocalypseSpawn(ApocalypsePersonalSpawnEvent event) {
         if (blockedPlayers.contains(event.getPlayer())) event.setCancelled(true);
     }
 

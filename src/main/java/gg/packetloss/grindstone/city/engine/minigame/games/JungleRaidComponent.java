@@ -43,7 +43,7 @@ import gg.packetloss.grindstone.city.engine.minigame.MinigameComponent;
 import gg.packetloss.grindstone.city.engine.minigame.PlayerGameState;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.events.environment.DarkAreaInjuryEvent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
@@ -1278,9 +1278,9 @@ public class JungleRaidComponent extends MinigameComponent {
         }
 
         @EventHandler
-        public void onZombieLocalSpawn(ApocalypseLocalSpawnEvent event) {
+        public void onApocalypseEvent(ApocalypseEvent event) {
 
-            if (getTeam(event.getPlayer()) != -1) event.setCancelled(true);
+            if (contains(event.getLocation())) event.setCancelled(true);
         }
 
         @EventHandler(ignoreCancelled = true)

@@ -23,7 +23,7 @@ import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.HomeTeleportEvent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.homes.CSVHomeDatabase;
 import gg.packetloss.grindstone.homes.EnderPearlHomesComponent;
@@ -224,12 +224,9 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onApocalypseBedSpawn(ApocalypseBedSpawnEvent event) {
-        Player player = event.getPlayer();
-
-        if (player.getWorld().getName().contains(config.legitWorld) && getBedLocation(player) != null) {
-
-            event.setLocation(getBedLocation(player));
+    public void onApocalypseSpawn(ApocalypseEvent event) {
+        if (event.getWorld().getName().contains(config.legitWorld)) {
+            event.setCancelled(true);
         }
     }
 

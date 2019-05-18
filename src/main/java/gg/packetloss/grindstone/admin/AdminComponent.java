@@ -23,7 +23,7 @@ import gg.packetloss.grindstone.NinjaComponent;
 import gg.packetloss.grindstone.RogueComponent;
 import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypsePlayerEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
@@ -458,7 +458,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onApocalypseSpawn(ApocalypsePlayerEvent event) {
+    public void onApocalypseSpawn(ApocalypsePersonalSpawnEvent event) {
         if (isAdmin(event.getPlayer())) {
             event.setCancelled(true);
         }
