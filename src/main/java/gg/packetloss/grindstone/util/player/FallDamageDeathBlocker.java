@@ -28,7 +28,7 @@ public class FallDamageDeathBlocker {
             CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 tracker.decrement(player.getUniqueId());
             }, 20 * 20);
-        }, 20 * 2);
+        }, 20);
     }
 
 }
