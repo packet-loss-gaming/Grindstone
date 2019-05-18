@@ -202,6 +202,10 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     private void boostPlayer(Player player) {
+        if (player.getWorld().getThunderDuration() == 0) {
+            return;
+        }
+
         server.getScheduler().scheduleSyncDelayedTask(inst, () -> {
             player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 30, 2));
             player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 45, 2));
