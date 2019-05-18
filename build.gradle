@@ -53,6 +53,8 @@ dependencies {
     compile group: 'net.milkbowl.vault', name: 'Vault', version: '1.4.1'
     compile group: 'fr.neatmonster', name: 'nocheatplus', version: '3.13.7-RC'
     compile group: 'de.diddiz', name: 'logblock', version: 'dev-SNAPSHOT'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
