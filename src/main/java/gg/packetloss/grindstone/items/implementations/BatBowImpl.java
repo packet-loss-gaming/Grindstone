@@ -9,12 +9,12 @@ package gg.packetloss.grindstone.items.implementations;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.entity.ProjectileTickEvent;
 import gg.packetloss.grindstone.items.CustomItemSession;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
@@ -55,9 +55,9 @@ public class BatBowImpl extends AbstractItemFeatureImpl {
                 }
 
                 if (type != null) {
-                    SpecialAttackEvent specEvent = callSpec(owner, SpecType.RANGED, new MobAttack(owner, targetLoc, type));
+                    SpecialAttackEvent specEvent = callSpec(owner, SpecType.ANIMAL_BOW, new MobAttack(owner, targetLoc, type));
                     if (!specEvent.isCancelled()) {
-                        session.updateSpec(SpecType.ANIMAL_BOW, specEvent.getSpec().getCoolDown());
+                        session.updateSpec(specEvent.getContext(), specEvent.getContextCoolDown());
                         specEvent.getSpec().activate();
                     }
                 }

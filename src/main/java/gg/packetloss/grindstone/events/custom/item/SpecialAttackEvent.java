@@ -20,6 +20,7 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
     private boolean cancelled = false;
     private final SpecType context;
     private SpecialAttack spec;
+    private long coolDown;
 
     public SpecialAttackEvent(final Player owner, final SpecType context, final SpecialAttack spec) {
 
@@ -29,6 +30,7 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
 
         this.context = context;
         this.spec = spec;
+        this.coolDown = context.getDelay() + spec.getCoolDown();
     }
 
     public SpecType getContext() {
@@ -46,6 +48,14 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
         Validate.isTrue(getPlayer().equals(spec.getOwner()), "The owner and the spec owner must match!");
 
         this.spec = spec;
+    }
+
+    public long getContextCoolDown() {
+        return coolDown;
+    }
+
+    public void setContextCooldown(long coolDown) {
+        this.coolDown = coolDown;
     }
 
     public HandlerList getHandlers() {

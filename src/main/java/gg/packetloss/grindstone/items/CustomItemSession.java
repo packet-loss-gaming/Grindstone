@@ -25,19 +25,14 @@ public class CustomItemSession extends PersistentSession {
         super(MAX_AGE);
     }
 
-    public void updateSpec(SpecType type) {
+    public void updateSpec(SpecType type, long delay) {
 
-        specMap.put(type, System.currentTimeMillis());
-    }
-
-    public void updateSpec(SpecType type, long additionalDelay) {
-
-        specMap.put(type, System.currentTimeMillis() + additionalDelay);
+        specMap.put(type, System.currentTimeMillis() + delay);
     }
 
     public boolean canSpec(SpecType type) {
 
-        return !specMap.containsKey(type) || System.currentTimeMillis() - specMap.get(type) >= type.getDelay();
+        return !specMap.containsKey(type) || System.currentTimeMillis() - specMap.get(type) >= 0;
     }
 
     public void addDeathPoint(Location deathPoint) {

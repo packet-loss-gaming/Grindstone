@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.items.implementations;
 
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.items.CustomItemSession;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
@@ -16,7 +17,6 @@ import gg.packetloss.grindstone.util.DamageUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -112,7 +112,7 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
                 SpecialAttackEvent specEvent = callSpec(owner, specType, spec);
 
                 if (!specEvent.isCancelled()) {
-                    session.updateSpec(specType, specEvent.getSpec().getCoolDown());
+                    session.updateSpec(specType, specEvent.getContextCoolDown());
                     specEvent.getSpec().activate();
                 }
             }
