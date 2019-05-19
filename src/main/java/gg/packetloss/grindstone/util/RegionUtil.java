@@ -16,7 +16,7 @@ import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.economic.store.AdminStoreComponent;
+import gg.packetloss.grindstone.economic.store.MarketComponent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -106,7 +106,7 @@ public class RegionUtil {
 
             for (Map.Entry<BaseBlock, Integer> entry : blockMapping.entrySet()) {
                 BaseBlock b = entry.getKey();
-                bp += AdminStoreComponent.priceCheck(
+                bp += MarketComponent.priceCheck(
                         b.getId(),
                         b.getData()
                 ) * entry.getValue();

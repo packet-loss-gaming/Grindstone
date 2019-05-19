@@ -42,7 +42,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.District;
-import gg.packetloss.grindstone.economic.store.AdminStoreComponent;
+import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.item.BookUtil;
@@ -66,7 +66,7 @@ import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Home Manager", desc = "Home ECS")
-@Depend(plugins = {"WorldEdit", "WorldGuard"}, components = AdminStoreComponent.class)
+@Depend(plugins = {"WorldEdit", "WorldGuard"}, components = MarketComponent.class)
 public class HomeManagerComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -641,7 +641,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                             for (int z = minZ; z <= maxZ; ++z) {
                                 Vector pt = new Vector(x, y, z);
                                 BaseBlock b = world.getBlock(pt);
-                                p2 += AdminStoreComponent.priceCheck(b.getId(), b.getData());
+                                p2 += MarketComponent.priceCheck(b.getId(), b.getData());
                             }
                         }
                     }

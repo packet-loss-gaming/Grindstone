@@ -26,6 +26,8 @@ public interface ItemStoreDatabase {
      */
     public boolean save();
 
+    public void updatePrices();
+
     /**
      * Add/Set an item
      */
@@ -34,12 +36,17 @@ public interface ItemStoreDatabase {
     public void removeItem(String playerName, String itemName);
 
     /**
+     * Change the stock of an item
+     */
+    public void adjustStocks(Map<String, Integer> adjustments);
+
+    /**
      * Gets the item that was requested
      *
      * @param name the name of the item
-     * @return the ItemPricePair that was requested or null if nothing was found
+     * @return the MarketItemInfo that was requested or null if nothing was found
      */
-    public ItemPricePair getItem(String name);
+    public MarketItemInfo getItem(String name);
 
     /**
      * Gets the items that were requested.
@@ -47,14 +54,14 @@ public interface ItemStoreDatabase {
      * @param names the names of the items to lookup
      * @return a mapping of names to ItemPricePairs
      */
-    public Map<String, ItemPricePair> getItems(Collection<String> names);
+    public Map<String, MarketItemInfo> getItems(Collection<String> names);
 
     /**
      * Returns a list of items
      *
      * @return A list of items
      */
-    public List<ItemPricePair> getItemList();
+    public List<MarketItemInfo> getItemList();
 
     /**
      * Returns a list of items
@@ -63,5 +70,5 @@ public interface ItemStoreDatabase {
      * @param showHidden return items which are database only
      * @return A list of items
      */
-    public List<ItemPricePair> getItemList(String filter, boolean showHidden);
+    public List<MarketItemInfo> getItemList(String filter, boolean showHidden);
 }

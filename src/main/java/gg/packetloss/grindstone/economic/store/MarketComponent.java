@@ -28,6 +28,7 @@ import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
 import gg.packetloss.grindstone.util.item.ItemType;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -40,12 +41,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.text.DecimalFormat;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.logging.Logger;
 
-@ComponentInformation(friendlyName = "Admin Store", desc = "Admin Store system.")
+@ComponentInformation(friendlyName = "Market", desc = "Buy and sell goods.")
 @Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, DataBaseComponent.class, SessionComponent.class})
-public class AdminStoreComponent extends BukkitComponent {
+public class MarketComponent extends BukkitComponent {
+    public static final int LOWER_MARKET_LOSS_THRESHOLD = 100000;
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
@@ -61,6 +65,14 @@ public class AdminStoreComponent extends BukkitComponent {
 
     private ProtectedRegion region = null;
     private Economy econ;
+
+    private DecimalFormat wholeNumberFormatter = new DecimalFormat("#,###");
+
+    public void simulateMarket() {
+        itemDatabase.updatePrices();
+
+        ChatUtil.sendNotice(server.getOnlinePlayers(), ChatColor.GOLD + "The market has been updated!");
+    }
 
     @Override
     public void enable() {
@@ -84,6 +96,16 @@ public class AdminStoreComponent extends BukkitComponent {
                     e.printStackTrace();
                 }
             }, 1);
+
+            // Calculate delay
+            LocalTime now = LocalTime.now();
+            boolean isEvenHour = now.getHour() % 2 == 0;
+            long nextRunDelay = TimeUtil.getTicksTill((isEvenHour ? now.getHour() + 2 : now.getHour() + 1) % 23);
+
+            // Schedule an update task for every two hours
+            server.getScheduler().runTaskTimerAsynchronously(
+              inst, this::simulateMarket, nextRunDelay, TimeUtil.convertHoursToTicks(2)
+            );
         }, 1);
     }
 
@@ -119,18 +141,24 @@ public class AdminStoreComponent extends BukkitComponent {
             }
 
             String itemName = optItemName.get();
-            ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
-            if (itemPricePair == null || !itemPricePair.isBuyable()) {
+            MarketItemInfo marketItemInfo = itemDatabase.getItem(itemName);
+            if (marketItemInfo == null || !marketItemInfo.isBuyable()) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
-            itemName = itemPricePair.getName();
+            itemName = marketItemInfo.getName();
 
             int amt = 1;
             if (args.hasFlag('a')) {
                 amt = Math.max(1, args.getFlagInteger('a'));
             }
-            double price = itemPricePair.getPrice() * amt;
+
+            if (amt > marketItemInfo.getStock()) {
+                throw new CommandException("You requested " + wholeNumberFormatter.format(amt) + " however, only "
+                  + wholeNumberFormatter.format(marketItemInfo.getStock()) + " are in stock.");
+            }
+
+            double price = marketItemInfo.getPrice() * amt;
             double lottery = price * .03;
 
             if (!econ.has(playerName, price)) {
@@ -138,7 +166,7 @@ public class AdminStoreComponent extends BukkitComponent {
             }
 
             // Get the items and add them to the inventory
-            ItemStack[] itemStacks = getItem(itemPricePair.getName(), amt);
+            ItemStack[] itemStacks = getItem(marketItemInfo.getName(), amt);
             for (ItemStack itemStack : itemStacks) {
                 if (player.getInventory().firstEmpty() == -1) {
                     player.getWorld().dropItem(player.getLocation(), itemStack);
@@ -152,6 +180,12 @@ public class AdminStoreComponent extends BukkitComponent {
 
             // Charge the money and send the sender some feedback
             econ.withdrawPlayer(playerName, price);
+
+            // Update market stocks.
+            HashMap<String, Integer> adjustments = new HashMap<>();
+            adjustments.put(itemName, -amt);
+            itemDatabase.adjustStocks(adjustments);
+
             transactionDatabase.logTransaction(playerName, itemName, amt);
             transactionDatabase.save();
             String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), "");
@@ -210,7 +244,7 @@ public class AdminStoreComponent extends BukkitComponent {
 
             // FIXME: This is a rat's nest.
             server.getScheduler().runTaskAsynchronously(inst, () -> {
-                Map<String, ItemPricePair> nameItemMapping = itemDatabase.getItems(itemNamesInFilter);
+                Map<String, MarketItemInfo> nameItemMapping = itemDatabase.getItems(itemNamesInFilter);
                 server.getScheduler().runTask(inst, () -> {
                     double[] payment = {0}; // hack to update payment from inside lambda
                     HashMap<String, Integer> transactions = new HashMap<>();
@@ -231,21 +265,15 @@ public class AdminStoreComponent extends BukkitComponent {
                         final double percentageSale = optPercentageSale.get();
                         final String itemName = optItemName.get();
 
-                        ItemPricePair itemPricePair = nameItemMapping.get(itemName.toUpperCase());
-                        if (itemPricePair == null || !itemPricePair.isSellable()) {
+                        MarketItemInfo marketItemInfo = nameItemMapping.get(itemName.toUpperCase());
+                        if (marketItemInfo == null || !marketItemInfo.isSellable()) {
                             return item;
                         }
 
                         int amt = item.getAmount();
-                        payment[0] += itemPricePair.getSellPrice() * amt * percentageSale;
+                        payment[0] += marketItemInfo.getSellPrice() * amt * percentageSale;
 
-                        // Multiply the amount by -1 since this is selling
-                        amt *= -1;
-
-                        if (transactions.containsKey(itemName)) {
-                            amt += transactions.get(itemName);
-                        }
-                        transactions.put(itemName, amt);
+                        transactions.merge(itemName, amt, (oldItemName, oldAmt) -> oldAmt + amt);
 
                         return null;
                     });
@@ -256,8 +284,12 @@ public class AdminStoreComponent extends BukkitComponent {
                     }
 
                     server.getScheduler().runTaskAsynchronously(inst, () -> {
+                        // Update market stocks.
+                        itemDatabase.adjustStocks(transactions);
+
                         for (Map.Entry<String, Integer> entry : transactions.entrySet()) {
-                            transactionDatabase.logTransaction(playerName, entry.getKey(), entry.getValue());
+                            // Invert quantity this is a sale, and the transactions are from a player perspective.
+                            transactionDatabase.logTransaction(playerName, entry.getKey(), -entry.getValue());
                         }
                         transactionDatabase.save();
                     });
@@ -284,6 +316,18 @@ public class AdminStoreComponent extends BukkitComponent {
             });
         }
 
+        private String formatPriceForList(double price) {
+            String result = "";
+            result += ChatColor.WHITE;
+            if (price >= 10000) {
+                result += "~" + wholeNumberFormatter.format(price / 1000) + "k";
+            } else {
+                result += econ.format(price);
+            }
+            result += ChatColor.YELLOW;
+            return result;
+        }
+
         @Command(aliases = {"list", "l"},
                 usage = "[-p page] [filter...]", desc = "Get a list of items and their prices",
                 flags = "p:", min = 0
@@ -291,31 +335,32 @@ public class AdminStoreComponent extends BukkitComponent {
         public void listCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             String filterString = args.argsLength() > 0 ? args.getJoinedStrings(0) : null;
-            List<ItemPricePair> itemPricePairCollection = itemDatabase.getItemList(filterString,
+            List<MarketItemInfo> marketItemInfoCollection = itemDatabase.getItemList(filterString,
                     inst.hasPermission(sender, "aurora.admin.adminstore.disabled"));
-            Collections.sort(itemPricePairCollection);
+            Collections.sort(marketItemInfoCollection);
 
-            new PaginatedResult<ItemPricePair>(ChatColor.GOLD + "Item List") {
+            new PaginatedResult<MarketItemInfo>(ChatColor.GOLD + "Item List") {
                 @Override
-                public String format(ItemPricePair pair) {
+                public String format(MarketItemInfo pair) {
                     ChatColor color = pair.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
                     String buy, sell;
                     if (pair.isBuyable() || !pair.isEnabled()) {
-                        buy = ChatColor.WHITE + econ.format(pair.getPrice()) + ChatColor.YELLOW;
+                        buy = formatPriceForList(pair.getPrice());
                     } else {
                         buy = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
                     }
                     if (pair.isSellable() || !pair.isEnabled()) {
-                        sell = ChatColor.WHITE + econ.format(pair.getSellPrice()) + ChatColor.YELLOW;
+                        sell = formatPriceForList(pair.getSellPrice());
                     } else {
                         sell = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
                     }
 
                     String message = color + pair.getName().toUpperCase()
+                            + ChatColor.GRAY + " x" + wholeNumberFormatter.format(pair.getStock())
                             + ChatColor.YELLOW + " (Quick Price: " + buy + " - " + sell + ")";
                     return message.replace(' ' + econ.currencyNamePlural(), "");
                 }
-            }.display(sender, itemPricePairCollection, args.getFlagInteger('p', 1));
+            }.display(sender, marketItemInfoCollection, args.getFlagInteger('p', 1));
         }
 
         @Command(aliases = {"lookup", "value", "info", "pc"},
@@ -345,39 +390,53 @@ public class AdminStoreComponent extends BukkitComponent {
                 }
             }
 
-            ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
-            if (itemPricePair == null) {
+            MarketItemInfo marketItemInfo = itemDatabase.getItem(itemName);
+            if (marketItemInfo == null) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
-            if (!itemPricePair.isEnabled() && !inst.hasPermission(sender, "aurora.admin.adminstore.disabled")) {
+            if (!marketItemInfo.isEnabled() && !inst.hasPermission(sender, "aurora.admin.adminstore.disabled")) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
-            ChatColor color = itemPricePair.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
-            double paymentPrice = itemPricePair.getSellPrice() * percentageSale;
+            ChatColor color = marketItemInfo.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
+            double paymentPrice = marketItemInfo.getSellPrice() * percentageSale;
 
-            String purchasePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getPrice()), "");
-            String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), "");
             ChatUtil.sendNotice(sender, ChatColor.GOLD, "Price Information for: " + color + itemName.toUpperCase());
 
+            String stockCount = wholeNumberFormatter.format(marketItemInfo.getStock());
+            ChatUtil.sendNotice(sender, "There are currently " + ChatColor.GRAY + stockCount + ChatColor.YELLOW + " in stock.");
+
             // Purchase Information
-            if (itemPricePair.isBuyable() || !itemPricePair.isEnabled()) {
+            if (marketItemInfo.isBuyable() || !marketItemInfo.isEnabled()) {
+                String purchasePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(marketItemInfo.getPrice()), "");
+
                 ChatUtil.sendNotice(sender, "When you buy it you pay:");
                 ChatUtil.sendNotice(sender, " - " + purchasePrice + " each.");
             } else {
                 ChatUtil.sendNotice(sender, ChatColor.GRAY, "This item cannot be purchased.");
             }
+
             // Sale Information
-            if (itemPricePair.isSellable() || !itemPricePair.isEnabled()) {
+            if (marketItemInfo.isSellable() || !marketItemInfo.isEnabled()) {
+                String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), "");
+
                 ChatUtil.sendNotice(sender, "When you sell it you get:");
                 ChatUtil.sendNotice(sender, " - " + sellPrice + " each.");
                 if (percentageSale != 1.0) {
-                    sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(itemPricePair.getSellPrice()), "");
+                    sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(marketItemInfo.getSellPrice()), "");
                     ChatUtil.sendNotice(sender, " - " + sellPrice + " each when new.");
                 }
             } else {
                 ChatUtil.sendNotice(sender, ChatColor.GRAY, "This item cannot be sold.");
+            }
+
+            // True value / admin information
+            if (sender.hasPermission("aurora.admin.adminstore.truevalue")) {
+                String basePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(marketItemInfo.getValue()), "");
+
+                ChatUtil.sendNotice(sender, "Base price:");
+                ChatUtil.sendNotice(sender, " - " + basePrice + " each.");
             }
         }
 
@@ -435,8 +494,8 @@ public class AdminStoreComponent extends BukkitComponent {
             }
 
             server.getScheduler().runTaskAsynchronously(inst, () -> {
-                List<ItemPricePair> items = itemDatabase.getItemList();
-                for (ItemPricePair item : items) {
+                List<MarketItemInfo> items = itemDatabase.getItemList();
+                for (MarketItemInfo item : items) {
                     itemDatabase.addItem(sender.getName(), item.getName(),
                       item.getPrice() * factor, !item.isBuyable(), !item.isSellable());
                 }
@@ -463,7 +522,7 @@ public class AdminStoreComponent extends BukkitComponent {
             double price = Math.max(.01, args.getFlagDouble('p', .1));
 
             // Database operations
-            ItemPricePair oldItem = itemDatabase.getItem(itemName);
+            MarketItemInfo oldItem = itemDatabase.getItem(itemName);
             itemName = itemName.replace('_', ' ');
             itemDatabase.addItem(sender.getName(), itemName, price, disableBuy, disableSell);
             itemDatabase.save();
@@ -481,8 +540,8 @@ public class AdminStoreComponent extends BukkitComponent {
         }
 
         @Command(aliases = {"remove"},
-                usage = "<item name>", desc = "Value an item",
-                flags = "", min = 1)
+          usage = "<item name>", desc = "Value an item",
+          flags = "", min = 1)
         @CommandPermissions("aurora.admin.adminstore.remove")
         public void removeCmd(CommandContext args, CommandSender sender) throws CommandException {
             Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
@@ -498,6 +557,13 @@ public class AdminStoreComponent extends BukkitComponent {
             itemDatabase.removeItem(sender.getName(), itemName);
             itemDatabase.save();
             ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName.toUpperCase() + ChatColor.YELLOW + " has been removed from the database!");
+        }
+
+        @Command(aliases = {"simulate"}, desc = "Simulate market activity",
+          flags = "", min = 0, max = 0)
+        @CommandPermissions("aurora.admin.adminstore.simulate")
+        public void simulateCmd(CommandContext args, CommandSender sender) throws CommandException {
+            server.getScheduler().runTaskAsynchronously(inst, MarketComponent.this::simulateMarket);
         }
     }
 
@@ -637,10 +703,10 @@ public class AdminStoreComponent extends BukkitComponent {
         ItemType type = ItemType.fromNumberic(blockID, data);
         if (type == null) return 0;
 
-        ItemPricePair itemPricePair = itemDatabase.getItem(type.getName());
-        if (itemPricePair == null) return 0;
+        MarketItemInfo marketItemInfo = itemDatabase.getItem(type.getName());
+        if (marketItemInfo == null) return 0;
 
-        return itemPricePair.getPrice();
+        return marketItemInfo.getPrice();
     }
 
     /**
@@ -671,12 +737,12 @@ public class AdminStoreComponent extends BukkitComponent {
         final double percentageSale = optPercentageSale.get();
         final String itemName = optItemName.get();
 
-        ItemPricePair itemPricePair = itemDatabase.getItem(itemName);
-        if (itemPricePair == null) {
+        MarketItemInfo marketItemInfo = itemDatabase.getItem(itemName);
+        if (marketItemInfo == null) {
             return -1;
         }
 
-        return itemPricePair.getPrice() * percentageSale * stack.getAmount();
+        return marketItemInfo.getPrice() * percentageSale * stack.getAmount();
     }
 
     public String checkPlayer(CommandSender sender) throws CommandException {

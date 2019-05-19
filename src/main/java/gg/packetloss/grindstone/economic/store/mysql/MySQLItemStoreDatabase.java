@@ -8,8 +8,9 @@ package gg.packetloss.grindstone.economic.store.mysql;
 
 import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.data.MySQLPreparedStatement;
-import gg.packetloss.grindstone.economic.store.ItemPricePair;
 import gg.packetloss.grindstone.economic.store.ItemStoreDatabase;
+import gg.packetloss.grindstone.economic.store.MarketItemInfo;
+import gg.packetloss.grindstone.util.ChanceUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,8 +19,10 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.economic.store.MarketComponent.LOWER_MARKET_LOSS_THRESHOLD;
+
 public class MySQLItemStoreDatabase implements ItemStoreDatabase {
-    private static final String columns = "`name`, `price`, `buyable`, `sellable`";
+    private static final String columns = "`name`, `price`, `current-price`, `stock`, `buyable`, `sellable`";
     private Queue<MySQLPreparedStatement> queue = new LinkedList<>();
 
     @Override
@@ -29,6 +32,8 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
                     "`id` INT NOT NULL AUTO_INCREMENT," +
                     "`name` VARCHAR(50) NOT NULL," +
                     "`price` DOUBLE NOT NULL," +
+                    "`current-price` DOUBLE NOT NULL," +
+                    "`stock` INT NOT NULL," +
                     "`buyable` TINYINT(1) NOT NULL," +
                     "`sellable` TINYINT(1) NOT NULL," +
                     "PRIMARY KEY (`id`)," +
@@ -62,6 +67,71 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         return true;
     }
 
+    private double getNewValue(double baseValue) {
+        double divisor = 5 + ChanceUtil.getRandom(5);
+        if (baseValue >= LOWER_MARKET_LOSS_THRESHOLD) {
+            divisor += 7;
+        }
+
+        double multiplier = 1D / divisor;
+        double change = baseValue  * multiplier;
+
+        if (ChanceUtil.getChance(2)) {
+            change = -change;
+        }
+
+        return baseValue + change;
+    }
+
+    private int getNewStock(double baseValue, int existingStock) {
+        int adjustedBaseValue = (int) Math.round(baseValue);
+
+        adjustedBaseValue = (int) Math.sqrt(adjustedBaseValue);
+        adjustedBaseValue = Math.max(3, adjustedBaseValue);
+
+        int changeUnit = Math.max(100, (ChanceUtil.getRangedRandom(20, 200) - adjustedBaseValue) * 100);
+        int baseChange = ChanceUtil.getChance(32) ? ChanceUtil.getRandom(20) * changeUnit : changeUnit;
+        int change = ChanceUtil.getRandom(ChanceUtil.getRandom(Math.max(1, baseChange - adjustedBaseValue)));
+
+        if (ChanceUtil.getChance(adjustedBaseValue)) {
+            existingStock += change;
+        } else {
+            existingStock -= change;
+        }
+
+        return Math.max(0, existingStock);
+    }
+
+    @Override
+    public void updatePrices() {
+        try (Connection connection = MySQLHandle.getConnection()) {
+            String updateSql = "UPDATE `market-items` SET `current-price` = ?, `stock` = ? WHERE `id` = ?";
+            try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
+
+                String sql = "SELECT `id`, `price`, `stock` FROM `market-items`";
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    try (ResultSet results = statement.executeQuery()) {
+                        while (results.next()) {
+                            int id = results.getInt(1);
+                            double price = results.getDouble(2);
+                            int stock = results.getInt(3);
+
+                            updateStatement.setDouble(1, getNewValue(price));
+                            updateStatement.setInt(2, getNewStock(price, stock));
+                            updateStatement.setInt(3, id);
+
+                            updateStatement.addBatch();
+                        }
+                    }
+                }
+
+                updateStatement.executeBatch();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void addItem(String playerName, String itemName, double price, boolean disableBuy, boolean disableSell) {
         queue.add(new ItemRowStatement(itemName, price, !disableBuy, !disableSell));
@@ -70,6 +140,25 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     @Override
     public void removeItem(String playerName, String itemName) {
         queue.add(new ItemDeleteStatement(itemName));
+    }
+
+    @Override
+    public void adjustStocks(Map<String, Integer> adjustments) {
+        try (Connection connection = MySQLHandle.getConnection()) {
+            String updateSql = "UPDATE `market-items` SET `stock` = `stock` + ? WHERE `name` = ?";
+            try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
+                for (Map.Entry<String, Integer> entry : adjustments.entrySet()) {
+                    updateStatement.setInt(1, entry.getValue());
+                    updateStatement.setString(2, entry.getKey());
+
+                    updateStatement.addBatch();
+                }
+
+                updateStatement.executeBatch();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static int getItemID(String name) throws SQLException {
@@ -103,18 +192,20 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     @Override
-    public ItemPricePair getItem(String name) {
+    public MarketItemInfo getItem(String name) {
         try (Connection connection  = MySQLHandle.getConnection()) {
             String sql = "SELECT " + columns + " FROM `market-items` WHERE `name` = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, name.toUpperCase());
                 try (ResultSet results = statement.executeQuery()) {
                     if (results.next()) {
-                        return new ItemPricePair(
+                        return new MarketItemInfo(
                                 results.getString(1),
                                 results.getDouble(2),
-                                !results.getBoolean(3),
-                                !results.getBoolean(4)
+                                results.getDouble(3),
+                                results.getInt(4),
+                                !results.getBoolean(5),
+                                !results.getBoolean(6)
                         );
                     }
                 }
@@ -138,8 +229,8 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     @Override
-    public Map<String, ItemPricePair> getItems(Collection<String> names) {
-        Map<String, ItemPricePair> nameItemMapping = new HashMap<>();
+    public Map<String, MarketItemInfo> getItems(Collection<String> names) {
+        Map<String, MarketItemInfo> nameItemMapping = new HashMap<>();
 
         try (Connection connection  = MySQLHandle.getConnection()) {
             String sql = "SELECT " + columns + " FROM `market-items` WHERE `name` IN (" + preparePlaceHolders(names.size()) + ")";
@@ -151,11 +242,13 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
                     while (results.next()) {
                         nameItemMapping.put(
                             results.getString(1).toUpperCase(),
-                            new ItemPricePair(
+                            new MarketItemInfo(
                                 results.getString(1),
                                 results.getDouble(2),
-                                !results.getBoolean(3),
-                                !results.getBoolean(4)
+                                results.getDouble(3),
+                                results.getInt(4),
+                                !results.getBoolean(5),
+                                !results.getBoolean(6)
                             )
                         );
                     }
@@ -169,17 +262,19 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     @Override
-    public List<ItemPricePair> getItemList() {
-        List<ItemPricePair> items = new ArrayList<>();
+    public List<MarketItemInfo> getItemList() {
+        List<MarketItemInfo> items = new ArrayList<>();
         try (Connection connection = MySQLHandle.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement("SELECT " + columns + " FROM `market-items`")) {
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
-                        items.add(new ItemPricePair(
+                        items.add(new MarketItemInfo(
                                 results.getString(1),
                                 results.getDouble(2),
-                                !results.getBoolean(3),
-                                !results.getBoolean(4)
+                                results.getDouble(3),
+                                results.getInt(4),
+                                !results.getBoolean(5),
+                                !results.getBoolean(6)
                         ));
                     }
                 }
@@ -191,13 +286,13 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     @Override
-    public List<ItemPricePair> getItemList(String filter, boolean showHidden) {
+    public List<MarketItemInfo> getItemList(String filter, boolean showHidden) {
 
         if (filter == null || filter.isEmpty()) {
             return getItemList();
         }
 
-        List<ItemPricePair> items = new ArrayList<>();
+        List<MarketItemInfo> items = new ArrayList<>();
         try (Connection connection = MySQLHandle.getConnection()) {
             String sql = "SELECT " + columns + " FROM `market-items` WHERE `name` LIKE ?";
             if (!showHidden) {
@@ -207,11 +302,13 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
                 statement.setString(1, filter.toUpperCase() + "%");
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
-                        items.add(new ItemPricePair(
+                        items.add(new MarketItemInfo(
                                 results.getString(1),
                                 results.getDouble(2),
-                                !results.getBoolean(3),
-                                !results.getBoolean(4)
+                                results.getDouble(3),
+                                results.getInt(4),
+                                !results.getBoolean(5),
+                                !results.getBoolean(6)
                         ));
                     }
                 }

@@ -6,15 +6,19 @@
 
 package gg.packetloss.grindstone.economic.store;
 
-public class ItemPricePair implements Comparable<ItemPricePair> {
+import static gg.packetloss.grindstone.economic.store.MarketComponent.LOWER_MARKET_LOSS_THRESHOLD;
 
+public class MarketItemInfo implements Comparable<MarketItemInfo> {
     private String name;
-    private double price;
+    private double value, price;
+    private int stock;
     private boolean disableBuy, disableSell;
 
-    public ItemPricePair(String name, double price, boolean disableBuy, boolean disableSell) {
+    public MarketItemInfo(String name, double value, double price, int stock, boolean disableBuy, boolean disableSell) {
         this.name = name;
+        this.value = value;
         this.price = price;
+        this.stock = stock;
         this.disableBuy = disableBuy;
         this.disableSell = disableSell;
     }
@@ -23,8 +27,12 @@ public class ItemPricePair implements Comparable<ItemPricePair> {
         return name;
     }
 
-    public void setPrice(double price) {
-        this.price = price;
+    public void setValue(double value) {
+        this.value = value;
+    }
+
+    public double getValue() {
+        return value;
     }
 
     public double getPrice() {
@@ -32,8 +40,12 @@ public class ItemPricePair implements Comparable<ItemPricePair> {
     }
 
     public double getSellPrice() {
-        double sellPrice = price > 100000 ? price * .92 : price * .80;
+        double sellPrice = price >= LOWER_MARKET_LOSS_THRESHOLD ? price * .92 : price * .80;
         return sellPrice < .01 ? 0 : sellPrice;
+    }
+
+    public int getStock() {
+        return stock;
     }
 
     public boolean isEnabled() {
@@ -49,7 +61,7 @@ public class ItemPricePair implements Comparable<ItemPricePair> {
     }
 
     @Override
-    public int compareTo(ItemPricePair record) {
+    public int compareTo(MarketItemInfo record) {
         if (record == null) return -1;
         if (this.getPrice() == record.getPrice()) {
             int c = String.CASE_INSENSITIVE_ORDER.compare(this.getName(), record.getName());

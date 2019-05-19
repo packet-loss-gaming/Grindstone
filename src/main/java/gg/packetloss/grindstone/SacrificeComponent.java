@@ -22,9 +22,11 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import gg.packetloss.grindstone.economic.store.AdminStoreComponent;
+import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
@@ -33,8 +35,6 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -185,7 +185,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             }
 
             if (itemStack != null) {
-                value -= Math.max(9, AdminStoreComponent.priceCheck(itemStack));
+                value -= Math.max(9, MarketComponent.priceCheck(itemStack));
                 loot.add(itemStack);
             }
 
@@ -553,7 +553,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         PlayerInventory pInventory = player.getInventory();
 
-        final double value = AdminStoreComponent.priceCheck(item);
+        final double value = MarketComponent.priceCheck(item);
 
         if (ItemUtil.isItem(item, CustomItems.MASTER_SWORD)) {
             pInventory.addItem(CustomItemCenter.build(CustomItems.MASTER_SWORD));
@@ -638,7 +638,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             ItemStack questioned = player.getInventory().getItemInHand();
 
             // Check value & validity
-            double value = AdminStoreComponent.priceCheck(questioned);
+            double value = MarketComponent.priceCheck(questioned);
             if (value < 0) throw new CommandException("You can't sacrifice that!");
 
             // Mask the value so it doesn't just show the market price and print it

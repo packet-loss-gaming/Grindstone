@@ -26,7 +26,7 @@ import gg.packetloss.grindstone.bosses.detail.WBossDetail;
 import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPScope;
-import gg.packetloss.grindstone.economic.store.AdminStoreComponent;
+import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.entity.item.DropClearPulseEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -513,7 +513,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         boolean hasChest = false;
 
         List<ItemStack> grave = new ArrayList<>();
-        event.getDrops().sort((o1, o2) -> (int) (AdminStoreComponent.priceCheck(o2, false) - AdminStoreComponent.priceCheck(o1, false)));
+        event.getDrops().sort((o1, o2) -> (int) (MarketComponent.priceCheck(o2, false) - MarketComponent.priceCheck(o1, false)));
         Iterator<ItemStack> it = event.getDrops().iterator();
         int kept = 9;
         while (it.hasNext()) {

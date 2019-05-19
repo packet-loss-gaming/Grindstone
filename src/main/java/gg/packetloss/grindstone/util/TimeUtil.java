@@ -70,4 +70,16 @@ public class TimeUtil {
 
         return returnValue;
     }
+
+    public static long convertSecondsToTicks(int seconds) {
+        return seconds * 20;
+    }
+
+    public static long convertMinutesToTicks(int minutes) {
+        return convertSecondsToTicks(minutes * 60);
+    }
+
+    public static long convertHoursToTicks(int hours) {
+        return convertMinutesToTicks(hours * 60);
+    }
 }
