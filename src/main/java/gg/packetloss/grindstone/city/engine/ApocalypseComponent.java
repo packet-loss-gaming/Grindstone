@@ -34,6 +34,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -55,6 +56,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static gg.packetloss.grindstone.util.player.GeneralPlayerUtil.hasFlyingGamemode;
 
 
 @ComponentInformation(friendlyName = "Apocalypse", desc = "Sends an invasion force after the residents of the server.")
@@ -306,7 +309,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     private void disableFlight(List<Player> applicable) {
-        applicable.stream().filter(Player::isFlying).forEach(player -> {
+        applicable.stream().filter(player -> player.isFlying() && !hasFlyingGamemode(player)).forEach(player -> {
             player.setFlying(false);
             player.setAllowFlight(false);
             ChatUtil.sendNotice(player, "The lightning hinders your ability to fly.");
