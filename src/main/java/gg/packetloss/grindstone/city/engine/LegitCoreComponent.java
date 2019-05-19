@@ -105,7 +105,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     private static class LocalConfiguration extends ConfigurationBase {
         @Setting("city-world")
         public String cityWorld = "City";
-        @Setting("wilderness-world")
+        @Setting("legit-world")
         public String legitWorld = "Legit";
     }
 
@@ -353,6 +353,8 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         @Setting("is-legit-set")
         private boolean isLegitSet = false;
 
+        @Setting("legit-world")
+        private String legit_world = "Legit";
         @Setting("legit-x")
         private double legit_x = 0;
         @Setting("legit-y")
@@ -401,10 +403,11 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
         }
 
         public Location getLegitIndex() {
-            return new Location(Bukkit.getWorld("Legit"), legit_x, legit_y, legit_z, legit_yaw, legit_pitch);
+            return new Location(Bukkit.getWorld(legit_world), legit_x, legit_y, legit_z, legit_yaw, legit_pitch);
         }
 
         public void setLegitIndex(Location legitIndex) {
+            legit_world = legitIndex.getWorld().getName();
             legit_x = legitIndex.getX();
             legit_y = legitIndex.getY();
             legit_z = legitIndex.getZ();
