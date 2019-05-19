@@ -61,67 +61,85 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
         return session.isEnabled();
     }
 
-    private void mirrorX(Vector newPos, Vector mirrorPos, Vector position) {
-        if (position.getX() < mirrorPos.getX()) {
-            double diff = mirrorPos.getX() - position.getX();
-            newPos.setX(mirrorPos.getX() + diff);
-        } else {
-            double diff = position.getX() - mirrorPos.getX();
-            newPos.setX(mirrorPos.getX() - diff);
+    private void mirrorX(Vector mirrorPosition, List<Vector> mirrorPositions) {
+        List<Vector> producedPositions = new ArrayList<>();
+
+        for (Vector position : mirrorPositions) {
+            Vector newPosition = position.clone();
+            if (position.getX() < mirrorPosition.getX()) {
+                double diff = mirrorPosition.getX() - position.getX();
+                newPosition.setX(mirrorPosition.getX() + diff);
+            } else {
+                double diff = position.getX() - mirrorPosition.getX();
+                newPosition.setX(mirrorPosition.getX() - diff);
+            }
+            producedPositions.add(newPosition);
         }
+
+        mirrorPositions.addAll(producedPositions);
     }
 
-    private void mirrorY(Vector newPos, Vector mirrorPos, Vector position) {
-        if (position.getY() < mirrorPos.getY()) {
-            double diff = mirrorPos.getY() - position.getY();
-            newPos.setY(mirrorPos.getY() + diff);
-        } else {
-            double diff = position.getY() - mirrorPos.getY();
-            newPos.setY(mirrorPos.getY() - diff);
+    private void mirrorY(Vector mirrorPosition, List<Vector> mirrorPositions) {
+        List<Vector> producedPositions = new ArrayList<>();
+
+        for (Vector position : mirrorPositions) {
+            Vector newPosition = position.clone();
+            if (position.getY() < mirrorPosition.getY()) {
+                double diff = mirrorPosition.getY() - position.getY();
+                newPosition.setY(mirrorPosition.getY() + diff);
+            } else {
+                double diff = position.getY() - mirrorPosition.getY();
+                newPosition.setY(mirrorPosition.getY() - diff);
+            }
+            producedPositions.add(newPosition);
         }
+
+        mirrorPositions.addAll(producedPositions);
     }
 
-    private void mirrorZ(Vector newPos, Vector mirrorPos, Vector position) {
-        if (position.getZ() < mirrorPos.getZ()) {
-            double diff = mirrorPos.getZ() - position.getZ();
-            newPos.setZ(mirrorPos.getZ() + diff);
-        } else {
-            double diff = position.getZ() - mirrorPos.getZ();
-            newPos.setZ(mirrorPos.getZ() - diff);
+    private void mirrorZ(Vector mirrorPosition, List<Vector> mirrorPositions) {
+        List<Vector> producedPositions = new ArrayList<>();
+
+        for (Vector position : mirrorPositions) {
+            Vector newPosition = position.clone();
+            if (position.getZ() < mirrorPosition.getZ()) {
+                double diff = mirrorPosition.getZ() - position.getZ();
+                newPosition.setZ(mirrorPosition.getZ() + diff);
+            } else {
+                double diff = position.getZ() - mirrorPosition.getZ();
+                newPosition.setZ(mirrorPosition.getZ() - diff);
+            }
+            producedPositions.add(newPosition);
         }
+
+        mirrorPositions.addAll(producedPositions);
     }
 
     private List<Vector> getMirrorPositions(Player player, Vector position) {
         SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
 
-        Vector mirrorPos = session.getPosition();
+        Vector mirrorPosition = session.getPosition();
 
         List<Vector> mirrorPositions = new ArrayList<>();
 
+        // Add the current block to "bootstrap" the mirroring.
+        mirrorPositions.add(position);
+
         if (session.isEnabledMirror(MirrorDirection.X)) {
-            Vector newPos = position.clone();
-            mirrorX(newPos, mirrorPos, position);
-            mirrorPositions.add(newPos);
+            mirrorX(mirrorPosition, mirrorPositions);
         }
 
         if (session.isEnabledMirror(MirrorDirection.Y)) {
-            Vector newPos = position.clone();
-            mirrorY(newPos, mirrorPos, position);
-            mirrorPositions.add(newPos);
+            mirrorY(mirrorPosition, mirrorPositions);
         }
 
         if (session.isEnabledMirror(MirrorDirection.Z)) {
-            Vector newPos = position.clone();
-            mirrorZ(newPos, mirrorPos, position);
-            mirrorPositions.add(newPos);
+            mirrorZ(mirrorPosition, mirrorPositions);
         }
 
-        if (session.isEnabledMirror(MirrorDirection.X) && session.isEnabledMirror(MirrorDirection.Z)) {
-            Vector newPos = position.clone();
-            mirrorX(newPos, mirrorPos, position);
-            mirrorZ(newPos, mirrorPos, position);
-            mirrorPositions.add(newPos);
-        }
+        // Remove the current block as whatever change needs to be mirrored already
+        // occurred there, and we no longer need it to calculate any mirrors.
+        mirrorPositions.remove(0);
 
         return mirrorPositions;
     }
