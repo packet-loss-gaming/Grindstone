@@ -11,6 +11,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.util.Vector;
 
 import java.util.Collection;
 
@@ -188,5 +189,13 @@ public class ChatUtil {
         }
 
         return out.toString();
+    }
+
+    public static String toString(Vector vector) {
+        if (vector == null) {
+            return "none";
+        }
+
+        return vector.getX() + ", " + vector.getY() + ", " + vector.getZ();
     }
 }

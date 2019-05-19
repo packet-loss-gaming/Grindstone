@@ -59,7 +59,7 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
         }
 
         SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
-        return session.isEnabled();
+        return session.isEnabled() && session.getPosition() != null;
     }
 
     private void mirrorX(Vector mirrorPosition, List<Vector> mirrorPositions) {
@@ -201,7 +201,7 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
     }
 
     public class Commands {
-        @Command(aliases = {"symmetry"}, desc = "Symmetry Commands")
+        @Command(aliases = {"symmetry", "/sym"}, desc = "Symmetry Commands")
         @NestedCommand({SymmetryCommands.class})
         @CommandPermissions({"aurora.symmetry"})
         public void symmetryCommands(CommandContext args, CommandSender sender) throws CommandException {
@@ -232,7 +232,7 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
             SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
             session.setPosition(new Vector(args.getDouble(0), args.getDouble(1), args.getDouble(2)));
 
-            ChatUtil.sendNotice(player, "Point of symmetry set to: " + session.getPosition().toString() + "!");
+            ChatUtil.sendNotice(player, "Point of symmetry set to: " + ChatUtil.toString(session.getPosition()) + "!");
         }
 
         @Command(aliases = {"togglemirror", "tm"}, usage = "<direction>",
@@ -254,6 +254,19 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
             } catch (IllegalArgumentException ex) {
                 throw new CommandException("No such direction! Valid directions: 'X', 'Y', 'Z'.");
             }
+        }
+
+        @Command(aliases = {"status"}, desc = "View symmetry mode status", max = 0)
+        public void viewStatus(CommandContext args, CommandSender sender) throws CommandException {
+            Player player = PlayerUtil.checkPlayer(sender);
+
+            SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
+
+            ChatUtil.sendNotice(player, "Enabled: " + session.isEnabled());
+            ChatUtil.sendNotice(player, "Point of Symmetry: " + ChatUtil.toString(session.getPosition()));
+            ChatUtil.sendNotice(player, "Mirroring X: " + session.isEnabledMirror(MirrorDirection.X));
+            ChatUtil.sendNotice(player, "Mirroring Y: " + session.isEnabledMirror(MirrorDirection.Y));
+            ChatUtil.sendNotice(player, "Mirroring Z: " + session.isEnabledMirror(MirrorDirection.Z));
         }
     }
 
@@ -287,7 +300,7 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
         }
 
         public Vector getPosition() {
-            return position.clone();
+            return position == null ? null : position.clone();
         }
 
         public void setMirror(MirrorDirection direction, boolean active) {
