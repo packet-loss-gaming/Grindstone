@@ -28,6 +28,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -182,6 +183,21 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
         }
 
         mirrorBlockBreak(player, event.getBlock());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onGameModeChange(PlayerGameModeChangeEvent event) {
+        // We only need to disable symmetric building when the new game mode is not creative mode
+        if (event.getNewGameMode() == GameMode.CREATIVE) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        // Force disable symmetric building so that if the player reenters creative mode with a point of
+        // symmetry a long distance away, they don't accidentally destroy things.
+        SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
+        session.setEnabled(false);
     }
 
     public class Commands {
