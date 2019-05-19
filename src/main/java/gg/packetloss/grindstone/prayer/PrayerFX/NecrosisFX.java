@@ -9,24 +9,33 @@ package gg.packetloss.grindstone.prayer.PrayerFX;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.util.EntityUtil;
+import org.apache.commons.lang.Validate;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 public class NecrosisFX extends AbstractEffect {
 
-    private LivingEntity beneficiary = null;
+    private final LivingEntity beneficiary;
 
-    public void setBeneficiary(LivingEntity beneficiary) {
+    public NecrosisFX(LivingEntity beneficiary) {
+        Validate.notNull(beneficiary);
+
         this.beneficiary = beneficiary;
     }
 
-    private boolean checkBeneficiary() {
-        return beneficiary != null && beneficiary instanceof Player;
+    private boolean isFullyHealed() {
+        return beneficiary.getHealth() == beneficiary.getMaxHealth();
+    }
+
+    private boolean isBlockedPvP(Player player) {
+        return beneficiary instanceof Player && !PvPComponent.allowsPvP((Player) beneficiary, player);
     }
 
     @Override
     public void add(Player player) {
-        if (checkBeneficiary() && !PvPComponent.allowsPvP((Player) beneficiary, player)) return;
+        if (isFullyHealed()) return;
+        if (isBlockedPvP(player)) return;
+
         EntityUtil.heal(beneficiary, 1);
         EntityUtil.forceDamage(player, 1);
     }
