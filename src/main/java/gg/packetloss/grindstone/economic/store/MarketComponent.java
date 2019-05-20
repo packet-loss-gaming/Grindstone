@@ -67,6 +67,7 @@ public class MarketComponent extends BukkitComponent {
     private Economy econ;
 
     private DecimalFormat wholeNumberFormatter = new DecimalFormat("#,###");
+    private DecimalFormat oneDecimalFormatter = new DecimalFormat("#,###.#");
 
     public void simulateMarket() {
         itemDatabase.updatePrices();
@@ -321,6 +322,8 @@ public class MarketComponent extends BukkitComponent {
             result += ChatColor.WHITE;
             if (price >= 10000) {
                 result += "~" + wholeNumberFormatter.format(price / 1000) + "k";
+            } else if (price >= 1000) {
+                result += "~" + oneDecimalFormatter.format(price / 1000) + "k";
             } else {
                 result += econ.format(price);
             }
