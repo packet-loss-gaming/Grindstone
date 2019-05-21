@@ -84,19 +84,15 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     private int getNewStock(double baseValue, int existingStock) {
-        int adjustedBaseValue = (int) Math.round(baseValue);
+        final int TARGET_MAXIMUM = 1000000;
+        final int OFFSET = 100;
 
-        adjustedBaseValue = (int) Math.sqrt(adjustedBaseValue);
-        adjustedBaseValue = Math.max(3, adjustedBaseValue);
+        int adjustedChange = (int) ChanceUtil.getRandom(TARGET_MAXIMUM / (baseValue + OFFSET));
 
-        int changeUnit = Math.max(100, (ChanceUtil.getRangedRandom(20, 200) - adjustedBaseValue) * 100);
-        int baseChange = ChanceUtil.getChance(32) ? ChanceUtil.getRandom(20) * changeUnit : changeUnit;
-        int change = ChanceUtil.getRandom(ChanceUtil.getRandom(Math.max(1, baseChange - adjustedBaseValue)));
-
-        if (ChanceUtil.getChance(adjustedBaseValue)) {
-            existingStock += change;
+        if (ChanceUtil.getChance(2)) {
+            existingStock += adjustedChange;
         } else {
-            existingStock -= change;
+            existingStock -= adjustedChange * ChanceUtil.getRandomNTimes(15, 4);
         }
 
         return Math.max(0, existingStock);
