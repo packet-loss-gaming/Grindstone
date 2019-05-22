@@ -26,7 +26,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class MagicBucketImpl extends AbstractItemFeatureImpl {
     private boolean isGettingFlightElsewhere(Player player) {
-        return admin.isAdmin(player) || !GeneralPlayerUtil.hasFlyingGamemode(player);
+        return admin.isAdmin(player) || GeneralPlayerUtil.hasFlyingGamemode(player);
     }
 
     private boolean grantFlight(Player player) {
