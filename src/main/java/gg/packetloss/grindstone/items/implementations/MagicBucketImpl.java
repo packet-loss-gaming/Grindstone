@@ -6,10 +6,10 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Player;
@@ -25,22 +25,36 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class MagicBucketImpl extends AbstractItemFeatureImpl {
+    private boolean isGettingFlightElsewhere(Player player) {
+        return admin.isAdmin(player) || !GeneralPlayerUtil.hasFlyingGamemode(player);
+    }
 
-    public boolean handleRightClick(final Player player) {
+    private boolean grantFlight(Player player) {
+        ChatUtil.sendNotice(player, "The bucket glows brightly.");
 
-        if (admin.isAdmin(player)) return false;
+        player.setFlySpeed(.4F);
+        player.setAllowFlight(true);
 
-        player.setAllowFlight(!player.getAllowFlight());
-        if (player.getAllowFlight()) {
-            player.setFlySpeed(.4F);
-            // antiCheat.exempt(player, CheckType.FLY);
-            ChatUtil.sendNotice(player, "The bucket glows brightly.");
-        } else {
-            player.setFlySpeed(.1F);
-            // antiCheat.unexempt(player, CheckType.FLY);
-            ChatUtil.sendNotice(player, "The power of the bucket fades.");
-        }
         return true;
+    }
+
+    private boolean takeFlight(Player player) {
+        if (isGettingFlightElsewhere(player)) return false;
+
+        ChatUtil.sendNotice(player, "The power of the bucket fades.");
+
+        player.setFlySpeed(.1F);
+        player.setAllowFlight(false);
+
+        return true;
+    }
+
+    private boolean handleRightClick(Player player) {
+        if (player.getAllowFlight()) {
+            return takeFlight(player);
+        } else {
+            return grantFlight(player);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -64,15 +78,16 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
 
         if (event.getRightClicked() instanceof Cow && ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
             server.getScheduler().runTaskLater(inst, () -> {
+                // Swap the magic bucket for mad milk
                 if (!ItemUtil.swapItem(player.getInventory(), CustomItems.MAGIC_BUCKET, CustomItems.MAD_MILK)) {
                     ChatUtil.sendError(player, "Your inventory is too full!");
                     return;
                 }
-                if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET) && !GeneralPlayerUtil.hasFlyingGamemode(player)) {
-                    if (player.getAllowFlight()) {
-                        ChatUtil.sendNotice(player, "The power of the bucket fades.");
-                    }
-                    player.setAllowFlight(false);
+
+                // Since the player's magic bucket is now mad milk,
+                // if they don't have another one, take their flight.
+                if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
+                    takeFlight(player);
                 }
             }, 1);
             event.setCancelled(true);
@@ -108,11 +123,7 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
         if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
             server.getScheduler().runTaskLater(inst, () -> {
                 if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
-                    if (player.getAllowFlight()) {
-                        ChatUtil.sendNotice(player, "The power of the bucket fades.");
-                    }
-                    player.setAllowFlight(false);
-                    // antiCheat.unexempt(player, CheckType.FLY);
+                    takeFlight(player);
                 }
             }, 1);
         }
@@ -128,12 +139,8 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
         ItemStack[] chestContents = event.getInventory().getContents();
         if (!ItemUtil.findItemOfName(chestContents, CustomItems.MAGIC_BUCKET.toString())) return;
 
-        if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
-            if (player.getAllowFlight()) {
-                ChatUtil.sendNotice(player, "The power of the bucket fades.");
-            }
-            player.setAllowFlight(false);
-            // antiCheat.unexempt(player, CheckType.FLY);
+        if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET) && !GeneralPlayerUtil.hasFlyingGamemode(player)) {
+            takeFlight(player);
         }
     }
 
@@ -144,11 +151,7 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
         ItemStack[] drops = event.getDrops().toArray(new ItemStack[event.getDrops().size()]);
 
         if (ItemUtil.findItemOfName(drops, CustomItems.MAGIC_BUCKET.toString())) {
-            if (player.getAllowFlight()) {
-                ChatUtil.sendNotice(player, "The power of the bucket fades.");
-            }
-            player.setAllowFlight(false);
-            // antiCheat.unexempt(player, CheckType.FLY);
+            takeFlight(player);
         }
     }
 }
