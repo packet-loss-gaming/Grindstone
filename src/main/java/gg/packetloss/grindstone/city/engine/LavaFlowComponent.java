@@ -28,53 +28,53 @@ import java.util.logging.Logger;
 @Depend(plugins = "WorldGuard")
 public class LavaFlowComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    private WorldGuardPlugin worldGuard;
+  private WorldGuardPlugin worldGuard;
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        try {
-            setUpWorldGuard();
-        } catch (UnknownPluginException e) {
-            log.warning("Plugin not found: " + e.getMessage() + ".");
-            return;
-        }
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+    try {
+      setUpWorldGuard();
+    } catch (UnknownPluginException e) {
+      log.warning("Plugin not found: " + e.getMessage() + ".");
+      return;
     }
 
-    private void setUpWorldGuard() throws UnknownPluginException {
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
 
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
+  private void setUpWorldGuard() throws UnknownPluginException {
 
-        // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
-            throw new UnknownPluginException("WorldGuard");
-        }
+    Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
-        this.worldGuard = (WorldGuardPlugin) plugin;
+    // WorldGuard may not be loaded
+    if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+      throw new UnknownPluginException("WorldGuard");
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockFromTo(BlockFromToEvent event) {
+    this.worldGuard = (WorldGuardPlugin) plugin;
+  }
 
-        if (EnvironmentUtil.isLava(event.getBlock())) {
-            try {
-                WorldConfiguration wcfg = worldGuard.getGlobalStateManager().get(event.getBlock().getWorld());
-                if (wcfg.preventWaterDamage.size() > 0) {
-                    if (wcfg.preventWaterDamage.contains(event.getToBlock().getTypeId())) {
-                        event.setCancelled(true);
-                    }
-                }
-            } catch (NullPointerException ex) {
-                log.warning("Blocking lava flow, configuration error!");
-                event.setCancelled(true);
-            }
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onBlockFromTo(BlockFromToEvent event) {
+
+    if (EnvironmentUtil.isLava(event.getBlock())) {
+      try {
+        WorldConfiguration wcfg = worldGuard.getGlobalStateManager().get(event.getBlock().getWorld());
+        if (wcfg.preventWaterDamage.size() > 0) {
+          if (wcfg.preventWaterDamage.contains(event.getToBlock().getTypeId())) {
+            event.setCancelled(true);
+          }
         }
+      } catch (NullPointerException ex) {
+        log.warning("Blocking lava flow, configuration error!");
+        event.setCancelled(true);
+      }
     }
+  }
 }

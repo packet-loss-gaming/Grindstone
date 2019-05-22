@@ -19,15 +19,15 @@ import java.util.logging.Logger;
 @Depend(plugins = {"AntiCheat"})
 public class AntiCheatCompatibilityComponent extends BukkitComponent /* implements Listener, Runnable*/ {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    //private LocalConfiguration config;
-    //private ConcurrentHashMap<String, ConcurrentHashMap<CheckType, Long>> playerList = new ConcurrentHashMap<>();
+  //private LocalConfiguration config;
+  //private ConcurrentHashMap<String, ConcurrentHashMap<CheckType, Long>> playerList = new ConcurrentHashMap<>();
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
         /*
         config = configure(new LocalConfiguration());
@@ -35,7 +35,7 @@ public class AntiCheatCompatibilityComponent extends BukkitComponent /* implemen
         inst.registerEvents(this);
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 20, 20 * 5);
         */
-    }
+  }
 
     /*
 

@@ -9,10 +9,10 @@ package gg.packetloss.grindstone.items.implementations;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import gg.packetloss.grindstone.items.CustomItemSession;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -26,79 +26,79 @@ import java.util.Set;
 
 public class RedFeatherImpl extends AbstractItemFeatureImpl {
 
-    private static Set<EntityDamageEvent.DamageCause> ignoredCauses = new HashSet<>();
+  private static Set<EntityDamageEvent.DamageCause> ignoredCauses = new HashSet<>();
 
-    static {
-        ignoredCauses.add(EntityDamageEvent.DamageCause.POISON);
-        ignoredCauses.add(EntityDamageEvent.DamageCause.WITHER);
-    }
+  static {
+    ignoredCauses.add(EntityDamageEvent.DamageCause.POISON);
+    ignoredCauses.add(EntityDamageEvent.DamageCause.WITHER);
+  }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onEntityDamage(EntityDamageEvent event) {
+  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  public void onEntityDamage(EntityDamageEvent event) {
 
-        Entity entity = event.getEntity();
+    Entity entity = event.getEntity();
 
-        if (entity instanceof Player && !ignoredCauses.contains(event.getCause())) {
+    if (entity instanceof Player && !ignoredCauses.contains(event.getCause())) {
 
-            Player player = (Player) entity;
-            CustomItemSession session = getSession(player);
-            ItemStack[] contents = player.getInventory().getContents();
+      Player player = (Player) entity;
+      CustomItemSession session = getSession(player);
+      ItemStack[] contents = player.getInventory().getContents();
 
-            if (session.canSpec(SpecType.RED_FEATHER) && ItemUtil.hasItem(player, CustomItems.RED_FEATHER)) {
+      if (session.canSpec(SpecType.RED_FEATHER) && ItemUtil.hasItem(player, CustomItems.RED_FEATHER)) {
 
-                final int redQD = ItemUtil.countItemsOfType(contents, ItemID.REDSTONE_DUST);
-                final int redQB = 9 * ItemUtil.countItemsOfType(contents, BlockID.REDSTONE_BLOCK);
+        final int redQD = ItemUtil.countItemsOfType(contents, ItemID.REDSTONE_DUST);
+        final int redQB = 9 * ItemUtil.countItemsOfType(contents, BlockID.REDSTONE_BLOCK);
 
-                int redQ = redQD + redQB;
+        int redQ = redQD + redQB;
 
-                if (redQ > 0) {
+        if (redQ > 0) {
 
-                    contents = ItemUtil.removeItemOfType(contents, ItemID.REDSTONE_DUST);
-                    contents = ItemUtil.removeItemOfType(contents, BlockID.REDSTONE_BLOCK);
+          contents = ItemUtil.removeItemOfType(contents, ItemID.REDSTONE_DUST);
+          contents = ItemUtil.removeItemOfType(contents, BlockID.REDSTONE_BLOCK);
 
-                    player.getInventory().setContents(contents);
+          player.getInventory().setContents(contents);
 
-                    final double dmg = event.getDamage();
-                    final int k = (dmg > 80 ? 16 : dmg > 40 ? 8 : dmg > 20 ? 4 : 2);
+          final double dmg = event.getDamage();
+          final int k = (dmg > 80 ? 16 : dmg > 40 ? 8 : dmg > 20 ? 4 : 2);
 
-                    final double blockable = redQ * k;
-                    final double blocked = blockable - (blockable - dmg);
+          final double blockable = redQ * k;
+          final double blocked = blockable - (blockable - dmg);
 
-                    redQ = (int) ((blockable - blocked) / k);
+          redQ = (int) ((blockable - blocked) / k);
 
-                    World w = player.getWorld();
+          World w = player.getWorld();
 
-                    while (redQ / 9 > 0) {
-                        ItemStack is = new ItemStack(BlockID.REDSTONE_BLOCK);
-                        if (player.getInventory().firstEmpty() != -1) {
-                            player.getInventory().addItem(is);
-                        } else {
-                            w.dropItem(player.getLocation(), is);
-                        }
-                        redQ -= 9;
-                    }
-
-                    while (redQ > 0) {
-                        int r = Math.min(64, redQ);
-                        ItemStack is = new ItemStack(ItemID.REDSTONE_DUST, r);
-                        if (player.getInventory().firstEmpty() != -1) {
-                            player.getInventory().addItem(is);
-                        } else {
-                            w.dropItem(player.getLocation(), is);
-                        }
-                        redQ -= r;
-                    }
-
-                    //noinspection deprecation
-                    player.updateInventory();
-
-                    event.setDamage(Math.max(0, dmg - blocked));
-                    player.setFireTicks(0);
-
-                    // Update the session
-                    session.updateSpec(SpecType.RED_FEATHER, (long) (blocked * 75));
-                }
+          while (redQ / 9 > 0) {
+            ItemStack is = new ItemStack(BlockID.REDSTONE_BLOCK);
+            if (player.getInventory().firstEmpty() != -1) {
+              player.getInventory().addItem(is);
+            } else {
+              w.dropItem(player.getLocation(), is);
             }
+            redQ -= 9;
+          }
+
+          while (redQ > 0) {
+            int r = Math.min(64, redQ);
+            ItemStack is = new ItemStack(ItemID.REDSTONE_DUST, r);
+            if (player.getInventory().firstEmpty() != -1) {
+              player.getInventory().addItem(is);
+            } else {
+              w.dropItem(player.getLocation(), is);
+            }
+            redQ -= r;
+          }
+
+          //noinspection deprecation
+          player.updateInventory();
+
+          event.setDamage(Math.max(0, dmg - blocked));
+          player.setFireTicks(0);
+
+          // Update the session
+          session.updateSpec(SpecType.RED_FEATHER, (long) (blocked * 75));
         }
+      }
     }
+  }
 }

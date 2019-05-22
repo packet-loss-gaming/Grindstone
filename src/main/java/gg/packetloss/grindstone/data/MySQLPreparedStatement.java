@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public interface MySQLPreparedStatement {
-    void setConnection(Connection connection);
-    void executeStatements() throws SQLException;
+  void setConnection(Connection connection);
+
+  void executeStatements() throws SQLException;
 }

@@ -11,55 +11,55 @@ import org.bukkit.TravelAgent;
 import org.bukkit.event.player.PlayerPortalEvent;
 
 public class NoOPTravelAgent implements TravelAgent {
-    @Override
-    public TravelAgent setSearchRadius(int radius) {
-        return this;
-    }
+  public static void overwriteDestination(PlayerPortalEvent event, Location location) {
+    event.useTravelAgent(true);
+    event.setPortalTravelAgent(new NoOPTravelAgent());
 
-    @Override
-    public int getSearchRadius() {
-        return 0;
-    }
+    event.setTo(location.add(0, 1, 0));
+  }
 
-    @Override
-    public TravelAgent setCreationRadius(int radius) {
-        return this;
-    }
+  @Override
+  public TravelAgent setSearchRadius(int radius) {
+    return this;
+  }
 
-    @Override
-    public int getCreationRadius() {
-        return 0;
-    }
+  @Override
+  public int getSearchRadius() {
+    return 0;
+  }
 
-    @Override
-    public boolean getCanCreatePortal() {
-        return false;
-    }
+  @Override
+  public TravelAgent setCreationRadius(int radius) {
+    return this;
+  }
 
-    @Override
-    public void setCanCreatePortal(boolean create) {
+  @Override
+  public int getCreationRadius() {
+    return 0;
+  }
 
-    }
+  @Override
+  public boolean getCanCreatePortal() {
+    return false;
+  }
 
-    @Override
-    public Location findOrCreate(Location location) {
-        return location;
-    }
+  @Override
+  public void setCanCreatePortal(boolean create) {
 
-    @Override
-    public Location findPortal(Location location) {
-        return location;
-    }
+  }
 
-    @Override
-    public boolean createPortal(Location location) {
-        return false;
-    }
+  @Override
+  public Location findOrCreate(Location location) {
+    return location;
+  }
 
-    public static void overwriteDestination(PlayerPortalEvent event, Location location) {
-        event.useTravelAgent(true);
-        event.setPortalTravelAgent(new NoOPTravelAgent());
+  @Override
+  public Location findPortal(Location location) {
+    return location;
+  }
 
-        event.setTo(location.add(0, 1, 0));
-    }
+  @Override
+  public boolean createPortal(Location location) {
+    return false;
+  }
 }

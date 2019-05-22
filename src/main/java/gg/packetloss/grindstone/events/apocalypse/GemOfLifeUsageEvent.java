@@ -13,31 +13,31 @@ import org.bukkit.event.player.PlayerEvent;
 
 public class GemOfLifeUsageEvent extends PlayerEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
+  private static final HandlerList handlers = new HandlerList();
+  private boolean cancelled = false;
 
-    public GemOfLifeUsageEvent(Player player) {
+  public GemOfLifeUsageEvent(Player player) {
 
-        super(player);
-    }
+    super(player);
+  }
 
-    public HandlerList getHandlers() {
+  public static HandlerList getHandlerList() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public boolean isCancelled() {
+  public boolean isCancelled() {
 
-        return cancelled;
-    }
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
+  public void setCancelled(boolean cancelled) {
 
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 }

@@ -12,19 +12,19 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class PvMSession extends PersistentSession {
-    public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
+  public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
 
-    private UUID lastAttacked = null;
+  private UUID lastAttacked = null;
 
-    protected PvMSession() {
-        super(MAX_AGE);
+  protected PvMSession() {
+    super(MAX_AGE);
+  }
+
+  public boolean checkLast(UUID lastAttacked) {
+    if (this.lastAttacked == lastAttacked) {
+      return true;
     }
-
-    public boolean checkLast(UUID lastAttacked) {
-        if (this.lastAttacked == lastAttacked) {
-            return true;
-        }
-        this.lastAttacked = lastAttacked;
-        return false;
-    }
+    this.lastAttacked = lastAttacked;
+    return false;
+  }
 }

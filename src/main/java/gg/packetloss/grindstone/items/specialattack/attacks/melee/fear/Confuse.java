@@ -14,16 +14,16 @@ import org.bukkit.potion.PotionEffectType;
 
 public class Confuse extends EntityAttack implements MeleeSpecial {
 
-    public Confuse(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
-    }
+  public Confuse(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+  }
 
-    @Override
-    public void activate() {
+  @Override
+  public void activate() {
 
-        int duration = (int) Math.min(1200, owner.getHealth() * 18);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, duration, 1), true);
+    int duration = (int) Math.min(1200, owner.getHealth() * 18);
+    target.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, duration, 1), true);
 
-        inform("Your sword confuses its victim.");
-    }
+    inform("Your sword confuses its victim.");
+  }
 }

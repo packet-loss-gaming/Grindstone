@@ -27,53 +27,59 @@ import java.util.logging.Logger;
 @Depend(plugins = {"WorldGuard"})
 public class ImpersonalComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = CommandBook.logger();
+  private final Server server = CommandBook.server();
 
-    private WorldGuardPlugin WG;
+  private WorldGuardPlugin WG;
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        setUpWG();
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+    setUpWG();
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
+
+  /*
+   * @returns true if the block is allowed to be there
+   */
+  public boolean check(Block block, boolean breakIt) {
+
+    ApplicableRegionSet ars = WG.getGlobalRegionManager().get(block.getWorld())
+        .getApplicableRegions(block.getLocation());
+
+    if (ars.size() < 1) {
+      return false;
     }
-
-    /*
-     * @returns true if the block is allowed to be there
-     */
-    public boolean check(Block block, boolean breakIt) {
-
-        ApplicableRegionSet ars = WG.getGlobalRegionManager().get(block.getWorld())
-                .getApplicableRegions(block.getLocation());
-
-        if (ars.size() < 1) return false;
-        for (ProtectedRegion ar : ars) {
-            if (ar.getId().endsWith("-house")) {
-                if (breakIt) block.breakNaturally();
-                return false;
-            }
+    for (ProtectedRegion ar : ars) {
+      if (ar.getId().endsWith("-house")) {
+        if (breakIt) {
+          block.breakNaturally();
         }
-        return true;
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private void setUpWG() {
+
+    Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
+
+    // WorldGuard may not be loaded
+    if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+      return;
     }
 
-    private void setUpWG() {
+    WG = (WorldGuardPlugin) plugin;
+  }
 
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
+  @EventHandler(ignoreCancelled = true)
+  public void onSacrifice(PlayerSacrificeItemEvent event) {
 
-        // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) return;
-
-        WG = (WorldGuardPlugin) plugin;
+    if (!check(event.getBlock(), false)) {
+      event.setCancelled(true);
     }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onSacrifice(PlayerSacrificeItemEvent event) {
-
-        if (!check(event.getBlock(), false)) {
-            event.setCancelled(true);
-        }
-    }
+  }
 }

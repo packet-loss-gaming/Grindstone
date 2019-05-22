@@ -10,76 +10,76 @@ import java.util.Calendar;
 
 public class TimeUtil {
 
-    private static Calendar calendar = Calendar.getInstance();
+  private static Calendar calendar = Calendar.getInstance();
 
-    /**
-     * Gets the ticks till the start of the next hour
-     *
-     * @return the number of ticks till the next hour
-     */
-    public static long getTicksTillHour() {
+  /**
+   * Gets the ticks till the start of the next hour
+   *
+   * @return the number of ticks till the next hour
+   */
+  public static long getTicksTillHour() {
 
-        Calendar localCalendar = Calendar.getInstance();
-        long returnValue;
+    Calendar localCalendar = Calendar.getInstance();
+    long returnValue;
 
-        localCalendar.set(Calendar.MINUTE, 0);
-        localCalendar.add(Calendar.HOUR_OF_DAY, 1);
+    localCalendar.set(Calendar.MINUTE, 0);
+    localCalendar.add(Calendar.HOUR_OF_DAY, 1);
 
-        returnValue = localCalendar.getTimeInMillis() - calendar.getTimeInMillis();
-        returnValue = (returnValue / 1000) * 20; // To Ticks
+    returnValue = localCalendar.getTimeInMillis() - calendar.getTimeInMillis();
+    returnValue = (returnValue / 1000) * 20; // To Ticks
 
-        return returnValue;
+    return returnValue;
+  }
+
+  /**
+   * Gets the ticks till a given base 24 hour
+   *
+   * @param hour The hour, for example 13 is 1 P.M.
+   * @return the number of ticks till the given time
+   */
+  public static long getTicksTill(int hour) {
+
+    return getTicksTill(hour, -1);
+  }
+
+  /**
+   * Gets the ticks till a given base 24 hour on a day of the week
+   *
+   * @param hour      The hour, for example 13 is 1 P.M.
+   * @param dayofweek The day, for example 7 is Saturday
+   * @return the number of ticks till the given time
+   */
+  public static long getTicksTill(int hour, int dayofweek) {
+
+    Calendar localCalendar = Calendar.getInstance();
+    long returnValue;
+
+    localCalendar.set(Calendar.MINUTE, 0);
+
+    while (localCalendar.get(Calendar.HOUR_OF_DAY) != hour) {
+      localCalendar.add(Calendar.HOUR_OF_DAY, 1);
+    }
+    if (dayofweek != -1) {
+      while (localCalendar.get(Calendar.DAY_OF_WEEK) != dayofweek) {
+        localCalendar.add(Calendar.DAY_OF_WEEK, 1);
+      }
     }
 
-    /**
-     * Gets the ticks till a given base 24 hour
-     *
-     * @param hour The hour, for example 13 is 1 P.M.
-     * @return the number of ticks till the given time
-     */
-    public static long getTicksTill(int hour) {
+    returnValue = localCalendar.getTimeInMillis() - calendar.getTimeInMillis();
+    returnValue = (returnValue / 1000) * 20; // To Ticks
 
-        return getTicksTill(hour, -1);
-    }
+    return returnValue;
+  }
 
-    /**
-     * Gets the ticks till a given base 24 hour on a day of the week
-     *
-     * @param hour      The hour, for example 13 is 1 P.M.
-     * @param dayofweek The day, for example 7 is Saturday
-     * @return the number of ticks till the given time
-     */
-    public static long getTicksTill(int hour, int dayofweek) {
+  public static long convertSecondsToTicks(int seconds) {
+    return seconds * 20;
+  }
 
-        Calendar localCalendar = Calendar.getInstance();
-        long returnValue;
+  public static long convertMinutesToTicks(int minutes) {
+    return convertSecondsToTicks(minutes * 60);
+  }
 
-        localCalendar.set(Calendar.MINUTE, 0);
-
-        while (localCalendar.get(Calendar.HOUR_OF_DAY) != hour) {
-            localCalendar.add(Calendar.HOUR_OF_DAY, 1);
-        }
-        if (dayofweek != -1) {
-            while (localCalendar.get(Calendar.DAY_OF_WEEK) != dayofweek) {
-                localCalendar.add(Calendar.DAY_OF_WEEK, 1);
-            }
-        }
-
-        returnValue = localCalendar.getTimeInMillis() - calendar.getTimeInMillis();
-        returnValue = (returnValue / 1000) * 20; // To Ticks
-
-        return returnValue;
-    }
-
-    public static long convertSecondsToTicks(int seconds) {
-        return seconds * 20;
-    }
-
-    public static long convertMinutesToTicks(int minutes) {
-        return convertSecondsToTicks(minutes * 60);
-    }
-
-    public static long convertHoursToTicks(int hours) {
-        return convertMinutesToTicks(hours * 60);
-    }
+  public static long convertHoursToTicks(int hours) {
+    return convertMinutesToTicks(hours * 60);
+  }
 }

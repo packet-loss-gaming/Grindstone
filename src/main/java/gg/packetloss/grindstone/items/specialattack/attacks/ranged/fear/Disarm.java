@@ -16,52 +16,58 @@ import org.bukkit.inventory.ItemStack;
 
 public class Disarm extends EntityAttack implements RangedSpecial {
 
-    public Disarm(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+  public Disarm(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+  }
+
+  @Override
+  public void activate() {
+
+    final ItemStack held = getItemStack();
+
+    if (held == null) {
+      return;
     }
 
-    @Override
-    public void activate() {
+    if (target instanceof Player) {
 
-        final ItemStack held = getItemStack();
+      ItemStack[] items = ((Player) target).getInventory().getContents();
 
-        if (held == null) return;
+      int heldS = ((Player) target).getInventory().getHeldItemSlot();
+      int k = ChanceUtil.getRandom(items.length) - 1;
 
-        if (target instanceof Player) {
+      items[heldS] = items[k];
+      items[k] = held;
 
-            ItemStack[] items = ((Player) target).getInventory().getContents();
-
-            int heldS = ((Player) target).getInventory().getHeldItemSlot();
-            int k = ChanceUtil.getRandom(items.length) - 1;
-
-            items[heldS] = items[k];
-            items[k] = held;
-
-            ((Player) target).getInventory().setContents(items);
-        } else {
-            target.getEquipment().setItemInHand(null);
-            server.getScheduler().runTaskLater(inst, () -> {
-                if (target.isValid()) {
-                    target.getEquipment().setItemInHand(held);
-                }
-            }, 20 * 3);
+      ((Player) target).getInventory().setContents(items);
+    } else {
+      target.getEquipment().setItemInHand(null);
+      SERVER.getScheduler().runTaskLater(INST, () -> {
+        if (target.isValid()) {
+          target.getEquipment().setItemInHand(held);
         }
-
-        inform("Your bow disarms its victim.");
+      }, 20 * 3);
     }
 
-    public ItemStack getItemStack() {
+    inform("Your bow disarms its victim.");
+  }
 
-        ItemStack held;
-        if (target instanceof Player) {
-            held = ((Player) target).getItemInHand();
-            if (held != null) held = held.clone();
-        } else if (target instanceof Skeleton) {
-            held = null;
-        } else {
-            held = target.getEquipment().getItemInHand();
-            if (held != null) held = held.clone();
-        }
-        return held == null || held.getTypeId() == 0 ? null : held;
+  public ItemStack getItemStack() {
+
+    ItemStack held;
+    if (target instanceof Player) {
+      held = ((Player) target).getItemInHand();
+      if (held != null) {
+        held = held.clone();
+      }
+    } else if (target instanceof Skeleton) {
+      held = null;
+    } else {
+      held = target.getEquipment().getItemInHand();
+      if (held != null) {
+        held = held.clone();
+      }
     }
+    return held == null || held.getTypeId() == 0 ? null : held;
+  }
 }

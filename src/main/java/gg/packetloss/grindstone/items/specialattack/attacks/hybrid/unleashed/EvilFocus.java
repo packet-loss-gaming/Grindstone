@@ -17,18 +17,18 @@ import org.bukkit.potion.PotionEffectType;
 
 public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpecial {
 
-    public EvilFocus(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
-    }
+  public EvilFocus(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+  }
 
-    @Override
-    public void activate() {
+  @Override
+  public void activate() {
 
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (10 * target.getHealth()), 9), true);
-        if (target instanceof Player) {
-            target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0), true);
-        }
-        target.getWorld().playSound(target.getLocation(), Sound.GHAST_SCREAM, 1, .02F);
-        inform("Your weapon traps your foe in their own sins.");
+    target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (10 * target.getHealth()), 9), true);
+    if (target instanceof Player) {
+      target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0), true);
     }
+    target.getWorld().playSound(target.getLocation(), Sound.GHAST_SCREAM, 1, .02F);
+    inform("Your weapon traps your foe in their own sins.");
+  }
 }

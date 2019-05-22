@@ -13,7 +13,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
@@ -38,180 +37,180 @@ import java.util.logging.Logger;
 
 public class HotSpringArena extends AbstractRegionedArena implements GenericArena, Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
+  List<Player> playerL = new ArrayList<>();
+  private AdminComponent adminComponent;
 
-    private AdminComponent adminComponent;
+  public HotSpringArena(World world, ProtectedRegion region, AdminComponent adminComponent) {
 
-    List<Player> playerL = new ArrayList<>();
+    super(world, region);
+    this.adminComponent = adminComponent;
 
-    public HotSpringArena(World world, ProtectedRegion region, AdminComponent adminComponent) {
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
 
-        super(world, region);
-        this.adminComponent = adminComponent;
+  @Override
+  public void run() {
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+    smoke();
+    effect();
+  }
+
+  @Override
+  public void disable() {
+
+    // No disable code
+  }
+
+  @Override
+  public String getId() {
+
+    return getRegion().getId();
+  }
+
+  @Override
+  public void equalize() {
+
+    // Do nothing
+  }
+
+  @Override
+  public ArenaType getArenaType() {
+
+    return ArenaType.GENERIC;
+  }
+
+  @EventHandler(ignoreCancelled = true)
+  public void onPlayerKick(PlayerKickEvent event) {
+
+    if (playerL.contains(event.getPlayer())) {
+      event.setCancelled(true);
     }
+  }
 
-    @Override
-    public void run() {
+  public void smoke() {
 
-        smoke();
-        effect();
-    }
+    try {
+      if (!isEmpty()) {
 
-    @Override
-    public void disable() {
+        com.sk89q.worldedit.Vector min = getRegion().getMinimumPoint();
+        com.sk89q.worldedit.Vector max = getRegion().getMaximumPoint();
 
-        // No disable code
-    }
+        int minX = min.getBlockX();
+        int minY = min.getBlockY();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxZ = max.getBlockZ();
 
-    @Override
-    public String getId() {
+        for (int x = minX; x <= maxX; x++) {
+          for (int z = minZ; z <= maxZ; z++) {
+            int sizeY = getWorld().getHighestBlockYAt(x, z) - minY;
 
-        return getRegion().getId();
-    }
+            for (int y = sizeY; y > 0; y--) {
+              Block block = getWorld().getBlockAt(x, y + minY, z);
 
-    @Override
-    public void equalize() {
-
-        // Do nothing
-    }
-
-    @Override
-    public ArenaType getArenaType() {
-
-        return ArenaType.GENERIC;
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerKick(PlayerKickEvent event) {
-
-        if (playerL.contains(event.getPlayer())) {
-            event.setCancelled(true);
-        }
-    }
-
-    public void smoke() {
-
-        try {
-            if (!isEmpty()) {
-
-                com.sk89q.worldedit.Vector min = getRegion().getMinimumPoint();
-                com.sk89q.worldedit.Vector max = getRegion().getMaximumPoint();
-
-                int minX = min.getBlockX();
-                int minY = min.getBlockY();
-                int minZ = min.getBlockZ();
-                int maxX = max.getBlockX();
-                int maxZ = max.getBlockZ();
-
-                for (int x = minX; x <= maxX; x++) {
-                    for (int z = minZ; z <= maxZ; z++) {
-                        int sizeY = getWorld().getHighestBlockYAt(x, z) - minY;
-
-                        for (int y = sizeY; y > 0; y--) {
-                            Block block = getWorld().getBlockAt(x, y + minY, z);
-
-                            if (EnvironmentUtil.isWater(block) && ChanceUtil.getChance(200)) {
-                                getWorld().playEffect(block.getLocation(), Effect.ENDER_SIGNAL, 1);
-                                if (getWorld().isThundering() && ChanceUtil.getChance(50)) {
-                                    getWorld().spawn(block.getLocation(), Zombie.class);
-                                }
-                                break;
-                            }
-                        }
-                    }
+              if (EnvironmentUtil.isWater(block) && ChanceUtil.getChance(200)) {
+                getWorld().playEffect(block.getLocation(), Effect.ENDER_SIGNAL, 1);
+                if (getWorld().isThundering() && ChanceUtil.getChance(50)) {
+                  getWorld().spawn(block.getLocation(), Zombie.class);
                 }
+                break;
+              }
             }
-        } catch (Exception e) {
-
-            log.warning("The region: " + getId() + " does not exists in the world: " + getWorld().getName() + ".");
+          }
         }
+      }
+    } catch (Exception e) {
+
+      log.warning("The region: " + getId() + " does not exists in the world: " + getWorld().getName() + ".");
     }
+  }
 
-    public void effect() {
+  public void effect() {
 
-        for (final Player player : getContained(Player.class)) {
-            try {
+    for (final Player player : getContained(Player.class)) {
+      try {
 
-                player.removePotionEffect(PotionEffectType.CONFUSION);
-                player.removePotionEffect(PotionEffectType.BLINDNESS);
-                player.removePotionEffect(PotionEffectType.WEAKNESS);
-                player.removePotionEffect(PotionEffectType.POISON);
-                player.removePotionEffect(PotionEffectType.SLOW);
+        player.removePotionEffect(PotionEffectType.CONFUSION);
+        player.removePotionEffect(PotionEffectType.BLINDNESS);
+        player.removePotionEffect(PotionEffectType.WEAKNESS);
+        player.removePotionEffect(PotionEffectType.POISON);
+        player.removePotionEffect(PotionEffectType.SLOW);
 
-                player.removePotionEffect(PotionEffectType.REGENERATION);
-                player.removePotionEffect(PotionEffectType.SPEED);
-                player.removePotionEffect(PotionEffectType.JUMP);
+        player.removePotionEffect(PotionEffectType.REGENERATION);
+        player.removePotionEffect(PotionEffectType.SPEED);
+        player.removePotionEffect(PotionEffectType.JUMP);
 
-                player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 300, 2));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 180, 1));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20 * 180, 1));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 300, 2));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 180, 1));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20 * 180, 1));
 
-                Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-                if (downward.getTypeId() != BlockID.LAPIS_LAZULI_BLOCK) {
-                    downward = downward.getRelative(BlockFace.DOWN);
-                    if (downward.getTypeId() != BlockID.LAPIS_LAZULI_BLOCK) {
-                        continue;
-                    }
-                }
+        Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
+        if (downward.getTypeId() != BlockID.LAPIS_LAZULI_BLOCK) {
+          downward = downward.getRelative(BlockFace.DOWN);
+          if (downward.getTypeId() != BlockID.LAPIS_LAZULI_BLOCK) {
+            continue;
+          }
+        }
 
-                // TODO Fix this
+        // TODO Fix this
 
-                playerL.add(player);
+        playerL.add(player);
 
-                //AntiCheatAPI.exemptPlayer(player, CheckType.WATER_WALK);
-                //AntiCheatAPI.exemptPlayer(player, CheckType.FLY);
-                //AntiCheatAPI.exemptPlayer(player, CheckType.SNEAK);
+        //AntiCheatAPI.exemptPlayer(player, CheckType.WATER_WALK);
+        //AntiCheatAPI.exemptPlayer(player, CheckType.FLY);
+        //AntiCheatAPI.exemptPlayer(player, CheckType.SNEAK);
 
-                IntegratedRunnable runnable = new IntegratedRunnable() {
-                    @Override
-                    public boolean run(int times) {
+        IntegratedRunnable runnable = new IntegratedRunnable() {
+          @Override
+          public boolean run(int times) {
 
-                        if (player == null || !player.isValid()) return true;
-
-                        Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-                        if (!BlockType.canPassThrough(downward.getTypeId()) && player.getLocation().getBlockY() > 70) {
-                            return true;
-                        }
-
-                        player.setFlying(false);
-                        player.setAllowFlight(false);
-
-                        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
-                        Vector vector = player.getVelocity();
-                        vector.add(new Vector(0, 1.2, 0));
-                        player.setVelocity(vector);
-
-                        player.setFallDistance(0);
-                        return true;
-                    }
-
-                    @Override
-                    public void end() {
-
-                        if (playerL.contains(player)) {
-                            playerL.remove(player);
-                        }
-
-                        if (player == null || !player.isValid()) return;
-
-                        // AntiCheatAPI.unexemptPlayer(player, CheckType.WATER_WALK);
-                        // AntiCheatAPI.unexemptPlayer(player, CheckType.FLY);
-                        // AntiCheatAPI.unexemptPlayer(player, CheckType.SNEAK);
-                    }
-                };
-
-                TimedRunnable timedRunnable = new TimedRunnable(runnable, 14);
-                BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 15);
-                timedRunnable.setTask(task);
-            } catch (Exception e) {
-
-                log.warning("The player: " + player.getName() + " was not boosted by the hot spring: " + getId() + ".");
+            if (player == null || !player.isValid()) {
+              return true;
             }
-        }
+
+            Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
+            if (!BlockType.canPassThrough(downward.getTypeId()) && player.getLocation().getBlockY() > 70) {
+              return true;
+            }
+
+            player.setFlying(false);
+            player.setAllowFlight(false);
+
+            server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+            Vector vector = player.getVelocity();
+            vector.add(new Vector(0, 1.2, 0));
+            player.setVelocity(vector);
+
+            player.setFallDistance(0);
+            return true;
+          }
+
+          @Override
+          public void end() {
+
+            playerL.remove(player);
+
+            if (player == null || !player.isValid()) {
+              return;
+            }
+
+            // AntiCheatAPI.unexemptPlayer(player, CheckType.WATER_WALK);
+            // AntiCheatAPI.unexemptPlayer(player, CheckType.FLY);
+            // AntiCheatAPI.unexemptPlayer(player, CheckType.SNEAK);
+          }
+        };
+
+        TimedRunnable timedRunnable = new TimedRunnable(runnable, 14);
+        BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 15);
+        timedRunnable.setTask(task);
+      } catch (Exception e) {
+
+        log.warning("The player: " + player.getName() + " was not boosted by the hot spring: " + getId() + ".");
+      }
     }
+  }
 }

@@ -8,13 +8,13 @@ package gg.packetloss.grindstone.exceptions;
 
 public class UnknownPluginException extends Exception {
 
-    public UnknownPluginException() {
+  public UnknownPluginException() {
 
-        super();
-    }
+    super();
+  }
 
-    public UnknownPluginException(String message) {
+  public UnknownPluginException(String message) {
 
-        super(message);
-    }
+    super(message);
+  }
 }

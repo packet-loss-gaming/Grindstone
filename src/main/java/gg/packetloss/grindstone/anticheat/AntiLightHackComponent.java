@@ -39,98 +39,105 @@ import java.util.logging.Logger;
 @Depend(components = AdminComponent.class)
 public class AntiLightHackComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private static String[] textOps = new String[4];
+  private static List<Biome> biomeBlackList = new ArrayList<>();
 
-    @InjectComponent
-    AdminComponent adminComponent;
+  static {
+    textOps[0] = "You swing your pickaxe at your foot sometimes yelling... ouch!";
+    textOps[1] = "Your pickaxe suddenly came in contact with your eye.";
+    textOps[2] = "You stumble and trip over a rock.";
+    textOps[3] = "You suddenly find yourself falling from the... Oh wait, you just bashed your head off a rock.";
+  }
 
-    LocalConfiguration config;
+  static {
+    biomeBlackList.add(Biome.HELL);
+  }
 
-    @Override
-    public void enable() {
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
+  @InjectComponent
+  AdminComponent adminComponent;
+  LocalConfiguration config;
 
-        config = configure(new LocalConfiguration());
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+  @Override
+  public void enable() {
+
+    config = configure(new LocalConfiguration());
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
+
+  @Override
+  public void reload() {
+
+    super.reload();
+    configure(config);
+  }
+
+  @EventHandler
+  public void onBlockBreak(BlockBreakEvent event) {
+
+    Player player = event.getPlayer();
+    Block block = event.getBlock();
+    Block pBlock = player.getLocation().getBlock();
+    Block pEyeBlock = pBlock.getRelative(BlockFace.UP);
+
+    if (!adminComponent.isAdmin(player) && isProtectedBlock(block.getTypeId())) {
+
+      // Light
+      int light = pBlock.getLightLevel();
+      light += pEyeBlock.getLightLevel();
+      if (light > config.maxLight) {
+        return;
+      }
+
+      // Environment
+      if (!isValidEnvironment(pBlock)) {
+        return;
+      }
+
+      // Chanced
+      if (!ChanceUtil.getChance(config.failRate)) {
+        return;
+      }
+
+      // Potions
+      if (player.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
+        return;
+      }
+
+      // Damage
+      DarkAreaInjuryEvent aEvent = new DarkAreaInjuryEvent(player,
+          ChanceUtil.getRandom(config.maxDamage), CollectionUtil.getElement(textOps));
+      server.getPluginManager().callEvent(aEvent);
+
+      if (aEvent.isCancelled()) {
+        return;
+      }
+
+      ChatUtil.sendWarning(player, aEvent.getMessage());
+      player.damage(aEvent.getDamage());
     }
+  }
 
-    @Override
-    public void reload() {
+  private boolean isValidEnvironment(Block block) {
 
-        super.reload();
-        configure(config);
-    }
+    return !biomeBlackList.contains(block.getBiome()) && !EnvironmentUtil.isWater(block.getTypeId());
+  }
 
-    private static class LocalConfiguration extends ConfigurationBase {
+  private boolean isProtectedBlock(int id) {
 
-        @Setting("chance-of-failure")
-        public int failRate = 3;
-        @Setting("max-damage")
-        public int maxDamage = 5;
-        @Setting("max-light")
-        public double maxLight = 0;
-    }
+    return EnvironmentUtil.isValuableOre(id) || id == BlockID.STONE;
+  }
 
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
+  private static class LocalConfiguration extends ConfigurationBase {
 
-        Player player = event.getPlayer();
-        Block block = event.getBlock();
-        Block pBlock = player.getLocation().getBlock();
-        Block pEyeBlock = pBlock.getRelative(BlockFace.UP);
-
-        if (!adminComponent.isAdmin(player) && isProtectedBlock(block.getTypeId())) {
-
-            // Light
-            int light = pBlock.getLightLevel();
-            light += pEyeBlock.getLightLevel();
-            if (light > config.maxLight) return;
-
-            // Environment
-            if (!isValidEnvironment(pBlock)) return;
-
-            // Chanced
-            if (!ChanceUtil.getChance(config.failRate)) return;
-
-            // Potions
-            if (player.hasPotionEffect(PotionEffectType.NIGHT_VISION)) return;
-
-            // Damage
-            DarkAreaInjuryEvent aEvent = new DarkAreaInjuryEvent(player,
-                    ChanceUtil.getRandom(config.maxDamage), CollectionUtil.getElement(textOps));
-            server.getPluginManager().callEvent(aEvent);
-
-            if (aEvent.isCancelled()) return;
-
-            ChatUtil.sendWarning(player, aEvent.getMessage());
-            player.damage(aEvent.getDamage());
-        }
-    }
-
-    private static String[] textOps = new String[4];
-
-    static {
-        textOps[0] = "You swing your pickaxe at your foot sometimes yelling... ouch!";
-        textOps[1] = "Your pickaxe suddenly came in contact with your eye.";
-        textOps[2] = "You stumble and trip over a rock.";
-        textOps[3] = "You suddenly find yourself falling from the... Oh wait, you just bashed your head off a rock.";
-    }
-
-    private static List<Biome> biomeBlackList = new ArrayList<>();
-
-    static {
-        biomeBlackList.add(Biome.HELL);
-    }
-
-    private boolean isValidEnvironment(Block block) {
-
-        return !biomeBlackList.contains(block.getBiome()) && !EnvironmentUtil.isWater(block.getTypeId());
-    }
-
-    private boolean isProtectedBlock(int id) {
-
-        return EnvironmentUtil.isValuableOre(id) || id == BlockID.STONE;
-    }
+    @Setting("chance-of-failure")
+    public int failRate = 3;
+    @Setting("max-damage")
+    public int maxDamage = 5;
+    @Setting("max-light")
+    public double maxLight = 0;
+  }
 }

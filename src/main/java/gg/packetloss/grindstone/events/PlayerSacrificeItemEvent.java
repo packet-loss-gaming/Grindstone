@@ -16,55 +16,55 @@ import org.bukkit.inventory.ItemStack;
 
 public class PlayerSacrificeItemEvent extends PlayerEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
-    private final Block origin;
-    private ItemStack itemStack;
+  private static final HandlerList handlers = new HandlerList();
+  private final Block origin;
+  private boolean cancelled = false;
+  private ItemStack itemStack;
 
 
-    public PlayerSacrificeItemEvent(final Player player, Block origin, ItemStack itemStack) {
+  public PlayerSacrificeItemEvent(final Player player, Block origin, ItemStack itemStack) {
 
-        super(player);
-        this.origin = origin;
-        this.itemStack = itemStack;
+    super(player);
+    this.origin = origin;
+    this.itemStack = itemStack;
+  }
+
+  public static HandlerList getHandlerList() {
+
+    return handlers;
+  }
+
+  public Block getBlock() {
+
+    return origin;
+  }
+
+  public ItemStack getItemStack() {
+
+    return itemStack.clone();
+  }
+
+  public void setItemStack(ItemStack itemStack) {
+
+    if (itemStack == null) {
+      itemStack = new ItemStack(BlockID.AIR);
     }
 
-    public Block getBlock() {
+    this.itemStack = itemStack;
+  }
 
-        return origin;
-    }
+  public HandlerList getHandlers() {
 
-    public void setItemStack(ItemStack itemStack) {
+    return handlers;
+  }
 
-        if (itemStack == null) {
-            itemStack = new ItemStack(BlockID.AIR);
-        }
+  public boolean isCancelled() {
 
-        this.itemStack = itemStack;
-    }
+    return cancelled;
+  }
 
-    public ItemStack getItemStack() {
+  public void setCancelled(boolean cancelled) {
 
-        return itemStack.clone();
-    }
-
-    public HandlerList getHandlers() {
-
-        return handlers;
-    }
-
-    public static HandlerList getHandlerList() {
-
-        return handlers;
-    }
-
-    public boolean isCancelled() {
-
-        return cancelled;
-    }
-
-    public void setCancelled(boolean cancelled) {
-
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 }

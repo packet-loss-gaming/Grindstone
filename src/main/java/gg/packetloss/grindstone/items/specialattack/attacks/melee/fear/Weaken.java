@@ -14,17 +14,17 @@ import org.bukkit.potion.PotionEffectType;
 
 public class Weaken extends EntityAttack implements MeleeSpecial {
 
-    public Weaken(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
-    }
+  public Weaken(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+  }
 
-    @Override
-    public void activate() {
+  @Override
+  public void activate() {
 
-        int duration = (int) Math.min(20 * 60 * 5, owner.getHealth() * 18);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, duration, 1), true);
-        owner.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, duration, 1), true);
+    int duration = (int) Math.min(20 * 60 * 5, owner.getHealth() * 18);
+    target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, duration, 1), true);
+    owner.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, duration, 1), true);
 
-        inform("Your sword leaches strength from its victim.");
-    }
+    inform("Your sword leaches strength from its victim.");
+  }
 }

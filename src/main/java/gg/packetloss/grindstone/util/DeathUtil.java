@@ -15,26 +15,25 @@ import org.bukkit.util.Vector;
 import java.util.Random;
 
 public class DeathUtil {
+  private static final Random RANDOM = new Random();
 
-    private static final Random random = new Random();
+  private static final PotionType[] THROWN_TYPES = new PotionType[] {
+      PotionType.INSTANT_DAMAGE, PotionType.INSTANT_DAMAGE,
+      PotionType.POISON, PotionType.WEAKNESS
+  };
 
-    private static final PotionType[] thrownTypes = new PotionType[]{
-            PotionType.INSTANT_DAMAGE, PotionType.INSTANT_DAMAGE,
-            PotionType.POISON, PotionType.WEAKNESS
-    };
+  public static void throwSlashPotion(Location location) {
 
-    public static void throwSlashPotion(Location location) {
-
-        ThrownPotion potionEntity = location.getWorld().spawn(location, ThrownPotion.class);
-        PotionType type = CollectionUtil.getElement(thrownTypes);
-        Potion potion = new Potion(type);
-        potion.setLevel(type.getMaxLevel());
-        potion.setSplash(true);
-        potionEntity.setItem(potion.toItemStack(1));
-        potionEntity.setVelocity(new Vector(
-                random.nextDouble() * .5 - .25,
-                random.nextDouble() * .4 + .1,
-                random.nextDouble() * .5 - .25
-        ));
-    }
+    ThrownPotion potionEntity = location.getWorld().spawn(location, ThrownPotion.class);
+    PotionType type = CollectionUtil.getElement(THROWN_TYPES);
+    Potion potion = new Potion(type);
+    potion.setLevel(type.getMaxLevel());
+    potion.setSplash(true);
+    potionEntity.setItem(potion.toItemStack(1));
+    potionEntity.setVelocity(new Vector(
+        RANDOM.nextDouble() * .5 - .25,
+        RANDOM.nextDouble() * .4 + .1,
+        RANDOM.nextDouble() * .5 - .25
+    ));
+  }
 }

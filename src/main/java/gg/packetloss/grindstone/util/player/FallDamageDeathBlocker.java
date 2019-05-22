@@ -14,21 +14,21 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 
 public class FallDamageDeathBlocker {
-    private static boolean isLaunched(Player player) {
-        return player.getLocation().add(0, -1, 0).getBlock().getType() == Material.AIR && player.getVelocity().getY() > 0;
-    }
+  private static boolean isLaunched(Player player) {
+    return player.getLocation().add(0, -1, 0).getBlock().getType() == Material.AIR && player.getVelocity().getY() > 0;
+  }
 
-    public static void protectPlayer(Player player, RefCountedTracker<UUID> tracker) {
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-            if (!isLaunched(player)) {
-                return;
-            }
+  public static void protectPlayer(Player player, RefCountedTracker<UUID> tracker) {
+    CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+      if (!isLaunched(player)) {
+        return;
+      }
 
-            tracker.increment(player.getUniqueId());
-            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                tracker.decrement(player.getUniqueId());
-            }, 20 * 20);
-        }, 20);
-    }
+      tracker.increment(player.getUniqueId());
+      CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        tracker.decrement(player.getUniqueId());
+      }, 20 * 20);
+    }, 20);
+  }
 
 }

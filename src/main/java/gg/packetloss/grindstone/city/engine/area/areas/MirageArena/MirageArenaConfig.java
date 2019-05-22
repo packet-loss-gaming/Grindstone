@@ -10,10 +10,10 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 
 public class MirageArenaConfig extends ConfigurationBase {
-    @Setting("fake-xp-amount")
-    public int fakeXP = 100;
-    @Setting("gold.cap")
-    public int goldCap = 200;
-    @Setting("gold.bar-chance")
-    public int goldBarChance = 27;
+  @Setting("fake-xp-amount")
+  public int fakeXP = 100;
+  @Setting("gold.cap")
+  public int goldCap = 200;
+  @Setting("gold.bar-chance")
+  public int goldBarChance = 27;
 }

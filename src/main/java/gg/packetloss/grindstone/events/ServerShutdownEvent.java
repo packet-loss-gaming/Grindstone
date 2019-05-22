@@ -11,27 +11,27 @@ import org.bukkit.event.HandlerList;
 
 public class ServerShutdownEvent extends Event {
 
-    private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-    private final int secondsLeft;
+  private final int secondsLeft;
 
-    public ServerShutdownEvent(int secondsLeft) {
+  public ServerShutdownEvent(int secondsLeft) {
 
-        this.secondsLeft = secondsLeft;
-    }
+    this.secondsLeft = secondsLeft;
+  }
 
-    public int getSecondsLeft() {
+  public static HandlerList getHandlerList() {
 
-        return secondsLeft;
-    }
+    return handlers;
+  }
 
-    public HandlerList getHandlers() {
+  public int getSecondsLeft() {
 
-        return handlers;
-    }
+    return secondsLeft;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 }

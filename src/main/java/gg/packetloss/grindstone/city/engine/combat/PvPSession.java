@@ -14,75 +14,75 @@ import java.util.concurrent.TimeUnit;
 
 public class PvPSession extends PersistentSession {
 
-    public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
+  public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
 
-    // Flag booleans
-    private boolean hasPvPOn = false;
-    private boolean useSafeSpots = true;
+  // Flag booleans
+  private boolean hasPvPOn = false;
+  private boolean useSafeSpots = true;
 
-    // Punishment booleans & data
-    private boolean wasKicked = false;
-    private boolean punishNextLogin = false;
+  // Punishment booleans & data
+  private boolean wasKicked = false;
+  private boolean punishNextLogin = false;
 
-    private long nextFreePoint = 0;
+  private long nextFreePoint = 0;
 
-    protected PvPSession() {
+  protected PvPSession() {
 
-        super(MAX_AGE);
-    }
+    super(MAX_AGE);
+  }
 
-    public Player getPlayer() {
+  public Player getPlayer() {
 
-        CommandSender sender = super.getOwner();
-        return sender instanceof Player ? (Player) sender : null;
-    }
+    CommandSender sender = super.getOwner();
+    return sender instanceof Player ? (Player) sender : null;
+  }
 
-    public boolean hasPvPOn() {
+  public boolean hasPvPOn() {
 
-        return hasPvPOn;
-    }
+    return hasPvPOn;
+  }
 
-    public void setPvP(boolean hasPvPOn) {
+  public void setPvP(boolean hasPvPOn) {
 
-        this.hasPvPOn = hasPvPOn;
-    }
+    this.hasPvPOn = hasPvPOn;
+  }
 
-    public boolean useSafeSpots() {
+  public boolean useSafeSpots() {
 
-        return useSafeSpots;
-    }
+    return useSafeSpots;
+  }
 
-    public void useSafeSpots(boolean useSafeSpots) {
+  public void useSafeSpots(boolean useSafeSpots) {
 
-        this.useSafeSpots = useSafeSpots;
-    }
+    this.useSafeSpots = useSafeSpots;
+  }
 
-    public boolean punishNextLogin() {
+  public boolean punishNextLogin() {
 
-        return punishNextLogin && !wasKicked;
-    }
+    return punishNextLogin && !wasKicked;
+  }
 
-    public void punishNextLogin(boolean witherNextLogin) {
+  public void punishNextLogin(boolean witherNextLogin) {
 
-        this.punishNextLogin = witherNextLogin;
-    }
+    this.punishNextLogin = witherNextLogin;
+  }
 
-    public void wasKicked(boolean wasKicked) {
+  public void wasKicked(boolean wasKicked) {
 
-        this.wasKicked = wasKicked;
-    }
+    this.wasKicked = wasKicked;
+  }
 
-    public boolean recentlyHit() {
+  public boolean recentlyHit() {
 
-        return System.currentTimeMillis() < nextFreePoint;
-    }
+    return System.currentTimeMillis() < nextFreePoint;
+  }
 
-    public void updateHit() {
+  public void updateHit() {
 
-        nextFreePoint = System.currentTimeMillis() + 7000;
-    }
+    nextFreePoint = System.currentTimeMillis() + 7000;
+  }
 
-    public void resetHit() {
-        nextFreePoint = 0;
-    }
+  public void resetHit() {
+    nextFreePoint = 0;
+  }
 }

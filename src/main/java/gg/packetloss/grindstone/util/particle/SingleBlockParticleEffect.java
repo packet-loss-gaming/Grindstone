@@ -11,7 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 
 public class SingleBlockParticleEffect {
-    public static void puffOfSmoke(Location loc) {
-        loc.getWorld().playEffect(loc, Effect.SMOKE, BlockFace.UP);
-    }
+  public static void puffOfSmoke(Location loc) {
+    loc.getWorld().playEffect(loc, Effect.SMOKE, BlockFace.UP);
+  }
 }

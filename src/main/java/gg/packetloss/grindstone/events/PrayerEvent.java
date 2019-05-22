@@ -13,28 +13,28 @@ import org.bukkit.event.player.PlayerEvent;
 
 public abstract class PrayerEvent extends PlayerEvent implements Cancellable {
 
-    private boolean cancelled = false;
-    private final Prayer prayer;
+  private final Prayer prayer;
+  private boolean cancelled = false;
 
-    public PrayerEvent(final Player player, Prayer prayer) {
+  public PrayerEvent(final Player player, Prayer prayer) {
 
-        super(player);
-        this.prayer = prayer;
-    }
+    super(player);
+    this.prayer = prayer;
+  }
 
-    public Prayer getCause() {
+  public Prayer getCause() {
 
-        return prayer;
-    }
+    return prayer;
+  }
 
-    public boolean isCancelled() {
+  public boolean isCancelled() {
 
-        return cancelled;
-    }
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
+  public void setCancelled(boolean cancelled) {
 
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 
 }

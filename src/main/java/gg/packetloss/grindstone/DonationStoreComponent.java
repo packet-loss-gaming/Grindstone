@@ -30,65 +30,71 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Donation Store", desc = "Effect manager for donations.")
 public class DonationStoreComponent extends BukkitComponent implements Listener, Runnable {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
 
-        //server.getScheduler().runTaskTimer(inst, this, 20, 1);
+    //server.getScheduler().runTaskTimer(inst, this, 20, 1);
+  }
+
+  @EventHandler
+  public void onPlayerDeath(PlayerDeathEvent event) {
+
+    Player player = event.getEntity();
+    Location pLoc = player.getLocation();
+
+    if (inst.hasPermission(player, "aurora.deatheffects.bat")) {
+      EffectUtil.Strange.mobBarrage(pLoc, Bat.class);
     }
+  }
 
-    @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent event) {
+  @Override
+  public void run() {
 
-        Player player = event.getEntity();
-        Location pLoc = player.getLocation();
+    Collection<? extends Player> players = server.getOnlinePlayers();
+    butterBoot(players);
+  }
 
-        if (inst.hasPermission(player, "aurora.deatheffects.bat")) {
-            EffectUtil.Strange.mobBarrage(pLoc, Bat.class);
+  private void butterBoot(final Collection<? extends Player> players) {
+
+    for (Player player : players) {
+
+      if (!player.isValid()) {
+        continue;
+      }
+
+      ItemStack boots = player.getInventory().getBoots();
+      if (!ItemUtil.matchesFilter(boots, ChatColor.GOLD + "Butter Boots")) {
+        continue;
+      }
+
+      Location loc = player.getLocation();
+      Vector additive = player.getLocation().getDirection().multiply(-1);
+      loc.add(additive);
+
+      final Location locClone = loc.clone();
+
+      final int type = loc.getBlock().getTypeId();
+      final byte data = loc.getBlock().getData();
+
+      if (!BlockType.canPassThrough(type)) {
+        continue;
+      }
+      for (Player aPlayer : players) {
+        aPlayer.sendBlockChange(loc, Material.FIRE, (byte) 0);
+      }
+
+      server.getScheduler().runTaskLater(inst, () -> {
+        for (Player aPlayer : players) {
+          aPlayer.sendBlockChange(locClone, type, data);
         }
+      }, 20 * 8);
     }
-
-    @Override
-    public void run() {
-
-        Collection<? extends Player> players = server.getOnlinePlayers();
-        butterBoot(players);
-    }
-
-    private void butterBoot(final Collection<? extends Player> players) {
-
-        for (Player player : players) {
-
-            if (!player.isValid()) continue;
-
-            ItemStack boots = player.getInventory().getBoots();
-            if (!ItemUtil.matchesFilter(boots, ChatColor.GOLD + "Butter Boots")) continue;
-
-            Location loc = player.getLocation();
-            Vector additive = player.getLocation().getDirection().multiply(-1);
-            loc.add(additive);
-
-            final Location locClone = loc.clone();
-
-            final int type = loc.getBlock().getTypeId();
-            final byte data = loc.getBlock().getData();
-
-            if (!BlockType.canPassThrough(type)) continue;
-            for (Player aPlayer : players) {
-                aPlayer.sendBlockChange(loc, Material.FIRE, (byte) 0);
-            }
-
-            server.getScheduler().runTaskLater(inst, () -> {
-                for (Player aPlayer : players) {
-                    aPlayer.sendBlockChange(locClone, type, data);
-                }
-            }, 20 * 8);
-        }
-    }
+  }
 }

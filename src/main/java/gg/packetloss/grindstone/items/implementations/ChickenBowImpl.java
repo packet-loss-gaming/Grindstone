@@ -24,84 +24,90 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 
 public class ChickenBowImpl extends AbstractItemFeatureImpl {
-    @EventHandler
-    public void onArrowLand(ProjectileHitEvent event) {
+  @EventHandler
+  public void onArrowLand(ProjectileHitEvent event) {
 
-        Projectile projectile = event.getEntity();
-        Entity shooter = null;
+    Projectile projectile = event.getEntity();
+    Entity shooter = null;
 
-        ProjectileSource source = projectile.getShooter();
-        if (source instanceof Entity) {
-            shooter = (Entity) source;
-        }
-
-        if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
-
-            Object test = projectile.getMetadata("launcher").get(0).value();
-
-            if (!(test instanceof ItemStack)) return;
-
-            ItemStack launcher = (ItemStack) test;
-
-            final Player owner = (Player) shooter;
-            final Location targetLoc = projectile.getLocation();
-
-            CustomItemSession session = getSession(owner);
-
-            if (session.canSpec(SpecType.ANIMAL_BOW)) {
-                Class<? extends LivingEntity> type = null;
-                if (ItemUtil.isItem(launcher, CustomItems.CHICKEN_BOW)) {
-                    type = Chicken.class;
-                }
-
-                if (type != null) {
-                    SpecialAttackEvent specEvent = callSpec(owner, SpecType.ANIMAL_BOW, new MobAttack(owner, targetLoc, type));
-                    if (!specEvent.isCancelled()) {
-                        session.updateSpec(specEvent.getContext(), specEvent.getContextCoolDown());
-                        specEvent.getSpec().activate();
-                    }
-                }
-            }
-        }
+    ProjectileSource source = projectile.getShooter();
+    if (source instanceof Entity) {
+      shooter = (Entity) source;
     }
 
-    @EventHandler
-    public void onArrowTick(ProjectileTickEvent event) {
+    if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
 
-        Projectile projectile = event.getEntity();
-        Entity shooter = null;
+      Object test = projectile.getMetadata("launcher").get(0).value();
 
-        ProjectileSource source = projectile.getShooter();
-        if (source instanceof Entity) {
-            shooter = (Entity) source;
+      if (!(test instanceof ItemStack)) {
+        return;
+      }
+
+      ItemStack launcher = (ItemStack) test;
+
+      final Player owner = (Player) shooter;
+      final Location targetLoc = projectile.getLocation();
+
+      CustomItemSession session = getSession(owner);
+
+      if (session.canSpec(SpecType.ANIMAL_BOW)) {
+        Class<? extends LivingEntity> type = null;
+        if (ItemUtil.isItem(launcher, CustomItems.CHICKEN_BOW)) {
+          type = Chicken.class;
         }
 
-        if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
-
-            Object test = projectile.getMetadata("launcher").get(0).value();
-
-            if (!(test instanceof ItemStack)) return;
-
-            ItemStack launcher = (ItemStack) test;
-
-            final Location location = projectile.getLocation();
-            if (ItemUtil.isItem(launcher, CustomItems.CHICKEN_BOW)) {
-
-                if (!ChanceUtil.getChance(5)) return;
-                server.getScheduler().runTaskLater(inst, () -> {
-                    final Chicken chicken = location.getWorld().spawn(location, Chicken.class);
-                    chicken.setRemoveWhenFarAway(true);
-                    server.getScheduler().runTaskLater(inst, () -> {
-                        if (chicken.isValid()) {
-                            chicken.remove();
-                            for (int i = 0; i < 20; i++) {
-                                chicken.getWorld().playEffect(chicken.getLocation(), Effect.SMOKE, 0);
-                            }
-                        }
-                    }, 20 * 3);
-                }, 3);
-            }
+        if (type != null) {
+          SpecialAttackEvent specEvent = callSpec(owner, SpecType.ANIMAL_BOW, new MobAttack(owner, targetLoc, type));
+          if (!specEvent.isCancelled()) {
+            session.updateSpec(specEvent.getContext(), specEvent.getContextCoolDown());
+            specEvent.getSpec().activate();
+          }
         }
+      }
     }
+  }
+
+  @EventHandler
+  public void onArrowTick(ProjectileTickEvent event) {
+
+    Projectile projectile = event.getEntity();
+    Entity shooter = null;
+
+    ProjectileSource source = projectile.getShooter();
+    if (source instanceof Entity) {
+      shooter = (Entity) source;
+    }
+
+    if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
+
+      Object test = projectile.getMetadata("launcher").get(0).value();
+
+      if (!(test instanceof ItemStack)) {
+        return;
+      }
+
+      ItemStack launcher = (ItemStack) test;
+
+      final Location location = projectile.getLocation();
+      if (ItemUtil.isItem(launcher, CustomItems.CHICKEN_BOW)) {
+
+        if (!ChanceUtil.getChance(5)) {
+          return;
+        }
+        server.getScheduler().runTaskLater(inst, () -> {
+          final Chicken chicken = location.getWorld().spawn(location, Chicken.class);
+          chicken.setRemoveWhenFarAway(true);
+          server.getScheduler().runTaskLater(inst, () -> {
+            if (chicken.isValid()) {
+              chicken.remove();
+              for (int i = 0; i < 20; i++) {
+                chicken.getWorld().playEffect(chicken.getLocation(), Effect.SMOKE, 0);
+              }
+            }
+          }, 20 * 3);
+        }, 3);
+      }
+    }
+  }
 
 }

@@ -15,56 +15,56 @@ import org.bukkit.inventory.ItemStack;
 
 public class ChestSuckEvent extends Event implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
-    private final Block container;
-    private final Item item;
-    private ItemStack itemStack;
+  private static final HandlerList handlers = new HandlerList();
+  private final Block container;
+  private final Item item;
+  private boolean cancelled = false;
+  private ItemStack itemStack;
 
-    public ChestSuckEvent(Block container, Item item, ItemStack itemStack) {
+  public ChestSuckEvent(Block container, Item item, ItemStack itemStack) {
 
-        this.container = container;
-        this.item = item;
-        this.itemStack = itemStack;
-    }
+    this.container = container;
+    this.item = item;
+    this.itemStack = itemStack;
+  }
 
-    public Block getContainer() {
+  public static HandlerList getHandlerList() {
 
-        return container;
-    }
+    return handlers;
+  }
 
-    public Item getItem() {
+  public Block getContainer() {
 
-        return item;
-    }
+    return container;
+  }
 
-    public ItemStack getItemStack() {
+  public Item getItem() {
 
-        return itemStack;
-    }
+    return item;
+  }
 
-    public void setItemStack(ItemStack itemStack) {
+  public ItemStack getItemStack() {
 
-        this.itemStack = itemStack;
-    }
+    return itemStack;
+  }
 
-    public HandlerList getHandlers() {
+  public void setItemStack(ItemStack itemStack) {
 
-        return handlers;
-    }
+    this.itemStack = itemStack;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public boolean isCancelled() {
+  public boolean isCancelled() {
 
-        return cancelled;
-    }
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
+  public void setCancelled(boolean cancelled) {
 
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 }

@@ -7,15 +7,15 @@
 package gg.packetloss.grindstone.city.engine.minigame;
 
 public enum GameProgress {
-    DONE(0),
-    INITIALIZED(1),
-    ACTIVE(2),
-    ENDING(3);
+  DONE(0),
+  INITIALIZED(1),
+  ACTIVE(2),
+  ENDING(3);
 
-    public int level;
+  public int level;
 
-    GameProgress(int level) {
+  GameProgress(int level) {
 
-        this.level = level;
-    }
+    this.level = level;
+  }
 }

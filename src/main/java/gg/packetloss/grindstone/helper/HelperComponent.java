@@ -25,43 +25,43 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Helper", desc = "Regex based auto messaging.")
 public class HelperComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = CommandBook.logger();
+  private final Server server = CommandBook.server();
 
-    private Map<String, Response> responses;
-    private YAMLResponseList responseList;
+  private Map<String, Response> responses;
+  private YAMLResponseList responseList;
 
-    @Override
-    public void enable() {
-        responseList = new YAMLResponseList(
-                new YAMLProcessor(
-                        new File(inst.getDataFolder().getPath() + "/helper/responses.yml"),
-                        false,
-                        YAMLFormat.EXTENDED
-                )
-        );
-        responses = responseList.obtainResponses();
+  @Override
+  public void enable() {
+    responseList = new YAMLResponseList(
+        new YAMLProcessor(
+            new File(inst.getDataFolder().getPath() + "/helper/responses.yml"),
+            false,
+            YAMLFormat.EXTENDED
+        )
+    );
+    responses = responseList.obtainResponses();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
-    }
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
 
-    @Override
-    public void reload() {
-        responses = responseList.obtainResponses();
-    }
+  @Override
+  public void reload() {
+    responses = responseList.obtainResponses();
+  }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onAsyncChat(AsyncPlayerChatEvent event) {
-        Player player = event.getPlayer();
-        String message = event.getMessage();
-        server.getScheduler().runTaskLater(inst, () -> {
-            for (Response response : responses.values()) {
-                if (response.accept(player, message)) {
-                    break;
-                }
-            }
-        }, 10);
-    }
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onAsyncChat(AsyncPlayerChatEvent event) {
+    Player player = event.getPlayer();
+    String message = event.getMessage();
+    server.getScheduler().runTaskLater(inst, () -> {
+      for (Response response : responses.values()) {
+        if (response.accept(player, message)) {
+          break;
+        }
+      }
+    }, 10);
+  }
 }

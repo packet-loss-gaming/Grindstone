@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerEvent;
 
 public abstract class NinjaEvent extends PlayerEvent {
-    public NinjaEvent(Player who) {
-        super(who);
-    }
+  public NinjaEvent(Player who) {
+    super(who);
+  }
 }

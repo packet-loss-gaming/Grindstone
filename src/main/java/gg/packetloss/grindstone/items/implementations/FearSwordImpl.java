@@ -15,22 +15,22 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import org.bukkit.entity.LivingEntity;
 
 public class FearSwordImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
-    @Override
-    public SpecialAttack getSpecial(LivingEntity owner, LivingEntity target) {
-        switch (ChanceUtil.getRandom(6)) {
-            case 1:
-                return new Confuse(owner, target);
-            case 2:
-                return new FearBlaze(owner, target);
-            case 3:
-                return new Curse(owner, target);
-            case 4:
-                return new Weaken(owner, target);
-            case 5:
-                return new Decimate(owner, target);
-            case 6:
-                return new SoulSmite(owner, target);
-        }
-        return null;
+  @Override
+  public SpecialAttack getSpecial(LivingEntity owner, LivingEntity target) {
+    switch (ChanceUtil.getRandom(6)) {
+      case 1:
+        return new Confuse(owner, target);
+      case 2:
+        return new FearBlaze(owner, target);
+      case 3:
+        return new Curse(owner, target);
+      case 4:
+        return new Weaken(owner, target);
+      case 5:
+        return new Decimate(owner, target);
+      case 6:
+        return new SoulSmite(owner, target);
     }
+    return null;
+  }
 }

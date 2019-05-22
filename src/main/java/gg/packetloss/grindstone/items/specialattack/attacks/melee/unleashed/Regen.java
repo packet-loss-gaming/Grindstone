@@ -14,15 +14,15 @@ import org.bukkit.potion.PotionEffectType;
 
 public class Regen extends EntityAttack implements MeleeSpecial {
 
-    public Regen(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
-    }
+  public Regen(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+  }
 
-    @Override
-    public void activate() {
+  @Override
+  public void activate() {
 
-        owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) (target.getHealth() * 10), 2), true);
+    owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) (target.getHealth() * 10), 2), true);
 
-        inform("You gain a healing aura.");
-    }
+    inform("You gain a healing aura.");
+  }
 }

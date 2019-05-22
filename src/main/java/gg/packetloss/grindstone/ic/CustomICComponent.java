@@ -22,30 +22,30 @@ import java.util.logging.Logger;
 @Depend(plugins = "CraftBook")
 public class CustomICComponent extends BukkitComponent {
 
-    private static final CommandBook inst = CommandBook.inst();
-    private static final Logger log = inst.getLogger();
-    private static final Server server = CommandBook.server();
+  private static final CommandBook INST = CommandBook.inst();
+  private static final Logger LOG = INST.getLogger();
+  private static final Server SERVER = CommandBook.server();
 
-    private ICManager ICCore;
+  private ICManager ICCore;
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        server.getScheduler().runTaskLater(inst, () -> {
-            ICCore = ICManager.inst();
-            if (ICCore == null) {
-                log.warning("ICManager is null!");
-            }
-            registerICs();
-        }, 1);
+    SERVER.getScheduler().runTaskLater(INST, () -> {
+      ICCore = ICManager.inst();
+      if (ICCore == null) {
+        LOG.warning("ICManager is null!");
+      }
+      registerICs();
+    }, 1);
 
-    }
+  }
 
-    @SuppressWarnings("AccessStaticViaInstance")
-    private void registerICs() {
+  @SuppressWarnings("AccessStaticViaInstance")
+  private void registerICs() {
 
-        ICCore.registerIC("SK1278", "group sentry", new GroupSentryGun.Factory(server), ICCore.familySISO, ICCore.familyAISO);
-        ICCore.registerIC("SK9001", "star spawner", new NinjaStarSpawner.Factory(server), ICCore.familySISO, ICCore.familyAISO);
-        ICCore.registerIC("SK9002", "delay repeater", new DelayedRepeater.Factory(server), ICCore.familySISO, ICCore.familyAISO);
-    }
+    ICCore.registerIC("SK1278", "group sentry", new GroupSentryGun.Factory(SERVER), ICCore.familySISO, ICCore.familyAISO);
+    ICCore.registerIC("SK9001", "star spawner", new NinjaStarSpawner.Factory(SERVER), ICCore.familySISO, ICCore.familyAISO);
+    ICCore.registerIC("SK9002", "delay repeater", new DelayedRepeater.Factory(SERVER), ICCore.familySISO, ICCore.familyAISO);
+  }
 }

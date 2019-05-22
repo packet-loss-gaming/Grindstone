@@ -13,11 +13,11 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.events.entity.item.DropClearPulseEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -43,191 +43,197 @@ import java.util.logging.Logger;
 
 public class DropPartyArena extends AbstractRegionedArena implements CommandTriggeredArena, Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    private List<ItemStack> drops;
-    private BukkitTask task = null;
-    private long lastDropPulse = 0;
-    private double dropPartyPulses = 0;
+  private List<ItemStack> drops;
+  private BukkitTask task = null;
+  private long lastDropPulse = 0;
+  private double dropPartyPulses = 0;
 
-    public DropPartyArena(World world, ProtectedRegion region) {
+  public DropPartyArena(World world, ProtectedRegion region) {
 
-        super(world, region);
-        drops = new ArrayList<>();
+    super(world, region);
+    drops = new ArrayList<>();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
 
-        long ticks = TimeUtil.getTicksTill(20, 7);
-        server.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, ticks, 20 * 60 * 60 * 24 * 7);
+    long ticks = TimeUtil.getTicksTill(20, 7);
+    server.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, ticks, 20 * 60 * 60 * 24 * 7);
+  }
+
+  @Override
+  public void run() {
+
+    drop(ChanceUtil.getRangedRandom(1460, 5836));
+  }
+
+  @Override
+  public void disable() {
+
+    // No disabling code
+  }
+
+  @Override
+  public String getId() {
+
+    return getRegion().getId();
+  }
+
+  @Override
+  public void equalize() {
+    // Nothing to do
+  }
+
+  @Override
+  public ArenaType getArenaType() {
+
+    return ArenaType.COMMAND_TRIGGERED;
+  }
+
+  public void drop(int populatorValue) {
+
+    drop(populatorValue, 24);
+  }
+
+  public void drop(int populatorValue, int modifier) {
+
+    // Check for online players
+    final int playerCount = server.getOnlinePlayers().size();
+
+    if (playerCount < 1) {
+      return;
     }
 
-    @Override
-    public void run() {
+    // Notify online players
+    Bukkit.broadcastMessage(ChatColor.GOLD + "Drop party in 60 seconds!");
 
-        drop(ChanceUtil.getRangedRandom(1460, 5836));
+    // Setup region variable
+    final CuboidRegion rg = new CuboidRegion(getRegion().getMinimumPoint(), getRegion().getMaximumPoint());
+
+    // Use the SacrificeComponent to populate the drop party if a populator value is given
+    final boolean populate = populatorValue > 0;
+    if (populate) {
+      for (int i = 0; i < playerCount * modifier; i++) {
+        drops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
+        drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
+      }
+      drops.add(ItemUtil.makeSkull(CollectionUtil.getElement(server.getOnlinePlayers()).getName()));
     }
 
-    @Override
-    public void disable() {
+    // Remove null drops and shuffle all other drops
+    drops.removeAll(Collections.singleton(null));
+    Collections.shuffle(drops);
 
-        // No disabling code
+    // Set a maximum drop count
+    dropPartyPulses = drops.size() * .15;
+
+    if (task != null) {
+      task.cancel();
     }
 
-    @Override
-    public String getId() {
+    task = server.getScheduler().runTaskTimer(inst, () -> {
+      if (lastDropPulse != 0 && System.currentTimeMillis() - lastDropPulse < TimeUnit.SECONDS.toMillis(3)) {
+        return;
+      }
 
-        return getRegion().getId();
-    }
+      Iterator<ItemStack> it = drops.iterator();
 
-    @Override
-    public void equalize() {
-        // Nothing to do
-    }
+      RegionChecker checker = new RegionChecker(rg);
+      for (int k = 10; it.hasNext() && k > 0; k--) {
 
-    @Override
-    public ArenaType getArenaType() {
+        // Pick a random Location
+        Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), checker);
+        if (!getWorld().getChunkAt(l).isLoaded()) {
+          getWorld().getChunkAt(l).load(true);
+        }
+        getWorld().dropItem(l, it.next());
 
-        return ArenaType.COMMAND_TRIGGERED;
-    }
+        // Remove the drop
+        it.remove();
 
-    public void drop(int populatorValue) {
-
-        drop(populatorValue, 24);
-    }
-
-    public void drop(int populatorValue, int modifier) {
-
-        // Check for online players
-        final int playerCount = server.getOnlinePlayers().size();
-
-        if (playerCount < 1) return;
-
-        // Notify online players
-        Bukkit.broadcastMessage(ChatColor.GOLD + "Drop party in 60 seconds!");
-
-        // Setup region variable
-        final CuboidRegion rg = new CuboidRegion(getRegion().getMinimumPoint(), getRegion().getMaximumPoint());
-
-        // Use the SacrificeComponent to populate the drop party if a populator value is given
-        final boolean populate = populatorValue > 0;
+        // Drop the xp
         if (populate) {
-            for (int i = 0; i < playerCount * modifier; i++) {
-                drops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
-                drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
-            }
-            drops.add(ItemUtil.makeSkull(CollectionUtil.getElement(server.getOnlinePlayers()).getName()));
+          // Throw in some xp cause why not
+          for (int s = ChanceUtil.getRandom(5); s > 0; s--) {
+            ExperienceOrb e = getWorld().spawn(l, ExperienceOrb.class);
+            e.setExperience(8);
+          }
         }
+      }
 
-        // Remove null drops and shuffle all other drops
-        drops.removeAll(Collections.singleton(null));
-        Collections.shuffle(drops);
+      // Cancel if we've ran out of drop party pulses or if there is nothing more to drop
+      if (drops.size() < 1 || dropPartyPulses <= 0) {
+        task.cancel();
+        task = null;
+      }
 
-        // Set a maximum drop count
-        dropPartyPulses = drops.size() * .15;
+      dropPartyPulses--;
+    }, 20 * 60, 20 * 3);
+  }
 
-        if (task != null) task.cancel();
+  @EventHandler
+  public void onDropClearPulse(DropClearPulseEvent event) {
 
-        task = server.getScheduler().runTaskTimer(inst, () -> {
-            if (lastDropPulse != 0 && System.currentTimeMillis() - lastDropPulse < TimeUnit.SECONDS.toMillis(3)) {
-                return;
-            }
-
-            Iterator<ItemStack> it = drops.iterator();
-
-            RegionChecker checker = new RegionChecker(rg);
-            for (int k = 10; it.hasNext() && k > 0; k--) {
-
-                // Pick a random Location
-                Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), checker);
-                if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
-                getWorld().dropItem(l, it.next());
-
-                // Remove the drop
-                it.remove();
-
-                // Drop the xp
-                if (populate) {
-                    // Throw in some xp cause why not
-                    for (int s = ChanceUtil.getRandom(5); s > 0; s--) {
-                        ExperienceOrb e = getWorld().spawn(l, ExperienceOrb.class);
-                        e.setExperience(8);
-                    }
-                }
-            }
-
-            // Cancel if we've ran out of drop party pulses or if there is nothing more to drop
-            if (drops.size() < 1 || dropPartyPulses <= 0) {
-                task.cancel();
-                task = null;
-            }
-
-            dropPartyPulses--;
-        }, 20 * 60, 20 * 3);
-    }
-
-    @EventHandler
-    public void onDropClearPulse(DropClearPulseEvent event) {
-
-        if (task != null) {
-            lastDropPulse = System.currentTimeMillis();
-            ChatUtil.sendNotice(getContained(1, Player.class), "Drop Party temporarily suspended for: Drop Clear.");
-            for (Entity entity : getContained(1, Item.class, ExperienceOrb.class)) {
-                if (entity instanceof Item) {
-                    drops.add(((Item) entity).getItemStack());
-                }
-                entity.remove();
-            }
+    if (task != null) {
+      lastDropPulse = System.currentTimeMillis();
+      ChatUtil.sendNotice(getContained(1, Player.class), "Drop Party temporarily suspended for: Drop Clear.");
+      for (Entity entity : getContained(1, Item.class, ExperienceOrb.class)) {
+        if (entity instanceof Item) {
+          drops.add(((Item) entity).getItemStack());
         }
+        entity.remove();
+      }
     }
+  }
 
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
+  @EventHandler
+  public void onPlayerInteract(PlayerInteractEvent event) {
 
-        Block block = event.getClickedBlock();
+    Block block = event.getClickedBlock();
 
-        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && block.getTypeId() == BlockID.STONE_BUTTON
-                && getRegion().getParent().contains(new Vector(block.getX(), block.getY(), block.getZ()).floor())) {
+    if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && block.getTypeId() == BlockID.STONE_BUTTON
+        && getRegion().getParent().contains(new Vector(block.getX(), block.getY(), block.getZ()).floor())) {
 
-            Player player = event.getPlayer();
+      Player player = event.getPlayer();
 
-            if (task != null) {
+      if (task != null) {
 
-                ChatUtil.sendError(player, "There is already a drop party in progress!");
-                return;
+        ChatUtil.sendError(player, "There is already a drop party in progress!");
+        return;
+      }
+
+      // Scan for, and absorb chest contents
+      Vector min = getRegion().getParent().getMinimumPoint();
+      Vector max = getRegion().getParent().getMaximumPoint();
+
+      int minX = min.getBlockX();
+      int minY = min.getBlockY();
+      int minZ = min.getBlockZ();
+      int maxX = max.getBlockX();
+      int maxY = max.getBlockY();
+      int maxZ = max.getBlockZ();
+
+      for (int x = minX; x <= maxX; x++) {
+        for (int z = minZ; z <= maxZ; z++) {
+          for (int y = minY; y <= maxY; y++) {
+            BlockState chest = getWorld().getBlockAt(x, y, z).getState();
+
+            if (chest instanceof Chest) {
+
+              Inventory chestInventory = ((Chest) chest).getBlockInventory();
+              Collections.addAll(drops, chestInventory.getContents());
+
+              chestInventory.clear();
+              chest.update(true);
             }
-
-            // Scan for, and absorb chest contents
-            Vector min = getRegion().getParent().getMinimumPoint();
-            Vector max = getRegion().getParent().getMaximumPoint();
-
-            int minX = min.getBlockX();
-            int minY = min.getBlockY();
-            int minZ = min.getBlockZ();
-            int maxX = max.getBlockX();
-            int maxY = max.getBlockY();
-            int maxZ = max.getBlockZ();
-
-            for (int x = minX; x <= maxX; x++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    for (int y = minY; y <= maxY; y++) {
-                        BlockState chest = getWorld().getBlockAt(x, y, z).getState();
-
-                        if (chest instanceof Chest) {
-
-                            Inventory chestInventory = ((Chest) chest).getBlockInventory();
-                            Collections.addAll(drops, chestInventory.getContents());
-
-                            chestInventory.clear();
-                            chest.update(true);
-                        }
-                    }
-                }
-            }
-
-            drop(0);
+          }
         }
+      }
+
+      drop(0);
     }
+  }
 }

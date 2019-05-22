@@ -32,79 +32,79 @@ import java.util.logging.Logger;
 
 public class ThunderZombie {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    private BukkitBossDeclaration<GenericDetail> thunderZombie;
+  private BukkitBossDeclaration<GenericDetail> thunderZombie;
 
-    public ThunderZombie() {
-        thunderZombie = new BukkitBossDeclaration<GenericDetail>(inst, new SimpleInstructionDispatch<>()) {
-            @Override
-            public boolean matchesBind(LocalEntity entity) {
-                return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Thor Zombie");
-            }
-        };
-        setupThunderZombie();
-    }
+  public ThunderZombie() {
+    thunderZombie = new BukkitBossDeclaration<GenericDetail>(inst, new SimpleInstructionDispatch<>()) {
+      @Override
+      public boolean matchesBind(LocalEntity entity) {
+        return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Thor Zombie");
+      }
+    };
+    setupThunderZombie();
+  }
 
-    public void bind(Damageable entity) {
-        thunderZombie.bind(new BukkitBoss<>(entity, new GenericDetail()));
-    }
+  public void bind(Damageable entity) {
+    thunderZombie.bind(new BukkitBoss<>(entity, new GenericDetail()));
+  }
 
-    private void setupThunderZombie() {
-        List<BindInstruction<GenericDetail>> bindInstructions = thunderZombie.bindInstructions;
-        bindInstructions.add(new BindInstruction<GenericDetail>() {
-            @Override
-            public InstructionResult<GenericDetail, BindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
-                Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
-                if (anEntity instanceof LivingEntity) {
-                    ((LivingEntity) anEntity).setCustomName("Thor Zombie");
-                    ((LivingEntity) anEntity).setMaxHealth(500);
-                    ((LivingEntity) anEntity).setHealth(500);
-                }
-                return null;
-            }
-        });
+  private void setupThunderZombie() {
+    List<BindInstruction<GenericDetail>> bindInstructions = thunderZombie.bindInstructions;
+    bindInstructions.add(new BindInstruction<GenericDetail>() {
+      @Override
+      public InstructionResult<GenericDetail, BindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+        Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
+        if (anEntity instanceof LivingEntity) {
+          anEntity.setCustomName("Thor Zombie");
+          ((LivingEntity) anEntity).setMaxHealth(500);
+          ((LivingEntity) anEntity).setHealth(500);
+        }
+        return null;
+      }
+    });
 
-        List<UnbindInstruction<GenericDetail>> unbindInstructions = thunderZombie.unbindInstructions;
-        unbindInstructions.add(new ExplosiveUnbind<GenericDetail>(false, false) {
-            @Override
-            public float getExplosionStrength(GenericDetail genericDetail) {
-                return 4F;
-            }
-        });
-        unbindInstructions.add(new UnbindInstruction<GenericDetail>() {
-            @Override
-            public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
-                Entity boss = BukkitUtil.getBukkitEntity(controllable);
-                Location target = boss.getLocation();
-                for (int i = ChanceUtil.getRangedRandom(12, 150); i > 0; --i) {
-                    target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT));
-                }
-                return null;
-            }
-        });
+    List<UnbindInstruction<GenericDetail>> unbindInstructions = thunderZombie.unbindInstructions;
+    unbindInstructions.add(new ExplosiveUnbind<GenericDetail>(false, false) {
+      @Override
+      public float getExplosionStrength(GenericDetail genericDetail) {
+        return 4F;
+      }
+    });
+    unbindInstructions.add(new UnbindInstruction<GenericDetail>() {
+      @Override
+      public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+        Entity boss = BukkitUtil.getBukkitEntity(controllable);
+        Location target = boss.getLocation();
+        for (int i = ChanceUtil.getRangedRandom(12, 150); i > 0; --i) {
+          target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT));
+        }
+        return null;
+      }
+    });
 
-        List<DamageInstruction<GenericDetail>> damageInstructions = thunderZombie.damageInstructions;
-        damageInstructions.add(new DamageInstruction<GenericDetail>() {
-            @Override
-            public InstructionResult<GenericDetail, DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
-                Entity boss = BukkitUtil.getBukkitEntity(controllable);
-                final Entity toHit = BukkitUtil.getBukkitEntity(entity);
-                toHit.setVelocity(boss.getLocation().getDirection().multiply(2));
+    List<DamageInstruction<GenericDetail>> damageInstructions = thunderZombie.damageInstructions;
+    damageInstructions.add(new DamageInstruction<GenericDetail>() {
+      @Override
+      public InstructionResult<GenericDetail, DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
+        Entity boss = BukkitUtil.getBukkitEntity(controllable);
+        final Entity toHit = BukkitUtil.getBukkitEntity(entity);
+        toHit.setVelocity(boss.getLocation().getDirection().multiply(2));
 
-                server.getScheduler().runTaskLater(inst, () -> {
-                    final Location targetLocation = toHit.getLocation();
-                    server.getScheduler().runTaskLater(inst, () -> {
-                        targetLocation.getWorld().strikeLightning(targetLocation);
-                    }, 15);
-                }, 30);
-                return null;
-            }
-        });
+        server.getScheduler().runTaskLater(inst, () -> {
+          final Location targetLocation = toHit.getLocation();
+          server.getScheduler().runTaskLater(inst, () -> {
+            targetLocation.getWorld().strikeLightning(targetLocation);
+          }, 15);
+        }, 30);
+        return null;
+      }
+    });
 
-        List<DamagedInstruction<GenericDetail>> damagedInstructions = thunderZombie.damagedInstructions;
-        damagedInstructions.add(new HealthPrint<>());
-    }
+    List<DamagedInstruction<GenericDetail>> damagedInstructions = thunderZombie.damagedInstructions;
+    damagedInstructions.add(new HealthPrint<>());
+  }
 }

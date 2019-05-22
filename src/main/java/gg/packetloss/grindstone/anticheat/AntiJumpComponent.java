@@ -27,64 +27,64 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Anti Jump", desc = "Stop the jump hackers")
 public class AntiJumpComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    private LocalConfiguration config;
+  private LocalConfiguration config;
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        config = configure(new LocalConfiguration());
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
-    }
+    config = configure(new LocalConfiguration());
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
 
-    @Override
-    public void reload() {
+  @Override
+  public void reload() {
 
-        super.reload();
-        configure(config);
-    }
+    super.reload();
+    configure(config);
+  }
 
-    private static class LocalConfiguration extends ConfigurationBase {
+  @EventHandler(priority = EventPriority.MONITOR)
+  public void onBlockPlace(BlockPlaceEvent event) {
 
-        @Setting("upwards-velocity")
-        public double upwardsVelocity = .1;
-        @Setting("leap-distance")
-        public double leapDistance = 1.2;
-        @Setting("radius")
-        public double radius = 2;
-    }
+    if (event.isCancelled()) {
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onBlockPlace(BlockPlaceEvent event) {
+      final Player player = event.getPlayer();
+      final Location playerLoc = player.getLocation();
 
-        if (event.isCancelled()) {
+      final Location blockLoc = event.getBlock().getLocation();
+      final int blockY = blockLoc.getBlockY();
 
-            final Player player = event.getPlayer();
-            final Location playerLoc = player.getLocation();
+      if (Math.abs(player.getVelocity().getY()) > config.upwardsVelocity && playerLoc.getY() > blockY) {
+        server.getScheduler().runTaskLater(inst, () -> {
+          if (player.getLocation().getY() >= (blockY + config.leapDistance)) {
 
-            final Location blockLoc = event.getBlock().getLocation();
-            final int blockY = blockLoc.getBlockY();
-
-            if (Math.abs(player.getVelocity().getY()) > config.upwardsVelocity && playerLoc.getY() > blockY) {
-                server.getScheduler().runTaskLater(inst, () -> {
-                    if (player.getLocation().getY() >= (blockY + config.leapDistance)) {
-
-                        if (LocationUtil.distanceSquared2D(playerLoc, blockLoc) > config.radius * config.radius) {
-                            return;
-                        }
-
-                        ChatUtil.sendWarning(player, "Hack jumping detected.");
-
-                        playerLoc.setY(blockY);
-
-                        player.teleport(playerLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
-                    }
-                }, 4);
+            if (LocationUtil.distanceSquared2D(playerLoc, blockLoc) > config.radius * config.radius) {
+              return;
             }
-        }
+
+            ChatUtil.sendWarning(player, "Hack jumping detected.");
+
+            playerLoc.setY(blockY);
+
+            player.teleport(playerLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+          }
+        }, 4);
+      }
     }
+  }
+
+  private static class LocalConfiguration extends ConfigurationBase {
+
+    @Setting("upwards-velocity")
+    public double upwardsVelocity = .1;
+    @Setting("leap-distance")
+    public double leapDistance = 1.2;
+    @Setting("radius")
+    public double radius = 2;
+  }
 }

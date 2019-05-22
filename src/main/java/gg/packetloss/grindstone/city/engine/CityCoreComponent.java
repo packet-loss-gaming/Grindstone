@@ -24,37 +24,37 @@ import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "City Core", desc = "Operate the core city functionality.")
 public class CityCoreComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    @Override
-    public void enable() {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+  @Override
+  public void enable() {
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
+
+  private boolean isCityWorld(World world) {
+    return world.getName().equals("City");
+  }
+
+  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  public void onDoorBreak(EntityBreakDoorEvent event) {
+    Block block = event.getBlock();
+
+    if (!isCityWorld(block.getWorld())) {
+      return;
     }
 
-    private boolean isCityWorld(World world) {
-        return world.getName().equals("City");
-    }
+    // Open the door.
+    server.getScheduler().runTaskLater(inst, () -> {
+      BlockState state = block.getRelative(BlockFace.DOWN).getState();
+      Door doorData = (Door) state.getData();
+      doorData.setOpen(true);
+      state.update(true);
+    }, 1);
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onDoorBreak(EntityBreakDoorEvent event) {
-        Block block = event.getBlock();
-
-        if (!isCityWorld(block.getWorld())) {
-            return;
-        }
-
-        // Open the door.
-        server.getScheduler().runTaskLater(inst, () -> {
-            BlockState state = block.getRelative(BlockFace.DOWN).getState();
-            Door doorData = (Door) state.getData();
-            doorData.setOpen(true);
-            state.update(true);
-        }, 1);
-
-        // Prevent the door from being destroyed.
-        event.setCancelled(true);
-    }
+    // Prevent the door from being destroyed.
+    event.setCancelled(true);
+  }
 }

@@ -14,16 +14,16 @@ import org.bukkit.potion.PotionEffectType;
 
 public class MagicChain extends EntityAttack implements RangedSpecial {
 
-    public MagicChain(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
-    }
+  public MagicChain(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+  }
 
-    @Override
-    public void activate() {
+  @Override
+  public void activate() {
 
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (owner.getHealth() * 18), 2), true);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, (int) (owner.getHealth() * 18), 2), true);
+    target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (owner.getHealth() * 18), 2), true);
+    target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, (int) (owner.getHealth() * 18), 2), true);
 
-        inform("Your bow slows its victim.");
-    }
+    inform("Your bow slows its victim.");
+  }
 }

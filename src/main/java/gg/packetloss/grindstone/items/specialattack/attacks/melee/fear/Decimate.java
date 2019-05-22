@@ -16,19 +16,19 @@ import org.bukkit.entity.Player;
 
 public class Decimate extends EntityAttack implements MeleeSpecial {
 
-    public Decimate(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+  public Decimate(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+  }
+
+  @Override
+  public void activate() {
+
+    if (owner instanceof Player) {
+      SERVER.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
     }
 
-    @Override
-    public void activate() {
+    DamageUtil.damage(owner, target, ChanceUtil.getRandom(target instanceof Player ? 3 : 10) * 50);
 
-        if (owner instanceof Player) {
-            server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
-        }
-
-        DamageUtil.damage(owner, target, ChanceUtil.getRandom(target instanceof Player ? 3 : 10) * 50);
-
-        inform("Your sword tears through the flesh of its victim.");
-    }
+    inform("Your sword tears through the flesh of its victim.");
+  }
 }

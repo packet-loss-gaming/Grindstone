@@ -23,47 +23,50 @@ import org.bukkit.entity.Player;
 
 public class GlowingFog extends EntityAttack implements RangedSpecial {
 
-    public GlowingFog(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
-    }
+  public GlowingFog(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+  }
 
-    @Override
-    public void activate() {
-        final Location targeted = target.getLocation();
+  @Override
+  public void activate() {
+    final Location targeted = target.getLocation();
 
-        IntegratedRunnable glowingFog = new IntegratedRunnable() {
-            @Override
-            public boolean run(int times) {
+    IntegratedRunnable glowingFog = new IntegratedRunnable() {
+      @Override
+      public boolean run(int times) {
 
-                if (owner instanceof Player) {
-                    server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
-                }
+        if (owner instanceof Player) {
+          SERVER.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+        }
 
-                EnvironmentUtil.generateRadialEffect(targeted, Effect.MOBSPAWNER_FLAMES);
+        EnvironmentUtil.generateRadialEffect(targeted, Effect.MOBSPAWNER_FLAMES);
 
-                for (Entity aEntity : targeted.getWorld().getEntitiesByClasses(LivingEntity.class)) {
-                    if (!aEntity.isValid() || aEntity.equals(owner)
-                            || aEntity.getLocation().distanceSquared(targeted) > 16) continue;
-                    if (aEntity instanceof LivingEntity) {
-                        if (aEntity instanceof Player) {
-                            if (owner instanceof Player && !PvPComponent.allowsPvP((Player) owner, (Player) aEntity))
-                                continue;
-                        }
-                        DamageUtil.damage(owner, (LivingEntity) aEntity, 5);
-                    }
-                }
-                return true;
+        for (Entity aEntity : targeted.getWorld().getEntitiesByClasses(LivingEntity.class)) {
+          if (!aEntity.isValid() || aEntity.equals(owner)
+              || aEntity.getLocation().distanceSquared(targeted) > 16) {
+            continue;
+          }
+          if (aEntity instanceof LivingEntity) {
+            if (aEntity instanceof Player) {
+              if (owner instanceof Player && !PvPComponent.allowsPvP((Player) owner, (Player) aEntity)) {
+                continue;
+              }
             }
+            DamageUtil.damage(owner, (LivingEntity) aEntity, 5);
+          }
+        }
+        return true;
+      }
 
-            @Override
-            public void end() {
+      @Override
+      public void end() {
 
-            }
-        };
+      }
+    };
 
-        TimedRunnable runnable = new TimedRunnable(glowingFog, (ChanceUtil.getRandom(15) * 3) + 7);
-        runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 0, 10));
+    TimedRunnable runnable = new TimedRunnable(glowingFog, (ChanceUtil.getRandom(15) * 3) + 7);
+    runnable.setTask(SERVER.getScheduler().runTaskTimer(INST, runnable, 0, 10));
 
-        inform("Your bow unleashes a powerful glowing fog.");
-    }
+    inform("Your bow unleashes a powerful glowing fog.");
+  }
 }

@@ -11,22 +11,22 @@ import org.bukkit.entity.LivingEntity;
 
 public abstract class LocationAttack extends SpecialAttack {
 
-    protected Location target;
+  protected Location target;
 
-    public LocationAttack(LivingEntity owner, Location target) {
-        super(owner);
-        this.target = target;
-    }
+  public LocationAttack(LivingEntity owner, Location target) {
+    super(owner);
+    this.target = target;
+  }
 
-    @Override
-    public LivingEntity getTarget() {
+  @Override
+  public LivingEntity getTarget() {
 
-        return null;
-    }
+    return null;
+  }
 
-    @Override
-    public Location getLocation() {
+  @Override
+  public Location getLocation() {
 
-        return target;
-    }
+    return target;
+  }
 }

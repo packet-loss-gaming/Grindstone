@@ -10,13 +10,13 @@ import com.skelril.OSBL.entity.EntityDetail;
 
 public class WBossDetail implements EntityDetail {
 
-    private int level;
+  private int level;
 
-    public WBossDetail(int level) {
-        this.level = level;
-    }
+  public WBossDetail(int level) {
+    this.level = level;
+  }
 
-    public int getLevel() {
-        return level;
-    }
+  public int getLevel() {
+    return level;
+  }
 }

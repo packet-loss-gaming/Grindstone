@@ -19,12 +19,12 @@ public class DumpPlayerInventoryEvent extends PlayerEvent implements Cancellable
     super(player);
   }
 
-  @Override
-  public HandlerList getHandlers() {
+  public static HandlerList getHandlerList() {
     return handlers;
   }
 
-  public static HandlerList getHandlerList() {
+  @Override
+  public HandlerList getHandlers() {
     return handlers;
   }
 

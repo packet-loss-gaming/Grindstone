@@ -40,194 +40,207 @@ import java.util.logging.Logger;
 
 public class FactoryFloor extends AbstractFactoryArea implements GenericArena, Listener, PersistentArena {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  protected static FactoryFloor factInst;
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
+  private AdminComponent adminComponent;
 
-    protected static FactoryFloor factInst;
+  private YAMLProcessor processor;
+  private List<FactoryMech> mechs;
+  private LinkedList<ItemStack> que = new LinkedList<>();
+  private long nextMobSpawn = 0L;
 
-    private AdminComponent adminComponent;
+  public FactoryFloor(World world, ProtectedRegion[] regions, List<FactoryMech> mechs, YAMLProcessor processor,
+                      AdminComponent adminComponent) {
+    super(world, regions[0], regions[1], Arrays.copyOfRange(regions, 2, 4));
+    this.processor = processor;
+    this.adminComponent = adminComponent;
+    this.mechs = Lists.newArrayList(mechs);
 
-    private YAMLProcessor processor;
-    private List<FactoryMech> mechs;
-    private LinkedList<ItemStack> que = new LinkedList<>();
-    private long nextMobSpawn = 0L;
+    reloadData();
 
-    public FactoryFloor(World world, ProtectedRegion[] regions, List<FactoryMech> mechs, YAMLProcessor processor,
-                        AdminComponent adminComponent) {
-        super(world, regions[0], regions[1], Arrays.copyOfRange(regions, 2, 4));
-        this.processor = processor;
-        this.adminComponent = adminComponent;
-        this.mechs = Lists.newArrayList(mechs);
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+    factInst = this;
+  }
 
-        reloadData();
+  public void madMilk() {
+    nextMobSpawn = Math.max(nextMobSpawn, System.currentTimeMillis()) + TimeUnit.MINUTES.toMillis(40);
+    writePrime();
+  }
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
-        factInst = this;
-    }
-
-    public void madMilk() {
-        nextMobSpawn = Math.max(nextMobSpawn, System.currentTimeMillis()) + TimeUnit.MINUTES.toMillis(40);
-        writePrime();
-    }
-
-    public void throwPotions() {
-        Random random = new Random();
-        PotionType type = PotionType.INSTANT_HEAL;
-        getContained(Zombie.class, Skeleton.class).stream().forEach(e -> {
-            for (int i = ChanceUtil.getRandom(3); i > 0; --i) {
-                Location tg = e.getLocation().add(0, ChanceUtil.getRangedRandom(2, 6), 0);
-                if (tg.getBlock().getType().isSolid()) continue;
-                ThrownPotion potion = e.getWorld().spawn(
-                        tg,
-                        ThrownPotion.class
-                );
-                Potion brewedPotion = new Potion(type);
-                brewedPotion.setLevel(type.getMaxLevel());
-                brewedPotion.setSplash(true);
-                potion.setItem(brewedPotion.toItemStack(1));
-                potion.setVelocity(new org.bukkit.util.Vector(
-                        random.nextDouble() * 2.0 - 1,
-                        0,
-                        random.nextDouble() * 2.0 - 1));
-            }
-        });
-    }
-
-    public ChamberType getProductType(ItemStack product) {
-        switch (product.getType()) {
-            case POTION:
-                return ChamberType.POTION;
-            case IRON_INGOT:
-            case GOLD_INGOT:
-                return ChamberType.SMELTING;
+  public void throwPotions() {
+    Random random = new Random();
+    PotionType type = PotionType.INSTANT_HEAL;
+    getContained(Zombie.class, Skeleton.class).stream().forEach(e -> {
+      for (int i = ChanceUtil.getRandom(3); i > 0; --i) {
+        Location tg = e.getLocation().add(0, ChanceUtil.getRangedRandom(2, 6), 0);
+        if (tg.getBlock().getType().isSolid()) {
+          continue;
         }
+        ThrownPotion potion = e.getWorld().spawn(
+            tg,
+            ThrownPotion.class
+        );
+        Potion brewedPotion = new Potion(type);
+        brewedPotion.setLevel(type.getMaxLevel());
+        brewedPotion.setSplash(true);
+        potion.setItem(brewedPotion.toItemStack(1));
+        potion.setVelocity(new org.bukkit.util.Vector(
+            random.nextDouble() * 2.0 - 1,
+            0,
+            random.nextDouble() * 2.0 - 1));
+      }
+    });
+  }
+
+  public ChamberType getProductType(ItemStack product) {
+    switch (product.getType()) {
+      case POTION:
         return ChamberType.POTION;
+      case IRON_INGOT:
+      case GOLD_INGOT:
+        return ChamberType.SMELTING;
+    }
+    return ChamberType.POTION;
+  }
+
+  public void produce(ItemStack product) {
+    ProtectedRegion region = getChamber(getProductType(product));
+    Vector vec = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint()).getCenter();
+    getWorld().dropItem(BukkitUtil.toLocation(getWorld(), vec), product);
+  }
+
+  @Override
+  public void run() {
+
+    if (isEmpty()) {
+      return;
     }
 
-    public void produce(ItemStack product) {
-        ProtectedRegion region = getChamber(getProductType(product));
-        Vector vec = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint()).getCenter();
-        getWorld().dropItem(BukkitUtil.toLocation(getWorld(), vec), product);
+    equalize();
+    if (System.currentTimeMillis() < nextMobSpawn) {
+      throwPotions();
     }
 
-    @Override
-    public void run() {
-
-        if (isEmpty()) return;
-
-        equalize();
-        if (System.currentTimeMillis() < nextMobSpawn) {
-            throwPotions();
-        }
-
-        int queueSize = que.size();
-        for (FactoryMech mech : Collections.synchronizedList(mechs)) que.addAll(mech.process());
-
-        if (queueSize != que.size()) {
-            writePrime();
-            queueSize = que.size();
-        }
-
-        if (que.isEmpty()) return;
-        boolean hexa = ModifierComponent.getModifierCenter().isActive(ModifierType.HEXA_FACTORY_SPEED);
-        int max = getContained(Player.class).size() * (hexa ? 54 : 9);
-        for (int i = ChanceUtil.getRangedRandom(max / 3, max); i > 0; --i) {
-            if (que.isEmpty()) break;
-            produce(que.poll());
-        }
-        if (queueSize != que.size()) writePrime();
+    int queueSize = que.size();
+    for (FactoryMech mech : Collections.synchronizedList(mechs)) {
+      que.addAll(mech.process());
     }
 
-    @Override
-    public void disable() {
-        mechs.clear();
+    if (queueSize != que.size()) {
+      writePrime();
+      queueSize = que.size();
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onEntityDamage(EntityDamageEvent event) {
+    if (que.isEmpty()) {
+      return;
+    }
+    boolean hexa = ModifierComponent.getModifierCenter().isActive(ModifierType.HEXA_FACTORY_SPEED);
+    int max = getContained(Player.class).size() * (hexa ? 54 : 9);
+    for (int i = ChanceUtil.getRangedRandom(max / 3, max); i > 0; --i) {
+      if (que.isEmpty()) {
+        break;
+      }
+      produce(que.poll());
+    }
+    if (queueSize != que.size()) {
+      writePrime();
+    }
+  }
 
-        final Entity entity = event.getEntity();
+  @Override
+  public void disable() {
+    mechs.clear();
+  }
 
-        if (!(entity instanceof Player) || !contains(entity)) return;
+  @EventHandler(ignoreCancelled = true)
+  public void onEntityDamage(EntityDamageEvent event) {
 
-        if (((Player) entity).isFlying() && event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
-            DamageUtil.multiplyFinalDamage(event, 2);
-        }
+    final Entity entity = event.getEntity();
+
+    if (!(entity instanceof Player) || !contains(entity)) {
+      return;
     }
 
-    @Override
-    public String getId() {
-        return getRegion().getId();
+    if (((Player) entity).isFlying() && event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
+      DamageUtil.multiplyFinalDamage(event, 2);
     }
+  }
 
-    @Override
-    public void equalize() { }
+  @Override
+  public String getId() {
+    return getRegion().getId();
+  }
 
-    @Override
-    public ArenaType getArenaType() {
-        return ArenaType.MONITORED;
+  @Override
+  public void equalize() {
+  }
+
+  @Override
+  public ArenaType getArenaType() {
+    return ArenaType.MONITORED;
+  }
+
+  public void writePrime() {
+    processor.setProperty("mob-delay-timer", nextMobSpawn);
+    processor.removeProperty("products");
+    for (int i = 0; i < que.size(); ++i) {
+      YAMLNode node = processor.addNode("products." + i);
+      ItemStack stack = que.get(i);
+      node.setProperty("stack-data", StackSerializer.getMap(stack));
     }
+    processor.save();
+  }
 
-    public void writePrime() {
-        processor.setProperty("mob-delay-timer", nextMobSpawn);
-        processor.removeProperty("products");
-        for (int i = 0; i < que.size(); ++i) {
-            YAMLNode node = processor.addNode("products." + i);
-            ItemStack stack = que.get(i);
-            node.setProperty("stack-data", StackSerializer.getMap(stack));
-        }
-        processor.save();
+  public void writeAreas() {
+    for (FactoryMech mech : mechs) {
+      mech.save();
     }
+  }
 
-    public void writeAreas() {
-        for (FactoryMech mech : mechs) {
-            mech.save();
-        }
+  @Override
+  public void writeData(boolean doAsync) {
+    Runnable r = () -> {
+      writePrime();
+      writeAreas();
+    };
+
+    if (!doAsync) {
+      r.run();
+      return;
     }
+    server.getScheduler().runTaskAsynchronously(inst, r);
+  }
 
-    @Override
-    public void writeData(boolean doAsync) {
-        Runnable r = () -> {
-            writePrime();
-            writeAreas();
-        };
-
-        if (!doAsync) {
-            r.run();
-            return;
-        }
-        server.getScheduler().runTaskAsynchronously(inst, r);
-    }
-
-    @Override
-    public void reloadData() {
-        try {
-            processor.load();
-            Object timerO = processor.getProperty("mob-delay-timer");
-            if (timerO instanceof Long) {
-                nextMobSpawn = (long) timerO;
-            }
-            Map<String, YAMLNode> nodes = processor.getNodes("products");
-            if (nodes != null) {
-                for (Map.Entry<String, YAMLNode> entry : nodes.entrySet()) {
-                    try {
-                        YAMLNode node = entry.getValue();
-                        //noinspection unchecked
-                        ItemStack is = StackSerializer.fromMap((Map<String, Object>) node.getProperty("stack-data"));
-                        que.add(Integer.parseInt(entry.getKey()), is);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
-            }
-
-            for (FactoryMech mech : mechs) {
-                mech.load();
-            }
-        } catch (Exception ex) {
+  @Override
+  public void reloadData() {
+    try {
+      processor.load();
+      Object timerO = processor.getProperty("mob-delay-timer");
+      if (timerO instanceof Long) {
+        nextMobSpawn = (long) timerO;
+      }
+      Map<String, YAMLNode> nodes = processor.getNodes("products");
+      if (nodes != null) {
+        for (Map.Entry<String, YAMLNode> entry : nodes.entrySet()) {
+          try {
+            YAMLNode node = entry.getValue();
+            //noinspection unchecked
+            ItemStack is = StackSerializer.fromMap((Map<String, Object>) node.getProperty("stack-data"));
+            que.add(Integer.parseInt(entry.getKey()), is);
+          } catch (Exception ex) {
             ex.printStackTrace();
+          }
         }
+      }
+
+      for (FactoryMech mech : mechs) {
+        mech.load();
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
     }
+  }
 }

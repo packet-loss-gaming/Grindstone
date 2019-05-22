@@ -31,88 +31,90 @@ import java.util.logging.Logger;
 //@Depend(plugins = {"LogBlock"})
 public class RestorationUtil extends BukkitComponent {
 
-    private final static CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final static Server server = CommandBook.server();
+  private static final CommandBook INST = CommandBook.inst();
+  private static final Server SERVER = CommandBook.server();
+  private static final Logger LOG = INST.getLogger();
 
-    private LogBlock logBlock = null;
+  private LogBlock logBlock = null;
 
-    public void enable() {
+  public static void handleToolDamage(final Player player) {
 
-        Plugin plugin = server.getPluginManager().getPlugin("LogBlock");
-        if (plugin != null && plugin instanceof LogBlock) {
-            logBlock = (LogBlock) plugin;
-        }
+    SERVER.getScheduler().runTaskLater(INST, () -> {
+      ItemStack held = player.getItemInHand();
+      if (!ItemUtil.isTool(held.getTypeId())) {
+        return;
+      }
+      short newDurability = (short) (held.getDurability() + 1);
+      short maxDurability = held.getType().getMaxDurability();
+      if (newDurability >= maxDurability) {
+        player.setItemInHand(null);
+      } else {
+        held.setDurability(newDurability);
+        player.setItemInHand(held);
+      }
+    }, 1);
+  }
+
+  public void enable() {
+
+    Plugin plugin = SERVER.getPluginManager().getPlugin("LogBlock");
+    if (plugin instanceof LogBlock) {
+      logBlock = (LogBlock) plugin;
     }
+  }
 
-    public void blockAndLogEvent(Cancellable event) {
+  public void blockAndLogEvent(Cancellable event) {
 
-        event.setCancelled(true);
+    event.setCancelled(true);
 
-        Consumer consumer = logBlock.getConsumer();
+    Consumer consumer = logBlock.getConsumer();
 
-        if (consumer != null) {
+    if (consumer != null) {
 
-            final Player player;
-            final Block block;
-            int xp = 0;
+      final Player player;
+      final Block block;
+      int xp = 0;
 
-            if (event instanceof BlockBreakEvent) {
-                BlockBreakEvent aEvent = (BlockBreakEvent) event;
-                player = aEvent.getPlayer();
-                block = aEvent.getBlock();
-                xp = aEvent.getExpToDrop();
+      if (event instanceof BlockBreakEvent) {
+        BlockBreakEvent aEvent = (BlockBreakEvent) event;
+        player = aEvent.getPlayer();
+        block = aEvent.getBlock();
+        xp = aEvent.getExpToDrop();
 
-                handleToolDamage(player);
-            } else if (event instanceof PlayerBucketFillEvent) {
-                PlayerBucketFillEvent aEvent = (PlayerBucketFillEvent) event;
-                player = aEvent.getPlayer();
-                block = aEvent.getBlockClicked();
+        handleToolDamage(player);
+      } else if (event instanceof PlayerBucketFillEvent) {
+        PlayerBucketFillEvent aEvent = (PlayerBucketFillEvent) event;
+        player = aEvent.getPlayer();
+        block = aEvent.getBlockClicked();
 
-                final int amt = player.getItemInHand().getAmount();
-                final boolean isWater = EnvironmentUtil.isWater(block);
-                server.getScheduler().runTaskLater(inst, () -> {
+        final int amt = player.getItemInHand().getAmount();
+        final boolean isWater = EnvironmentUtil.isWater(block);
+        SERVER.getScheduler().runTaskLater(INST, () -> {
 
-                    if (amt > 1) {
-                        player.setItemInHand(new ItemStack(ItemID.BUCKET, amt));
-                    } else {
-                        player.setItemInHand(null);
-                    }
+          if (amt > 1) {
+            player.setItemInHand(new ItemStack(ItemID.BUCKET, amt));
+          } else {
+            player.setItemInHand(null);
+          }
 
-                    if (isWater) {
-                        player.getInventory().addItem(new ItemStack(ItemID.WATER_BUCKET));
-                    } else {
-                        player.getInventory().addItem(new ItemStack(ItemID.LAVA_BUCKET));
-                    }
-                }, 1);
-            } else {
-                return;
-            }
-            consumer.queueBlockBreak(new Actor(player.getName(), player.getUniqueId()), block.getState());
-
-            block.setTypeId(0);
-
-            if (xp > 0) {
-                ExperienceOrb orb = block.getWorld().spawn(block.getLocation(), ExperienceOrb.class);
-                orb.setExperience(xp);
-            }
-
-        }
-    }
-
-    public static void handleToolDamage(final Player player) {
-
-        server.getScheduler().runTaskLater(inst, () -> {
-            ItemStack held = player.getItemInHand();
-            if (!ItemUtil.isTool(held.getTypeId())) return;
-            short newDurability = (short) (held.getDurability() + 1);
-            short maxDurability = held.getType().getMaxDurability();
-            if (newDurability >= maxDurability) {
-                player.setItemInHand(null);
-            } else {
-                held.setDurability(newDurability);
-                player.setItemInHand(held);
-            }
+          if (isWater) {
+            player.getInventory().addItem(new ItemStack(ItemID.WATER_BUCKET));
+          } else {
+            player.getInventory().addItem(new ItemStack(ItemID.LAVA_BUCKET));
+          }
         }, 1);
+      } else {
+        return;
+      }
+      consumer.queueBlockBreak(new Actor(player.getName(), player.getUniqueId()), block.getState());
+
+      block.setTypeId(0);
+
+      if (xp > 0) {
+        ExperienceOrb orb = block.getWorld().spawn(block.getLocation(), ExperienceOrb.class);
+        orb.setExperience(xp);
+      }
+
     }
+  }
 }

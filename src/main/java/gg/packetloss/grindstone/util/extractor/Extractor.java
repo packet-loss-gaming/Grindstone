@@ -7,5 +7,5 @@
 package gg.packetloss.grindstone.util.extractor;
 
 public interface Extractor<K, E> {
-    public K extractFrom(E e);
+  K extractFrom(E e);
 }

@@ -16,121 +16,117 @@ import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GeneralPlayerUtil {
-    /**
-     * Make a player state
-     */
-    public static PlayerState makeComplexState(Player player) {
+  /**
+   * Make a player state
+   */
+  public static PlayerState makeComplexState(Player player) {
 
-        return new PlayerState(player.getUniqueId().toString(),
-                player.getInventory().getContents(),
-                player.getInventory().getArmorContents(),
-                player.getHealth(),
-                player.getFoodLevel(),
-                player.getSaturation(),
-                player.getExhaustion(),
-                player.getLevel(),
-                player.getExp());
+    return new PlayerState(player.getUniqueId().toString(),
+        player.getInventory().getContents(),
+        player.getInventory().getArmorContents(),
+        player.getHealth(),
+        player.getFoodLevel(),
+        player.getSaturation(),
+        player.getExhaustion(),
+        player.getLevel(),
+        player.getExp());
+  }
+
+  public static boolean isFlyingGamemode(GameMode gameMode) {
+    List<GameMode> flyingGamemodes = Arrays.asList(
+        GameMode.CREATIVE,
+        GameMode.SPECTATOR
+    );
+
+    return flyingGamemodes.contains(gameMode);
+  }
+
+  /**
+   * Checks if the player has a gamemode that provides flight.
+   *
+   * @param player The target player
+   * @return true - if player has flight from gamemode
+   */
+  public static boolean hasFlyingGamemode(Player player) {
+    return isFlyingGamemode(player.getGameMode());
+  }
+
+  public static void findSafeSpot(Player player) {
+
+    Location toBlock = LocationUtil.findFreePosition(player.getLocation());
+
+    if (toBlock != null && player.teleport(toBlock)) {
+      return;
+    } else {
+      toBlock = player.getLocation();
     }
 
-    public static boolean isFlyingGamemode(GameMode gameMode) {
-        List<GameMode> flyingGamemodes = Arrays.asList(
-          GameMode.CREATIVE,
-          GameMode.SPECTATOR
-        );
+    Location working = toBlock.clone();
 
-        return flyingGamemodes.contains(gameMode);
-    }
+    List<BlockFace> nearbyBlockFaces = Lists.newArrayList(EnvironmentUtil.getNearbyBlockFaces());
+    nearbyBlockFaces.remove(BlockFace.SELF);
+    Collections.shuffle(nearbyBlockFaces);
 
-    /**
-     * Checks if the player has a gamemode that provides flight.
-     *
-     * @param player The target player
-     * @return true - if player has flight from gamemode
-     */
-    public static boolean hasFlyingGamemode(Player player) {
-        return isFlyingGamemode(player.getGameMode());
-    }
+    boolean done = false;
 
-    public static void findSafeSpot(Player player) {
+    for (int i = 1; i < 10 && !done; i++) {
+      for (BlockFace face : nearbyBlockFaces) {
+        working = LocationUtil.findFreePosition(toBlock.getBlock().getRelative(face, i).getLocation(working));
 
-        Location toBlock = LocationUtil.findFreePosition(player.getLocation());
-
-        if (toBlock != null && player.teleport(toBlock)) {
-            return;
-        } else {
-            toBlock = player.getLocation();
+        if (working == null) {
+          working = toBlock.clone();
+          continue;
         }
 
-        Location working = toBlock.clone();
-
-        List<BlockFace> nearbyBlockFaces = Lists.newArrayList(EnvironmentUtil.getNearbyBlockFaces());
-        nearbyBlockFaces.remove(BlockFace.SELF);
-        Collections.shuffle(nearbyBlockFaces);
-
-        boolean done = false;
-
-        for (int i = 1; i < 10 && !done; i++) {
-            for (BlockFace face : nearbyBlockFaces) {
-                working = LocationUtil.findFreePosition(toBlock.getBlock().getRelative(face, i).getLocation(working));
-
-                if (working == null) {
-                    working = toBlock.clone();
-                    continue;
-                }
-
-                done = player.teleport(working);
-            }
-        }
-
-        if (!done) {
-            player.teleport(player.getWorld().getSpawnLocation());
-            ChatUtil.sendError(player, "Failed to locate a safe location, teleporting to spawn!");
-        }
+        done = player.teleport(working);
+      }
     }
 
-    /**
-     * This method is used to hide a player
-     *
-     * @param player - The player to hide
-     * @param to     - The player who can no longer see the player
-     * @return - true if change occurred
-     */
-    public static boolean hide(Player player, Player to) {
-
-        if (to.canSee(player)) {
-            to.hidePlayer(player);
-            return true;
-        }
-        return false;
+    if (!done) {
+      player.teleport(player.getWorld().getSpawnLocation());
+      ChatUtil.sendError(player, "Failed to locate a safe location, teleporting to spawn!");
     }
+  }
 
-    /**
-     * This method is used to show a player
-     *
-     * @param player - The player to show
-     * @param to     - The player who can now see the player
-     * @return - true if change occurred
-     */
-    public static boolean show(Player player, Player to) {
+  /**
+   * This method is used to hide a player
+   *
+   * @param player - The player to hide
+   * @param to     - The player who can no longer see the player
+   * @return - true if change occurred
+   */
+  public static boolean hide(Player player, Player to) {
 
-        if (!to.canSee(player)) {
-            to.showPlayer(player);
-            return true;
-        }
-        return false;
+    if (to.canSee(player)) {
+      to.hidePlayer(player);
+      return true;
     }
+    return false;
+  }
 
-    public static Set<UUID> getOnlinePlayerUUIDs() {
-        return CommandBook.server().getOnlinePlayers().stream()
-          .map(Player::getUniqueId)
-          .collect(Collectors.toSet());
+  /**
+   * This method is used to show a player
+   *
+   * @param player - The player to show
+   * @param to     - The player who can now see the player
+   * @return - true if change occurred
+   */
+  public static boolean show(Player player, Player to) {
+
+    if (!to.canSee(player)) {
+      to.showPlayer(player);
+      return true;
     }
+    return false;
+  }
+
+  public static Set<UUID> getOnlinePlayerUUIDs() {
+    return CommandBook.server().getOnlinePlayers().stream()
+        .map(Player::getUniqueId)
+        .collect(Collectors.toSet());
+  }
 }

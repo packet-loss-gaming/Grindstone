@@ -13,43 +13,43 @@ import org.bukkit.event.player.PlayerEvent;
 
 public class FrostBiteEvent extends PlayerEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
-    private int damage;
+  private static final HandlerList handlers = new HandlerList();
+  private boolean cancelled = false;
+  private int damage;
 
-    public FrostBiteEvent(Player player, int damage) {
+  public FrostBiteEvent(Player player, int damage) {
 
-        super(player);
-        this.damage = damage;
-    }
+    super(player);
+    this.damage = damage;
+  }
 
-    public void setDamage(int damage) {
+  public static HandlerList getHandlerList() {
 
-        this.damage = damage;
-    }
+    return handlers;
+  }
 
-    public int getDamage() {
+  public int getDamage() {
 
-        return damage;
-    }
+    return damage;
+  }
 
-    public HandlerList getHandlers() {
+  public void setDamage(int damage) {
 
-        return handlers;
-    }
+    this.damage = damage;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public boolean isCancelled() {
+  public boolean isCancelled() {
 
-        return cancelled;
-    }
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
+  public void setCancelled(boolean cancelled) {
 
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 }

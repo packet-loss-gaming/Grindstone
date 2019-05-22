@@ -14,55 +14,55 @@ import org.bukkit.event.player.PlayerEvent;
 
 public class CreepSpeakEvent extends PlayerEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
-    private Entity targeter;
-    private String message;
+  private static final HandlerList handlers = new HandlerList();
+  private boolean cancelled = false;
+  private Entity targeter;
+  private String message;
 
-    public CreepSpeakEvent(Player player, Entity targeter, String message) {
+  public CreepSpeakEvent(Player player, Entity targeter, String message) {
 
-        super(player);
-        this.targeter = targeter;
-        this.message = message;
-    }
+    super(player);
+    this.targeter = targeter;
+    this.message = message;
+  }
 
-    public Entity getTargeter() {
+  public static HandlerList getHandlerList() {
 
-        return targeter;
-    }
+    return handlers;
+  }
 
-    public void setTargeter(Entity targeter) {
+  public Entity getTargeter() {
 
-        this.targeter = targeter;
-    }
+    return targeter;
+  }
 
-    public String getMessage() {
+  public void setTargeter(Entity targeter) {
 
-        return message;
-    }
+    this.targeter = targeter;
+  }
 
-    public void setMessage(String message) {
+  public String getMessage() {
 
-        this.message = message;
-    }
+    return message;
+  }
 
-    public HandlerList getHandlers() {
+  public void setMessage(String message) {
 
-        return handlers;
-    }
+    this.message = message;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public boolean isCancelled() {
+  public boolean isCancelled() {
 
-        return cancelled;
-    }
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
+  public void setCancelled(boolean cancelled) {
 
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 }

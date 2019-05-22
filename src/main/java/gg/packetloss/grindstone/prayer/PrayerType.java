@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.prayer;
 
-import gg.packetloss.grindstone.prayer.PrayerFX.*;
+import gg.packetloss.grindstone.prayer.impl.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,105 +15,106 @@ import java.util.concurrent.TimeUnit;
 
 public enum PrayerType {
 
-    UNASSIGNED(0, 0, null),
+  UNASSIGNED(0, 0, null),
 
-    FIRE(1000, 35, FireFX.class),
-    STARVATION(1001, 35, StarvationFX.class),
-    INVENTORY(1002, 35, InventoryFX.class),
-    RACKET(1003, 35, RacketFX.class),
-    SMOKE(1004, 35, SmokeFX.class),
-    TNT(1005, 35, TNTFX.class),
-    WALK(1006, 35, WalkFX.class),
-    SLAP(1007, 35, SlapFX.class),
-    BUTTERFINGERS(1008, 35, ButterFingersFX.class),
-    ARROW(1009, 35, ArrowFX.class),
-    ZOMBIE(1010, 35, ZombieFX.class),
-    DOOM(1011, 35, DoomFX.class),
-    POISON(1012, 35, PoisonFX.class),
-    BLINDNESS(1013, 35, BlindnessFX.class),
-    MUSHROOM(1014, 35, MushroomFX.class),
-    CANNON(1015, 35, CannonFX.class),
-    MERLIN(1016, 35, MerlinFX.class),
-    ROCKET(1017, 35, 1, RocketFX.class),
-    GLASSBOX(1018, 35, GlassBoxFX.class),
-    DEADLYPOTION(1019, 35, DeadlyPotionFX.class),
-    NECROSIS(1020, 40, NecrosisFX.class),
+  FIRE(1000, 35, FirePrayer.class),
+  STARVATION(1001, 35, StarvationPrayer.class),
+  INVENTORY(1002, 35, InventoryPrayer.class),
+  RACKET(1003, 35, RacketPrayer.class),
+  SMOKE(1004, 35, SmokeEffectPrayer.class),
+  TNT(1005, 35, TNTPrayer.class),
+  WALK(1006, 35, WalkPrayer.class),
+  SLAP(1007, 35, SlapPrayer.class),
+  BUTTERFINGERS(1008, 35, BufferFingersPrayer.class),
+  ARROW(1009, 35, ArrowPrayer.class),
+  ZOMBIE(1010, 35, ZombiePrayer.class),
+  DOOM(1011, 35, DoomPrayer.class),
+  POISON(1012, 35, PoisonPrayer.class),
+  BLINDNESS(1013, 35, BlindnessPrayer.class),
+  MUSHROOM(1014, 35, MushroomPrayer.class),
+  CANNON(1015, 35, CannonPrayer.class),
+  MERLIN(1016, 35, MerlinPrayer.class),
+  ROCKET(1017, 35, 1, RocketPrayer.class),
+  GLASSBOX(1018, 35, GlassBoxPrayer.class),
+  DEADLYPOTION(1019, 35, DeadlyPotionPrayer.class),
+  NECROSIS(1020, 40, NecrosisPrayer.class),
 
-    FIREBALL(2000, 75, ThrownFireballFX.class),
-    HEALTH(2001, 15, HealthFX.class),
-    SPEED(2002, 20, SpeedFX.class),
-    ANTIFIRE(2003, 15, AntifireFX.class),
-    POWER(2004, 50, PowerFX.class),
-    GOD(2005, 150, GodFX.class),
-    NIGHTVISION(2006, 30, NightVisionFX.class),
-    FLASH(2007, 40, FlashFX.class),
-    INVISIBILITY(2008, 30, InvisibilityFX.class),
-    DEADLYDEFENSE(2009, 75, DeadlyDefenseFX.class),
-    DIGGYDIGGY(2010, 30, DiggyDiggyFX.class),
-    HULK(2011, 50, HulkFX.class),
-    HEALTHBOOST(2012, 15, HealthBoostFX.class),
-    ABSORPTION(2013, 15, AbsorptionFX.class);
+  FIREBALL(2000, 75, ThrownFireballPrayer.class),
+  HEALTH(2001, 15, HealthPrayer.class),
+  SPEED(2002, 20, SpeedPrayer.class),
+  ANTIFIRE(2003, 15, AntifirePrayer.class),
+  POWER(2004, 50, PowerPrayer.class),
+  GOD(2005, 150, GodPrayer.class),
+  NIGHTVISION(2006, 30, NightVisionPrayer.class),
+  FLASH(2007, 40, FlashPrayer.class),
+  INVISIBILITY(2008, 30, InvisibilityPrayer.class),
+  DEADLYDEFENSE(2009, 75, DeadlyDefensePrayer.class),
+  DIGGYDIGGY(2010, 30, DiggyDiggyPrayer.class),
+  HULK(2011, 50, HulkPrayer.class),
+  HEALTHBOOST(2012, 15, HealthBoostPrayer.class),
+  ABSORPTION(2013, 15, AbsorptionPrayer.class);
 
-    private final int id;
-    private final int cost;
-    private final long defaultTime;
-    private final Class FXClass;
-    private final static Map<Integer, PrayerType> BY_ID = new HashMap<>();
+  private final static Map<Integer, PrayerType> BY_ID = new HashMap<>();
 
-    private PrayerType(int id, int cost, Class FXClass) {
-
-        this.id = id;
-        this.cost = cost;
-        this.defaultTime = TimeUnit.MINUTES.toMillis(15);
-        this.FXClass = FXClass;
+  static {
+    for (PrayerType prayerType : values()) {
+      BY_ID.put(prayerType.getValue(), prayerType);
     }
+  }
 
-    private PrayerType(int id, int cost, int defaultTime, Class FXClass) {
+  private final int id;
+  private final int cost;
+  private final long defaultTime;
+  private final Class prayerClass;
 
-        this.id = id;
-        this.cost = cost;
-        this.defaultTime = TimeUnit.MINUTES.toMillis(defaultTime);
-        this.FXClass = FXClass;
-    }
+  PrayerType(int id, int cost, Class prayerClass) {
 
-    public int getValue() {
+    this.id = id;
+    this.cost = cost;
+    this.defaultTime = TimeUnit.MINUTES.toMillis(15);
+    this.prayerClass = prayerClass;
+  }
 
-        return id;
-    }
+  PrayerType(int id, int cost, int defaultTime, Class prayerClass) {
 
-    public int getLevelCost() {
+    this.id = id;
+    this.cost = cost;
+    this.defaultTime = TimeUnit.MINUTES.toMillis(defaultTime);
+    this.prayerClass = prayerClass;
+  }
 
-        return cost;
-    }
+  public static PrayerType getId(final int id) {
 
-    public long getDefaultTime() {
+    return BY_ID.get(id);
+  }
 
-        return defaultTime;
-    }
+  public int getValue() {
 
-    public Class getFXClass() {
+    return id;
+  }
 
-        return FXClass;
-    }
+  public int getLevelCost() {
 
-    public boolean isHoly() {
+    return cost;
+  }
 
-        return getValue() >= 2000;
-    }
+  public long getDefaultTime() {
 
-    public boolean isUnholy() {
+    return defaultTime;
+  }
 
-        return getValue() < 2000;
-    }
+  public Class getPrayerClass() {
 
-    public static PrayerType getId(final int id) {
+    return prayerClass;
+  }
 
-        return BY_ID.get(id);
-    }
+  public boolean isHoly() {
 
-    static {
-        for (PrayerType prayerType : values()) {
-            BY_ID.put(prayerType.getValue(), prayerType);
-        }
-    }
+    return getValue() >= 2000;
+  }
+
+  public boolean isUnholy() {
+
+    return getValue() < 2000;
+  }
 }

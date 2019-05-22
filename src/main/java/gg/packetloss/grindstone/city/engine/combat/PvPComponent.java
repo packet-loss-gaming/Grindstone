@@ -29,8 +29,8 @@ import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.extractor.entity.CombatantExtractor;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
-import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -53,218 +53,218 @@ import java.util.logging.Logger;
 @Depend(components = {SessionComponent.class, PrayerComponent.class}, plugins = "WorldGuard")
 public class PvPComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  @InjectComponent
+  private static SessionComponent sessions;
+  private static List<PvPScope> pvpLimitors = new ArrayList<>();
+  private static WorldGuardPlugin WG;
+  private static CombatantExtractor<Player, Player, Projectile> extractor = new CombatantExtractor<>(
+      Player.class,
+      Player.class,
+      Projectile.class
+  );
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
+  @InjectComponent
+  private PrayerComponent prayers;
 
-    @InjectComponent
-    private static SessionComponent sessions;
-    @InjectComponent
-    private PrayerComponent prayers;
+  public static void registerScope(PvPScope scope) {
+    pvpLimitors.add(scope);
+  }
 
-    private static List<PvPScope> pvpLimitors = new ArrayList<>();
-    private static WorldGuardPlugin WG;
+  public static void removeScope(PvPScope scope) {
+    pvpLimitors.remove(scope);
+  }
 
-    @Override
-    public void enable() {
+  public static boolean allowsPvP(Player attacker, Player defender) {
 
-        try {
-            setUpWorldGuard();
-        } catch (UnknownPluginException e) {
-            log.warning("Plugin not found: " + e.getMessage() + ".");
-            return;
-        }
-        registerCommands(Commands.class);
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
-    }
+    return allowsPvP(attacker, defender, true);
+  }
 
-    private void setUpWorldGuard() throws UnknownPluginException {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
-            throw new UnknownPluginException("WorldGuard");
-        }
-
-        WG = (WorldGuardPlugin) plugin;
-    }
-
-    public class Commands {
-
-        @Command(aliases = {"pvp"},
-                usage = "", desc = "Toggle PvP",
-                flags = "s", min = 0, max = 0)
-        public void pvpCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            PlayerUtil.checkPlayer(sender);
-
-            PvPSession session = sessions.getSession(PvPSession.class, sender);
-
-            if (session.recentlyHit()) {
-                throw new CommandException("You have been hit recently and cannot toggle PvP!");
-            }
-
-            if (!args.hasFlag('s') || !session.hasPvPOn()) {
-                session.setPvP(!session.hasPvPOn());
-                ChatUtil.sendNotice(sender, "Global PvP has been: " + (session.hasPvPOn() ? "enabled" : "disabled") + ".");
-
-                session.useSafeSpots(!args.hasFlag('s'));
-            } else {
-                if (session.useSafeSpots()) {
-                    session.useSafeSpots(!args.hasFlag('s'));
-                } else {
-                    session.useSafeSpots(args.hasFlag('s'));
-                }
-            }
-
-            if (session.hasPvPOn()) {
-                ChatUtil.sendNotice(sender, "Safe spots are: " + (session.useSafeSpots() ? "enabled" : "disabled") + ".");
-            }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerJoin(PlayerJoinEvent event) {
-
-        final Player player = event.getPlayer();
-        PvPSession session = sessions.getSession(PvPSession.class, player);
-
-        if (session.punishNextLogin()) {
-            try {
-                Prayer[] targetPrayers = new Prayer[]{
-                        PrayerComponent.constructPrayer(player, PrayerType.GLASSBOX, 1000 * 60 * 3),
-                        PrayerComponent.constructPrayer(player, PrayerType.NECROSIS, 1000 * 60 * 3),
-                };
-
-                prayers.influencePlayer(player, targetPrayers);
-
-                server.getScheduler().runTaskLater(inst,
-                        () -> ChatUtil.sendWarning(player,
-                                "You ran from a fight, the Giant Chicken does not approve!"), 1
-                );
-            } catch (UnsupportedPrayerException ignored) {
-            }
-        }
-        session.wasKicked(false);
-    }
-
-
-    @EventHandler
-    public void onPlayerKick(PlayerKickEvent event) {
-
-        PvPSession session = sessions.getSession(PvPSession.class, event.getPlayer());
-
-        if (session.recentlyHit()) {
-            session.wasKicked(true);
-        }
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-
-        PvPSession session = sessions.getSession(PvPSession.class, event.getPlayer());
-
-        if (session.recentlyHit() || session.punishNextLogin()) {
-            session.punishNextLogin(true);
-            return;
-        }
-
-        session.setPvP(false);
-    }
-
-    private static EDBEExtractor<Player, Player, Projectile> extractor = new EDBEExtractor<>(
-            Player.class,
-            Player.class,
-            Projectile.class
-    );
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerDamage(EntityDamageByEntityEvent event) {
-
-        CombatantPair<Player, Player, Projectile> result = extractor.extractFrom(event);
-
-        if (result == null) return;
-
-        sessions.getSession(PvPSession.class, result.getAttacker()).updateHit();
-        sessions.getSession(PvPSession.class, result.getDefender()).updateHit();
-    }
-
-    @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent event) {
-
-        Player player = event.getEntity();
-        PvPSession pSession = sessions.getSession(PvPSession.class, player);
-        pSession.resetHit();
-
-        if (pSession.punishNextLogin()) {
-            pSession.punishNextLogin(false);
-        }
-
-        Player killer = player.getKiller();
-        if (killer != null) {
-            sessions.getSession(PvPSession.class, killer).resetHit();
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPvPBlock(DisallowedPVPEvent event) {
-
-        if (allowsPvP(event.getAttacker(), event.getDefender(), false)) event.setCancelled(true);
-    }
-
-    public static void registerScope(PvPScope scope) {
-        pvpLimitors.add(scope);
-    }
-
-    public static void removeScope(PvPScope scope) {
-        pvpLimitors.remove(scope);
-    }
-
-    public static boolean allowsPvP(Player attacker, Player defender) {
-
-        return allowsPvP(attacker, defender, true);
-    }
-
-    private static boolean checkSafeZone(ApplicableRegionSet regions, Player attacker, Player defender) {
-        for (ProtectedRegion region : regions) {
-            if (HomeManagerComponent.isPlayerHouse(region, attacker) || HomeManagerComponent.isPlayerHouse(region, defender)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static boolean allowsPvP(Player attacker, Player defender, boolean checkRegions) {
-
-        PvPSession attackerSession = sessions.getSession(PvPSession.class, attacker);
-        PvPSession defenderSession = sessions.getSession(PvPSession.class, defender);
-
-        for (PvPScope scope : pvpLimitors) {
-            if (!scope.checkFor(attacker, defender)) return false;
-        }
-
-        if (attackerSession.hasPvPOn() && defenderSession.hasPvPOn()) {
-            if (attackerSession.useSafeSpots() || defenderSession.useSafeSpots()) {
-                RegionManager manager = WG.getRegionManager(attacker.getWorld());
-
-                if (!checkSafeZone(manager.getApplicableRegions(attacker.getLocation()), attacker, defender)) {
-                    return false;
-                }
-
-                if (!checkSafeZone(manager.getApplicableRegions(defender.getLocation()), attacker, defender)) {
-                    return false;
-                }
-            }
-            return true;
-        } else if (checkRegions) {
-            RegionManager manager = WG.getRegionManager(attacker.getWorld());
-            ApplicableRegionSet attackerApplicable = manager.getApplicableRegions(attacker.getLocation());
-            ApplicableRegionSet defenderApplicable = manager.getApplicableRegions(defender.getLocation());
-
-            return attackerApplicable.allows(DefaultFlag.PVP) && defenderApplicable.allows(DefaultFlag.PVP);
-        }
+  private static boolean checkSafeZone(ApplicableRegionSet regions, Player attacker, Player defender) {
+    for (ProtectedRegion region : regions) {
+      if (HomeManagerComponent.isPlayerHouse(region, attacker) || HomeManagerComponent.isPlayerHouse(region, defender)) {
         return false;
+      }
     }
+    return true;
+  }
+
+  public static boolean allowsPvP(Player attacker, Player defender, boolean checkRegions) {
+
+    PvPSession attackerSession = sessions.getSession(PvPSession.class, attacker);
+    PvPSession defenderSession = sessions.getSession(PvPSession.class, defender);
+
+    for (PvPScope scope : pvpLimitors) {
+      if (!scope.checkFor(attacker, defender)) {
+        return false;
+      }
+    }
+
+    if (attackerSession.hasPvPOn() && defenderSession.hasPvPOn()) {
+      if (attackerSession.useSafeSpots() || defenderSession.useSafeSpots()) {
+        RegionManager manager = WG.getRegionManager(attacker.getWorld());
+
+        if (!checkSafeZone(manager.getApplicableRegions(attacker.getLocation()), attacker, defender)) {
+          return false;
+        }
+
+        return checkSafeZone(manager.getApplicableRegions(defender.getLocation()), attacker, defender);
+      }
+      return true;
+    } else if (checkRegions) {
+      RegionManager manager = WG.getRegionManager(attacker.getWorld());
+      ApplicableRegionSet attackerApplicable = manager.getApplicableRegions(attacker.getLocation());
+      ApplicableRegionSet defenderApplicable = manager.getApplicableRegions(defender.getLocation());
+
+      return attackerApplicable.allows(DefaultFlag.PVP) && defenderApplicable.allows(DefaultFlag.PVP);
+    }
+    return false;
+  }
+
+  @Override
+  public void enable() {
+
+    try {
+      setUpWorldGuard();
+    } catch (UnknownPluginException e) {
+      log.warning("Plugin not found: " + e.getMessage() + ".");
+      return;
+    }
+    registerCommands(Commands.class);
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
+
+  private void setUpWorldGuard() throws UnknownPluginException {
+
+    Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
+
+    // WorldGuard may not be loaded
+    if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+      throw new UnknownPluginException("WorldGuard");
+    }
+
+    WG = (WorldGuardPlugin) plugin;
+  }
+
+  @EventHandler(priority = EventPriority.LOWEST)
+  public void onPlayerJoin(PlayerJoinEvent event) {
+
+    final Player player = event.getPlayer();
+    PvPSession session = sessions.getSession(PvPSession.class, player);
+
+    if (session.punishNextLogin()) {
+      try {
+        Prayer[] targetPrayers = new Prayer[] {
+            PrayerComponent.constructPrayer(player, PrayerType.GLASSBOX, 1000 * 60 * 3),
+            PrayerComponent.constructPrayer(player, PrayerType.NECROSIS, 1000 * 60 * 3),
+        };
+
+        prayers.influencePlayer(player, targetPrayers);
+
+        server.getScheduler().runTaskLater(inst,
+            () -> ChatUtil.sendWarning(player,
+                "You ran from a fight, the Giant Chicken does not approve!"), 1
+        );
+      } catch (UnsupportedPrayerException ignored) {
+      }
+    }
+    session.wasKicked(false);
+  }
+
+  @EventHandler
+  public void onPlayerKick(PlayerKickEvent event) {
+
+    PvPSession session = sessions.getSession(PvPSession.class, event.getPlayer());
+
+    if (session.recentlyHit()) {
+      session.wasKicked(true);
+    }
+  }
+
+  @EventHandler
+  public void onPlayerQuit(PlayerQuitEvent event) {
+
+    PvPSession session = sessions.getSession(PvPSession.class, event.getPlayer());
+
+    if (session.recentlyHit() || session.punishNextLogin()) {
+      session.punishNextLogin(true);
+      return;
+    }
+
+    session.setPvP(false);
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onPlayerDamage(EntityDamageByEntityEvent event) {
+
+    CombatantPair<Player, Player, Projectile> result = extractor.extractFrom(event);
+
+    if (result == null) {
+      return;
+    }
+
+    sessions.getSession(PvPSession.class, result.getAttacker()).updateHit();
+    sessions.getSession(PvPSession.class, result.getDefender()).updateHit();
+  }
+
+  @EventHandler
+  public void onPlayerDeath(PlayerDeathEvent event) {
+
+    Player player = event.getEntity();
+    PvPSession pSession = sessions.getSession(PvPSession.class, player);
+    pSession.resetHit();
+
+    if (pSession.punishNextLogin()) {
+      pSession.punishNextLogin(false);
+    }
+
+    Player killer = player.getKiller();
+    if (killer != null) {
+      sessions.getSession(PvPSession.class, killer).resetHit();
+    }
+  }
+
+  @EventHandler(ignoreCancelled = true)
+  public void onPvPBlock(DisallowedPVPEvent event) {
+
+    if (allowsPvP(event.getAttacker(), event.getDefender(), false)) {
+      event.setCancelled(true);
+    }
+  }
+
+  public class Commands {
+
+    @Command(aliases = {"pvp"},
+        usage = "", desc = "Toggle PvP",
+        flags = "s", min = 0, max = 0)
+    public void pvpCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+      PlayerUtil.checkPlayer(sender);
+
+      PvPSession session = sessions.getSession(PvPSession.class, sender);
+
+      if (session.recentlyHit()) {
+        throw new CommandException("You have been hit recently and cannot toggle PvP!");
+      }
+
+      if (!args.hasFlag('s') || !session.hasPvPOn()) {
+        session.setPvP(!session.hasPvPOn());
+        ChatUtil.sendNotice(sender, "Global PvP has been: " + (session.hasPvPOn() ? "enabled" : "disabled") + ".");
+
+        session.useSafeSpots(!args.hasFlag('s'));
+      } else {
+        if (session.useSafeSpots()) {
+          session.useSafeSpots(!args.hasFlag('s'));
+        } else {
+          session.useSafeSpots(args.hasFlag('s'));
+        }
+      }
+
+      if (session.hasPvPOn()) {
+        ChatUtil.sendNotice(sender, "Safe spots are: " + (session.useSafeSpots() ? "enabled" : "disabled") + ".");
+      }
+    }
+  }
 }

@@ -9,25 +9,25 @@ package gg.packetloss.grindstone.items.custom;
 import org.bukkit.potion.PotionEffectType;
 
 public class Potion {
-    private PotionEffectType type;
-    private int time;
-    private int level;
+  private PotionEffectType type;
+  private int time;
+  private int level;
 
-    public Potion(PotionEffectType type, int time, int level) {
-        this.type = type;
-        this.time = time;
-        this.level = level;
-    }
+  public Potion(PotionEffectType type, int time, int level) {
+    this.type = type;
+    this.time = time;
+    this.level = level;
+  }
 
-    public PotionEffectType getType() {
-        return type;
-    }
+  public PotionEffectType getType() {
+    return type;
+  }
 
-    public int getTime() {
-        return time;
-    }
+  public int getTime() {
+    return time;
+  }
 
-    public int getLevel() {
-        return level;
-    }
+  public int getLevel() {
+    return level;
+  }
 }

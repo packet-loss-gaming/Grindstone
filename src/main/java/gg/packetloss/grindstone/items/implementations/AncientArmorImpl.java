@@ -11,8 +11,8 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.entity.Player;
 
 public class AncientArmorImpl extends AbstractXPArmor {
-    @Override
-    public boolean hasArmor(Player player) {
-        return ItemUtil.hasAncientArmour(player);
-    }
+  @Override
+  public boolean hasArmor(Player player) {
+    return ItemUtil.hasAncientArmour(player);
+  }
 }

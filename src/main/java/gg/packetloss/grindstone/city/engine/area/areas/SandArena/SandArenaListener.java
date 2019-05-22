@@ -30,104 +30,106 @@ import java.util.Set;
 import java.util.UUID;
 
 public class SandArenaListener extends AreaListener<SandArena> {
-    public SandArenaListener(SandArena parent) {
-        super(parent);
+  private static Set<Class> blacklistedSpecs = new HashSet<>();
+
+  static {
+    blacklistedSpecs.add(Disarm.class);
+  }
+
+  private RefCountedTracker<UUID> protectedPlayers = new RefCountedTracker<>();
+
+  public SandArenaListener(SandArena parent) {
+    super(parent);
+  }
+
+  @EventHandler(ignoreCancelled = true)
+  public void onSpecialAttack(SpecialAttackEvent event) {
+
+    SpecialAttack attack = event.getSpec();
+
+    if (!parent.contains(attack.getLocation())) {
+      return;
     }
 
-    private static Set<Class> blacklistedSpecs = new HashSet<>();
+    if (blacklistedSpecs.contains(attack.getClass())) {
 
-    static {
-        blacklistedSpecs.add(Disarm.class);
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(ignoreCancelled = true)
+  public void onGemOfLifeUsage(GemOfLifeUsageEvent event) {
+
+    if (parent.contains(event.getPlayer())) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onEntityDamage(EntityDamageEvent event) {
+    Entity injuredEntity = event.getEntity();
+    if (!(injuredEntity instanceof Player)) {
+      return;
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
-
-        SpecialAttack attack = event.getSpec();
-
-        if (!parent.contains(attack.getLocation())) return;
-
-        if (blacklistedSpecs.contains(attack.getClass())) {
-
-            event.setCancelled(true);
-        }
+    Player defender = (Player) injuredEntity;
+    boolean isFallDamage = event.getCause() == DamageCause.FALL;
+    if (isFallDamage && !parent.contains(defender) && protectedPlayers.contains(defender.getUniqueId())) {
+      event.setCancelled(true);
+      return;
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onGemOfLifeUsage(GemOfLifeUsageEvent event) {
-
-        if (parent.contains(event.getPlayer())) {
-            event.setCancelled(true);
-        }
+    if (parent.contains(defender)) {
+      FallDamageDeathBlocker.protectPlayer(defender, protectedPlayers);
     }
+  }
 
-    private RefCountedTracker<UUID> protectedPlayers = new RefCountedTracker<>();
+  @EventHandler
+  public void onPlayerDeath(PlayerDeathEvent event) {
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onEntityDamage(EntityDamageEvent event) {
-        Entity injuredEntity = event.getEntity();
-        if (!(injuredEntity instanceof Player)) {
-            return;
-        }
+    HashMap<String, PlayerState> playerState = parent.playerState;
 
-        Player defender = (Player) injuredEntity;
-        boolean isFallDamage = event.getCause() == DamageCause.FALL;
-        if (isFallDamage && !parent.contains(defender) && protectedPlayers.contains(defender.getUniqueId())) {
-            event.setCancelled(true);
-            return;
-        }
+    Player player = event.getEntity();
+    if (!playerState.containsKey(player.getName()) && parent.contains(player, 1) && !parent.admin.isAdmin(player)) {
 
-        if (parent.contains(defender)) {
-            FallDamageDeathBlocker.protectPlayer(defender, protectedPlayers);
-        }
+      playerState.put(player.getName(), new PlayerState(player.getName(),
+          player.getInventory().getContents(),
+          player.getInventory().getArmorContents(),
+          player.getLevel(),
+          player.getExp()));
+      event.getDrops().clear();
+      event.setDroppedExp(0);
+      event.setKeepLevel(true);
     }
+  }
 
-    @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent event) {
+  @EventHandler(priority = EventPriority.HIGHEST)
+  public void onPlayerRespawn(PlayerRespawnEvent event) {
 
-        HashMap<String, PlayerState> playerState = parent.playerState;
+    HashMap<String, PlayerState> playerState = parent.playerState;
 
-        Player player = event.getEntity();
-        if (!playerState.containsKey(player.getName()) && parent.contains(player, 1) && !parent.admin.isAdmin(player)) {
+    Player player = event.getPlayer();
+    final Location fallBack = event.getRespawnLocation();
 
-            playerState.put(player.getName(), new PlayerState(player.getName(),
-                    player.getInventory().getContents(),
-                    player.getInventory().getArmorContents(),
-                    player.getLevel(),
-                    player.getExp()));
-            event.getDrops().clear();
-            event.setDroppedExp(0);
-            event.setKeepLevel(true);
-        }
+    // Restore their inventory if they have one stored
+    if (playerState.containsKey(player.getName()) && !parent.admin.isAdmin(player)) {
+
+      try {
+        PlayerState identity = playerState.get(player.getName());
+
+        // Restore the contents
+        player.getInventory().setArmorContents(identity.getArmourContents());
+        player.getInventory().setContents(identity.getInventoryContents());
+        player.setLevel(identity.getLevel());
+        player.setExp(identity.getExperience());
+
+        event.setRespawnLocation(parent.getRespawnLocation());
+      } catch (Exception e) {
+        e.printStackTrace();
+        event.setRespawnLocation(fallBack);
+      } finally {
+        playerState.remove(player.getName());
+      }
     }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-
-        HashMap<String, PlayerState> playerState = parent.playerState;
-
-        Player player = event.getPlayer();
-        final Location fallBack = event.getRespawnLocation();
-
-        // Restore their inventory if they have one stored
-        if (playerState.containsKey(player.getName()) && !parent.admin.isAdmin(player)) {
-
-            try {
-                PlayerState identity = playerState.get(player.getName());
-
-                // Restore the contents
-                player.getInventory().setArmorContents(identity.getArmourContents());
-                player.getInventory().setContents(identity.getInventoryContents());
-                player.setLevel(identity.getLevel());
-                player.setExp(identity.getExperience());
-
-                event.setRespawnLocation(parent.getRespawnLocation());
-            } catch (Exception e) {
-                e.printStackTrace();
-                event.setRespawnLocation(fallBack);
-            } finally {
-                playerState.remove(player.getName());
-            }
-        }
-    }
+  }
 }

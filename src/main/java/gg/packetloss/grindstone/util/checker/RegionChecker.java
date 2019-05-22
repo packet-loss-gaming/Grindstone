@@ -13,16 +13,16 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class RegionChecker extends Checker<Region, Vector> {
 
-    public RegionChecker(Region region) {
-        super(region);
-    }
+  public RegionChecker(Region region) {
+    super(region);
+  }
 
-    public RegionChecker(ProtectedRegion region) {
-        super(new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint()));
-    }
+  public RegionChecker(ProtectedRegion region) {
+    super(new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint()));
+  }
 
-    @Override
-    public Boolean evaluate(Vector vector) {
-        return get().contains(vector);
-    }
+  @Override
+  public Boolean evaluate(Vector vector) {
+    return get().contains(vector);
+  }
 }

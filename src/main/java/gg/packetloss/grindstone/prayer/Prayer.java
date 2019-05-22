@@ -6,68 +6,74 @@
 
 package gg.packetloss.grindstone.prayer;
 
-import gg.packetloss.grindstone.prayer.PrayerFX.AbstractEffect;
-import gg.packetloss.grindstone.prayer.PrayerFX.AbstractTriggeredEffect;
+import gg.packetloss.grindstone.prayer.impl.AbstractPrayer;
+import gg.packetloss.grindstone.prayer.impl.AbstractTriggerPrayer;
 import org.bukkit.entity.Player;
 
 public class Prayer implements Comparable<Prayer> {
 
-    private final Player player;
-    private final AbstractEffect abstractEffect;
-    private final long startTime;
-    private long maxDuration;
+  private final Player player;
+  private final AbstractPrayer abstractEffect;
+  private final long startTime;
+  private long maxDuration;
 
 
-    protected Prayer(Player player, AbstractEffect abstractEffect, long maxDuration) {
+  protected Prayer(Player player, AbstractPrayer abstractEffect, long maxDuration) {
 
-        this.player = player;
-        this.abstractEffect = abstractEffect;
-        this.startTime = System.currentTimeMillis();
-        this.maxDuration = maxDuration;
+    this.player = player;
+    this.abstractEffect = abstractEffect;
+    this.startTime = System.currentTimeMillis();
+    this.maxDuration = maxDuration;
+  }
+
+  public Player getPlayer() {
+
+    return player;
+  }
+
+  public AbstractPrayer getEffect() {
+
+    return abstractEffect;
+  }
+
+  public long getStartTime() {
+
+    return startTime;
+  }
+
+  public long getMaxDuration() {
+
+    return maxDuration;
+  }
+
+  public void setMaxDuration(long maxDuration) {
+
+    this.maxDuration = maxDuration;
+  }
+
+  public boolean hasTrigger() {
+
+    return abstractEffect instanceof AbstractTriggerPrayer;
+  }
+
+  public Class getTriggerClass() {
+
+    return hasTrigger() ? ((AbstractTriggerPrayer) abstractEffect).getTriggerClass() : null;
+  }
+
+  @Override
+  public int compareTo(Prayer prayer) {
+
+    if (prayer == null) {
+      return 0;
     }
 
-    public Player getPlayer() {
-
-        return player;
+    if (this.getEffect().getType().getValue() == prayer.getEffect().getType().getValue()) {
+      return 0;
     }
-
-    public AbstractEffect getEffect() {
-
-        return abstractEffect;
+    if (this.getEffect().getType().getValue() > prayer.getEffect().getType().getValue()) {
+      return 1;
     }
-
-    public long getStartTime() {
-
-        return startTime;
-    }
-
-    public long getMaxDuration() {
-
-        return maxDuration;
-    }
-
-    public void setMaxDuration(long maxDuration) {
-
-        this.maxDuration = maxDuration;
-    }
-
-    public boolean hasTrigger() {
-
-        return abstractEffect instanceof AbstractTriggeredEffect;
-    }
-
-    public Class getTriggerClass() {
-
-        return hasTrigger() ? ((AbstractTriggeredEffect) abstractEffect).getTriggerClass() : null;
-    }
-
-    @Override
-    public int compareTo(Prayer prayer) {
-
-        if (prayer == null) return 0;
-
-        if (this.getEffect().getType().getValue() == prayer.getEffect().getType().getValue()) return 0;
-        if (this.getEffect().getType().getValue() > prayer.getEffect().getType().getValue()) return 1;
-        return -1;
-    }
+    return -1;
+  }
 }

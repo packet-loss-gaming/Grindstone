@@ -9,9 +9,9 @@ package gg.packetloss.grindstone.economic.store.mysql;
 import gg.packetloss.grindstone.data.MySQLPreparedStatement;
 
 public abstract class ItemStatement implements MySQLPreparedStatement {
-    protected final String name;
+  protected final String name;
 
-    public ItemStatement(String name) {
-        this.name = name.toUpperCase();
-    }
+  public ItemStatement(String name) {
+    this.name = name.toUpperCase();
+  }
 }

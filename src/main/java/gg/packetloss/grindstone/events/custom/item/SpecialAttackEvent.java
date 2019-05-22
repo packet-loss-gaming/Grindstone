@@ -16,65 +16,65 @@ import org.bukkit.event.player.PlayerEvent;
 
 public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
-    private final SpecType context;
-    private SpecialAttack spec;
-    private long coolDown;
+  private static final HandlerList handlers = new HandlerList();
+  private final SpecType context;
+  private boolean cancelled = false;
+  private SpecialAttack spec;
+  private long coolDown;
 
-    public SpecialAttackEvent(final Player owner, final SpecType context, final SpecialAttack spec) {
+  public SpecialAttackEvent(final Player owner, final SpecType context, final SpecialAttack spec) {
 
-        super(owner);
+    super(owner);
 
-        Validate.isTrue(owner.equals(spec.getOwner()), "The owner and the spec owner must match!");
+    Validate.isTrue(owner.equals(spec.getOwner()), "The owner and the spec owner must match!");
 
-        this.context = context;
-        this.spec = spec;
-        this.coolDown = context.getDelay() + spec.getCoolDown();
-    }
+    this.context = context;
+    this.spec = spec;
+    this.coolDown = context.getDelay() + spec.getCoolDown();
+  }
 
-    public SpecType getContext() {
+  public static HandlerList getHandlerList() {
 
-        return context;
-    }
+    return handlers;
+  }
 
-    public SpecialAttack getSpec() {
+  public SpecType getContext() {
 
-        return spec;
-    }
+    return context;
+  }
 
-    public void setSpec(SpecialAttack spec) {
+  public SpecialAttack getSpec() {
 
-        Validate.isTrue(getPlayer().equals(spec.getOwner()), "The owner and the spec owner must match!");
+    return spec;
+  }
 
-        this.spec = spec;
-    }
+  public void setSpec(SpecialAttack spec) {
 
-    public long getContextCoolDown() {
-        return coolDown;
-    }
+    Validate.isTrue(getPlayer().equals(spec.getOwner()), "The owner and the spec owner must match!");
 
-    public void setContextCooldown(long coolDown) {
-        this.coolDown = coolDown;
-    }
+    this.spec = spec;
+  }
 
-    public HandlerList getHandlers() {
+  public long getContextCoolDown() {
+    return coolDown;
+  }
 
-        return handlers;
-    }
+  public void setContextCooldown(long coolDown) {
+    this.coolDown = coolDown;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public boolean isCancelled() {
+  public boolean isCancelled() {
 
-        return cancelled;
-    }
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
+  public void setCancelled(boolean cancelled) {
 
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 }

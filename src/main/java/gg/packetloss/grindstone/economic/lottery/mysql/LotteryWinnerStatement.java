@@ -14,31 +14,31 @@ import java.sql.SQLException;
 
 public class LotteryWinnerStatement implements MySQLPreparedStatement {
 
-    private Connection con;
-    private final long date;
-    private final int player;
-    private final double amount;
+  private final long date;
+  private final int player;
+  private final double amount;
+  private Connection con;
 
-    public LotteryWinnerStatement(int player, double amount) {
-        this.date = System.currentTimeMillis() / 1000;
-        this.player = player;
-        this.amount = amount;
+  public LotteryWinnerStatement(int player, double amount) {
+    this.date = System.currentTimeMillis() / 1000;
+    this.player = player;
+    this.amount = amount;
+  }
+
+  @Override
+  public void setConnection(Connection con) {
+    this.con = con;
+  }
+
+  @Override
+  public void executeStatements() throws SQLException {
+    String sql = "INSERT INTO `lottery-winners` (date, player, amount) VALUES (FROM_UNIXTIME(?), ?, ?)";
+
+    try (PreparedStatement statement = con.prepareStatement(sql)) {
+      statement.setLong(1, date);
+      statement.setInt(2, player);
+      statement.setDouble(3, amount);
+      statement.execute();
     }
-
-    @Override
-    public void setConnection(Connection con) {
-        this.con = con;
-    }
-
-    @Override
-    public void executeStatements() throws SQLException {
-        String sql = "INSERT INTO `lottery-winners` (date, player, amount) VALUES (FROM_UNIXTIME(?), ?, ?)";
-
-        try (PreparedStatement statement = con.prepareStatement(sql)) {
-            statement.setLong(1, date);
-            statement.setInt(2, player);
-            statement.setDouble(3, amount);
-            statement.execute();
-        }
-    }
+  }
 }

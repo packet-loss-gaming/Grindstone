@@ -12,40 +12,40 @@ import org.bukkit.event.HandlerList;
 
 public class RogueGrenadeEvent extends RogueEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
+  private static final HandlerList handlers = new HandlerList();
+  private boolean cancelled = false;
 
-    private int grenadeCount;
+  private int grenadeCount;
 
-    public RogueGrenadeEvent(Player who, int grenadeCount) {
-        super(who);
-        this.grenadeCount = grenadeCount;
-    }
+  public RogueGrenadeEvent(Player who, int grenadeCount) {
+    super(who);
+    this.grenadeCount = grenadeCount;
+  }
 
-    public int getGrenadeCount() {
-        return grenadeCount;
-    }
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-    public void setGrenadeCount(int grenadeCount) {
-        this.grenadeCount = grenadeCount;
-    }
+  public int getGrenadeCount() {
+    return grenadeCount;
+  }
 
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
-    }
+  public void setGrenadeCount(int grenadeCount) {
+    this.grenadeCount = grenadeCount;
+  }
 
-    @Override
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
+  @Override
+  public boolean isCancelled() {
+    return cancelled;
+  }
 
-    @Override
-    public HandlerList getHandlers() {
-        return handlers;
-    }
+  @Override
+  public void setCancelled(boolean cancelled) {
+    this.cancelled = cancelled;
+  }
 
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
+  @Override
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

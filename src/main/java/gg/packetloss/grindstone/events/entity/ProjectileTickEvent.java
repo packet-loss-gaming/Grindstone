@@ -12,38 +12,38 @@ import org.bukkit.event.entity.EntityEvent;
 
 public class ProjectileTickEvent extends EntityEvent {
 
-    private static final HandlerList handlers = new HandlerList();
-    private final float force;
+  private static final HandlerList handlers = new HandlerList();
+  private final float force;
 
-    public ProjectileTickEvent(final Projectile projectile, final float force) {
+  public ProjectileTickEvent(final Projectile projectile, final float force) {
 
-        super(projectile);
-        this.force = force;
-    }
+    super(projectile);
+    this.force = force;
+  }
 
-    @Override
-    public Projectile getEntity() {
+  public static HandlerList getHandlerList() {
 
-        return (Projectile) super.getEntity();
-    }
+    return handlers;
+  }
 
-    public boolean hasLaunchForce() {
+  @Override
+  public Projectile getEntity() {
 
-        return force != -1;
-    }
+    return (Projectile) super.getEntity();
+  }
 
-    public float getLaunchForce() {
+  public boolean hasLaunchForce() {
 
-        return force;
-    }
+    return force != -1;
+  }
 
-    public HandlerList getHandlers() {
+  public float getLaunchForce() {
 
-        return handlers;
-    }
+    return force;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 }

@@ -9,14 +9,15 @@ package gg.packetloss.grindstone.city.engine.combat;
 import org.bukkit.entity.Player;
 
 public abstract class PvPScope {
-    public abstract boolean isApplicable(Player player);
-    public abstract boolean allowed(Player attacker, Player defender);
+  public abstract boolean isApplicable(Player player);
 
-    public boolean checkFor(Player attacker, Player defender) {
-        // noinspection SimplifiableIfStatement
-        if (isApplicable(attacker) && isApplicable(defender)) {
-            return allowed(attacker, defender);
-        }
-        return true;
+  public abstract boolean allowed(Player attacker, Player defender);
+
+  public boolean checkFor(Player attacker, Player defender) {
+    // noinspection SimplifiableIfStatement
+    if (isApplicable(attacker) && isApplicable(defender)) {
+      return allowed(attacker, defender);
     }
+    return true;
+  }
 }

@@ -15,36 +15,36 @@ import java.util.List;
 
 public class NinjaTormentArrowEvent extends NinjaEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
+  private static final HandlerList handlers = new HandlerList();
+  private boolean cancelled = false;
 
-    private List<Entity> entities;
+  private List<Entity> entities;
 
-    public NinjaTormentArrowEvent(Player who, List<Entity> entities) {
-        super(who);
-        this.entities = entities;
-    }
+  public NinjaTormentArrowEvent(Player who, List<Entity> entities) {
+    super(who);
+    this.entities = entities;
+  }
 
-    public List<Entity> getEntities() {
-        return entities;
-    }
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
-    }
+  public List<Entity> getEntities() {
+    return entities;
+  }
 
-    @Override
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
+  @Override
+  public boolean isCancelled() {
+    return cancelled;
+  }
 
-    @Override
-    public HandlerList getHandlers() {
-        return handlers;
-    }
+  @Override
+  public void setCancelled(boolean cancelled) {
+    this.cancelled = cancelled;
+  }
 
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
+  @Override
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerEvent;
 
 public abstract class RogueEvent extends PlayerEvent {
-    public RogueEvent(Player who) {
-        super(who);
-    }
+  public RogueEvent(Player who) {
+    super(who);
+  }
 }

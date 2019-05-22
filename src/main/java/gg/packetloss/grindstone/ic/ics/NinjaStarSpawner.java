@@ -21,87 +21,87 @@ import java.util.logging.Logger;
 
 public class NinjaStarSpawner extends AbstractSelfTriggeredIC {
 
-    private static final CommandBook inst = CommandBook.inst();
-    private static final Logger log = inst.getLogger();
-    private static final Server server = CommandBook.server();
+  private static final CommandBook INST = CommandBook.inst();
+  private static final Logger LOG = INST.getLogger();
+  private static final Server SERVER = CommandBook.server();
 
-    private int quantity;
+  private int quantity;
 
-    public NinjaStarSpawner(Server server, ChangedSign block, ICFactory factory) {
+  public NinjaStarSpawner(Server server, ChangedSign block, ICFactory factory) {
 
-        super(server, block, factory);
+    super(server, block, factory);
+  }
+
+  @Override
+  public void load() {
+
+    try {
+      quantity = Integer.parseInt(getSign().getLine(2));
+    } catch (NumberFormatException ex) {
+      quantity = 1;
+    }
+  }
+
+  @Override
+  public String getTitle() {
+
+    return "Star Spawner";
+  }
+
+  @Override
+  public String getSignTitle() {
+
+    return "STAR SPAWNER";
+  }
+
+  @Override
+  public void trigger(ChipState chip) {
+
+    drop();
+  }
+
+  @Override
+  public void think(ChipState chip) {
+
+    if (!chip.getInput(0)) {
+      trigger(chip);
+    }
+  }
+
+  public void drop() {
+
+    Location k = LocationUtil.getCenterOfBlock(LocationUtil.getNextFreeSpace(getBackBlock(), BlockFace.UP));
+    final Item item = k.getWorld().dropItem(k, CustomItemCenter.build(CustomItems.NINJA_STAR, quantity));
+    SERVER.getScheduler().runTaskLater(INST, () -> {
+      if (item.isValid()) {
+        item.remove();
+      }
+    }, 20 * 15);
+  }
+
+  public static class Factory extends AbstractICFactory implements RestrictedIC {
+
+    public Factory(Server server) {
+
+      super(server);
     }
 
     @Override
-    public void load() {
+    public IC create(ChangedSign sign) {
 
-        try {
-            quantity = Integer.parseInt(getSign().getLine(2));
-        } catch (NumberFormatException ex) {
-            quantity = 1;
-        }
+      return new NinjaStarSpawner(getServer(), sign, this);
     }
 
     @Override
-    public String getTitle() {
+    public String getShortDescription() {
 
-        return "Star Spawner";
+      return "Spawns Ninja Stars.";
     }
 
     @Override
-    public String getSignTitle() {
+    public String[] getLineHelp() {
 
-        return "STAR SPAWNER";
+      return new String[] {"Quantity", ""};
     }
-
-    @Override
-    public void trigger(ChipState chip) {
-
-        drop();
-    }
-
-    @Override
-    public void think(ChipState chip) {
-
-        if (!chip.getInput(0)) {
-            trigger(chip);
-        }
-    }
-
-    public void drop() {
-
-        Location k = LocationUtil.getCenterOfBlock(LocationUtil.getNextFreeSpace(getBackBlock(), BlockFace.UP));
-        final Item item = k.getWorld().dropItem(k, CustomItemCenter.build(CustomItems.NINJA_STAR, quantity));
-        server.getScheduler().runTaskLater(inst, () -> {
-            if (item.isValid()) {
-                item.remove();
-            }
-        }, 20 * 15);
-    }
-
-    public static class Factory extends AbstractICFactory implements RestrictedIC {
-
-        public Factory(Server server) {
-
-            super(server);
-        }
-
-        @Override
-        public IC create(ChangedSign sign) {
-
-            return new NinjaStarSpawner(getServer(), sign, this);
-        }
-
-        @Override
-        public String getShortDescription() {
-
-            return "Spawns Ninja Stars.";
-        }
-
-        @Override
-        public String[] getLineHelp() {
-
-            return new String[]{"Quantity", ""};
-        }
-    }
+  }
 }

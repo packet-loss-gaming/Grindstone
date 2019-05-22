@@ -11,9 +11,9 @@ import org.bukkit.World;
 import org.bukkit.event.Cancellable;
 
 public interface ApocalypseEvent extends Cancellable {
-    Location getLocation();
+  Location getLocation();
 
-    default World getWorld() {
-        return getLocation().getWorld();
-    }
+  default World getWorld() {
+    return getLocation().getWorld();
+  }
 }

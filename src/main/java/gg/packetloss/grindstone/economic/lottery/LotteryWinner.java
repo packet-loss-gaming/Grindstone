@@ -7,19 +7,19 @@
 package gg.packetloss.grindstone.economic.lottery;
 
 public class LotteryWinner {
-    private String name;
-    private double amt;
+  private String name;
+  private double amt;
 
-    public LotteryWinner(String name, double amt) {
-        this.name = name;
-        this.amt = amt;
-    }
+  public LotteryWinner(String name, double amt) {
+    this.name = name;
+    this.amt = amt;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public double getAmt() {
-        return amt;
-    }
+  public double getAmt() {
+    return amt;
+  }
 }

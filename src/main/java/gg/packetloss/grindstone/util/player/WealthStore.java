@@ -12,28 +12,28 @@ import java.util.List;
 
 public class WealthStore extends GenericWealthStore {
 
-    public WealthStore(String ownerName, ItemStack[] inventoryContents) {
+  public WealthStore(String ownerName, ItemStack[] inventoryContents) {
 
-        super(ownerName, inventoryContents);
-    }
+    super(ownerName, inventoryContents);
+  }
 
-    public WealthStore(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents) {
+  public WealthStore(String ownerName, ItemStack[] inventoryContents, ItemStack[] armourContents) {
 
-        super(ownerName, inventoryContents, armourContents);
-    }
+    super(ownerName, inventoryContents, armourContents);
+  }
 
-    public WealthStore(String ownerName, List<ItemStack> itemStacks) {
+  public WealthStore(String ownerName, List<ItemStack> itemStacks) {
 
-        super(ownerName, itemStacks);
-    }
+    super(ownerName, itemStacks);
+  }
 
-    public WealthStore(String ownerName, List<ItemStack> itemStacks, int value) {
+  public WealthStore(String ownerName, List<ItemStack> itemStacks, int value) {
 
-        super(ownerName, itemStacks, value);
-    }
+    super(ownerName, itemStacks, value);
+  }
 
-    public WealthStore(String ownerName, int value) {
+  public WealthStore(String ownerName, int value) {
 
-        super(ownerName, value);
-    }
+    super(ownerName, value);
+  }
 }

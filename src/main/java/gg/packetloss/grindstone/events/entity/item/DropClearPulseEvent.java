@@ -12,43 +12,43 @@ import org.bukkit.event.HandlerList;
 
 public class DropClearPulseEvent extends Event {
 
-    private static final HandlerList handlers = new HandlerList();
-    private final World world;
-    private int secondsLeft;
+  private static final HandlerList handlers = new HandlerList();
+  private final World world;
+  private int secondsLeft;
 
-    public DropClearPulseEvent(World world, int secondsLeft) {
+  public DropClearPulseEvent(World world, int secondsLeft) {
 
-        this.world = world;
-        this.secondsLeft = secondsLeft;
-    }
+    this.world = world;
+    this.secondsLeft = secondsLeft;
+  }
 
-    public World getWorld() {
+  public static HandlerList getHandlerList() {
 
-        return world;
-    }
+    return handlers;
+  }
 
-    public int getSecondsLeft() {
+  public World getWorld() {
 
-        return secondsLeft;
-    }
+    return world;
+  }
 
-    public void setSecondsLeft(int secondsLeft) {
+  public int getSecondsLeft() {
 
-        this.secondsLeft = Math.min(120, secondsLeft);
-    }
+    return secondsLeft;
+  }
 
-    public int getCurrentSecond() {
+  public void setSecondsLeft(int secondsLeft) {
 
-        return secondsLeft + 1;
-    }
+    this.secondsLeft = Math.min(120, secondsLeft);
+  }
 
-    public HandlerList getHandlers() {
+  public int getCurrentSecond() {
 
-        return handlers;
-    }
+    return secondsLeft + 1;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 }

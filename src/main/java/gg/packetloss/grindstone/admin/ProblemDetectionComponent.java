@@ -18,70 +18,72 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Problem Detector", desc = "Problem detection system.")
 public class ProblemDetectionComponent extends BukkitComponent implements Runnable {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    private final DecimalFormat format = new DecimalFormat("#.#");
+  private final DecimalFormat format = new DecimalFormat("#.#");
 
-    private long lastTickWarning = 0, lastMemoryWarning = 0;
-    private long lastTick = 0;
-    private double averageError = 0;
+  private long lastTickWarning = 0, lastMemoryWarning = 0;
+  private long lastTick = 0;
+  private double averageError = 0;
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        //server.getScheduler().runTaskTimer(inst, this, 20, 20);
+    //server.getScheduler().runTaskTimer(inst, this, 20, 20);
+  }
+
+  @Override
+  public void run() {
+
+    try {
+      checkMemory();
+    } catch (Exception ex) {
+      if (lastMemoryWarning == 0 || System.currentTimeMillis() - lastMemoryWarning > 1000) {
+        System.gc();
+        server.broadcastMessage(ChatColor.RED + "[WARNING] " + ex.getMessage());
+        lastMemoryWarning = System.currentTimeMillis();
+      }
     }
 
-    @Override
-    public void run() {
+    try {
+      checkTicks();
+    } catch (Exception ex) {
+      if (lastTickWarning == 0 || System.currentTimeMillis() - lastTickWarning > 1000) {
+        server.broadcastMessage(ChatColor.RED + "[WARNING] " + ex.getMessage());
+        lastTickWarning = System.currentTimeMillis();
+      }
+    }
+  }
 
-        try {
-            checkMemory();
-        } catch (Exception ex) {
-            if (lastMemoryWarning == 0 || System.currentTimeMillis() - lastMemoryWarning > 1000) {
-                System.gc();
-                server.broadcastMessage(ChatColor.RED + "[WARNING] " + ex.getMessage());
-                lastMemoryWarning = System.currentTimeMillis();
-            }
-        }
+  public void checkTicks() throws Exception {
 
-        try {
-            checkTicks();
-        } catch (Exception ex) {
-            if (lastTickWarning == 0 || System.currentTimeMillis() - lastTickWarning > 1000) {
-                server.broadcastMessage(ChatColor.RED + "[WARNING] " + ex.getMessage());
-                lastTickWarning = System.currentTimeMillis();
-            }
-        }
+    if (lastTick == 0) {
+      lastTick = System.currentTimeMillis();
+      return;
+    }
+    long elapsedTime = System.currentTimeMillis() - lastTick;
+
+    double error = (1000 - elapsedTime) * -1;
+
+    averageError = (error + averageError) / 2;
+    lastTick = System.currentTimeMillis();
+
+    if (averageError < 50) {
+      return;
     }
 
-    public void checkTicks() throws Exception {
+    throw new Exception("Slow clock rate, Current error: " + format.format(error) +
+        ", AVG error: " + format.format(averageError) + "!");
+  }
 
-        if (lastTick == 0) {
-            lastTick = System.currentTimeMillis();
-            return;
-        }
-        long elapsedTime = System.currentTimeMillis() - lastTick;
+  public void checkMemory() throws Exception {
 
-        double error = (1000 - elapsedTime) * -1;
+    double memory = Math.floor(Runtime.getRuntime().freeMemory() / 1024.0 / 1024.0);
 
-        averageError = (error + averageError) / 2;
-        lastTick = System.currentTimeMillis();
-
-        if (averageError < 50) return;
-
-        throw new Exception("Slow clock rate, Current error: " + format.format(error) +
-                ", AVG error: " + format.format(averageError) + "!");
+    if (memory < 70) {
+      throw new Exception("Low RAM: " + memory + " MB!");
     }
-
-    public void checkMemory() throws Exception {
-
-        double memory = Math.floor(Runtime.getRuntime().freeMemory() / 1024.0 / 1024.0);
-
-        if (memory < 70) {
-            throw new Exception("Low RAM: " + memory + " MB!");
-        }
-    }
+  }
 }

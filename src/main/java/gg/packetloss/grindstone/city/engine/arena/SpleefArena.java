@@ -9,8 +9,8 @@ package gg.packetloss.grindstone.city.engine.arena;
 
 public interface SpleefArena extends GenericArena {
 
-    public void restoreFloor();
+  void restoreFloor();
 
-    public void feed();
+  void feed();
 
 }

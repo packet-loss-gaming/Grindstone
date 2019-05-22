@@ -8,10 +8,10 @@ package gg.packetloss.grindstone.items.implementations.support;
 
 import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
-import gg.packetloss.grindstone.prayer.PrayerFX.NecrosisFX;
+import gg.packetloss.grindstone.prayer.impl.NecrosisPrayer;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.extractor.entity.CombatantExtractor;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
-import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.entity.LivingEntity;
@@ -20,34 +20,36 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 public class Necrosis {
-    private static EDBEExtractor<LivingEntity, Player, Projectile> necrosisExtractor = new EDBEExtractor<>(
+  private static CombatantExtractor<LivingEntity, Player, Projectile> necrosisExtractor = new CombatantExtractor<>(
       LivingEntity.class,
       Player.class,
       Projectile.class
-    );
+  );
 
-    private final PrayerComponent prayers;
+  private final PrayerComponent prayers;
 
-    public Necrosis(PrayerComponent prayers) {
-        this.prayers = prayers;
+  public Necrosis(PrayerComponent prayers) {
+    this.prayers = prayers;
+  }
+
+  public void handleEvent(EntityDamageByEntityEvent event) {
+    CombatantPair<LivingEntity, Player, Projectile> result = necrosisExtractor.extractFrom(event);
+
+    if (result == null) {
+      return;
     }
 
-    public void handleEvent(EntityDamageByEntityEvent event) {
-        CombatantPair<LivingEntity, Player, Projectile> result = necrosisExtractor.extractFrom(event);
-
-        if (result == null) return;
-
-        Player defender = result.getDefender();
-        if (ItemUtil.hasNectricArmour(defender) && ChanceUtil.getChance(4)) {
-            LivingEntity attacker = result.getAttacker();
-            if (attacker instanceof Player) {
-                NecrosisFX necrosis = new NecrosisFX(defender);
-                Prayer prayer = PrayerComponent.constructPrayer((Player) attacker, necrosis, 5000);
-                prayers.influencePlayer((Player) attacker, prayer);
-                defender.chat("Taste necrosis!");
-            } else {
-                EffectUtil.Necros.deathStrike(defender, Math.max(5, event.getDamage()));
-            }
-        }
+    Player defender = result.getDefender();
+    if (ItemUtil.hasNectricArmour(defender) && ChanceUtil.getChance(4)) {
+      LivingEntity attacker = result.getAttacker();
+      if (attacker instanceof Player) {
+        NecrosisPrayer necrosis = new NecrosisPrayer(defender);
+        Prayer prayer = PrayerComponent.constructPrayer((Player) attacker, necrosis, 5000);
+        prayers.influencePlayer((Player) attacker, prayer);
+        defender.chat("Taste necrosis!");
+      } else {
+        EffectUtil.Necros.deathStrike(defender, Math.max(5, event.getDamage()));
+      }
     }
+  }
 }

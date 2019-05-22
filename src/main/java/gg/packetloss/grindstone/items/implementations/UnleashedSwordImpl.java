@@ -19,22 +19,22 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import org.bukkit.entity.LivingEntity;
 
 public class UnleashedSwordImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
-    @Override
-    public SpecialAttack getSpecial(LivingEntity owner, LivingEntity target) {
-        switch (ChanceUtil.getRandom(6)) {
-            case 1:
-                return new EvilFocus(owner, target);
-            case 2:
-                return new HealingLight(owner, target);
-            case 3:
-                return new Speed(owner, target);
-            case 4:
-                return new Regen(owner, target);
-            case 5:
-                return new DoomBlade(owner, target);
-            case 6:
-                return new LifeLeech(owner, target);
-        }
-        return null;
+  @Override
+  public SpecialAttack getSpecial(LivingEntity owner, LivingEntity target) {
+    switch (ChanceUtil.getRandom(6)) {
+      case 1:
+        return new EvilFocus(owner, target);
+      case 2:
+        return new HealingLight(owner, target);
+      case 3:
+        return new Speed(owner, target);
+      case 4:
+        return new Regen(owner, target);
+      case 5:
+        return new DoomBlade(owner, target);
+      case 6:
+        return new LifeLeech(owner, target);
     }
+    return null;
+  }
 }

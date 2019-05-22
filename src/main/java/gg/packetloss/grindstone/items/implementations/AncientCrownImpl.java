@@ -6,10 +6,10 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractCondenserImpl;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,55 +21,55 @@ import org.bukkit.inventory.ItemStack;
 
 public class AncientCrownImpl extends AbstractCondenserImpl {
 
-    public AncientCrownImpl(ItemCondenser condenser) {
-        super(condenser);
+  public AncientCrownImpl(ItemCondenser condenser) {
+    super(condenser);
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  public void onEntityRegainHealth(EntityRegainHealthEvent event) {
+
+    Entity healed = event.getEntity();
+
+    if (healed instanceof Player) {
+
+      Player player = (Player) healed;
+
+      if (ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN)) {
+        event.setAmount(event.getAmount() * 2.5);
+      }
     }
+  }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onEntityRegainHealth(EntityRegainHealthEvent event) {
+  @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+  public void onXPPickUp(PlayerExpChangeEvent event) {
 
-        Entity healed = event.getEntity();
+    Player player = event.getPlayer();
 
-        if (healed instanceof Player) {
+    if (ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN)) {
+      event.setAmount(event.getAmount() * 2);
+    }
+  }
 
-            Player player = (Player) healed;
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+  public void onItemPickup(PlayerPickupItemEvent event) {
 
-            if (ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN)) {
-                event.setAmount(event.getAmount() * 2.5);
-            }
+    final Player player = event.getPlayer();
+    ItemStack itemStack = event.getItem().getItemStack();
+
+    if (condenser.supports(itemStack)) {
+
+      if (!ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN)) {
+        return;
+      }
+
+      server.getScheduler().runTaskLater(inst, () -> {
+        ItemStack[] result = condenser.operate(player.getInventory().getContents(), true);
+        if (result != null) {
+          player.getInventory().setContents(result);
+          //noinspection deprecation
+          player.updateInventory();
         }
+      }, 1);
     }
-
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onXPPickUp(PlayerExpChangeEvent event) {
-
-        Player player = event.getPlayer();
-
-        if (ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN)) {
-            event.setAmount(event.getAmount() * 2);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void onItemPickup(PlayerPickupItemEvent event) {
-
-        final Player player = event.getPlayer();
-        ItemStack itemStack = event.getItem().getItemStack();
-
-        if (condenser.supports(itemStack)) {
-
-            if (!ItemUtil.isItem(player.getInventory().getHelmet(), CustomItems.ANCIENT_CROWN)) {
-                return;
-            }
-
-            server.getScheduler().runTaskLater(inst, () -> {
-                ItemStack[] result = condenser.operate(player.getInventory().getContents(), true);
-                if (result != null) {
-                    player.getInventory().setContents(result);
-                    //noinspection deprecation
-                    player.updateInventory();
-                }
-            }, 1);
-        }
-    }
+  }
 }

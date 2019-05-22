@@ -6,25 +6,25 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
-import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
-import gg.packetloss.grindstone.prayer.PrayerFX.HulkFX;
-import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
+import gg.packetloss.grindstone.prayer.impl.HulkPrayer;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class GodFishImpl extends AbstractItemFeatureImpl {
-    @EventHandler(ignoreCancelled = true)
-    public void onConsume(PlayerItemConsumeEvent event) {
+  @EventHandler(ignoreCancelled = true)
+  public void onConsume(PlayerItemConsumeEvent event) {
 
-        Player player = event.getPlayer();
-        ItemStack stack = event.getItem();
+    Player player = event.getPlayer();
+    ItemStack stack = event.getItem();
 
-        if (ItemUtil.isItem(stack, CustomItems.GOD_FISH)) {
-            player.chat("The fish flow within me!");
-            new HulkFX().add(player);
-        }
+    if (ItemUtil.isItem(stack, CustomItems.GOD_FISH)) {
+      player.chat("The fish flow within me!");
+      new HulkPrayer().add(player);
     }
+  }
 }

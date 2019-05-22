@@ -13,42 +13,42 @@ import org.bukkit.event.player.PlayerEvent;
 
 public class RapidHitEvent extends PlayerEvent {
 
-    private static final HandlerList handlers = new HandlerList();
-    private int damage;
+  private static final HandlerList handlers = new HandlerList();
+  private int damage;
 
-    public RapidHitEvent(Player player) {
+  public RapidHitEvent(Player player) {
 
-        super(player);
-        this.damage = -1;
-    }
+    super(player);
+    this.damage = -1;
+  }
 
-    public RapidHitEvent(Player player, int damage) {
+  public RapidHitEvent(Player player, int damage) {
 
-        super(player);
-        this.damage = damage;
-    }
+    super(player);
+    this.damage = damage;
+  }
 
-    public void setDamage(int damage) {
+  public static HandlerList getHandlerList() {
 
-        Validate.isTrue(damage >= -1, "The damage must be greater than or equal to negative one");
-        this.damage = damage;
-    }
+    return handlers;
+  }
 
-    /**
-     * @return the damage or -1 if not applicable
-     */
-    public int getDamage() {
+  /**
+   * @return the damage or -1 if not applicable
+   */
+  public int getDamage() {
 
-        return damage;
-    }
+    return damage;
+  }
 
-    public HandlerList getHandlers() {
+  public void setDamage(int damage) {
 
-        return handlers;
-    }
+    Validate.isTrue(damage >= -1, "The damage must be greater than or equal to negative one");
+    this.damage = damage;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 }

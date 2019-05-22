@@ -8,8 +8,8 @@ package gg.packetloss.grindstone.util.timer;
 
 public class TimerUtil {
 
-    public static boolean matchesFilter(int entry, int min, int divisible) {
+  public static boolean matchesFilter(int entry, int min, int divisible) {
 
-        return entry > 0 && entry % divisible == 0 || entry <= min && entry > 0;
-    }
+    return entry > 0 && entry % divisible == 0 || entry <= min && entry > 0;
+  }
 }

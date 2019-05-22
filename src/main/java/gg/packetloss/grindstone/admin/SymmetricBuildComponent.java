@@ -39,276 +39,276 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Symmetric Build", desc = "Build symmetric structures faster.")
 @Depend(components = {SessionComponent.class})
 public class SymmetricBuildComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    @InjectComponent
-    private SessionComponent sessions;
+  @InjectComponent
+  private SessionComponent sessions;
 
-    @Override
-    public void enable() {
-        registerCommands(Commands.class);
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+  @Override
+  public void enable() {
+    registerCommands(Commands.class);
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
+
+  private boolean isBuildingWithSymmetricBuilding(Player player) {
+    if (player.getGameMode() != GameMode.CREATIVE) {
+      return false;
     }
 
-    private boolean isBuildingWithSymmetricBuilding(Player player) {
-        if (player.getGameMode() != GameMode.CREATIVE) {
-            return false;
-        }
+    SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
+    return session.isEnabled() && session.getPosition() != null;
+  }
 
-        SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
-        return session.isEnabled() && session.getPosition() != null;
+  private void mirrorX(Vector mirrorPosition, List<Vector> mirrorPositions) {
+    List<Vector> producedPositions = new ArrayList<>();
+
+    for (Vector position : mirrorPositions) {
+      Vector newPosition = position.clone();
+      if (position.getX() < mirrorPosition.getX()) {
+        double diff = mirrorPosition.getX() - position.getX();
+        newPosition.setX(mirrorPosition.getX() + diff);
+      } else {
+        double diff = position.getX() - mirrorPosition.getX();
+        newPosition.setX(mirrorPosition.getX() - diff);
+      }
+      producedPositions.add(newPosition);
     }
 
-    private void mirrorX(Vector mirrorPosition, List<Vector> mirrorPositions) {
-        List<Vector> producedPositions = new ArrayList<>();
+    mirrorPositions.addAll(producedPositions);
+  }
 
-        for (Vector position : mirrorPositions) {
-            Vector newPosition = position.clone();
-            if (position.getX() < mirrorPosition.getX()) {
-                double diff = mirrorPosition.getX() - position.getX();
-                newPosition.setX(mirrorPosition.getX() + diff);
-            } else {
-                double diff = position.getX() - mirrorPosition.getX();
-                newPosition.setX(mirrorPosition.getX() - diff);
-            }
-            producedPositions.add(newPosition);
-        }
+  private void mirrorY(Vector mirrorPosition, List<Vector> mirrorPositions) {
+    List<Vector> producedPositions = new ArrayList<>();
 
-        mirrorPositions.addAll(producedPositions);
+    for (Vector position : mirrorPositions) {
+      Vector newPosition = position.clone();
+      if (position.getY() < mirrorPosition.getY()) {
+        double diff = mirrorPosition.getY() - position.getY();
+        newPosition.setY(mirrorPosition.getY() + diff);
+      } else {
+        double diff = position.getY() - mirrorPosition.getY();
+        newPosition.setY(mirrorPosition.getY() - diff);
+      }
+      producedPositions.add(newPosition);
     }
 
-    private void mirrorY(Vector mirrorPosition, List<Vector> mirrorPositions) {
-        List<Vector> producedPositions = new ArrayList<>();
+    mirrorPositions.addAll(producedPositions);
+  }
 
-        for (Vector position : mirrorPositions) {
-            Vector newPosition = position.clone();
-            if (position.getY() < mirrorPosition.getY()) {
-                double diff = mirrorPosition.getY() - position.getY();
-                newPosition.setY(mirrorPosition.getY() + diff);
-            } else {
-                double diff = position.getY() - mirrorPosition.getY();
-                newPosition.setY(mirrorPosition.getY() - diff);
-            }
-            producedPositions.add(newPosition);
-        }
+  private void mirrorZ(Vector mirrorPosition, List<Vector> mirrorPositions) {
+    List<Vector> producedPositions = new ArrayList<>();
 
-        mirrorPositions.addAll(producedPositions);
+    for (Vector position : mirrorPositions) {
+      Vector newPosition = position.clone();
+      if (position.getZ() < mirrorPosition.getZ()) {
+        double diff = mirrorPosition.getZ() - position.getZ();
+        newPosition.setZ(mirrorPosition.getZ() + diff);
+      } else {
+        double diff = position.getZ() - mirrorPosition.getZ();
+        newPosition.setZ(mirrorPosition.getZ() - diff);
+      }
+      producedPositions.add(newPosition);
     }
 
-    private void mirrorZ(Vector mirrorPosition, List<Vector> mirrorPositions) {
-        List<Vector> producedPositions = new ArrayList<>();
+    mirrorPositions.addAll(producedPositions);
+  }
 
-        for (Vector position : mirrorPositions) {
-            Vector newPosition = position.clone();
-            if (position.getZ() < mirrorPosition.getZ()) {
-                double diff = mirrorPosition.getZ() - position.getZ();
-                newPosition.setZ(mirrorPosition.getZ() + diff);
-            } else {
-                double diff = position.getZ() - mirrorPosition.getZ();
-                newPosition.setZ(mirrorPosition.getZ() - diff);
-            }
-            producedPositions.add(newPosition);
-        }
+  private List<Vector> getMirrorPositions(Player player, Vector position) {
+    SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
 
-        mirrorPositions.addAll(producedPositions);
+    Vector mirrorPosition = session.getPosition();
+
+    List<Vector> mirrorPositions = new ArrayList<>();
+
+    // Add the current block to "bootstrap" the mirroring.
+    mirrorPositions.add(position);
+
+    if (session.isEnabledMirror(MirrorDirection.X)) {
+      mirrorX(mirrorPosition, mirrorPositions);
     }
 
-    private List<Vector> getMirrorPositions(Player player, Vector position) {
-        SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
-
-        Vector mirrorPosition = session.getPosition();
-
-        List<Vector> mirrorPositions = new ArrayList<>();
-
-        // Add the current block to "bootstrap" the mirroring.
-        mirrorPositions.add(position);
-
-        if (session.isEnabledMirror(MirrorDirection.X)) {
-            mirrorX(mirrorPosition, mirrorPositions);
-        }
-
-        if (session.isEnabledMirror(MirrorDirection.Y)) {
-            mirrorY(mirrorPosition, mirrorPositions);
-        }
-
-        if (session.isEnabledMirror(MirrorDirection.Z)) {
-            mirrorZ(mirrorPosition, mirrorPositions);
-        }
-
-        // Remove the current block as whatever change needs to be mirrored already
-        // occurred there, and we no longer need it to calculate any mirrors.
-        mirrorPositions.remove(0);
-
-        return mirrorPositions;
+    if (session.isEnabledMirror(MirrorDirection.Y)) {
+      mirrorY(mirrorPosition, mirrorPositions);
     }
 
-    private void mirrorBlockPlace(Player player, Block sourceBlock) {
-        BlockState sourceState = sourceBlock.getState();
-
-        List<Vector> positions = getMirrorPositions(player, sourceBlock.getLocation().toVector());
-        for (Vector pos : positions) {
-            Block block = sourceBlock.getWorld().getBlockAt(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ());
-            BlockState state = block.getState();
-            state.setType(sourceState.getType());
-            state.setData(sourceState.getData());
-            state.update(true);
-        }
+    if (session.isEnabledMirror(MirrorDirection.Z)) {
+      mirrorZ(mirrorPosition, mirrorPositions);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent event) {
-        Player player = event.getPlayer();
-        if (!isBuildingWithSymmetricBuilding(player)) {
-            return;
-        }
+    // Remove the current block as whatever change needs to be mirrored already
+    // occurred there, and we no longer need it to calculate any mirrors.
+    mirrorPositions.remove(0);
 
-        mirrorBlockPlace(player, event.getBlock());
+    return mirrorPositions;
+  }
+
+  private void mirrorBlockPlace(Player player, Block sourceBlock) {
+    BlockState sourceState = sourceBlock.getState();
+
+    List<Vector> positions = getMirrorPositions(player, sourceBlock.getLocation().toVector());
+    for (Vector pos : positions) {
+      Block block = sourceBlock.getWorld().getBlockAt(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ());
+      BlockState state = block.getState();
+      state.setType(sourceState.getType());
+      state.setData(sourceState.getData());
+      state.update(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onBlockPlace(BlockPlaceEvent event) {
+    Player player = event.getPlayer();
+    if (!isBuildingWithSymmetricBuilding(player)) {
+      return;
     }
 
-    private void mirrorBlockBreak(Player player, Block block) {
-        List<Vector> positions = getMirrorPositions(player, block.getLocation().toVector());
-        for (Vector pos : positions) {
-            block.getWorld().getBlockAt(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ()).setType(Material.AIR);
-        }
+    mirrorBlockPlace(player, event.getBlock());
+  }
+
+  private void mirrorBlockBreak(Player player, Block block) {
+    List<Vector> positions = getMirrorPositions(player, block.getLocation().toVector());
+    for (Vector pos : positions) {
+      block.getWorld().getBlockAt(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ()).setType(Material.AIR);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onBlockBreak(BlockBreakEvent event) {
+    Player player = event.getPlayer();
+    if (!isBuildingWithSymmetricBuilding(player)) {
+      return;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockBreak(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        if (!isBuildingWithSymmetricBuilding(player)) {
-            return;
-        }
+    mirrorBlockBreak(player, event.getBlock());
+  }
 
-        mirrorBlockBreak(player, event.getBlock());
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onGameModeChange(PlayerGameModeChangeEvent event) {
+    // We only need to disable symmetric building when the new game mode is not creative mode
+    if (event.getNewGameMode() == GameMode.CREATIVE) {
+      return;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onGameModeChange(PlayerGameModeChangeEvent event) {
-        // We only need to disable symmetric building when the new game mode is not creative mode
-        if (event.getNewGameMode() == GameMode.CREATIVE) {
-            return;
-        }
+    Player player = event.getPlayer();
 
-        Player player = event.getPlayer();
+    // Force disable symmetric building so that if the player reenters creative mode with a point of
+    // symmetry a long distance away, they don't accidentally destroy things.
+    SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
+    session.setEnabled(false);
+  }
 
-        // Force disable symmetric building so that if the player reenters creative mode with a point of
-        // symmetry a long distance away, they don't accidentally destroy things.
-        SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
-        session.setEnabled(false);
+  public enum MirrorDirection {
+    X,
+    Y,
+    Z
+  }
+
+  private static class SymmetricSession extends PersistentSession {
+    public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
+
+    private boolean enabled = false;
+    private Vector position = null;
+    private boolean[] mirrors = {false, false, false};
+
+    protected SymmetricSession() {
+      super(MAX_AGE);
     }
 
-    public class Commands {
-        @Command(aliases = {"symmetry", "/sym"}, desc = "Symmetry Commands")
-        @NestedCommand({SymmetryCommands.class})
-        @CommandPermissions({"aurora.symmetry"})
-        public void symmetryCommands(CommandContext args, CommandSender sender) throws CommandException {
-
-        }
+    public boolean isEnabled() {
+      return enabled;
     }
 
-    public class SymmetryCommands {
-        @Command(aliases = {"toggle", "t"}, desc = "Enable/disable symmetry building",
-                 min = 0, max = 0)
-        public void toggleSymmetry(CommandContext args, CommandSender sender) throws CommandException {
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
-            session.setEnabled(!session.isEnabled());
-
-            ChatUtil.sendNotice(
-              player,
-              "Symmetry building " + (session.isEnabled() ? "enabled" : "disabled") + "!"
-            );
-        }
-
-        @Command(aliases = {"setpoint", "sp"}, usage = "<x> <y> <z>",
-                 desc = "Set the point of symmetry", min = 3, max = 3)
-        public void setPoint(CommandContext args, CommandSender sender) throws CommandException {
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
-            session.setPosition(new Vector(args.getDouble(0), args.getDouble(1), args.getDouble(2)));
-
-            ChatUtil.sendNotice(player, "Point of symmetry set to: " + ChatUtil.toString(session.getPosition()) + "!");
-        }
-
-        @Command(aliases = {"togglemirror", "tm"}, usage = "<direction>",
-                 desc = "Set the symmetric mirroring direction", min = 1, max = 1)
-        public void toggleMirror(CommandContext args, CommandSender sender) throws CommandException {
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
-
-            try {
-                MirrorDirection direction = MirrorDirection.valueOf(args.getString(0).toUpperCase());
-                session.setMirror(direction, !session.isEnabledMirror(direction));
-
-                ChatUtil.sendNotice(
-                  player,
-                  "Mirror direction \"" + direction + "\" " +
-                    (session.isEnabledMirror(direction) ? "enabled" : "disabled") +"!"
-                );
-            } catch (IllegalArgumentException ex) {
-                throw new CommandException("No such direction! Valid directions: 'X', 'Y', 'Z'.");
-            }
-        }
-
-        @Command(aliases = {"status"}, desc = "View symmetry mode status", max = 0)
-        public void viewStatus(CommandContext args, CommandSender sender) throws CommandException {
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
-
-            ChatUtil.sendNotice(player, "Enabled: " + session.isEnabled());
-            ChatUtil.sendNotice(player, "Point of Symmetry: " + ChatUtil.toString(session.getPosition()));
-            ChatUtil.sendNotice(player, "Mirroring X: " + session.isEnabledMirror(MirrorDirection.X));
-            ChatUtil.sendNotice(player, "Mirroring Y: " + session.isEnabledMirror(MirrorDirection.Y));
-            ChatUtil.sendNotice(player, "Mirroring Z: " + session.isEnabledMirror(MirrorDirection.Z));
-        }
+    public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
     }
 
-    public enum MirrorDirection {
-        X,
-        Y,
-        Z
+    public Vector getPosition() {
+      return position == null ? null : position.clone();
     }
 
-    private static class SymmetricSession extends PersistentSession {
-        public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
-
-        private boolean enabled = false;
-        private Vector position = null;
-        private boolean[] mirrors = {false, false, false};
-
-        protected SymmetricSession() {
-            super(MAX_AGE);
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setPosition(Vector position) {
-            this.position = position;
-        }
-
-        public Vector getPosition() {
-            return position == null ? null : position.clone();
-        }
-
-        public void setMirror(MirrorDirection direction, boolean active) {
-            mirrors[direction.ordinal()] = active;
-        }
-
-        public boolean isEnabledMirror(MirrorDirection direction) {
-           return mirrors[direction.ordinal()];
-        }
+    public void setPosition(Vector position) {
+      this.position = position;
     }
+
+    public void setMirror(MirrorDirection direction, boolean active) {
+      mirrors[direction.ordinal()] = active;
+    }
+
+    public boolean isEnabledMirror(MirrorDirection direction) {
+      return mirrors[direction.ordinal()];
+    }
+  }
+
+  public class Commands {
+    @Command(aliases = {"symmetry", "/sym"}, desc = "Symmetry Commands")
+    @NestedCommand( {SymmetryCommands.class})
+    @CommandPermissions( {"aurora.symmetry"})
+    public void symmetryCommands(CommandContext args, CommandSender sender) throws CommandException {
+
+    }
+  }
+
+  public class SymmetryCommands {
+    @Command(aliases = {"toggle", "t"}, desc = "Enable/disable symmetry building",
+        min = 0, max = 0)
+    public void toggleSymmetry(CommandContext args, CommandSender sender) throws CommandException {
+      Player player = PlayerUtil.checkPlayer(sender);
+
+      SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
+      session.setEnabled(!session.isEnabled());
+
+      ChatUtil.sendNotice(
+          player,
+          "Symmetry building " + (session.isEnabled() ? "enabled" : "disabled") + "!"
+      );
+    }
+
+    @Command(aliases = {"setpoint", "sp"}, usage = "<x> <y> <z>",
+        desc = "Set the point of symmetry", min = 3, max = 3)
+    public void setPoint(CommandContext args, CommandSender sender) throws CommandException {
+      Player player = PlayerUtil.checkPlayer(sender);
+
+      SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
+      session.setPosition(new Vector(args.getDouble(0), args.getDouble(1), args.getDouble(2)));
+
+      ChatUtil.sendNotice(player, "Point of symmetry set to: " + ChatUtil.toString(session.getPosition()) + "!");
+    }
+
+    @Command(aliases = {"togglemirror", "tm"}, usage = "<direction>",
+        desc = "Set the symmetric mirroring direction", min = 1, max = 1)
+    public void toggleMirror(CommandContext args, CommandSender sender) throws CommandException {
+      Player player = PlayerUtil.checkPlayer(sender);
+
+      SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
+
+      try {
+        MirrorDirection direction = MirrorDirection.valueOf(args.getString(0).toUpperCase());
+        session.setMirror(direction, !session.isEnabledMirror(direction));
+
+        ChatUtil.sendNotice(
+            player,
+            "Mirror direction \"" + direction + "\" " +
+                (session.isEnabledMirror(direction) ? "enabled" : "disabled") + "!"
+        );
+      } catch (IllegalArgumentException ex) {
+        throw new CommandException("No such direction! Valid directions: 'X', 'Y', 'Z'.");
+      }
+    }
+
+    @Command(aliases = {"status"}, desc = "View symmetry mode status", max = 0)
+    public void viewStatus(CommandContext args, CommandSender sender) throws CommandException {
+      Player player = PlayerUtil.checkPlayer(sender);
+
+      SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
+
+      ChatUtil.sendNotice(player, "Enabled: " + session.isEnabled());
+      ChatUtil.sendNotice(player, "Point of Symmetry: " + ChatUtil.toString(session.getPosition()));
+      ChatUtil.sendNotice(player, "Mirroring X: " + session.isEnabledMirror(MirrorDirection.X));
+      ChatUtil.sendNotice(player, "Mirroring Y: " + session.isEnabledMirror(MirrorDirection.Y));
+      ChatUtil.sendNotice(player, "Mirroring Z: " + session.isEnabledMirror(MirrorDirection.Z));
+    }
+  }
 }

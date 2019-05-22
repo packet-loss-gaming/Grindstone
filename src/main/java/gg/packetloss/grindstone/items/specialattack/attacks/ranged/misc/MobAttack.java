@@ -15,22 +15,22 @@ import org.bukkit.entity.LivingEntity;
 
 public class MobAttack extends LocationAttack implements RangedSpecial {
 
-    private Class<? extends LivingEntity> type;
+  private Class<? extends LivingEntity> type;
 
-    public <T extends LivingEntity> MobAttack(LivingEntity owner, Location target, Class<T> type) {
-        super(owner, target);
-        this.type = type;
+  public <T extends LivingEntity> MobAttack(LivingEntity owner, Location target, Class<T> type) {
+    super(owner, target);
+    this.type = type;
+  }
+
+  @Override
+  public void activate() {
+
+    EffectUtil.Strange.mobBarrage(target, type);
+
+    if (Bat.class.equals(type)) {
+      inform("Your bow releases a batty attack.");
+    } else {
+      inform("Your bow releases a " + type.getSimpleName().toLowerCase() + " attack.");
     }
-
-    @Override
-    public void activate() {
-
-        EffectUtil.Strange.mobBarrage(target, type);
-
-        if (Bat.class.equals(type)) {
-            inform("Your bow releases a batty attack.");
-        } else {
-            inform("Your bow releases a " + type.getSimpleName().toLowerCase() + " attack.");
-        }
-    }
+  }
 }

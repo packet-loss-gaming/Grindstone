@@ -12,27 +12,27 @@ import java.util.Map;
 
 public class Modifier implements Serializable {
 
-    // Integer key is the DurationType.id() and long is the end time
-    private Map<Integer, Long> times = new HashMap<>();
+  // Integer key is the DurationType.id() and long is the end time
+  private Map<Integer, Long> times = new HashMap<>();
 
-    public void extend(ModifierType type, long amount) {
-        Long time = times.get(type.id());
-        long curTime = System.currentTimeMillis();
-        if (time != null && time > curTime) {
-            time += amount;
-        } else {
-            time = curTime + amount;
-        }
-
-        times.put(type.id(), time);
+  public void extend(ModifierType type, long amount) {
+    Long time = times.get(type.id());
+    long curTime = System.currentTimeMillis();
+    if (time != null && time > curTime) {
+      time += amount;
+    } else {
+      time = curTime + amount;
     }
 
-    public boolean isActive(ModifierType type) {
-        return status(type) != 0;
-    }
+    times.put(type.id(), time);
+  }
 
-    public long status(ModifierType type) {
-        Long time = times.get(type.id());
-        return time != null ? Math.max(time - System.currentTimeMillis(), 0) : 0;
-    }
+  public boolean isActive(ModifierType type) {
+    return status(type) != 0;
+  }
+
+  public long status(ModifierType type) {
+    Long time = times.get(type.id());
+    return time != null ? Math.max(time - System.currentTimeMillis(), 0) : 0;
+  }
 }

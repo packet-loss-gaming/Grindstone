@@ -17,25 +17,25 @@ import org.bukkit.inventory.ItemStack;
 
 public class SummationHymnImpl extends AbstractCondenserImpl {
 
-    public SummationHymnImpl(ItemCondenser condenser) {
-        super(condenser);
-    }
+  public SummationHymnImpl(ItemCondenser condenser) {
+    super(condenser);
+  }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onHymnSing(HymnSingEvent event) {
-        Player player = event.getPlayer();
-        HymnSingEvent.Hymn hymn = event.getHymn();
+  @EventHandler(ignoreCancelled = true)
+  public void onHymnSing(HymnSingEvent event) {
+    Player player = event.getPlayer();
+    HymnSingEvent.Hymn hymn = event.getHymn();
 
-        switch (hymn) {
-            case SUMMATION:
-                ItemStack[] result = condenser.operate(player.getInventory().getContents(), true);
-                if (result != null) {
-                    player.getInventory().setContents(result);
-                    //noinspection deprecation
-                    player.updateInventory();
-                    ChatUtil.sendNotice(player, ChatColor.GOLD, "The hymn glows brightly...");
-                }
-                break;
+    switch (hymn) {
+      case SUMMATION:
+        ItemStack[] result = condenser.operate(player.getInventory().getContents(), true);
+        if (result != null) {
+          player.getInventory().setContents(result);
+          //noinspection deprecation
+          player.updateInventory();
+          ChatUtil.sendNotice(player, ChatColor.GOLD, "The hymn glows brightly...");
         }
+        break;
     }
+  }
 }

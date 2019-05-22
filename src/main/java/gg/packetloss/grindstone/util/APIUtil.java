@@ -12,12 +12,12 @@ import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import org.bukkit.plugin.Plugin;
 
 public class APIUtil {
-    public static WorldGuardPlugin getWorldGuard() throws UnknownPluginException {
-        Plugin plugin = CommandBook.server().getPluginManager().getPlugin("WorldGuard");
-        // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
-            throw new UnknownPluginException("WorldGuard");
-        }
-        return (WorldGuardPlugin) plugin;
+  public static WorldGuardPlugin getWorldGuard() throws UnknownPluginException {
+    Plugin plugin = CommandBook.server().getPluginManager().getPlugin("WorldGuard");
+    // WorldGuard may not be loaded
+    if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+      throw new UnknownPluginException("WorldGuard");
     }
+    return (WorldGuardPlugin) plugin;
+  }
 }

@@ -14,16 +14,16 @@ import org.bukkit.potion.PotionEffectType;
 
 public class FearBlaze extends EntityAttack implements MeleeSpecial {
 
-    public FearBlaze(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
-    }
+  public FearBlaze(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+  }
 
-    @Override
-    public void activate() {
+  @Override
+  public void activate() {
 
-        target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) (target.getHealth() * 20), 0), true);
-        target.setFireTicks((int) (owner.getHealth() * 20));
+    target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) (target.getHealth() * 20), 0), true);
+    target.setFireTicks((int) (owner.getHealth() * 20));
 
-        inform("Your sword releases a deadly blaze.");
-    }
+    inform("Your sword releases a deadly blaze.");
+  }
 }

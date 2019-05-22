@@ -13,28 +13,28 @@ import org.bukkit.World;
 
 public class AbstractFactoryArea extends AbstractRegionedArena {
 
-    protected ProtectedRegion potionChamber;
-    protected ProtectedRegion[] smeltingChamber;
+  protected ProtectedRegion potionChamber;
+  protected ProtectedRegion[] smeltingChamber;
 
-    public AbstractFactoryArea(World world, ProtectedRegion region,
-                               ProtectedRegion potionChamber, ProtectedRegion[] smeltingChamer) {
-        super(world, region);
-        this.potionChamber = potionChamber;
-        this.smeltingChamber = smeltingChamer;
-    }
+  public AbstractFactoryArea(World world, ProtectedRegion region,
+                             ProtectedRegion potionChamber, ProtectedRegion[] smeltingChamer) {
+    super(world, region);
+    this.potionChamber = potionChamber;
+    this.smeltingChamber = smeltingChamer;
+  }
 
-    public ProtectedRegion getChamber(ChamberType type) {
-        switch (type) {
-            case POTION:
-                return potionChamber;
-            case SMELTING:
-                return CollectionUtil.getElement(smeltingChamber);
-        }
-        return null;
+  public ProtectedRegion getChamber(ChamberType type) {
+    switch (type) {
+      case POTION:
+        return potionChamber;
+      case SMELTING:
+        return CollectionUtil.getElement(smeltingChamber);
     }
+    return null;
+  }
 
-    protected enum ChamberType {
-        POTION,
-        SMELTING
-    }
+  protected enum ChamberType {
+    POTION,
+    SMELTING
+  }
 }

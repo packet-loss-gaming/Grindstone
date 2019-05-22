@@ -12,31 +12,31 @@ import org.bukkit.event.player.PlayerEvent;
 
 public class FallBlockerEvent extends PlayerEvent {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean displayMessage = true;
+  private static final HandlerList handlers = new HandlerList();
+  private boolean displayMessage = true;
 
-    public FallBlockerEvent(Player player) {
+  public FallBlockerEvent(Player player) {
 
-        super(player);
-    }
+    super(player);
+  }
 
-    public boolean isDisplayingMessage() {
+  public static HandlerList getHandlerList() {
 
-        return displayMessage;
-    }
+    return handlers;
+  }
 
-    public void setDisplayMessage(boolean displayMessage) {
+  public boolean isDisplayingMessage() {
 
-        this.displayMessage = displayMessage;
-    }
+    return displayMessage;
+  }
 
-    public HandlerList getHandlers() {
+  public void setDisplayMessage(boolean displayMessage) {
 
-        return handlers;
-    }
+    this.displayMessage = displayMessage;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 }

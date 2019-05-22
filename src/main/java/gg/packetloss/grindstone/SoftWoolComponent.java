@@ -26,34 +26,34 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Soft Wool", desc = "Fall softly my friends.")
 public class SoftWoolComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
 
-    }
+  }
 
-    @EventHandler
-    public void onEntityDamage(EntityDamageEvent event) {
+  @EventHandler
+  public void onEntityDamage(EntityDamageEvent event) {
 
-        Entity entity = event.getEntity();
-        EntityDamageEvent.DamageCause damageCause = event.getCause();
+    Entity entity = event.getEntity();
+    EntityDamageEvent.DamageCause damageCause = event.getCause();
 
-        if (damageCause.equals(EntityDamageEvent.DamageCause.FALL)
-                && LocationUtil.getBelowID(entity.getLocation(), BlockID.CLOTH)) {
-            if (entity instanceof Player) {
-                FallBlockerEvent fEvent = new FallBlockerEvent((Player) entity);
-                server.getPluginManager().callEvent(fEvent);
-                if (fEvent.isDisplayingMessage()) {
-                    ChatUtil.sendNotice((Player) entity, "The cloth negates your fall damage.");
-                }
-            }
-            event.setCancelled(true);
+    if (damageCause.equals(EntityDamageEvent.DamageCause.FALL)
+        && LocationUtil.getBelowID(entity.getLocation(), BlockID.CLOTH)) {
+      if (entity instanceof Player) {
+        FallBlockerEvent fEvent = new FallBlockerEvent((Player) entity);
+        server.getPluginManager().callEvent(fEvent);
+        if (fEvent.isDisplayingMessage()) {
+          ChatUtil.sendNotice(entity, "The cloth negates your fall damage.");
         }
+      }
+      event.setCancelled(true);
     }
+  }
 }

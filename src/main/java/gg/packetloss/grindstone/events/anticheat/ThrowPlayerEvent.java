@@ -12,20 +12,20 @@ import org.bukkit.event.player.PlayerEvent;
 
 public class ThrowPlayerEvent extends PlayerEvent {
 
-    private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-    public ThrowPlayerEvent(Player player) {
+  public ThrowPlayerEvent(Player player) {
 
-        super(player);
-    }
+    super(player);
+  }
 
-    public HandlerList getHandlers() {
+  public static HandlerList getHandlerList() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 }

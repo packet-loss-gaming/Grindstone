@@ -21,7 +21,10 @@ import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryTicketDatabase;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
 import gg.packetloss.grindstone.exceptions.NotFoundException;
-import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.player.GenericWealthStore;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -49,347 +52,349 @@ import java.util.logging.Logger;
 @Depend(plugins = {"Vault"}, components = {DataBaseComponent.class, ImpersonalComponent.class})
 public class LotteryComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
+  private static String LOTTERY_BANK_ACCOUNT = "Lottery";
+  private static double MIN_WINNING;
+  private static Economy economy = null;
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = CommandBook.logger();
+  private final Server server = CommandBook.server();
+  @InjectComponent
+  ImpersonalComponent impersonalComponent;
+  private LocalConfiguration config;
+  private List<Player> recentList = new ArrayList<>();
+  private LotteryTicketDatabase lotteryTicketDatabase;
+  private LotteryWinnerDatabase lotteryWinnerDatabase;
+  private Runnable runLottery = this::completeLottery;
+  private Runnable broadcastLottery = () -> broadcastLottery(server.getOnlinePlayers());
 
-    @InjectComponent
-    ImpersonalComponent impersonalComponent;
+  @Override
+  public void enable() {
+    // FIXME: Work around for database load order issue.
+    server.getScheduler().runTaskLater(inst, () -> {
+      config = configure(new LocalConfiguration());
+      MIN_WINNING = config.maxPerLotto * config.ticketPrice * 1.25;
 
-    private LocalConfiguration config;
+      lotteryTicketDatabase = new MySQLLotteryTicketDatabase();
+      lotteryTicketDatabase.load();
+      lotteryWinnerDatabase = new MySQLLotteryWinnerDatabase();
+      lotteryWinnerDatabase.load();
 
-    private static String LOTTERY_BANK_ACCOUNT = "Lottery";
-    private static double MIN_WINNING;
-    private List<Player> recentList = new ArrayList<>();
-    private LotteryTicketDatabase lotteryTicketDatabase;
-    private LotteryWinnerDatabase lotteryWinnerDatabase;
-    private static Economy economy = null;
+      //noinspection AccessStaticViaInstance
+      inst.registerEvents(this);
+      registerCommands(Commands.class);
 
-    @Override
-    public void enable() {
-        // FIXME: Work around for database load order issue.
-        server.getScheduler().runTaskLater(inst, () -> {
-            config = configure(new LocalConfiguration());
-            MIN_WINNING = config.maxPerLotto * config.ticketPrice * 1.25;
+      setupEconomy();
 
-            lotteryTicketDatabase = new MySQLLotteryTicketDatabase();
-            lotteryTicketDatabase.load();
-            lotteryWinnerDatabase = new MySQLLotteryWinnerDatabase();
-            lotteryWinnerDatabase.load();
+      long ticks = TimeUtil.getTicksTill(17), nextHour = TimeUtil.getTicksTillHour();
+      server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24);
+      server.getScheduler().scheduleSyncRepeatingTask(inst, broadcastLottery, nextHour, 20 * 60 * 60);
+    }, 1);
+  }
 
-            //noinspection AccessStaticViaInstance
-            inst.registerEvents(this);
-            registerCommands(Commands.class);
+  @Override
+  public void reload() {
 
-            setupEconomy();
+    super.reload();
+    configure(config);
+  }
 
-            long ticks = TimeUtil.getTicksTill(17), nextHour = TimeUtil.getTicksTillHour();
-            server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24);
-            server.getScheduler().scheduleSyncRepeatingTask(inst, broadcastLottery, nextHour, 20 * 60 * 60);
-        }, 1);
+  @EventHandler(ignoreCancelled = true)
+  public void onPlayerInteract(PlayerInteractEvent event) {
+
+    Player player = event.getPlayer();
+    Block block = event.getClickedBlock();
+
+    if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)
+        || block == null
+        || !EnvironmentUtil.isSign(block)) {
+      return;
     }
 
-    @Override
-    public void reload() {
+    Sign sign = (Sign) block.getState();
 
-        super.reload();
-        configure(config);
+    if (sign.getLine(0).equals("[Lottery]") && inst.hasPermission(player, "aurora.lottery.ticket.buy.sign")) {
+      if (!impersonalComponent.check(block, true)) {
+        return;
+      }
+      try {
+        int count = Integer.parseInt(sign.getLine(1).trim());
+        buyTickets(player, count);
+      } catch (NumberFormatException e) {
+        block.breakNaturally();
+      } catch (CommandException e) {
+        ChatUtil.sendError(player, e.getMessage());
+      }
+    }
+  }
+
+  @EventHandler(ignoreCancelled = true)
+  public void onPlayerBlockPlace(SignChangeEvent event) {
+
+    Block block = event.getBlock();
+    Player player = event.getPlayer();
+
+    if (event.getLine(0).equalsIgnoreCase("[lottery]")) {
+      if (!inst.hasPermission(player, "aurora.lottery.ticket.sell.sign")) {
+        event.setCancelled(true);
+        block.breakNaturally(new ItemStack(ItemID.SIGN, 1));
+      }
+      event.setLine(0, "[Lottery]");
+      try {
+        int ticketCount = Integer.parseInt(event.getLine(1).trim());
+        if (ticketCount > config.maxSellCount || ticketCount < 0) {
+          ChatUtil.sendError(player, "The third line must be a number below: "
+              + ChatUtil.makeCountString(config.maxSellCount, "."));
+          event.setCancelled(true);
+          block.breakNaturally(new ItemStack(ItemID.SIGN, 1));
+        }
+        event.setLine(2, "for");
+        event.setLine(3, String.valueOf(config.ticketPrice * ticketCount));
+      } catch (NumberFormatException e) {
+        ChatUtil.sendError(player, "The third line must be a number below: "
+            + ChatUtil.makeCountString(config.maxSellCount, "."));
+        event.setCancelled(true);
+        block.breakNaturally(new ItemStack(ItemID.SIGN, 1));
+      }
+    }
+  }
+
+  private boolean setupEconomy() {
+
+    RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
+        .vault.economy.Economy.class);
+    if (economyProvider != null) {
+      economy = economyProvider.getProvider();
     }
 
-    private Runnable runLottery = this::completeLottery;
+    return (economy != null);
+  }
 
-    private Runnable broadcastLottery = () -> broadcastLottery(server.getOnlinePlayers());
+  public LotteryTicketDatabase getLotteryTicketDatabase() {
 
-    private static class LocalConfiguration extends ConfigurationBase {
+    return lotteryTicketDatabase;
+  }
 
-        @Setting("ticket-price")
-        public int ticketPrice = 20;
-        @Setting("max.sell-count")
-        public int maxSellCount = 50;
-        @Setting("max.per-lotto")
-        public int maxPerLotto = 150;
-        @Setting("recent-length")
-        public int recentLength = 5;
+  public void buyTickets(final Player player, int count) throws CommandException {
+
+    if (recentList.contains(player)) {
+      return;
     }
 
-    public class Commands {
+    String playerName = player.getName();
 
-        @Command(aliases = {"lottery", "lotto"}, desc = "Lottery Commands")
-        @NestedCommand({NestedCommands.class})
-        public void lotteryCmd(CommandContext args, CommandSender sender) throws CommandException {
+    int b = 0;
+    int m = 0;
+    int sold = 0;
 
-        }
+    b = (int) (economy.getBalance(playerName) / config.ticketPrice);
+
+    m = config.maxPerLotto - lotteryTicketDatabase.getTickets(playerName);
+
+    if (b > m) {
+      if (m > count) {
+        sold = count;
+      } else {
+        sold = m;
+      }
+    } else if (m > b) {
+      if (b > count) {
+        sold = count;
+      } else {
+        sold = b;
+      }
     }
 
-    public class NestedCommands {
-
-        @Command(aliases = {"buy"},
-                usage = "[amount]", desc = "Buy Lottery Tickets.",
-                flags = "", min = 0, max = 1)
-        @CommandPermissions({"aurora.lottery.ticket.buy.command"})
-        public void lotteryBuyCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            buyTickets(PlayerUtil.checkPlayer(sender), args.argsLength() > 0 ? args.getInteger(0) : 1);
-        }
-
-        @Command(aliases = {"draw"},
-                usage = "", desc = "Trigger the lottery draw.",
-                flags = "", min = 0, max = 0)
-        @CommandPermissions({"aurora.lottery.draw"})
-        public void lotteryDrawCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            ChatUtil.sendNotice(sender, "Lottery draw in progress.");
-            completeLottery();
-        }
-
-        @Command(aliases = {"pot", "value"},
-                usage = "", desc = "View the lottery pot size.",
-                flags = "b", min = 0, max = 0)
-        @CommandPermissions({"aurora.lottery.pot"})
-        public void lotteryPotCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            List<CommandSender> que = new ArrayList<>();
-
-            que.add(sender);
-            if (args.hasFlag('b') && sender.hasPermission("aurora.lottery.pot.broadcast")) {
-                que.addAll(server.getOnlinePlayers());
-            }
-
-            broadcastLottery(que);
-        }
-
-        @Command(aliases = {"recent", "last", "previous"},
-                usage = "", desc = "View the last lottery winner.",
-                flags = "", min = 0, max = 0)
-        @CommandPermissions({"aurora.lottery.last"})
-        public void lotteryLastCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            ChatUtil.sendNotice(sender, ChatColor.GRAY, "Lottery - Recent winners:");
-            List<LotteryWinner> winners = lotteryWinnerDatabase.getRecentWinner(config.recentLength);
-            short number = 0;
-            for (LotteryWinner winner : winners) {
-                number++;
-                ChatUtil.sendNotice(sender, "  " + ChatColor.GOLD + number + ". " + ChatColor.YELLOW
-                        + winner.getName() + ChatColor.GOLD + " - " + ChatColor.WHITE + economy.format(winner.getAmt()));
-            }
-        }
+    if (sold < 0) {
+      sold = 0;
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerInteract(PlayerInteractEvent event) {
-
-        Player player = event.getPlayer();
-        Block block = event.getClickedBlock();
-
-        if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)
-                || block == null
-                || !EnvironmentUtil.isSign(block)) return;
-
-        Sign sign = (Sign) block.getState();
-
-        if (sign.getLine(0).equals("[Lottery]") && inst.hasPermission(player, "aurora.lottery.ticket.buy.sign")) {
-            if (!impersonalComponent.check(block, true)) return;
-            try {
-                int count = Integer.parseInt(sign.getLine(1).trim());
-                buyTickets(player, count);
-            } catch (NumberFormatException e) {
-                block.breakNaturally();
-            } catch (CommandException e) {
-                ChatUtil.sendError(player, e.getMessage());
-            }
-        }
+    if (!economy.has(playerName, config.ticketPrice * sold)) {
+      throw new CommandException("You do not have enough " + economy.currencyNamePlural() + ".");
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerBlockPlace(SignChangeEvent event) {
+    if (sold > 0) {
+      economy.withdrawPlayer(playerName, config.ticketPrice * sold);
 
-        Block block = event.getBlock();
-        Player player = event.getPlayer();
-
-        if (event.getLine(0).equalsIgnoreCase("[lottery]")) {
-            if (!inst.hasPermission(player, "aurora.lottery.ticket.sell.sign")) {
-                event.setCancelled(true);
-                block.breakNaturally(new ItemStack(ItemID.SIGN, 1));
-            }
-            event.setLine(0, "[Lottery]");
-            try {
-                int ticketCount = Integer.parseInt(event.getLine(1).trim());
-                if (ticketCount > config.maxSellCount || ticketCount < 0) {
-                    ChatUtil.sendError(player, "The third line must be a number below: "
-                            + ChatUtil.makeCountString(config.maxSellCount, "."));
-                    event.setCancelled(true);
-                    block.breakNaturally(new ItemStack(ItemID.SIGN, 1));
-                }
-                event.setLine(2, "for");
-                event.setLine(3, String.valueOf(config.ticketPrice * ticketCount));
-            } catch (NumberFormatException e) {
-                ChatUtil.sendError(player, "The third line must be a number below: "
-                        + ChatUtil.makeCountString(config.maxSellCount, "."));
-                event.setCancelled(true);
-                block.breakNaturally(new ItemStack(ItemID.SIGN, 1));
-            }
-        }
+      lotteryTicketDatabase.addTickets(playerName, sold);
+      lotteryTicketDatabase.save();
     }
 
-    private boolean setupEconomy() {
+    if (sold * config.ticketPrice != 1) {
+      ChatUtil.sendNotice(player, "You purchased: "
+          + ChatUtil.makeCountString(sold, " tickets for: ")
+          + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice), "."));
+    } else {
+      ChatUtil.sendNotice(player, "You purchased: "
+          + ChatUtil.makeCountString(sold, " tickets for: ")
+          + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice), "."));
+    }
+    recentList.add(player);
+    server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 10);
+  }
 
-        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
-                .vault.economy.Economy.class);
-        if (economyProvider != null) {
-            economy = economyProvider.getProvider();
-        }
+  public void completeLottery() {
 
-        return (economy != null);
+    String name;
+    try {
+      name = findNewMillionaire();
+    } catch (NotFoundException ex) {
+      return;
     }
 
-    public LotteryTicketDatabase getLotteryTicketDatabase() {
+    double cash = getWinnerCash();
 
-        return lotteryTicketDatabase;
+    try {
+      economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
+    } catch (Throwable t) {
+    }
+    economy.depositPlayer(name, cash);
+    Bukkit.broadcastMessage(ChatColor.YELLOW + name + " has won: " +
+        ChatUtil.makeCountString(economy.format(cash), " via the lottery!"));
+
+    lotteryWinnerDatabase.addWinner(name, cash);
+    lotteryWinnerDatabase.save();
+    lotteryTicketDatabase.clearTickets();
+    lotteryTicketDatabase.save();
+  }
+
+  public void broadcastLottery(Iterable<? extends CommandSender> senders) {
+
+    for (CommandSender receiver : senders) {
+      ChatUtil.sendNotice(receiver, "The lottery currently has: "
+          + ChatUtil.makeCountString(lotteryTicketDatabase.getTicketCount(), " tickets and is worth: ")
+          + ChatUtil.makeCountString(economy.format(getWinnerCash()),
+          "."));
+    }
+  }
+
+  public double getWinnerCash() {
+
+    double amt = lotteryTicketDatabase.getTicketCount() * config.ticketPrice * .75;
+
+    EconomyResponse response = economy.bankBalance(LOTTERY_BANK_ACCOUNT);
+    if (response.transactionSuccess()) {
+      amt += response.balance;
+    }
+    return amt;
+  }
+
+  private String findNewMillionaire() throws NotFoundException {
+
+    List<GenericWealthStore> ticketDB = lotteryTicketDatabase.getTickets();
+    if (ticketDB.size() < 2) {
+      throw new NotFoundException();
     }
 
-    public void buyTickets(final Player player, int count) throws CommandException {
-
-        if (recentList.contains(player)) return;
-
-        String playerName = player.getName();
-
-        int b = 0;
-        int m = 0;
-        int sold = 0;
-
-        b = (int) (economy.getBalance(playerName) / config.ticketPrice);
-
-        m = config.maxPerLotto - lotteryTicketDatabase.getTickets(playerName);
-
-        if (b > m) {
-            if (m > count) {
-                sold = count;
-            } else {
-                sold = m;
-            }
-        } else if (m > b) {
-            if (b > count) {
-                sold = count;
-            } else {
-                sold = b;
-            }
-        }
-
-        if (sold < 0) {
-            sold = 0;
-        }
-
-        if (!economy.has(playerName, config.ticketPrice * sold)) {
-            throw new CommandException("You do not have enough " + economy.currencyNamePlural() + ".");
-        }
-
-        if (sold > 0) {
-            economy.withdrawPlayer(playerName, config.ticketPrice * sold);
-
-            lotteryTicketDatabase.addTickets(playerName, sold);
-            lotteryTicketDatabase.save();
-        }
-
-        if (sold * config.ticketPrice != 1) {
-            ChatUtil.sendNotice(player, "You purchased: "
-                    + ChatUtil.makeCountString(sold, " tickets for: ")
-                    + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice), "."));
-        } else {
-            ChatUtil.sendNotice(player, "You purchased: "
-                    + ChatUtil.makeCountString(sold, " tickets for: ")
-                    + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice), "."));
-        }
-        recentList.add(player);
-        server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 10);
+    List<WeightedTicket> tickets = new ArrayList<>();
+    for (GenericWealthStore lotteryTicket : ticketDB) {
+      int lastTicketValue = tickets.isEmpty() ? 0 : tickets.get(tickets.size() - 1).getWeight();
+      int weightedValue = lotteryTicket.getValue() + lastTicketValue;
+      tickets.add(new WeightedTicket(lotteryTicket.getOwnerName(), weightedValue));
     }
 
-    public void completeLottery() {
+    int maxWeight = tickets.get(tickets.size() - 1).getWeight();
+    int randomValue = ChanceUtil.getRandom(maxWeight);
 
-        String name;
-        try {
-            name = findNewMillionaire();
-        } catch (NotFoundException ex) {
-            return;
-        }
-
-        double cash = getWinnerCash();
-
-        try {
-            economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
-        } catch (Throwable t) {
-        }
-        economy.depositPlayer(name, cash);
-        Bukkit.broadcastMessage(ChatColor.YELLOW + name + " has won: " +
-                ChatUtil.makeCountString(economy.format(cash), " via the lottery!"));
-
-        lotteryWinnerDatabase.addWinner(name, cash);
-        lotteryWinnerDatabase.save();
-        lotteryTicketDatabase.clearTickets();
-        lotteryTicketDatabase.save();
+    for (WeightedTicket weightedTicket : tickets) {
+      randomValue -= weightedTicket.getWeight();
+      if (randomValue <= 0) {
+        return weightedTicket.getTicketOwner();
+      }
     }
 
-    public void broadcastLottery(Iterable<? extends CommandSender> senders) {
+    throw new IllegalStateException("Probability failed to resolve a winner, this should never happen.");
+  }
 
-        for (CommandSender receiver : senders) {
-            ChatUtil.sendNotice(receiver, "The lottery currently has: "
-                    + ChatUtil.makeCountString(lotteryTicketDatabase.getTicketCount(), " tickets and is worth: ")
-                    + ChatUtil.makeCountString(economy.format(getWinnerCash()),
-                    "."));
-        }
+  private static class LocalConfiguration extends ConfigurationBase {
+
+    @Setting("ticket-price")
+    public int ticketPrice = 20;
+    @Setting("max.sell-count")
+    public int maxSellCount = 50;
+    @Setting("max.per-lotto")
+    public int maxPerLotto = 150;
+    @Setting("recent-length")
+    public int recentLength = 5;
+  }
+
+  public class Commands {
+
+    @Command(aliases = {"lottery", "lotto"}, desc = "Lottery Commands")
+    @NestedCommand( {NestedCommands.class})
+    public void lotteryCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+    }
+  }
+
+  public class NestedCommands {
+
+    @Command(aliases = {"buy"},
+        usage = "[amount]", desc = "Buy Lottery Tickets.",
+        flags = "", min = 0, max = 1)
+    @CommandPermissions( {"aurora.lottery.ticket.buy.command"})
+    public void lotteryBuyCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+      buyTickets(PlayerUtil.checkPlayer(sender), args.argsLength() > 0 ? args.getInteger(0) : 1);
     }
 
-    public double getWinnerCash() {
+    @Command(aliases = {"draw"},
+        usage = "", desc = "Trigger the lottery draw.",
+        flags = "", min = 0, max = 0)
+    @CommandPermissions( {"aurora.lottery.draw"})
+    public void lotteryDrawCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-        double amt = lotteryTicketDatabase.getTicketCount() * config.ticketPrice * .75;
-
-        EconomyResponse response = economy.bankBalance(LOTTERY_BANK_ACCOUNT);
-        if (response.transactionSuccess()) {
-            amt += response.balance;
-        }
-        return amt;
+      ChatUtil.sendNotice(sender, "Lottery draw in progress.");
+      completeLottery();
     }
 
-    private class WeightedTicket {
-        String ticketOwner;
-        int weight;
+    @Command(aliases = {"pot", "value"},
+        usage = "", desc = "View the lottery pot size.",
+        flags = "b", min = 0, max = 0)
+    @CommandPermissions( {"aurora.lottery.pot"})
+    public void lotteryPotCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-        public WeightedTicket(String ticketOwner, int weight) {
-            this.ticketOwner = ticketOwner;
-            this.weight = weight;
-        }
+      List<CommandSender> que = new ArrayList<>();
 
-        public String getTicketOwner() {
-            return ticketOwner;
-        }
+      que.add(sender);
+      if (args.hasFlag('b') && sender.hasPermission("aurora.lottery.pot.broadcast")) {
+        que.addAll(server.getOnlinePlayers());
+      }
 
-        public int getWeight() {
-            return weight;
-        }
+      broadcastLottery(que);
     }
 
+    @Command(aliases = {"recent", "last", "previous"},
+        usage = "", desc = "View the last lottery winner.",
+        flags = "", min = 0, max = 0)
+    @CommandPermissions( {"aurora.lottery.last"})
+    public void lotteryLastCmd(CommandContext args, CommandSender sender) throws CommandException {
 
-    private String findNewMillionaire() throws NotFoundException {
-
-        List<GenericWealthStore> ticketDB = lotteryTicketDatabase.getTickets();
-        if (ticketDB.size() < 2) throw new NotFoundException();
-
-        List<WeightedTicket> tickets = new ArrayList<>();
-        for (GenericWealthStore lotteryTicket : ticketDB) {
-            int lastTicketValue = tickets.isEmpty() ? 0 : tickets.get(tickets.size() - 1).getWeight();
-            int weightedValue = lotteryTicket.getValue() + lastTicketValue;
-            tickets.add(new WeightedTicket(lotteryTicket.getOwnerName(), weightedValue));
-        }
-
-        int maxWeight = tickets.get(tickets.size() - 1).getWeight();
-        int randomValue = ChanceUtil.getRandom(maxWeight);
-
-        for (WeightedTicket weightedTicket : tickets) {
-            randomValue -= weightedTicket.getWeight();
-            if (randomValue <= 0) {
-                return weightedTicket.getTicketOwner();
-            }
-        }
-
-        throw new IllegalStateException("Probability failed to resolve a winner, this should never happen.");
+      ChatUtil.sendNotice(sender, ChatColor.GRAY, "Lottery - Recent winners:");
+      List<LotteryWinner> winners = lotteryWinnerDatabase.getRecentWinner(config.recentLength);
+      short number = 0;
+      for (LotteryWinner winner : winners) {
+        number++;
+        ChatUtil.sendNotice(sender, "  " + ChatColor.GOLD + number + ". " + ChatColor.YELLOW
+            + winner.getName() + ChatColor.GOLD + " - " + ChatColor.WHITE + economy.format(winner.getAmt()));
+      }
     }
+  }
+
+  private class WeightedTicket {
+    String ticketOwner;
+    int weight;
+
+    public WeightedTicket(String ticketOwner, int weight) {
+      this.ticketOwner = ticketOwner;
+      this.weight = weight;
+    }
+
+    public String getTicketOwner() {
+      return ticketOwner;
+    }
+
+    public int getWeight() {
+      return weight;
+    }
+  }
 }

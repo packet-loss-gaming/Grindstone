@@ -10,9 +10,9 @@ import org.bukkit.event.Listener;
 
 public abstract class AreaListener<Area extends AreaComponent<?>> implements Listener {
 
-    protected final Area parent;
+  protected final Area parent;
 
-    public AreaListener(Area parent) {
-        this.parent = parent;
-    }
+  public AreaListener(Area parent) {
+    this.parent = parent;
+  }
 }

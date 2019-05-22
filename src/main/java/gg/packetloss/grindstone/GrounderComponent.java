@@ -27,39 +27,39 @@ import java.util.logging.Logger;
 @Depend(plugins = {"WorldEdit, Vault"}, components = {AdminComponent.class})
 public class GrounderComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = CommandBook.logger();
+  private final Server server = CommandBook.server();
 
-    @InjectComponent
-    private AdminComponent adminComponent;
+  @InjectComponent
+  private AdminComponent adminComponent;
 
-    @Override
-    public void enable() {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
-    }
+  @Override
+  public void enable() {
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPlayerGameModeChange(final PlayerGameModeChangeEvent event) {
-        Player player = event.getPlayer();
-        GameMode gameMode = event.getNewGameMode();
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  public void onPlayerGameModeChange(final PlayerGameModeChangeEvent event) {
+    Player player = event.getPlayer();
+    GameMode gameMode = event.getNewGameMode();
 
-        // Check for the gamemode changing from GameMode.SURVIVAL to GameMode.CREATIVE
-        if (gameMode.equals(GameMode.CREATIVE)) {
-            if (adminComponent.canEnterAdminMode(player)) {
-                // Convert the player to an admin mode state automatically, rather than telling them
-                // to run the admin mode command first.
-                boolean wasAdmin = adminComponent.isAdmin(player);
-                if (!wasAdmin && adminComponent.admin(player)) {
-                    ChatUtil.sendNotice(player, "Admin mode enabled automatically.");
-                }
-            } else if (!inst.hasPermission(player, "aurora.gamemode.creative.permit")) {
-                // Stop this change & notify
-                event.setCancelled(true);
-                ChatUtil.sendWarning(player, "Your gamemode change has been denied.");
-                log.info("The player: " + player.getName() + " was stopped from changing gamemodes.");
-            }
+    // Check for the gamemode changing from GameMode.SURVIVAL to GameMode.CREATIVE
+    if (gameMode.equals(GameMode.CREATIVE)) {
+      if (adminComponent.canEnterAdminMode(player)) {
+        // Convert the player to an admin mode state automatically, rather than telling them
+        // to run the admin mode command first.
+        boolean wasAdmin = adminComponent.isAdmin(player);
+        if (!wasAdmin && adminComponent.admin(player)) {
+          ChatUtil.sendNotice(player, "Admin mode enabled automatically.");
         }
+      } else if (!inst.hasPermission(player, "aurora.gamemode.creative.permit")) {
+        // Stop this change & notify
+        event.setCancelled(true);
+        ChatUtil.sendWarning(player, "Your gamemode change has been denied.");
+        log.info("The player: " + player.getName() + " was stopped from changing gamemodes.");
+      }
     }
+  }
 }

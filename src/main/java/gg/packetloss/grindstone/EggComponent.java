@@ -9,8 +9,6 @@ package gg.packetloss.grindstone;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
-import com.sk89q.commandbook.util.entity.player.PlayerUtil;
-import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
@@ -51,354 +49,371 @@ import java.util.concurrent.TimeUnit;
 @Depend(components = {SessionComponent.class})
 public class EggComponent extends BukkitComponent implements Listener, Runnable {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Server server = CommandBook.server();
 
-    @InjectComponent
-    SessionComponent sessions;
+  @InjectComponent
+  SessionComponent sessions;
 
-    private WorldGuardPlugin worldGuard;
-    private LocalConfiguration config;
+  private WorldGuardPlugin worldGuard;
+  private LocalConfiguration config;
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        config = configure(new LocalConfiguration());
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+    config = configure(new LocalConfiguration());
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
 
-        setUpWorldGuard();
+    setUpWorldGuard();
 
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 120);
-    }
+    server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 120);
+  }
 
-    @Override
-    public void reload() {
+  @Override
+  public void reload() {
 
-        super.reload();
-        configure(config);
-    }
+    super.reload();
+    configure(config);
+  }
 
-    private static class LocalConfiguration extends ConfigurationBase {
+  @Override
+  public void run() {
 
-        @Setting("enable-easter-eggs")
-        public boolean enableEasterEggs = true;
-        @Setting("enable-halloween-eggs")
-        public boolean enableHalloweenEggs = true;
-        @Setting("strict-mode")
-        public boolean strictMode = true;
-    }
+    for (World world : server.getWorlds()) {
+      for (Item item : world.getEntitiesByClass(Item.class)) {
 
-    @Override
-    public void run() {
-
-        for (World world : server.getWorlds()) {
-            for (Item item : world.getEntitiesByClass(Item.class)) {
-
-                ItemStack itemStack = item.getItemStack();
-                if (itemStack.getTypeId() != ItemID.SPAWN_EGG || item.getTicksLived() < 300) continue;
-
-                // Attempt to hatch the egg
-                hatchEgg(item);
-            }
-        }
-    }
-
-    private void setUpWorldGuard() {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
-            worldGuard = null;
+        ItemStack itemStack = item.getItemStack();
+        if (itemStack.getTypeId() != ItemID.SPAWN_EGG || item.getTicksLived() < 300) {
+          continue;
         }
 
-        //noinspection ConstantConditions
-        worldGuard = (WorldGuardPlugin) plugin;
+        // Attempt to hatch the egg
+        hatchEgg(item);
+      }
+    }
+  }
+
+  private void setUpWorldGuard() {
+
+    Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
+
+    // WorldGuard may not be loaded
+    if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+      worldGuard = null;
     }
 
-    public void eggOn(Player player) {
+    //noinspection ConstantConditions
+    worldGuard = (WorldGuardPlugin) plugin;
+  }
 
-        for (EggType eggType : EggType.values()) {
-            if (eggType == EggType.INVALID) continue;
-            sessions.getSession(EggState.class, player).setEggDrop(eggType, true);
+  public void eggOn(Player player) {
+
+    for (EggType eggType : EggType.values()) {
+      if (eggType == EggType.INVALID) {
+        continue;
+      }
+      sessions.getSession(EggState.class, player).setEggDrop(eggType, true);
+    }
+  }
+
+  public void eggOn(Player player, EggType eggType) {
+
+    if (eggType.equals(EggType.INVALID)) {
+      eggOn(player);
+    } else {
+      sessions.getSession(EggState.class, player).setEggDrop(eggType, true);
+    }
+  }
+
+  public boolean allowedEggs(Player player, EggType eggType) {
+
+    return sessions.getSession(EggState.class, player).getEggDropAllowed(eggType);
+  }
+
+  public void eggOff(Player player) {
+
+    for (EggType eggType : EggType.values()) {
+      if (eggType == EggType.INVALID) {
+        continue;
+      }
+      sessions.getSession(EggState.class, player).setEggDrop(eggType, false);
+    }
+  }
+
+  public void eggOff(Player player, EggType eggType) {
+
+    if (eggType.equals(EggType.INVALID)) {
+      eggOff(player);
+    } else {
+      sessions.getSession(EggState.class, player).setEggDrop(eggType, false);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  public void onBlockBreak(BlockBreakEvent event) {
+
+    Player player = event.getPlayer();
+
+    Block block = event.getBlock();
+    World world = block.getWorld();
+    int blockType = block.getTypeId();
+
+    if (EnvironmentUtil.isShrubBlock(blockType)) {
+      if (LocalDate.now().getMonth().equals(Month.APRIL)
+          && allowedEggs(player, EggType.EASTER)
+          && config.enableEasterEggs && !ChanceUtil.getChance(5, 6)) {
+
+        for (short c = 0; c < ChanceUtil.getRangedRandom(7, 17); c++) {
+          EggEntity attemptedEgg;
+          switch (ChanceUtil.getRandom(8)) {
+            case 1:
+              attemptedEgg = EggEntity.BAT;
+              break;
+            case 2:
+              attemptedEgg = EggEntity.CHICKEN;
+              break;
+            case 3:
+              attemptedEgg = EggEntity.COW;
+              break;
+            case 4:
+              attemptedEgg = EggEntity.MUSHROOM_COW;
+              break;
+            case 5:
+              attemptedEgg = EggEntity.OCELOT;
+              break;
+            case 6:
+              attemptedEgg = EggEntity.WOLF;
+              break;
+            case 7:
+              attemptedEgg = EggEntity.SHEEP;
+              break;
+            case 8:
+            default:
+              attemptedEgg = EggEntity.PIG;
+              break;
+          }
+          EggDropEvent eggDropEvent = new EggDropEvent(attemptedEgg, block.getLocation());
+          server.getPluginManager().callEvent(eggDropEvent);
+          if (!eggDropEvent.isCancelled()) {
+            world.dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toSpawnEgg());
+          }
         }
+      }
+
+      if (LocalDate.now().getMonth().equals(Month.OCTOBER)
+          && allowedEggs(player, EggType.HALLOWEEN)
+          && config.enableHalloweenEggs && !ChanceUtil.getChance(7, 8)) {
+
+        for (short c = 0; c < ChanceUtil.getRangedRandom(7, 13); c++) {
+          EggEntity attemptedEgg;
+          switch (ChanceUtil.getRandom(8)) {
+            case 1:
+              attemptedEgg = EggEntity.ENDERMAN;
+              break;
+            case 2:
+              attemptedEgg = EggEntity.SPIDER;
+              break;
+            case 3:
+              attemptedEgg = EggEntity.CAVE_SPIDER;
+              break;
+            case 4:
+              attemptedEgg = EggEntity.SLIME;
+              break;
+            case 5:
+              attemptedEgg = EggEntity.MAGMA_CUBE;
+              break;
+            case 6:
+              attemptedEgg = EggEntity.WITCH;
+              break;
+            case 7:
+              attemptedEgg = EggEntity.SKELETON;
+              break;
+            case 8:
+            default:
+              attemptedEgg = EggEntity.ZOMBIE;
+              break;
+          }
+          EggDropEvent eggDropEvent = new EggDropEvent(attemptedEgg, block.getLocation());
+          server.getPluginManager().callEvent(eggDropEvent);
+          if (!eggDropEvent.isCancelled()) {
+            world.dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toSpawnEgg());
+          }
+        }
+      }
+    }
+  }
+
+  private boolean hatchEgg(Item egg) {
+
+    EggHatchEvent event = new EggHatchEvent(egg, EntityType.fromId(egg.getItemStack().getData().getData()),
+        egg.getLocation());
+    server.getPluginManager().callEvent(event);
+
+    if (!event.isCancelled()) {
+
+      if (config.strictMode && worldGuard != null) {
+
+        RegionManager mgr = worldGuard.getGlobalRegionManager().get(egg.getWorld());
+        ApplicableRegionSet set = mgr.getApplicableRegions(BukkitUtil.toVector(event.getLocation()));
+
+        if (!set.allows(DefaultFlag.MOB_SPAWNING)) {
+          event.setCancelled(true);
+          return false;
+        }
+
+        Set<EntityType> entityTypes = set.getFlag(DefaultFlag.DENY_SPAWN);
+        if (entityTypes != null && entityTypes.contains(event.getEggType())) {
+          event.setCancelled(true);
+          return false;
+        }
+      }
+
+      int hatchCount = 0;
+      int c;
+      for (c = 0; c < egg.getItemStack().getAmount(); c++) {
+        if (ChanceUtil.getChance(200)) {
+          hatchCount++;
+          event.getLocation().getWorld().spawn(event.getLocation(), event.getEggType().getEntityClass());
+        }
+      }
+
+      if (c - hatchCount > 0) {
+        egg.getItemStack().setAmount(c - hatchCount);
+      } else {
+        egg.remove();
+      }
+      return true;
+    }
+    return false;
+  }
+
+  private enum EggType {
+    EASTER,
+    HALLOWEEN,
+    INVALID
+  }
+
+  public enum EggEntity {
+
+    // FRIENDLY - 7
+    BAT(EntityType.BAT, 65),
+    CHICKEN(EntityType.CHICKEN, 93),
+    COW(EntityType.COW, 92),
+    MUSHROOM_COW(EntityType.MUSHROOM_COW, 96),
+    OCELOT(EntityType.OCELOT, 98),
+    PIG(EntityType.PIG, 90),
+    SHEEP(EntityType.SHEEP, 91),
+
+    // NEUTRAL - 1
+    WOLF(EntityType.WOLF, 95),
+
+    // MEAN - 8
+    ENDERMAN(EntityType.ENDERMAN, 58),
+    SPIDER(EntityType.SPIDER, 52),
+    CAVE_SPIDER(EntityType.CAVE_SPIDER, 59),
+    SLIME(EntityType.SLIME, 55),
+    MAGMA_CUBE(EntityType.MAGMA_CUBE, 62),
+    WITCH(EntityType.WITCH, 66),
+    SKELETON(EntityType.SKELETON, 51),
+    ZOMBIE(EntityType.ZOMBIE, 54);
+
+
+    private final EntityType entityType;
+    private final byte networkId;
+
+    EggEntity(EntityType entityType, int networkId) {
+
+      this.entityType = entityType;
+      this.networkId = (byte) networkId;
     }
 
-    public void eggOn(Player player, EggType eggType) {
+    public EntityType getType() {
 
-        if (eggType.equals(EggType.INVALID)) eggOn(player);
-        else sessions.getSession(EggState.class, player).setEggDrop(eggType, true);
+      return entityType;
     }
 
-    public boolean allowedEggs(Player player, EggType eggType) {
+    public short getNetworkId() {
 
-        return sessions.getSession(EggState.class, player).getEggDropAllowed(eggType);
+      return networkId;
     }
 
-    public void eggOff(Player player) {
+    public ItemStack toSpawnEgg(int amt) {
 
-        for (EggType eggType : EggType.values()) {
-            if (eggType == EggType.INVALID) continue;
-            sessions.getSession(EggState.class, player).setEggDrop(eggType, false);
-        }
+      return new ItemStack(ItemID.SPAWN_EGG, amt, getNetworkId());
     }
 
-    public void eggOff(Player player, EggType eggType) {
+    public ItemStack toSpawnEgg() {
 
-        if (eggType.equals(EggType.INVALID)) eggOff(player);
-        else sessions.getSession(EggState.class, player).setEggDrop(eggType, false);
+      return toSpawnEgg(1);
+    }
+  }
+
+  private static class LocalConfiguration extends ConfigurationBase {
+
+    @Setting("enable-easter-eggs")
+    public boolean enableEasterEggs = true;
+    @Setting("enable-halloween-eggs")
+    public boolean enableHalloweenEggs = true;
+    @Setting("strict-mode")
+    public boolean strictMode = true;
+  }
+
+  private static class EggState extends PersistentSession {
+
+    public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
+
+    @Setting("easter-egg")
+    private boolean easterEgg = true;
+    @Setting("halloween-egg")
+    private boolean halloweenEgg = true;
+
+    protected EggState() {
+
+      super(MAX_AGE);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockBreak(BlockBreakEvent event) {
+    public boolean getEggDropAllowed(EggType eggType) {
 
-        Player player = event.getPlayer();
-
-        Block block = event.getBlock();
-        World world = block.getWorld();
-        int blockType = block.getTypeId();
-
-        if (EnvironmentUtil.isShrubBlock(blockType)) {
-            if (LocalDate.now().getMonth().equals(Month.APRIL)
-                    && allowedEggs(player, EggType.EASTER)
-                    && config.enableEasterEggs && !ChanceUtil.getChance(5, 6)) {
-
-                for (short c = 0; c < ChanceUtil.getRangedRandom(7, 17); c++) {
-                    EggEntity attemptedEgg;
-                    switch (ChanceUtil.getRandom(8)) {
-                        case 1:
-                            attemptedEgg = EggEntity.BAT;
-                            break;
-                        case 2:
-                            attemptedEgg = EggEntity.CHICKEN;
-                            break;
-                        case 3:
-                            attemptedEgg = EggEntity.COW;
-                            break;
-                        case 4:
-                            attemptedEgg = EggEntity.MUSHROOM_COW;
-                            break;
-                        case 5:
-                            attemptedEgg = EggEntity.OCELOT;
-                            break;
-                        case 6:
-                            attemptedEgg = EggEntity.WOLF;
-                            break;
-                        case 7:
-                            attemptedEgg = EggEntity.SHEEP;
-                            break;
-                        case 8:
-                        default:
-                            attemptedEgg = EggEntity.PIG;
-                            break;
-                    }
-                    EggDropEvent eggDropEvent = new EggDropEvent(attemptedEgg, block.getLocation());
-                    server.getPluginManager().callEvent(eggDropEvent);
-                    if (!eggDropEvent.isCancelled()) {
-                        world.dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toSpawnEgg());
-                    }
-                }
-            }
-
-            if (LocalDate.now().getMonth().equals(Month.OCTOBER)
-                    && allowedEggs(player, EggType.HALLOWEEN)
-                    && config.enableHalloweenEggs && !ChanceUtil.getChance(7, 8)) {
-
-                for (short c = 0; c < ChanceUtil.getRangedRandom(7, 13); c++) {
-                    EggEntity attemptedEgg;
-                    switch (ChanceUtil.getRandom(8)) {
-                        case 1:
-                            attemptedEgg = EggEntity.ENDERMAN;
-                            break;
-                        case 2:
-                            attemptedEgg = EggEntity.SPIDER;
-                            break;
-                        case 3:
-                            attemptedEgg = EggEntity.CAVE_SPIDER;
-                            break;
-                        case 4:
-                            attemptedEgg = EggEntity.SLIME;
-                            break;
-                        case 5:
-                            attemptedEgg = EggEntity.MAGMA_CUBE;
-                            break;
-                        case 6:
-                            attemptedEgg = EggEntity.WITCH;
-                            break;
-                        case 7:
-                            attemptedEgg = EggEntity.SKELETON;
-                            break;
-                        case 8:
-                        default:
-                            attemptedEgg = EggEntity.ZOMBIE;
-                            break;
-                    }
-                    EggDropEvent eggDropEvent = new EggDropEvent(attemptedEgg, block.getLocation());
-                    server.getPluginManager().callEvent(eggDropEvent);
-                    if (!eggDropEvent.isCancelled()) {
-                        world.dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toSpawnEgg());
-                    }
-                }
-            }
-        }
+      switch (eggType) {
+        case EASTER:
+          return easterEgg;
+        case HALLOWEEN:
+          return halloweenEgg;
+        default:
+          return false;
+      }
     }
 
-    private boolean hatchEgg(Item egg) {
+    public void setEggDrop(EggType eggType, boolean eggDrop) {
 
-        EggHatchEvent event = new EggHatchEvent(egg, EntityType.fromId(egg.getItemStack().getData().getData()),
-                egg.getLocation());
-        server.getPluginManager().callEvent(event);
+      StringBuilder sb = new StringBuilder();
 
-        if (!event.isCancelled()) {
-
-            if (config.strictMode && worldGuard != null) {
-
-                RegionManager mgr = worldGuard.getGlobalRegionManager().get(egg.getWorld());
-                ApplicableRegionSet set = mgr.getApplicableRegions(BukkitUtil.toVector(event.getLocation()));
-
-                if (!set.allows(DefaultFlag.MOB_SPAWNING)) {
-                    event.setCancelled(true);
-                    return false;
-                }
-
-                Set<EntityType> entityTypes = set.getFlag(DefaultFlag.DENY_SPAWN);
-                if (entityTypes != null && entityTypes.contains(event.getEggType())) {
-                    event.setCancelled(true);
-                    return false;
-                }
-            }
-
-            int hatchCount = 0;
-            int c;
-            for (c = 0; c < egg.getItemStack().getAmount(); c++) {
-                if (ChanceUtil.getChance(200)) {
-                    hatchCount++;
-                    event.getLocation().getWorld().spawn(event.getLocation(), event.getEggType().getEntityClass());
-                }
-            }
-
-            if (c - hatchCount > 0) {
-                egg.getItemStack().setAmount(c - hatchCount);
-            } else {
-                egg.remove();
-            }
-            return true;
-        }
-        return false;
+      switch (eggType) {
+        case EASTER:
+          this.easterEgg = eggDrop;
+          sb.append("Easter ");
+          break;
+        case HALLOWEEN:
+          this.halloweenEgg = eggDrop;
+          sb.append("Halloween ");
+          break;
+      }
+      sb.append("eggs are now ");
+      if (eggDrop) {
+        sb.append("enabled.");
+      } else {
+        sb.append("disabled.");
+      }
+      if (getPlayer().isOnline()) {
+        ChatUtil.sendNotice(getPlayer(), sb.toString());
+      }
     }
 
-    private enum EggType {
-        EASTER,
-        HALLOWEEN,
-        INVALID
+    public Player getPlayer() {
+
+      CommandSender sender = super.getOwner();
+      return sender instanceof Player ? (Player) sender : null;
     }
-
-    public enum EggEntity {
-
-        // FRIENDLY - 7
-        BAT(EntityType.BAT, 65),
-        CHICKEN(EntityType.CHICKEN, 93),
-        COW(EntityType.COW, 92),
-        MUSHROOM_COW(EntityType.MUSHROOM_COW, 96),
-        OCELOT(EntityType.OCELOT, 98),
-        PIG(EntityType.PIG, 90),
-        SHEEP(EntityType.SHEEP, 91),
-
-        // NEUTRAL - 1
-        WOLF(EntityType.WOLF, 95),
-
-        // MEAN - 8
-        ENDERMAN(EntityType.ENDERMAN, 58),
-        SPIDER(EntityType.SPIDER, 52),
-        CAVE_SPIDER(EntityType.CAVE_SPIDER, 59),
-        SLIME(EntityType.SLIME, 55),
-        MAGMA_CUBE(EntityType.MAGMA_CUBE, 62),
-        WITCH(EntityType.WITCH, 66),
-        SKELETON(EntityType.SKELETON, 51),
-        ZOMBIE(EntityType.ZOMBIE, 54);
-
-
-        private final EntityType entityType;
-        private final byte networkId;
-
-        EggEntity(EntityType entityType, int networkId) {
-
-            this.entityType = entityType;
-            this.networkId = (byte) networkId;
-        }
-
-        public EntityType getType() {
-
-            return entityType;
-        }
-
-        public short getNetworkId() {
-
-            return networkId;
-        }
-
-        public ItemStack toSpawnEgg(int amt) {
-
-            return new ItemStack(ItemID.SPAWN_EGG, amt, getNetworkId());
-        }
-
-        public ItemStack toSpawnEgg() {
-
-            return toSpawnEgg(1);
-        }
-    }
-
-    private static class EggState extends PersistentSession {
-
-        public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
-
-        @Setting("easter-egg")
-        private boolean easterEgg = true;
-        @Setting("halloween-egg")
-        private boolean halloweenEgg = true;
-
-        protected EggState() {
-
-            super(MAX_AGE);
-        }
-
-        public boolean getEggDropAllowed(EggType eggType) {
-
-            switch (eggType) {
-                case EASTER:
-                    return easterEgg;
-                case HALLOWEEN:
-                    return halloweenEgg;
-                default:
-                    return false;
-            }
-        }
-
-        public void setEggDrop(EggType eggType, boolean eggDrop) {
-
-            StringBuilder sb = new StringBuilder();
-
-            switch (eggType) {
-                case EASTER:
-                    this.easterEgg = eggDrop;
-                    sb.append("Easter ");
-                    break;
-                case HALLOWEEN:
-                    this.halloweenEgg = eggDrop;
-                    sb.append("Halloween ");
-                    break;
-            }
-            sb.append("eggs are now ");
-            if (eggDrop) sb.append("enabled.");
-            else sb.append("disabled.");
-            if (getPlayer().isOnline()) ChatUtil.sendNotice(getPlayer(), sb.toString());
-        }
-
-        public Player getPlayer() {
-
-            CommandSender sender = super.getOwner();
-            return sender instanceof Player ? (Player) sender : null;
-        }
-    }
+  }
 }

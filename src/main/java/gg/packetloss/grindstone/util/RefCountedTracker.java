@@ -10,22 +10,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RefCountedTracker<T> {
-    private Map<T, Integer> counter = new HashMap<>();
+  private Map<T, Integer> counter = new HashMap<>();
 
-    public void increment(T key) {
-        counter.merge(key, 1, (oldKey, value) -> value + 1);
-    }
+  public void increment(T key) {
+    counter.merge(key, 1, (oldKey, value) -> value + 1);
+  }
 
-    public void decrement(T key) {
-        int count = counter.get(key) - 1;
-        if (count == 0) {
-            counter.remove(key);
-        } else {
-            counter.put(key, count);
-        }
+  public void decrement(T key) {
+    int count = counter.get(key) - 1;
+    if (count == 0) {
+      counter.remove(key);
+    } else {
+      counter.put(key, count);
     }
+  }
 
-    public boolean contains(T key) {
-        return counter.containsKey(key);
-    }
+  public boolean contains(T key) {
+    return counter.containsKey(key);
+  }
 }

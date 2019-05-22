@@ -13,33 +13,33 @@ import org.bukkit.event.player.PlayerEvent;
 
 public class PlayerAdminModeChangeEvent extends PlayerEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private final boolean toAdminMode;
-    private boolean cancelled = false;
+  private static final HandlerList handlers = new HandlerList();
+  private final boolean toAdminMode;
+  private boolean cancelled = false;
 
 
-    public PlayerAdminModeChangeEvent(final Player player, boolean toAdminMode) {
-        super(player);
-        this.toAdminMode = toAdminMode;
-    }
+  public PlayerAdminModeChangeEvent(final Player player, boolean toAdminMode) {
+    super(player);
+    this.toAdminMode = toAdminMode;
+  }
 
-    public boolean willBeInAdminMode() {
-        return toAdminMode;
-    }
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-    public HandlerList getHandlers() {
-        return handlers;
-    }
+  public boolean willBeInAdminMode() {
+    return toAdminMode;
+  }
 
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 
-    public boolean isCancelled() {
-        return cancelled;
-    }
+  public boolean isCancelled() {
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
+  public void setCancelled(boolean cancelled) {
+    this.cancelled = cancelled;
+  }
 }

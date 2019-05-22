@@ -8,5 +8,5 @@ package gg.packetloss.grindstone.util.database;
 
 public interface UnloadableDatabase {
 
-    public boolean unload();
+  boolean unload();
 }

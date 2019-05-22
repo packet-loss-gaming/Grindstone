@@ -23,6 +23,10 @@ public class ApocalypsePersonalSpawnEvent extends PlayerEvent implements Apocaly
     this.spawnLocation = spawnLocation;
   }
 
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
+
   /**
    * @return the event location
    */
@@ -51,10 +55,6 @@ public class ApocalypsePersonalSpawnEvent extends PlayerEvent implements Apocaly
 
   @Override
   public HandlerList getHandlers() {
-    return handlers;
-  }
-
-  public static HandlerList getHandlerList() {
     return handlers;
   }
 }

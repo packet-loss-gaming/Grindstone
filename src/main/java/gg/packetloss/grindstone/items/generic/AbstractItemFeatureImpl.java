@@ -22,31 +22,32 @@ import java.util.logging.Logger;
 
 public abstract class AbstractItemFeatureImpl implements Listener {
 
-    protected final CommandBook inst = CommandBook.inst();
-    protected final Logger log = CommandBook.logger();
-    protected final Server server = CommandBook.server();
+  protected static AdminComponent admin;
+  protected static SessionComponent sessions;
+  protected static PrayerComponent prayers;
+  protected final CommandBook inst = CommandBook.inst();
+  protected final Logger log = CommandBook.logger();
+  protected final Server server = CommandBook.server();
 
-    protected static AdminComponent admin;
-    protected static SessionComponent sessions;
-    protected static PrayerComponent prayers;
+  public static void applyResource(AdminComponent admin) {
+    AbstractItemFeatureImpl.admin = admin;
+  }
 
-    public static void applyResource(AdminComponent admin) {
-        AbstractItemFeatureImpl.admin = admin;
-    }
-    public static void applyResource(SessionComponent sessions) {
-        AbstractItemFeatureImpl.sessions = sessions;
-    }
-    public static void applyResource(PrayerComponent prayers) {
-        AbstractItemFeatureImpl.prayers = prayers;
-    }
+  public static void applyResource(SessionComponent sessions) {
+    AbstractItemFeatureImpl.sessions = sessions;
+  }
 
-    public CustomItemSession getSession(Player player) {
-        return sessions.getSession(CustomItemSession.class, player);
-    }
+  public static void applyResource(PrayerComponent prayers) {
+    AbstractItemFeatureImpl.prayers = prayers;
+  }
 
-    protected SpecialAttackEvent callSpec(Player owner, SpecType context, SpecialAttack spec) {
-        SpecialAttackEvent event = new SpecialAttackEvent(owner, context, spec);
-        server.getPluginManager().callEvent(event);
-        return event;
-    }
+  public CustomItemSession getSession(Player player) {
+    return sessions.getSession(CustomItemSession.class, player);
+  }
+
+  protected SpecialAttackEvent callSpec(Player owner, SpecType context, SpecialAttack spec) {
+    SpecialAttackEvent event = new SpecialAttackEvent(owner, context, spec);
+    server.getPluginManager().callEvent(event);
+    return event;
+  }
 }

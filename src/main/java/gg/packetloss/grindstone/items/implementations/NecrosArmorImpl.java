@@ -15,13 +15,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 public class NecrosArmorImpl extends AbstractXPArmor {
-    @Override
-    public boolean hasArmor(Player player) {
-        return ItemUtil.hasNecrosArmour(player);
-    }
+  @Override
+  public boolean hasArmor(Player player) {
+    return ItemUtil.hasNecrosArmour(player);
+  }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void necrosis(EntityDamageByEntityEvent event) {
-        new Necrosis(prayers).handleEvent(event);
-    }
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  public void necrosis(EntityDamageByEntityEvent event) {
+    new Necrosis(prayers).handleEvent(event);
+  }
 }

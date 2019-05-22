@@ -8,13 +8,13 @@ package gg.packetloss.grindstone.exceptions;
 
 public class NotFoundException extends Exception {
 
-    public NotFoundException() {
+  public NotFoundException() {
 
-        super();
-    }
+    super();
+  }
 
-    public NotFoundException(String message) {
+  public NotFoundException(String message) {
 
-        super(message);
-    }
+    super(message);
+  }
 }

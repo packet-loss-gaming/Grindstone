@@ -8,13 +8,13 @@ package gg.packetloss.grindstone.exceptions;
 
 public class InvalidPrayerException extends Exception {
 
-    public InvalidPrayerException() {
+  public InvalidPrayerException() {
 
-        super();
-    }
+    super();
+  }
 
-    public InvalidPrayerException(String message) {
+  public InvalidPrayerException(String message) {
 
-        super(message);
-    }
+    super(message);
+  }
 }

@@ -6,10 +6,10 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractCondenserImpl;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -18,30 +18,30 @@ import org.bukkit.inventory.ItemStack;
 
 public class ImbuedCrystalImpl extends AbstractCondenserImpl {
 
-    public ImbuedCrystalImpl(ItemCondenser condenser) {
-        super(condenser);
-    }
+  public ImbuedCrystalImpl(ItemCondenser condenser) {
+    super(condenser);
+  }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void onItemPickup(PlayerPickupItemEvent event) {
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+  public void onItemPickup(PlayerPickupItemEvent event) {
 
-        final Player player = event.getPlayer();
-        ItemStack itemStack = event.getItem().getItemStack();
+    final Player player = event.getPlayer();
+    ItemStack itemStack = event.getItem().getItemStack();
 
-        if (condenser.supports(itemStack)) {
+    if (condenser.supports(itemStack)) {
 
-            if (!ItemUtil.hasItem(player, CustomItems.IMBUED_CRYSTAL)) {
-                return;
-            }
+      if (!ItemUtil.hasItem(player, CustomItems.IMBUED_CRYSTAL)) {
+        return;
+      }
 
-            server.getScheduler().runTaskLater(inst, () -> {
-                ItemStack[] result = condenser.operate(player.getInventory().getContents(), true);
-                if (result != null) {
-                    player.getInventory().setContents(result);
-                    //noinspection deprecation
-                    player.updateInventory();
-                }
-            }, 1);
+      server.getScheduler().runTaskLater(inst, () -> {
+        ItemStack[] result = condenser.operate(player.getInventory().getContents(), true);
+        if (result != null) {
+          player.getInventory().setContents(result);
+          //noinspection deprecation
+          player.updateInventory();
         }
+      }, 1);
     }
+  }
 }

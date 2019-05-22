@@ -8,13 +8,13 @@ package gg.packetloss.grindstone.util.checker;
 
 public abstract class Checker<T, K> implements Expression<K, Boolean> {
 
-    private T main;
+  private T main;
 
-    public Checker(T main) {
-        this.main = main;
-    }
+  public Checker(T main) {
+    this.main = main;
+  }
 
-    public T get() {
-        return main;
-    }
+  public T get() {
+    return main;
+  }
 }

@@ -25,133 +25,139 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class MagicBucketImpl extends AbstractItemFeatureImpl {
-    private boolean isGettingFlightElsewhere(Player player) {
-        return admin.isAdmin(player) || GeneralPlayerUtil.hasFlyingGamemode(player);
+  private boolean isGettingFlightElsewhere(Player player) {
+    return admin.isAdmin(player) || GeneralPlayerUtil.hasFlyingGamemode(player);
+  }
+
+  private boolean grantFlight(Player player) {
+    ChatUtil.sendNotice(player, "The bucket glows brightly.");
+
+    player.setFlySpeed(.4F);
+    player.setAllowFlight(true);
+
+    return true;
+  }
+
+  private boolean takeFlight(Player player) {
+    if (isGettingFlightElsewhere(player)) {
+      return false;
     }
 
-    private boolean grantFlight(Player player) {
-        ChatUtil.sendNotice(player, "The bucket glows brightly.");
+    ChatUtil.sendNotice(player, "The power of the bucket fades.");
 
-        player.setFlySpeed(.4F);
-        player.setAllowFlight(true);
+    player.setFlySpeed(.1F);
+    player.setAllowFlight(false);
 
-        return true;
+    return true;
+  }
+
+  private boolean handleRightClick(Player player) {
+    if (player.getAllowFlight()) {
+      return takeFlight(player);
+    } else {
+      return grantFlight(player);
     }
+  }
 
-    private boolean takeFlight(Player player) {
-        if (isGettingFlightElsewhere(player)) return false;
+  @EventHandler(ignoreCancelled = true)
+  public void onPlayerInteract(PlayerInteractEvent event) {
 
-        ChatUtil.sendNotice(player, "The power of the bucket fades.");
+    Player player = event.getPlayer();
+    ItemStack itemStack = event.getItem();
 
-        player.setFlySpeed(.1F);
-        player.setAllowFlight(false);
-
-        return true;
+    if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
+      if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) && handleRightClick(player)) {
+        event.setCancelled(true);
+      }
     }
+  }
 
-    private boolean handleRightClick(Player player) {
-        if (player.getAllowFlight()) {
-            return takeFlight(player);
-        } else {
-            return grantFlight(player);
-        }
-    }
+  @EventHandler(ignoreCancelled = true)
+  public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerInteract(PlayerInteractEvent event) {
+    Player player = event.getPlayer();
+    ItemStack itemStack = player.getItemInHand();
 
-        Player player = event.getPlayer();
-        ItemStack itemStack = event.getItem();
-
-        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
-            if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) && handleRightClick(player)) {
-                event.setCancelled(true);
-            }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-
-        Player player = event.getPlayer();
-        ItemStack itemStack = player.getItemInHand();
-
-        if (event.getRightClicked() instanceof Cow && ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
-            server.getScheduler().runTaskLater(inst, () -> {
-                // Swap the magic bucket for mad milk
-                if (!ItemUtil.swapItem(player.getInventory(), CustomItems.MAGIC_BUCKET, CustomItems.MAD_MILK)) {
-                    ChatUtil.sendError(player, "Your inventory is too full!");
-                    return;
-                }
-
-                // Since the player's magic bucket is now mad milk,
-                // if they don't have another one, take their flight.
-                if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
-                    takeFlight(player);
-                }
-            }, 1);
-            event.setCancelled(true);
-            return;
+    if (event.getRightClicked() instanceof Cow && ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
+      server.getScheduler().runTaskLater(inst, () -> {
+        // Swap the magic bucket for mad milk
+        if (!ItemUtil.swapItem(player.getInventory(), CustomItems.MAGIC_BUCKET, CustomItems.MAD_MILK)) {
+          ChatUtil.sendError(player, "Your inventory is too full!");
+          return;
         }
 
-        if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) && handleRightClick(player)) {
-            event.setCancelled(true);
+        // Since the player's magic bucket is now mad milk,
+        // if they don't have another one, take their flight.
+        if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
+          takeFlight(player);
         }
-        //noinspection deprecation
-        server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
+      }, 1);
+      event.setCancelled(true);
+      return;
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerBucketFill(PlayerBucketFillEvent event) {
+    if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) && handleRightClick(player)) {
+      event.setCancelled(true);
+    }
+    //noinspection deprecation
+    server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
+  }
 
-        Player player = event.getPlayer();
-        ItemStack itemStack = player.getItemInHand();
+  @EventHandler(ignoreCancelled = true)
+  public void onPlayerBucketFill(PlayerBucketFillEvent event) {
 
-        if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) && handleRightClick(player)) {
-            event.setCancelled(true);
+    Player player = event.getPlayer();
+    ItemStack itemStack = player.getItemInHand();
+
+    if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) && handleRightClick(player)) {
+      event.setCancelled(true);
+    }
+    //noinspection deprecation
+    server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
+  }
+
+  @EventHandler(ignoreCancelled = true)
+  public void onPlayerDropItem(PlayerDropItemEvent event) {
+
+    final Player player = event.getPlayer();
+    ItemStack itemStack = event.getItemDrop().getItemStack();
+
+    if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
+      server.getScheduler().runTaskLater(inst, () -> {
+        if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
+          takeFlight(player);
         }
-        //noinspection deprecation
-        server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
+      }, 1);
+    }
+  }
+
+  @EventHandler(ignoreCancelled = true)
+  public void onClose(InventoryCloseEvent event) {
+
+    Player player = (Player) event.getPlayer();
+
+    if (!player.getAllowFlight()) {
+      return;
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerDropItem(PlayerDropItemEvent event) {
-
-        final Player player = event.getPlayer();
-        ItemStack itemStack = event.getItemDrop().getItemStack();
-
-        if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
-            server.getScheduler().runTaskLater(inst, () -> {
-                if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
-                    takeFlight(player);
-                }
-            }, 1);
-        }
+    ItemStack[] chestContents = event.getInventory().getContents();
+    if (!ItemUtil.findItemOfName(chestContents, CustomItems.MAGIC_BUCKET.toString())) {
+      return;
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onClose(InventoryCloseEvent event) {
-
-        Player player = (Player) event.getPlayer();
-
-        if (!player.getAllowFlight()) return;
-
-        ItemStack[] chestContents = event.getInventory().getContents();
-        if (!ItemUtil.findItemOfName(chestContents, CustomItems.MAGIC_BUCKET.toString())) return;
-
-        if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET) && !GeneralPlayerUtil.hasFlyingGamemode(player)) {
-            takeFlight(player);
-        }
+    if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET) && !GeneralPlayerUtil.hasFlyingGamemode(player)) {
+      takeFlight(player);
     }
+  }
 
-    @EventHandler(priority = EventPriority.LOW)
-    public void onPlayerDeath(PlayerDeathEvent event) {
+  @EventHandler(priority = EventPriority.LOW)
+  public void onPlayerDeath(PlayerDeathEvent event) {
 
-        Player player = event.getEntity();
-        ItemStack[] drops = event.getDrops().toArray(new ItemStack[event.getDrops().size()]);
+    Player player = event.getEntity();
+    ItemStack[] drops = event.getDrops().toArray(new ItemStack[event.getDrops().size()]);
 
-        if (ItemUtil.findItemOfName(drops, CustomItems.MAGIC_BUCKET.toString())) {
-            takeFlight(player);
-        }
+    if (ItemUtil.findItemOfName(drops, CustomItems.MAGIC_BUCKET.toString())) {
+      takeFlight(player);
     }
+  }
 }

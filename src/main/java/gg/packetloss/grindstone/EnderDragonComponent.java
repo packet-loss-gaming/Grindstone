@@ -24,24 +24,26 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Ender Dragon", desc = "Stop Enderdragon portals")
 public class EnderDragonComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = CommandBook.logger();
+  private final Server server = CommandBook.server();
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  public void onCreatePortal(EntityCreatePortalEvent event) {
+
+    if (event.getEntityType().equals(EntityType.ENDER_DRAGON)
+        && !event.getEntity().getWorld().getEnvironment().equals(World.Environment.THE_END)) {
+      Bukkit.broadcastMessage(ChatColor.GOLD + "Jeffery died, the village is safe once again!");
+      if (!event.isCancelled()) {
+        event.setCancelled(true);
+      }
     }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onCreatePortal(EntityCreatePortalEvent event) {
-
-        if (event.getEntityType().equals(EntityType.ENDER_DRAGON)
-                && !event.getEntity().getWorld().getEnvironment().equals(World.Environment.THE_END)) {
-            Bukkit.broadcastMessage(ChatColor.GOLD + "Jeffery died, the village is safe once again!");
-            if (!event.isCancelled()) event.setCancelled(true);
-        }
-    }
+  }
 }

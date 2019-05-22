@@ -13,8 +13,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 public class NectricArmorImpl extends AbstractItemFeatureImpl {
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void necrosis(EntityDamageByEntityEvent event) {
-        new Necrosis(prayers).handleEvent(event);
-    }
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  public void necrosis(EntityDamageByEntityEvent event) {
+    new Necrosis(prayers).handleEvent(event);
+  }
 }

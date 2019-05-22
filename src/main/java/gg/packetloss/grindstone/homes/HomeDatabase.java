@@ -13,51 +13,51 @@ import java.util.UUID;
 
 public interface HomeDatabase {
 
-    /**
-     * Load the home database.
-     *
-     * @return whether the operation was fully successful
-     */
-    public boolean load();
+  /**
+   * Load the home database.
+   *
+   * @return whether the operation was fully successful
+   */
+  boolean load();
 
-    /**
-     * Save the database.
-     *
-     * @return whether the operation was fully successful
-     */
-    public boolean save();
+  /**
+   * Save the database.
+   *
+   * @return whether the operation was fully successful
+   */
+  boolean save();
 
-    /**
-     * Checks if a player has a house
-     *
-     * @param playerID The playerID who's house to find
-     * @return Whether the player has a house
-     */
-    public boolean houseExist(UUID playerID);
+  /**
+   * Checks if a player has a house
+   *
+   * @param playerID The playerID who's house to find
+   * @return Whether the player has a house
+   */
+  boolean houseExist(UUID playerID);
 
-    /**
-     * Add a house for a player
-     *
-     * @param player the player who's house to add
-     * @param world the world the house is in
-     * @param x the house's x loc
-     * @param y the house's y loc
-     * @param z the house's z loc
-     */
-    public void saveHouse(Player player, String world, int x, int y, int z);
+  /**
+   * Add a house for a player
+   *
+   * @param player the player who's house to add
+   * @param world  the world the house is in
+   * @param x      the house's x loc
+   * @param y      the house's y loc
+   * @param z      the house's z loc
+   */
+  void saveHouse(Player player, String world, int x, int y, int z);
 
-    /**
-     * Returns a player's house
-     *
-     * @param playerID The playerID who's house to delete
-     */
-    public boolean deleteHouse(UUID playerID);
+  /**
+   * Returns a player's house
+   *
+   * @param playerID The playerID who's house to delete
+   */
+  boolean deleteHouse(UUID playerID);
 
-    /**
-     * Returns the home with the given name
-     *
-     * @param playerID The playerID who's house to find
-     * @return The applicable player
-     */
-    public Home getHouse(UUID playerID);
+  /**
+   * Returns the home with the given name
+   *
+   * @param playerID The playerID who's house to find
+   * @return The applicable player
+   */
+  Home getHouse(UUID playerID);
 }

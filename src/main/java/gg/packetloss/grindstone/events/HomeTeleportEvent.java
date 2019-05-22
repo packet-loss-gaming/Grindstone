@@ -14,43 +14,43 @@ import org.bukkit.event.player.PlayerEvent;
 
 public class HomeTeleportEvent extends PlayerEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
-    private Location destination;
+  private static final HandlerList handlers = new HandlerList();
+  private boolean cancelled = false;
+  private Location destination;
 
-    public HomeTeleportEvent(Player player, Location destination) {
+  public HomeTeleportEvent(Player player, Location destination) {
 
-        super(player);
-        this.destination = destination;
-    }
+    super(player);
+    this.destination = destination;
+  }
 
-    public Location getDestination() {
+  public static HandlerList getHandlerList() {
 
-        return destination;
-    }
+    return handlers;
+  }
 
-    public void setDestination(Location destination) {
+  public Location getDestination() {
 
-        this.destination = destination;
-    }
+    return destination;
+  }
 
-    public HandlerList getHandlers() {
+  public void setDestination(Location destination) {
 
-        return handlers;
-    }
+    this.destination = destination;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public boolean isCancelled() {
+  public boolean isCancelled() {
 
-        return cancelled;
-    }
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
+  public void setCancelled(boolean cancelled) {
 
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 }

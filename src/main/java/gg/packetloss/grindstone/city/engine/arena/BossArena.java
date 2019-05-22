@@ -11,9 +11,9 @@ import org.bukkit.entity.LivingEntity;
 
 public interface BossArena extends MonitoredArena {
 
-    public boolean isBossSpawned();
+  boolean isBossSpawned();
 
-    public void spawnBoss();
+  void spawnBoss();
 
-    public LivingEntity getBoss();
+  LivingEntity getBoss();
 }

@@ -22,53 +22,53 @@ import java.util.Set;
 
 public class Nightmare extends EntityAttack implements MeleeSpecial {
 
-    private Random r;
+  private Random r;
 
-    public Nightmare(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
-        r = new Random(System.currentTimeMillis());
+  public Nightmare(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+    r = new Random(System.currentTimeMillis());
+  }
+
+  @Override
+  public void activate() {
+
+    inform("You unleash a nightmare upon the plane.");
+
+    final Set<Location> locations = new HashSet<>();
+
+    Location origin = target.getLocation().add(0, 5, 0);
+
+    for (int i = 0; i < 100; i++) {
+
+      double angle = r.nextDouble() * Math.PI * 2;
+      double radius = r.nextDouble() * 12;
+
+      Location pt = origin.clone();
+      pt.setX(origin.getX() + radius * Math.cos(angle));
+      pt.setZ(origin.getZ() + radius * Math.sin(angle));
+
+      locations.add(pt);
     }
 
-    @Override
-    public void activate() {
+    IntegratedRunnable hellFire = new IntegratedRunnable() {
+      @Override
+      public boolean run(int times) {
+        locations.stream().filter(location -> ChanceUtil.getChance(3)).forEach(location -> {
+          Snowball snowball = location.getWorld().spawn(location, Snowball.class);
+          snowball.setMetadata("rogue-snowball", new FixedMetadataValue(INST, true));
+          snowball.setMetadata("nightmare", new FixedMetadataValue(INST, true));
+          snowball.setShooter(owner);
+        });
+        return true;
+      }
 
-        inform("You unleash a nightmare upon the plane.");
+      @Override
+      public void end() {
+        inform("Your nightmare fades away...");
+      }
+    };
 
-        final Set<Location> locations = new HashSet<>();
-
-        Location origin = target.getLocation().add(0, 5, 0);
-
-        for (int i = 0; i < 100; i++) {
-
-            double angle = r.nextDouble() * Math.PI * 2;
-            double radius = r.nextDouble() * 12;
-
-            Location pt = origin.clone();
-            pt.setX(origin.getX() + radius * Math.cos(angle));
-            pt.setZ(origin.getZ() + radius * Math.sin(angle));
-
-            locations.add(pt);
-        }
-
-        IntegratedRunnable hellFire = new IntegratedRunnable() {
-            @Override
-            public boolean run(int times) {
-                locations.stream().filter(location -> ChanceUtil.getChance(3)).forEach(location -> {
-                    Snowball snowball = location.getWorld().spawn(location, Snowball.class);
-                    snowball.setMetadata("rogue-snowball", new FixedMetadataValue(inst, true));
-                    snowball.setMetadata("nightmare", new FixedMetadataValue(inst, true));
-                    snowball.setShooter(owner);
-                });
-                return true;
-            }
-
-            @Override
-            public void end() {
-                inform("Your nightmare fades away...");
-            }
-        };
-
-        TimedRunnable runnable = new TimedRunnable(hellFire, 40);
-        runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 50, 10));
-    }
+    TimedRunnable runnable = new TimedRunnable(hellFire, 40);
+    runnable.setTask(SERVER.getScheduler().runTaskTimer(INST, runnable, 50, 10));
+  }
 }

@@ -12,63 +12,63 @@ import java.util.Map;
 
 public interface ItemStoreDatabase {
 
-    /**
-     * Load the item database.
-     *
-     * @return whether the operation was fully successful
-     */
-    public boolean load();
+  /**
+   * Load the item database.
+   *
+   * @return whether the operation was fully successful
+   */
+  boolean load();
 
-    /**
-     * Save the database.
-     *
-     * @return whether the operation was fully successful
-     */
-    public boolean save();
+  /**
+   * Save the database.
+   *
+   * @return whether the operation was fully successful
+   */
+  boolean save();
 
-    public void updatePrices();
+  void updatePrices();
 
-    /**
-     * Add/Set an item
-     */
-    public void addItem(String playerName, String itemName, double price, boolean disableBuy, boolean disableSell);
+  /**
+   * Add/Set an item
+   */
+  void addItem(String playerName, String itemName, double price, boolean disableBuy, boolean disableSell);
 
-    public void removeItem(String playerName, String itemName);
+  void removeItem(String playerName, String itemName);
 
-    /**
-     * Change the stock of an item
-     */
-    public void adjustStocks(Map<String, Integer> adjustments);
+  /**
+   * Change the stock of an item
+   */
+  void adjustStocks(Map<String, Integer> adjustments);
 
-    /**
-     * Gets the item that was requested
-     *
-     * @param name the name of the item
-     * @return the MarketItemInfo that was requested or null if nothing was found
-     */
-    public MarketItemInfo getItem(String name);
+  /**
+   * Gets the item that was requested
+   *
+   * @param name the name of the item
+   * @return the MarketItemInfo that was requested or null if nothing was found
+   */
+  MarketItemInfo getItem(String name);
 
-    /**
-     * Gets the items that were requested.
-     *
-     * @param names the names of the items to lookup
-     * @return a mapping of names to ItemPricePairs
-     */
-    public Map<String, MarketItemInfo> getItems(Collection<String> names);
+  /**
+   * Gets the items that were requested.
+   *
+   * @param names the names of the items to lookup
+   * @return a mapping of names to ItemPricePairs
+   */
+  Map<String, MarketItemInfo> getItems(Collection<String> names);
 
-    /**
-     * Returns a list of items
-     *
-     * @return A list of items
-     */
-    public List<MarketItemInfo> getItemList();
+  /**
+   * Returns a list of items
+   *
+   * @return A list of items
+   */
+  List<MarketItemInfo> getItemList();
 
-    /**
-     * Returns a list of items
-     *
-     * @param filter     the item name must start with this to be returned
-     * @param showHidden return items which are database only
-     * @return A list of items
-     */
-    public List<MarketItemInfo> getItemList(String filter, boolean showHidden);
+  /**
+   * Returns a list of items
+   *
+   * @param filter     the item name must start with this to be returned
+   * @param showHidden return items which are database only
+   * @return A list of items
+   */
+  List<MarketItemInfo> getItemList(String filter, boolean showHidden);
 }

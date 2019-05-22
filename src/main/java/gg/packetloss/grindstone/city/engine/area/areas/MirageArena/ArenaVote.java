@@ -7,22 +7,22 @@
 package gg.packetloss.grindstone.city.engine.area.areas.MirageArena;
 
 public class ArenaVote {
-    private String arena;
-    private int votes;
+  private String arena;
+  private int votes;
 
-    public ArenaVote(String arena) {
-        this.arena = arena;
-    }
+  public ArenaVote(String arena) {
+    this.arena = arena;
+  }
 
-    public String getArena() {
-        return arena;
-    }
+  public String getArena() {
+    return arena;
+  }
 
-    public void addVote() {
-        ++votes;
-    }
+  public void addVote() {
+    ++votes;
+  }
 
-    public int getVotes() {
-        return votes;
-    }
+  public int getVotes() {
+    return votes;
+  }
 }

@@ -14,54 +14,54 @@ import org.bukkit.event.HandlerList;
 
 public class EggDropEvent extends Event implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
-    private EggComponent.EggEntity eggType;
-    private Location location;
+  private static final HandlerList handlers = new HandlerList();
+  private boolean cancelled = false;
+  private EggComponent.EggEntity eggType;
+  private Location location;
 
-    public EggDropEvent(EggComponent.EggEntity eggType, Location location) {
+  public EggDropEvent(EggComponent.EggEntity eggType, Location location) {
 
-        this.eggType = eggType;
-        this.location = location;
-    }
+    this.eggType = eggType;
+    this.location = location;
+  }
 
-    public EggComponent.EggEntity getEggType() {
+  public static HandlerList getHandlerList() {
 
-        return eggType;
-    }
+    return handlers;
+  }
 
-    public void setEggType(EggComponent.EggEntity eggType) {
+  public EggComponent.EggEntity getEggType() {
 
-        this.eggType = eggType;
-    }
+    return eggType;
+  }
 
-    public Location getLocation() {
+  public void setEggType(EggComponent.EggEntity eggType) {
 
-        return location;
-    }
+    this.eggType = eggType;
+  }
 
-    public void setLocation(Location location) {
+  public Location getLocation() {
 
-        this.location = location;
-    }
+    return location;
+  }
 
-    public HandlerList getHandlers() {
+  public void setLocation(Location location) {
 
-        return handlers;
-    }
+    this.location = location;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public boolean isCancelled() {
+  public boolean isCancelled() {
 
-        return cancelled;
-    }
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
+  public void setCancelled(boolean cancelled) {
 
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 }

@@ -13,55 +13,55 @@ import org.bukkit.event.player.PlayerEvent;
 
 public class DarkAreaInjuryEvent extends PlayerEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
-    private int damage;
-    private String message;
+  private static final HandlerList handlers = new HandlerList();
+  private boolean cancelled = false;
+  private int damage;
+  private String message;
 
-    public DarkAreaInjuryEvent(Player player, int damage, String message) {
+  public DarkAreaInjuryEvent(Player player, int damage, String message) {
 
-        super(player);
-        this.damage = damage;
-        this.message = message;
-    }
+    super(player);
+    this.damage = damage;
+    this.message = message;
+  }
 
-    public int getDamage() {
+  public static HandlerList getHandlerList() {
 
-        return damage;
-    }
+    return handlers;
+  }
 
-    public void setDamage(int damage) {
+  public int getDamage() {
 
-        this.damage = damage;
-    }
+    return damage;
+  }
 
-    public String getMessage() {
+  public void setDamage(int damage) {
 
-        return message;
-    }
+    this.damage = damage;
+  }
 
-    public void setMessage(String message) {
+  public String getMessage() {
 
-        this.message = message;
-    }
+    return message;
+  }
 
-    public HandlerList getHandlers() {
+  public void setMessage(String message) {
 
-        return handlers;
-    }
+    this.message = message;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public boolean isCancelled() {
+  public boolean isCancelled() {
 
-        return cancelled;
-    }
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
+  public void setCancelled(boolean cancelled) {
 
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 }

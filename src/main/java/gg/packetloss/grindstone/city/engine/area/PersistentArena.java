@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.city.engine.area;
 
 public interface PersistentArena {
-    public void writeData(boolean doAsync);
-    public void reloadData();
+  void writeData(boolean doAsync);
+
+  void reloadData();
 }

@@ -12,46 +12,46 @@ import org.bukkit.event.HandlerList;
 
 public class RogueBlipEvent extends RogueEvent implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
+  private static final HandlerList handlers = new HandlerList();
+  private boolean cancelled = false;
 
-    private double modifier;
-    private boolean auto;
+  private double modifier;
+  private boolean auto;
 
-    public RogueBlipEvent(Player who, double modifier, boolean auto) {
-        super(who);
-        this.modifier = modifier;
-        this.auto = auto;
-    }
+  public RogueBlipEvent(Player who, double modifier, boolean auto) {
+    super(who);
+    this.modifier = modifier;
+    this.auto = auto;
+  }
 
-    public double getModifier() {
-        return modifier;
-    }
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-    public void setModifier(double modifier) {
-        this.modifier = modifier;
-    }
+  public double getModifier() {
+    return modifier;
+  }
 
-    public boolean isAuto() {
-        return auto;
-    }
+  public void setModifier(double modifier) {
+    this.modifier = modifier;
+  }
 
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
-    }
+  public boolean isAuto() {
+    return auto;
+  }
 
-    @Override
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
+  @Override
+  public boolean isCancelled() {
+    return cancelled;
+  }
 
-    @Override
-    public HandlerList getHandlers() {
-        return handlers;
-    }
+  @Override
+  public void setCancelled(boolean cancelled) {
+    this.cancelled = cancelled;
+  }
 
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
+  @Override
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

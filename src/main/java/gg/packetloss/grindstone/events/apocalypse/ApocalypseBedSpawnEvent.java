@@ -11,19 +11,19 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 public class ApocalypseBedSpawnEvent extends ApocalypsePersonalSpawnEvent {
-    private int numberOfZombies;
+  private int numberOfZombies;
 
-    public ApocalypseBedSpawnEvent(Player player, Location spawnLocation, int numberOfZombies) {
-        super(player, spawnLocation);
-        this.numberOfZombies = numberOfZombies;
-    }
+  public ApocalypseBedSpawnEvent(Player player, Location spawnLocation, int numberOfZombies) {
+    super(player, spawnLocation);
+    this.numberOfZombies = numberOfZombies;
+  }
 
-    public int getNumberOfZombies() {
-        return numberOfZombies;
-    }
+  public int getNumberOfZombies() {
+    return numberOfZombies;
+  }
 
-    public void setNumberOfZombies(int numberOfZombies) {
-        Validate.isTrue(numberOfZombies > 0);
-        this.numberOfZombies = numberOfZombies;
-    }
+  public void setNumberOfZombies(int numberOfZombies) {
+    Validate.isTrue(numberOfZombies > 0);
+    this.numberOfZombies = numberOfZombies;
+  }
 }

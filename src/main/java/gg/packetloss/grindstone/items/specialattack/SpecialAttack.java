@@ -17,36 +17,36 @@ import java.util.logging.Logger;
 
 public abstract class SpecialAttack {
 
-    protected static final CommandBook inst = CommandBook.inst();
-    protected static final Logger log = inst.getLogger();
-    protected static final Server server = CommandBook.server();
+  protected static final CommandBook INST = CommandBook.inst();
+  protected static final Logger LOG = INST.getLogger();
+  protected static final Server SERVER = CommandBook.server();
 
-    protected LivingEntity owner;
+  protected LivingEntity owner;
 
-    public SpecialAttack(LivingEntity owner) {
-        this.owner = owner;
+  public SpecialAttack(LivingEntity owner) {
+    this.owner = owner;
+  }
+
+  public abstract void activate();
+
+  public abstract LivingEntity getTarget();
+
+  public abstract Location getLocation();
+
+  public LivingEntity getOwner() {
+
+    return owner;
+  }
+
+  protected void inform(String message) {
+
+    if (owner instanceof Player) {
+      ChatUtil.sendNotice(owner, message);
     }
+  }
 
-    public abstract void activate();
+  public long getCoolDown() {
 
-    public abstract LivingEntity getTarget();
-
-    public abstract Location getLocation();
-
-    public LivingEntity getOwner() {
-
-        return owner;
-    }
-
-    protected void inform(String message) {
-
-        if (owner instanceof Player) {
-            ChatUtil.sendNotice((Player) owner, message);
-        }
-    }
-
-    public long getCoolDown() {
-
-        return 0;
-    }
+    return 0;
+  }
 }

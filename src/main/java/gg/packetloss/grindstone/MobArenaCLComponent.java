@@ -30,48 +30,48 @@ import java.util.logging.Logger;
 @Depend(plugins = {"MobArena"}, components = {AdminComponent.class})
 public class MobArenaCLComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = CommandBook.logger();
+  private final Server server = CommandBook.server();
+  Set<Player> playerList = new HashSet<>();
+  @InjectComponent
+  private AdminComponent admin;
 
-    @InjectComponent
-    private AdminComponent admin;
+  @Override
+  public void enable() {
 
-    Set<Player> playerList = new HashSet<>();
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
 
-    @Override
-    public void enable() {
+  @EventHandler(ignoreCancelled = true)
+  public void onArenaEnter(ArenaPlayerJoinEvent event) {
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+    Player player = event.getPlayer();
+
+    if (!admin.deadmin(player)) {
+      ChatUtil.sendError(player, "Failed to disable admin mode, mob arena add cancelled.");
+      event.setCancelled(true);
+      return;
     }
+    playerList.add(player);
+  }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onArenaEnter(ArenaPlayerJoinEvent event) {
+  @EventHandler
+  public void onArenaLeave(ArenaPlayerLeaveEvent event) {
 
-        Player player = event.getPlayer();
+    Player player = event.getPlayer();
 
-        if (!admin.deadmin(player)) {
-            ChatUtil.sendError(player, "Failed to disable admin mode, mob arena add cancelled.");
-            event.setCancelled(true);
-            return;
-        }
-        if (!playerList.contains(player)) playerList.add(player);
+    playerList.remove(player);
+  }
+
+  @EventHandler(ignoreCancelled = true)
+  public void onPrayerApplication(PrayerApplicationEvent event) {
+
+    Player player = event.getPlayer();
+
+    if (playerList.contains(player)) {
+      event.setCancelled(true);
     }
-
-    @EventHandler
-    public void onArenaLeave(ArenaPlayerLeaveEvent event) {
-
-        Player player = event.getPlayer();
-
-        if (playerList.contains(player)) playerList.remove(player);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPrayerApplication(PrayerApplicationEvent event) {
-
-        Player player = event.getPlayer();
-
-        if (playerList.contains(player)) event.setCancelled(true);
-    }
+  }
 }

@@ -9,6 +9,6 @@ package gg.packetloss.grindstone.city.engine.arena;
 
 public interface MonitoredArena extends GenericArena {
 
-    public void forceRestoreBlocks();
+  void forceRestoreBlocks();
 
 }

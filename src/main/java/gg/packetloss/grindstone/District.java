@@ -9,19 +9,19 @@ package gg.packetloss.grindstone;
 
 public enum District {
 
-    GLOBAL("City"),
-    CARPE_DIEM("Carpe Diem"),
-    GLACIES_MARE("Glacies Mare"),
-    OBLITUS("Oblitus"),
-    VINEAM("Vineam");
+  GLOBAL("City"),
+  CARPE_DIEM("Carpe Diem"),
+  GLACIES_MARE("Glacies Mare"),
+  OBLITUS("Oblitus"),
+  VINEAM("Vineam");
 
-    private final String properName;
+  private final String properName;
 
-    District(String properName) {
-        this.properName = properName;
-    }
+  District(String properName) {
+    this.properName = properName;
+  }
 
-    public String toProperName() {
-        return properName;
-    }
+  public String toProperName() {
+    return properName;
+  }
 }

@@ -15,16 +15,16 @@ import org.bukkit.potion.PotionEffectType;
 
 public class Curse extends EntityAttack implements MeleeSpecial, RangedSpecial {
 
-    public Curse(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
-    }
+  public Curse(LivingEntity owner, LivingEntity target) {
+    super(owner, target);
+  }
 
-    @Override
-    public void activate() {
+  @Override
+  public void activate() {
 
-        int duration = (int) Math.min(20 * 60 * 5, owner.getHealth() * 24);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, duration, 2), true);
+    int duration = (int) Math.min(20 * 60 * 5, owner.getHealth() * 24);
+    target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, duration, 2), true);
 
-        inform("Your weapon curses its victim.");
-    }
+    inform("Your weapon curses its victim.");
+  }
 }

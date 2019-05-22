@@ -12,21 +12,21 @@ import org.bukkit.event.HandlerList;
 
 public class PrePrayerApplicationEvent extends PrayerEvent {
 
-    private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
 
-    public PrePrayerApplicationEvent(final Player player, Prayer prayer) {
+  public PrePrayerApplicationEvent(final Player player, Prayer prayer) {
 
-        super(player, prayer);
-    }
+    super(player, prayer);
+  }
 
-    public HandlerList getHandlers() {
+  public static HandlerList getHandlerList() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 }

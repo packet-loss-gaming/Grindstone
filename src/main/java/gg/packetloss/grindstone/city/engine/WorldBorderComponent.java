@@ -28,94 +28,94 @@ import java.util.logging.Logger;
 @Depend(components = {AdminComponent.class})
 public class WorldBorderComponent extends BukkitComponent implements Runnable {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = inst.getLogger();
+  private final Server server = CommandBook.server();
 
-    @InjectComponent
-    AdminComponent adminComponent;
+  @InjectComponent
+  AdminComponent adminComponent;
 
-    private LocalConfiguration config;
-    private World world;
+  private LocalConfiguration config;
+  private World world;
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        config = configure(new LocalConfiguration());
+    config = configure(new LocalConfiguration());
 
-        this.world = Bukkit.getWorld("City");
-        server.getScheduler().runTaskTimer(inst, this, 0, 20 * 8);
-    }
+    this.world = Bukkit.getWorld("City");
+    server.getScheduler().runTaskTimer(inst, this, 0, 20 * 8);
+  }
 
-    @Override
-    public void reload() {
+  @Override
+  public void reload() {
 
-        super.reload();
-        configure(config);
-    }
+    super.reload();
+    configure(config);
+  }
 
-    @Override
-    public void run() {
+  @Override
+  public void run() {
 
-        Location pLoc = new Location(world, 0, 0, 0);
-        Location origin;
+    Location pLoc = new Location(world, 0, 0, 0);
+    Location origin;
 
-        for (Player player : server.getOnlinePlayers()) {
+    for (Player player : server.getOnlinePlayers()) {
 
-            pLoc = player.getLocation(pLoc);
-            origin = pLoc.clone();
+      pLoc = player.getLocation(pLoc);
+      origin = pLoc.clone();
 
-            int x = pLoc.getBlockX();
-            int bx = player.getWorld().equals(world) ? config.maxX : 10000;
-            int sx = player.getWorld().equals(world) ? config.minX : -10000;
-            int y = pLoc.getBlockY();
-            int by = config.maxY;
-            int z = pLoc.getBlockZ();
-            int bz = player.getWorld().equals(world) ? config.maxZ : 10000;
-            int sz = player.getWorld().equals(world) ? config.minZ : -10000;
+      int x = pLoc.getBlockX();
+      int bx = player.getWorld().equals(world) ? config.maxX : 10000;
+      int sx = player.getWorld().equals(world) ? config.minX : -10000;
+      int y = pLoc.getBlockY();
+      int by = config.maxY;
+      int z = pLoc.getBlockZ();
+      int bz = player.getWorld().equals(world) ? config.maxZ : 10000;
+      int sz = player.getWorld().equals(world) ? config.minZ : -10000;
 
-            if (x > bx) {
-                pLoc.setX(bx);
-            } else if (x < sx) {
-                pLoc.setX(sx);
-            }
+      if (x > bx) {
+        pLoc.setX(bx);
+      } else if (x < sx) {
+        pLoc.setX(sx);
+      }
 
-            if (y > by && player.getAllowFlight() && !adminComponent.isAdmin(player)) {
-                pLoc.setY(by);
-            }
+      if (y > by && player.getAllowFlight() && !adminComponent.isAdmin(player)) {
+        pLoc.setY(by);
+      }
 
-            if (z > bz) {
-                pLoc.setZ(bz);
-            } else if (z < sz) {
-                pLoc.setZ(sz);
-            }
+      if (z > bz) {
+        pLoc.setZ(bz);
+      } else if (z < sz) {
+        pLoc.setZ(sz);
+      }
 
-            if (!pLoc.equals(origin)) {
-                Entity v = player.getVehicle();
-                if (v == null) {
-                    player.teleport(pLoc);
-                } else {
-                    v.eject();
-                    v.teleport(pLoc);
-                    player.teleport(v);
-                    v.setPassenger(player);
-                }
-                ChatUtil.sendNotice(player, "You have reached the end of the accessible area of this world.");
-            }
+      if (!pLoc.equals(origin)) {
+        Entity v = player.getVehicle();
+        if (v == null) {
+          player.teleport(pLoc);
+        } else {
+          v.eject();
+          v.teleport(pLoc);
+          player.teleport(v);
+          v.setPassenger(player);
         }
+        ChatUtil.sendNotice(player, "You have reached the end of the accessible area of this world.");
+      }
     }
+  }
 
-    private static class LocalConfiguration extends ConfigurationBase {
+  private static class LocalConfiguration extends ConfigurationBase {
 
-        @Setting("max.x")
-        public int maxX = 100;
-        @Setting("min.x")
-        public int minX = -100;
-        @Setting("max.y")
-        public int maxY = 300;
-        @Setting("max.z")
-        public int maxZ = 100;
-        @Setting("min.z")
-        public int minZ = -100;
-    }
+    @Setting("max.x")
+    public int maxX = 100;
+    @Setting("min.x")
+    public int minX = -100;
+    @Setting("max.y")
+    public int maxY = 300;
+    @Setting("max.z")
+    public int maxZ = 100;
+    @Setting("min.z")
+    public int minZ = -100;
+  }
 }

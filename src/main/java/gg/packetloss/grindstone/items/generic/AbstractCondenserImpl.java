@@ -9,9 +9,9 @@ package gg.packetloss.grindstone.items.generic;
 import gg.packetloss.grindstone.util.ItemCondenser;
 
 public class AbstractCondenserImpl extends AbstractItemFeatureImpl {
-    protected ItemCondenser condenser;
+  protected ItemCondenser condenser;
 
-    public AbstractCondenserImpl(ItemCondenser condenser) {
-        this.condenser = condenser;
-    }
+  public AbstractCondenserImpl(ItemCondenser condenser) {
+    this.condenser = condenser;
+  }
 }

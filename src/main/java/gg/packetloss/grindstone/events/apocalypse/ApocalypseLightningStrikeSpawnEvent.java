@@ -11,36 +11,36 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 public class ApocalypseLightningStrikeSpawnEvent extends Event implements ApocalypseEvent {
-    private static final HandlerList handlers = new HandlerList();
+  private static final HandlerList handlers = new HandlerList();
 
-    private final Location location;
-    private boolean cancelled = false;
+  private final Location location;
+  private boolean cancelled = false;
 
-    public ApocalypseLightningStrikeSpawnEvent(Location location) {
-        this.location = location;
-    }
+  public ApocalypseLightningStrikeSpawnEvent(Location location) {
+    this.location = location;
+  }
 
-    @Override
-    public Location getLocation() {
-        return location;
-    }
+  public static HandlerList getHandlerList() {
+    return handlers;
+  }
 
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
-    }
+  @Override
+  public Location getLocation() {
+    return location;
+  }
 
-    @Override
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
+  @Override
+  public boolean isCancelled() {
+    return cancelled;
+  }
 
-    @Override
-    public HandlerList getHandlers() {
-        return handlers;
-    }
+  @Override
+  public void setCancelled(boolean cancelled) {
+    this.cancelled = cancelled;
+  }
 
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
+  @Override
+  public HandlerList getHandlers() {
+    return handlers;
+  }
 }

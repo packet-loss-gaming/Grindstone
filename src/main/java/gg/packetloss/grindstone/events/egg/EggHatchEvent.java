@@ -15,61 +15,61 @@ import org.bukkit.event.HandlerList;
 
 public class EggHatchEvent extends Event implements Cancellable {
 
-    private static final HandlerList handlers = new HandlerList();
-    private boolean cancelled = false;
-    private final Item egg;
-    private EntityType eggType;
-    private Location location;
+  private static final HandlerList handlers = new HandlerList();
+  private final Item egg;
+  private boolean cancelled = false;
+  private EntityType eggType;
+  private Location location;
 
-    public EggHatchEvent(Item egg, EntityType eggType, Location location) {
+  public EggHatchEvent(Item egg, EntityType eggType, Location location) {
 
-        this.egg = egg;
-        this.eggType = eggType;
-        this.location = location;
-    }
+    this.egg = egg;
+    this.eggType = eggType;
+    this.location = location;
+  }
 
-    public Item getEgg() {
+  public static HandlerList getHandlerList() {
 
-        return egg;
-    }
+    return handlers;
+  }
 
-    public EntityType getEggType() {
+  public Item getEgg() {
 
-        return eggType;
-    }
+    return egg;
+  }
 
-    public void setEggType(EntityType eggType) {
+  public EntityType getEggType() {
 
-        this.eggType = eggType;
-    }
+    return eggType;
+  }
 
-    public Location getLocation() {
+  public void setEggType(EntityType eggType) {
 
-        return location;
-    }
+    this.eggType = eggType;
+  }
 
-    public void setLocation(Location location) {
+  public Location getLocation() {
 
-        this.location = location;
-    }
+    return location;
+  }
 
-    public HandlerList getHandlers() {
+  public void setLocation(Location location) {
 
-        return handlers;
-    }
+    this.location = location;
+  }
 
-    public static HandlerList getHandlerList() {
+  public HandlerList getHandlers() {
 
-        return handlers;
-    }
+    return handlers;
+  }
 
-    public boolean isCancelled() {
+  public boolean isCancelled() {
 
-        return cancelled;
-    }
+    return cancelled;
+  }
 
-    public void setCancelled(boolean cancelled) {
+  public void setCancelled(boolean cancelled) {
 
-        this.cancelled = cancelled;
-    }
+    this.cancelled = cancelled;
+  }
 }

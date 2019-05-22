@@ -10,19 +10,19 @@ import org.bukkit.enchantments.Enchantment;
 
 public class Enchant {
 
-    private Enchantment enchant;
-    private int level;
+  private Enchantment enchant;
+  private int level;
 
-    public Enchant(Enchantment enchant, int level) {
-        this.enchant = enchant;
-        this.level = level;
-    }
+  public Enchant(Enchantment enchant, int level) {
+    this.enchant = enchant;
+    this.level = level;
+  }
 
-    public org.bukkit.enchantments.Enchantment getEnchant() {
-        return enchant;
-    }
+  public org.bukkit.enchantments.Enchantment getEnchant() {
+    return enchant;
+  }
 
-    public int getLevel() {
-        return level;
-    }
+  public int getLevel() {
+    return level;
+  }
 }

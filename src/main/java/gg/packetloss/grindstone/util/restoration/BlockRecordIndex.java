@@ -8,9 +8,9 @@ package gg.packetloss.grindstone.util.restoration;
 
 public abstract class BlockRecordIndex {
 
-    public abstract void revertByTime(long time);
+  public abstract void revertByTime(long time);
 
-    public abstract void revertAll();
+  public abstract void revertAll();
 
-    public abstract int size();
+  public abstract int size();
 }

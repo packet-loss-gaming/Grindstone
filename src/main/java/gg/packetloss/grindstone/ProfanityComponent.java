@@ -36,172 +36,177 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Profanity", desc = "Kill Profanity.")
 public class ProfanityComponent extends BukkitComponent implements Listener {
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
+  private final CommandBook inst = CommandBook.inst();
+  private final Logger log = CommandBook.logger();
+  private final Server server = CommandBook.server();
 
-    private LocalConfiguration config;
+  private LocalConfiguration config;
 
-    @Override
-    public void enable() {
+  @Override
+  public void enable() {
 
-        this.config = configure(new LocalConfiguration());
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+    this.config = configure(new LocalConfiguration());
+    //noinspection AccessStaticViaInstance
+    inst.registerEvents(this);
+  }
+
+  @Override
+  public void reload() {
+
+    super.reload();
+    configure(config);
+  }
+
+  // Sign Censor
+  @EventHandler(ignoreCancelled = true)
+  public void onSignChange(SignChangeEvent event) {
+
+    Player player = event.getPlayer();
+    Block block = event.getBlock();
+    Location blockLoc = block.getLocation();
+    int blockTypeId = event.getBlock().getTypeId();
+
+    // Basic Checks
+    if (!config.enableSignCensor) {
+      return;
     }
 
-    @Override
-    public void reload() {
+    // Check Block Type
+    if ((blockTypeId == BlockID.SIGN_POST) || (blockTypeId == BlockID.WALL_SIGN)) {
+      // Get Lines
+      String[] signLine = event.getLines();
 
-        super.reload();
-        configure(config);
-    }
+      // Check for profanity and explode if needed
+      if (inBlackListedWord(signLine)) {
 
-    private static class LocalConfiguration extends ConfigurationBase {
+        // Get rid of that sign!
+        block.getWorld().createExplosion(blockLoc, 0);
+        blockLoc.getBlock().breakNaturally(new ItemStack(ItemID.SIGN, 1));
 
-        @Setting("enable-sign-censor")
-        public boolean enableSignCensor = true;
-        @Setting("enable-chat-censor")
-        public boolean enableChatCensor = false;
-        @Setting("censored-words")
-        public Set<String> blackListedWords = new HashSet<>(Arrays.asList(
-                "shit", "fuck", "penis", "bitch", "piss", "retard", "bastard", "likes dick", "kunt", "cunt", "slut",
-                "pussy",
-                "pussies", "gay", "whore", "wanker", "bloody hell", "rape", "strip club", "stripper club", "twat",
-                "douche",
-                "doosh", "handjob", "hand job", "blowjob", "blow job", "fuc", "rimming", "cum", "dildo", "ball sack",
-                "ballsack", "hardon", "hard on", "fag", "faggot", "sexual", "jizz", "jackass", "jack ass", "jackoff",
-                "jack off", "niger", "nigger", "nutsack", "prick", "queef", "queer", "titty", "tit", "testicle",
-                "hooker"));
-    }
+        // Mess with the player
+        player.setHealth(0);
+        player.playEffect(EntityEffect.DEATH);
+        ChatUtil.sendWarning(player, "Let that be a lesson to you to not use profanity.");
 
-    // Sign Censor
-    @EventHandler(ignoreCancelled = true)
-    public void onSignChange(SignChangeEvent event) {
-
-        Player player = event.getPlayer();
-        Block block = event.getBlock();
-        Location blockLoc = block.getLocation();
-        int blockTypeId = event.getBlock().getTypeId();
-
-        // Basic Checks
-        if (!config.enableSignCensor)
-            return;
-
-        // Check Block Type
-        if ((blockTypeId == BlockID.SIGN_POST) || (blockTypeId == BlockID.WALL_SIGN)) {
-            // Get Lines
-            String[] signLine = event.getLines();
-
-            // Check for profanity and explode if needed
-            if (inBlackListedWord(signLine)) {
-
-                // Get rid of that sign!
-                block.getWorld().createExplosion(blockLoc, 0);
-                blockLoc.getBlock().breakNaturally(new ItemStack(ItemID.SIGN, 1));
-
-                // Mess with the player
-                player.setHealth(0);
-                player.playEffect(EntityEffect.DEATH);
-                ChatUtil.sendWarning(player, "Let that be a lesson to you to not use profanity.");
-
-                // Public Embarrassment? :P
-                for (final Player otherPlayer : server.getOnlinePlayers()) {
-                    // Don't tell the player we are sending this message
-                    if (otherPlayer != player) {
-                        ChatUtil.sendNotice(otherPlayer, "The player: "
-                                + player.getDisplayName() + " attempted "
-                                + "to place a sign containing one or more blacklisted word(s).");
-                    }
-                }
-            }
+        // Public Embarrassment? :P
+        for (final Player otherPlayer : server.getOnlinePlayers()) {
+          // Don't tell the player we are sending this message
+          if (otherPlayer != player) {
+            ChatUtil.sendNotice(otherPlayer, "The player: "
+                + player.getDisplayName() + " attempted "
+                + "to place a sign containing one or more blacklisted word(s).");
+          }
         }
+      }
+    }
+  }
+
+  // Chat Censor
+  @EventHandler(priority = EventPriority.HIGH)
+  public void onPlayerChat(AsyncPlayerChatEvent event) {
+    // Basic Checks
+    if (!config.enableChatCensor) {
+      return;
     }
 
-    // Chat Censor
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onPlayerChat(AsyncPlayerChatEvent event) {
-        // Basic Checks
-        if (!config.enableChatCensor) return;
+    event.setMessage(filterString(ChatUtil.runeizeString(event.getMessage()), true));
+  }
 
-        event.setMessage(filterString(ChatUtil.runeizeString(event.getMessage()), true));
+  @EventHandler(priority = EventPriority.HIGH)
+  public void onCommandPreProcess(PlayerCommandPreprocessEvent event) {
+    // Basic Checks
+    if (!config.enableChatCensor) {
+      return;
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onCommandPreProcess(PlayerCommandPreprocessEvent event) {
-        // Basic Checks
-        if (!config.enableChatCensor) return;
+    event.setMessage(filterString(event.getMessage(), false));
+  }
 
-        event.setMessage(filterString(event.getMessage(), false));
-    }
+  public boolean inBlackListedWord(String[] lines) {
 
-    public boolean inBlackListedWord(String[] lines) {
+    // Check for cuss words
+    Object[] bLW = config.blackListedWords.toArray();
 
-        // Check for cuss words
-        Object[] bLW = config.blackListedWords.toArray();
-
-        for (int i = 0; i < config.blackListedWords.size(); i++) {
-            for (String line : lines) {
-                if (line.toLowerCase().contains(bLW[i].toString())) {
-                    return true;
-                }
-            }
+    for (int i = 0; i < config.blackListedWords.size(); i++) {
+      for (String line : lines) {
+        if (line.toLowerCase().contains(bLW[i].toString())) {
+          return true;
         }
-
-        return false;
+      }
     }
 
-    public String filterString(String string) {
+    return false;
+  }
 
-        return filterString(string, true);
-    }
+  public String filterString(String string) {
 
-    public String filterString(String string, boolean useColor) {
+    return filterString(string, true);
+  }
 
-        Object[] bLW = config.blackListedWords.toArray();
-        String[] words = string.split(" ");
-        StringBuilder out = new StringBuilder();
+  public String filterString(String string, boolean useColor) {
 
-        for (String word : words) {
+    Object[] bLW = config.blackListedWords.toArray();
+    String[] words = string.split(" ");
+    StringBuilder out = new StringBuilder();
 
-            if (useColor) {
-                for (Object aBLW : bLW) {
+    for (String word : words) {
 
-                    if (word.toLowerCase().contains(aBLW.toString().toLowerCase())) {
-                        word = loonizeWord(word, true) + ChatColor.WHITE;
-                    }
-                }
-            } else {
-                for (Object aBLW : bLW) {
+      if (useColor) {
+        for (Object aBLW : bLW) {
 
-                    if (word.toLowerCase().contains(aBLW.toString().toLowerCase())) {
-                        word = loonizeWord(word, false);
-                    }
-                }
-            }
-            out.append(word).append(" ");
+          if (word.toLowerCase().contains(aBLW.toString().toLowerCase())) {
+            word = loonizeWord(word, true) + ChatColor.WHITE;
+          }
         }
-        return out.toString();
-    }
+      } else {
+        for (Object aBLW : bLW) {
 
-    public String loonizeWord(String word) {
-
-        return loonizeWord(word, true);
-    }
-
-    public String loonizeWord(String word, boolean useColor) {
-
-        String loonyFilteredString = "";
-        if (useColor) {
-            for (int f = 0; f < word.length(); f++) {
-                loonyFilteredString = loonyFilteredString + ChatUtil.loonyColor() + ChatUtil.loonyCharacter();
-            }
-        } else {
-            for (int f = 0; f < word.length(); f++) {
-                loonyFilteredString = loonyFilteredString + ChatUtil.loonyCharacter();
-            }
+          if (word.toLowerCase().contains(aBLW.toString().toLowerCase())) {
+            word = loonizeWord(word, false);
+          }
         }
-
-        return loonyFilteredString;
+      }
+      out.append(word).append(" ");
     }
+    return out.toString();
+  }
+
+  public String loonizeWord(String word) {
+
+    return loonizeWord(word, true);
+  }
+
+  public String loonizeWord(String word, boolean useColor) {
+
+    String loonyFilteredString = "";
+    if (useColor) {
+      for (int f = 0; f < word.length(); f++) {
+        loonyFilteredString = loonyFilteredString + ChatUtil.loonyColor() + ChatUtil.loonyCharacter();
+      }
+    } else {
+      for (int f = 0; f < word.length(); f++) {
+        loonyFilteredString = loonyFilteredString + ChatUtil.loonyCharacter();
+      }
+    }
+
+    return loonyFilteredString;
+  }
+
+  private static class LocalConfiguration extends ConfigurationBase {
+
+    @Setting("enable-sign-censor")
+    public boolean enableSignCensor = true;
+    @Setting("enable-chat-censor")
+    public boolean enableChatCensor = false;
+    @Setting("censored-words")
+    public Set<String> blackListedWords = new HashSet<>(Arrays.asList(
+        "shit", "fuck", "penis", "bitch", "piss", "retard", "bastard", "likes dick", "kunt", "cunt", "slut",
+        "pussy",
+        "pussies", "gay", "whore", "wanker", "bloody hell", "rape", "strip club", "stripper club", "twat",
+        "douche",
+        "doosh", "handjob", "hand job", "blowjob", "blow job", "fuc", "rimming", "cum", "dildo", "ball sack",
+        "ballsack", "hardon", "hard on", "fag", "faggot", "sexual", "jizz", "jackass", "jack ass", "jackoff",
+        "jack off", "niger", "nigger", "nutsack", "prick", "queef", "queer", "titty", "tit", "testicle",
+        "hooker"));
+  }
 }

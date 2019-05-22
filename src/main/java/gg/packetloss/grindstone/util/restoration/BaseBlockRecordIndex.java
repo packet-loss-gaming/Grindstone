@@ -13,48 +13,48 @@ import java.util.Vector;
 
 public class BaseBlockRecordIndex extends BlockRecordIndex implements Serializable {
 
-    private List<BlockRecord> recordList = new Vector<>();
+  private List<BlockRecord> recordList = new Vector<>();
 
-    public void addItem(BlockRecord record) {
+  public void addItem(BlockRecord record) {
 
-        recordList.add(record);
+    recordList.add(record);
+  }
+
+  @Override
+  public void revertByTime(long time) {
+
+    Iterator<BlockRecord> it = recordList.iterator();
+    BlockRecord active;
+
+    while (it.hasNext()) {
+      active = it.next();
+      if (System.currentTimeMillis() - active.getTime() >= time) {
+        active.revert();
+        it.remove();
+      }
     }
+  }
 
-    @Override
-    public void revertByTime(long time) {
+  @Override
+  public void revertAll() {
+    Iterator<BlockRecord> it = recordList.iterator();
+    BlockRecord active;
 
-        Iterator<BlockRecord> it = recordList.iterator();
-        BlockRecord active;
-
-        while (it.hasNext()) {
-            active = it.next();
-            if (System.currentTimeMillis() - active.getTime() >= time) {
-                active.revert();
-                it.remove();
-            }
-        }
+    while (it.hasNext()) {
+      active = it.next();
+      active.revert();
+      it.remove();
     }
+  }
 
-    @Override
-    public void revertAll() {
-        Iterator<BlockRecord> it = recordList.iterator();
-        BlockRecord active;
+  @Override
+  public boolean equals(Object o) {
+    return o instanceof BaseBlockRecordIndex && recordList.equals(((BaseBlockRecordIndex) o).recordList);
+  }
 
-        while (it.hasNext()) {
-            active = it.next();
-            active.revert();
-            it.remove();
-        }
-    }
+  @Override
+  public int size() {
 
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof BaseBlockRecordIndex && recordList.equals(((BaseBlockRecordIndex) o).recordList);
-    }
-
-    @Override
-    public int size() {
-
-        return recordList.size();
-    }
+    return recordList.size();
+  }
 }

@@ -12,41 +12,41 @@ import org.bukkit.Location;
 import java.util.UUID;
 
 public class Home {
-    private final UUID playerID;
-    private final String world;
-    private final int x;
-    private final int y;
-    private final int z;
+  private final UUID playerID;
+  private final String world;
+  private final int x;
+  private final int y;
+  private final int z;
 
-    public Home(UUID playerID, String world, int x, int y, int z) {
-        this.playerID = playerID;
-        this.world = world;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
+  public Home(UUID playerID, String world, int x, int y, int z) {
+    this.playerID = playerID;
+    this.world = world;
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
 
-    public UUID getPlayerID() {
-        return playerID;
-    }
+  public UUID getPlayerID() {
+    return playerID;
+  }
 
-    public String getWorldName() {
-        return world;
-    }
+  public String getWorldName() {
+    return world;
+  }
 
-    public int getX() {
-        return x;
-    }
+  public int getX() {
+    return x;
+  }
 
-    public int getY() {
-        return y;
-    }
+  public int getY() {
+    return y;
+  }
 
-    public int getZ() {
-        return z;
-    }
+  public int getZ() {
+    return z;
+  }
 
-    public Location getLocation() {
-        return new Location(Bukkit.getWorld(world), x, y, z);
-    }
+  public Location getLocation() {
+    return new Location(Bukkit.getWorld(world), x, y, z);
+  }
 }

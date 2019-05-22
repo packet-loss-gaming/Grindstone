@@ -12,13 +12,13 @@ import org.bukkit.craftbukkit.v1_8_R3.CraftChunk;
 
 public class ChunkBook {
 
-    public static void relight(Chunk chunk) throws UnsupportedFeatureException {
+  public static void relight(Chunk chunk) throws UnsupportedFeatureException {
 
-        try {
-            ((CraftChunk) chunk).getHandle().initLighting();
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw new UnsupportedFeatureException();
-        }
+    try {
+      ((CraftChunk) chunk).getHandle().initLighting();
+    } catch (Throwable t) {
+      t.printStackTrace();
+      throw new UnsupportedFeatureException();
     }
+  }
 }

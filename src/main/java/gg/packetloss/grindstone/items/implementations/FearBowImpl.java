@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.items.implementations;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.CustomItemSession;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
@@ -20,7 +21,6 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearStri
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.MagicChain;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -29,81 +29,87 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 
 public class FearBowImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
-    @Override
-    public SpecialAttack getSpecial(LivingEntity owner, LivingEntity target) {
-        switch (ChanceUtil.getRandom(5)) {
-            case 1:
-                Disarm disarmSpec = new Disarm(owner, target);
-                if (disarmSpec.getItemStack() != null) {
-                    return disarmSpec;
-                }
-            case 2:
-                return new Curse(owner, target);
-            case 3:
-                return new MagicChain(owner, target);
-            case 4:
-                return new FearStrike(owner, target);
-            case 5:
-                return new FearBomb(owner, target);
+  @Override
+  public SpecialAttack getSpecial(LivingEntity owner, LivingEntity target) {
+    switch (ChanceUtil.getRandom(5)) {
+      case 1:
+        Disarm disarmSpec = new Disarm(owner, target);
+        if (disarmSpec.getItemStack() != null) {
+          return disarmSpec;
         }
-        return null;
+      case 2:
+        return new Curse(owner, target);
+      case 3:
+        return new MagicChain(owner, target);
+      case 4:
+        return new FearStrike(owner, target);
+      case 5:
+        return new FearBomb(owner, target);
+    }
+    return null;
+  }
+
+  @EventHandler
+  public void onArrowLand(ProjectileHitEvent event) {
+
+    Projectile projectile = event.getEntity();
+    Entity shooter = null;
+
+    ProjectileSource source = projectile.getShooter();
+    if (source instanceof Entity) {
+      shooter = (Entity) source;
     }
 
-    @EventHandler
-    public void onArrowLand(ProjectileHitEvent event) {
+    if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
 
-        Projectile projectile = event.getEntity();
-        Entity shooter = null;
+      Object test = projectile.getMetadata("launcher").get(0).value();
 
-        ProjectileSource source = projectile.getShooter();
-        if (source instanceof Entity) {
-            shooter = (Entity) source;
-        }
+      if (!(test instanceof ItemStack)) {
+        return;
+      }
 
-        if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
+      ItemStack launcher = (ItemStack) test;
 
-            Object test = projectile.getMetadata("launcher").get(0).value();
+      final Player owner = (Player) shooter;
+      final Location targetLoc = projectile.getLocation();
 
-            if (!(test instanceof ItemStack)) return;
+      CustomItemSession session = getSession(owner);
 
-            ItemStack launcher = (ItemStack) test;
+      if (!session.canSpec(SpecType.RANGED)) {
 
-            final Player owner = (Player) shooter;
-            final Location targetLoc = projectile.getLocation();
+        if (ItemUtil.isItem(launcher, CustomItems.FEAR_BOW)) {
+          if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
 
-            CustomItemSession session = getSession(owner);
+            server.getPluginManager().callEvent(new RapidHitEvent(owner));
 
-            if (!session.canSpec(SpecType.RANGED)) {
-
-                if (ItemUtil.isItem(launcher, CustomItems.FEAR_BOW)) {
-                    if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
-
-                        server.getPluginManager().callEvent(new RapidHitEvent(owner));
-
-                        // Simulate a lightning strike
-                        targetLoc.getWorld().strikeLightningEffect(targetLoc);
-                        for (Entity e : projectile.getNearbyEntities(2, 4, 2)) {
-                            if (!e.isValid() || !(e instanceof LivingEntity)) continue;
-                            // Pig Zombie
-                            if (e instanceof Pig) {
-                                e.getWorld().spawn(e.getLocation(), PigZombie.class);
-                                e.remove();
-                                continue;
-                            }
-                            // Creeper
-                            if (e instanceof Creeper) {
-                                ((Creeper) e).setPowered(true);
-                            }
-                            // Player
-                            if (e instanceof Player) {
-                                if (!PvPComponent.allowsPvP(owner, (Player) e)) continue;
-                            }
-
-                            ((LivingEntity) e).damage(5, owner);
-                        }
-                    }
+            // Simulate a lightning strike
+            targetLoc.getWorld().strikeLightningEffect(targetLoc);
+            for (Entity e : projectile.getNearbyEntities(2, 4, 2)) {
+              if (!e.isValid() || !(e instanceof LivingEntity)) {
+                continue;
+              }
+              // Pig Zombie
+              if (e instanceof Pig) {
+                e.getWorld().spawn(e.getLocation(), PigZombie.class);
+                e.remove();
+                continue;
+              }
+              // Creeper
+              if (e instanceof Creeper) {
+                ((Creeper) e).setPowered(true);
+              }
+              // Player
+              if (e instanceof Player) {
+                if (!PvPComponent.allowsPvP(owner, (Player) e)) {
+                  continue;
                 }
+              }
+
+              ((LivingEntity) e).damage(5, owner);
             }
+          }
         }
+      }
     }
+  }
 }

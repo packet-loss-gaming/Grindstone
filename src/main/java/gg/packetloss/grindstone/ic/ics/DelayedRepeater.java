@@ -15,67 +15,67 @@ import java.util.logging.Logger;
 
 public class DelayedRepeater extends AbstractIC {
 
-    private static final CommandBook inst = CommandBook.inst();
-    private static final Logger log = inst.getLogger();
-    private static final Server server = CommandBook.server();
+  private static final CommandBook INST = CommandBook.inst();
+  private static final Logger LOG = INST.getLogger();
+  private static final Server SERVER = CommandBook.server();
 
-    private long delay;
+  private long delay;
 
-    public DelayedRepeater(Server server, ChangedSign block, ICFactory factory) {
-        super(server, block, factory);
+  public DelayedRepeater(Server server, ChangedSign block, ICFactory factory) {
+    super(server, block, factory);
+  }
+
+  @Override
+  public void load() {
+    try {
+      delay = Long.parseLong(getLine(2));
+    } catch (Exception ex) {
+      delay = 20;
+    }
+  }
+
+  @Override
+  public String getTitle() {
+
+    return "Delay Repeater";
+  }
+
+  @Override
+  public String getSignTitle() {
+
+    return "DELAY REPEATER";
+  }
+
+  @Override
+  public void trigger(final ChipState chip) {
+
+    final boolean trigger = chip.getInput(0);
+    SERVER.getScheduler().runTaskLater(INST, () -> chip.setOutput(0, trigger), delay);
+  }
+
+  public static class Factory extends AbstractICFactory implements RestrictedIC {
+
+    public Factory(Server server) {
+
+      super(server);
     }
 
     @Override
-    public void load() {
-        try {
-            delay = Long.parseLong(getLine(2));
-        } catch (Exception ex) {
-            delay = 20;
-        }
+    public IC create(ChangedSign sign) {
+
+      return new DelayedRepeater(getServer(), sign, this);
     }
 
     @Override
-    public String getTitle() {
+    public String getShortDescription() {
 
-        return "Delay Repeater";
+      return "Delays a current by x ticks.";
     }
 
     @Override
-    public String getSignTitle() {
+    public String[] getLineHelp() {
 
-        return "DELAY REPEATER";
+      return new String[] {"delay", ""};
     }
-
-    @Override
-    public void trigger(final ChipState chip) {
-
-        final boolean trigger = chip.getInput(0);
-        server.getScheduler().runTaskLater(inst, () -> chip.setOutput(0, trigger), delay);
-    }
-
-    public static class Factory extends AbstractICFactory implements RestrictedIC {
-
-        public Factory(Server server) {
-
-            super(server);
-        }
-
-        @Override
-        public IC create(ChangedSign sign) {
-
-            return new DelayedRepeater(getServer(), sign, this);
-        }
-
-        @Override
-        public String getShortDescription() {
-
-            return "Delays a current by x ticks.";
-        }
-
-        @Override
-        public String[] getLineHelp() {
-
-            return new String[]{"delay", ""};
-        }
-    }
+  }
 }

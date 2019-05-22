@@ -10,7 +10,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 public class ApocalypseLocalSpawnEvent extends ApocalypsePersonalSpawnEvent {
-    public ApocalypseLocalSpawnEvent(Player player, Location spawnLocation) {
-        super(player, spawnLocation);
-    }
+  public ApocalypseLocalSpawnEvent(Player player, Location spawnLocation) {
+    super(player, spawnLocation);
+  }
 }
