@@ -21,3 +21,6 @@ build/
 
 # OSX
 .DS_Store
+
+# Developer scripts
+scripts/
