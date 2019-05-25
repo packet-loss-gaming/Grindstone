@@ -76,6 +76,10 @@ public class GarbageDisposalComponent extends BukkitComponent implements Listene
         // Remove the items
         List<Item> drops = playerDrops.getOrDefault(playerID, new ArrayList<>());
         for (Item item : drops) {
+            if (!item.isValid()) {
+                continue;
+            }
+
             SingleBlockParticleEffect.puffOfSmoke(item.getLocation());
             item.remove();
         }
