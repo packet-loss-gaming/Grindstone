@@ -10,6 +10,8 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 
 public class SandArenaConfig extends ConfigurationBase {
+    @Setting("fake-xp-amount")
+    public int fakeXP = 100;
     @Setting("increase-rate")
     public int increaseRate = 8;
     @Setting("decrease-rate")

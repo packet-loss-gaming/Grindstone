@@ -24,6 +24,8 @@ import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerExpChangeEvent;
 
 import java.io.File;
 import java.util.HashMap;
@@ -67,10 +69,20 @@ public class SandArena extends AreaComponent<SandArenaConfig> implements Persist
     @Override
     public void run() {
         if (!isEmpty()) {
+            fakeXPGain();
             addBlocks();
         }
         removeBlocks();
         writeData(true);
+    }
+
+    public void fakeXPGain() {
+        for (Player player : getContained(Player.class)) {
+            for (int i = ChanceUtil.getRandom(5); i > 0; --i) {
+                server.getPluginManager().callEvent(new PlayerExpChangeEvent(player,
+                        ChanceUtil.getRandom(config.fakeXP)));
+            }
+        }
     }
 
     public void addBlocks() {
