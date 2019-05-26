@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.logging.Logger;
 
-@ComponentInformation(friendlyName = "Shudown", desc = "Shutdown system")
+@ComponentInformation(friendlyName = "Shutdown", desc = "Shutdown system")
 public class ShutdownComponent extends BukkitComponent {
 
     private final CommandBook inst = CommandBook.inst();
