@@ -33,7 +33,7 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
                     "`name` VARCHAR(50) NOT NULL," +
                     "`price` DOUBLE NOT NULL," +
                     "`current-price` DOUBLE NOT NULL," +
-                    "`stock` INT NOT NULL," +
+                    "`stock` INT NOT NULL DEFAULT 0," +
                     "`buyable` TINYINT(1) NOT NULL," +
                     "`sellable` TINYINT(1) NOT NULL," +
                     "PRIMARY KEY (`id`)," +
