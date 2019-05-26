@@ -32,7 +32,7 @@ public class MySQLMarketTransactionDatabase implements MarketTransactionDatabase
                     "`date` DATETIME NOT NULL," +
                     "`player` INT NOT NULL," +
                     "`item` INT NOT NULL," +
-                    "`amount` INT NOT NULL," +
+                    "`stock` INT NOT NULL DEFAULT 0," +
                     "PRIMARY KEY (`id`)" +
                     ") ENGINE=MyISAM;";
             try (PreparedStatement statement = connection.prepareStatement(tranSQL)) {
