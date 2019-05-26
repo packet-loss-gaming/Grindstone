@@ -18,8 +18,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Shudown", desc = "Shutdown system")
@@ -54,7 +57,7 @@ public class ShutdownComponent extends BukkitComponent {
                     throw new CommandException("Invalid time entered!");
                 }
             }
-            shutdown(delay, expectedDowntime);
+            shutdown(sender instanceof Player ? (Player) sender : null, delay, expectedDowntime);
         }
     }
 
@@ -62,7 +65,20 @@ public class ShutdownComponent extends BukkitComponent {
     private String downTime;
     private BukkitTask task = null;
 
-    public void shutdown(final int assignedSeconds, String expectedDownTime) {
+    private boolean isRequesterOnlyPlayerOnline(Collection<? extends Player> players, @Nullable Player requester) {
+        if (requester == null) {
+            return false;
+        }
+
+        if (players.size() != 1) {
+            return false;
+        }
+
+        Player player = players.iterator().next();
+        return player.getUniqueId() == requester.getUniqueId();
+    }
+
+    public void shutdown(@Nullable Player requester, final int assignedSeconds, String expectedDownTime) {
 
         this.downTime = expectedDownTime;
 
@@ -77,7 +93,13 @@ public class ShutdownComponent extends BukkitComponent {
 
         // New Task
         task = inst.getServer().getScheduler().runTaskTimer(inst, () -> {
+            Collection<? extends Player> players = server.getOnlinePlayers();
+            if (players.isEmpty() || isRequesterOnlyPlayerOnline(players, requester)) {
+                seconds = 0;
+            }
+
             server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
+
             if (seconds > 0 && seconds % 5 == 0 || seconds <= 10 && seconds > 0) {
                 Bukkit.broadcastMessage(ChatColor.RED + "Shutting down in " + seconds + " seconds - for "
                         + downTime + " of downtime!");
