@@ -226,6 +226,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
         player.setExhaustion(state.getExhaustion());
         player.setLevel(state.getLevel());
         player.setExp(state.getExperience());
+        player.updateInventory();
 
         if (player.getVehicle() != null) {
             player.getVehicle().eject();

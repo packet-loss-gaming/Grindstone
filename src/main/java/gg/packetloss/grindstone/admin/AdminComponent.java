@@ -257,6 +257,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     player.setExhaustion(identity.getExhaustion());
                     player.setLevel(identity.getLevel());
                     player.setExp(identity.getExperience());
+                    player.updateInventory();
 
                     playerState.remove(player.getUniqueId());
                 }
