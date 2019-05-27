@@ -1,0 +1,420 @@
+package gg.packetloss.grindstone.city.engine.area.areas.Frostborn;
+
+import com.sk89q.commandbook.util.entity.ProjectileUtil;
+import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldedit.blocks.BaseBlock;
+import com.sk89q.worldedit.blocks.BlockID;
+import com.sk89q.worldedit.bukkit.BukkitUtil;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
+import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.city.engine.area.AreaComponent;
+import gg.packetloss.grindstone.city.engine.area.PersistentArena;
+import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.database.IOUtil;
+import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
+import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
+import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
+import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.entity.*;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
+
+import java.io.File;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
+@Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
+public class FrostbornArea extends AreaComponent<FrostbornConfig> implements PersistentArena {
+    @InjectComponent
+    protected AdminComponent admin;
+
+    protected Economy economy;
+
+    protected ProtectedRegion gate_RG, entrance_RG;
+
+    protected Snowman boss;
+    protected Location gate;
+    protected Location bossSpawnLoc;
+
+    // Block information
+    protected static Set<BaseBlock> breakable = new HashSet<>();
+
+    static {
+        breakable.add(new BaseBlock(BlockID.SNOW, -1));
+        breakable.add(new BaseBlock(BlockID.SNOW_BLOCK, -1));
+        breakable.add(new BaseBlock(BlockID.LIGHTSTONE, -1));
+    }
+
+    protected static Set<BaseBlock> restoreable = new HashSet<>();
+
+    static {
+        restoreable.add(new BaseBlock(BlockID.SNOW_BLOCK, -1));
+        restoreable.add(new BaseBlock(BlockID.LIGHTSTONE, -1));
+    }
+
+    // Block Restoration
+    protected BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
+
+    // Items taken from players returned upon death
+    protected ArrayList<SerializableItemStack> lootItems = new ArrayList<>();
+
+    protected long lastDeath = 0;
+
+    @Override
+    public void setUp() {
+        try {
+            WorldGuardPlugin WG = APIUtil.getWorldGuard();
+            world = server.getWorlds().get(0);
+            gate = new Location(world, -48.5, 81, 392, 270, 0);
+            bossSpawnLoc = new Location(getWorld(), -137, 67, 392, 270, 0);
+            RegionManager manager = WG.getRegionManager(world);
+            String base = "glacies-mare-district-frostborn";
+            region = manager.getRegion(base + "-arena");
+            gate_RG = manager.getRegion(base + "-gate");
+            entrance_RG = manager.getRegion(base + "-entrance");
+            tick = 4 * 20;
+            listener = new FrostbornListener(this);
+            config = new FrostbornConfig();
+
+            reloadData();
+        } catch (UnknownPluginException e) {
+            log.info("WorldGuard could not be found!");
+        }
+    }
+
+    @Override
+    public void enable() {
+        server.getScheduler().runTaskLater(inst, super::enable, 1);
+    }
+
+    @Override
+    public void disable() {
+        writeData(false);
+    }
+
+    @Override
+    public void run() {
+        restoreBlocks();
+        movePlayers();
+        if (!isBossSpawned()) {
+            if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
+                spawnBoss();
+            }
+        } else if (!isEmpty()) {
+            preventRestoreDrowning();
+            feedPlayers();
+            runAttack();
+        }
+        writeData(true);
+    }
+
+    public void restoreBlocks() {
+        generalIndex.revertByTime(1000 * config.timeToRestore);
+    }
+
+    public void movePlayer(Player player) {
+        // Add the players inventory to loot list
+        List<ItemStack> stacks = new ArrayList<>();
+        stacks.addAll(Arrays.asList(player.getInventory().getArmorContents()));
+        stacks.addAll(Arrays.asList(player.getInventory().getContents()));
+        stacks.removeIf(i -> i == null || i.getType() == Material.AIR);
+
+        stacks.stream().map(SerializableItemStack::new).collect(Collectors.toCollection(() -> lootItems));
+
+        // Clear the players inventory
+        player.getInventory().setArmorContents(null);
+        player.getInventory().clear();
+
+        // Move them into the arena
+        Location loc = new Location(getWorld(), -102, 67, 392, 90, 0);
+        loc.add(ChanceUtil.getRangedRandom(-5, 5), 0, ChanceUtil.getRangedRandom(-5, 5));
+        player.teleport(loc, TeleportCause.UNKNOWN);
+    }
+
+    private void movePlayers() {
+        for (Player player : getContained(entrance_RG, Player.class)) {
+            movePlayer(player);
+        }
+    }
+
+    public void preventRestoreDrowning() {
+        Location bossLoc = boss.getLocation();
+        while (bossLoc.getBlock().getType() != Material.AIR) {
+            bossLoc.add(0, 1, 0);
+        }
+        boss.teleport(bossLoc);
+    }
+
+    public void feedPlayers() {
+        for (Player player : getContained(Player.class)) {
+            player.setFoodLevel(20);
+            player.setSaturation(5);
+            player.setExhaustion(0);
+        }
+    }
+
+    private void createEvilSnowballFountain(Location loc) {
+        IntegratedRunnable snowballFountain = new IntegratedRunnable() {
+            @Override
+            public boolean run(int times) {
+                if (!isBossSpawned()) return true;
+                for (int i = ChanceUtil.getRandom(9); i > 0; --i) {
+                    ProjectileUtil.sendProjectileFromLocation(
+                            loc,
+                            new Vector(
+                                    ChanceUtil.getRangedRandom(-.25, .25),
+                                    1,
+                                    ChanceUtil.getRangedRandom(-.25, .25)
+                            ),
+                            .6F,
+                            Snowball.class
+                    );
+                }
+                return true;
+            }
+
+            @Override
+            public void end() {
+            }
+        };
+        TimedRunnable fountainTask = new TimedRunnable(snowballFountain, 24);
+        BukkitTask minionEatingTaskExecutor = server.getScheduler().runTaskTimer(inst, fountainTask, 10, 7);
+        fountainTask.setTask(minionEatingTaskExecutor);
+    }
+
+    public void runSpecial(int specialNumber) {
+        switch (specialNumber) {
+            case 1:
+                ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "BOW TO THE KING!");
+                ProjectileUtil.sendProjectilesFromLocation(boss.getLocation(), 25, 2F, Snowball.class);
+                break;
+            case 2:
+                ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "I AM SNOWTASTIC!");
+                for (Player player : getContained(Player.class)) {
+                    Location fountainLoc = player.getLocation();
+                    createEvilSnowballFountain(fountainLoc);
+
+                    Location targetLoc = fountainLoc;
+                    int requested = ChanceUtil.getRandom(7);
+                    for (int maxTries = 10; requested > 0 && maxTries > 0; --maxTries) {
+                        targetLoc = LocationUtil.findRandomLoc(
+                                targetLoc,
+                                15,
+                                true,
+                                true
+                        );
+
+                        if (contains(targetLoc)) {
+                            Material lowerBlockMat = targetLoc.add(0, -1, 0).getBlock().getType();
+                            if (lowerBlockMat != Material.SNOW_BLOCK && lowerBlockMat != Material.GLOWSTONE) {
+                                continue;
+                            }
+
+                            createEvilSnowballFountain(targetLoc);
+                            --requested;
+                        }
+                    }
+                }
+                break;
+        }
+    }
+
+    public void runAttack() {
+        boss.setTarget(CollectionUtil.getElement(getContained(Player.class)));
+
+        if (!boss.hasLineOfSight(boss.getTarget())) {
+            Location targetLoc;
+            do {
+                targetLoc = LocationUtil.findRandomLoc(
+                        boss.getTarget().getLocation(),
+                        15,
+                        false,
+                        true
+                );
+            } while (!contains(targetLoc));
+
+            boss.teleport(targetLoc);
+        }
+
+        if (ChanceUtil.getChance(10)) {
+            runSpecial(ChanceUtil.getRandom(2));
+        }
+    }
+
+    public boolean isArenaLoaded() {
+        BlockVector min = getRegion().getMinimumPoint();
+        BlockVector max = getRegion().getMaximumPoint();
+        Region region = new CuboidRegion(min, max);
+        return BukkitUtil.toLocation(getWorld(), region.getCenter()).getChunk().isLoaded();
+    }
+
+    public boolean isBossSpawned() {
+        if (!isArenaLoaded()) return true;
+        boolean found = false;
+        boolean second = false;
+        for (Snowman e : getContained(Snowman.class)) {
+            if (e.isValid()) {
+                if (!found) {
+                    boss = e;
+                    found = true;
+                } else if (e.getHealth() < boss.getHealth()) {
+                    boss = e;
+                    second = true;
+                } else {
+                    e.remove();
+                }
+            }
+        }
+        if (second) {
+            getContained(Snowman.class).stream().filter(e -> e.isValid() && !e.equals(boss)).forEach(Entity::remove);
+        }
+        return boss != null && boss.isValid();
+    }
+
+    public void spawnBoss() {
+        boss = getWorld().spawn(bossSpawnLoc, Snowman.class);
+        boss.setMaxHealth(1750);
+        boss.setHealth(1750);
+        boss.setRemoveWhenFarAway(false);
+    }
+
+    protected boolean accept(BaseBlock baseBlock, Set<BaseBlock> baseBlocks) {
+        for (BaseBlock aBaseBlock : baseBlocks) {
+            if (baseBlock.equalsFuzzy(aBaseBlock)) return true;
+        }
+        return false;
+    }
+
+    protected void dropLoot() {
+        generalIndex.revertAll();
+
+        // Clear the players inventories
+        for (Player player : getContained(Player.class)) {
+            player.getInventory().setArmorContents(null);
+            player.getInventory().clear();
+        }
+
+        // Clear items on the ground
+        getContained(Item.class).forEach(Item::remove);
+
+        // Drop the loot
+        for (SerializableItemStack lootItem : lootItems) {
+            ItemStack bukkitStack = lootItem.bukkitRestore();
+            world.dropItem(bossSpawnLoc, bukkitStack.clone());
+            if (ChanceUtil.getChance(config.chanceOfDupe)) {
+                world.dropItem(bossSpawnLoc, bukkitStack.clone());
+                ChatUtil.sendNotice(getContained(1, Player.class), "An item has been duplicated!");
+            }
+        }
+        lootItems.clear();
+
+        // Teleport the players to a reasonable location where they'll see the loot
+        for (Player player : getContained(Player.class)) {
+            Location loc = bossSpawnLoc.clone();
+            loc.add(ChanceUtil.getRangedRandom(10, 15), 0, ChanceUtil.getRangedRandom(-5, 5));
+            loc.setYaw(90);
+            player.teleport(loc, TeleportCause.UNKNOWN);
+        }
+    }
+
+    @Override
+    public void writeData(boolean doAsync) {
+        Runnable run = () -> {
+            generalFile:
+            {
+                File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
+                if (generalFile.exists()) {
+                    Object generalFileO = IOUtil.readBinaryFile(generalFile);
+
+                    if (generalIndex.equals(generalFileO)) {
+                        break generalFile;
+                    }
+                }
+                IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
+            }
+            lootFile:
+            {
+                File lootFile = new File(getWorkingDir().getPath() + "/loot.dat");
+                if (lootFile.exists()) {
+                    Object lootFileO = IOUtil.readBinaryFile(lootFile);
+
+                    if (lootItems.equals(lootFileO)) {
+                        break lootFile;
+                    }
+                }
+                IOUtil.toBinaryFile(getWorkingDir(), "loot", lootItems);
+            }
+        };
+        if (doAsync) {
+            server.getScheduler().runTaskAsynchronously(inst, run);
+        } else {
+            run.run();
+        }
+    }
+
+    @Override
+    public void reloadData() {
+        File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
+        if (generalFile.exists()) {
+            Object generalFileO = IOUtil.readBinaryFile(generalFile);
+            if (generalFileO instanceof BaseBlockRecordIndex) {
+                generalIndex = (BaseBlockRecordIndex) generalFileO;
+                log.info("Loaded: " + generalIndex.size() + " general records for Frostborn.");
+            } else {
+                log.warning("Invalid block record file encountered: " + generalFile.getName() + "!");
+                log.warning("Attempting to use backup file...");
+                generalFile = new File(getWorkingDir().getPath() + "/old-" + generalFile.getName());
+                if (generalFile.exists()) {
+                    generalFileO = IOUtil.readBinaryFile(generalFile);
+                    if (generalFileO instanceof BaseBlockRecordIndex) {
+                        generalIndex = (BaseBlockRecordIndex) generalFileO;
+                        log.info("Backup file loaded successfully!");
+                        log.info("Loaded: " + generalIndex.size() + " general records for Frostborn.");
+                    } else {
+                        log.warning("Backup file failed to load!");
+                    }
+                }
+            }
+        }
+
+        File lootFile = new File(getWorkingDir().getPath() + "/loot.dat");
+        if (lootFile.exists()) {
+            Object lootFileO = IOUtil.readBinaryFile(lootFile);
+            if (lootFileO instanceof ArrayList) {
+                //noinspection unchecked
+                lootItems = (ArrayList<SerializableItemStack>) lootFileO;
+                log.info("Loaded: " + lootItems.size() + " loot items for Frostborn.");
+            } else {
+                log.warning("Invalid item loot file found: " + lootFile.getName() + "!");
+                log.warning("Attempting to use backup file...");
+                lootFile = new File(getWorkingDir().getPath() + "/old-" + lootFile.getName());
+                if (lootFile.exists()) {
+                    lootFileO = IOUtil.readBinaryFile(lootFile);
+                    if (lootFileO instanceof ArrayList) {
+                        //noinspection unchecked
+                        lootItems = (ArrayList<SerializableItemStack>) lootFileO;
+                        log.info("Backup file loaded successfully!");
+                        log.info("Loaded: " + lootItems.size() + " loot items for Frostborn.");
+                    } else {
+                        log.warning("Backup file failed to load!");
+                    }
+                }
+            }
+        }
+    }
+}
