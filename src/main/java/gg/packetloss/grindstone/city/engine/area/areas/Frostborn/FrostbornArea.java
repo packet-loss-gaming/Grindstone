@@ -114,6 +114,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         if (!isBossSpawned()) {
             if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
                 spawnBoss();
+                sendPlayersToGate();
             }
         } else if (!isEmpty()) {
             preventRestoreDrowning();
@@ -347,6 +348,12 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         boss.setMaxHealth(1750);
         boss.setHealth(1750);
         boss.setRemoveWhenFarAway(false);
+    }
+
+    public void sendPlayersToGate() {
+        for (Player player : getContained(Player.class)) {
+            player.teleport(gate, TeleportCause.UNKNOWN);
+        }
     }
 
     protected boolean accept(BaseBlock baseBlock, Set<BaseBlock> baseBlocks) {
