@@ -55,10 +55,10 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         inst.registerEvents(this);
         this.registerCommands(Commands.class);
 
-        File homeDirectory = new File(inst.getDataFolder().getPath() + "/warps");
-        if (!homeDirectory.exists()) homeDirectory.mkdir();
+        File warpsDirectory = new File(inst.getDataFolder().getPath() + "/warps");
+        if (!warpsDirectory.exists()) warpsDirectory.mkdir();
 
-        WarpDatabase warpDatabase = new CSVWarpDatabase("warps", homeDirectory);
+        WarpDatabase warpDatabase = new CSVWarpDatabase("warps", warpsDirectory);
         warpDatabase.load();
 
         warpManager = new WarpManager(warpDatabase);
