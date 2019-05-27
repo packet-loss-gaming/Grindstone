@@ -303,8 +303,11 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     protected void dropLoot() {
         generalIndex.revertAll();
 
+        // Gather the players in the arena
+        Collection<Player> players = getContained(Player.class);
+
         // Clear the players inventories
-        for (Player player : getContained(Player.class)) {
+        for (Player player : players) {
             player.getInventory().setArmorContents(null);
             player.getInventory().clear();
         }
@@ -323,8 +326,13 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         }
         lootItems.clear();
 
+        // Drop some additional holdover loot
+        for (int i = ChanceUtil.getRandom(8) * players.size(); i > 0; --i) {
+            world.dropItem(bossSpawnLoc, new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRangedRandom(32, 64)));
+        }
+
         // Teleport the players to a reasonable location where they'll see the loot
-        for (Player player : getContained(Player.class)) {
+        for (Player player : players) {
             Location loc = bossSpawnLoc.clone();
             loc.add(ChanceUtil.getRangedRandom(10, 15), 0, ChanceUtil.getRangedRandom(-5, 5));
             loc.setYaw(90);
