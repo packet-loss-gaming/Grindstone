@@ -17,6 +17,8 @@ import com.skelril.OSBL.util.AttackDamage;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.bosses.instruction.ExplosiveUnbind;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.Location;
@@ -79,9 +81,15 @@ public class ThunderZombie {
             public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
+
                 for (int i = ChanceUtil.getRangedRandom(12, 150); i > 0; --i) {
                     target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT));
                 }
+
+                if (ChanceUtil.getChance(1000)) {
+                    target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOMB_OF_THE_RIFT_SPLITTER));
+                }
+
                 return null;
             }
         });

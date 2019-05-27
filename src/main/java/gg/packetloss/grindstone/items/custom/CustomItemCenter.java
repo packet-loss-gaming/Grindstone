@@ -517,6 +517,8 @@ public class CustomItemCenter {
         addItem(madMilk);
 
         CustomItem tombOfTheRiftSplitter = new CustomItem(TOMB_OF_THE_RIFT_SPLITTER, Material.BOOK);
+        tombOfTheRiftSplitter.addSource(ItemSource.FROSTBORN);
+        tombOfTheRiftSplitter.addSource(ItemSource.APOCALYPSE);
         tombOfTheRiftSplitter.addSource(ItemSource.MARKET);
         tombOfTheRiftSplitter.addUse("Consumable to create a new warp.");
         addItem(tombOfTheRiftSplitter);

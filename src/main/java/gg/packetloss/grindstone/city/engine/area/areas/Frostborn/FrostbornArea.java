@@ -17,6 +17,8 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
@@ -392,6 +394,12 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         // Drop some additional holdover loot
         for (int i = ChanceUtil.getRandom(8) * players.size(); i > 0; --i) {
             world.dropItem(bossSpawnLoc, new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRangedRandom(32, 64)));
+        }
+
+        for (int i = 0; i < players.size(); ++i) {
+            if (ChanceUtil.getChance(100)) {
+                world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOMB_OF_THE_RIFT_SPLITTER));
+            }
         }
 
         // Teleport the players to a reasonable location where they'll see the loot

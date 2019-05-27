@@ -23,6 +23,7 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseRespawnBoostEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -260,6 +261,10 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 event.setDroppedExp(event.getDroppedExp() * 3);
                 event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandomNTimes(16, 7)));
             } else event.setDroppedExp(event.getDroppedExp() * 2);
+
+            if (ChanceUtil.getChance(10000)) {
+                event.getDrops().add(CustomItemCenter.build(CustomItems.TOMB_OF_THE_RIFT_SPLITTER));
+            }
         }
     }
 

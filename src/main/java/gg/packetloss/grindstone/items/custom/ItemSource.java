@@ -25,7 +25,9 @@ public enum ItemSource {
     NINJA_GUILD("Ninja Guild"),
     ARROW_FISHING("Arrow Fishing"),
     GOLD_RUSH("Gold Rush"),
-    GRAVE_YARD("Grave Yard");
+    GRAVE_YARD("Grave Yard"),
+    FROSTBORN("Frostborn"),
+    APOCALYPSE("Apocalypse");
 
     private String friendlyName;
     private ItemSource[] subSources;
