@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 
 import java.util.Optional;
 
+@Deprecated
 public class HomeManager {
     private HomeDatabase homeDatabase;
 

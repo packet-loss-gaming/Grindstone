@@ -23,7 +23,6 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseRespawnBoostEvent;
-import gg.packetloss.grindstone.homes.EnderPearlHomesComponent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -34,7 +33,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import gg.packetloss.grindstone.warps.WarpsComponent;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -53,6 +52,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -61,7 +61,7 @@ import static gg.packetloss.grindstone.util.player.GeneralPlayerUtil.hasFlyingGa
 
 
 @ComponentInformation(friendlyName = "Apocalypse", desc = "Sends an invasion force after the residents of the server.")
-@Depend(components = {JailComponent.class, AdminComponent.class, EnderPearlHomesComponent.class})
+@Depend(components = {JailComponent.class, AdminComponent.class, WarpsComponent.class})
 public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -73,7 +73,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private AdminComponent adminComponent;
     @InjectComponent
-    private EnderPearlHomesComponent homesComponent;
+    private WarpsComponent warpsComponent;
     @InjectComponent
     private SessionComponent sessions;
 
@@ -238,11 +238,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onEntityDeath(EntityDeathEvent event) {
 
-        Entity ent = event.getEntity();
+        LivingEntity ent = event.getEntity();
         World world = ent.getWorld();
 
-        if (ent instanceof Skeleton && ((Skeleton) ent).getKiller() != null) {
-            ItemStack held = ((Skeleton) ent).getEquipment().getItemInHand();
+        if (ent instanceof Skeleton && ent.getKiller() != null) {
+            ItemStack held = ent.getEquipment().getItemInHand();
             if (held != null && held.getTypeId() == ItemID.BOW) {
                 if (world.isThundering() && ChanceUtil.getChance(5)) {
                     event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8) * 2)));
@@ -253,7 +253,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             }
         }
 
-        if (checkEntity((LivingEntity) ent)) {
+        if (checkEntity(ent)) {
             event.getDrops().removeIf(next -> next != null && next.getTypeId() == ItemID.ROTTEN_FLESH);
 
             if (attackMob.isInstance(ent) && ChanceUtil.getChance(5)) {
@@ -318,12 +318,15 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     public void bedSpawn(Player player, int multiplier) {
         // Find a free position at or near the player's bed.
-        Location bedLocation = homesComponent.getBedLocation(player);
-        Location freeBedLocation = LocationUtil.findFreePosition(homesComponent.getBedLocation(player));
+        Optional<Location> bedLocation = warpsComponent.getRawBedLocation(player);
+        if (!bedLocation.isPresent()) {
+            return;
+        }
+        Optional<Location> freeBedLocation = warpsComponent.getBedLocation(player);
 
         // If the player has a bed location, but there's no "free" location, redirect and give them
         // an extra local spawn, they probably tried to out smart the mechanic.
-        if (bedLocation != null && freeBedLocation == null) {
+        if (!freeBedLocation.isPresent()) {
             ChatUtil.sendWarning(player, "The zombies spawning at your bed couldn't find anywhere to spawn!");
             ChatUtil.sendWarning(player, "So... Instead they came to you!");
 
@@ -334,7 +337,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         // Fire an event for the bed spawn.
         ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(
-          player, bedLocation, ChanceUtil.getRandom(multiplier)
+          player, bedLocation.get(), ChanceUtil.getRandom(multiplier)
         );
         server.getPluginManager().callEvent(apocalypseEvent);
         if (apocalypseEvent.isCancelled()) {

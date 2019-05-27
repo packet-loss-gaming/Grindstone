@@ -147,8 +147,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     }
 
     public class Commands {
-
-        @Command(aliases = {"home"}, desc = "Home Manager")
+        @Command(aliases = {"/home"}, desc = "Home Manager")
         @NestedCommand({NestedCommands.class})
         public void homeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -316,12 +315,6 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             ProtectedRegion region = requireStoodInHome(player, WG.getRegionManager(player.getWorld()));
 
             player.performCommand("rg flag " + region.getId() + " " + args.getJoinedStrings(0));
-        }
-
-        @Command(aliases = {"location", "loc"}, desc = "Home Manager")
-        @NestedCommand({TeleportCommands.class})
-        public void homeTeleportCmds(CommandContext args, CommandSender sender) throws CommandException {
-
         }
 
         @Command(aliases = {"rules"}, usage = "[district]", desc = "District Rules", min = 0, max = 1)
@@ -919,21 +912,5 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         tPlayer.getInventory().addItem(BookUtil.Rules.BuildingCode.server());
         tPlayer.getInventory().addItem(ruleBook);
         return true;
-    }
-
-    public class TeleportCommands {
-
-        @Command(aliases = {"set"}, desc = "Set your home")
-        public void setHomeLoc(CommandContext args, CommandSender sender) {
-
-            ChatUtil.sendNotice(sender, "To set your home, sleep in a bed during the night.");
-        }
-
-        @Command(aliases = {"teleport", "tp"}, desc = "Go to your home")
-        public void teleportHome(CommandContext args, CommandSender sender) {
-
-            ChatUtil.sendNotice(sender, "To go to your home, throw an ender pearl at your feet.");
-        }
-
     }
 }

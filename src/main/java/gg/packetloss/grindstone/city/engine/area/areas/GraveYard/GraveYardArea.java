@@ -18,12 +18,13 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
+import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
@@ -49,7 +50,7 @@ import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Grave Yard", desc = "The home of the undead")
 @Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
-public class GraveYardArea extends AreaComponent<GraveYardConfig> {
+public class GraveYardArea extends AreaComponent<GraveYardConfig> implements PersistentArena {
 
     @InjectComponent
     protected AdminComponent admin;
@@ -221,6 +222,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         return location.getY() < 69 && contains(location);
     }
 
+    @Override
     public void writeData(boolean doAsync) {
         Runnable run = () -> {
             generalFile:
@@ -255,6 +257,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
     }
 
+    @Override
     public void reloadData() {
         File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
         File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");

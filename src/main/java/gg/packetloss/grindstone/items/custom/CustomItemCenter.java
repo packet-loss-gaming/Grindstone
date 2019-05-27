@@ -515,6 +515,11 @@ public class CustomItemCenter {
         madMilk.addUse("If thrown into a brewing vat at the factory, a melt down will occur in which all undead creatures die.");
         madMilk.addUse("When drank, it will turn into a Magic Bucket.");
         addItem(madMilk);
+
+        CustomItem tombOfTheRiftSplitter = new CustomItem(TOMB_OF_THE_RIFT_SPLITTER, Material.BOOK);
+        tombOfTheRiftSplitter.addSource(ItemSource.MARKET);
+        tombOfTheRiftSplitter.addUse("Consumable to create a new warp.");
+        addItem(tombOfTheRiftSplitter);
     }
 
     public static Collection<CustomItem> values() {

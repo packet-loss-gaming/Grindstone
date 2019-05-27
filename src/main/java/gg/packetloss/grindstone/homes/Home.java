@@ -11,6 +11,7 @@ import org.bukkit.Location;
 
 import java.util.UUID;
 
+@Deprecated
 public class Home {
     private final UUID playerID;
     private final String world;

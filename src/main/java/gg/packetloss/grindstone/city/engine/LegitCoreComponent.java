@@ -26,12 +26,12 @@ import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.homes.CSVHomeDatabase;
-import gg.packetloss.grindstone.homes.EnderPearlHomesComponent;
 import gg.packetloss.grindstone.homes.HomeDatabase;
 import gg.packetloss.grindstone.homes.HomeManager;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
+import gg.packetloss.grindstone.warps.WarpsComponent;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Legit Core", desc = "Operate the legit world.")
-@Depend(components = {AdminComponent.class, SessionComponent.class, EnderPearlHomesComponent.class})
+@Depend(components = {AdminComponent.class, SessionComponent.class, WarpsComponent.class})
 public class LegitCoreComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -57,7 +57,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private SessionComponent sessions;
     @InjectComponent
-    private EnderPearlHomesComponent mainHomeDatabase;
+    private WarpsComponent warpsComponent;
 
     private final File legitFileDir = new File(inst.getDataFolder().getPath() + "/legit/legit");
     private final File normalFileDir = new File(inst.getDataFolder().getPath() + "/legit/main");
@@ -327,7 +327,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
                 session.setLegitIndex(player.getLocation());
                 return session.getFromIndex();
             } else {
-                Location target = mainHomeDatabase.getRespawnLocation(player);
+                Location target = warpsComponent.getRespawnLocation(player);
                 session.setLegitIndex(player.getLocation());
                 session.setFromIndex(target);
                 return target;

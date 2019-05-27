@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Logger;
 
+@Deprecated
 public class CSVHomeDatabase implements HomeDatabase {
 
     private final Logger log = CommandBook.inst().getLogger();
