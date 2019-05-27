@@ -196,8 +196,30 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             }
         };
         TimedRunnable fountainTask = new TimedRunnable(snowballFountain, 24);
-        BukkitTask minionEatingTaskExecutor = server.getScheduler().runTaskTimer(inst, fountainTask, 10, 7);
-        fountainTask.setTask(minionEatingTaskExecutor);
+        BukkitTask fountainTaskExecutor = server.getScheduler().runTaskTimer(inst, fountainTask, 10, 7);
+        fountainTask.setTask(fountainTaskExecutor);
+    }
+
+    private void createEvilSnowballVomit() {
+        IntegratedRunnable snowballVomit = new IntegratedRunnable() {
+            @Override
+            public boolean run(int times) {
+                if (!isBossSpawned()) return true;
+                for (int i = ChanceUtil.getRandom(4); i > 0; --i) {
+                    Snowball snowball = boss.launchProjectile(Snowball.class);
+                    Vector vector = new Vector(ChanceUtil.getRandom(2.0), 1, ChanceUtil.getRandom(2.0));
+                    snowball.setVelocity(snowball.getVelocity().multiply(vector));
+                }
+                return true;
+            }
+
+            @Override
+            public void end() {
+            }
+        };
+        TimedRunnable snowballVomitTask = new TimedRunnable(snowballVomit, 40);
+        BukkitTask snowballVomitTaskExecutor = server.getScheduler().runTaskTimer(inst, snowballVomitTask, 10, 4);
+        snowballVomitTask.setTask(snowballVomitTaskExecutor);
     }
 
     public void runSpecial(int specialNumber) {
@@ -236,6 +258,33 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                     }
                 }
                 break;
+            case 3:
+                ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "BLAARRGGGHHHH!!!");
+                createEvilSnowballVomit();
+                break;
+            case 4:
+                ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "RELEASE THE BATS!");
+                for (int i = ChanceUtil.getRandomNTimes(20, 3) + 10; i > 0; --i) {
+                    Bat b = (Bat) getWorld().spawnEntity(boss.getLocation(), EntityType.BAT);
+                    b.setMaxHealth(50);
+                    b.setHealth(50);
+                }
+                break;
+        }
+    }
+
+    public void runSnowbats() {
+        for (Bat bat : getContained(Bat.class)) {
+            Location spawnLoc = bat.getLocation().add(0, -1, 0);
+            for (int i = ChanceUtil.getRandom(3); i > 0; --i) {
+                Snowball snowball = (Snowball) getWorld().spawnEntity(spawnLoc, EntityType.SNOWBALL);
+                Vector vector = new Vector(
+                        ChanceUtil.getRangedRandom(-.5, .5),
+                        0,
+                        ChanceUtil.getRangedRandom(-.5, .5)
+                );
+                snowball.setVelocity(vector);
+            }
         }
     }
 
@@ -256,8 +305,10 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             boss.teleport(targetLoc);
         }
 
+        runSnowbats();
+
         if (ChanceUtil.getChance(10)) {
-            runSpecial(ChanceUtil.getRandom(2));
+            runSpecial(ChanceUtil.getRandom(4));
         }
     }
 
@@ -317,8 +368,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             player.getInventory().clear();
         }
 
-        // Clear items on the ground
-        getContained(Item.class).forEach(Item::remove);
+        // Clear items on the ground, and any lingering snowballs and bats
+        getContained(Item.class, Snowball.class, Bat.class).forEach(Entity::remove);
 
         // Drop the loot
         for (SerializableItemStack lootItem : lootItems) {
