@@ -173,6 +173,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
                 parent.lastDeath = System.currentTimeMillis();
 
                 parent.dropLoot();
+                parent.freezeEntrance();
             }
         }
     }

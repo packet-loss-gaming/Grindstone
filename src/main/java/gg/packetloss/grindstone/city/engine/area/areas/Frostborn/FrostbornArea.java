@@ -29,6 +29,7 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
@@ -117,11 +118,15 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
                 spawnBoss();
                 sendPlayersToGate();
+                thawEntrance();
             }
-        } else if (!isEmpty()) {
+        } else {
             preventRestoreDrowning();
-            feedPlayers();
-            runAttack();
+
+            if (!isEmpty()) {
+                feedPlayers();
+                runAttack();
+            }
         }
         writeData(true);
     }
@@ -267,10 +272,12 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 break;
             case 4:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "RELEASE THE BATS!");
-                for (int i = ChanceUtil.getRandomNTimes(20, 3) + 10; i > 0; --i) {
-                    Bat b = (Bat) getWorld().spawnEntity(boss.getLocation(), EntityType.BAT);
-                    b.setMaxHealth(50);
-                    b.setHealth(50);
+                for (Player player : getContained(Player.class)) {
+                    for (int i = ChanceUtil.getRandomNTimes(20, 3) + 10; i > 0; --i) {
+                        Bat b = (Bat) getWorld().spawnEntity(player.getLocation().add(0, 4, 0), EntityType.BAT);
+                        b.setMaxHealth(50);
+                        b.setHealth(50);
+                    }
                 }
                 break;
         }
@@ -356,6 +363,39 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         for (Player player : getContained(Player.class)) {
             player.teleport(gate, TeleportCause.UNKNOWN);
         }
+    }
+
+    private void replaceBlocksInEntrance(Material from, Material to) {
+        com.sk89q.worldedit.Vector min = entrance_RG.getMinimumPoint();
+        com.sk89q.worldedit.Vector max = entrance_RG.getMaximumPoint();
+
+        int minX = min.getBlockX();
+        int minZ = min.getBlockZ();
+        int minY = min.getBlockY();
+        int maxX = max.getBlockX();
+        int maxZ = max.getBlockZ();
+        int maxY = max.getBlockY();
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                for (int y = minY; y <= maxY; y++) {
+                    Block block = getWorld().getBlockAt(x, y, z);
+                    if (!block.getChunk().isLoaded()) block.getChunk().load();
+                    if (block.getType() == from) {
+                        block.setType(to);
+                    }
+                }
+            }
+        }
+
+    }
+
+    public void thawEntrance() {
+        replaceBlocksInEntrance(Material.ICE, Material.AIR);
+    }
+
+    public void freezeEntrance() {
+        replaceBlocksInEntrance(Material.AIR, Material.ICE);
     }
 
     protected boolean accept(BaseBlock baseBlock, Set<BaseBlock> baseBlocks) {
