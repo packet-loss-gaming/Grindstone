@@ -193,7 +193,7 @@ public class ChatUtil {
 
     public static String toString(Vector vector) {
         if (vector == null) {
-            return "none";
+            return "NONE";
         }
 
         return vector.getX() + ", " + vector.getY() + ", " + vector.getZ();

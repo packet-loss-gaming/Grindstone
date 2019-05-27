@@ -16,9 +16,8 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
-import org.bukkit.Server;
+import gg.packetloss.grindstone.util.LocationUtil;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
@@ -29,6 +28,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -42,6 +43,9 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
+
+    private final double MAX_TELEPORT_DISTANCE = 200;
+    private final double MAX_TELEPORT_DISTANCE_SQ = Math.pow(MAX_TELEPORT_DISTANCE, 2);
 
     @InjectComponent
     private SessionComponent sessions;
@@ -200,6 +204,50 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
         session.setEnabled(false);
     }
 
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+        Location from = event.getFrom();
+        Location to = event.getTo();
+
+        if (from.getWorld().equals(to.getWorld())) {
+            if (LocationUtil.distanceSquared2D(from, to) < MAX_TELEPORT_DISTANCE_SQ) {
+                return;
+            }
+        }
+
+        Player player = event.getPlayer();
+        SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
+        if (session.isEnabled()) {
+            session.setEnabled(false);
+            ChatUtil.sendNotice(player, "Symmetry disable due to teleport distance.");
+        }
+    }
+
+    private String format(boolean b) {
+        if (b) {
+            return ChatColor.DARK_GREEN + "TRUE";
+        } else {
+            return ChatColor.RED + "FALSE";
+        }
+    }
+
+    private void printStatus(Player player) {
+        SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
+
+        ChatUtil.sendNotice(player, ChatColor.GOLD + "Symmetry Status:");
+        ChatUtil.sendNotice(player, "  Enabled: " + format(session.isEnabled()));
+        ChatUtil.sendNotice(player, "  Point of Symmetry: " + ChatColor.BLUE + ChatUtil.toString(session.getPosition()));
+        ChatUtil.sendNotice(player, "  Mirroring X: " + format(session.isEnabledMirror(MirrorDirection.X)));
+        ChatUtil.sendNotice(player, "  Mirroring Y: " + format(session.isEnabledMirror(MirrorDirection.Y)));
+        ChatUtil.sendNotice(player, "  Mirroring Z: " + format(session.isEnabledMirror(MirrorDirection.Z)));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerDisconnect(PlayerQuitEvent event) {
+        SymmetricSession session = sessions.getSession(SymmetricSession.class, event.getPlayer());
+        session.setEnabled(false);
+    }
+
     public class Commands {
         @Command(aliases = {"symmetry", "/sym"}, desc = "Symmetry Commands")
         @NestedCommand({SymmetryCommands.class})
@@ -222,6 +270,8 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
               player,
               "Symmetry building " + (session.isEnabled() ? "enabled" : "disabled") + "!"
             );
+
+            printStatus(player);
         }
 
         @Command(aliases = {"setpoint", "sp"}, usage = "<x> <y> <z>",
@@ -233,6 +283,8 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
             session.setPosition(new Vector(args.getDouble(0), args.getDouble(1), args.getDouble(2)));
 
             ChatUtil.sendNotice(player, "Point of symmetry set to: " + ChatUtil.toString(session.getPosition()) + "!");
+
+            printStatus(player);
         }
 
         @Command(aliases = {"togglemirror", "tm"}, usage = "<direction>",
@@ -251,6 +303,8 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
                   "Mirror direction \"" + direction + "\" " +
                     (session.isEnabledMirror(direction) ? "enabled" : "disabled") +"!"
                 );
+
+                printStatus(player);
             } catch (IllegalArgumentException ex) {
                 throw new CommandException("No such direction! Valid directions: 'X', 'Y', 'Z'.");
             }
@@ -260,13 +314,7 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
         public void viewStatus(CommandContext args, CommandSender sender) throws CommandException {
             Player player = PlayerUtil.checkPlayer(sender);
 
-            SymmetricSession session = sessions.getSession(SymmetricSession.class, player);
-
-            ChatUtil.sendNotice(player, "Enabled: " + session.isEnabled());
-            ChatUtil.sendNotice(player, "Point of Symmetry: " + ChatUtil.toString(session.getPosition()));
-            ChatUtil.sendNotice(player, "Mirroring X: " + session.isEnabledMirror(MirrorDirection.X));
-            ChatUtil.sendNotice(player, "Mirroring Y: " + session.isEnabledMirror(MirrorDirection.Y));
-            ChatUtil.sendNotice(player, "Mirroring Z: " + session.isEnabledMirror(MirrorDirection.Z));
+            printStatus(player);
         }
     }
 
