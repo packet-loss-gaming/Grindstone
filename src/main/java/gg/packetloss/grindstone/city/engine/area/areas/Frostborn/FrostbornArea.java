@@ -140,6 +140,9 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         player.getInventory().setArmorContents(null);
         player.getInventory().clear();
 
+        // Add a stack of snowballs so the player isn't totally helpless
+        player.getInventory().addItem(new ItemStack(Material.SNOW_BALL, Material.SNOW_BALL.getMaxStackSize()));
+
         // Move them into the arena
         Location loc = new Location(getWorld(), -102, 67, 392, 90, 0);
         loc.add(ChanceUtil.getRangedRandom(-5, 5), 0, ChanceUtil.getRangedRandom(-5, 5));
