@@ -215,21 +215,23 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                     Location targetLoc = fountainLoc;
                     int requested = ChanceUtil.getRandom(7);
                     for (int maxTries = 10; requested > 0 && maxTries > 0; --maxTries) {
-                        targetLoc = LocationUtil.findRandomLoc(
+                        Location newLoc = LocationUtil.findRandomLoc(
                                 targetLoc,
                                 15,
                                 true,
                                 true
                         );
 
-                        if (contains(targetLoc)) {
-                            Material lowerBlockMat = targetLoc.add(0, -1, 0).getBlock().getType();
+                        if (contains(newLoc)) {
+                            Material lowerBlockMat = newLoc.clone().add(0, -1, 0).getBlock().getType();
                             if (lowerBlockMat != Material.SNOW_BLOCK && lowerBlockMat != Material.GLOWSTONE) {
                                 continue;
                             }
 
-                            createEvilSnowballFountain(targetLoc);
+                            createEvilSnowballFountain(newLoc);
                             --requested;
+
+                            targetLoc = newLoc;
                         }
                     }
                 }
