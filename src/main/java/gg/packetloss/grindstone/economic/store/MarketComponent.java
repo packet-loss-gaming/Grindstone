@@ -203,7 +203,7 @@ public class MarketComponent extends BukkitComponent {
 
         @Command(aliases = {"sell", "s"},
                 usage = "", desc = "Sell an item",
-                flags = "hau", min = 0, max = 0)
+                flags = "haus", min = 0, max = 0)
         public void sellCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             String playerName = checkPlayer(sender);
@@ -222,6 +222,9 @@ public class MarketComponent extends BukkitComponent {
             } else if (args.hasFlag('h')) {
                 min = 0;
                 max = 9;
+            } else if (args.hasFlag('s')) {
+                min = 9;
+                max = itemStacks.length;
             } else {
                 min = player.getInventory().getHeldItemSlot();
                 max = min + 1;
