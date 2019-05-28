@@ -438,7 +438,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
         for (int i = 0; i < players.size(); ++i) {
             if (ChanceUtil.getChance(100)) {
-                world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOMB_OF_THE_RIFT_SPLITTER));
+                world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
             }
         }
 

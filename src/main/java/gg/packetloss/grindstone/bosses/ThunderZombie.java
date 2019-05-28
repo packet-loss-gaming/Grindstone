@@ -87,7 +87,7 @@ public class ThunderZombie {
                 }
 
                 if (ChanceUtil.getChance(1000)) {
-                    target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOMB_OF_THE_RIFT_SPLITTER));
+                    target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
                 }
 
                 return null;

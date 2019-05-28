@@ -516,12 +516,12 @@ public class CustomItemCenter {
         madMilk.addUse("When drank, it will turn into a Magic Bucket.");
         addItem(madMilk);
 
-        CustomItem tombOfTheRiftSplitter = new CustomItem(TOMB_OF_THE_RIFT_SPLITTER, Material.BOOK);
-        tombOfTheRiftSplitter.addSource(ItemSource.FROSTBORN);
-        tombOfTheRiftSplitter.addSource(ItemSource.APOCALYPSE);
-        tombOfTheRiftSplitter.addSource(ItemSource.MARKET);
-        tombOfTheRiftSplitter.addUse("Consumable to create a new warp.");
-        addItem(tombOfTheRiftSplitter);
+        CustomItem tomeOfTheRiftSplitter = new CustomItem(TOME_OF_THE_RIFT_SPLITTER, Material.BOOK);
+        tomeOfTheRiftSplitter.addSource(ItemSource.FROSTBORN);
+        tomeOfTheRiftSplitter.addSource(ItemSource.APOCALYPSE);
+        tomeOfTheRiftSplitter.addSource(ItemSource.MARKET);
+        tomeOfTheRiftSplitter.addUse("Consumable to create a new warp.");
+        addItem(tomeOfTheRiftSplitter);
     }
 
     public static Collection<CustomItem> values() {

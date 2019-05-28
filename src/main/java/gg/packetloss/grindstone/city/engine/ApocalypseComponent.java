@@ -263,7 +263,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             } else event.setDroppedExp(event.getDroppedExp() * 2);
 
             if (ChanceUtil.getChance(10000)) {
-                event.getDrops().add(CustomItemCenter.build(CustomItems.TOMB_OF_THE_RIFT_SPLITTER));
+                event.getDrops().add(CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
             }
         }
     }

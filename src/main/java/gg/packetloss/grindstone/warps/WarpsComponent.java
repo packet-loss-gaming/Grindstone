@@ -35,7 +35,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import static com.sk89q.commandbook.util.InputUtil.PlayerParser;
-import static gg.packetloss.grindstone.items.custom.CustomItems.TOMB_OF_THE_RIFT_SPLITTER;
+import static gg.packetloss.grindstone.items.custom.CustomItems.TOME_OF_THE_RIFT_SPLITTER;
 
 @ComponentInformation(
         friendlyName = "Rift Warps",
@@ -244,8 +244,8 @@ public class WarpsComponent extends BukkitComponent implements Listener {
             } else {
                 inst.checkPermission(sender, "aurora.warp.set.self");
 
-                if (!ItemUtil.removeItemOfName(player, CustomItemCenter.build(TOMB_OF_THE_RIFT_SPLITTER), 1, false)) {
-                    throw new CommandException("You need a Tomb of the Rift Splitter to add or update a warp.");
+                if (!ItemUtil.removeItemOfName(player, CustomItemCenter.build(TOME_OF_THE_RIFT_SPLITTER), 1, false)) {
+                    throw new CommandException("You need a Tome of the Rift Splitter to add or update a warp.");
                 }
 
                 warpName = new WarpQualifiedName(player.getUniqueId(), args.getString(0));
