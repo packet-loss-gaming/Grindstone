@@ -66,13 +66,13 @@ public class LostItemsComponent extends BukkitComponent {
                     int itemId = Integer.parseInt(itemName);
                     item = CustomItems.values()[itemId];
                 } catch (NumberFormatException ex) {
-                    item = CustomItems.valueOf(itemName);
+                    item = CustomItems.valueOf(itemName.toUpperCase());
                 }
             } catch (ArrayIndexOutOfBoundsException|IllegalArgumentException ex) {
                 ChatUtil.sendNotice(sender, ChatColor.GOLD + "Valid items:");
                 int counter = 0;
                 for (CustomItems aItem : CustomItems.values()) {
-                    ChatUtil.sendNotice(sender, aItem.getColor() + "" + counter++ + "). " + aItem.getName());
+                    ChatUtil.sendNotice(sender, aItem.getColor() + "" + counter++ + "). " + aItem.getSnakecaseName().toUpperCase());
                 }
 
                 return;
