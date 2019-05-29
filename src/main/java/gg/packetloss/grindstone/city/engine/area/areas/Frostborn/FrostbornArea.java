@@ -22,6 +22,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
@@ -150,6 +151,12 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
         // Add a stack of snowballs so the player isn't totally helpless
         player.getInventory().addItem(new ItemStack(Material.SNOW_BALL, Material.SNOW_BALL.getMaxStackSize()));
+
+        // Disable any flight powers
+        GeneralPlayerUtil.takeFlightSafely(player);
+
+        // Ensure no fall damage even if the player wasn't flying
+        player.setFallDistance(0);
 
         // Move them into the arena
         Location loc = new Location(getWorld(), -102, 67, 392, 90, 0);

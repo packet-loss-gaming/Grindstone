@@ -168,6 +168,8 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
     }
 
     public boolean addToTeam(Player player, int team, Set<Character> flags) {
+        GeneralPlayerUtil.takeFlightSafely(player);
+
         PlayerState state = GeneralPlayerUtil.makeComplexState(player);
         state.setOwnerName(player.getName());
         state.setLocation(player.getLocation());

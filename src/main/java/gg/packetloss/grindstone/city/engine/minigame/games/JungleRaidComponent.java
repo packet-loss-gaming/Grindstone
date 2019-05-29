@@ -12,8 +12,8 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.NestedCommand;
-import com.sk89q.worldedit.*;
 import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.*;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ItemID;
@@ -59,8 +59,8 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.hackbook.ChunkBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.*;
 import org.bukkit.Location;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
@@ -560,21 +560,11 @@ public class JungleRaidComponent extends MinigameComponent {
 
             if (!isGameInitialised()) return;
 
-            // Security
+            // Handle titian mode night vision
             for (Player player : getContainedPlayers()) {
-
                 if (!player.isValid()) continue;
 
-                if (!player.getGameMode().equals(GameMode.SURVIVAL)) {
-                    if (player.isFlying()) {
-                        player.setAllowFlight(true);
-                        player.setFlying(true);
-                        player.setGameMode(GameMode.SURVIVAL);
-                    } else player.setGameMode(GameMode.SURVIVAL);
-                }
-
                 if (gameFlags.contains('T') && titan.equals(player.getName())) {
-
                     player.removePotionEffect(PotionEffectType.NIGHT_VISION);
                     player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 20 * 20, 1, true));
                 }

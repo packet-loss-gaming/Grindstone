@@ -13,8 +13,8 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.Effect;
@@ -178,8 +178,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                             return true;
                         }
 
-                        player.setFlying(false);
-                        player.setAllowFlight(false);
+                        GeneralPlayerUtil.takeFlightSafely(player);
 
                         server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
                         Vector vector = player.getVelocity();

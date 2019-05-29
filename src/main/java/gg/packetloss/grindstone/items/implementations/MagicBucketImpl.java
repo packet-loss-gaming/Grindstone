@@ -39,14 +39,11 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
     }
 
     private boolean takeFlight(Player player) {
-        if (isGettingFlightElsewhere(player)) return false;
-
-        ChatUtil.sendNotice(player, "The power of the bucket fades.");
-
-        player.setFlySpeed(.1F);
-        player.setAllowFlight(false);
-
-        return true;
+        if (GeneralPlayerUtil.takeFlightSafely(player)) {
+            ChatUtil.sendNotice(player, "The power of the bucket fades.");
+            return true;
+        }
+        return false;
     }
 
     private boolean handleRightClick(Player player) {

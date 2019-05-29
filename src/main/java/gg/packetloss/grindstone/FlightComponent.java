@@ -15,6 +15,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -58,9 +59,9 @@ public class FlightComponent extends BukkitComponent implements Listener {
 
     private void dewingPlayer(Player player) {
 
-        player.setAllowFlight(false);
-        player.setFallDistance(0F);
-        ChatUtil.sendWarning(player, "You lose your wings and can no longer fly.");
+        if (GeneralPlayerUtil.takeFlightSafely(player)) {
+            ChatUtil.sendWarning(player, "You lose your wings and can no longer fly.");
+        }
     }
 
     @EventHandler

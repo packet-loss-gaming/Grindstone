@@ -16,11 +16,7 @@ import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GeneralPlayerUtil {
@@ -57,6 +53,23 @@ public class GeneralPlayerUtil {
      */
     public static boolean hasFlyingGamemode(Player player) {
         return isFlyingGamemode(player.getGameMode());
+    }
+
+    /**
+     * Removes a player's flight powers, if they're not in a flying gamemode.
+     *
+     * @param player The target player
+     * @return true - if flight was removed
+     */
+    public static boolean takeFlightSafely(Player player) {
+        if (!hasFlyingGamemode(player) && player.getAllowFlight()) {
+            player.setFlying(false);
+            player.setAllowFlight(false);
+            player.setFlySpeed(.1F);
+            player.setFallDistance(0F);
+            return true;
+        }
+        return false;
     }
 
     public static void findSafeSpot(Player player) {

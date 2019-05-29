@@ -92,16 +92,9 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
             public void end() {
 
                 if (player.isValid()) {
-                    if (player.getAllowFlight()) {
+                    if (GeneralPlayerUtil.takeFlightSafely(player)) {
                         ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
                         // antiCheat.unexempt(player, CheckType.FLY);
-                    }
-
-                    // Only reset flight information if the player is not now in a gamemode where they can fly.
-                    if (!GeneralPlayerUtil.isFlyingGamemode(player.getGameMode())) {
-                        player.setFallDistance(0);
-                        player.setAllowFlight(false);
-                        player.setFlySpeed(.1F);
                     }
                 }
             }
@@ -145,13 +138,14 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
 
         Player player = event.getPlayer();
 
-        if (event.isSneaking() && player.getAllowFlight() && player.isOnGround() && !admin.isAdmin(player)) {
+        if (event.isSneaking() && player.getAllowFlight() && player.isOnGround()) {
 
             if (player.getFlySpeed() != .6F || !ItemUtil.hasItem(player, CustomItems.PIXIE_DUST)) return;
 
-            player.setAllowFlight(false);
-            // antiCheat.unexempt(player, CheckType.FLY);
-            ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
+            if (GeneralPlayerUtil.takeFlightSafely(player)) {
+                // antiCheat.unexempt(player, CheckType.FLY);
+                ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
+            }
 
             UUID playerID = player.getUniqueId();
             players.add(playerID);
