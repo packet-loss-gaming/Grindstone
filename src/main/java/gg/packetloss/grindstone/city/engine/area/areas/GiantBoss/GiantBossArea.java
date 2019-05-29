@@ -425,7 +425,12 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                     if (!isBossSpawned()) return;
                     // Set defaults
                     boolean baskInGlory = getContained(Player.class).size() == 0;
+
                     damageHeals = true;
+
+                    // Schedule Reset
+                    server.getScheduler().runTaskLater(inst, () -> damageHeals = false, 10);
+
                     // Check Players
                     for (Player player : getContained(Player.class)) {
                         if (boss.hasLineOfSight(player)) {
@@ -433,16 +438,16 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                             baskInGlory = true;
                         }
                     }
-                    //Attack
+
+                    // Attack
                     if (baskInGlory) {
                         int dmgFact = difficulty * 3 + 1;
                         spawnPts.stream().filter(pt -> ChanceUtil.getChance(12)).forEach(pt -> {
                             getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), dmgFact, false, false);
                         });
-                        //Schedule Reset
-                        server.getScheduler().runTaskLater(inst, () -> damageHeals = false, 10);
                         return;
                     }
+
                     // Notify if avoided
                     ChatUtil.sendNotice(getContained(1, Player.class), "Gah... Afraid are you friends?");
                 }, 20 * (difficulty == 1 ? 14 : 7));
