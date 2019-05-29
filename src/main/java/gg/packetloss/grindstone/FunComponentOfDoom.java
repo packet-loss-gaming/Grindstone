@@ -100,7 +100,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
         Player player = event.getEntity();
         if (player.getWorld().getName().contains("City")) {
             String name = player.getName();
-            if (name.equals("darkkrai13")) {
+            if (name.equals("Cow_Fu")) {
                 event.getDrops().add(new ItemStack(ItemID.RAW_BEEF));
             }
         }
