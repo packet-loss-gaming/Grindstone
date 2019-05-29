@@ -82,10 +82,10 @@ public class BaseBlockRecordIndex extends BlockRecordIndex implements Serializab
     }
 
     private void reprocessBuffer(List<BlockRecord> buffer) {
-        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
             for (BlockRecord blockRecord : buffer) {
                 blockRecord.revert();
             }
-        });
+        }, 1);
     }
 }
