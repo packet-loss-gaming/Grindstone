@@ -86,7 +86,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
 
             if (event instanceof EntityDamageByEntityEvent) {
                 if (((EntityDamageByEntityEvent) event).getDamager() instanceof Player) {
-                    parent.runSpecial(1);
+                    parent.runSpecial(3);
                 }
             }
         } else if (entity instanceof Item) {
