@@ -98,6 +98,12 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
     public void onProjectileLand(ProjectileHitEvent event) {
         Projectile p = event.getEntity();
         if (p instanceof Snowball && parent.contains(p)) {
+            if (p.hasMetadata("forstborn-avalanche")) {
+                Location targetLoc = p.getLocation();
+                targetLoc.setY(79);
+                parent.createAvalanche(targetLoc);
+            }
+
             float damage = 1;
 
             if (p.getShooter() instanceof Player) {

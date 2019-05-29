@@ -34,6 +34,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
@@ -240,8 +241,9 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     public void runSpecial(int specialNumber) {
         switch (specialNumber) {
             case 1:
-                ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "BOW TO THE KING!");
-                ProjectileUtil.sendProjectilesFromLocation(boss.getLocation(), 25, 2F, Snowball.class);
+                ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "THIS ONE IS GOING TO HURT!");
+                Snowball snowball = boss.launchProjectile(Snowball.class);
+                snowball.setMetadata("forstborn-avalanche", new FixedMetadataValue(inst, true));
                 break;
             case 2:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "I AM SNOWTASTIC!");
@@ -290,20 +292,43 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         }
     }
 
+    private void aerialBombard(Location spawnLoc, int quantity) {
+        for (int i = 0; i < quantity; ++i) {
+            Snowball snowball = (Snowball) getWorld().spawnEntity(spawnLoc, EntityType.SNOWBALL);
+            Vector vector = new Vector(
+                    ChanceUtil.getRangedRandom(-.4, .4),
+                    0,
+                    ChanceUtil.getRangedRandom(-.4, .4)
+            );
+            snowball.setVelocity(vector);
+        }
+    }
+
     public void runSnowbats() {
         for (Bat bat : getContained(Bat.class)) {
             Location spawnLoc = bat.getLocation().add(0, -1, 0);
-            for (int i = ChanceUtil.getRandom(3); i > 0; --i) {
-                Snowball snowball = (Snowball) getWorld().spawnEntity(spawnLoc, EntityType.SNOWBALL);
-                Vector vector = new Vector(
-                        ChanceUtil.getRangedRandom(-.5, .5),
-                        0,
-                        ChanceUtil.getRangedRandom(-.5, .5)
-                );
-                snowball.setVelocity(vector);
-            }
+            aerialBombard(spawnLoc, ChanceUtil.getRandom(3));
         }
     }
+
+    protected void createAvalanche(Location loc) {
+        IntegratedRunnable snowballVomit = new IntegratedRunnable() {
+            @Override
+            public boolean run(int times) {
+                if (!isBossSpawned()) return true;
+                aerialBombard(loc, ChanceUtil.getRangedRandom(3, 9));
+                return true;
+            }
+
+            @Override
+            public void end() {
+            }
+        };
+        TimedRunnable aerialBombardTask = new TimedRunnable(snowballVomit, 40);
+        BukkitTask aerialBombardTaskExecutor = server.getScheduler().runTaskTimer(inst, aerialBombardTask, 10, 4);
+        aerialBombardTask.setTask(aerialBombardTaskExecutor);
+    }
+
 
     public void runAttack() {
         boss.setTarget(CollectionUtil.getElement(getContained(Player.class)));
