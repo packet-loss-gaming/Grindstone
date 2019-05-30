@@ -61,7 +61,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerInteractBlock(PlayerInteractEvent event) {
         if (event.getAction() != Action.LEFT_CLICK_BLOCK) {
             return;
@@ -241,7 +241,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onApocalypseLocalSpawnEvent(ApocalypseLocalSpawnEvent event) {
         if (parent.contains(event.getPlayer())) {
             event.setCancelled(true);
