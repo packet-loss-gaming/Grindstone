@@ -59,6 +59,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
+
 
 @ComponentInformation(friendlyName = "Apocalypse", desc = "Sends an invasion force after the residents of the server.")
 @Depend(components = {JailComponent.class, AdminComponent.class, WarpsComponent.class})
@@ -208,7 +210,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     private void boostPlayer(Player player, Location respawnLocation) {
         World world = respawnLocation.getWorld();
-        if (!world.isThundering()) {
+        if (!hasThunderstorm(world)) {
             return;
         }
 
@@ -244,7 +246,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (ent instanceof Skeleton && ent.getKiller() != null) {
             ItemStack held = ent.getEquipment().getItemInHand();
             if (held != null && held.getTypeId() == ItemID.BOW) {
-                if (world.isThundering() && ChanceUtil.getChance(5)) {
+                if (hasThunderstorm(world) && ChanceUtil.getChance(5)) {
                     event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8) * 2)));
                 } else {
                     event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8))));
@@ -284,7 +286,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (mobCount >= mobCountMax || world.getEntities().size() > (mobCountMax * 2)) return;
 
         // Do we care?
-        if (world.isThundering() && (!lightning.isEffect() || ChanceUtil.getChance(config.effectLightning))) {
+        if (hasThunderstorm(world) && (!lightning.isEffect() || ChanceUtil.getChance(config.effectLightning))) {
             lightning(lightningStrikeLoc);
         }
     }
@@ -411,7 +413,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     public boolean checkEntity(LivingEntity e) {
 
-        return e.getWorld().isThundering()
+        return hasThunderstorm(e.getWorld())
                 || (e.getCustomName() != null && e.getCustomName().equals("Apocalyptic Zombie"));
     }
 

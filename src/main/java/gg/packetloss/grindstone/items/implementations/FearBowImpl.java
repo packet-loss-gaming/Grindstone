@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.items.implementations;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.CustomItemSession;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
@@ -19,8 +20,8 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearBomb
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearStrike;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.MagicChain;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -76,7 +77,7 @@ public class FearBowImpl extends AbstractItemFeatureImpl implements SpecWeaponIm
             if (!session.canSpec(SpecType.RANGED)) {
 
                 if (ItemUtil.isItem(launcher, CustomItems.FEAR_BOW)) {
-                    if (!targetLoc.getWorld().isThundering() && targetLoc.getBlock().getLightFromSky() > 0) {
+                    if (!EnvironmentUtil.hasThunderstorm(targetLoc.getWorld()) && targetLoc.getBlock().getLightFromSky() > 0) {
 
                         server.getPluginManager().callEvent(new RapidHitEvent(owner));
 

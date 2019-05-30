@@ -25,10 +25,7 @@ import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
-import gg.packetloss.grindstone.util.APIUtil;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
@@ -98,7 +95,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
 
             mobDestroyer = server.getScheduler().runTaskTimer(inst, () -> {
                 Collection<Entity> contained = getContained(1, Zombie.class, ExperienceOrb.class);
-                if (!getWorld().isThundering()) removeOutsideZombies(contained);
+                if (!EnvironmentUtil.hasThunderstorm(getWorld())) removeOutsideZombies(contained);
                 if (isBossSpawned()) {
                     buffBabies(contained);
                     removeXP(contained);
@@ -286,7 +283,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
     public void equalize() {
         // Equalize Boss
         int diff = getWorld().getDifficulty().getValue();
-        if (getWorld().isThundering()) {
+        if (EnvironmentUtil.hasThunderstorm(getWorld())) {
             difficulty = diff + diff;
         } else {
             difficulty = diff;

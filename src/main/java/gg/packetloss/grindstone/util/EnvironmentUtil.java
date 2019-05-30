@@ -10,6 +10,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -47,6 +48,10 @@ public class EnvironmentUtil {
     public static boolean isMidnight(long time) {
 
         return time == ((0 - 8 + 24) * 1000);
+    }
+
+    public static boolean hasThunderstorm(World world) {
+        return world.hasStorm() && world.isThundering();
     }
 
     private static final Set<Integer> cropBlocks = new HashSet<>();

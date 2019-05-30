@@ -51,6 +51,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static com.sk89q.commandbook.util.ChatUtil.getFriendlyTime;
+import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 import static gg.packetloss.grindstone.util.portal.NoOPTravelAgent.overwriteDestination;
 
 public class GraveYardListener extends AreaListener<GraveYardArea> {
@@ -102,7 +103,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     public void onLightningStrike(LightningStrikeEvent event) {
 
         World world = event.getWorld();
-        if (parent.getWorld().equals(world) && world.isThundering()) {
+        if (parent.getWorld().equals(world) && hasThunderstorm(world)) {
             for (Location headStone : parent.headStones) {
                 if (world.getEntitiesByClass(Zombie.class).size() > 1000) return;
                 if (ChanceUtil.getChance(18)) {
@@ -139,7 +140,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         LivingEntity attacker = result.getAttacker();
         if (parent.isHostileTempleArea(event.getEntity().getLocation())) {
             double damage = event.getDamage();
-            if (ItemUtil.hasAncientArmour(defender) && (parent.getWorld().isThundering() || !(defender instanceof Player))) {
+            if (ItemUtil.hasAncientArmour(defender) && (hasThunderstorm(parent.getWorld()) || !(defender instanceof Player))) {
                 double diff = defender.getMaxHealth() - defender.getHealth();
                 if (ChanceUtil.getChance((int) Math.max(3, Math.round(defender.getMaxHealth() - diff)))) {
                     EffectUtil.Ancient.powerBurst(defender, damage);
@@ -148,7 +149,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (attacker instanceof Player) {
                 Player player = (Player) attacker;
                 player.getActivePotionEffects().stream().filter(effect -> !excludedTypes.contains(effect.getType())).forEach(defender::addPotionEffect);
-                if (parent.getWorld().isThundering()) return;
+                if (hasThunderstorm(parent.getWorld())) return;
                 if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
                     if (ChanceUtil.getChance(10)) {
                         EffectUtil.Master.healingLight(player, defender);
@@ -274,13 +275,13 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 if (ChanceUtil.getChance(10000)) {
                     drops.add(CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL));
                 }
-                if (ChanceUtil.getChance(6000) || world.isThundering() && ChanceUtil.getChance(4000)) {
+                if (ChanceUtil.getChance(6000) || hasThunderstorm(world) && ChanceUtil.getChance(4000)) {
                     drops.add(CustomItemCenter.build(CustomItems.BAT_BOW));
                 }
-                if (ChanceUtil.getChance(6000) || world.isThundering() && ChanceUtil.getChance(4000)) {
+                if (ChanceUtil.getChance(6000) || hasThunderstorm(world) && ChanceUtil.getChance(4000)) {
                     drops.add(CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS));
                 }
-                if (ChanceUtil.getChance(6000) || world.isThundering() && ChanceUtil.getChance(4000)) {
+                if (ChanceUtil.getChance(6000) || hasThunderstorm(world) && ChanceUtil.getChance(4000)) {
                     drops.add(CustomItemCenter.build(CustomItems.GEM_OF_LIFE));
                 }
                 if (ChanceUtil.getChance(400)) {
@@ -322,13 +323,13 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 if (ChanceUtil.getChance(100)) {
                     drops.add(CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL));
                 }
-                if (ChanceUtil.getChance(60) || world.isThundering() && ChanceUtil.getChance(40)) {
+                if (ChanceUtil.getChance(60) || hasThunderstorm(world) && ChanceUtil.getChance(40)) {
                     drops.add(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(16)));
                 }
-                if (ChanceUtil.getChance(60) || world.isThundering() && ChanceUtil.getChance(40)) {
+                if (ChanceUtil.getChance(60) || hasThunderstorm(world) && ChanceUtil.getChance(40)) {
                     drops.add(CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS));
                 }
-                if (ChanceUtil.getChance(60) || world.isThundering() && ChanceUtil.getChance(40)) {
+                if (ChanceUtil.getChance(60) || hasThunderstorm(world) && ChanceUtil.getChance(40)) {
                     drops.add(CustomItemCenter.build(CustomItems.GEM_OF_LIFE));
                 }
                 if (ChanceUtil.getChance(20)) {
@@ -523,7 +524,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (LocationUtil.isInRegion(parent.getWorld(), parent.creepers, player)) {
                 ChatUtil.sendNotice(player, "A spirit carries you through the maze!");
                 player.teleport(new Location(parent.getWorld(), -162.5, 52, -704), PlayerTeleportEvent.TeleportCause.UNKNOWN);
-            } else if (LocationUtil.isInRegion(parent.getWorld(), parent.rewards, player) && !parent.getWorld().isThundering()) {
+            } else if (LocationUtil.isInRegion(parent.getWorld(), parent.rewards, player) && !hasThunderstorm(parent.getWorld())) {
                 if (parent.nextTStorm < System.currentTimeMillis()) {
                     ChatUtil.sendNotice(player, "A monstrous thunderstorm begins!");
                     parent.getWorld().setThundering(true);
@@ -543,7 +544,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         HashMap<String, PlayerState> playerState = parent.playerState;
         Player player = event.getEntity();
         boolean contained = parent.contains(player);
-        if (contained || player.getWorld().isThundering()) {
+        if (contained || hasThunderstorm(player.getWorld())) {
             List<ItemStack> drops = event.getDrops();
             ItemStack[] dropArray = ItemUtil.clone(drops.toArray(new ItemStack[drops.size()]));
             if (ItemUtil.findItemOfName(dropArray, GEM_OF_LIFE)) {

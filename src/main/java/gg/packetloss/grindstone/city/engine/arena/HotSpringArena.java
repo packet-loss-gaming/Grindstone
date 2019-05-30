@@ -117,7 +117,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
                             if (EnvironmentUtil.isWater(block) && ChanceUtil.getChance(200)) {
                                 getWorld().playEffect(block.getLocation(), Effect.ENDER_SIGNAL, 1);
-                                if (getWorld().isThundering() && ChanceUtil.getChance(50)) {
+                                if (EnvironmentUtil.hasThunderstorm(getWorld()) && ChanceUtil.getChance(50)) {
                                     getWorld().spawn(block.getLocation(), Zombie.class);
                                 }
                                 break;

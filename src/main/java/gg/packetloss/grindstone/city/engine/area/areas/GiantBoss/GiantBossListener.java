@@ -18,6 +18,8 @@ import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.unleashed.LifeLeech;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.Decimate;
@@ -33,8 +35,6 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
@@ -394,7 +394,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     }
                 }
                 // Sacrificial drops
-                int m = parent.getWorld().isThundering() ? 3 : 1;
+                int m = EnvironmentUtil.hasThunderstorm(parent.getWorld()) ? 3 : 1;
                 m *= player != null ? 3 : 1;
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m, 400000));
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 15000));
