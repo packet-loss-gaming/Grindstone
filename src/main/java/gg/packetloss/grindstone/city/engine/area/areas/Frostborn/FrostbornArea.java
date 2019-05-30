@@ -13,6 +13,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
+import gg.packetloss.grindstone.ProtectedDroppedItemsComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.city.engine.area.PersistentArena;
@@ -21,6 +22,7 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
+import gg.packetloss.grindstone.util.item.itemstack.ProtectedSerializedItemStack;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
@@ -42,15 +44,18 @@ import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
-@Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
+@Depend(components = {AdminComponent.class, ProtectedDroppedItemsComponent.class}, plugins = {"WorldGuard"})
 public class FrostbornArea extends AreaComponent<FrostbornConfig> implements PersistentArena {
     private final int BASE_RAGE = -10;
 
     @InjectComponent
     protected AdminComponent admin;
+    @InjectComponent
+    protected ProtectedDroppedItemsComponent dropProtector;
 
     protected Economy economy;
 
@@ -81,7 +86,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     protected BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
 
     // Items taken from players returned upon death
-    protected ArrayList<SerializableItemStack> lootItems = new ArrayList<>();
+    protected ArrayList<ProtectedSerializedItemStack> lootItems = new ArrayList<>();
 
     protected int rageModifier = BASE_RAGE;
     protected long lastDeath = 0;
@@ -151,7 +156,10 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         stacks.addAll(Arrays.asList(player.getInventory().getContents()));
         stacks.removeIf(i -> i == null || i.getType() == Material.AIR);
 
-        stacks.stream().map(SerializableItemStack::new).collect(Collectors.toCollection(() -> lootItems));
+        long timeOfAddition = System.currentTimeMillis();
+        stacks.stream().map(SerializableItemStack::new).map(item -> {
+            return new ProtectedSerializedItemStack(player.getUniqueId(), timeOfAddition, item);
+        }).collect(Collectors.toCollection(() -> lootItems));
 
         // Clear the players inventory
         player.getInventory().setArmorContents(null);
@@ -446,6 +454,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
         // Gather the players in the arena
         Collection<Player> players = getContained(Player.class);
+        Collection<UUID> playerIds = players.stream().map(Entity::getUniqueId).collect(Collectors.toList());
 
         // Clear the players inventories
         for (Player player : players) {
@@ -457,15 +466,33 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         getContained(Item.class, Snowball.class, Bat.class).forEach(Entity::remove);
 
         // Drop the loot
-        for (SerializableItemStack lootItem : lootItems) {
-            ItemStack bukkitStack = lootItem.bukkitRestore();
-            world.dropItem(bossSpawnLoc, bukkitStack.clone());
-            if (ChanceUtil.getChance(config.chanceOfDupe)) {
-                world.dropItem(bossSpawnLoc, bukkitStack.clone());
-                ChatUtil.sendNotice(getContained(1, Player.class), "An item has been duplicated!");
+        Iterator<ProtectedSerializedItemStack> lootIt = lootItems.iterator();
+        while (lootIt.hasNext()) {
+            ProtectedSerializedItemStack lootItem = lootIt.next();
+            long timeSinceAddition = System.currentTimeMillis() - lootItem.getAdditionDate();
+            boolean stillProtected = timeSinceAddition <= TimeUnit.DAYS.toMillis(1);
+
+            UUID ownerID = lootItem.getPlayer();
+            if (!stillProtected || playerIds.contains(ownerID)) {
+                ItemStack bukkitStack = lootItem.getItemStack().bukkitRestore();
+
+                Item firstSpawnedItem = world.dropItem(bossSpawnLoc, bukkitStack.clone());
+                if (stillProtected) {
+                    dropProtector.protectDrop(firstSpawnedItem, ownerID);
+                }
+
+                if (ChanceUtil.getChance(config.chanceOfDupe)) {
+                    Item secondSpawnedItem = world.dropItem(bossSpawnLoc, bukkitStack.clone());
+                    if (stillProtected) {
+                        dropProtector.protectDrop(secondSpawnedItem, ownerID);
+                    }
+
+                    ChatUtil.sendNotice(getContained(1, Player.class), "An item has been duplicated!");
+                }
+
+                lootIt.remove();
             }
         }
-        lootItems.clear();
 
         // Drop some additional holdover loot
         for (int i = ChanceUtil.getRandom(8) * players.size(); i > 0; --i) {
@@ -552,7 +579,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             Object lootFileO = IOUtil.readBinaryFile(lootFile);
             if (lootFileO instanceof ArrayList) {
                 //noinspection unchecked
-                lootItems = (ArrayList<SerializableItemStack>) lootFileO;
+                lootItems = (ArrayList<ProtectedSerializedItemStack>) lootFileO;
                 log.info("Loaded: " + lootItems.size() + " loot items for Frostborn.");
             } else {
                 log.warning("Invalid item loot file found: " + lootFile.getName() + "!");
@@ -562,7 +589,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                     lootFileO = IOUtil.readBinaryFile(lootFile);
                     if (lootFileO instanceof ArrayList) {
                         //noinspection unchecked
-                        lootItems = (ArrayList<SerializableItemStack>) lootFileO;
+                        lootItems = (ArrayList<ProtectedSerializedItemStack>) lootFileO;
                         log.info("Backup file loaded successfully!");
                         log.info("Loaded: " + lootItems.size() + " loot items for Frostborn.");
                     } else {
