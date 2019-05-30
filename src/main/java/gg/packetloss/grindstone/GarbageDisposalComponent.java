@@ -14,8 +14,8 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.item.PlayerDropMapping;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
-import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Item;
@@ -25,56 +25,34 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerDropItemEvent;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Garbage Disposal", desc = "Get rid of that unwanted trash.")
-public class GarbageDisposalComponent extends BukkitComponent implements Listener, Runnable {
+public class GarbageDisposalComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private HashMap<UUID, List<Item>> playerDrops = new HashMap<>();
+    private PlayerDropMapping dropMapping = new PlayerDropMapping();
 
     @Override
     public void enable() {
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         registerCommands(Commands.class);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 20 * 15);
-    }
-
-    @Override
-    public void run() {
-        Set<UUID> onlinePlayerIds = GeneralPlayerUtil.getOnlinePlayerUUIDs();
-
-        Iterator<Map.Entry<UUID, List<Item>>> entrySetIterator = playerDrops.entrySet().iterator();
-        while (entrySetIterator.hasNext()) {
-            Map.Entry<UUID, List<Item>> entry = entrySetIterator.next();
-            UUID playerUUID = entry.getKey();
-
-            if (!onlinePlayerIds.contains(playerUUID)) {
-                entrySetIterator.remove();
-                continue;
-            }
-
-            List<Item> items = entry.getValue();
-            items.removeIf(i -> !i.isValid());
-        }
+        server.getScheduler().scheduleSyncRepeatingTask(inst, dropMapping, 0, 20 * 15);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDropItem(PlayerDropItemEvent event) {
-        UUID playerID = event.getPlayer().getUniqueId();
-
-        playerDrops.putIfAbsent(playerID, new ArrayList<>());
-        List<Item> drops = playerDrops.get(playerID);
-        drops.add(event.getItemDrop());
+        dropMapping.trackItem(event.getPlayer(), event.getItemDrop());
     }
 
     public void clearDropsOfPlayer(UUID playerID) {
         // Remove the items
-        List<Item> drops = playerDrops.getOrDefault(playerID, new ArrayList<>());
+        List<Item> drops = dropMapping.getDropsList(playerID);
         for (Item item : drops) {
             if (!item.isValid()) {
                 continue;
