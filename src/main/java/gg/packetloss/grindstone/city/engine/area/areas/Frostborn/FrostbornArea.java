@@ -26,6 +26,8 @@ import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import gg.packetloss.hackbook.AttributeBook;
+import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -45,6 +47,8 @@ import java.util.stream.Collectors;
 @ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
 @Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
 public class FrostbornArea extends AreaComponent<FrostbornConfig> implements PersistentArena {
+    private final int BASE_RAGE = -10;
+
     @InjectComponent
     protected AdminComponent admin;
 
@@ -78,6 +82,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     // Items taken from players returned upon death
     protected ArrayList<SerializableItemStack> lootItems = new ArrayList<>();
 
+    protected int rageModifier = BASE_RAGE;
     protected long lastDeath = 0;
 
     @Override
@@ -150,9 +155,6 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         player.getInventory().setArmorContents(null);
         player.getInventory().clear();
 
-        // Add a stack of snowballs so the player isn't totally helpless
-        player.getInventory().addItem(new ItemStack(Material.SNOW_BALL, Material.SNOW_BALL.getMaxStackSize()));
-
         // Disable any flight powers
         GeneralPlayerUtil.takeFlightSafely(player);
 
@@ -212,7 +214,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             }
         };
         TimedRunnable fountainTask = new TimedRunnable(snowballFountain, 24);
-        BukkitTask fountainTaskExecutor = server.getScheduler().runTaskTimer(inst, fountainTask, 10, 7);
+        BukkitTask fountainTaskExecutor = server.getScheduler().runTaskTimer(inst, fountainTask, 20, 7);
         fountainTask.setTask(fountainTaskExecutor);
     }
 
@@ -223,7 +225,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 if (!isBossSpawned()) return true;
                 for (int i = ChanceUtil.getRandom(4); i > 0; --i) {
                     Snowball snowball = boss.launchProjectile(Snowball.class);
-                    Vector vector = new Vector(ChanceUtil.getRandom(2.0), 1, ChanceUtil.getRandom(2.0));
+                    Vector vector = new Vector(ChanceUtil.getRandom(1.3), 1, ChanceUtil.getRandom(1.3));
                     snowball.setVelocity(snowball.getVelocity().multiply(vector));
                 }
                 return true;
@@ -239,6 +241,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     public void runSpecial(int specialNumber) {
+        rageModifier = BASE_RAGE;
         switch (specialNumber) {
             case 1:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "THIS ONE IS GOING TO HURT!");
@@ -276,16 +279,19 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 }
                 break;
             case 3:
-                ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "BLAARRGGGHHHH!!!");
-                createEvilSnowballVomit();
+                ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "ME NO FEEL SO GOOD...");
+                server.getScheduler().runTaskLater(inst, () -> {
+                    ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "BLAARRGGGHHHH!!!");
+                    createEvilSnowballVomit();
+                }, 20);
                 break;
             case 4:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "RELEASE THE BATS!");
                 for (Player player : getContained(Player.class)) {
                     for (int i = ChanceUtil.getRandomNTimes(20, 3) + 10; i > 0; --i) {
-                        Bat b = (Bat) getWorld().spawnEntity(player.getLocation().add(0, 4, 0), EntityType.BAT);
-                        b.setMaxHealth(50);
-                        b.setHealth(50);
+                        Bat b = (Bat) getWorld().spawnEntity(player.getLocation().add(0, 6, 0), EntityType.BAT);
+                        b.setMaxHealth(1);
+                        b.setHealth(1);
                     }
                 }
                 break;
@@ -333,23 +339,12 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     public void runAttack() {
         boss.setTarget(CollectionUtil.getElement(getContained(Player.class)));
 
-        if (!boss.hasLineOfSight(boss.getTarget())) {
-            Location targetLoc;
-            do {
-                targetLoc = LocationUtil.findRandomLoc(
-                        boss.getTarget().getLocation(),
-                        15,
-                        false,
-                        true
-                );
-            } while (!contains(targetLoc));
-
-            boss.teleport(targetLoc);
-        }
-
         runSnowbats();
 
-        if (ChanceUtil.getChance(10)) {
+        int baseChance = 10;
+        int modifiedChance = Math.max(1, baseChance - Math.max(0, rageModifier));
+
+        if (ChanceUtil.getChance(modifiedChance)) {
             runSpecial(ChanceUtil.getRandom(4));
         }
     }
@@ -389,6 +384,13 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         boss.setMaxHealth(1750);
         boss.setHealth(1750);
         boss.setRemoveWhenFarAway(false);
+
+        try {
+            AttributeBook.setAttribute(boss, AttributeBook.Attribute.MOVEMENT_SPEED, 0.6);
+            AttributeBook.setAttribute(boss, AttributeBook.Attribute.FOLLOW_RANGE, 150);
+        } catch (UnsupportedFeatureException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void sendPlayersToGate() {

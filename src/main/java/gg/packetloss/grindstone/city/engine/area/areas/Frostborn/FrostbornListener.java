@@ -11,21 +11,28 @@ import com.sk89q.worldedit.blocks.BaseBlock;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -55,6 +62,23 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
     }
 
     @EventHandler
+    public void onPlayerInteractBlock(PlayerInteractEvent event) {
+        if (event.getAction() != Action.LEFT_CLICK_BLOCK) {
+            return;
+        }
+
+        Block clickedBlock = event.getClickedBlock();
+        if (!parent.contains(clickedBlock)) {
+            return;
+        }
+
+        Material blockType = clickedBlock.getType();
+        if (blockType == Material.SNOW || blockType == Material.SNOW_BLOCK) {
+            event.getPlayer().getInventory().addItem(new ItemStack(Material.SNOW_BALL, 4));
+        }
+    }
+
+    @EventHandler
     public void onFallBlock(FallBlockerEvent event) {
         Player player = event.getPlayer();
 
@@ -67,7 +91,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         Location to = event.getTo();
 
-        if (parent.contains(to) && !event.getCause().equals(TeleportCause.UNKNOWN)) {
+        if (parent.contains(to, 1) && !event.getCause().equals(TeleportCause.UNKNOWN)) {
             Player player = event.getPlayer();
             if (parent.admin.isAdmin(player)) return;
             event.setTo(parent.gate);
@@ -80,10 +104,19 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
         if (!parent.contains(entity)) return;
 
         if (entity instanceof Snowman) {
+            // Increase the probability of a special attack
+            ++parent.rageModifier;
+
+            // Slow the boss on damage
+            PotionEffect potionEffect = new PotionEffect(PotionEffectType.SLOW, 20 * 3, 3, true, false);
+            ((Snowman) entity).addPotionEffect(potionEffect, true);
+
+            // Notify players of the new health
             for (Player player : parent.getContained(1, Player.class)) {
                 PvMComponent.printHealth(player, (LivingEntity) entity);
             }
 
+            // If punched return fire with a special attack
             if (event instanceof EntityDamageByEntityEvent) {
                 if (((EntityDamageByEntityEvent) event).getDamager() instanceof Player) {
                     parent.runSpecial(3);
@@ -105,12 +138,15 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             }
 
             float damage = 1;
+            boolean blockDamage = true;
 
             if (p.getShooter() instanceof Player) {
                 damage = 2;
+                blockDamage = false;
             }
 
-            p.getWorld().createExplosion(p.getLocation(), damage);
+            Location targetLoc = p.getLocation();
+            p.getWorld().createExplosion(targetLoc.getX(), targetLoc.getY(), targetLoc.getZ(), damage, false, blockDamage);
         }
     }
 
@@ -141,7 +177,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             return;
         }
 
-        event.setYield(.01F);
+        event.setYield(0);
 
         Iterator<Block> it = event.blockList().iterator();
         while (it.hasNext()) {
@@ -202,6 +238,13 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
                     break;
             }
             event.setDeathMessage(player.getName() + deathMessage);
+        }
+    }
+
+    @EventHandler
+    public void onApocalypseLocalSpawnEvent(ApocalypseLocalSpawnEvent event) {
+        if (parent.contains(event.getPlayer())) {
+            event.setCancelled(true);
         }
     }
 }
