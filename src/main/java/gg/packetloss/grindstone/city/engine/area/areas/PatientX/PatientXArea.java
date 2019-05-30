@@ -376,7 +376,18 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
         boolean second = false;
 
         for (Zombie e : getContained(Zombie.class)) {
-            if (e.isValid() && !e.isBaby()) {
+            if (!e.isValid()) {
+                continue;
+            }
+
+            // Skip unnamed entities
+            if (e.getCustomName() == null) {
+                continue;
+            }
+
+            // The boss cannot be a baby do not check them. However, if we've still have a baby zombie
+            // at this point, we should not continue, as it needs removed.
+            if (!e.isBaby()) {
                 if (e.getMaxHealth() == config.bossHealth) {
                     if (!found) {
                         boss = e;
@@ -388,8 +399,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
                         continue;
                     }
                 }
-                e.remove();
             }
+
+            e.remove();
         }
 
         if (second) {
