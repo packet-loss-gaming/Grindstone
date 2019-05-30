@@ -57,7 +57,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     protected ProtectedRegion gate_RG, entrance_RG;
 
     protected Snowman boss;
-    protected Location gate;
+    protected Location gateOuter;
+    protected Location gateInner;
     protected Location bossSpawnLoc;
 
     // Block information
@@ -90,7 +91,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         try {
             WorldGuardPlugin WG = APIUtil.getWorldGuard();
             world = server.getWorlds().get(0);
-            gate = new Location(world, -48.5, 81, 392, 270, 0);
+            gateOuter = new Location(world, -48.5, 81, 392, 270, 0);
+            gateInner = new Location(world, -50.5, 81, 392, 90, 0);
             bossSpawnLoc = new Location(getWorld(), -137, 67, 392, 270, 0);
             RegionManager manager = WG.getRegionManager(world);
             String base = "glacies-mare-district-frostborn";
@@ -395,7 +397,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     public void sendPlayersToGate() {
         for (Player player : getContained(Player.class)) {
-            player.teleport(gate, TeleportCause.UNKNOWN);
+            player.teleport(gateOuter, TeleportCause.UNKNOWN);
         }
     }
 

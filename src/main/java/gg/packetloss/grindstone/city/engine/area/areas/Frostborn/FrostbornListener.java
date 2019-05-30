@@ -29,6 +29,7 @@ import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -53,11 +54,11 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
         if (!event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) return;
         Player player = event.getPlayer();
         if (parent.contains(parent.gate_RG, player)) {
-            // Teleport to gate area
-            player.teleport(new Location(parent.getWorld(), -50.5, 81, 392, 90, 0), TeleportCause.UNKNOWN);
+            // Teleport inside just past the gate
+            player.teleport(parent.gateInner, TeleportCause.UNKNOWN);
         } else if (parent.contains(player, 1)) {
             // Teleport back outside
-            player.teleport(parent.gate, TeleportCause.UNKNOWN);
+            player.teleport(parent.gateOuter, TeleportCause.UNKNOWN);
         }
     }
 
@@ -94,7 +95,16 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
         if (parent.contains(to, 1) && !event.getCause().equals(TeleportCause.UNKNOWN)) {
             Player player = event.getPlayer();
             if (parent.admin.isAdmin(player)) return;
-            event.setTo(parent.gate);
+            event.setTo(parent.gateOuter);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+
+        if (parent.contains(player)) {
+            player.teleport(parent.gateInner, TeleportCause.UNKNOWN);
         }
     }
 
