@@ -280,10 +280,17 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         if (worldEdit().getSession(player).hasSuperPickAxe()) worldEdit().getSession(player).disableSuperPickAxe();
         if (godComponent.hasGodMode(player)) godComponent.disableGodMode(player);
+
+        boolean wasFlying = player.isFlying();
+
         if (!player.getGameMode().equals(GameMode.SURVIVAL)) player.setGameMode(GameMode.SURVIVAL);
-        if (GeneralPlayerUtil.takeFlightSafely(player)) {
+        GeneralPlayerUtil.takeFlightSafely(player);
+
+        if (wasFlying) {
+            player.setFallDistance(0);
             server.getScheduler().runTaskLater(inst, () -> GeneralPlayerUtil.findSafeSpot(player), 1);
         }
+
         return true;
     }
 
