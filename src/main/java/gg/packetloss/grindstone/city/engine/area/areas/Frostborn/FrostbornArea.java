@@ -26,7 +26,6 @@ import gg.packetloss.grindstone.util.item.itemstack.ProtectedSerializedItemStack
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
-import gg.packetloss.grindstone.util.restoration.DoubleBufferedBaseBlockRecordIndex;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.hackbook.AttributeBook;
@@ -84,7 +83,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     // Block Restoration
-    protected DoubleBufferedBaseBlockRecordIndex generalIndex = new DoubleBufferedBaseBlockRecordIndex();
+    protected BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
 
     // Items taken from players returned upon death
     protected ArrayList<ProtectedSerializedItemStack> lootItems = new ArrayList<>();
@@ -127,8 +126,6 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     @Override
     public void run() {
-        restoreBlocks();
-        movePlayers();
         if (!isBossSpawned()) {
             if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
                 spawnBoss();
@@ -136,6 +133,14 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 thawEntrance();
             }
         } else {
+            // This is extremely weird. It seems upon restart if we call restoreBlocks as soon as we possibly can
+            // this results in snow blocks having some sort of block update, which results in many of
+            // the restored snow blocks turning into snow balls.
+            //
+            // This is a work around to only restore blocks when players are in the building.
+            if (!isEmpty(1)) {
+                restoreBlocks();
+            }
             preventRestoreDrowning();
 
             if (!isEmpty()) {
@@ -143,6 +148,9 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 runAttack();
             }
         }
+
+        movePlayers();
+
         writeData(true);
     }
 
@@ -535,8 +543,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         if (generalFile.exists()) {
             Object generalFileO = IOUtil.readBinaryFile(generalFile);
             if (generalFileO instanceof BaseBlockRecordIndex) {
-                generalIndex = (DoubleBufferedBaseBlockRecordIndex) generalFileO;
-                generalIndex.flushPersistedBuffer();
+                generalIndex = (BaseBlockRecordIndex) generalFileO;
                 log.info("Loaded: " + generalIndex.size() + " general records for Frostborn.");
             } else {
                 log.warning("Invalid block record file encountered: " + generalFile.getName() + "!");
@@ -545,8 +552,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 if (generalFile.exists()) {
                     generalFileO = IOUtil.readBinaryFile(generalFile);
                     if (generalFileO instanceof BaseBlockRecordIndex) {
-                        generalIndex = (DoubleBufferedBaseBlockRecordIndex) generalFileO;
-                        generalIndex.flushPersistedBuffer();
+                        generalIndex = (BaseBlockRecordIndex) generalFileO;
                         log.info("Backup file loaded successfully!");
                         log.info("Loaded: " + generalIndex.size() + " general records for Frostborn.");
                     } else {

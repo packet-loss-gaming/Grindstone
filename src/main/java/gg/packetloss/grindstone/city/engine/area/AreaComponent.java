@@ -109,15 +109,19 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
                 .collect(Collectors.toList());
     }
 
-    public boolean isEmpty() {
+    public boolean isEmpty(int parentsUp) {
         for (Player player : server.getOnlinePlayers()) {
-            if (contains(player)) {
+            if (contains(player, parentsUp)) {
                 empty = false;
                 return false;
             }
         }
         empty = true;
         return true;
+    }
+
+    public boolean isEmpty() {
+        return isEmpty(0);
     }
 
     public boolean cachedEmpty() {
