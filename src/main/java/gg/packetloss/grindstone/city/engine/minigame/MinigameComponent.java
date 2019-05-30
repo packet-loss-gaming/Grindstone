@@ -256,31 +256,8 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
 
         File workingDirectory = new File(workingDir);
 
-        activeFile:
-        {
-            File activeFile = new File(workingDir + "active.dat");
-            if (activeFile.exists()) {
-                Object playerStateFileO = IOUtil.readBinaryFile(activeFile);
-
-                if (playerState.equals(playerStateFileO)) {
-                    break activeFile;
-                }
-            }
-            IOUtil.toBinaryFile(workingDirectory, "active", playerState);
-        }
-
-        goneFile:
-        {
-            File goneFile = new File(workingDir + "gone.dat");
-            if (goneFile.exists()) {
-                Object playerStateFileO = IOUtil.readBinaryFile(goneFile);
-
-                if (goneState.equals(playerStateFileO)) {
-                    break goneFile;
-                }
-            }
-            IOUtil.toBinaryFile(workingDirectory, "gone", goneState);
-        }
+        IOUtil.toBinaryFile(workingDirectory, "active", playerState);
+        IOUtil.toBinaryFile(workingDirectory, "gone", goneState);
     }
 
     public void reloadData() {

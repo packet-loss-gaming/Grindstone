@@ -469,19 +469,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
     @Override
     public void writeData(boolean doAsync) {
         Runnable run = () -> {
-            respawnsFile:
-            {
-                File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
-                if (playerStateFile.exists()) {
-                    Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-
-                    if (playerState.equals(playerStateFileO)) {
-                        break respawnsFile;
-                    }
-                }
-                IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
-            }
+            IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
         };
+
         if (doAsync) {
             server.getScheduler().runTaskAsynchronously(inst, run);
         } else {

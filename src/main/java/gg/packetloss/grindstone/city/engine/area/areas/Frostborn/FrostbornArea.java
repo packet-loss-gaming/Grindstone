@@ -26,6 +26,7 @@ import gg.packetloss.grindstone.util.item.itemstack.ProtectedSerializedItemStack
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
+import gg.packetloss.grindstone.util.restoration.DoubleBufferedBaseBlockRecordIndex;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.hackbook.AttributeBook;
@@ -83,7 +84,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     // Block Restoration
-    protected BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
+    protected DoubleBufferedBaseBlockRecordIndex generalIndex = new DoubleBufferedBaseBlockRecordIndex();
 
     // Items taken from players returned upon death
     protected ArrayList<ProtectedSerializedItemStack> lootItems = new ArrayList<>();
@@ -517,31 +518,10 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     @Override
     public void writeData(boolean doAsync) {
         Runnable run = () -> {
-            generalFile:
-            {
-                File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
-                if (generalFile.exists()) {
-                    Object generalFileO = IOUtil.readBinaryFile(generalFile);
-
-                    if (generalIndex.equals(generalFileO)) {
-                        break generalFile;
-                    }
-                }
-                IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
-            }
-            lootFile:
-            {
-                File lootFile = new File(getWorkingDir().getPath() + "/loot.dat");
-                if (lootFile.exists()) {
-                    Object lootFileO = IOUtil.readBinaryFile(lootFile);
-
-                    if (lootItems.equals(lootFileO)) {
-                        break lootFile;
-                    }
-                }
-                IOUtil.toBinaryFile(getWorkingDir(), "loot", lootItems);
-            }
+            IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
+            IOUtil.toBinaryFile(getWorkingDir(), "loot", lootItems);
         };
+
         if (doAsync) {
             server.getScheduler().runTaskAsynchronously(inst, run);
         } else {
@@ -555,7 +535,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         if (generalFile.exists()) {
             Object generalFileO = IOUtil.readBinaryFile(generalFile);
             if (generalFileO instanceof BaseBlockRecordIndex) {
-                generalIndex = (BaseBlockRecordIndex) generalFileO;
+                generalIndex = (DoubleBufferedBaseBlockRecordIndex) generalFileO;
+                generalIndex.flushPersistedBuffer();
                 log.info("Loaded: " + generalIndex.size() + " general records for Frostborn.");
             } else {
                 log.warning("Invalid block record file encountered: " + generalFile.getName() + "!");
@@ -564,7 +545,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 if (generalFile.exists()) {
                     generalFileO = IOUtil.readBinaryFile(generalFile);
                     if (generalFileO instanceof BaseBlockRecordIndex) {
-                        generalIndex = (BaseBlockRecordIndex) generalFileO;
+                        generalIndex = (DoubleBufferedBaseBlockRecordIndex) generalFileO;
+                        generalIndex.flushPersistedBuffer();
                         log.info("Backup file loaded successfully!");
                         log.info("Loaded: " + generalIndex.size() + " general records for Frostborn.");
                     } else {
