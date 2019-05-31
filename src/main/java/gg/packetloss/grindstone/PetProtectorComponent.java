@@ -9,11 +9,10 @@ package gg.packetloss.grindstone;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
-import com.zachsthings.libcomponents.Depend;
-import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
+import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Server;
 import org.bukkit.entity.*;
@@ -23,7 +22,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,15 +29,10 @@ import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Pet Protector", desc = "Protectin dem petz.")
-@Depend(components = {AdminComponent.class})
 public class PetProtectorComponent extends BukkitComponent implements Listener {
-
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
-
-    @InjectComponent
-    private AdminComponent admin;
 
     @Override
     public void enable() {
@@ -50,9 +43,8 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
 
     @EventHandler
     public void onEntityTarget(EntityTargetEvent event) {
-
+        // Prevent safe mobs from being used against fellow players
         if (event.getTarget() instanceof Player && isSafe(event.getEntity())) {
-
             event.setCancelled(true);
         }
     }
@@ -63,26 +55,50 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         ignored.add(EntityDamageEvent.DamageCause.FALL);
     }
 
+    private static EDBEExtractor<Player, LivingEntity, Arrow> extractor = new EDBEExtractor<>(
+            Player.class,
+            LivingEntity.class,
+            Arrow.class
+    );
+
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
+        Entity targetEntity = event.getEntity();
 
-        if (!(event.getEntity() instanceof Tameable)) return;
+        if (!isSafe(targetEntity) || ignored.contains(event.getCause())) {
+            return;
+        }
 
-        Entity e = null;
         if (event instanceof EntityDamageByEntityEvent) {
-            e = ((EntityDamageByEntityEvent) event).getDamager();
-        }
-        if (isSafe(event.getEntity()) && !ignored.contains(event.getCause())) {
-            if (e != null) {
-                ProjectileSource source = null;
-                if (e instanceof Projectile) source = ((Projectile) e).getShooter();
-                if (source != null && source instanceof Player) {
-                    e = (Entity) source;
-                    ChatUtil.sendError((Player) e, "You cannot hurt a " + event.getEntityType().toString().toLowerCase() + " that you don't own.");
+            CombatantPair<Player, LivingEntity, Arrow> result = extractor.extractFrom((EntityDamageByEntityEvent) event);
+
+            // Only block entity damage by entity events where the attacker is a player
+            if (result == null) return;
+
+            Player attacker = result.getAttacker();
+
+            String customName = targetEntity.getCustomName();
+            String entityName = targetEntity.getType().toString().toLowerCase();
+
+            if (((Tameable) targetEntity).getOwner().getUniqueId().equals(attacker.getUniqueId())) {
+                String message = "You're hurting your " + entityName;
+                if (customName != null) {
+                    message += ", " + customName;
                 }
+                message += "!";
+
+                ChatUtil.sendWarning(attacker, message);
+                return;
             }
-            event.setCancelled(true);
+
+            if (customName != null) {
+                ChatUtil.sendError(attacker, "How dare you try and harm, " + customName + "!");
+            }
+
+            ChatUtil.sendError(attacker, "You cannot hurt a " + entityName + " that you don't own.");
         }
+
+        event.setCancelled(true);
     }
 
     @EventHandler
@@ -119,16 +135,16 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         if (isSafe(event.getRightClicked()) && (tameable.getOwner() == null || !tameable.getOwner().getName().equals(player.getName()))) {
 
             event.setCancelled(true);
-            ChatUtil.sendError(player, "You cannot currently interact with that " + event.getRightClicked().getType().toString().toLowerCase() + ".");
+            String entityName = event.getRightClicked().getType().toString().toLowerCase();
+            ChatUtil.sendError(player, "You cannot interact with a " + entityName + " that you don't own.");
         }
     }
 
     private boolean isSafe(Entity entity) {
-
-        if (entity instanceof LivingEntity && entity instanceof Vehicle) {
-            Vehicle horse = (Vehicle) entity;
+        if (entity instanceof Horse) {
+            Horse horse = (Horse) entity;
             Entity passenger = horse.getPassenger();
-            if (passenger != null && passenger instanceof Player) {
+            if (passenger instanceof Player) {
                 return true;
             }
         }
