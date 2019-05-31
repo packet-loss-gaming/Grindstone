@@ -127,7 +127,7 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
 
                 ChatUtil.sendNotice(player, "You have gained possession of this horse.");
                 return;
-            } else if (player.isSneaking() && tameable.getOwner().getName().equals(player.getName())) {
+            } else if (player.isSneaking() && tameable.getOwner().getUniqueId().equals(player.getUniqueId())) {
 
                 tameable.setOwner(null);
                 tameable.setTamed(true);
@@ -141,7 +141,7 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         }
 
         if (isSafe(entity)) {
-            if ((tameable.getOwner() == null || !tameable.getOwner().getName().equals(player.getName()))) {
+            if ((tameable.getOwner() == null || !tameable.getOwner().getUniqueId().equals(player.getUniqueId()))) {
                 event.setCancelled(true);
                 String entityName = entity.getType().toString().toLowerCase();
                 ChatUtil.sendError(player, "You cannot interact with a " + entityName + " that you don't own.");
