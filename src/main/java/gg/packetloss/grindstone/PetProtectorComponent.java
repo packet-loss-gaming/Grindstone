@@ -9,7 +9,10 @@ package gg.packetloss.grindstone;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.homes.HomeManagerComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -29,10 +32,14 @@ import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Pet Protector", desc = "Protectin dem petz.")
+@Depend(components = {HomeManagerComponent.class})
 public class PetProtectorComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
+
+    @InjectComponent
+    private HomeManagerComponent homes;
 
     @Override
     public void enable() {
@@ -107,9 +114,10 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         if (!(event.getRightClicked() instanceof Tameable)) return;
 
         Player player = event.getPlayer();
-        Tameable tameable = (Tameable) event.getRightClicked();
+        Entity entity = event.getRightClicked();
+        Tameable tameable = (Tameable) entity;
 
-        if (event.getRightClicked() instanceof Horse && tameable.isTamed() && player.getItemInHand().getTypeId() == ItemID.RED_APPLE) {
+        if (entity instanceof Horse && tameable.isTamed() && player.getItemInHand().getTypeId() == ItemID.RED_APPLE) {
             if (tameable.getOwner() == null) {
 
                 tameable.setOwner(player);
@@ -132,11 +140,15 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
             }
         }
 
-        if (isSafe(event.getRightClicked()) && (tameable.getOwner() == null || !tameable.getOwner().getName().equals(player.getName()))) {
-
-            event.setCancelled(true);
-            String entityName = event.getRightClicked().getType().toString().toLowerCase();
-            ChatUtil.sendError(player, "You cannot interact with a " + entityName + " that you don't own.");
+        if (isSafe(entity)) {
+            if ((tameable.getOwner() == null || !tameable.getOwner().getName().equals(player.getName()))) {
+                event.setCancelled(true);
+                String entityName = entity.getType().toString().toLowerCase();
+                ChatUtil.sendError(player, "You cannot interact with a " + entityName + " that you don't own.");
+            } else if (entity instanceof Wolf && !((Wolf) tameable).isSitting() && !homes.isEntityInPlayersHome(player, entity)) {
+                event.setCancelled(true);
+                ChatUtil.sendError(player, "You cannot make a wolf sit outside of your home!");
+            }
         }
     }
 

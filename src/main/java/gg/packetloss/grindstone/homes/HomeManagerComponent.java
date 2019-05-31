@@ -51,6 +51,7 @@ import org.apache.commons.lang3.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -128,6 +129,20 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         if (economyProvider != null) {
             econ = economyProvider.getProvider();
         }
+    }
+
+    public static boolean isEntityInPlayersHome(Player player, Entity entity, RegionManager manager) {
+        for (ProtectedRegion aRegion : manager.getApplicableRegions(entity.getLocation())) {
+            if (isPlayerHouse(aRegion, new BukkitPlayer(WorldGuardPlugin.inst(), player))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isEntityInPlayersHome(Player player, Entity entity) {
+        RegionManager manager = WG.getRegionManager(entity.getWorld());
+        return isEntityInPlayersHome(player, entity, manager);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -847,9 +862,12 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
         return getHomeName(player.getName(), manager);
     }
+    public static boolean isHouse(ProtectedRegion region) {
+        return region.getId().endsWith("-house");
+    }
 
     public static boolean isPlayerHouse(ProtectedRegion region, LocalPlayer player) {
-        return region.getId().endsWith("-house") && region.getOwners().contains(player);
+        return isHouse(region) && region.getOwners().contains(player);
     }
 
     public static boolean isPlayerHouse(ProtectedRegion region, Player player) {
