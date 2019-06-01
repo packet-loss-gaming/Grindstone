@@ -47,6 +47,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemName;
+
 @ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
 @Depend(components = {AdminComponent.class, ProtectedDroppedItemsComponent.class}, plugins = {"WorldGuard"})
 public class FrostbornArea extends AreaComponent<FrostbornConfig> implements PersistentArena {
@@ -484,22 +486,28 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             UUID ownerID = lootItem.getPlayer();
             if (!stillProtected || playerIds.contains(ownerID)) {
                 ItemStack bukkitStack = lootItem.getItemStack().bukkitRestore();
+                lootIt.remove();
+
+                Optional<String> itemName = computeItemName(bukkitStack);
+                boolean isPhantomItem = itemName.orElse("").contains("Phantom");
+                if (!isPhantomItem && ChanceUtil.getChance(config.chanceofActivation)) {
+                    if (ChanceUtil.getChance(config.chanceOfDupe)) {
+                        Item firstSpawnedItem = world.dropItem(bossSpawnLoc, bukkitStack.clone());
+                        if (stillProtected) {
+                            dropProtector.protectDrop(firstSpawnedItem, ownerID);
+                        }
+
+                        ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.GOLD + "An item has been duplicated!");
+                    } else {
+                        ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "An item has been destroyed!");
+                        continue;
+                    }
+                }
 
                 Item firstSpawnedItem = world.dropItem(bossSpawnLoc, bukkitStack.clone());
                 if (stillProtected) {
                     dropProtector.protectDrop(firstSpawnedItem, ownerID);
                 }
-
-                if (ChanceUtil.getChance(config.chanceOfDupe)) {
-                    Item secondSpawnedItem = world.dropItem(bossSpawnLoc, bukkitStack.clone());
-                    if (stillProtected) {
-                        dropProtector.protectDrop(secondSpawnedItem, ownerID);
-                    }
-
-                    ChatUtil.sendNotice(getContained(1, Player.class), "An item has been duplicated!");
-                }
-
-                lootIt.remove();
             }
         }
 
