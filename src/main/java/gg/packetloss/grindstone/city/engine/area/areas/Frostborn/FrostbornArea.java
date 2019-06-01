@@ -243,6 +243,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     private void createEvilSnowballFountain(Location loc) {
+        final int timesToRun = 24;
+
         IntegratedRunnable snowballFountain = new IntegratedRunnable() {
             @Override
             public boolean run(int times) {
@@ -266,7 +268,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             public void end() {
             }
         };
-        TimedRunnable fountainTask = new TimedRunnable(snowballFountain, 24);
+        TimedRunnable fountainTask = new TimedRunnable(snowballFountain, timesToRun);
         BukkitTask fountainTaskExecutor = server.getScheduler().runTaskTimer(inst, fountainTask, 20, 7);
         fountainTask.setTask(fountainTaskExecutor);
     }
@@ -355,7 +357,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         }
     }
 
-    private void aerialBombard(Location spawnLoc, int quantity, int chanceOfAvalanche) {
+    private void aerialBombard(Location spawnLoc, int quantity, int iteration) {
         for (int i = 0; i < quantity; ++i) {
             Snowball snowball = (Snowball) getWorld().spawnEntity(spawnLoc, EntityType.SNOWBALL);
             Vector vector = new Vector(
@@ -365,8 +367,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             );
             snowball.setVelocity(vector);
 
-            if (chanceOfAvalanche > 0) {
-                snowball.setMetadata("forstborn-avalanche", new FixedMetadataValue(inst, chanceOfAvalanche));
+            if (iteration > 0) {
+                snowball.setMetadata("forstborn-avalanche", new FixedMetadataValue(inst, iteration));
             }
         }
     }
@@ -378,12 +380,18 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         }
     }
 
-    protected void createAvalanche(Location loc, int chanceOfCascade) {
+    protected void createAvalanche(Location loc, int iteration) {
+        final int timesToRun = 40;
+
         IntegratedRunnable snowballVomit = new IntegratedRunnable() {
             @Override
             public boolean run(int times) {
                 if (!isBossSpawned()) return true;
-                aerialBombard(loc, ChanceUtil.getRangedRandom(3, 9), chanceOfCascade);
+
+                // If this is anything but the first burst of snowballs, use 0, which represent no further spawns.
+                int iterationToUse = times == timesToRun ? iteration : 0;
+
+                aerialBombard(loc, ChanceUtil.getRangedRandom(3, 9), iterationToUse);
                 return true;
             }
 
@@ -391,7 +399,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             public void end() {
             }
         };
-        TimedRunnable aerialBombardTask = new TimedRunnable(snowballVomit, 40);
+
+        TimedRunnable aerialBombardTask = new TimedRunnable(snowballVomit, timesToRun);
         BukkitTask aerialBombardTaskExecutor = server.getScheduler().runTaskTimer(inst, aerialBombardTask, 10, 4);
         aerialBombardTask.setTask(aerialBombardTaskExecutor);
     }

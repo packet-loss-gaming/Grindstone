@@ -45,8 +45,16 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    private int explosionCounter = 0;
+    private double rollingAvgExplosionsPerSecond = 0;
+
     public FrostbornListener(FrostbornArea parent) {
         super(parent);
+
+        server.getScheduler().runTaskTimer(inst, () -> {
+            rollingAvgExplosionsPerSecond = (explosionCounter + rollingAvgExplosionsPerSecond) / 2;
+            explosionCounter = 0;
+        }, 0, 20);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -137,17 +145,33 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
         }
     }
 
+    private int getChanceForIteration(int iteration) {
+        if (iteration == 1) {
+            return 1;
+        }
+
+        if (iteration < 5) {
+            return 3;
+        }
+
+        return (int) Math.pow(3, iteration - 1);
+    }
+
     @EventHandler
     public void onProjectileLand(ProjectileHitEvent event) {
         Projectile p = event.getEntity();
         if (p instanceof Snowball && parent.contains(p)) {
+            if (!parent.isBossSpawned()) {
+                return;
+            }
+
             if (p.hasMetadata("forstborn-avalanche")) {
                 Location targetLoc = p.getLocation();
                 targetLoc.setY(79);
 
-                int chance = p.getMetadata("forstborn-avalanche").get(0).asInt();
-                if (ChanceUtil.getChance(chance)) {
-                    parent.createAvalanche(targetLoc, (int) Math.pow(chance + 5, 2));
+                int iteration = p.getMetadata("forstborn-avalanche").get(0).asInt();
+                if (ChanceUtil.getChance(getChanceForIteration(iteration))) {
+                    parent.createAvalanche(targetLoc, iteration + 1);
                 }
             }
 
@@ -157,6 +181,20 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             if (p.getShooter() instanceof Player) {
                 damage = 2;
                 blockDamage = false;
+            } else {
+                ++explosionCounter;
+
+                if (rollingAvgExplosionsPerSecond > 300) {
+                    // Drop some snowballs, no one is going to notice anyways
+                    if (ChanceUtil.getChance((rollingAvgExplosionsPerSecond / 300) + 1)) {
+                        return;
+                    }
+                }
+
+                // Only do block damage
+                if (rollingAvgExplosionsPerSecond > 50) {
+                    blockDamage = ChanceUtil.getChance(((int) rollingAvgExplosionsPerSecond / 50) + 1);
+                }
             }
 
             Location targetLoc = p.getLocation();
