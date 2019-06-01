@@ -10,6 +10,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -232,6 +233,14 @@ public class EnvironmentUtil {
     public static boolean isContainer(int block) {
 
         return containerBlocks.contains(block);
+    }
+
+    public static boolean isChest(Material material) {
+        return material == Material.CHEST || material == Material.TRAPPED_CHEST;
+    }
+
+    public static boolean isChest(Block block) {
+        return isChest(block.getType());
     }
 
     private static final Set<Integer> interactiveBlocks = new HashSet<>();

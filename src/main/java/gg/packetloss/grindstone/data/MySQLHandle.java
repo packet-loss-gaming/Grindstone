@@ -6,7 +6,12 @@
 
 package gg.packetloss.grindstone.data;
 
-import java.sql.*;
+import com.zaxxer.hikari.HikariDataSource;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class MySQLHandle {
     private static String database = "";
@@ -25,8 +30,27 @@ public class MySQLHandle {
         MySQLHandle.password = password;
     }
 
+    private static HikariDataSource pool = null;
+
+    private static HikariDataSource getPool() {
+        if (pool != null) {
+            return pool;
+        }
+
+        pool = new HikariDataSource();
+        pool.setJdbcUrl(database);
+        pool.setUsername(username);
+        pool.setPassword(password);
+
+        pool.setMinimumIdle(4);
+        pool.setMaximumPoolSize(8);
+        pool.setPoolName("Grindstone-Connection-Pool");
+
+        return pool;
+    }
+
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(database, username, password);
+        return getPool().getConnection();
     }
 
     public static int getPlayerId(String name) throws SQLException {

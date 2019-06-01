@@ -31,13 +31,11 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
 import gg.packetloss.grindstone.util.item.ItemType;
-import gg.packetloss.grindstone.util.item.ItemUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
@@ -45,6 +43,8 @@ import java.text.DecimalFormat;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.util.item.ItemNameCalculator.*;
 
 @ComponentInformation(friendlyName = "Market", desc = "Buy and sell goods.")
 @Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, DataBaseComponent.class, SessionComponent.class})
@@ -573,18 +573,6 @@ public class MarketComponent extends BukkitComponent {
         }
     }
 
-    private static Set<String> names = new HashSet<>();
-
-    static {
-        for (CustomItems item : CustomItems.values()) {
-            names.add(item.name());
-        }
-    }
-
-    private static boolean hasItemOfName(String name) {
-        return names.contains(name.toUpperCase().replace(' ', '_'));
-    }
-
     private static ItemStack[] getItem(String name, int amount) throws CommandException {
 
         name = name.toUpperCase().replace(" ", "_");
@@ -635,19 +623,6 @@ public class MarketComponent extends BukkitComponent {
         return stack != null && stack.getType() != Material.AIR;
     }
 
-    private static boolean verifyValidCustomItem(ItemMeta stackMeta) {
-        String itemName = stackMeta.getDisplayName();
-        return ItemUtil.isAuthenticCustomItem(itemName);
-    }
-
-    private static boolean verifyValidCustomItem(ItemStack stack) {
-        ItemMeta stackMeta = stack.getItemMeta();
-        if (!stackMeta.hasDisplayName()) {
-            return true;
-        }
-
-        return verifyValidCustomItem(stackMeta);
-    }
 
     private static void verifyValidItemCommand(ItemStack stack) throws CommandException {
         if (!verifyValidItemStack(stack)) {
@@ -658,38 +633,6 @@ public class MarketComponent extends BukkitComponent {
             throw new CommandException("Renamed items are unsupported!");
         }
 
-    }
-
-    private static Optional<String> matchItemFromNameOrId(String itemName) {
-        // If this isn't a custom item, return that.
-        if (hasItemOfName(itemName)) {
-            return Optional.of(itemName);
-        }
-
-        // Otherwise try to find a builtin item.
-        ItemType type = ItemType.lookup(itemName);
-        if (type == null) {
-            // Return no result, we found no custom item, and no builtin item.
-            return Optional.empty();
-        }
-        return Optional.of(type.getName());
-    }
-
-    private static Optional<String> computeItemName(ItemStack stack) {
-        String itemName = stack.getTypeId() + ":" + stack.getDurability();
-
-        // Check for custom item name overrides.
-        ItemMeta stackMeta = stack.getItemMeta();
-        if (stackMeta.hasDisplayName()) {
-            if (verifyValidCustomItem(stackMeta)) {
-                itemName = ChatColor.stripColor(stackMeta.getDisplayName());
-            } else {
-                // Return no result, we found an invalid custom item.
-                return Optional.empty();
-            }
-        }
-
-        return matchItemFromNameOrId(itemName);
     }
 
     private static Optional<Double> computePercentageSale(ItemStack stack) {

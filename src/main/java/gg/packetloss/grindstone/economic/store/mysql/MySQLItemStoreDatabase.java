@@ -20,6 +20,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.economic.store.MarketComponent.LOWER_MARKET_LOSS_THRESHOLD;
+import static gg.packetloss.grindstone.util.DBUtil.preparePlaceHolders;
+import static gg.packetloss.grindstone.util.DBUtil.setStringValues;
 
 public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     private static final String columns = "`name`, `price`, `current-price`, `stock`, `buyable`, `sellable`";
@@ -212,18 +214,6 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         return null;
     }
 
-    // FIXME: This should be in a more general place.
-
-    private String preparePlaceHolders(int length) {
-        return String.join(",", Collections.nCopies(length, "?"));
-    }
-
-    private void setValues(PreparedStatement preparedStatement, List<String> values) throws SQLException {
-        for (int i = 0; i < values.size(); i++) {
-            preparedStatement.setString(i + 1, values.get(i));
-        }
-    }
-
     @Override
     public Map<String, MarketItemInfo> getItems(Collection<String> names) {
         Map<String, MarketItemInfo> nameItemMapping = new HashMap<>();
@@ -232,7 +222,7 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
             String sql = "SELECT " + columns + " FROM `market-items` WHERE `name` IN (" + preparePlaceHolders(names.size()) + ")";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 List<String> uppercaseNames = names.stream().map(String::toUpperCase).collect(Collectors.toList());
-                setValues(statement, uppercaseNames);
+                setStringValues(statement, uppercaseNames);
 
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {

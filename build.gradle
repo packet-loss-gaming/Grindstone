@@ -54,6 +54,8 @@ dependencies {
     compile group: 'fr.neatmonster', name: 'nocheatplus', version: '3.13.7-RC'
     compile group: 'de.diddiz', name: 'logblock', version: 'dev-SNAPSHOT'
 
+    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.2.0'
+
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
