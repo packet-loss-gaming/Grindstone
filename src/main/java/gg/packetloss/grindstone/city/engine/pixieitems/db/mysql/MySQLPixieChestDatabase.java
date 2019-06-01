@@ -129,7 +129,7 @@ public class MySQLPixieChestDatabase implements PixieChestDatabase {
     }
 
     private String getChestNetworkLookupSQL(Location[] locations) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT `network-id` FROM `pixie-chests` WHERE ");
+        StringBuilder sqlBuilder = new StringBuilder("SELECT DISTINCT `network-id` FROM `pixie-chests` WHERE ");
         appendBlockPlaceHolders(sqlBuilder, locations);
         return sqlBuilder.toString();
     }

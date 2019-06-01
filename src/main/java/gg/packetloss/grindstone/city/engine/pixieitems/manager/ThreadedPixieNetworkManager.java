@@ -81,16 +81,6 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         }
     }
 
-    private PixieNetworkGraph safelyGetNetwork(int networkID) {
-        networkLock.readLock().lock();
-
-        try {
-            return idToNetworkMapping.get(networkID);
-        } finally {
-            networkLock.readLock().unlock();
-        }
-    }
-
     private void clearBlockMemoryOnly(@Nullable PixieNetworkGraph network, Location location) {
         if (network != null) {
             network.removeSink(location);
@@ -118,6 +108,8 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     private CompletableFuture<Boolean> processNetworkChanges(Runnable op, Location... locations) {
+        Validate.isTrue(locations.length > 0);
+
         Set<Chunk> chunks = Arrays.stream(locations).map(Location::getChunk).collect(Collectors.toSet());
 
         CompletableFuture<Boolean> future = new CompletableFuture<>();
@@ -126,12 +118,22 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
             List<Integer> added = new ArrayList<>();
             List<Integer> removed = new ArrayList<>();
 
+            HashMap<Chunk, Collection<Integer>> chunkPreviousNetworks = new HashMap<>();
+            HashMap<Chunk, Collection<Integer>> chunkNewNetworks = new HashMap<>();
+
             for (Chunk chunk : chunks) {
-                Collection<Integer> previousNetworks = chestDatabase.getNetworksInChunk(chunk).get();
+                chunkPreviousNetworks.put(chunk, chestDatabase.getNetworksInChunk(chunk).get());
+            }
 
-                op.run();
+            op.run();
 
-                Collection<Integer> newNetworks = chestDatabase.getNetworksInChunk(chunk).get();
+            for (Chunk chunk : chunks) {
+                chunkNewNetworks.put(chunk, chestDatabase.getNetworksInChunk(chunk).get());
+            }
+
+            for (Chunk chunk : chunks) {
+                Collection<Integer> previousNetworks = chunkPreviousNetworks.get(chunk);
+                Collection<Integer> newNetworks = chunkNewNetworks.get(chunk);
 
                 newNetworks.stream().filter(networkID -> !previousNetworks.contains(networkID)).forEach(added::add);
                 previousNetworks.stream().filter(networkID -> !newNetworks.contains(networkID)).forEach(removed::add);
@@ -368,7 +370,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
             for (int networkID : networkIDs) {
                 chestDatabase.removeChest(networkID, locations);
             }
-        });
+        }, locations);
 
         return true;
     }
