@@ -144,7 +144,11 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             if (p.hasMetadata("forstborn-avalanche")) {
                 Location targetLoc = p.getLocation();
                 targetLoc.setY(79);
-                parent.createAvalanche(targetLoc);
+
+                int chance = p.getMetadata("forstborn-avalanche").get(0).asInt();
+                if (ChanceUtil.getChance(chance)) {
+                    parent.createAvalanche(targetLoc, (int) Math.pow(chance + 5, 2));
+                }
             }
 
             float damage = 1;
@@ -200,7 +204,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             }
 
             // Prevent glowstone lighting the sides of the arena from being busted
-            if (block.getY() >= 78) {
+            if (block.getY() > FrostbornArea.ARENA_FLOOR_LEVEL + 1) {
                 it.remove();
                 continue;
             }

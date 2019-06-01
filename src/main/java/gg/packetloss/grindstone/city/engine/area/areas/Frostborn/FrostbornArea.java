@@ -52,7 +52,8 @@ import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemN
 @ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
 @Depend(components = {AdminComponent.class, ProtectedDroppedItemsComponent.class}, plugins = {"WorldGuard"})
 public class FrostbornArea extends AreaComponent<FrostbornConfig> implements PersistentArena {
-    private final int BASE_RAGE = -10;
+    protected static final int BASE_RAGE = -10;
+    protected static final int ARENA_FLOOR_LEVEL = 66;
 
     @InjectComponent
     protected AdminComponent admin;
@@ -210,6 +211,37 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         }
     }
 
+    private boolean isValidFountainBlock(Block block) {
+        Material material = block.getType();
+        return material == Material.SNOW_BLOCK || material == Material.GLOWSTONE || material == Material.AIR;
+    }
+
+    private Collection<Location> getRandomFountainOriginLocations() {
+        List<Location> fountainLocations = new ArrayList<>();
+
+        com.sk89q.worldedit.Vector min = region.getMinimumPoint();
+        com.sk89q.worldedit.Vector max = region.getMaximumPoint();
+
+        int minX = min.getBlockX();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxZ = max.getBlockZ();
+
+        do {
+            int targetX = ChanceUtil.getRangedRandom(minX, maxX);
+            int targetZ = ChanceUtil.getRangedRandom(minZ, maxZ);
+
+            Block block = world.getBlockAt(targetX, ARENA_FLOOR_LEVEL, targetZ);
+            if (!isValidFountainBlock(block)) {
+                continue;
+            }
+
+            fountainLocations.add(block.getLocation().add(0, 1, 0));
+        } while (fountainLocations.size() < config.fountainOrigins);
+
+        return fountainLocations;
+    }
+
     private void createEvilSnowballFountain(Location loc) {
         IntegratedRunnable snowballFountain = new IntegratedRunnable() {
             @Override
@@ -267,12 +299,11 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             case 1:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "THIS ONE IS GOING TO HURT!");
                 Snowball snowball = boss.launchProjectile(Snowball.class);
-                snowball.setMetadata("forstborn-avalanche", new FixedMetadataValue(inst, true));
+                snowball.setMetadata("forstborn-avalanche", new FixedMetadataValue(inst, 1));
                 break;
             case 2:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "I AM SNOWTASTIC!");
-                for (Player player : getContained(Player.class)) {
-                    Location fountainLoc = player.getLocation();
+                for (Location fountainLoc : getRandomFountainOriginLocations()) {
                     createEvilSnowballFountain(fountainLoc);
 
                     Location targetLoc = fountainLoc;
@@ -286,8 +317,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                         );
 
                         if (contains(newLoc)) {
-                            Material lowerBlockMat = newLoc.clone().add(0, -1, 0).getBlock().getType();
-                            if (lowerBlockMat != Material.SNOW_BLOCK && lowerBlockMat != Material.GLOWSTONE) {
+                            if (!isValidFountainBlock(newLoc.clone().add(0, -1, 0).getBlock())) {
                                 continue;
                             }
 
@@ -308,8 +338,14 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 break;
             case 4:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "RELEASE THE BATS!");
+
+                Collection<Player> players = getContained(Player.class);
+
+                int totalBats = ChanceUtil.getRandomNTimes(60, 9) + 30;
+                int batsPerPlayer = totalBats / players.size();
+
                 for (Player player : getContained(Player.class)) {
-                    for (int i = ChanceUtil.getRandomNTimes(20, 3) + 10; i > 0; --i) {
+                    for (int i = batsPerPlayer; i > 0; --i) {
                         Bat b = (Bat) getWorld().spawnEntity(player.getLocation().add(0, 6, 0), EntityType.BAT);
                         b.setMaxHealth(1);
                         b.setHealth(1);
@@ -319,7 +355,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         }
     }
 
-    private void aerialBombard(Location spawnLoc, int quantity) {
+    private void aerialBombard(Location spawnLoc, int quantity, int chanceOfAvalanche) {
         for (int i = 0; i < quantity; ++i) {
             Snowball snowball = (Snowball) getWorld().spawnEntity(spawnLoc, EntityType.SNOWBALL);
             Vector vector = new Vector(
@@ -328,22 +364,26 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                     ChanceUtil.getRangedRandom(-.4, .4)
             );
             snowball.setVelocity(vector);
+
+            if (chanceOfAvalanche > 0) {
+                snowball.setMetadata("forstborn-avalanche", new FixedMetadataValue(inst, chanceOfAvalanche));
+            }
         }
     }
 
     public void runSnowbats() {
         for (Bat bat : getContained(Bat.class)) {
             Location spawnLoc = bat.getLocation().add(0, -1, 0);
-            aerialBombard(spawnLoc, ChanceUtil.getRandom(3));
+            aerialBombard(spawnLoc, ChanceUtil.getRandom(3), 0);
         }
     }
 
-    protected void createAvalanche(Location loc) {
+    protected void createAvalanche(Location loc, int chanceOfCascade) {
         IntegratedRunnable snowballVomit = new IntegratedRunnable() {
             @Override
             public boolean run(int times) {
                 if (!isBossSpawned()) return true;
-                aerialBombard(loc, ChanceUtil.getRangedRandom(3, 9));
+                aerialBombard(loc, ChanceUtil.getRangedRandom(3, 9), chanceOfCascade);
                 return true;
             }
 

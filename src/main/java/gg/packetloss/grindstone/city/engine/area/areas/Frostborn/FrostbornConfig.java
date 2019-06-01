@@ -8,6 +8,8 @@ public class FrostbornConfig extends ConfigurationBase {
     public double chanceOfDupe = 2;
     @Setting("loot.chance-of-activation")
     public double chanceofActivation = 2;
+    @Setting("combat.fountain-origins")
+    public int fountainOrigins = 3;
     @Setting("block-restore.time")
     public int timeToRestore = 4;
 }
