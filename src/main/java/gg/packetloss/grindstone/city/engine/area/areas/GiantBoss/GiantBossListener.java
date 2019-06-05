@@ -18,6 +18,7 @@ import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
+import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
@@ -276,7 +277,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             }
         }
         if (attacker != null && !parent.contains(attacker, 1) || !parent.contains(defender, 1)) return;
-        final Collection<Player> contained = parent.getContained(Player.class);
+
         if (defender instanceof Giant) {
             final Giant boss = (Giant) defender;
             // Schedule a task to change the display name to show HP
@@ -284,6 +285,41 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 if (!boss.isValid()) return;
                 parent.printBossHealth();
             }, 1);
+
+
+            if (acceptedReasons.contains(event.getCause())) {
+                final ItemStack weapon = new ItemStack(ItemID.BONE);
+                ItemMeta weaponMeta = weapon.getItemMeta();
+                weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
+                weapon.setItemMeta(weaponMeta);
+
+                final double oldHP = boss.getHealth();
+                final Entity finalAttacker = attacker;
+
+                int maxBabySpawns = (int) (event.getDamage() / 30) + 1;
+                int babySpawns = ChanceUtil.getRandom(maxBabySpawns);
+                final int chancePerSpawnPoint = Math.max(11 / babySpawns, 1);
+
+                ChatUtil.sendDebug(babySpawns);
+
+                server.getScheduler().runTaskLater(inst, () -> {
+                    if (oldHP < boss.getHealth()) return;
+                    for (Location spawnPt : parent.spawnPts) {
+                        if (ChanceUtil.getChance(chancePerSpawnPoint)) {
+                            Zombie z = parent.getWorld().spawn(spawnPt, Zombie.class);
+                            z.setBaby(true);
+                            EntityEquipment equipment = z.getEquipment();
+                            equipment.setArmorContents(null);
+                            equipment.setItemInHand(weapon.clone());
+                            equipment.setItemInHandDropChance(0F);
+                            if (finalAttacker instanceof LivingEntity) {
+                                z.setTarget((LivingEntity) finalAttacker);
+                            }
+                        }
+                    }
+                }, 1);
+            }
+
             if (parent.damageHeals) {
                 boss.setHealth(Math.min(boss.getMaxHealth(), (event.getDamage() * parent.difficulty) + boss.getHealth()));
                 if (ChanceUtil.getChance(4) && acceptedReasons.contains(event.getCause())) {
@@ -304,33 +340,12 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                         ChatUtil.sendNotice(parent.getContained(1, Player.class), "Feel my power!");
                     }
                 }
+            } else {
+                double zombieBlockingNumber = Math.min(parent.getContained(Zombie.class).size() / 2, 100);
+                double percentageDamageRemaining = (100 - zombieBlockingNumber) / 100;
+                event.setDamage(event.getDamage() * percentageDamageRemaining);
             }
-            if (ChanceUtil.getChance(3) && acceptedReasons.contains(event.getCause())) {
-                final ItemStack weapon = new ItemStack(ItemID.BONE);
-                ItemMeta weaponMeta = weapon.getItemMeta();
-                weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
-                weapon.setItemMeta(weaponMeta);
-                final double oldHP = boss.getHealth();
-                final Entity finalAttacker = attacker;
-                server.getScheduler().runTaskLater(inst, () -> {
-                    if (oldHP < boss.getHealth()) return;
-                    for (Location spawnPt : parent.spawnPts) {
-                        if (ChanceUtil.getChance(11)) {
-                            for (int i = 0; i < Math.max(3, contained.size()); i++) {
-                                Zombie z = parent.getWorld().spawn(spawnPt, Zombie.class);
-                                z.setBaby(true);
-                                EntityEquipment equipment = z.getEquipment();
-                                equipment.setArmorContents(null);
-                                equipment.setItemInHand(weapon.clone());
-                                equipment.setItemInHandDropChance(0F);
-                                if (finalAttacker != null && finalAttacker instanceof LivingEntity) {
-                                    z.setTarget((LivingEntity) finalAttacker);
-                                }
-                            }
-                        }
-                    }
-                }, 1);
-            }
+
             if (attacker != null && attacker instanceof Player) {
                 if (ItemUtil.hasForgeBook((Player) attacker)) {
                     ((Giant) defender).setHealth(0);
@@ -366,6 +381,16 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 }
             }
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onNinjaBomb(NinjaSmokeBombEvent event) {
+        Player player = event.getPlayer();
+        if (!parent.contains(player)) {
+            return;
+        }
+
+        event.getEntities().removeIf(next -> next instanceof Giant);
     }
 
     private static PotionEffect[] effects = new PotionEffect[]{

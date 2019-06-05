@@ -34,7 +34,6 @@ import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -70,13 +69,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         Player player = event.getPlayer();
         ProtectedRegion region = getRegion(player.getLocation());
         if (region != null) {
-            Iterator<Entity> it = event.getEntities().iterator();
-            while (it.hasNext()) {
-                Entity next = it.next();
-                if (!region.equals(getRegion(next.getLocation()))) {
-                    it.remove();
-                }
-            }
+            event.getEntities().removeIf(next -> !region.equals(getRegion(next.getLocation())));
         }
     }
 

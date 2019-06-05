@@ -249,7 +249,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
             return;
         }
         for (Zombie zombie : que) {
-            zombie.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 20, 3));
+            zombie.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 3, 3), true);
         }
     }
 
@@ -300,7 +300,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
         // Equalize Players
         for (Player player : getContained(Player.class)) {
             try {
-                admin.standardizePlayer(player);
                 if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
                     player.damage(32, boss);
                 }
@@ -476,7 +475,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                             double realDamage = entity.getHealth();
                             if (entity instanceof Zombie && ((Zombie) entity).isBaby()) {
                                 entity.setHealth(0);
-                            } else {
+                            } else if (boss.hasLineOfSight(entity)) {
                                 entity.damage(realDamage, boss);
                             }
                             toHeal += realDamage * difficulty * .09;

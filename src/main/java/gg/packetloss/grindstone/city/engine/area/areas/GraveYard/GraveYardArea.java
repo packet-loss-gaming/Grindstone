@@ -148,7 +148,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
     public void run() {
         restoreBlocks();
         if (isEmpty()) return;
-        equalize();
         for (LivingEntity entity : getContained(LivingEntity.class)) {
             if (!entity.isValid()) continue;
             // Cave Spider killer
@@ -185,16 +184,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
         return world.getEntitiesByClass(clazz).stream()
                 .filter(entity -> entity.isValid() && isHostileTempleArea(entity.getLocation()))
                 .collect(Collectors.toList());
-    }
-
-    public void equalize() {
-        for (Player player : getContained(Player.class)) {
-            try {
-                admin.standardizePlayer(player);
-            } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
-            }
-        }
     }
 
     protected boolean accept(BaseBlock baseBlock, Set<BaseBlock> baseBlocks) {
