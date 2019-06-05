@@ -300,8 +300,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 int babySpawns = ChanceUtil.getRandom(maxBabySpawns);
                 final int chancePerSpawnPoint = Math.max(11 / babySpawns, 1);
 
-                ChatUtil.sendDebug(babySpawns);
-
                 server.getScheduler().runTaskLater(inst, () -> {
                     if (oldHP < boss.getHealth()) return;
                     for (Location spawnPt : parent.spawnPts) {
