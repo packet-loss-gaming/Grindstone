@@ -23,7 +23,9 @@ import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.HomeTeleportEvent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseRespawnBoostEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.homes.CSVHomeDatabase;
 import gg.packetloss.grindstone.homes.HomeDatabase;
@@ -224,7 +226,21 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onApocalypseSpawn(ApocalypseEvent event) {
+    public void onApocalypseLightningStrikeSpawn(ApocalypseLightningStrikeSpawnEvent event) {
+        if (event.getWorld().getName().contains(config.legitWorld)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onApocalypsePersonSpawn(ApocalypsePersonalSpawnEvent event) {
+        if (event.getWorld().getName().contains(config.legitWorld)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onApocalypseRespawnBoost(ApocalypseRespawnBoostEvent event) {
         if (event.getWorld().getName().contains(config.legitWorld)) {
             event.setCancelled(true);
         }

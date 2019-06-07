@@ -59,7 +59,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
     protected Economy economy;
 
     // Temple regions
-    protected ProtectedRegion temple, pressurePlateLockArea, creepers, rewards;
+    protected ProtectedRegion temple, pressurePlateLockArea, creepers, parkour, rewards;
 
     // Block information
     protected static Set<BaseBlock> breakable = new HashSet<>();
@@ -115,6 +115,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
             temple = manager.getRegion(base + "-temple");
             pressurePlateLockArea = manager.getRegion(base + "-temple-puzzle-one");
             creepers = manager.getRegion(base + "-creepers");
+            parkour = manager.getRegion(base + "-parkour");
             rewards = manager.getRegion(base + "-temple-rewards");
 
             tick = 4 * 20;

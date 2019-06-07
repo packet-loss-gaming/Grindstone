@@ -16,6 +16,8 @@ import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
+import gg.packetloss.grindstone.events.guild.NinjaGrappleEvent;
+import gg.packetloss.grindstone.events.guild.RogueBlipEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.*;
@@ -176,6 +178,26 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     }
 
     @EventHandler(ignoreCancelled = true)
+    public void onNinjaGrapple(NinjaGrappleEvent event) {
+        Player player = event.getPlayer();
+        if (!parent.contains(player)) {
+            return;
+        }
+
+        event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onRogueBlip(RogueBlipEvent event) {
+        Player player = event.getPlayer();
+        if (!parent.contains(player)) {
+            return;
+        }
+
+        event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
         Player player = event.getPlayer();
         if (event.isFlying() && parent.contains(player) && !parent.admin.isAdmin(player)) {
@@ -186,7 +208,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
     @EventHandler(ignoreCancelled = true)
     public void onPotionSplash(PotionSplashEvent event) {
-        event.getAffectedEntities().stream().filter(entity -> entity != null && entity instanceof Player && ChanceUtil.getChance(14)).forEach(entity -> {
+        event.getAffectedEntities().stream().filter(entity -> entity instanceof Player && ChanceUtil.getChance(14)).forEach(entity -> {
             if (ChanceUtil.getChance(14)) {
                 entity.removePotionEffect(PotionEffectType.REGENERATION);
             }

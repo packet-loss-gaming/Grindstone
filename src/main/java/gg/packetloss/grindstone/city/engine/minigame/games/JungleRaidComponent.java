@@ -43,7 +43,9 @@ import gg.packetloss.grindstone.city.engine.minigame.MinigameComponent;
 import gg.packetloss.grindstone.city.engine.minigame.PlayerGameState;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseRespawnBoostEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.events.environment.DarkAreaInjuryEvent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
@@ -1267,10 +1269,25 @@ public class JungleRaidComponent extends MinigameComponent {
             if (getTeam(player) != -1) left(event.getPlayer());
         }
 
-        @EventHandler
-        public void onApocalypseEvent(ApocalypseEvent event) {
+        @EventHandler(ignoreCancelled = true)
+        public void onApocalypseLightningStrikeSpawn(ApocalypseLightningStrikeSpawnEvent event) {
+            if (contains(event.getLocation())) {
+                event.setCancelled(true);
+            }
+        }
 
-            if (contains(event.getLocation())) event.setCancelled(true);
+        @EventHandler(ignoreCancelled = true)
+        public void onApocalypsePersonSpawn(ApocalypsePersonalSpawnEvent event) {
+            if (contains(event.getLocation())) {
+                event.setCancelled(true);
+            }
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onApocalypseRespawnBoost(ApocalypseRespawnBoostEvent event) {
+            if (contains(event.getLocation())) {
+                event.setCancelled(true);
+            }
         }
 
         @EventHandler(ignoreCancelled = true)
