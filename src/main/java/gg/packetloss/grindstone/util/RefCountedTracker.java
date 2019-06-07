@@ -13,7 +13,8 @@ public class RefCountedTracker<T> {
     private Map<T, Integer> counter = new HashMap<>();
 
     public void increment(T key) {
-        counter.merge(key, 1, (oldKey, value) -> value + 1);
+        counter.putIfAbsent(key, 0);
+        counter.put(key, counter.get(key) + 1);
     }
 
     public void decrement(T key) {
