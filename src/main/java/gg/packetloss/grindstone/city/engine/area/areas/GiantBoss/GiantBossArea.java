@@ -72,7 +72,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
     protected BukkitTask mobDestroyer;
     protected Random random = new Random();
 
-    protected boolean flagged = false;
+    protected boolean flaggedForColumnAttack = false;
 
     protected double toHeal = 0;
     protected int difficulty = Difficulty.HARD.getValue();
@@ -241,16 +241,11 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                 .collect(Collectors.toList());
 
         if (que.size() < 45) {
-            flagged = false;
+            flaggedForColumnAttack = false;
             return;
         }
-        flagged = true;
-        if (que.size() < 250) {
-            return;
-        }
-        for (Zombie zombie : que) {
-            zombie.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 3, 3), true);
-        }
+
+        flaggedForColumnAttack = true;
     }
 
     public void removeXP(Collection<? extends Entity> contained) {
@@ -323,28 +318,32 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
         Collection<Player> contained = getContained(Player.class);
         if (contained == null || contained.size() <= 0) return;
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
+
         // AI system
-        if (attackCase != 4) {
-            if ((attackCase == 5 || attackCase == 9) && boss.getHealth() > boss.getMaxHealth() * .9) {
-                attackCase = ChanceUtil.getChance(2) ? 8 : 2;
-            }
-            if (flagged && ChanceUtil.getChance(2)) {
-                attackCase = ChanceUtil.getChance(2) ? 4 : 7;
-            }
-            for (Player player : contained) {
-                if (player.getHealth() < 4) {
-                    attackCase = 2;
-                    break;
-                }
-            }
-            if (boss.getHealth() < boss.getMaxHealth() * .3 && ChanceUtil.getChance(2)) {
-                attackCase = 9;
-            }
-            if (((attackCase == 3 || attackCase == 6) && boss.getHealth() < boss.getMaxHealth() * .3) || (attackCase == 7 && contained.size() < 2)) {
-                runAttack(ChanceUtil.getRandom(OPTION_COUNT));
-                return;
+        if ((attackCase == 5 || attackCase == 9) && boss.getHealth() > boss.getMaxHealth() * .9) {
+            attackCase = ChanceUtil.getChance(2) ? 8 : 2;
+        }
+
+        for (Player player : contained) {
+            if (player.getHealth() < 4) {
+                attackCase = 2;
+                break;
             }
         }
+
+        if (boss.getHealth() < boss.getMaxHealth() * .3 && ChanceUtil.getChance(2)) {
+            attackCase = 9;
+        }
+
+        if (((attackCase == 3 || attackCase == 6) && boss.getHealth() < boss.getMaxHealth() * .3) || (attackCase == 7 && contained.size() < 2)) {
+            runAttack(ChanceUtil.getRandom(OPTION_COUNT));
+            return;
+        }
+
+        if (flaggedForColumnAttack && ChanceUtil.getChance(2)) {
+            attackCase = ChanceUtil.getChance(2) ? 4 : 7;
+        }
+
         switch (attackCase) {
             case 1:
                 ChatUtil.sendWarning(containedP, "Taste my wrath!");
@@ -471,10 +470,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                     public boolean run(int times) {
                         if (!isBossSpawned()) return true;
                         for (LivingEntity entity : getContained(LivingEntity.class)) {
-                            if (entity instanceof Giant || !ChanceUtil.getChance(5)) continue;
-                            double realDamage = entity.getHealth();
+                            if (entity instanceof Giant || !ChanceUtil.getChance(3)) continue;
+                            double realDamage = entity.getHealth() / 2;
                             if (entity instanceof Zombie && ((Zombie) entity).isBaby()) {
-                                entity.setHealth(0);
+                                entity.damage(realDamage);
                             } else if (boss.hasLineOfSight(entity)) {
                                 entity.damage(realDamage, boss);
                             }
