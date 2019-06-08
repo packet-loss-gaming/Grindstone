@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.city.engine.area.areas.SandArena;
 
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -86,13 +85,6 @@ public class SandArena extends AreaComponent<SandArenaConfig> implements Persist
     }
 
     public void addBlocks() {
-        CuboidRegion dropArea = new CuboidRegion(region.getMaximumPoint(), region.getMinimumPoint());
-
-        if (dropArea.getArea() > 75000) {
-            log.warning("The region: " + getRegion().getId() + " is too large.");
-            return;
-        }
-
         com.sk89q.worldedit.Vector min = getRegion().getMinimumPoint();
         com.sk89q.worldedit.Vector max = getRegion().getMaximumPoint();
 
