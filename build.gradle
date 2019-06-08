@@ -42,8 +42,8 @@ dependencies {
     compile files('lib/MobArena.jar')
     compile files('lib/Pitfall.jar')
 
-    compile group: 'org.bukkit', name: 'bukkit', version: '1.8.8-R0.1-SNAPSHOT'
-    compile group: 'org.bukkit', name: 'craftbukkit', version: '1.8.8-R0.1-SNAPSHOT'
+    compile group: 'org.bukkit', name: 'bukkit', version: '1.9.4-R0.1-SNAPSHOT'
+    compile group: 'org.bukkit', name: 'craftbukkit', version: '1.9.4-R0.1-SNAPSHOT'
 
     compile group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '6.1'
     compile group: 'com.sk89q', name: 'worldguard', version: '6.1'

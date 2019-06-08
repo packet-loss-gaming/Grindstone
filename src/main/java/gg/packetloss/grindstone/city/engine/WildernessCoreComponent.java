@@ -894,14 +894,14 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 for (int i = 0; i < ItemUtil.fortuneModifier(block.getTypeId(), fortune); i++) {
                     world.dropItem(location, EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch));
                 }
-                world.playSound(location, Sound.BLAZE_BREATH, Math.min(1, (((float) timesL / times) * .6F) + vol), 0);
+                world.playSound(location, Sound.ENTITY_BLAZE_BURN, Math.min(1, (((float) timesL / times) * .6F) + vol), 0);
                 return true;
             }
 
             @Override
             public void end() {
 
-                world.playSound(location, Sound.BLAZE_DEATH, .2F, 0);
+                world.playSound(location, Sound.ENTITY_BLAZE_DEATH, .2F, 0);
             }
         };
 

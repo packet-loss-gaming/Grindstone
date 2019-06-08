@@ -28,7 +28,7 @@ public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpeci
         if (target instanceof Player) {
             target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0), true);
         }
-        target.getWorld().playSound(target.getLocation(), Sound.GHAST_SCREAM, 1, .02F);
+        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_GHAST_SCREAM, 1, .02F);
         inform("Your weapon traps your foe in their own sins.");
     }
 }

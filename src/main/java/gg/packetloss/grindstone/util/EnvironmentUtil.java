@@ -353,8 +353,8 @@ public class EnvironmentUtil {
         frozenBiomes.add(Biome.FROZEN_OCEAN);
         frozenBiomes.add(Biome.FROZEN_RIVER);
         frozenBiomes.add(Biome.ICE_MOUNTAINS);
-        frozenBiomes.add(Biome.ICE_PLAINS);
-        frozenBiomes.add(Biome.ICE_PLAINS_SPIKES);
+        frozenBiomes.add(Biome.ICE_FLATS);
+        frozenBiomes.add(Biome.MUTATED_ICE_FLATS);
     }
 
     public static boolean isFrozenBiome(Biome biome) {
