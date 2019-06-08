@@ -25,6 +25,14 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
         }
 
         CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            if (owner.isDead()) {
+                return;
+            }
+
+            if (!owner.hasLineOfSight(target)) {
+                return;
+            }
+
             target.getWorld().strikeLightningEffect(target.getLocation());
             target.damage(15, owner);
 
