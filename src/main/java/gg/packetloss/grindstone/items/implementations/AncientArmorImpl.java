@@ -6,11 +6,11 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
-import gg.packetloss.grindstone.items.generic.AbstractXPArmor;
+import gg.packetloss.grindstone.items.generic.BloodLustArmor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.entity.Player;
 
-public class AncientArmorImpl extends AbstractXPArmor {
+public class AncientArmorImpl extends BloodLustArmor {
     @Override
     public boolean hasArmor(Player player) {
         return ItemUtil.hasAncientArmour(player);

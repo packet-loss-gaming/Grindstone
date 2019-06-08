@@ -44,7 +44,7 @@ public class CustomItemCenter {
         ancientCrown.addUse("Acts as an Imbued Crystal");
         ancientCrown.addUse("Acts as a Gem of Darkness");
         ancientCrown.addUse("Acts as an Ancient Helmet");
-        ancientCrown.addUse("Repaired with XP");
+        ancientCrown.addUse("Repaired when worn while attacking creatures or players");
         addItem(ancientCrown);
 
         CustomEquipment ancientHelmet = new CustomEquipment(ANCIENT_HELMET, Material.CHAINMAIL_HELMET);
@@ -58,7 +58,7 @@ public class CustomItemCenter {
         ancientHelmet.addSource(ItemSource.GRAVE_YARD);
         ancientHelmet.addSource(ItemSource.MARKET);
         ancientHelmet.addUse("Set Effect: Ancient Armor");
-        ancientHelmet.addUse("Repaired with XP");
+        ancientHelmet.addUse("Repaired when worn while attacking creatures or players");
         addItem(ancientHelmet);
 
         CustomEquipment ancientChestplate = new CustomEquipment(ANCIENT_CHESTPLATE, Material.CHAINMAIL_CHESTPLATE);
@@ -70,7 +70,7 @@ public class CustomItemCenter {
         ancientChestplate.addSource(ItemSource.GRAVE_YARD);
         ancientChestplate.addSource(ItemSource.MARKET);
         ancientChestplate.addUse("Set Effect: Ancient Armor");
-        ancientChestplate.addUse("Repaired with XP");
+        ancientChestplate.addUse("Repaired when worn while attacking creatures or players");
         addItem(ancientChestplate);
 
         CustomEquipment ancientLeggings = new CustomEquipment(ANCIENT_LEGGINGS, Material.CHAINMAIL_LEGGINGS);
@@ -82,7 +82,7 @@ public class CustomItemCenter {
         ancientLeggings.addSource(ItemSource.GRAVE_YARD);
         ancientLeggings.addSource(ItemSource.MARKET);
         ancientLeggings.addUse("Set Effect: Ancient Armor");
-        ancientLeggings.addUse("Repaired with XP");
+        ancientLeggings.addUse("Repaired when worn while attacking creatures or players");
         addItem(ancientLeggings);
 
         CustomEquipment ancientBoots = new CustomEquipment(ANCIENT_BOOTS, Material.CHAINMAIL_BOOTS);
@@ -95,7 +95,7 @@ public class CustomItemCenter {
         ancientBoots.addSource(ItemSource.GRAVE_YARD);
         ancientBoots.addSource(ItemSource.MARKET);
         ancientBoots.addUse("Set Effect: Ancient Armor");
-        ancientBoots.addUse("Repaired with XP");
+        ancientBoots.addUse("Repaired when worn while attacking creatures or players");
         addItem(ancientBoots);
 
         // Nectric Armor
@@ -153,7 +153,7 @@ public class CustomItemCenter {
         necrosHelmet.addSource(ItemSource.MARKET);
         necrosHelmet.addSource(ItemSource.PATIENT_X);
         necrosHelmet.addUse("Set Effect: Necrotic Armor");
-        necrosHelmet.addUse("Repaired with XP");
+        necrosHelmet.addUse("Repaired when worn while attacking creatures or players");
         addItem(necrosHelmet);
 
         CustomEquipment necrosChestplate = new CustomEquipment(NECROS_CHESTPLATE, Material.DIAMOND_CHESTPLATE);
@@ -164,7 +164,7 @@ public class CustomItemCenter {
         necrosChestplate.addSource(ItemSource.MARKET);
         necrosChestplate.addSource(ItemSource.PATIENT_X);
         necrosChestplate.addUse("Set Effect: Necrotic Armor");
-        necrosChestplate.addUse("Repaired with XP");
+        necrosChestplate.addUse("Repaired when worn while attacking creatures or players");
         addItem(necrosChestplate);
 
         CustomEquipment necrosLeggings = new CustomEquipment(NECROS_LEGGINGS, Material.DIAMOND_LEGGINGS);
@@ -175,7 +175,7 @@ public class CustomItemCenter {
         necrosLeggings.addSource(ItemSource.MARKET);
         necrosLeggings.addSource(ItemSource.PATIENT_X);
         necrosLeggings.addUse("Set Effect: Necrotic Armor");
-        necrosLeggings.addUse("Repaired with XP");
+        necrosLeggings.addUse("Repaired when worn while attacking creatures or players");
         addItem(necrosLeggings);
 
         CustomEquipment necrosBoots = new CustomEquipment(NECROS_BOOTS, Material.DIAMOND_BOOTS);
@@ -187,7 +187,7 @@ public class CustomItemCenter {
         necrosBoots.addSource(ItemSource.MARKET);
         necrosBoots.addSource(ItemSource.PATIENT_X);
         necrosBoots.addUse("Set Effect: Necrotic Armor");
-        necrosBoots.addUse("Repaired with XP");
+        necrosBoots.addUse("Repaired when worn while attacking creatures or players");
         addItem(necrosBoots);
 
         // Master Weapons

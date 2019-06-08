@@ -259,9 +259,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             event.getDrops().removeIf(next -> next != null && next.getTypeId() == ItemID.ROTTEN_FLESH);
 
             if (attackMob.isInstance(ent) && ChanceUtil.getChance(5)) {
-                event.setDroppedExp(event.getDroppedExp() * 3);
                 event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandomNTimes(16, 7)));
-            } else event.setDroppedExp(event.getDroppedExp() * 2);
+            }
 
             if (ChanceUtil.getChance(10000)) {
                 event.getDrops().add(CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));

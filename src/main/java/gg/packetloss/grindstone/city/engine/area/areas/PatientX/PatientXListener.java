@@ -298,7 +298,6 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     if (ChanceUtil.getChance(10)) {
                         event.getDrops().add(CustomItemCenter.build(CustomItems.PHANTOM_GOLD));
                     }
-                    event.setDroppedExp(20);
                     return;
                 }
 

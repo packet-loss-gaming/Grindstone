@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
-import gg.packetloss.grindstone.items.generic.AbstractXPArmor;
+import gg.packetloss.grindstone.items.generic.BloodLustArmor;
 import gg.packetloss.grindstone.items.implementations.support.Necrosis;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.entity.Player;
@@ -14,7 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
-public class NecrosArmorImpl extends AbstractXPArmor {
+public class NecrosArmorImpl extends BloodLustArmor {
     @Override
     public boolean hasArmor(Player player) {
         return ItemUtil.hasNecrosArmour(player);

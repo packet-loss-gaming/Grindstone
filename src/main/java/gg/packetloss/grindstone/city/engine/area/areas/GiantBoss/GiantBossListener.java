@@ -507,7 +507,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 if (ChanceUtil.getChance(28)) {
                     event.getDrops().add(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(3)));
                 }
-                event.setDroppedExp(14);
             }
         }
     }

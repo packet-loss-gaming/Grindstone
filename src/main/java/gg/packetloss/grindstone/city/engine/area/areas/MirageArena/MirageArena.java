@@ -30,7 +30,6 @@ import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPScope;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.util.APIUtil;
-import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.database.IOUtil;
@@ -42,7 +41,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
@@ -96,7 +94,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
     @Override
     public void run() {
         if (!isEmpty()) {
-            fakeXPGain();
             shiftMirage();
         }
         writeData(true);
@@ -114,15 +111,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
                 return !sessions.getSession(MirageSession.class, attacker).isIgnored(defender.getName());
             }
         });
-    }
-
-    public void fakeXPGain() {
-        for (Player player : getContained(Player.class)) {
-            for (int i = ChanceUtil.getRandom(5); i > 0; --i) {
-                server.getPluginManager().callEvent(new PlayerExpChangeEvent(player,
-                        ChanceUtil.getRandom(config.fakeXP)));
-            }
-        }
     }
 
     public void shiftMirage() {
