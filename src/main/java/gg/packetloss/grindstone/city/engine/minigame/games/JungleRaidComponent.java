@@ -221,7 +221,7 @@ public class JungleRaidComponent extends MinigameComponent {
 
         player.getInventory().addItem(gear.toArray(new ItemStack[gear.size()]));
 
-        ItemStack[] leatherArmour = ItemUtil.leatherArmour;
+        ItemStack[] leatherArmour = ItemUtil.LEATHER_ARMOR;
         Color color = Color.WHITE;
         if (teamNumber == 2) color = Color.RED;
         else if (teamNumber == 1) color = Color.BLUE;

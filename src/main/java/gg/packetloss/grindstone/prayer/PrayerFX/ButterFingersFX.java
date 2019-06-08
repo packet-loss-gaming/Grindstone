@@ -13,6 +13,8 @@ import gg.packetloss.grindstone.prayer.PrayerType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
+
 public class ButterFingersFX extends AbstractEffect {
 
     @Override
@@ -40,7 +42,7 @@ public class ButterFingersFX extends AbstractEffect {
             }
         }
 
-        player.getInventory().setArmorContents(null);
+        player.getInventory().setArmorContents(NO_ARMOR);
         player.getInventory().clear();
     }
 

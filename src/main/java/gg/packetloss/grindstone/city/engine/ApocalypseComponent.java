@@ -451,9 +451,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         if (ChanceUtil.getChance(config.armourChance)) {
             if (ChanceUtil.getChance(35)) {
-                equipment.setArmorContents(ItemUtil.diamondArmour);
+                equipment.setArmorContents(ItemUtil.DIAMOND_ARMOR);
             } else {
-                equipment.setArmorContents(ItemUtil.ironArmour);
+                equipment.setArmorContents(ItemUtil.IRON_ARMOR);
             }
 
             if (ChanceUtil.getChance(4)) equipment.setHelmet(null);

@@ -8,9 +8,9 @@ package gg.packetloss.grindstone.util.item;
 
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
-import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -26,21 +26,24 @@ import java.util.Map;
 
 public class ItemUtil {
 
-    public static final ItemStack[] leatherArmour = new ItemStack[]{
+    public static final ItemStack[] LEATHER_ARMOR = new ItemStack[]{
             new ItemStack(ItemID.LEATHER_BOOTS), new ItemStack(ItemID.LEATHER_PANTS),
             new ItemStack(ItemID.LEATHER_CHEST), new ItemStack(ItemID.LEATHER_HELMET)
     };
-    public static final ItemStack[] ironArmour = new ItemStack[]{
+    public static final ItemStack[] IRON_ARMOR = new ItemStack[]{
             new ItemStack(ItemID.IRON_BOOTS), new ItemStack(ItemID.IRON_PANTS),
             new ItemStack(ItemID.IRON_CHEST), new ItemStack(ItemID.IRON_HELMET)
     };
-    public static final ItemStack[] goldArmour = new ItemStack[]{
+    public static final ItemStack[] GOLD_ARMOR = new ItemStack[]{
             new ItemStack(ItemID.GOLD_BOOTS), new ItemStack(ItemID.GOLD_PANTS),
             new ItemStack(ItemID.GOLD_CHEST), new ItemStack(ItemID.GOLD_HELMET)
     };
-    public static final ItemStack[] diamondArmour = new ItemStack[]{
+    public static final ItemStack[] DIAMOND_ARMOR = new ItemStack[]{
             new ItemStack(ItemID.DIAMOND_BOOTS), new ItemStack(ItemID.DIAMOND_PANTS),
             new ItemStack(ItemID.DIAMOND_CHEST), new ItemStack(ItemID.DIAMOND_HELMET)
+    };
+    public static final ItemStack[] NO_ARMOR = new ItemStack[] {
+            null, null, null, null
     };
 
     public static ItemStack makeSkull(String name) {

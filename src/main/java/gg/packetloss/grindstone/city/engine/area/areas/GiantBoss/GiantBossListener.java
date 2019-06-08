@@ -68,6 +68,8 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
+
 public class GiantBossListener extends AreaListener<GiantBossArea> {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -308,7 +310,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                             z.setBaby(true);
                             z.setCanPickupItems(false);
                             EntityEquipment equipment = z.getEquipment();
-                            equipment.setArmorContents(null);
+                            equipment.setArmorContents(NO_ARMOR);
                             equipment.setItemInHand(weapon.clone());
                             equipment.setItemInHandDropChance(0F);
                             if (finalAttacker instanceof LivingEntity) {

@@ -29,6 +29,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
+
 @TemplateComponent
 public abstract class MinigameComponent extends BukkitComponent implements Runnable {
 
@@ -214,7 +216,7 @@ public abstract class MinigameComponent extends BukkitComponent implements Runna
 
         // Clear Player
         player.getInventory().clear();
-        player.getInventory().setArmorContents(null);
+        player.getInventory().setArmorContents(NO_ARMOR);
 
         // Teleport Player
         player.teleport(state.getLocation());

@@ -39,6 +39,8 @@ import org.bukkit.util.Vector;
 import java.io.File;
 import java.util.*;
 
+import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
+
 @ComponentInformation(friendlyName = "Patient X Arena", desc = "The mad boss of Ice")
 @Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
 public class PatientXArea extends AreaComponent<PatientXConfig> implements PersistentArena {
@@ -428,7 +430,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
 
         // Handle items
         EntityEquipment equipment = boss.getEquipment();
-        equipment.setArmorContents(null);
+        equipment.setArmorContents(NO_ARMOR);
         equipment.setItemInHand(null);
         boss.setCanPickupItems(false);
 

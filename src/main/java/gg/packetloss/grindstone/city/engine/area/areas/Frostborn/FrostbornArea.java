@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemName;
+import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
 @Depend(components = {AdminComponent.class, ProtectedDroppedItemsComponent.class}, plugins = {"WorldGuard"})
@@ -174,7 +175,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         }).collect(Collectors.toCollection(() -> lootItems));
 
         // Clear the players inventory
-        player.getInventory().setArmorContents(null);
+        player.getInventory().setArmorContents(NO_ARMOR);
         player.getInventory().clear();
 
         // Disable any flight powers
@@ -518,7 +519,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
         // Clear the players inventories
         for (Player player : players) {
-            player.getInventory().setArmorContents(null);
+            player.getInventory().setArmorContents(NO_ARMOR);
             player.getInventory().clear();
         }
 

@@ -46,6 +46,8 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
+
 
 @ComponentInformation(friendlyName = "Legit Core", desc = "Operate the legit world.")
 @Depend(components = {AdminComponent.class, SessionComponent.class, WarpsComponent.class})
@@ -316,7 +318,7 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
                 player.setLevel(identity.getLevel());
                 player.setExp(identity.getExperience());
             } else {
-                player.getInventory().setArmorContents(null);
+                player.getInventory().setArmorContents(NO_ARMOR);
                 player.getInventory().clear();
                 player.setHealth(player.getMaxHealth());
                 player.setFoodLevel(20);

@@ -66,6 +66,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
+
 
 @ComponentInformation(friendlyName = "Admin", desc = "Player Administration commands.")
 @Depend(plugins = {"WorldEdit, Vault"}, components = {NinjaComponent.class, RogueComponent.class, GodComponent.class})
@@ -237,7 +239,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
             if (!event.isCancelled()) {
                 // Clear their inventory
                 player.getInventory().clear();
-                player.getInventory().setArmorContents(null);
+                player.getInventory().setArmorContents(NO_ARMOR);
 
                 // Make a last attempt to ensure the inventory is loaded. While the deadmin command
                 // will run this call as well, this is here for cases where automatic depermission
