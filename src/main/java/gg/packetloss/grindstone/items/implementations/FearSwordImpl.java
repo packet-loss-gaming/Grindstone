@@ -19,7 +19,7 @@ public class FearSwordImpl extends AbstractItemFeatureImpl implements SpecWeapon
     public SpecialAttack getSpecial(LivingEntity owner, LivingEntity target) {
         switch (ChanceUtil.getRandom(6)) {
             case 1:
-                return new Confuse(owner, target);
+                return new ChainLightning(owner, target);
             case 2:
                 return new FearBlaze(owner, target);
             case 3:
