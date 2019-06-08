@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.items;
 
-import com.avaje.ebean.text.json.JsonElementString;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -23,7 +22,7 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
-import gg.packetloss.grindstone.items.custom.CustomItem;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -31,7 +30,6 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.InventoryUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -44,10 +42,8 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
@@ -147,11 +143,11 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
     private void registerSpecWeapons() {
         WeaponSysImpl wepSys = handle(new WeaponSysImpl());
-        wepSys.addRanged(CustomItems.FEAR_BOW, handle(new FearBowImpl()));
-        wepSys.addRanged(CustomItems.UNLEASHED_BOW, handle(new UnleashedBowImpl()));
+        wepSys.add(WeaponType.RANGED, CustomItems.FEAR_BOW, handle(new FearBowImpl()));
+        wepSys.add(WeaponType.RANGED, CustomItems.UNLEASHED_BOW, handle(new UnleashedBowImpl()));
 
-        wepSys.addMelee(CustomItems.FEAR_SWORD, handle(new FearSwordImpl()));
-        wepSys.addMelee(CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));
+        wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SWORD, handle(new FearSwordImpl()));
+        wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));
     }
 
     private void registerHymns() {

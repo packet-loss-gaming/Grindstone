@@ -9,7 +9,6 @@ package gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.blocks.ClothColor;
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
@@ -57,8 +56,9 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
             }
         }
 
-        Collections.addAll(blocks, blockList.toArray(new Block[blockList.size()]));
+        Collections.addAll(blocks, blockList.toArray(new Block[0]));
 
+        final FearBomb spec = this;
         IntegratedRunnable bomb = new IntegratedRunnable() {
 
             @Override
@@ -117,13 +117,8 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
                     block.getWorld().createExplosion(loc, 0F);
                     for (Entity entity : block.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
                         if (!entity.isValid()) continue;
-                        if (entity instanceof Player) {
-                            if (owner instanceof Player && !PvPComponent.allowsPvP((Player) owner, (Player) entity)) {
-                                continue;
-                            }
-                        }
                         if (entity.getLocation().distanceSquared(loc) <= 4) {
-                            DamageUtil.damage(owner, (LivingEntity) entity, 10000);
+                            DamageUtil.damageWithSpecialAttack(owner, target, spec, 10000);
                         }
                     }
 

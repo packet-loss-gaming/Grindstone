@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.melee.unleashed;
 
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
@@ -42,12 +41,13 @@ public class DoomBlade extends EntityAttack implements MeleeSpecial {
                 if (e.equals(owner)) continue;
                 double maxHit = ChanceUtil.getRangedRandom(150, 350);
                 if (e instanceof Player) {
-                    if (owner instanceof Player && !PvPComponent.allowsPvP((Player) owner, (Player) e)) {
-                        continue;
-                    }
                     maxHit = (1.0 / 3.0) * maxHit;
                 }
-                DamageUtil.damage(owner, (LivingEntity) e, maxHit);
+
+                if (!DamageUtil.damageWithSpecialAttack(owner, (LivingEntity) e, this, maxHit)) {
+                    continue;
+                }
+
                 for (int i = 0; i < 20; i++) e.getWorld().playEffect(e.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
                 dmgTotal += maxHit;
             }

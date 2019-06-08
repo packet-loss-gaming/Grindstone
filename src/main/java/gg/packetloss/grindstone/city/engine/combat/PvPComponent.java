@@ -22,6 +22,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackPreDamageEvent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.homes.HomeManagerComponent;
@@ -189,6 +190,24 @@ public class PvPComponent extends BukkitComponent implements Listener {
 
         sessions.getSession(PvPSession.class, result.getAttacker()).updateHit();
         sessions.getSession(PvPSession.class, result.getDefender()).updateHit();
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSpecialAttackPreDamage(SpecialAttackPreDamageEvent event) {
+        if (!(event.getAttacker() instanceof Player)) {
+            return;
+        }
+
+        if (!(event.getDefender() instanceof Player)) {
+            return;
+        }
+
+        Player attacker = (Player) event.getAttacker();
+        Player defender = (Player) event.getDefender();
+
+        if (!allowsPvP(attacker, defender)) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler

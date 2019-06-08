@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed;
 
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
@@ -31,6 +30,7 @@ public class GlowingFog extends EntityAttack implements RangedSpecial {
     public void activate() {
         final Location targeted = target.getLocation();
 
+        final GlowingFog spec = this;
         IntegratedRunnable glowingFog = new IntegratedRunnable() {
             @Override
             public boolean run(int times) {
@@ -45,11 +45,7 @@ public class GlowingFog extends EntityAttack implements RangedSpecial {
                     if (!aEntity.isValid() || aEntity.equals(owner)
                             || aEntity.getLocation().distanceSquared(targeted) > 16) continue;
                     if (aEntity instanceof LivingEntity) {
-                        if (aEntity instanceof Player) {
-                            if (owner instanceof Player && !PvPComponent.allowsPvP((Player) owner, (Player) aEntity))
-                                continue;
-                        }
-                        DamageUtil.damage(owner, (LivingEntity) aEntity, 5);
+                        DamageUtil.damageWithSpecialAttack(owner, (LivingEntity) aEntity, spec, 5);
                     }
                 }
                 return true;

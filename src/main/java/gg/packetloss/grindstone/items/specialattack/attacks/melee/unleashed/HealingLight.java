@@ -32,7 +32,7 @@ public class HealingLight extends EntityAttack implements MeleeSpecial {
             target.getWorld().playEffect(target.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
         }
 
-        DamageUtil.damage(owner, target, 20);
+        DamageUtil.damageWithSpecialAttack(owner, target, this, 20);
         inform("Your weapon glows dimly.");
     }
 }

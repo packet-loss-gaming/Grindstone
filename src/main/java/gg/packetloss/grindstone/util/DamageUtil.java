@@ -7,13 +7,12 @@
 package gg.packetloss.grindstone.util;
 
 import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackPreDamageEvent;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import org.bukkit.Server;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier.BASE;
@@ -24,23 +23,20 @@ public class DamageUtil {
     private static final Logger log = inst.getLogger();
     private static final Server server = CommandBook.server();
 
-    private static Map<Entity, Entity> entries = new ConcurrentHashMap<>();
-
-    public static void damage(LivingEntity attacker, LivingEntity defender, double amount) {
-
-        entries.put(attacker, defender);
-
-        defender.damage(amount, attacker);
-    }
-
-    public static boolean remove(Entity attacker, Entity defender) {
-
-        Entity testDefender = entries.remove(attacker);
-
-        return testDefender != null && testDefender.equals(defender);
-    }
-
     public static void multiplyFinalDamage(EntityDamageEvent event, double multiplier) {
         event.setDamage(BASE, Math.max(0, event.getDamage() + (event.getFinalDamage() * (multiplier - 1))));
+    }
+
+    public static boolean damageWithSpecialAttack(LivingEntity attacker, LivingEntity defender,
+                                                  SpecialAttack spec, double amount) {
+        SpecialAttackPreDamageEvent event = new SpecialAttackPreDamageEvent(attacker, defender, spec, amount);
+        server.getPluginManager().callEvent(event);
+
+        if (event.isCancelled()) {
+            return false;
+        }
+
+        event.getDefender().damage(event.getDamage(), attacker);
+        return true;
     }
 }

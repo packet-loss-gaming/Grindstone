@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear;
 
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
@@ -38,17 +37,22 @@ public class FearStrike extends EntityAttack implements RangedSpecial {
         for (Entity e : entityList) {
             if (e.isValid() && e instanceof LivingEntity) {
                 if (e.equals(owner)) continue;
+
+                // Check this, and do the damage first so we correctly check PvP boundaries
+                if (!DamageUtil.damageWithSpecialAttack(owner, (LivingEntity) e, this, 10)) {
+                    continue;
+                }
+
                 if (e instanceof Player) {
-                    if (owner instanceof Player && !PvPComponent.allowsPvP((Player) owner, (Player) e)) {
-                        continue;
-                    }
                     server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
                 }
 
+                // Set velocity/throw entity
                 Vector velocity = owner.getLocation().getDirection().multiply(2);
                 velocity.setY(Math.max(velocity.getY(), Math.random() * 2 + 1.27));
                 e.setVelocity(velocity);
-                DamageUtil.damage(owner, (LivingEntity) e, 10);
+
+                // Light entity on fire
                 e.setFireTicks(20 * (ChanceUtil.getRandom(40) + 20));
             }
         }
