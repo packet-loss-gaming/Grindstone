@@ -42,15 +42,18 @@ dependencies {
     compile files('lib/MobArena.jar')
     compile files('lib/Pitfall.jar')
 
-    compile group: 'org.bukkit', name: 'bukkit', version: '1.9.4-R0.1-SNAPSHOT'
-    compile group: 'org.bukkit', name: 'craftbukkit', version: '1.9.4-R0.1-SNAPSHOT'
+    compile group: 'org.bukkit', name: 'bukkit', version: '1.12.2-R0.1-SNAPSHOT'
+    compile group: 'org.bukkit', name: 'craftbukkit', version: '1.12.2-R0.1-SNAPSHOT'
 
-    compile group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '6.1'
+    compile group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '6.1.*'
     compile group: 'com.sk89q', name: 'worldguard', version: '6.1'
     compile group: 'com.sk89q', name: 'commandbook', version: '2.3.1-SNAPSHOT'
-    compile group: 'com.sk89q.craftbook', name: 'craftbook', version: '3.9-SNAPSHOT'
+    compile(group: 'com.sk89q.craftbook', name: 'craftbook', version: '3.9-SNAPSHOT') {
+        exclude group: 'org.spigotmc', module: 'spigot-api'
+        exclude group: 'org.spigotmc', module: 'spigot'
+    }
 
-    compile group: 'net.milkbowl.vault', name: 'Vault', version: '1.4.1'
+    compile group: 'net.milkbowl.vault', name: 'Vault', version: '1.5.6'
     compile group: 'fr.neatmonster', name: 'nocheatplus', version: '3.13.7-RC'
     compile group: 'de.diddiz', name: 'logblock', version: 'dev-SNAPSHOT'
 
