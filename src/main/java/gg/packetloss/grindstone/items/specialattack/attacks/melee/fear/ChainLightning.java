@@ -19,7 +19,7 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
         super(owner, target);
     }
 
-    private void chainOn(LivingEntity target, int depth) {
+    private void chainOn(LivingEntity target, int depth, int delayModifier) {
         if (depth != 1 && !ChanceUtil.getChance(3 * depth)) {
             return;
         }
@@ -28,6 +28,7 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
             target.getWorld().strikeLightningEffect(target.getLocation());
             target.damage(15, owner);
 
+            int localDelayModifier = 0;
             for (Entity entity : target.getNearbyEntities(5, 5, 5)) {
                 if (!(entity instanceof LivingEntity)) {
                     continue;
@@ -37,14 +38,14 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
                     continue;
                 }
 
-                chainOn((LivingEntity) entity, depth + 1);
+                chainOn((LivingEntity) entity, depth + 1, ++localDelayModifier);
             }
-        }, 10);
+        }, 10 * delayModifier);
     }
 
     @Override
     public void activate() {
-        chainOn(target, 1);
+        chainOn(target, 1, 1);
 
         inform("Your sword unleashes a chain lightning attack.");
     }
