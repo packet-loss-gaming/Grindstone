@@ -25,6 +25,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -107,6 +108,10 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void damageModifier(EntityDamageByEntityEvent event) {
+        if (!event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
+            return;
+        }
+
         WeaponAttackInfo attackInfo = WeaponAttackExtractor.extractFrom(event);
         if (attackInfo == null) {
             return;

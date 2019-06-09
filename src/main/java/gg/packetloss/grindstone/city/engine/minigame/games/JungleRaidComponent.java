@@ -1060,7 +1060,9 @@ public class JungleRaidComponent extends MinigameComponent {
             } else {
 
                 if (gameFlags.contains('T') && titan.equals(attackingPlayer.getName())) {
-                    event.setDamage(event.getDamage() * 2);
+                    if (event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
+                        event.setDamage(event.getDamage() * 2);
+                    }
                 }
 
                 if (gameFlags.contains('d')) {
