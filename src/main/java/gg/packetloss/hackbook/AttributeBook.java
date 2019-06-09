@@ -23,13 +23,11 @@ public class AttributeBook {
         MOVEMENT_SPEED(GenericAttributes.MOVEMENT_SPEED),
         ATTACK_DAMAGE(GenericAttributes.ATTACK_DAMAGE);
 
-        public IAttribute attribute;
+        public final IAttribute attribute;
 
         Attribute(IAttribute attribute) {
-
             this.attribute = attribute;
         }
-
     }
 
     public static double getAttribute(LivingEntity entity, Attribute attribute) throws UnsupportedFeatureException {
