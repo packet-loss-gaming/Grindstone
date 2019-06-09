@@ -10,6 +10,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.WeaponFamily;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import org.bukkit.ChatColor;
@@ -301,7 +302,11 @@ public class ItemUtil {
 
     public static boolean isItem(ItemStack stack, CustomItems type) {
 
-        return matchesFilter(stack, type.toString());
+        return matchesFilter(stack, type.toString(), false);
+    }
+
+    public static boolean isInItemFamily(ItemStack stack, WeaponFamily family) {
+        return matchesFilter(stack, family.getPrefix());
     }
 
     public static boolean swapItem(Inventory target, CustomItems oldItem, CustomItems newItem) {
