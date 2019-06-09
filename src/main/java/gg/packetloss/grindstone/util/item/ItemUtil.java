@@ -20,6 +20,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.HashMap;
@@ -471,5 +472,35 @@ public class ItemUtil {
                 }
         }
         return returnValue;
+    }
+
+    public static double getDamageModifier(ItemStack stack) {
+        double modifier = 1;
+
+        Map<String, String> map = getItemTags(stack);
+        if (map != null) {
+            String modifierString = map.get(ChatColor.RED + "Damage Modifier");
+            if (modifierString != null) {
+                try {
+                    modifier = Double.parseDouble(modifierString);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        return modifier;
+    }
+
+    public static void copyEnchancements(ItemStack source, ItemStack destination) {
+        if (!source.hasItemMeta()) {
+            return;
+        }
+
+        ItemMeta oldMeta = source.getItemMeta();
+        ItemMeta newMeta = destination.getItemMeta();
+        oldMeta.getEnchants().forEach((enchantment, level) -> {
+            newMeta.addEnchant(enchantment, level, true);
+        });
+        destination.setItemMeta(newMeta);
     }
 }

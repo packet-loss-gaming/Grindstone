@@ -12,6 +12,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.util.entity.player.PlayerUtil;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -25,12 +29,17 @@ import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
+import gg.packetloss.grindstone.items.migration.MigrationManager;
+import gg.packetloss.grindstone.items.migration.migrations.FearSwordMigration;
+import gg.packetloss.grindstone.items.migration.migrations.UnleashedSwordMigration;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.InventoryUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.bukkit.ChatColor;
 import org.bukkit.Server;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -40,11 +49,14 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Optional;
+import java.util.Set;
 
 
 @ComponentInformation(friendlyName = "Global Items Component", desc = "Global Custom Item effects")
@@ -97,6 +109,8 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         summationCondenser.addSupport(new ItemStack(ItemID.EMERALD, 9), new ItemStack(BlockID.EMERALD_BLOCK, 1));
     }
 
+    private MigrationManager migrationManager = new MigrationManager();
+
     private JsonObject buildItemManifest() {
         JsonArray itemNames = new JsonArray();
         for (CustomItems item : CustomItems.values()) {
@@ -125,6 +139,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         registerSpecWeapons();
         registerHymns();
         registerGeneral();
+        registerMigrations();
 
         writeItemManifest();
     }
@@ -178,6 +193,13 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         handle(new PotionOfRestitutionImpl());
         handle(new RedFeatherImpl());
         handle(new SummationScrollImpl(summationCondenser));
+    }
+
+    private void registerMigrations() {
+        migrationManager.add(new FearSwordMigration());
+        migrationManager.add(new UnleashedSwordMigration());
+
+        registerCommands(MigrationCommands.class);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -237,6 +259,38 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
                     return;
                 }
             }
+        }
+    }
+
+    public class MigrationCommands {
+        @Command(aliases = {"migrateitem"}, desc = "Updates a custom item with a configurable update path")
+        public void migrateItemCmd(CommandContext args, CommandSender sender) throws CommandException {
+            Player player = PlayerUtil.checkPlayer(sender);
+
+            PlayerInventory inventory = player.getInventory();
+            ItemStack heldItem = inventory.getItemInMainHand();
+
+            if (args.argsLength() == 0) {
+                Set<String> upgradeOptions = migrationManager.getUpgradeOptions(heldItem);
+                if (upgradeOptions.isEmpty()) {
+                    throw new CommandException("This item cannot be upgraded currently.");
+                }
+
+                ChatUtil.sendNotice(player, ChatColor.GOLD + "Available upgrade options:");
+                for (String upgradeOption : upgradeOptions) {
+                    ChatUtil.sendNotice(player, " - " + ChatColor.BLUE + upgradeOption.toUpperCase());
+                }
+
+                return;
+            }
+
+            String selectedUpgrade = args.getRemainingString(0);
+            Optional<ItemStack> optNewItem = migrationManager.upgradeItem(heldItem, selectedUpgrade);
+            if (!optNewItem.isPresent()) {
+                throw new CommandException("Invalid upgrade specified or no upgrades currently available.");
+            }
+
+            inventory.setItemInMainHand(optNewItem.get());
         }
     }
 }

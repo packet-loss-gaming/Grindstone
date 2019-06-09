@@ -18,7 +18,6 @@ import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -116,20 +115,8 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
         EntityDamageEvent.DamageCause cause = event.getCause();
         if (cause.equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
             ItemStack targetItem = attackInfo.getUsedItem();
-            Map<String, String> map = ItemUtil.getItemTags(targetItem);
 
-            double modifier = 1;
-
-            if (map != null) {
-                String modifierString = map.get(ChatColor.RED + "Damage Modifier");
-                if (modifierString != null) {
-                    try {
-                        modifier = Double.parseDouble(modifierString);
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-            }
-
+            double modifier = ItemUtil.getDamageModifier(targetItem);
             event.setDamage(event.getDamage() * modifier);
         } else if (cause.equals(EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
             ItemStack targetItem = attackInfo.getUsedItem();
