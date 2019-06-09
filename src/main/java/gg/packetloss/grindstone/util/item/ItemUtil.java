@@ -389,6 +389,15 @@ public class ItemUtil {
         return isNamed(stack) && (loose ? stack.getItemMeta().getDisplayName().startsWith(filter) : stack.getItemMeta().getDisplayName().equals(filter));
     }
 
+    public static boolean isCustomItemKind(ItemStack stack, String kind) {
+        if (!isNamed(stack)) {
+            return false;
+        }
+
+        String name = stack.getItemMeta().getDisplayName();
+        return isAuthenticCustomItem(name) && name.endsWith(kind);
+    }
+
     public static boolean hasForgeBook(Player player) {
 
         return player.isValid() && hasForgeBook(player.getItemInHand());
