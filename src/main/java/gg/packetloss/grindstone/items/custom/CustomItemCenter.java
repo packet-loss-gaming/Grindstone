@@ -206,13 +206,21 @@ public class CustomItemCenter {
         addItem(masterBow);
 
         // Unleashed Weapons
-        CustomWeapon unleashedSword = new CustomWeapon(UNLEASHED_SWORD, Material.DIAMOND_SWORD, 2.25);
+        CustomWeapon unleashedSword = new CustomWeapon(UNLEASHED_SWORD, Material.DIAMOND_SWORD, 4);
         unleashedSword.addSource(ItemSource.GRAVE_YARD);
         unleashedSword.addSource(ItemSource.MARKET);
         unleashedSword.addUse("Repairable at any Sacrificial Pit, but requires 2 Imbued Crystals " +
                 "for every 11% damage, or 1 Imbued Crystal if repaired inside of the Grave Yard rewards room.");
         unleashedSword.addUse("Global Effects");
         addItem(unleashedSword);
+
+        CustomWeapon unleashedShortSword = new CustomWeapon(UNLEASHED_SHORT_SWORD, Material.DIAMOND_SWORD, 2.25, 4);
+        unleashedShortSword.addSource(ItemSource.GRAVE_YARD);
+        unleashedShortSword.addSource(ItemSource.MARKET);
+        unleashedShortSword.addUse("Repairable at any Sacrificial Pit, but requires 2 Imbued Crystals " +
+                "for every 11% damage, or 1 Imbued Crystal if repaired inside of the Grave Yard rewards room.");
+        unleashedShortSword.addUse("Global Effects");
+        addItem(unleashedShortSword);
 
         CustomWeapon unleashedBow = new CustomWeapon(UNLEASHED_BOW, Material.BOW, 2.25);
         unleashedBow.addSource(ItemSource.GRAVE_YARD);
@@ -223,13 +231,21 @@ public class CustomItemCenter {
         addItem(unleashedBow);
 
         // Fear Weapons
-        CustomWeapon fearSword = new CustomWeapon(FEAR_SWORD, Material.DIAMOND_SWORD, 2.25);
+        CustomWeapon fearSword = new CustomWeapon(FEAR_SWORD, Material.DIAMOND_SWORD, 4);
         fearSword.addSource(ItemSource.GRAVE_YARD);
         fearSword.addSource(ItemSource.MARKET);
         fearSword.addUse("Repairable at any Sacrificial Pit, but requires 2 Gems of Darkness " +
                 "for every 11% damage, or 1 Gem of Darkness if repaired inside of the Grave Yard rewards room.");
         fearSword.addUse("Global Effects");
         addItem(fearSword);
+
+        CustomWeapon fearShortSword = new CustomWeapon(FEAR_SHORT_SWORD, Material.DIAMOND_SWORD, 2.25, 4);
+        fearShortSword.addSource(ItemSource.GRAVE_YARD);
+        fearShortSword.addSource(ItemSource.MARKET);
+        fearShortSword.addUse("Repairable at any Sacrificial Pit, but requires 2 Imbued Crystals " +
+                "for every 11% damage, or 1 Imbued Crystal if repaired inside of the Grave Yard rewards room.");
+        fearShortSword.addUse("Global Effects");
+        addItem(fearShortSword);
 
         CustomWeapon fearBow = new CustomWeapon(FEAR_BOW, Material.BOW, 2.25);
         fearBow.addSource(ItemSource.GRAVE_YARD);

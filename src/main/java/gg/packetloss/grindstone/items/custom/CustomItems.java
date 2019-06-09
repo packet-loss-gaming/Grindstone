@@ -35,12 +35,14 @@ public enum CustomItems {
     MASTER_BOW(ChatColor.DARK_PURPLE, "Master Bow"),
 
     // Unleashed Weapons
-    UNLEASHED_SWORD(ChatColor.DARK_PURPLE, "Unleashed Sword"),
-    UNLEASHED_BOW(ChatColor.DARK_PURPLE, "Unleashed Bow"),
+    UNLEASHED_SWORD(WeaponFamily.UNLEASHED, "Sword"),
+    UNLEASHED_SHORT_SWORD(WeaponFamily.UNLEASHED, "Short Sword"),
+    UNLEASHED_BOW(WeaponFamily.UNLEASHED, "Bow"),
 
     // Fear Weapons
-    FEAR_SWORD(ChatColor.DARK_RED, "Fear Sword"),
-    FEAR_BOW(ChatColor.DARK_RED, "Fear Bow"),
+    FEAR_SWORD(WeaponFamily.FEAR, "Sword"),
+    FEAR_SHORT_SWORD(WeaponFamily.FEAR, "Short Sword"),
+    FEAR_BOW(WeaponFamily.FEAR, "Bow"),
 
     // Shadow Items
     SHADOW_SWORD(ChatColor.DARK_RED, "Shadow Sword"),
@@ -106,13 +108,24 @@ public enum CustomItems {
     POTION_OF_RESTITUTION(ChatColor.DARK_RED, "Potion of Restitution"),
     TOME_OF_THE_RIFT_SPLITTER(ChatColor.BLACK, "Tome of the Rift Splitter");
 
+    private WeaponFamily family;
     private ChatColor color;
     private String name;
+
+    private CustomItems(WeaponFamily family, String kind) {
+        this.family = family;
+        this.color = family.getColor();
+        this.name = family.getProperName() + " " + kind;
+    }
 
     private CustomItems(ChatColor color, String name) {
 
         this.color = color;
         this.name = name;
+    }
+
+    public WeaponFamily getFamily() {
+        return family;
     }
 
     public ChatColor getColor() {

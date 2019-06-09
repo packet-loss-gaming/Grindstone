@@ -40,6 +40,10 @@ public class CustomItem {
         return item;
     }
 
+    public Material getBaseMaterial() {
+        return base.getType();
+    }
+
     public void addTag(Tag tag) {
         tags.add(tag);
     }

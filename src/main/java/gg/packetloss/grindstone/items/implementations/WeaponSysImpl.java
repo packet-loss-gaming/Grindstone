@@ -108,31 +108,35 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void damageModifier(EntityDamageByEntityEvent event) {
-        if (!event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
-            return;
-        }
-
         WeaponAttackInfo attackInfo = WeaponAttackExtractor.extractFrom(event);
         if (attackInfo == null) {
             return;
         }
 
-        double modifier = 1;
+        EntityDamageEvent.DamageCause cause = event.getCause();
+        if (cause.equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
+            ItemStack targetItem = attackInfo.getUsedItem();
+            Map<String, String> map = ItemUtil.getItemTags(targetItem);
 
-        ItemStack targetItem = attackInfo.getUsedItem();
-        Map<String, String> map = ItemUtil.getItemTags(targetItem);
+            double modifier = 1;
 
-        if (map != null) {
-            String modifierString = map.get(ChatColor.RED + "Damage Modifier");
-            if (modifierString != null) {
-                try {
-                    modifier = Double.parseDouble(modifierString);
-                } catch (NumberFormatException ignored) {
+            if (map != null) {
+                String modifierString = map.get(ChatColor.RED + "Damage Modifier");
+                if (modifierString != null) {
+                    try {
+                        modifier = Double.parseDouble(modifierString);
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             }
-        }
 
-        event.setDamage(event.getDamage() * modifier);
+            event.setDamage(event.getDamage() * modifier);
+        } else if (cause.equals(EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
+            ItemStack targetItem = attackInfo.getUsedItem();
+            if (ItemUtil.isCustomItemKind(targetItem, "Short Sword")) {
+                event.setCancelled(true);
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

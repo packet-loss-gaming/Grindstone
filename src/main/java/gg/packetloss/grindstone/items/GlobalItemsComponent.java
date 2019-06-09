@@ -147,7 +147,9 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         wepSys.add(WeaponType.RANGED, CustomItems.UNLEASHED_BOW, handle(new UnleashedBowImpl()));
 
         wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SWORD, handle(new FearSwordImpl()));
+        wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SHORT_SWORD, handle(new FearSwordImpl()));
         wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));
+        wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SHORT_SWORD, handle(new UnleashedSwordImpl()));
     }
 
     private void registerHymns() {
