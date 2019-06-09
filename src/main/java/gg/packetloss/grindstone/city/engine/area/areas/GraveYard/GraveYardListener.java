@@ -20,6 +20,7 @@ import gg.packetloss.grindstone.events.guild.NinjaGrappleEvent;
 import gg.packetloss.grindstone.events.guild.RogueBlipEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.WeaponFamily;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -236,7 +237,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             }
             parent.economy.depositPlayer(player.getName(), amount * item.getAmount());
             event.setItemStack(null);
-        } else if (ItemUtil.isItem(item, CustomItems.FEAR_SWORD) || ItemUtil.isItem(item, CustomItems.FEAR_BOW)) {
+        } else if (ItemUtil.isInItemFamily(item, WeaponFamily.FEAR)) {
             if (!isInRewardsRoom) {
                 o = 2;
             }
@@ -256,7 +257,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             }
             player.updateInventory();
             event.setItemStack(null);
-        } else if (ItemUtil.isItem(item, CustomItems.UNLEASHED_SWORD) || ItemUtil.isItem(item, CustomItems.UNLEASHED_BOW)) {
+        } else if (ItemUtil.isInItemFamily(item, WeaponFamily.UNLEASHED)) {
             if (!isInRewardsRoom) {
                 o = 2;
             }
