@@ -40,8 +40,6 @@ public class NecrosAbsorb {
             if (removed >= 1) {
                 ChatUtil.sendNotice(player, "Your armor absorbs " + (int) removed + " damaged.");
             }
-
-            ChatUtil.sendDebug(player.getName() + " Damage From: " + original + " To: " + event.getDamage());
         }
     }
 }
