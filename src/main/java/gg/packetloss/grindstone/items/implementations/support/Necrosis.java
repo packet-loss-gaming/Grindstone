@@ -13,11 +13,12 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
-import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+
+import java.util.function.Predicate;
 
 public class Necrosis {
     private static EDBEExtractor<LivingEntity, Player, Projectile> necrosisExtractor = new EDBEExtractor<>(
@@ -27,9 +28,11 @@ public class Necrosis {
     );
 
     private final PrayerComponent prayers;
+    private final Predicate<Player> hasArmor;
 
-    public Necrosis(PrayerComponent prayers) {
+    public Necrosis(PrayerComponent prayers, Predicate<Player> hasArmor) {
         this.prayers = prayers;
+        this.hasArmor = hasArmor;
     }
 
     public void handleEvent(EntityDamageByEntityEvent event) {
@@ -38,7 +41,7 @@ public class Necrosis {
         if (result == null) return;
 
         Player defender = result.getDefender();
-        if (ItemUtil.hasNectricArmour(defender) && ChanceUtil.getChance(4)) {
+        if (hasArmor.test(defender) && ChanceUtil.getChance(4)) {
             LivingEntity attacker = result.getAttacker();
             if (attacker instanceof Player) {
                 NecrosisFX necrosis = new NecrosisFX(defender);

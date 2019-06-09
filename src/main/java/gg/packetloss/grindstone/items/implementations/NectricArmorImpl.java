@@ -7,14 +7,27 @@
 package gg.packetloss.grindstone.items.implementations;
 
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
+import gg.packetloss.grindstone.items.implementations.support.NecrosAbsorb;
 import gg.packetloss.grindstone.items.implementations.support.Necrosis;
+import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 
 public class NectricArmorImpl extends AbstractItemFeatureImpl {
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public boolean hasArmor(Player player) {
+        return ItemUtil.hasNectricArmour(player);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void damageReduction(EntityDamageEvent event) {
+        new NecrosAbsorb(this::hasArmor).handleEvent(event);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void necrosis(EntityDamageByEntityEvent event) {
-        new Necrosis(prayers).handleEvent(event);
+        new Necrosis(prayers, this::hasArmor).handleEvent(event);
     }
 }
