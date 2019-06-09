@@ -30,8 +30,6 @@ public class NecrosAbsorb {
             double extra = event.getDamage() - pointOfActivation;
             double newExtra = ChanceUtil.getRandomNTimes((int) extra, 2);
 
-            double original = event.getDamage();
-
             // Change the damage
             event.setDamage(pointOfActivation + newExtra);
 
