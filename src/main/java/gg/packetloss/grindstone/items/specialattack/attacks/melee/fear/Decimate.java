@@ -27,7 +27,7 @@ public class Decimate extends EntityAttack implements MeleeSpecial {
             server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
         }
 
-        double damage = ChanceUtil.getRandom(target instanceof Player ? 3 : 10) * 50;
+        double damage = ChanceUtil.getRandom(target instanceof Player ? 4 : 20) * 25;
         DamageUtil.damageWithSpecialAttack(owner, target, this, damage);
 
         inform("Your sword tears through the flesh of its victim.");

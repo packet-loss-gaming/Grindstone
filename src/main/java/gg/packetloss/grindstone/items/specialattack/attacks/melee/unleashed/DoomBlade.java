@@ -41,7 +41,7 @@ public class DoomBlade extends EntityAttack implements MeleeSpecial {
                 if (e.equals(owner)) continue;
                 double maxHit = ChanceUtil.getRangedRandom(150, 350);
                 if (e instanceof Player) {
-                    maxHit = (1.0 / 3.0) * maxHit;
+                    maxHit = (1.0 / 5.0) * maxHit;
                 }
 
                 if (!DamageUtil.damageWithSpecialAttack(owner, (LivingEntity) e, this, maxHit)) {
