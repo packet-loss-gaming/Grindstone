@@ -224,7 +224,7 @@ public class MarketComponent extends BukkitComponent {
                 max = 9;
             } else if (args.hasFlag('s')) {
                 min = 9;
-                max = itemStacks.length;
+                max = itemStacks.length - 5;
             } else {
                 min = player.getInventory().getHeldItemSlot();
                 max = min + 1;
