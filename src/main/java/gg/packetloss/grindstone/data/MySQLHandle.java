@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class MySQLHandle {
     private static String database = "";
@@ -31,20 +32,44 @@ public class MySQLHandle {
     }
 
     private static HikariDataSource pool = null;
+    private static ReentrantLock setupLock = new ReentrantLock();
+
+    private static HikariDataSource createNewPool() {
+        HikariDataSource newPool = new HikariDataSource();
+
+        newPool.setJdbcUrl(database);
+        newPool.setUsername(username);
+        newPool.setPassword(password);
+
+        newPool.setMinimumIdle(4);
+        newPool.setMaximumPoolSize(8);
+        newPool.setPoolName("Grindstone-Connection-Pool");
+
+        return newPool;
+    }
+
+    private static void setupPool() {
+        setupLock.lock();
+
+        try {
+            // Some other thread did this for us already.
+            if (pool != null) {
+                return;
+            }
+
+            // We specifically want to set the pool, after it's been setup,
+            // so that the pointer is only ever set to a complete pool.
+            pool = createNewPool();
+        } finally {
+            setupLock.unlock();
+        }
+    }
 
     private static HikariDataSource getPool() {
-        if (pool != null) {
-            return pool;
+        // No lock is required for this check as this is an atomic action.
+        if (pool == null) {
+            setupPool();
         }
-
-        pool = new HikariDataSource();
-        pool.setJdbcUrl(database);
-        pool.setUsername(username);
-        pool.setPassword(password);
-
-        pool.setMinimumIdle(4);
-        pool.setMaximumPoolSize(8);
-        pool.setPoolName("Grindstone-Connection-Pool");
 
         return pool;
     }
