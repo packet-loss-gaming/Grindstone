@@ -216,15 +216,17 @@ public class MarketComponent extends BukkitComponent {
             boolean singleItem = false;
             int min, max;
 
+            final int hotbarLength = 9;
+            final int storageLength = 27;
             if (args.hasFlag('a')) {
                 min = 0;
-                max = itemStacks.length;
+                max = hotbarLength + storageLength;
             } else if (args.hasFlag('h')) {
                 min = 0;
-                max = 9;
+                max = hotbarLength;
             } else if (args.hasFlag('s')) {
-                min = 9;
-                max = itemStacks.length;
+                min = hotbarLength;
+                max = min + storageLength;
             } else {
                 min = player.getInventory().getHeldItemSlot();
                 max = min + 1;
