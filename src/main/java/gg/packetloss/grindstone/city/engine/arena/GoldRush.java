@@ -490,7 +490,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             for (int z = minZ; z <= maxZ; z++) {
                 for (int y = maxY; y >= minY; --y) {
                     Block block = getWorld().getBlockAt(x, y, z);
-                    if (EnvironmentUtil.isLiquid(block.getTypeId())) {
+                    if (EnvironmentUtil.isLiquid(block.getType())) {
                         block.setTypeId(BlockID.AIR);
                     }
                 }

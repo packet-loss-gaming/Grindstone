@@ -567,7 +567,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         if (!isWildernessWorld(player.getWorld())) return;
 
-        if (isEffectedOre(block.getTypeId())) {
+        if (isEffectedOre(block.getType())) {
 
             ItemStack stack = player.getItemInHand();
 
@@ -632,7 +632,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         Iterator<Block> it = blockList.iterator();
         while (it.hasNext()) {
             Block next = it.next();
-            if (isEffectedOre(next.getTypeId())) {
+            if (isEffectedOre(next.getType())) {
                 addPool(next.getState(), 0, false);
                 continue;
             }
@@ -688,7 +688,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         Player player = event.getPlayer();
 
         if (isWildernessWorld(player.getWorld()) && !adminComponent.isAdmin(player)) {
-            int typeId = event.getBlock().getTypeId();
+            Material typeId = event.getBlock().getType();
             if (isEffectedOre(typeId)) {
                 event.setCancelled(true);
                 ChatUtil.sendError(player, "You find yourself unable to place that ore.");
@@ -853,8 +853,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         final Location location = block.getLocation();
         final World world = location.getWorld();
 
-        ItemStack generalDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch);
-        final int fortune = EnvironmentUtil.isOre(generalDrop.getTypeId()) ? 0 : fortuneLevel;
+        ItemStack generalDrop = EnvironmentUtil.getOreDrop(block.getType(), hasSilkTouch);
+        final int fortune = EnvironmentUtil.isOre(generalDrop.getType()) ? 0 : fortuneLevel;
         final int times = ChanceUtil.getRandom(getOreMod(getLevel(location)));
         final float vol = ((float) 1 / times);
         IntegratedRunnable dropper = new IntegratedRunnable() {
@@ -864,7 +864,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 if (nextDropTime != 0 && System.currentTimeMillis() < nextDropTime) return false;
 
                 for (int i = 0; i < ItemUtil.fortuneModifier(block.getTypeId(), fortune); i++) {
-                    world.dropItem(location, EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch));
+                    world.dropItem(location, EnvironmentUtil.getOreDrop(block.getType(), hasSilkTouch));
                 }
                 world.playSound(location, Sound.ENTITY_BLAZE_BURN, Math.min(1, (((float) timesL / times) * .6F) + vol), 0);
                 return true;
@@ -890,14 +890,14 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     };
     */
 
-    private boolean isEffectedOre(int typeId) {
+    private boolean isEffectedOre(Material material) {
 
         /*
         for (int ore : ores) {
             if (ore == typeId) return true;
         }
         */
-        return EnvironmentUtil.isOre(typeId);
+        return EnvironmentUtil.isOre(material);
     }
 
     private static class WildernessSession extends PersistentSession {

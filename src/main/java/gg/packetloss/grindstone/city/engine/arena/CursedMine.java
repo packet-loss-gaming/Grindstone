@@ -666,9 +666,9 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                 && ItemUtil.isPickAxe(itemInHand.getTypeId())) {
 
             if (ChanceUtil.getChance(4)) {
-                ItemStack rawDrop = EnvironmentUtil.getOreDrop(block.getTypeId(), hasSilkTouch(itemInHand));
+                ItemStack rawDrop = EnvironmentUtil.getOreDrop(block.getType(), hasSilkTouch(itemInHand));
 
-                if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(rawDrop.getTypeId())) {
+                if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(rawDrop.getType())) {
                     rawDrop.setAmount(rawDrop.getAmount()
                             * ItemUtil.fortuneModifier(typeId, ItemUtil.fortuneLevel(itemInHand)));
                 }

@@ -26,6 +26,7 @@ import gg.packetloss.grindstone.events.egg.EggHatchEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -155,7 +156,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
 
         Block block = event.getBlock();
         World world = block.getWorld();
-        int blockType = block.getTypeId();
+        Material blockType = block.getType();
 
         if (EnvironmentUtil.isShrubBlock(blockType)) {
             if (LocalDate.now().getMonth().equals(Month.APRIL)

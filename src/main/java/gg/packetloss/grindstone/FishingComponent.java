@@ -14,11 +14,11 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.events.entity.ProjectileTickEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -79,7 +79,7 @@ public class FishingComponent extends BukkitComponent implements Listener {
         // Basic Checks
         if (!config.enableNACrops || event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
-        if (EnvironmentUtil.isCropBlock(block.getTypeId())
+        if (EnvironmentUtil.isCropBlock(block.getType())
                 && player.getItemInHand().getTypeId() == ItemID.RAW_FISH) {
 
             // Get needed data for a cycle

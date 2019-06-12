@@ -46,8 +46,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -61,7 +59,10 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -437,20 +438,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 }
             }
         }
-    }
-
-    private void handleExplosion(List<Block> blockList) {
-        blockList.removeIf(EnvironmentUtil::isValuableBlock);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onEntityExplosion(EntityExplodeEvent event) {
-        handleExplosion(event.blockList());
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockExplosion(BlockExplodeEvent event) {
-        handleExplosion(event.blockList());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

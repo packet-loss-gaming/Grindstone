@@ -29,10 +29,7 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -403,8 +400,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     public void onSheepEatGrass(EntityChangeBlockEvent event) {
         Entity entity = event.getEntity();
         if (entity instanceof Sheep && parent.contains(entity)) {
-            int type = event.getBlock().getTypeId();
-            if (type == BlockID.GRASS || EnvironmentUtil.isShrubBlock(type)) {
+            Material type = event.getBlock().getType();
+            if (type == Material.GRASS || EnvironmentUtil.isShrubBlock(type)) {
                 event.setCancelled(true);
                 Location loc = entity.getLocation();
                 entity.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(), 4, false, false);
