@@ -58,7 +58,6 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 @ComponentInformation(friendlyName = "Rogue", desc = "Speed and strength is always the answer.")
@@ -168,7 +167,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
                 if (entities.size() < 1) return;
 
-                Collections.sort(entities, new EntityDistanceComparator(player.getLocation()));
+                entities.sort(new EntityDistanceComparator(player.getLocation()));
 
                 server.getPluginManager().callEvent(new RapidHitEvent(player));
 
@@ -268,7 +267,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                         if (getState(defender).isTraitorProtected()) {
                             if (shooter instanceof Player) {
                                 ChatUtil.sendWarning(
-                                        (Player) shooter,
+                                        shooter,
                                         defender.getName() + " sends a band of Rogue marauders after you."
                                 );
                             }

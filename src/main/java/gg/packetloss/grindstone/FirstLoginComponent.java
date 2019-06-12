@@ -90,7 +90,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+        if (!(plugin instanceof WorldGuardPlugin)) {
             return null; // Maybe you want throw an exception instead
         }
 
@@ -116,7 +116,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
             String customName;
             for (Entity entity : zombies) {
                 if (entity == null || !entity.isValid() || !(entity instanceof LivingEntity)) continue;
-                customName = ((LivingEntity) entity).getCustomName();
+                customName = entity.getCustomName();
                 if (customName != null && customName.contains("Apocalyptic")) {
                     ((LivingEntity) entity).setHealth(0);
                 }
@@ -224,7 +224,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
 
-        if (blockedPlayers.contains(event.getPlayer())) blockedPlayers.remove(event.getPlayer());
+        blockedPlayers.remove(event.getPlayer());
     }
 
 }

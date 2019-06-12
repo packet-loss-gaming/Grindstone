@@ -9,8 +9,8 @@ package gg.packetloss.grindstone.city.engine.arena;
 
 public interface DynamicArena extends GenericArena {
 
-    public void addBlocks();
+    void addBlocks();
 
-    public void removeBlocks();
+    void removeBlocks();
 
 }

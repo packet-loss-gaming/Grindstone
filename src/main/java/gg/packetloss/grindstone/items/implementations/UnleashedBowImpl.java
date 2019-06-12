@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.items.implementations;
 
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
@@ -18,7 +19,6 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Glo
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.Effect;
@@ -59,7 +59,7 @@ public class UnleashedBowImpl extends AbstractItemFeatureImpl implements SpecWea
             shooter = (Entity) source;
         }
 
-        if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
+        if (shooter instanceof Player && projectile.hasMetadata("launcher")) {
 
             Object test = projectile.getMetadata("launcher").get(0).value();
 

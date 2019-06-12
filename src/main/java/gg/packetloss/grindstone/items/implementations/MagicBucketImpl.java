@@ -145,7 +145,7 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
-        ItemStack[] drops = event.getDrops().toArray(new ItemStack[event.getDrops().size()]);
+        ItemStack[] drops = event.getDrops().toArray(new ItemStack[0]);
 
         if (ItemUtil.findItemOfName(drops, CustomItems.MAGIC_BUCKET.toString())) {
             takeFlight(player);

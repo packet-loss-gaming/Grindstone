@@ -322,14 +322,14 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     public void bedSpawn(Player player, int multiplier) {
         // Find a free position at or near the player's bed.
         Optional<Location> bedLocation = warpsComponent.getRawBedLocation(player);
-        if (!bedLocation.isPresent()) {
+        if (bedLocation.isEmpty()) {
             return;
         }
         Optional<Location> freeBedLocation = warpsComponent.getBedLocation(player);
 
         // If the player has a bed location, but there's no "free" location, redirect and give them
         // an extra local spawn, they probably tried to out smart the mechanic.
-        if (!freeBedLocation.isPresent()) {
+        if (freeBedLocation.isEmpty()) {
             ChatUtil.sendWarning(player, "The zombies spawning at your bed couldn't find anywhere to spawn!");
             ChatUtil.sendWarning(player, "So... Instead they came to you!");
 

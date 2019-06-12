@@ -19,21 +19,21 @@ public interface JailCellDatabase extends Iterable<JailCell> {
      *
      * @return whether the operation was fully successful
      */
-    public boolean load();
+    boolean load();
 
     /**
      * Save the database.
      *
      * @return whether the operation was fully successful
      */
-    public boolean save();
+    boolean save();
 
     /**
      * Unloads the database
      *
      * @return whether the operation was fully successful
      */
-    public boolean unload();
+    boolean unload();
 
     /**
      * Checks if a cell exist.
@@ -42,7 +42,7 @@ public interface JailCellDatabase extends Iterable<JailCell> {
      * @param cellName   The name of the cell
      * @return Whether cell exist
      */
-    public boolean cellExist(String prisonName, String cellName);
+    boolean cellExist(String prisonName, String cellName);
 
     /**
      * Jails a player
@@ -52,7 +52,7 @@ public interface JailCellDatabase extends Iterable<JailCell> {
      * @param source
      * @param location
      */
-    public void createJailCell(String prisonName, String cellName, CommandSender source, Location location);
+    void createJailCell(String prisonName, String cellName, CommandSender source, Location location);
 
     /**
      * Unjails a player by name
@@ -61,7 +61,7 @@ public interface JailCellDatabase extends Iterable<JailCell> {
      * @param cellName
      * @param source
      */
-    public boolean deleteJailCell(String prisonName, String cellName, CommandSender source);
+    boolean deleteJailCell(String prisonName, String cellName, CommandSender source);
 
     /**
      * Returns a JailCell with the given name
@@ -70,7 +70,7 @@ public interface JailCellDatabase extends Iterable<JailCell> {
      * @param cellName   The name of the cell to retrieve
      * @return The applicable Inmate
      */
-    public JailCell getJailCell(String prisonName, String cellName);
+    JailCell getJailCell(String prisonName, String cellName);
 
     /**
      * Checks if a prison exist.
@@ -78,7 +78,7 @@ public interface JailCellDatabase extends Iterable<JailCell> {
      * @param prisonName The name of the prison to check for
      * @return Whether the prison exist
      */
-    public boolean prisonExist(String prisonName);
+    boolean prisonExist(String prisonName);
 
     /**
      * Returns an unmodifiable list of the cells for that prison
@@ -86,19 +86,19 @@ public interface JailCellDatabase extends Iterable<JailCell> {
      * @param prisonName The name of the prison to get
      * @return A map of the prison's cells
      */
-    public List<JailCell> getPrison(String prisonName);
+    List<JailCell> getPrison(String prisonName);
 
     /**
      * Returns an unmodifiable list of prison names
      *
      * @return A list of prison names
      */
-    public List<String> getPrisons();
+    List<String> getPrisons();
 
     /**
      * Returns an unmodifiable list of jail cells
      *
      * @return A list of jail cells
      */
-    public List<JailCell> getJailCells();
+    List<JailCell> getJailCells();
 }

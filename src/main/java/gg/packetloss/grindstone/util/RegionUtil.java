@@ -65,7 +65,7 @@ public class RegionUtil {
 
         for (ProtectedRegion house : regions) {
             Optional<Integer> chunkCount = countChunks(house);
-            if (!chunkCount.isPresent()) {
+            if (chunkCount.isEmpty()) {
                 return Optional.empty();
             }
             total += chunkCount.get();
@@ -173,14 +173,14 @@ public class RegionUtil {
         CompletableFuture<Optional<Double>> future = new CompletableFuture<>();
 
         Optional<Integer> size = countChunks(region);
-        if (!size.isPresent()) {
+        if (size.isEmpty()) {
             future.complete(Optional.empty());
             return future;
         }
 
         CompletableFuture<Optional<Double>> blockPriceFuture = calcBlockPrice(region, world);
         blockPriceFuture.thenAccept((optBlockPrice) -> {
-            if (!optBlockPrice.isPresent()) {
+            if (optBlockPrice.isEmpty()) {
                 future.complete(Optional.empty());
                 return;
             }

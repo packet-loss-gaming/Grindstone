@@ -53,7 +53,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -171,7 +170,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     public void smokeBomb(final Player player) {
 
         List<Entity> entities = player.getNearbyEntities(4, 4, 4);
-        Collections.sort(entities, new EntityDistanceComparator(player.getLocation()));
+        entities.sort(new EntityDistanceComparator(player.getLocation()));
 
         Location oldLoc = null;
         for (Entity entity : entities) {
@@ -188,7 +187,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         NinjaState session = sessions.getSession(NinjaState.class, player);
         session.smokeBomb();
 
-        Collections.sort(entities, new EntityDistanceComparator(player.getLocation()));
+        entities.sort(new EntityDistanceComparator(player.getLocation()));
 
         oldLoc = null;
         boolean modifyCamera = false;
@@ -222,7 +221,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                         20 * ChanceUtil.getRandom(3),
                         1
                 ));
-                ChatUtil.sendWarning((Player) entity, "You hear a strange ticking sound...");
+                ChatUtil.sendWarning(entity, "You hear a strange ticking sound...");
             }
             k = event.getTargetLoc();
             k.setPitch((float) (ChanceUtil.getRandom(361.0) - 1));
@@ -491,7 +490,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     public void onHorseJump(HorseJumpEvent event) {
 
         Entity passenger = event.getEntity().getPassenger();
-        if (passenger != null && passenger instanceof Player && isNinja((Player) passenger)) {
+        if (passenger instanceof Player && isNinja((Player) passenger)) {
             event.setPower(event.getPower() * 1.37F);
         }
     }

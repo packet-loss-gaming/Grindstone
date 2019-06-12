@@ -313,7 +313,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
             Optional<PixieChestDetail> optChestDetail = chestDatabase.getDetailsAtLocation(existingBlockLoc);
 
-            if (!optChestDetail.isPresent()) {
+            if (optChestDetail.isEmpty()) {
                 return;
             }
 
@@ -404,7 +404,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 ItemStack item = inventory.getItem(i);
 
                 Optional<String> optItemName = computeItemName(item);
-                if (!optItemName.isPresent()) {
+                if (optItemName.isEmpty()) {
                     continue;
                 }
 

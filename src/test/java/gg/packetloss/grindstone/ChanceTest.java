@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import java.util.Random;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 public class ChanceTest {
 
@@ -36,8 +36,8 @@ public class ChanceTest {
             max = Math.max(max, result);
         }
 
-        assertTrue("Expected min of: " + 1 + ", Received: " + min, min == 1);
-        assertTrue("Expected max of: " + x + ", Received: " + max, max == x);
+        assertEquals("Expected min of: " + 1 + ", Received: " + min, 1, min);
+        assertEquals("Expected max of: " + x + ", Received: " + max, max, x);
     }
 
     @Test
@@ -59,8 +59,8 @@ public class ChanceTest {
         min = Math.round(min * 10.0) / 10.0;
         max = Math.round(max * 10.0) / 10.0;
 
-        assertTrue("Expected min of: " + 1 + ", Received: " + min, min == 1);
-        assertTrue("Expected max of: " + x + ", Received: " + max, max == x);
+        assertEquals("Expected min of: " + 1 + ", Received: " + min, 1, min, 0.0);
+        assertEquals("Expected max of: " + x + ", Received: " + max, max, x, 0.0);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class ChanceTest {
         int x = 10;
         int result = ChanceUtil.getRangedRandom(x, x);
 
-        assertTrue("Gave duplicate x: " + x + ", Received: " + result, result == x);
+        assertEquals("Gave duplicate x: " + x + ", Received: " + result, result, x);
     }
 
     @Test
@@ -87,8 +87,8 @@ public class ChanceTest {
             max = Math.max(max, result);
         }
 
-        assertTrue("Expected min of: " + oMin + ", Received: " + min, min == oMin);
-        assertTrue("Expected max of: " + oMax + ", Received: " + max, max == oMax);
+        assertEquals("Expected min of: " + oMin + ", Received: " + min, min, oMin);
+        assertEquals("Expected max of: " + oMax + ", Received: " + max, max, oMax);
     }
 
     @Test
@@ -111,7 +111,7 @@ public class ChanceTest {
         min = Math.round(min * 10.0) / 10.0;
         max = Math.round(max * 10.0) / 10.0;
 
-        assertTrue("Expected min of: " + oMin + ", Received: " + min, min == oMin);
-        assertTrue("Expected max of: " + oMax + ", Received: " + max, max == oMax);
+        assertEquals("Expected min of: " + oMin + ", Received: " + min, min, oMin, 0.0);
+        assertEquals("Expected max of: " + oMax + ", Received: " + max, max, oMax, 0.0);
     }
 }

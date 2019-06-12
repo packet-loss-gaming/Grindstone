@@ -89,11 +89,8 @@ public class CSVWarpDatabase implements WarpDatabase {
     @Override
     public synchronized boolean load() {
 
-        FileInputStream input = null;
         boolean successful = true;
-
-        try {
-            input = new FileInputStream(warpFile);
+        try (FileInputStream input = new FileInputStream(warpFile)) {
             InputStreamReader streamReader = new InputStreamReader(input, "utf-8");
             CSVReader reader = new CSVReader(new BufferedReader(streamReader));
             String[] line;
@@ -130,29 +127,20 @@ public class CSVWarpDatabase implements WarpDatabase {
             log.warning("Failed to load " + warpFile.getAbsolutePath()
                     + ": " + e.getMessage());
             successful = false;
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
         return successful;
     }
 
     @Override
     public synchronized boolean save() {
-        FileOutputStream output = null;
-        boolean successful = true;
 
-        try {
-            output = new FileOutputStream(warpFile);
+        boolean successful = true;
+        try (FileOutputStream output = new FileOutputStream(warpFile)) {
             CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(output, "utf-8")));
             String[] line;
 
             for (WarpPoint warp : warps) {
-                line = new String[] {
+                line = new String[]{
                         warp.getQualifiedName().getNamespace().toString(),
                         warp.getQualifiedName().getName(),
                         warp.getWorldName(),
@@ -170,13 +158,6 @@ public class CSVWarpDatabase implements WarpDatabase {
             log.warning("Failed to save " + warpFile.getAbsolutePath()
                     + ": " + e.getMessage());
             successful = false;
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
         return successful;
     }

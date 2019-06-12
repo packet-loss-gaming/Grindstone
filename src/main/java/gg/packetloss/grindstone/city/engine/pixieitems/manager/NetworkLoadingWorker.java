@@ -58,6 +58,7 @@ public class NetworkLoadingWorker implements Runnable {
 
     @Override
     public void run() {
+        //noinspection InfiniteLoopStatement
         while (true) {
             waitForWork();
             processQueue();

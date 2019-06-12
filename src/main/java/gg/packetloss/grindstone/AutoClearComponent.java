@@ -341,7 +341,7 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
                 CheckProfile profile = checkEntities(world);
                 lastClear.put(world, profile.getStats());
                 Collection<Entity> entities = profile.getEntities();
-                entities.stream().forEach(Entity::remove);
+                entities.forEach(Entity::remove);
                 Bukkit.broadcastMessage(String.valueOf(ChatColor.GREEN) + entities.size() + " drops cleared!");
             }
         };

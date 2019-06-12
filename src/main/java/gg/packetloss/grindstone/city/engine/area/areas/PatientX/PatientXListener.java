@@ -204,7 +204,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             if (((Projectile) attacker).getShooter() != null) {
                 projectile = (Projectile) attacker;
                 ProjectileSource source = projectile.getShooter();
-                if (source != null && source instanceof Entity) {
+                if (source instanceof Entity) {
                     attacker = (Entity) projectile.getShooter();
                 }
             } else if (!(attacker instanceof LivingEntity)) return;
@@ -306,10 +306,9 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 ChatUtil.sendWarning(spectator, "So you think you've won? Ha!");
                 ChatUtil.sendWarning(spectator, "I'll get you next time...");
 
-                List<ItemStack> drops = new ArrayList<>();
                 int playerCount = spectator.isEmpty() ? 1 : contained.size();
                 int dropVal = parent.getConfig().playerVal * playerCount;
-                drops.addAll(SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), -1, dropVal));
+                List<ItemStack> drops = SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), -1, dropVal);
 
                 switch (ChanceUtil.getRandom(4)) {
                     case 1:

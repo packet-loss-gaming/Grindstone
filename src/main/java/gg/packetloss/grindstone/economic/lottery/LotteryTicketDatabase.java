@@ -13,17 +13,17 @@ import java.util.List;
 
 public interface LotteryTicketDatabase {
 
-    public boolean load();
+    boolean load();
 
-    public boolean save();
+    boolean save();
 
-    public void addTickets(String playerName, int count);
+    void addTickets(String playerName, int count);
 
-    public int getTickets(String playerName);
+    int getTickets(String playerName);
 
-    public void clearTickets();
+    void clearTickets();
 
-    public int getTicketCount();
+    int getTicketCount();
 
-    public List<GenericWealthStore> getTickets();
+    List<GenericWealthStore> getTickets();
 }

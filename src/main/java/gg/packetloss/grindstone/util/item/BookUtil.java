@@ -25,7 +25,7 @@ public class BookUtil {
 
             ruleBookMeta.setTitle(title);
             ruleBookMeta.setAuthor(author);
-            ruleBookMeta.addPage(text.toArray(new String[text.size()]));
+            ruleBookMeta.addPage(text.toArray(new String[0]));
 
             ruleBook.setItemMeta(ruleBookMeta);
 

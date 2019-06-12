@@ -21,7 +21,10 @@ import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryTicketDatabase;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
 import gg.packetloss.grindstone.exceptions.NotFoundException;
-import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.player.GenericWealthStore;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -314,10 +317,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
         double cash = getWinnerCash();
 
-        try {
-            economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
-        } catch (Throwable t) {
-        }
+        economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
         economy.depositPlayer(name, cash);
         Bukkit.broadcastMessage(ChatColor.YELLOW + name + " has won: " +
                 ChatUtil.makeCountString(economy.format(cash), " via the lottery!"));

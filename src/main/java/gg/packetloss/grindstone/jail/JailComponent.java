@@ -203,7 +203,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
             builder.append(calendar.get(Calendar.HOUR));
             builder.append(":");
             builder.append(calendar.get(Calendar.MINUTE));
-            builder.append(calendar.get(Calendar.AM_PM) == 0 ? "AM" : "PM");
+            builder.append(calendar.get(Calendar.AM_PM) == Calendar.AM ? "AM" : "PM");
         } else {
             builder.append("indefinitely");
         }
@@ -265,9 +265,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
         Player player = event.getPlayer();
 
-        if (cells.containsKey(player)) {
-            cells.remove(player);
-        }
+        cells.remove(player);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
@@ -486,11 +484,9 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                     throw new CommandException("No such prison exist!");
                 }
 
-                items = new ArrayList<>();
-
-                items.addAll(prisonCells.stream().map(cell -> cell.getCellName()
+                items = prisonCells.stream().map(cell -> cell.getCellName()
                         + " (" + cell.getWorldName() + "; " + cell.getX() + ", "
-                        + cell.getY() + ", " + cell.getZ() + ")").collect(Collectors.toList()));
+                        + cell.getY() + ", " + cell.getZ() + ")").collect(Collectors.toList());
             }
 
             Collections.sort(items);

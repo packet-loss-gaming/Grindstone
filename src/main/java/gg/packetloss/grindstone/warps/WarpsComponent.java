@@ -123,7 +123,7 @@ public class WarpsComponent extends BukkitComponent implements Listener {
     }
 
     public PaginatedResult<WarpPoint> getListResult() {
-        return new PaginatedResult<WarpPoint>(ChatColor.GOLD + "Warps") {
+        return new PaginatedResult<>(ChatColor.GOLD + "Warps") {
             public String format(WarpPoint entry) {
                 WarpQualifiedName qualifiedName = entry.getQualifiedName();
                 String line = (qualifiedName.isGlobal() ? ChatColor.BLUE : ChatColor.DARK_BLUE) + qualifiedName.getName().toUpperCase();
@@ -162,7 +162,7 @@ public class WarpsComponent extends BukkitComponent implements Listener {
                 throw new CommandException("Invalid qualified warp name!");
             }
 
-            if (!optWarp.isPresent()) {
+            if (optWarp.isEmpty()) {
                 throw new WarpNotFoundException();
             }
 

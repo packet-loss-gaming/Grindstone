@@ -188,7 +188,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
                     throw new CommandException("No color found by the name of: " + activeString + "!");
                 }
             } else {
-                colors = Arrays.asList(Color.PURPLE);
+                colors = Collections.singletonList(Color.PURPLE);
             }
 
             final List<Color> fades;
@@ -207,7 +207,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
                     throw new CommandException("No color found by the name of: " + activeString + "!");
                 }
             } else {
-                fades = Arrays.asList(Color.BLACK);
+                fades = Collections.singletonList(Color.BLACK);
             }
 
             final FireworkEffect.Type type;
@@ -243,10 +243,9 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
                 inst.checkPermission(sender, "aurora.fireworks.other");
 
                 List<Player> players = InputUtil.PlayerParser.matchPlayers(sender, args.getString(5));
-                playerLocList = new ArrayList<>();
-                playerLocList.addAll(players.stream().map(player -> player.getLocation()).collect(Collectors.toList()));
+                playerLocList = players.stream().map(Entity::getLocation).collect(Collectors.toList());
             } else if (sender instanceof Player) {
-                playerLocList = Arrays.asList(((Player) sender).getLocation());
+                playerLocList = Collections.singletonList(((Player) sender).getLocation());
             } else {
                 throw new CommandException("You must be a player or specify a player to use this command.");
             }
@@ -273,7 +272,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
                         meta.setPower(ChanceUtil.getRangedRandom(rocketPower / 2, rocketPower));
                         firework.setFireworkMeta(meta);
 
-                        if (finalI == amount - 1 && players.contains(name)) {
+                        if (finalI == amount - 1) {
                             players.remove(name);
                         }
                     }, i * 4);

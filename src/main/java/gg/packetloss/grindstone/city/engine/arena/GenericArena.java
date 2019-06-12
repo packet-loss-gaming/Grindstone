@@ -7,16 +7,16 @@
 package gg.packetloss.grindstone.city.engine.arena;
 
 
-public abstract interface GenericArena extends Runnable {
+public interface GenericArena extends Runnable {
 
-    public void run();
+    void run();
 
-    public void disable();
+    void disable();
 
-    public String getId();
+    String getId();
 
-    public void equalize();
+    void equalize();
 
-    public ArenaType getArenaType();
+    ArenaType getArenaType();
 
 }

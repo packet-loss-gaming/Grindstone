@@ -50,7 +50,7 @@ public class SoftWoolComponent extends BukkitComponent implements Listener {
                 FallBlockerEvent fEvent = new FallBlockerEvent((Player) entity);
                 server.getPluginManager().callEvent(fEvent);
                 if (fEvent.isDisplayingMessage()) {
-                    ChatUtil.sendNotice((Player) entity, "The cloth negates your fall damage.");
+                    ChatUtil.sendNotice(entity, "The cloth negates your fall damage.");
                 }
             }
             event.setCancelled(true);

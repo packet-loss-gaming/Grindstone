@@ -164,7 +164,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+        if (!(plugin instanceof WorldGuardPlugin)) {
             return; // Maybe you want throw an exception instead
         }
 
@@ -178,11 +178,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     public void checkHitList() {
 
-        Iterator<Map.Entry<String, Long>> it = daveHitList.entrySet().iterator();
-        while (it.hasNext()) {
-
-            if (it.next().getValue() >= System.currentTimeMillis()) it.remove();
-        }
+        daveHitList.entrySet().removeIf(stringLongEntry -> stringLongEntry.getValue() >= System.currentTimeMillis());
     }
 
     public void addSkull(Player player) {
@@ -281,7 +277,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
                     if (e instanceof Player) {
                         if (ChanceUtil.getChance(15) && checkInventory((Player) e, eInventory.getContents())) {
-                            ChatUtil.sendNotice((Player) e, "Divine intervention protects some of your items.");
+                            ChatUtil.sendNotice(e, "Divine intervention protects some of your items.");
                             continue;
                         }
                     }
@@ -315,7 +311,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             } catch (Exception ex) {
                 log.warning("=== Cursed Mine Drain System Error ===");
                 if (e instanceof Player) {
-                    log.warning("The player: " + ((Player) e).getName() + " has avoided the drain.");
+                    log.warning("The player: " + e.getName() + " has avoided the drain.");
                 } else {
                     log.warning("An entity has avoided the drain.");
                 }
@@ -803,7 +799,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                 event.getDrops().add(BookUtil.Lore.Areas.theGreatMine());
             }
 
-            if (daveHitList.containsKey(playerName)) daveHitList.remove(playerName);
+            daveHitList.remove(playerName);
             switch (ChanceUtil.getRandom(11)) {
                 case 1:
                     event.setDeathMessage(player.getName() + " was killed by Dave");

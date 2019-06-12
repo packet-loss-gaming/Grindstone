@@ -137,7 +137,7 @@ public class MarketComponent extends BukkitComponent {
             Player player = (Player) sender;
 
             Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0).toLowerCase());
-            if (!optItemName.isPresent()) {
+            if (optItemName.isEmpty()) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
@@ -257,12 +257,12 @@ public class MarketComponent extends BukkitComponent {
                     ItemStack[] newInventory = player.getInventory().getContents();
                     view.operateOnInventory(newInventory, (item) -> {
                         Optional<Double> optPercentageSale = computePercentageSale(item);
-                        if (!optPercentageSale.isPresent()) {
+                        if (optPercentageSale.isEmpty()) {
                             return item;
                         }
 
                         Optional<String> optItemName = computeItemName(item);
-                        if (!optItemName.isPresent()) {
+                        if (optItemName.isEmpty()) {
                             return item;
                         }
 
@@ -517,7 +517,7 @@ public class MarketComponent extends BukkitComponent {
         @CommandPermissions("aurora.admin.adminstore.add")
         public void addCmd(CommandContext args, CommandSender sender) throws CommandException {
             Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
-            if (!optItemName.isPresent()) {
+            if (optItemName.isEmpty()) {
                 throw new CommandException("No item by that name was found.");
             }
             String itemName = optItemName.get();
@@ -551,7 +551,7 @@ public class MarketComponent extends BukkitComponent {
         @CommandPermissions("aurora.admin.adminstore.remove")
         public void removeCmd(CommandContext args, CommandSender sender) throws CommandException {
             Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
-            if (!optItemName.isPresent()) {
+            if (optItemName.isEmpty()) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
@@ -597,7 +597,7 @@ public class MarketComponent extends BukkitComponent {
             i -= cloned.getAmount();
             itemStacks.add(cloned);
         }
-        return itemStacks.toArray(new ItemStack[itemStacks.size()]);
+        return itemStacks.toArray(new ItemStack[0]);
     }
 
     private static Set<Integer> ignored = new HashSet<>();
@@ -674,12 +674,12 @@ public class MarketComponent extends BukkitComponent {
         }
 
         Optional<Double> optPercentageSale = percentDamage ? computePercentageSale(stack) : Optional.of(1D);
-        if (!optPercentageSale.isPresent()) {
+        if (optPercentageSale.isEmpty()) {
             return -1;
         }
 
         Optional<String> optItemName = computeItemName(stack);
-        if (!optItemName.isPresent()) {
+        if (optItemName.isEmpty()) {
             return -1;
         }
 
@@ -723,7 +723,7 @@ public class MarketComponent extends BukkitComponent {
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+        if (!(plugin instanceof WorldGuardPlugin)) {
             throw new UnknownPluginException("WorldGuard");
         }
 

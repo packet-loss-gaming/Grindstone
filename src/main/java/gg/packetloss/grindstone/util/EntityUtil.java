@@ -11,8 +11,8 @@ import org.bukkit.entity.LivingEntity;
 
 public class EntityUtil {
     public static boolean nameMatches(Entity entity, String name) {
-        if (entity == null || !(entity instanceof LivingEntity)) return false;
-        String customName = ((LivingEntity) entity).getCustomName();
+        if (!(entity instanceof LivingEntity)) return false;
+        String customName = entity.getCustomName();
         return customName != null && customName.equals(name);
     }
 

@@ -112,13 +112,13 @@ public enum CustomItems {
     private ChatColor color;
     private String name;
 
-    private CustomItems(WeaponFamily family, String kind) {
+    CustomItems(WeaponFamily family, String kind) {
         this.family = family;
         this.color = family.getColor();
         this.name = family.getProperName() + " " + kind;
     }
 
-    private CustomItems(ChatColor color, String name) {
+    CustomItems(ChatColor color, String name) {
 
         this.color = color;
         this.name = name;

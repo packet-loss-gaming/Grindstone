@@ -38,7 +38,7 @@ public class ModifierBook {
 
         private final int opCode;
 
-        private ModifierOperation(int opCode) {
+        ModifierOperation(int opCode) {
             this.opCode = opCode;
         }
 
@@ -57,7 +57,7 @@ public class ModifierBook {
 
         private final String name;
 
-        private Slot(String name) {
+        Slot(String name) {
             this.name = name;
         }
 

@@ -71,11 +71,8 @@ public class CSVJailCellDatabase implements JailCellDatabase {
     @Override
     public synchronized boolean load() {
 
-        FileInputStream input = null;
         boolean successful = true;
-
-        try {
-            input = new FileInputStream(cellFile);
+        try (FileInputStream input = new FileInputStream(cellFile)) {
             InputStreamReader streamReader = new InputStreamReader(input, "utf-8");
             CSVReader reader = new CSVReader(new BufferedReader(streamReader));
             String[] line;
@@ -112,13 +109,6 @@ public class CSVJailCellDatabase implements JailCellDatabase {
             nameJailCell = new HashMap<>();
             log.warning("Failed to load " + cellFile.getAbsolutePath() + ": " + e.getMessage());
             successful = false;
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
         return successful;
     }
@@ -126,11 +116,8 @@ public class CSVJailCellDatabase implements JailCellDatabase {
     @Override
     public synchronized boolean save() {
 
-        FileOutputStream output = null;
         boolean successful = true;
-
-        try {
-            output = new FileOutputStream(cellFile);
+        try (FileOutputStream output = new FileOutputStream(cellFile)) {
             CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(output, "utf-8")));
             String[] line;
 
@@ -150,13 +137,6 @@ public class CSVJailCellDatabase implements JailCellDatabase {
         } catch (IOException e) {
             log.warning("Failed to save " + cellFile.getAbsolutePath() + ": " + e.getMessage());
             successful = false;
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
         return successful;
     }
@@ -269,7 +249,7 @@ public class CSVJailCellDatabase implements JailCellDatabase {
     @Override
     public Iterator<JailCell> iterator() {
 
-        return new Iterator<JailCell>() {
+        return new Iterator<>() {
 
             private final Iterator<JailCell> setIter = jailCells.iterator();
             private JailCell next;

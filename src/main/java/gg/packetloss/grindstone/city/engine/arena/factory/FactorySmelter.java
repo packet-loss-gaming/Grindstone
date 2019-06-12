@@ -55,7 +55,7 @@ public class FactorySmelter extends FactoryMech {
 
         Collection<Item> lavaContained = lavaSupply.getContained(Item.class);
         if (lavaContained.size() > 0) ChatUtil.sendNotice(playerList, "Adding lava...");
-        int totalLava = items.containsKey(ItemID.LAVA_BUCKET) ? items.get(ItemID.LAVA_BUCKET) : 0;
+        int totalLava = items.getOrDefault(ItemID.LAVA_BUCKET, 0);
         for (Item e : lavaContained) {
             // Find items and destroy those unwanted
             ItemStack workingStack = e.getItemStack();
@@ -99,8 +99,8 @@ public class FactorySmelter extends FactoryMech {
             save(); // Update save for new Iron & Gold values
         }
 
-        int maxIron = items.containsKey(BlockID.IRON_ORE) ? items.get(BlockID.IRON_ORE) : 0;
-        int maxGold = items.containsKey(BlockID.GOLD_ORE) ? items.get(BlockID.GOLD_ORE) : 0;
+        int maxIron = items.getOrDefault(BlockID.IRON_ORE, 0);
+        int maxGold = items.getOrDefault(BlockID.GOLD_ORE, 0);
 
         if (maxGold + maxIron < 1) return new ArrayList<>();
 

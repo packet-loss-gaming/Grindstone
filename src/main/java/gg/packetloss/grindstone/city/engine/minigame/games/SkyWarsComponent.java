@@ -145,7 +145,7 @@ public class SkyWarsComponent extends MinigameComponent {
 
         gear.add(makeSkyFeather(-1, 3, 2, 2));
 
-        player.getInventory().addItem(gear.toArray(new ItemStack[gear.size()]));
+        player.getInventory().addItem(gear.toArray(new ItemStack[0]));
 
         ItemStack[] leatherArmour = ItemUtil.LEATHER_ARMOR;
         Color color = Color.WHITE;
@@ -446,7 +446,7 @@ public class SkyWarsComponent extends MinigameComponent {
 
             if (entity.isValid() && LocationUtil.isInRegion(r, entity)) returnedList.add(entity);
         }
-        return returnedList.toArray(new Entity[returnedList.size()]);
+        return returnedList.toArray(new Entity[0]);
     }
 
     public boolean contains(Location location) {
@@ -829,7 +829,7 @@ public class SkyWarsComponent extends MinigameComponent {
                             }
                         }
                         if (!(attacker instanceof Player)) return;
-                        ChatUtil.sendError((Player) attacker, "The game has not yet started!");
+                        ChatUtil.sendError(attacker, "The game has not yet started!");
                     }
                 } else if (event.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
                     event.setCancelled(true);
@@ -982,7 +982,7 @@ public class SkyWarsComponent extends MinigameComponent {
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+        if (!(plugin instanceof WorldGuardPlugin)) {
             throw new UnknownPluginException("WorldGuard");
         }
 

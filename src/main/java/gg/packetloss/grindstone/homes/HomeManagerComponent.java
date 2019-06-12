@@ -103,7 +103,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         Plugin plugin = server.getPluginManager().getPlugin("WorldEdit");
 
         // WorldEdit may not be loaded
-        if (plugin == null || !(plugin instanceof WorldEditPlugin)) {
+        if (!(plugin instanceof WorldEditPlugin)) {
             return;
         }
 
@@ -115,7 +115,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+        if (!(plugin instanceof WorldGuardPlugin)) {
             return;
         }
 
@@ -240,11 +240,9 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                 return new CommandException(CURRENT_OWNED_CHUNK_COUNT_FAILED);
             });
 
-            StringBuilder builtInfo = new StringBuilder();
-            builtInfo.append(ChatColor.YELLOW).append("You own ").append(houses.size()).append(" houses.");
-            builtInfo.append("\n").append("Total Chunks: ").append(ownedChunks);
-
-            ChatUtil.sendNotice(sender,ChatColor.RESET, builtInfo.toString());
+            String builtInfo = ChatColor.YELLOW + "You own " + houses.size() + " houses." +
+                    "\n    Total Chunks: " + ownedChunks;
+            ChatUtil.sendNotice(sender,ChatColor.RESET, builtInfo);
         }
 
         @Command(aliases = {"pcchunks"}, usage = "<# of chunks>", desc = "Get the cost of buying x number of chunks",
@@ -446,7 +444,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             );
             optFutureBlockPrice.thenAccept((optBlockPrice) -> {
                 server.getScheduler().runTask(inst, () -> {
-                    if (!optBlockPrice.isPresent()) {
+                    if (optBlockPrice.isEmpty()) {
                         ChatUtil.sendError(player, "Your house cannot currently be sold.");
                         return;
                     }
@@ -454,13 +452,13 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                     double blockPrice = optBlockPrice.get();
                     List<ProtectedRegion> houses = RegionUtil.getHouses(new BukkitPlayer(WG, player), manager);
                     Optional<Integer> optPreviousChunks = RegionUtil.sumChunks(houses);
-                    if (!optPreviousChunks.isPresent()) {
+                    if (optPreviousChunks.isEmpty()) {
                         ChatUtil.sendError(player, CURRENT_OWNED_CHUNK_COUNT_FAILED);
                         return;
                     }
 
                     Optional<Integer> optSellingChunks = RegionUtil.countChunks(region);
-                    if (!optSellingChunks.isPresent()) {
+                    if (optSellingChunks.isEmpty()) {
                         ChatUtil.sendError(player, "We could not determine how many chunks are being sold!");
                         return;
                     }
@@ -631,7 +629,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
                     regionsComplete.add(blockPrice.thenAccept((optBlockPrice) -> {
                         server.getScheduler().runTask(inst, () -> {
-                            if (!optBlockPrice.isPresent()) {
+                            if (optBlockPrice.isEmpty()) {
                                 ChatUtil.sendError(sender, "Couldn't recompute block price for " + region.getId());
                                 return;
                             }
@@ -675,7 +673,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
             Region region = selection.getRegionSelector().getIncompleteRegion();
             Optional<Integer> optChunkCount = RegionUtil.countChunks(region);
-            if (!optChunkCount.isPresent()) {
+            if (optChunkCount.isEmpty()) {
                 throw new CommandException("Region type unsupported.");
             }
 

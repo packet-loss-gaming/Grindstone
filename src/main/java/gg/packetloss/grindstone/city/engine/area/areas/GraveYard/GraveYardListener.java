@@ -287,11 +287,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         if (entity.getCustomName() != null) {
             String customName = entity.getCustomName();
             if (customName.equals("Grave Zombie")) {
-                Iterator<ItemStack> it = drops.iterator();
-                while (it.hasNext()) {
-                    ItemStack stack = it.next();
-                    if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
-                }
+                drops.removeIf(stack -> stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH);
+
                 if (ChanceUtil.getChance(15000)) {
                     drops.add(CustomItemCenter.build(CustomItems.PHANTOM_CLOCK, ChanceUtil.getRandom(3)));
                 }
@@ -327,12 +324,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     }
                 }
             } else if (customName.equals("Guardian Zombie")) {
-                Iterator<ItemStack> it = drops.iterator();
-                while (it.hasNext()) {
-                    ItemStack stack = it.next();
+                drops.removeIf(stack -> stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH);
 
-                    if (stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH) it.remove();
-                }
                 if (ChanceUtil.getChance(60)) {
                     drops.add(CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION));
                 } else if (ChanceUtil.getChance(40)) {
@@ -569,7 +562,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         boolean contained = parent.contains(player);
         if (contained || hasThunderstorm(player.getWorld())) {
             List<ItemStack> drops = event.getDrops();
-            ItemStack[] dropArray = ItemUtil.clone(drops.toArray(new ItemStack[drops.size()]));
+            ItemStack[] dropArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
             if (ItemUtil.findItemOfName(dropArray, GEM_OF_LIFE)) {
                 if (!playerState.containsKey(player.getName())) {
                     GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);

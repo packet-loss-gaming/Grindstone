@@ -10,5 +10,5 @@ import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import org.bukkit.entity.LivingEntity;
 
 public interface SpecWeaponImpl {
-    public SpecialAttack getSpecial(LivingEntity owner, LivingEntity target);
+    SpecialAttack getSpecial(LivingEntity owner, LivingEntity target);
 }

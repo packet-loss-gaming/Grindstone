@@ -158,7 +158,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         if (!parent.contains(attack.getLocation())) return;
         Class specClass = attack.getClass();
         LivingEntity target = attack.getTarget();
-        if (target != null && target instanceof Giant) {
+        if (target instanceof Giant) {
             if (bossBlacklistedSpecs.contains(specClass)) {
                 event.setCancelled(true);
                 return;
@@ -244,7 +244,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 if (((Projectile) attacker).getShooter() != null) {
                     projectile = (Projectile) attacker;
                     ProjectileSource source = projectile.getShooter();
-                    if (source != null && source instanceof Entity) {
+                    if (source instanceof Entity) {
                         attacker = (Entity) projectile.getShooter();
                     }
                 } else if (!(attacker instanceof LivingEntity)) return;
@@ -253,7 +253,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 // Heal boss
                 EntityUtil.heal(parent.boss, event.getDamage());
                 // Evil code of doom
-                ChatUtil.sendNotice((Player) attacker, "Come closer...");
+                ChatUtil.sendNotice(attacker, "Come closer...");
                 attacker.teleport(parent.boss.getLocation());
                 ((Player) attacker).damage(parent.difficulty * 32, parent.boss);
                 server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) attacker));
@@ -347,7 +347,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 event.setDamage(event.getDamage() * percentageDamageRemaining);
             }
 
-            if (attacker != null && attacker instanceof Player) {
+            if (attacker instanceof Player) {
                 if (ItemUtil.hasForgeBook((Player) attacker)) {
                     ((Giant) defender).setHealth(0);
                     final Player finalAttacker = (Player) attacker;
@@ -373,7 +373,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     }
                 }
                 if (ChanceUtil.getChance(parent.difficulty * 9) && defender.getFireTicks() > 0) {
-                    ChatUtil.sendNotice((Player) defender, "Your armour extinguishes the fire.");
+                    ChatUtil.sendNotice(defender, "Your armour extinguishes the fire.");
                     defender.setFireTicks(0);
                 }
                 if (parent.damageHeals && ChanceUtil.getChance(parent.difficulty * 3 + 1)) {

@@ -95,7 +95,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         switch (session.getCurrentCommand()) {
             case ADD_SOURCE:
                 manager.addSource(networkID, block).thenAccept((optResult) -> {
-                    if (!optResult.isPresent()) {
+                    if (optResult.isEmpty()) {
                         ChatUtil.sendError(player, "An error occurred while attempting to create this source.");
                         return;
                     }
@@ -110,7 +110,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                 break;
             case ADD_SINK:
                 manager.addSink(networkID, block).thenAccept((optResult) -> {
-                    if (!optResult.isPresent()) {
+                    if (optResult.isEmpty()) {
                         ChatUtil.sendError(player, "An error occurred while attempting to create this sink.");
                         return;
                     }
@@ -181,7 +181,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                 optNetworkID = manager.getNetworkFromSourceChest(chest.getBlock());
             }
 
-            if (!optNetworkID.isPresent()) {
+            if (optNetworkID.isEmpty()) {
                 return;
             }
 
@@ -211,14 +211,14 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
     public class SorterCommands {
         @Command(aliases = {"create"},
-                usage = "<network name>", desc = "Create a new sorter system", min = 1, max = 1)
+                 usage = "<network name>", desc = "Create a new sorter system", min = 1, max = 1)
         public void createCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player owner = PlayerUtil.checkPlayer(sender);
             String name = args.getString(0).toUpperCase();
 
             manager.createNetwork(owner.getUniqueId(), name).thenAccept((optNetworkID) -> {
                 server.getScheduler().runTask(inst, () -> {
-                    if (!optNetworkID.isPresent()) {
+                    if (optNetworkID.isEmpty()) {
                         ChatUtil.sendError(sender, "Failed to create network!");
                         return;
                     }
@@ -239,7 +239,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
             manager.selectNetwork(owner.getUniqueId(), name).thenAccept((optNetworkID) -> {
                 server.getScheduler().runTask(inst, () -> {
-                    if (!optNetworkID.isPresent()) {
+                    if (optNetworkID.isEmpty()) {
                         ChatUtil.sendError(sender, "Failed to find an item sorter network by that name!");
                         return;
                     }

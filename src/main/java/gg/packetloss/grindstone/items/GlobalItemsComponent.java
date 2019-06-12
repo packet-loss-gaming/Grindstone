@@ -286,7 +286,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
             String selectedUpgrade = args.getRemainingString(0);
             Optional<ItemStack> optNewItem = migrationManager.upgradeItem(heldItem, selectedUpgrade);
-            if (!optNewItem.isPresent()) {
+            if (optNewItem.isEmpty()) {
                 throw new CommandException("Invalid upgrade specified or no upgrades currently available.");
             }
 

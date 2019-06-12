@@ -18,12 +18,12 @@ import com.skelril.OSBL.util.AttackDamage;
 import gg.packetloss.grindstone.bosses.detail.WBossDetail;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
 import gg.packetloss.grindstone.bosses.instruction.WDamageModifier;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.*;
@@ -43,7 +43,7 @@ public class StormBringer {
     private BukkitBossDeclaration<WBossDetail> stormBringer;
 
     public StormBringer() {
-        stormBringer = new BukkitBossDeclaration<WBossDetail>(inst, new SimpleInstructionDispatch<>()) {
+        stormBringer = new BukkitBossDeclaration<>(inst, new SimpleInstructionDispatch<>()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
                 return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Storm Bringer");
@@ -58,12 +58,12 @@ public class StormBringer {
 
     private void setupFangz() {
         List<BindInstruction<WBossDetail>> bindInstructions = stormBringer.bindInstructions;
-        bindInstructions.add(new BindInstruction<WBossDetail>() {
+        bindInstructions.add(new BindInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, BindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
-                    ((LivingEntity) anEntity).setCustomName("Storm Bringer");
+                    anEntity.setCustomName("Storm Bringer");
                     int level = controllable.getDetail().getLevel();
                     ((LivingEntity) anEntity).setMaxHealth(20 * 30 * level);
                     ((LivingEntity) anEntity).setHealth(20 * 30 * level);
@@ -73,7 +73,7 @@ public class StormBringer {
         });
 
         List<UnbindInstruction<WBossDetail>> unbindInstructions = stormBringer.unbindInstructions;
-        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
+        unbindInstructions.add(new UnbindInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
@@ -99,12 +99,13 @@ public class StormBringer {
 
         List<DamageInstruction<WBossDetail>> damageInstructions = stormBringer.damageInstructions;
         damageInstructions.add(new WDamageModifier());
-        damageInstructions.add(new DamageInstruction<WBossDetail>() {
+        damageInstructions.add(new DamageInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Entity eToHit = BukkitUtil.getBukkitEntity(entity);
-                if (!(eToHit instanceof LivingEntity) || !getEvent(damage).getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) return null;
+                if (!(eToHit instanceof LivingEntity) || !getEvent(damage).getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE))
+                    return null;
                 LivingEntity toHit = (LivingEntity) eToHit;
 
                 Location target = toHit.getLocation();

@@ -64,7 +64,7 @@ public class ImpersonalComponent extends BukkitComponent implements Listener {
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) return;
+        if (!(plugin instanceof WorldGuardPlugin)) return;
 
         WG = (WorldGuardPlugin) plugin;
     }

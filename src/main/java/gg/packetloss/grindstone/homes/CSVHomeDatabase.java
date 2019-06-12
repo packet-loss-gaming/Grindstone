@@ -42,11 +42,8 @@ public class CSVHomeDatabase implements HomeDatabase {
     @Override
     public synchronized boolean load() {
 
-        FileInputStream input = null;
         boolean successful = true;
-
-        try {
-            input = new FileInputStream(homeFile);
+        try (FileInputStream input = new FileInputStream(homeFile)) {
             InputStreamReader streamReader = new InputStreamReader(input, "utf-8");
             CSVReader reader = new CSVReader(new BufferedReader(streamReader));
             String[] line;
@@ -82,13 +79,6 @@ public class CSVHomeDatabase implements HomeDatabase {
             log.warning("Failed to load " + homeFile.getAbsolutePath()
                     + ": " + e.getMessage());
             successful = false;
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
         return successful;
     }
@@ -96,11 +86,8 @@ public class CSVHomeDatabase implements HomeDatabase {
     @Override
     public synchronized boolean save() {
 
-        FileOutputStream output = null;
         boolean successful = true;
-
-        try {
-            output = new FileOutputStream(homeFile);
+        try (FileOutputStream output = new FileOutputStream(homeFile)) {
             CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(output, "utf-8")));
             String[] line;
 
@@ -120,13 +107,6 @@ public class CSVHomeDatabase implements HomeDatabase {
             log.warning("Failed to save " + homeFile.getAbsolutePath()
                     + ": " + e.getMessage());
             successful = false;
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
         return successful;
     }

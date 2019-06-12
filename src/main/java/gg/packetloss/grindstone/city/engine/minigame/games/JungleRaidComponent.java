@@ -219,7 +219,7 @@ public class JungleRaidComponent extends MinigameComponent {
         gear.add(compass.clone());
         for (int i = 0; i < 2; i++) gear.add(arrows.clone());
 
-        player.getInventory().addItem(gear.toArray(new ItemStack[gear.size()]));
+        player.getInventory().addItem(gear.toArray(new ItemStack[0]));
 
         ItemStack[] leatherArmour = ItemUtil.LEATHER_ARMOR;
         Color color = Color.WHITE;
@@ -638,8 +638,8 @@ public class JungleRaidComponent extends MinigameComponent {
                             FireworkEffect.Builder builder = FireworkEffect.builder();
                             builder.flicker(ChanceUtil.getChance(2));
                             builder.trail(ChanceUtil.getChance(2));
-                            builder.withColor(Arrays.asList(Color.RED));
-                            builder.withFade(Arrays.asList(Color.YELLOW));
+                            builder.withColor(Collections.singletonList(Color.RED));
+                            builder.withFade(Collections.singletonList(Color.YELLOW));
                             builder.with(FireworkEffect.Type.BURST);
                             meta.addEffect(builder.build());
                             meta.setPower(ChanceUtil.getRangedRandom(2, 5));
@@ -995,7 +995,7 @@ public class JungleRaidComponent extends MinigameComponent {
                             }
                         }
                         if (!(attacker instanceof Player)) return;
-                        ChatUtil.sendError((Player) attacker, "The game has not yet started!");
+                        ChatUtil.sendError(attacker, "The game has not yet started!");
 
                         if (!wasProjectile) {
                             attacker.teleport(new Location(world, config.x, config.y, config.z));
@@ -1116,18 +1116,18 @@ public class JungleRaidComponent extends MinigameComponent {
 
                 final List<Color> colors;
                 if (teamColor < 1) {
-                    colors = Arrays.asList(Color.WHITE);
+                    colors = Collections.singletonList(Color.WHITE);
                 } else {
-                    colors = teamColor == 1 ? Arrays.asList(Color.BLUE) : Arrays.asList(Color.RED);
+                    colors = teamColor == 1 ? Collections.singletonList(Color.BLUE) : Collections.singletonList(Color.RED);
                 }
 
                 final List<Color> fades;
                 if (killerColor == -1) {
-                    fades = Arrays.asList(Color.BLACK);
+                    fades = Collections.singletonList(Color.BLACK);
                 } else if (killerColor < 1) {
-                    fades = Arrays.asList(Color.WHITE);
+                    fades = Collections.singletonList(Color.WHITE);
                 } else {
-                    fades = killerColor == 1 ? Arrays.asList(Color.BLUE) : Arrays.asList(Color.RED);
+                    fades = killerColor == 1 ? Collections.singletonList(Color.BLUE) : Collections.singletonList(Color.RED);
                 }
 
                 final Location playerLoc = player.getLocation().clone();
@@ -1404,7 +1404,7 @@ public class JungleRaidComponent extends MinigameComponent {
         Plugin plugin = server.getPluginManager().getPlugin("WorldEdit");
 
         // WorldEdit may not be loaded
-        if (plugin == null || !(plugin instanceof WorldEditPlugin)) {
+        if (!(plugin instanceof WorldEditPlugin)) {
             throw new UnknownPluginException("WorldEdit");
         }
 
@@ -1416,7 +1416,7 @@ public class JungleRaidComponent extends MinigameComponent {
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+        if (!(plugin instanceof WorldGuardPlugin)) {
             throw new UnknownPluginException("WorldGuard");
         }
 

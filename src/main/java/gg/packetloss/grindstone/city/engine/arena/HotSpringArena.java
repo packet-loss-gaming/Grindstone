@@ -171,7 +171,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                     @Override
                     public boolean run(int times) {
 
-                        if (player == null || !player.isValid()) return true;
+                        if (!player.isValid()) return true;
 
                         Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
                         if (!BlockType.canPassThrough(downward.getTypeId()) && player.getLocation().getBlockY() > 70) {
@@ -192,11 +192,9 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                     @Override
                     public void end() {
 
-                        if (playerL.contains(player)) {
-                            playerL.remove(player);
-                        }
+                        playerL.remove(player);
 
-                        if (player == null || !player.isValid()) return;
+                        if (!player.isValid()) return;
 
                         // AntiCheatAPI.unexemptPlayer(player, CheckType.WATER_WALK);
                         // AntiCheatAPI.unexemptPlayer(player, CheckType.FLY);

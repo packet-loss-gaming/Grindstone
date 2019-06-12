@@ -19,8 +19,8 @@ import org.bukkit.entity.Player;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.logging.*;
 import java.util.logging.Formatter;
+import java.util.logging.*;
 
 import static com.sk89q.commandbook.CommandBook.logger;
 
@@ -69,12 +69,9 @@ public class CSVInmateDatabase implements InmateDatabase {
 
     public synchronized boolean load() {
 
-        FileInputStream input = null;
         boolean successful = true;
         boolean needsSaved = false;
-
-        try {
-            input = new FileInputStream(inmateFile);
+        try (FileInputStream input = new FileInputStream(inmateFile)) {
             InputStreamReader streamReader = new InputStreamReader(input, "utf-8");
             CSVReader reader = new CSVReader(new BufferedReader(streamReader));
             String[] line;
@@ -141,13 +138,6 @@ public class CSVInmateDatabase implements InmateDatabase {
             UUIDInmate = new HashMap<>();
             log.warning("Failed to load " + inmateFile.getAbsolutePath() + ": " + e.getMessage());
             successful = false;
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
         if (needsSaved) save();
         return successful;
@@ -155,11 +145,8 @@ public class CSVInmateDatabase implements InmateDatabase {
 
     public synchronized boolean save() {
 
-        FileOutputStream output = null;
         boolean successful = true;
-
-        try {
-            output = new FileOutputStream(inmateFile);
+        try (FileOutputStream output = new FileOutputStream(inmateFile)) {
             CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(output, "utf-8")));
             String[] line;
 
@@ -180,13 +167,6 @@ public class CSVInmateDatabase implements InmateDatabase {
             log.warning("Failed to save " + inmateFile.getAbsolutePath()
                     + ": " + e.getMessage());
             successful = false;
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
         return successful;
     }
@@ -263,7 +243,7 @@ public class CSVInmateDatabase implements InmateDatabase {
 
     public Iterator<Inmate> iterator() {
 
-        return new Iterator<Inmate>() {
+        return new Iterator<>() {
 
             private final Iterator<Map.Entry<UUID, Inmate>> setIter = UUIDInmate.entrySet().iterator();
             private Inmate next;

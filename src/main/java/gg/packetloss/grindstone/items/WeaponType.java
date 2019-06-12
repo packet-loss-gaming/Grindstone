@@ -8,7 +8,7 @@ public enum WeaponType {
 
     private final SpecType specType;
 
-    private WeaponType(SpecType specType) {
+    WeaponType(SpecType specType) {
         this.specType = specType;
     }
 

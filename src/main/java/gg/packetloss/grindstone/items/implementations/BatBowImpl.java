@@ -35,7 +35,7 @@ public class BatBowImpl extends AbstractItemFeatureImpl {
             shooter = (Entity) source;
         }
 
-        if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
+        if (shooter instanceof Player && projectile.hasMetadata("launcher")) {
 
             Object test = projectile.getMetadata("launcher").get(0).value();
 
@@ -76,7 +76,7 @@ public class BatBowImpl extends AbstractItemFeatureImpl {
             shooter = (Entity) source;
         }
 
-        if (shooter != null && shooter instanceof Player && projectile.hasMetadata("launcher")) {
+        if (shooter instanceof Player && projectile.hasMetadata("launcher")) {
 
             Object test = projectile.getMetadata("launcher").get(0).value();
 

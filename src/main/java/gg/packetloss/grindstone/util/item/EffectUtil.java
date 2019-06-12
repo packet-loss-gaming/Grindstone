@@ -82,8 +82,8 @@ public class EffectUtil {
         public static void powerBurst(LivingEntity entity, double attackDamage) {
 
             if (entity instanceof Player) {
-                ChatUtil.sendNotice((Player) entity, "Your armour releases a burst of energy.");
-                ChatUtil.sendNotice((Player) entity, "You are healed by an ancient force.");
+                ChatUtil.sendNotice(entity, "Your armour releases a burst of energy.");
+                ChatUtil.sendNotice(entity, "You are healed by an ancient force.");
             }
 
             EntityUtil.heal(entity, attackDamage);
@@ -93,7 +93,7 @@ public class EffectUtil {
                     ((LivingEntity) e).setHealth(Math.min(((LivingEntity) e).getHealth() + attackDamage,
                             ((LivingEntity) e).getMaxHealth()));
                     if (e instanceof Player) {
-                        ChatUtil.sendNotice((Player) e, "You are healed by an ancient force.");
+                        ChatUtil.sendNotice(e, "You are healed by an ancient force.");
                     }
                 } else if (!(entity instanceof Player) || EnvironmentUtil.isHostileEntity(e)) {
                     if (e instanceof Player) {
@@ -115,7 +115,7 @@ public class EffectUtil {
         public static void deathStrike(LivingEntity entity, double attackDamage) {
 
             if (entity instanceof Player) {
-                ChatUtil.sendNotice((Player) entity, "You feel a necrotic power sweep over your soul.");
+                ChatUtil.sendNotice(entity, "You feel a necrotic power sweep over your soul.");
             }
 
             EntityUtil.heal(entity, attackDamage * 1.7);
@@ -124,7 +124,7 @@ public class EffectUtil {
                 if (e.getType() == entity.getType()) {
                     EntityUtil.heal(entity, attackDamage * 1.5);
                     if (e instanceof Player) {
-                        ChatUtil.sendNotice((Player) e, "You feel a necrotic power sweep over your soul.");
+                        ChatUtil.sendNotice(e, "You feel a necrotic power sweep over your soul.");
                     }
                 } else if (!(entity instanceof Player) || EnvironmentUtil.isHostileEntity(e)) {
                     ((LivingEntity) e).damage(attackDamage * 1.9);

@@ -14,17 +14,17 @@ public interface MarketTransactionDatabase {
      *
      * @return whether the operation was fully successful
      */
-    public boolean load();
+    boolean load();
 
     /**
      * Save the database.
      *
      * @return whether the operation was fully successful
      */
-    public boolean save();
+    boolean save();
 
-    public void logTransaction(String playerName, String itemName, int amount);
+    void logTransaction(String playerName, String itemName, int amount);
 
-    public List<ItemTransaction> getTransactions();
-    public List<ItemTransaction> getTransactions(String itemName, String playerName);
+    List<ItemTransaction> getTransactions();
+    List<ItemTransaction> getTransactions(String itemName, String playerName);
 }

@@ -9,7 +9,7 @@ public enum WeaponFamily {
     private final ChatColor color;
     private final String properName;
 
-    private WeaponFamily(ChatColor color, String properName) {
+    WeaponFamily(ChatColor color, String properName) {
         this.color = color;
         this.properName = properName;
     }

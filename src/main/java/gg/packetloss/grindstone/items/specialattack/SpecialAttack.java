@@ -41,7 +41,7 @@ public abstract class SpecialAttack {
     protected void inform(String message) {
 
         if (owner instanceof Player) {
-            ChatUtil.sendNotice((Player) owner, message);
+            ChatUtil.sendNotice(owner, message);
         }
     }
 

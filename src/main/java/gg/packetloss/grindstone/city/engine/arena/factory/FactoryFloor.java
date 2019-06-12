@@ -75,7 +75,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     public void throwPotions() {
         Random random = new Random();
         PotionType type = PotionType.INSTANT_HEAL;
-        getContained(Zombie.class, Skeleton.class).stream().forEach(e -> {
+        getContained(Zombie.class, Skeleton.class).forEach(e -> {
             for (int i = ChanceUtil.getRandom(3); i > 0; --i) {
                 Location tg = e.getLocation().add(0, ChanceUtil.getRangedRandom(2, 6), 0);
                 if (tg.getBlock().getType().isSolid()) continue;

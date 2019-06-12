@@ -56,7 +56,7 @@ public class MobArenaCLComponent extends BukkitComponent implements Listener {
             event.setCancelled(true);
             return;
         }
-        if (!playerList.contains(player)) playerList.add(player);
+        playerList.add(player);
     }
 
     @EventHandler
@@ -64,7 +64,7 @@ public class MobArenaCLComponent extends BukkitComponent implements Listener {
 
         Player player = event.getPlayer();
 
-        if (playerList.contains(player)) playerList.remove(player);
+        playerList.remove(player);
     }
 
     @EventHandler(ignoreCancelled = true)

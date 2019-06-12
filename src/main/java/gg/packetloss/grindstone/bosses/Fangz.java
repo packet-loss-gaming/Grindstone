@@ -18,13 +18,13 @@ import com.skelril.OSBL.util.AttackDamage;
 import gg.packetloss.grindstone.bosses.detail.WBossDetail;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
 import gg.packetloss.grindstone.bosses.instruction.WDamageModifier;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.DamageUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Damageable;
@@ -49,7 +49,7 @@ public class Fangz {
     private BukkitBossDeclaration<WBossDetail> fangz;
 
     public Fangz() {
-        fangz = new BukkitBossDeclaration<WBossDetail>(inst, new SimpleInstructionDispatch<>()) {
+        fangz = new BukkitBossDeclaration<>(inst, new SimpleInstructionDispatch<>()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
                 return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Fangz");
@@ -64,12 +64,12 @@ public class Fangz {
 
     private void setupFangz() {
         List<BindInstruction<WBossDetail>> bindInstructions = fangz.bindInstructions;
-        bindInstructions.add(new BindInstruction<WBossDetail>() {
+        bindInstructions.add(new BindInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, BindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
-                    ((LivingEntity) anEntity).setCustomName("Fangz");
+                    anEntity.setCustomName("Fangz");
                     int level = controllable.getDetail().getLevel();
                     ((LivingEntity) anEntity).setMaxHealth(20 * 50 * level);
                     ((LivingEntity) anEntity).setHealth(20 * 50 * level);
@@ -79,7 +79,7 @@ public class Fangz {
         });
 
         List<UnbindInstruction<WBossDetail>> unbindInstructions = fangz.unbindInstructions;
-        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
+        unbindInstructions.add(new UnbindInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
@@ -91,7 +91,7 @@ public class Fangz {
                 return null;
             }
         });
-        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
+        unbindInstructions.add(new UnbindInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
@@ -116,7 +116,7 @@ public class Fangz {
 
         List<DamageInstruction<WBossDetail>> damageInstructions = fangz.damageInstructions;
         damageInstructions.add(new WDamageModifier());
-        damageInstructions.add(new DamageInstruction<WBossDetail>() {
+        damageInstructions.add(new DamageInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);

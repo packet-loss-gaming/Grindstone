@@ -430,7 +430,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 event.setCancelled(true);
             } else if (!scope.checkFor((Player) defender, attacker)) {
                 // Auto unignore players when they successfully attack a player who is ignoring them
-                sessions.getSession(WildernessSession.class, (Player) defender).unignore(attacker.getName());
+                sessions.getSession(WildernessSession.class, defender).unignore(attacker.getName());
             }
             return true;
         }

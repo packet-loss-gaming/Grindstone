@@ -270,7 +270,7 @@ public class EnvironmentUtil {
         if (block.getState() instanceof Sign) {
             Sign signState = (Sign) block.getState();
             for (String line : signState.getLines()) {
-                if (line.matches("\\[.*\\]")) {
+                if (line.matches("\\[.*]")) {
                     return true;
                 }
             }

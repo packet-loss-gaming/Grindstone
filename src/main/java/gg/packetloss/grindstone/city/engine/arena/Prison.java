@@ -174,7 +174,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
 
             event.setUseInteractedBlock(Event.Result.DENY);
             event.getPlayer().getInventory().addItem(new ItemStack(ItemID.GOLD_BAR, lootSplit));
-            event.getPlayer().getInventory().addItem(loot.toArray(new ItemStack[loot.size()]));
+            event.getPlayer().getInventory().addItem(loot.toArray(new ItemStack[0]));
 
             event.getPlayer().teleport(new Location(getWorld(), 256.18, 81, 136));
             ChatUtil.sendNotice(event.getPlayer(), "You have successfully raided the jail!");

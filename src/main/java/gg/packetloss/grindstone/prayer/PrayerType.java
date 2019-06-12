@@ -60,7 +60,7 @@ public enum PrayerType {
     private final Class FXClass;
     private final static Map<Integer, PrayerType> BY_ID = new HashMap<>();
 
-    private PrayerType(int id, int cost, Class FXClass) {
+    PrayerType(int id, int cost, Class FXClass) {
 
         this.id = id;
         this.cost = cost;
@@ -68,7 +68,7 @@ public enum PrayerType {
         this.FXClass = FXClass;
     }
 
-    private PrayerType(int id, int cost, int defaultTime, Class FXClass) {
+    PrayerType(int id, int cost, int defaultTime, Class FXClass) {
 
         this.id = id;
         this.cost = cost;

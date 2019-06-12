@@ -41,7 +41,7 @@ public class ThunderZombie {
     private BukkitBossDeclaration<GenericDetail> thunderZombie;
 
     public ThunderZombie() {
-        thunderZombie = new BukkitBossDeclaration<GenericDetail>(inst, new SimpleInstructionDispatch<>()) {
+        thunderZombie = new BukkitBossDeclaration<>(inst, new SimpleInstructionDispatch<>()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
                 return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Thor Zombie");
@@ -56,12 +56,12 @@ public class ThunderZombie {
 
     private void setupThunderZombie() {
         List<BindInstruction<GenericDetail>> bindInstructions = thunderZombie.bindInstructions;
-        bindInstructions.add(new BindInstruction<GenericDetail>() {
+        bindInstructions.add(new BindInstruction<>() {
             @Override
             public InstructionResult<GenericDetail, BindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
-                    ((LivingEntity) anEntity).setCustomName("Thor Zombie");
+                    anEntity.setCustomName("Thor Zombie");
                     ((LivingEntity) anEntity).setMaxHealth(500);
                     ((LivingEntity) anEntity).setHealth(500);
                 }
@@ -70,13 +70,13 @@ public class ThunderZombie {
         });
 
         List<UnbindInstruction<GenericDetail>> unbindInstructions = thunderZombie.unbindInstructions;
-        unbindInstructions.add(new ExplosiveUnbind<GenericDetail>(false, false) {
+        unbindInstructions.add(new ExplosiveUnbind<>(false, false) {
             @Override
             public float getExplosionStrength(GenericDetail genericDetail) {
                 return 4F;
             }
         });
-        unbindInstructions.add(new UnbindInstruction<GenericDetail>() {
+        unbindInstructions.add(new UnbindInstruction<>() {
             @Override
             public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
@@ -95,7 +95,7 @@ public class ThunderZombie {
         });
 
         List<DamageInstruction<GenericDetail>> damageInstructions = thunderZombie.damageInstructions;
-        damageInstructions.add(new DamageInstruction<GenericDetail>() {
+        damageInstructions.add(new DamageInstruction<>() {
             @Override
             public InstructionResult<GenericDetail, DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);

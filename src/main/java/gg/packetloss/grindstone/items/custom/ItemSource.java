@@ -31,7 +31,7 @@ public enum ItemSource {
 
     private String friendlyName;
     private ItemSource[] subSources;
-    private ItemSource(String friendlyName, ItemSource... itemSource) {
+    ItemSource(String friendlyName, ItemSource... itemSource) {
         this.friendlyName = friendlyName;
         subSources = itemSource;
     }

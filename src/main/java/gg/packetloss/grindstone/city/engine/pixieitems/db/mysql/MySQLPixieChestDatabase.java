@@ -200,10 +200,7 @@ public class MySQLPixieChestDatabase implements PixieChestDatabase {
                         int networkID = results.getInt(1);
 
                         PixieNetworkDefinition definition = networkIds.compute(networkID, (ignored, value) -> {
-                            if (value == null) {
-                                return new PixieNetworkDefinition(networkID);
-                            }
-                            return value;
+                            return Objects.requireNonNullElseGet(value, () -> new PixieNetworkDefinition(networkID));
                         });
 
                         HashSet<String> itemNames = gson.fromJson(results.getString(6), itemNamesSetType);

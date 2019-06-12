@@ -82,8 +82,6 @@ public class BlockRecord implements Comparable<BlockRecord>, Serializable {
 
         if (record == null) return -1;
 
-        if (this.getTime() == record.getTime()) return 0;
-        if (this.getTime() > record.getTime()) return 1;
-        return -1;
+        return Long.compare(this.getTime(), record.getTime());
     }
 }

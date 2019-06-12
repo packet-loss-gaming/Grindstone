@@ -84,7 +84,7 @@ public class GroupSentryGun extends AbstractSelfTriggeredIC {
     @Override
     public void think(ChipState chip) {
 
-        if (((Factory) getFactory()).inverted ? chip.getInput(0) : !chip.getInput(0)) {
+        if (((Factory) getFactory()).inverted == chip.getInput(0)) {
             trigger(chip);
         }
     }

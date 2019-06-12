@@ -381,7 +381,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
         public Prayer[] getInfluences() {
 
-            return prayers.values().toArray(new Prayer[prayers.size()]);
+            return prayers.values().toArray(new Prayer[0]);
         }
 
         public void influence(Prayer prayer) {

@@ -361,11 +361,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         if (ent instanceof Slime && contains(ent)) {
 
-            Iterator<ItemStack> dropIterator = event.getDrops().iterator();
-            while (dropIterator.hasNext()) {
-                ItemStack next = dropIterator.next();
-                if (next != null && next.getTypeId() == ItemID.SLIME_BALL) dropIterator.remove();
-            }
+            event.getDrops().removeIf(next -> next != null && next.getTypeId() == ItemID.SLIME_BALL);
         }
     }
 

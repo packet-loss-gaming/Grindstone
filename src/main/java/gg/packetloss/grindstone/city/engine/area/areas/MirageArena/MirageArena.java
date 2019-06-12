@@ -140,7 +140,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
 
     public String getNextMirage(boolean clearOldVotes) {
         Map<String, ArenaVote> votes = new HashMap<>();
-        getContained(Player.class).stream().forEach(p -> {
+        getContained(Player.class).forEach(p -> {
             MirageSession session = sessions.getSession(MirageSession.class, p);
             String vote = session.getVote();
             if (vote != null) {
@@ -156,7 +156,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             }
         });
         List<ArenaVote> results = Lists.newArrayList(votes.values());
-        Collections.sort(results, (o1, o2) -> o2.getVotes() - o1.getVotes());
+        results.sort((o1, o2) -> o2.getVotes() - o1.getVotes());
         return results.isEmpty() ? null : results.get(0).getArena();
     }
 

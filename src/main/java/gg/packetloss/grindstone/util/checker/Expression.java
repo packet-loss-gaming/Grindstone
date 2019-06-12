@@ -7,5 +7,5 @@
 package gg.packetloss.grindstone.util.checker;
 
 public interface Expression<I, R> {
-    public R evaluate(I input);
+    R evaluate(I input);
 }

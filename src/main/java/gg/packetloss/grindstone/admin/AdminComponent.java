@@ -103,7 +103,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
         Plugin plugin = server.getPluginManager().getPlugin("WorldEdit");
 
         // WorldEdit may not be loaded
-        if (plugin == null || !(plugin instanceof WorldEditPlugin)) return null;
+        if (!(plugin instanceof WorldEditPlugin)) return null;
 
         return (WorldEditPlugin) plugin;
     }

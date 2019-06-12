@@ -52,7 +52,7 @@ public class GraveDigger {
     private BukkitBossDeclaration<WBossDetail> graveDigger;
 
     public GraveDigger() {
-        graveDigger = new BukkitBossDeclaration<WBossDetail>(inst, new SimpleInstructionDispatch<>()) {
+        graveDigger = new BukkitBossDeclaration<>(inst, new SimpleInstructionDispatch<>()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
                 return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Grave Digger");
@@ -67,12 +67,12 @@ public class GraveDigger {
 
     private void setupFangz() {
         List<BindInstruction<WBossDetail>> bindInstructions = graveDigger.bindInstructions;
-        bindInstructions.add(new BindInstruction<WBossDetail>() {
+        bindInstructions.add(new BindInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, BindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof LivingEntity) {
-                    ((LivingEntity) anEntity).setCustomName("Grave Digger");
+                    anEntity.setCustomName("Grave Digger");
                     int level = controllable.getDetail().getLevel();
                     ((LivingEntity) anEntity).setMaxHealth(20 * 43 * level);
                     ((LivingEntity) anEntity).setHealth(20 * 43 * level);
@@ -82,7 +82,7 @@ public class GraveDigger {
         });
 
         List<UnbindInstruction<WBossDetail>> unbindInstructions = graveDigger.unbindInstructions;
-        unbindInstructions.add(new UnbindInstruction<WBossDetail>() {
+        unbindInstructions.add(new UnbindInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, UnbindInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
@@ -113,7 +113,7 @@ public class GraveDigger {
 
         List<DamageInstruction<WBossDetail>> damageInstructions = graveDigger.damageInstructions;
         damageInstructions.add(new WDamageModifier());
-        damageInstructions.add(new DamageInstruction<WBossDetail>() {
+        damageInstructions.add(new DamageInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, DamageInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
@@ -132,7 +132,7 @@ public class GraveDigger {
 
         List<DamagedInstruction<WBossDetail>> damagedInstructions = graveDigger.damagedInstructions;
         damagedInstructions.add(new HealthPrint<>());
-        damagedInstructions.add(new DamagedInstruction<WBossDetail>() {
+        damagedInstructions.add(new DamagedInstruction<>() {
             @Override
             public InstructionResult<WBossDetail, DamagedInstruction<WBossDetail>> process(LocalControllable<WBossDetail> controllable, DamageSource damageSource, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);

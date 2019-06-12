@@ -16,7 +16,7 @@ public enum SpecType {
 
     private final long delay;
 
-    private SpecType(long delay) {
+    SpecType(long delay) {
 
         this.delay = delay;
     }

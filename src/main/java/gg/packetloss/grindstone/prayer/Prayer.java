@@ -66,8 +66,6 @@ public class Prayer implements Comparable<Prayer> {
 
         if (prayer == null) return 0;
 
-        if (this.getEffect().getType().getValue() == prayer.getEffect().getType().getValue()) return 0;
-        if (this.getEffect().getType().getValue() > prayer.getEffect().getType().getValue()) return 1;
-        return -1;
+        return Integer.compare(this.getEffect().getType().getValue(), prayer.getEffect().getType().getValue());
     }
 }

@@ -25,7 +25,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -106,7 +105,7 @@ public class ModifierComponent extends BukkitComponent implements Listener {
         }
         if (messages.isEmpty()) return;
 
-        Collections.sort(messages, String.CASE_INSENSITIVE_ORDER);
+        messages.sort(String.CASE_INSENSITIVE_ORDER);
         messages.add(0, "\n\nThe following donation perks are enabled:");
 
         Player player = event.getPlayer();

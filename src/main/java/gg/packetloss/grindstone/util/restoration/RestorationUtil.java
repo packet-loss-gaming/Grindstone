@@ -40,7 +40,7 @@ public class RestorationUtil extends BukkitComponent {
     public void enable() {
 
         Plugin plugin = server.getPluginManager().getPlugin("LogBlock");
-        if (plugin != null && plugin instanceof LogBlock) {
+        if (plugin instanceof LogBlock) {
             logBlock = (LogBlock) plugin;
         }
     }

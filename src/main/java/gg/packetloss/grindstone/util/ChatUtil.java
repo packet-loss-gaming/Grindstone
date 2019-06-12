@@ -46,7 +46,7 @@ public class ChatUtil {
     public static void sendDebug(Object o) {
         Bukkit.broadcast(
                 ChatColor.BLACK + "[" + ChatColor.DARK_RED + "DEBUG" + ChatColor.BLACK + "] "
-                        + ChatColor.GRAY + String.valueOf(o),
+                        + ChatColor.GRAY + o,
                 "aurora.debug");
     }
 

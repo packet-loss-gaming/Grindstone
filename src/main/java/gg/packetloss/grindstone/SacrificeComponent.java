@@ -135,9 +135,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
     private void removeEntity(Entity entity) {
 
-        if (entityTaskId.containsKey(entity.getEntityId())) {
-            entityTaskId.remove(entity.getEntityId());
-        }
+        entityTaskId.remove(entity.getEntityId());
 
     }
 

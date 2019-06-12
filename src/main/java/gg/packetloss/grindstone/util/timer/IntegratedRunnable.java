@@ -8,7 +8,7 @@ package gg.packetloss.grindstone.util.timer;
 
 public interface IntegratedRunnable {
 
-    public boolean run(int times);
+    boolean run(int times);
 
-    public void end();
+    void end();
 }

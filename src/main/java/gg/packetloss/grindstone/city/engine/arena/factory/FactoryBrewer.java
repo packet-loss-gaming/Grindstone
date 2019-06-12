@@ -10,12 +10,12 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.BaseItem;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -111,8 +111,8 @@ public class FactoryBrewer extends FactoryMech {
         }
 
         // Check these to avoid doing more calculations than need be
-        int bottles = items.containsKey(ItemID.GLASS_BOTTLE) ? items.get(ItemID.GLASS_BOTTLE) : 0;
-        int max = items.containsKey(ItemID.NETHER_WART_SEED) ? items.get(ItemID.NETHER_WART_SEED) : 0;
+        int bottles = items.getOrDefault(ItemID.GLASS_BOTTLE, 0);
+        int max = items.getOrDefault(ItemID.NETHER_WART_SEED, 0);
         if (bottles <= 0 || max <= 0) return new ArrayList<>();
 
         // Figure out the potion the player is trying to make

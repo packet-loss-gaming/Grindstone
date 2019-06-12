@@ -11,11 +11,11 @@ import java.util.List;
 
 public interface LotteryWinnerDatabase {
 
-    public boolean load();
+    boolean load();
 
-    public boolean save();
+    boolean save();
 
-    public void addWinner(String name, double amount);
+    void addWinner(String name, double amount);
 
-    public List<LotteryWinner> getRecentWinner(int limit);
+    List<LotteryWinner> getRecentWinner(int limit);
 }

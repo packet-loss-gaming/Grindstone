@@ -18,14 +18,14 @@ public interface HomeDatabase {
      *
      * @return whether the operation was fully successful
      */
-    public boolean load();
+    boolean load();
 
     /**
      * Save the database.
      *
      * @return whether the operation was fully successful
      */
-    public boolean save();
+    boolean save();
 
     /**
      * Checks if a player has a house
@@ -33,7 +33,7 @@ public interface HomeDatabase {
      * @param playerID The playerID who's house to find
      * @return Whether the player has a house
      */
-    public boolean houseExist(UUID playerID);
+    boolean houseExist(UUID playerID);
 
     /**
      * Add a house for a player
@@ -44,14 +44,14 @@ public interface HomeDatabase {
      * @param y the house's y loc
      * @param z the house's z loc
      */
-    public void saveHouse(Player player, String world, int x, int y, int z);
+    void saveHouse(Player player, String world, int x, int y, int z);
 
     /**
      * Returns a player's house
      *
      * @param playerID The playerID who's house to delete
      */
-    public boolean deleteHouse(UUID playerID);
+    boolean deleteHouse(UUID playerID);
 
     /**
      * Returns the home with the given name
@@ -59,5 +59,5 @@ public interface HomeDatabase {
      * @param playerID The playerID who's house to find
      * @return The applicable player
      */
-    public Home getHouse(UUID playerID);
+    Home getHouse(UUID playerID);
 }

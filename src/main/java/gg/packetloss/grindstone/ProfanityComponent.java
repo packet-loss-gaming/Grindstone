@@ -191,17 +191,17 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
 
     public String loonizeWord(String word, boolean useColor) {
 
-        String loonyFilteredString = "";
+        StringBuilder loonyFilteredString = new StringBuilder();
         if (useColor) {
             for (int f = 0; f < word.length(); f++) {
-                loonyFilteredString = loonyFilteredString + ChatUtil.loonyColor() + ChatUtil.loonyCharacter();
+                loonyFilteredString.append(ChatUtil.loonyColor()).append(ChatUtil.loonyCharacter());
             }
         } else {
             for (int f = 0; f < word.length(); f++) {
-                loonyFilteredString = loonyFilteredString + ChatUtil.loonyCharacter();
+                loonyFilteredString.append(ChatUtil.loonyCharacter());
             }
         }
 
-        return loonyFilteredString;
+        return loonyFilteredString.toString();
     }
 }

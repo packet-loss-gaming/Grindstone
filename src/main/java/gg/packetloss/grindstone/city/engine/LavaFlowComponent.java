@@ -53,7 +53,7 @@ public class LavaFlowComponent extends BukkitComponent implements Listener {
         Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+        if (!(plugin instanceof WorldGuardPlugin)) {
             throw new UnknownPluginException("WorldGuard");
         }
 

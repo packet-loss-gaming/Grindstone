@@ -28,10 +28,7 @@ public class HomeManager {
 
     public Optional<Location> getSafePlayerHome(Player player) {
         Optional<Location> optPlayerHome = getPlayerHome(player);
-        if (optPlayerHome.isPresent()) {
-            return Optional.ofNullable(LocationUtil.findFreePosition(optPlayerHome.get()));
-        }
-        return Optional.empty();
+        return optPlayerHome.map(LocationUtil::findFreePosition);
     }
 
     public void setPlayerHome(Player player, Location loc) {
