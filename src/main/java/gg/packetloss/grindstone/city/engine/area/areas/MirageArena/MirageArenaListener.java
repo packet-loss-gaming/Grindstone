@@ -72,7 +72,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         //
         // Make an exception for certain blocks, like fire, we'll let them be placed, but simply
         // not restore the item used.
-        boolean typesMatch = block.getType() != itemStack.getType();
+        boolean typesMatch = block.getType() == itemStack.getType();
         if (!typesMatch && !allowedBlocks.contains(block.getType())) {
             event.setCancelled(true);
             return;
