@@ -107,7 +107,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         parent.handleBlockBreak(block);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockIgnite(BlockIgniteEvent event) {
         Block block = event.getBlock();
 
@@ -118,8 +118,19 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         parent.handleBlockBreak(block);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBurn(BlockBurnEvent event) {
+        Block block = event.getBlock();
+
+        if (!parent.contains(block)) {
+            return;
+        }
+
+        parent.handleBlockBreak(block);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onLeafDecay(LeavesDecayEvent event) {
         Block block = event.getBlock();
 
         if (!parent.contains(block)) {
