@@ -20,8 +20,10 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -52,11 +54,21 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (!parent.contains(event.getBlock())) {
+        Block block = event.getBlock();
+
+        if (!parent.contains(block)) {
             return;
         }
 
-        event.setCancelled(true);
+        Player player = event.getPlayer();
+        ItemStack itemStack = event.getItemInHand().clone();
+        itemStack.setAmount(1);
+        Location blockLoc = block.getLocation();
+
+        server.getScheduler().runTaskLater(inst, () -> {
+            blockLoc.getBlock().setType(Material.AIR);
+            player.getInventory().addItem(itemStack);
+        }, 20 * 10);
     }
 
     @EventHandler(ignoreCancelled = true)
