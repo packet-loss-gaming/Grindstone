@@ -344,7 +344,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         for (Player otherPlayer : server.getOnlinePlayers()) {
             // Show Yourself!
-            if (otherPlayer != player) otherPlayer.showPlayer(player);
+            if (otherPlayer != player) otherPlayer.showPlayer(inst, player);
         }
     }
 
@@ -501,7 +501,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         Player player = event.getPlayer();
 
         for (final Player otherPlayer : server.getOnlinePlayers()) {
-            if (otherPlayer != player) otherPlayer.showPlayer(player);
+            if (otherPlayer != player) otherPlayer.showPlayer(inst, player);
         }
     }
 
@@ -580,19 +580,19 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                         if (otherPlayer.canSee(player)
                                 && !(guildCanSee(player) && inst.hasPermission(otherPlayer, "aurora.ninja"))
                                 && !inst.hasPermission(otherPlayer, "aurora.ninja.master")) {
-                            otherPlayer.hidePlayer(player);
+                            otherPlayer.hidePlayer(inst, player);
                             invisibleNewCount.add(otherPlayer);
                         }
                     } else {
                         if (!otherPlayer.canSee(player)) {
-                            otherPlayer.showPlayer(player);
+                            otherPlayer.showPlayer(inst, player);
                             visibleNewCount.add(otherPlayer);
                         }
                     }
 
                 } else {
                     if (!otherPlayer.canSee(player)) {
-                        otherPlayer.showPlayer(player);
+                        otherPlayer.showPlayer(inst, player);
                         visibleNewCount.add(otherPlayer);
                     }
                 }
