@@ -19,12 +19,12 @@ import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.player.PlayerState;
-import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -80,12 +80,12 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
         // Otherwise allow the block place, and schedule a reset
         parent.manuallyPlacedLocations.add(blockLoc);
-        BlockRecord oldBlock = new BlockRecord(event.getBlockReplacedState().getBlock());
+        BlockState replacedState = event.getBlockReplacedState();
 
         server.getScheduler().runTaskLater(inst, () -> {
             // If the position was still in the set, restore it to whatever it was before.
             if (parent.manuallyPlacedLocations.remove(blockLoc)) {
-                oldBlock.revert();
+                replacedState.update(true);
             }
 
             // Always give the player their block back, provided the types matched.
