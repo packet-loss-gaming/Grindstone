@@ -19,6 +19,7 @@ import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.player.PlayerState;
+import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -38,6 +39,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class MirageArenaListener extends AreaListener<MirageArena> {
@@ -49,6 +51,8 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
     public MirageArenaListener(MirageArena parent) {
         super(parent);
     }
+
+    private Set<Material> allowedBlocks = Set.of(Material.FIRE);
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
@@ -63,16 +67,31 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         itemStack.setAmount(1);
 
         Location blockLoc = block.getLocation();
+
+        // If the held item doesn't match what was placed, don't place it.
+        //
+        // Make an exception for certain blocks, like fire, we'll let them be placed, but simply
+        // not restore the item used.
+        boolean typesMatch = block.getType() != itemStack.getType();
+        if (!typesMatch && !allowedBlocks.contains(block.getType())) {
+            event.setCancelled(true);
+            return;
+        }
+
+        // Otherwise allow the block place, and schedule a reset
         parent.manuallyPlacedLocations.add(blockLoc);
+        BlockRecord oldBlock = new BlockRecord(event.getBlockReplacedState().getBlock());
 
         server.getScheduler().runTaskLater(inst, () -> {
-            // If the position was still in the set, set it to air.
+            // If the position was still in the set, restore it to whatever it was before.
             if (parent.manuallyPlacedLocations.remove(blockLoc)) {
-                blockLoc.getBlock().setType(Material.AIR);
+                oldBlock.revert();
             }
 
-            // Always give the player their block back.
-            player.getInventory().addItem(itemStack);
+            // Always give the player their block back, provided the types matched.
+            if (typesMatch) {
+                player.getInventory().addItem(itemStack);
+            }
         }, 20 * 10);
     }
 
