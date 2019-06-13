@@ -28,9 +28,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -63,21 +61,53 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         Player player = event.getPlayer();
         ItemStack itemStack = event.getItemInHand().clone();
         itemStack.setAmount(1);
+
         Location blockLoc = block.getLocation();
+        parent.manuallyPlacedLocations.add(blockLoc);
 
         server.getScheduler().runTaskLater(inst, () -> {
-            blockLoc.getBlock().setType(Material.AIR);
+            // If the position was still in the set, set it to air.
+            if (parent.manuallyPlacedLocations.remove(blockLoc)) {
+                blockLoc.getBlock().setType(Material.AIR);
+            }
+
+            // Always give the player their block back.
             player.getInventory().addItem(itemStack);
         }, 20 * 10);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
-        if (!parent.contains(event.getBlock())) {
+        Block block = event.getBlock();
+
+        if (!parent.contains(block)) {
             return;
         }
 
         event.setDropItems(false);
+        parent.handleBlockBreak(block);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockIgnite(BlockIgniteEvent event) {
+        Block block = event.getBlock();
+
+        if (!parent.contains(block)) {
+            return;
+        }
+
+        parent.handleBlockBreak(block);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockBurn(BlockBurnEvent event) {
+        Block block = event.getBlock();
+
+        if (!parent.contains(block)) {
+            return;
+        }
+
+        parent.handleBlockBreak(block);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -87,6 +117,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         }
 
         event.setYield(0);
+        event.blockList().forEach(parent::handleBlockBreak);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -96,6 +127,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         }
 
         event.setYield(0);
+        event.blockList().forEach(parent::handleBlockBreak);
     }
 
     @EventHandler(ignoreCancelled = true)

@@ -18,7 +18,7 @@ import java.io.Serializable;
 public class BlockRecord implements Comparable<BlockRecord>, Serializable {
 
     // Location information
-    private transient World world = null;
+    private transient World world;
     private final String worldName;
     private final int x, y, z;
 
@@ -29,7 +29,6 @@ public class BlockRecord implements Comparable<BlockRecord>, Serializable {
     private final long time;
 
     public BlockRecord(Block block) {
-
         this.world = block.getWorld();
         this.worldName = world.getName();
 
@@ -43,7 +42,6 @@ public class BlockRecord implements Comparable<BlockRecord>, Serializable {
     }
 
     public BlockRecord(Location location, BaseBlock blockData) {
-
         this.world = location.getWorld();
         this.worldName = world.getName();
 
@@ -57,17 +55,20 @@ public class BlockRecord implements Comparable<BlockRecord>, Serializable {
     }
 
     public long getTime() {
-
         return time;
     }
 
-    public void revert() {
-
+    public Location getLocation() {
         if (world == null) {
             world = Bukkit.getWorld(worldName);
         }
 
-        Block block = world.getBlockAt(x, y, z);
+        return new Location(world, x, y, z);
+    }
+
+    public void revert() {
+        Block block = getLocation().getBlock();
+
         Chunk chunk = block.getChunk();
         if (!chunk.isLoaded()) {
             chunk.load();
@@ -79,7 +80,6 @@ public class BlockRecord implements Comparable<BlockRecord>, Serializable {
     // Oldest to newest
     @Override
     public int compareTo(BlockRecord record) {
-
         if (record == null) return -1;
 
         return Long.compare(this.getTime(), record.getTime());

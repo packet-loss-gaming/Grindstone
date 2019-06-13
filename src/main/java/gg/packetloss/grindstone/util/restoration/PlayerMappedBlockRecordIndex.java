@@ -108,4 +108,9 @@ public class PlayerMappedBlockRecordIndex extends BlockRecordIndex implements Se
 
         return recordMap.size();
     }
+
+    @Override
+    public void dropAll() {
+        recordMap.clear();
+    }
 }

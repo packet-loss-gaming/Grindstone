@@ -34,19 +34,19 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
-import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
-import gg.packetloss.grindstone.util.timer.TimedRunnable;
-import gg.packetloss.grindstone.util.timer.TimerUtil;
+import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
+import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Mirage Arena", desc = "What will you see next?")
 @Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
@@ -57,9 +57,14 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
     @InjectComponent
     protected SessionComponent sessions;
 
+    protected boolean voting = false;
     protected int ticks = 0;
     protected PvPScope scope;
     protected boolean editing = false;
+
+    protected BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
+    protected Set<Location> manuallyPlacedLocations = new HashSet<>();
+
     protected HashMap<String, PlayerState> playerState = new HashMap<>();
 
     @Override
@@ -95,6 +100,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
     public void run() {
         if (!isEmpty()) {
             shiftMirage();
+            revertBlocks();
         }
         writeData(true);
     }
@@ -114,11 +120,24 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
     }
 
     public void shiftMirage() {
+        // Only process mirage shift logic if there is an active vote.
+        if (!voting) {
+            return;
+        }
+
+        // Increment ticks
         ++ticks;
+
         if (ticks >= 60) {
             String next = getNextMirage(true);
-            if (next == null) return;
+            if (next == null) {
+                return;
+            }
+
+            // Reset voting system
+            voting = false;
             ticks = 0;
+
             Collection<Player> players = getContained(Player.class);
             try {
                 ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, "Attempting to change the current mirage to " + next + "...");
@@ -131,11 +150,21 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             }
         } else if (ticks % 10 == 0) {
             String next = getNextMirage(false);
-            if (next == null) return;
+            if (next == null) {
+                return;
+            }
+
             Collection<Player> players = getContained(Player.class);
             ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, "The currently winning mirage is " + next + '.');
             ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, ((60 - ticks) * 5) + " seconds til arena change.");
         }
+    }
+
+    public void revertBlocks() {
+        generalIndex.revertByTimeWithFilter(TimeUnit.MINUTES.toMillis(4), (blockRecord -> {
+            // Skip blocks that were manually placed.
+            return !manuallyPlacedLocations.contains(blockRecord.getLocation());
+        }));
     }
 
     public String getNextMirage(boolean clearOldVotes) {
@@ -160,26 +189,8 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
         return results.isEmpty() ? null : results.get(0).getArena();
     }
 
-    public void clearItems() {
-        IntegratedRunnable normal = new IntegratedRunnable() {
-            @Override
-            public boolean run(int times) {
-                if (TimerUtil.matchesFilter(times, 10, 5)) {
-                    ChatUtil.sendWarning(getContained(Player.class), "Clearing all arena items in: " + times + " seconds.");
-                }
-                return true;
-            }
-            @Override
-            public void end() {
-                ChatUtil.sendWarning(getContained(Player.class), "Clearing arena items!");
-                for (Item item : getContained(Item.class)) {
-                    item.remove();
-                }
-            }
-        };
-        TimedRunnable timed = new TimedRunnable(normal, 30);
-        BukkitTask task = server.getScheduler().runTaskTimer(inst, timed, 0, 20);
-        timed.setTask(task);
+    public void resetBlockRecordIndex() {
+        generalIndex.dropAll();
     }
 
     public void freePlayers() {
@@ -252,7 +263,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
         int maxY = clipboard.getHeight();
         int maxZ = clipboard.getLength();
 
-        clearItems();
+        resetBlockRecordIndex();
         callEdit(editor, clipboard, 0, 0, maxX, maxY, maxZ);
     }
 
@@ -271,6 +282,14 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
                 world.refreshChunk(x / 16, z / 16);
             }
         }
+    }
+
+    protected void handleBlockBreak(Block block) {
+        if (manuallyPlacedLocations.remove(block.getLocation())) {
+            return;
+        }
+
+        generalIndex.addItem(new BlockRecord(block));
     }
 
     public File getFile(String name) {
@@ -301,6 +320,8 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
 
             MirageSession session = sessions.getSession(MirageSession.class, PlayerUtil.checkPlayer(sender));
             session.vote(initFile);
+
+            voting = true;
 
             ChatUtil.sendNotice(sender, "Your vote has been set to " + initFile + '.');
         }
@@ -384,14 +405,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
                 throw new CommandException("That arena state could not be saved!");
             }
             ChatUtil.sendNotice(sender, "Successfully saved.");
-        }
-
-        @Command(aliases = {"cleardrops", "dc"},
-                usage = "", desc = "Clear drops in the arena",
-                flags = "", min = 0, max = 0)
-        @CommandPermissions("aurora.mirage.cleardrops")
-        public void areaDC(CommandContext args, CommandSender sender) throws CommandException {
-            clearItems();
         }
 
         @Command(aliases = {"load"},

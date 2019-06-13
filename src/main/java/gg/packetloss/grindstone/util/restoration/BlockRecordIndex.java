@@ -13,4 +13,6 @@ public abstract class BlockRecordIndex {
     public abstract void revertAll();
 
     public abstract int size();
+
+    public abstract void dropAll();
 }

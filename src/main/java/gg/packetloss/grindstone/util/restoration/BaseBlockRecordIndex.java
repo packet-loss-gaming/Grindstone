@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class BaseBlockRecordIndex extends BlockRecordIndex implements Serializable {
     private List<BlockRecord> recordList = new ArrayList<>();
@@ -20,14 +21,20 @@ public class BaseBlockRecordIndex extends BlockRecordIndex implements Serializab
 
     @Override
     public void revertByTime(long time) {
+        revertByTimeWithFilter(time, (ignored) -> true);
+    }
+
+    public void revertByTimeWithFilter(long time, Predicate<BlockRecord> test) {
         Iterator<BlockRecord> it = recordList.iterator();
         BlockRecord active;
 
         while (it.hasNext()) {
             active = it.next();
             if (System.currentTimeMillis() - active.getTime() >= time) {
-                active.revert();
-                it.remove();
+                if (test.test(active)) {
+                    active.revert();
+                    it.remove();
+                }
             }
         }
     }
@@ -47,5 +54,10 @@ public class BaseBlockRecordIndex extends BlockRecordIndex implements Serializab
     @Override
     public int size() {
         return recordList.size();
+    }
+
+    @Override
+    public void dropAll() {
+        recordList.clear();
     }
 }
