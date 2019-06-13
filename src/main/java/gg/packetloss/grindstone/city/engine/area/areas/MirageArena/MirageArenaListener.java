@@ -115,6 +115,10 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
             return;
         }
 
+        if (block.getType() == Material.AIR) {
+            return;
+        }
+
         parent.handleBlockBreak(block);
     }
 
