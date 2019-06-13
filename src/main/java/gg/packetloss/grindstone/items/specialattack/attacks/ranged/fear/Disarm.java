@@ -29,7 +29,7 @@ public class Disarm extends EntityAttack implements RangedSpecial {
 
         if (target instanceof Player) {
 
-            ItemStack[] items = ((Player) target).getInventory().getContents();
+            ItemStack[] items = ((Player) target).getInventory().getExtraContents();
 
             int heldS = ((Player) target).getInventory().getHeldItemSlot();
             int k = ChanceUtil.getRandom(items.length) - 1;
@@ -37,12 +37,12 @@ public class Disarm extends EntityAttack implements RangedSpecial {
             items[heldS] = items[k];
             items[k] = held;
 
-            ((Player) target).getInventory().setContents(items);
+            ((Player) target).getInventory().setExtraContents(items);
         } else {
-            target.getEquipment().setItemInHand(null);
+            target.getEquipment().setItemInMainHand(null);
             server.getScheduler().runTaskLater(inst, () -> {
                 if (target.isValid()) {
-                    target.getEquipment().setItemInHand(held);
+                    target.getEquipment().setItemInMainHand(held);
                 }
             }, 20 * 3);
         }
