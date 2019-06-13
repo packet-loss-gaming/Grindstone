@@ -8,9 +8,6 @@ package gg.packetloss.grindstone.city.engine.area.areas.SandArena;
 
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
-import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
-import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
-import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
 import gg.packetloss.grindstone.util.RefCountedTracker;
 import gg.packetloss.grindstone.util.player.FallDamageDeathBlocker;
 import gg.packetloss.grindstone.util.player.PlayerState;
@@ -19,14 +16,13 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 public class SandArenaListener extends AreaListener<SandArena> {
@@ -34,23 +30,13 @@ public class SandArenaListener extends AreaListener<SandArena> {
         super(parent);
     }
 
-    private static Set<Class> blacklistedSpecs = new HashSet<>();
-
-    static {
-        blacklistedSpecs.add(Disarm.class);
-    }
-
     @EventHandler(ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
-
-        SpecialAttack attack = event.getSpec();
-
-        if (!parent.contains(attack.getLocation())) return;
-
-        if (blacklistedSpecs.contains(attack.getClass())) {
-
-            event.setCancelled(true);
+    public void onBlockPlace(BlockPlaceEvent event) {
+        if (!parent.contains(event.getBlock())) {
+            return;
         }
+
+        event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)

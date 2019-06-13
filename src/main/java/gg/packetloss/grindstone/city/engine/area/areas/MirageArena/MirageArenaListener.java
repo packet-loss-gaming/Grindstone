@@ -12,9 +12,6 @@ import com.sk89q.worldedit.blocks.ItemID;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
-import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
-import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
-import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -29,16 +26,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
 
 public class MirageArenaListener extends AreaListener<MirageArena> {
@@ -51,23 +50,40 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         super(parent);
     }
 
-    private static Set<Class> blacklistedSpecs = new HashSet<>();
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        if (!parent.contains(event.getBlock())) {
+            return;
+        }
 
-    static {
-        blacklistedSpecs.add(Disarm.class);
+        event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
-
-        SpecialAttack attack = event.getSpec();
-
-        if (!parent.contains(attack.getLocation())) return;
-
-        if (blacklistedSpecs.contains(attack.getClass())) {
-
-            event.setCancelled(true);
+    public void onBlockBreak(BlockBreakEvent event) {
+        if (!parent.contains(event.getBlock())) {
+            return;
         }
+
+        event.setDropItems(false);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityExplode(EntityExplodeEvent event) {
+        if (!parent.contains(event.getEntity())) {
+            return;
+        }
+
+        event.setYield(0);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockExplode(BlockExplodeEvent event) {
+        if (!parent.contains(event.getBlock())) {
+            return;
+        }
+
+        event.setYield(0);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -113,7 +129,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void dropGold(EntityDamageByEntityEvent event) {
+    public void onPlayerDamage(EntityDamageByEntityEvent event) {
         CombatantPair<Player, Player, Projectile> result = extractor.extractFrom(event);
 
         if (result == null || !parent.contains(result.getDefender())) return;
