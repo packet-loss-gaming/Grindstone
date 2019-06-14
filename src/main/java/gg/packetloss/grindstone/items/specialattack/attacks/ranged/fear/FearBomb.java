@@ -118,7 +118,7 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
                     for (Entity entity : block.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
                         if (!entity.isValid()) continue;
                         if (entity.getLocation().distanceSquared(loc) <= 4) {
-                            DamageUtil.damageWithSpecialAttack(owner, target, spec, 10000);
+                            DamageUtil.damageWithSpecialAttack(owner, target, spec, entity instanceof Player ? 200 : 10000);
                         }
                     }
 
