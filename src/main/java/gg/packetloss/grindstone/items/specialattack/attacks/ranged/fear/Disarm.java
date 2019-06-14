@@ -13,6 +13,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 public class Disarm extends EntityAttack implements RangedSpecial {
 
@@ -29,15 +30,18 @@ public class Disarm extends EntityAttack implements RangedSpecial {
 
         if (target instanceof Player) {
 
-            ItemStack[] items = ((Player) target).getInventory().getExtraContents();
+            PlayerInventory inv = ((Player) target).getInventory();
 
-            int heldS = ((Player) target).getInventory().getHeldItemSlot();
-            int k = ChanceUtil.getRandom(items.length) - 1;
+            ItemStack[] items = inv.getContents();
 
-            items[heldS] = items[k];
-            items[k] = held;
+            int heldIndex = inv.getHeldItemSlot();
+            int itemIndex = ChanceUtil.getRandom(27) + 8;
 
-            ((Player) target).getInventory().setExtraContents(items);
+            ItemStack previousItem = items[itemIndex];
+            items[itemIndex] = items[heldIndex];
+            items[heldIndex] = previousItem;
+
+            inv.setContents(items);
         } else {
             target.getEquipment().setItemInMainHand(null);
             server.getScheduler().runTaskLater(inst, () -> {
