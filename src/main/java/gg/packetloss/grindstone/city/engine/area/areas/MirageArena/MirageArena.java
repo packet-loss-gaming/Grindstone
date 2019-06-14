@@ -205,7 +205,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
         if (cy >= maxY) {
             ChatUtil.sendNotice(getContained(Player.class), "Editing Completed.");
             editing = false;
-            resendChunks();
             freePlayers();
             return;
         } else if (cx == 0 && cy % 10 == 0) {
@@ -265,23 +264,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
 
         resetBlockRecordIndex();
         callEdit(editor, clipboard, 0, 0, maxX, maxY, maxZ);
-    }
-
-    public void resendChunks() {
-
-        com.sk89q.worldedit.Vector min = getRegion().getMinimumPoint();
-        com.sk89q.worldedit.Vector max = getRegion().getMaximumPoint();
-
-        int minX = min.getBlockX();
-        int minZ = min.getBlockZ();
-        int maxX = max.getBlockX();
-        int maxZ = max.getBlockZ();
-
-        for (int x = minX; x < maxX; x += 16) {
-            for (int z = minZ; z < maxZ; z += 16) {
-                world.refreshChunk(x / 16, z / 16);
-            }
-        }
     }
 
     protected void handleBlockBreak(Block block) {

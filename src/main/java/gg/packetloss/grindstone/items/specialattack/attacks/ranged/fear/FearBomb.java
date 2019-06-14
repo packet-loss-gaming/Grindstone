@@ -17,8 +17,8 @@ import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -29,8 +29,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class FearBomb extends EntityAttack implements RangedSpecial {
 
@@ -56,24 +57,21 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
             }
         }
 
-        Collections.addAll(blocks, blockList.toArray(new Block[0]));
+        blocks.addAll(blockList);
 
         final FearBomb spec = this;
+        World world = target.getLocation().getWorld();
+        Set<Location> changedLocations = new HashSet<>();
         IntegratedRunnable bomb = new IntegratedRunnable() {
 
             @Override
             public boolean run(int times) {
-
-                Location loc = new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
-                List<Player> players = null;
+                List<Player> players = world.getPlayers();
 
                 for (Block block : blocks) {
+                    Location loc = block.getLocation();
+                    changedLocations.add(loc);
 
-                    if (players == null) {
-                        players = block.getWorld().getPlayers();
-                    }
-
-                    loc = block.getLocation(loc);
                     World world = loc.getWorld();
 
                     while (loc.getY() > 0 && BlockType.canPassThrough(world.getBlockTypeIdAt(loc))) {
@@ -97,16 +95,12 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
 
             @Override
             public void end() {
-
-                Location loc = new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
-                List<Chunk> chunks = new ArrayList<>();
-
                 if (owner instanceof Player) {
                     server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
                 }
 
+                Location loc = new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
                 for (Block block : blocks) {
-
                     loc = block.getLocation(loc);
                     World world = loc.getWorld();
 
@@ -121,23 +115,16 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
                             DamageUtil.damageWithSpecialAttack(owner, target, spec, entity instanceof Player ? 200 : 10000);
                         }
                     }
-
-                    Chunk chunk = block.getChunk();
-                    int x = chunk.getX();
-                    int z = chunk.getZ();
-
-                    findChunk:
-                    {
-                        for (Chunk aChunk : chunks) {
-                            if (aChunk.getX() == x && aChunk.getZ() == z) break findChunk;
-                        }
-
-                        chunks.add(chunk);
-                    }
                 }
 
-                for (Chunk chunk : chunks) {
-                    loc.getWorld().refreshChunk(chunk.getX(), chunk.getZ());
+                List<Player> players = world.getPlayers();
+                for (Location changedLoc : changedLocations) {
+                    Material type = changedLoc.getBlock().getType();
+                    byte data = changedLoc.getBlock().getData();
+
+                    for (Player player : players) {
+                        player.sendBlockChange(changedLoc, type, data);
+                    }
                 }
             }
         };
