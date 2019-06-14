@@ -23,17 +23,12 @@ public class NecrosisFX extends AbstractEffect {
         this.beneficiary = beneficiary;
     }
 
-    private boolean isFullyHealed() {
-        return beneficiary.getHealth() == beneficiary.getMaxHealth();
-    }
-
     private boolean isBlockedPvP(Player player) {
         return beneficiary instanceof Player && !PvPComponent.allowsPvP((Player) beneficiary, player);
     }
 
     @Override
     public void add(Player player) {
-        if (isFullyHealed()) return;
         if (isBlockedPvP(player)) return;
 
         EntityUtil.heal(beneficiary, 1);

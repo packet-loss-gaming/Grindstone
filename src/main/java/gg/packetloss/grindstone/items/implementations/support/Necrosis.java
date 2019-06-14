@@ -35,21 +35,57 @@ public class Necrosis {
         this.hasArmor = hasArmor;
     }
 
+    private Prayer constructNecrosisPrayer(Player attacker, Player defender) {
+        NecrosisFX necrosis = new NecrosisFX(defender);
+        int duration = ChanceUtil.getRangedRandom(3000, 6000);
+        return PrayerComponent.constructPrayer(attacker, necrosis, duration);
+    }
+
+    private int getMaxUnits() {
+        return 20;
+    }
+
+    private int getScaledHealthUnitsLost(Player defender) {
+        double healthPercentage = (defender.getMaxHealth() - defender.getHealth()) / defender.getMaxHealth();
+        return (int) (healthPercentage * getMaxUnits());
+    }
+
+    private void handlePlayer(Player attacker, Player defender, double damage) {
+        int healthLost = getScaledHealthUnitsLost(defender);
+
+        int healthUnits = healthLost / 3;
+        int damageUnits = (int) (damage / 10);
+
+        int executingUnits = healthUnits + damageUnits;
+
+        if (!ChanceUtil.getChance(Math.max(4, getMaxUnits() - executingUnits))) {
+            return;
+        }
+
+        prayers.influencePlayer(attacker, constructNecrosisPrayer(attacker, defender));
+        defender.chat("Taste necrosis!");
+    }
+
+    private void handleEntity(LivingEntity defender, double damage) {
+        if (!ChanceUtil.getChance(5)) {
+            return;
+        }
+
+        EffectUtil.Necros.deathStrike(defender, Math.max(5, damage));
+    }
+
     public void handleEvent(EntityDamageByEntityEvent event) {
         CombatantPair<LivingEntity, Player, Projectile> result = necrosisExtractor.extractFrom(event);
 
         if (result == null) return;
 
         Player defender = result.getDefender();
-        if (hasArmor.test(defender) && ChanceUtil.getChance(4)) {
+        if (hasArmor.test(defender)) {
             LivingEntity attacker = result.getAttacker();
             if (attacker instanceof Player) {
-                NecrosisFX necrosis = new NecrosisFX(defender);
-                Prayer prayer = PrayerComponent.constructPrayer((Player) attacker, necrosis, 5000);
-                prayers.influencePlayer((Player) attacker, prayer);
-                defender.chat("Taste necrosis!");
+                handlePlayer((Player) attacker, defender, event.getDamage());
             } else {
-                EffectUtil.Necros.deathStrike(defender, Math.max(5, event.getDamage()));
+                handleEntity(defender, event.getDamage());
             }
         }
     }
