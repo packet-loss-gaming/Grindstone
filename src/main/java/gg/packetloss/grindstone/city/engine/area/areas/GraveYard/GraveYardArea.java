@@ -36,6 +36,7 @@ import org.bukkit.block.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Lever;
@@ -584,17 +585,19 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
             block = location.getBlock().getState();
             if (!block.getChunk().isLoaded()) block.getChunk().load();
             chest = (Chest) block;
-            chest.getBlockInventory().clear();
-            int length = chest.getBlockInventory().getContents().length;
+
+            Inventory chestInv = chest.getBlockInventory();
+            chestInv.clear();
+
+            int length = chestInv.getContents().length;
             for (int i = 0; i < length * .6; ++i) {
                 int target = ChanceUtil.getRandom(length) - 1;
-                if (chest.getBlockInventory().getContents()[target] != null) {
+                if (chestInv.getContents()[target] != null) {
                     i--;
                     continue;
                 }
-                chest.getBlockInventory().setItem(target, pickRandomItem());
+                chestInv.setItem(target, pickRandomItem());
             }
-            chest.update();
         }
     }
 

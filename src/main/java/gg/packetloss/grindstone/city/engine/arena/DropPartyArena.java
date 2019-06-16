@@ -13,11 +13,11 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.events.entity.item.DropClearPulseEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -221,7 +221,6 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                             Collections.addAll(drops, chestInventory.getContents());
 
                             chestInventory.clear();
-                            chest.update(true);
                         }
                     }
                 }
