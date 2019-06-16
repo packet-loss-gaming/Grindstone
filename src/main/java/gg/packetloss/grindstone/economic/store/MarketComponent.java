@@ -40,7 +40,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.text.DecimalFormat;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -99,9 +98,8 @@ public class MarketComponent extends BukkitComponent {
             }, 1);
 
             // Calculate delay
-            LocalTime now = LocalTime.now();
-            boolean isEvenHour = now.getHour() % 2 == 0;
-            long nextRunDelay = TimeUtil.getTicksTill((isEvenHour ? now.getHour() + 2 : now.getHour() + 1) % 23);
+            int nextEventHour = TimeUtil.getNextHour((hour) -> hour % 2 == 0);
+            long nextRunDelay = TimeUtil.getTicksTill(nextEventHour);
 
             // Schedule an update task for every two hours
             server.getScheduler().runTaskTimerAsynchronously(

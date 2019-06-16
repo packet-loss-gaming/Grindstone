@@ -6,7 +6,9 @@
 
 package gg.packetloss.grindstone.util;
 
+import java.time.LocalTime;
 import java.util.Calendar;
+import java.util.function.Predicate;
 
 public class TimeUtil {
 
@@ -81,5 +83,15 @@ public class TimeUtil {
 
     public static long convertHoursToTicks(int hours) {
         return convertMinutesToTicks(hours * 60);
+    }
+
+    public static int getNextHour(Predicate<Integer> test) {
+        int hour = LocalTime.now().getHour();
+
+        do {
+            hour = (hour + 1) % 23;
+        } while (!test.test(hour));
+
+        return hour;
     }
 }
