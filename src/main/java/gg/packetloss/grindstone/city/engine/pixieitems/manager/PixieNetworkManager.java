@@ -14,7 +14,7 @@ public interface PixieNetworkManager {
     CompletableFuture<Optional<Integer>> selectNetwork(UUID namespace, String name);
 
     CompletableFuture<Optional<NewSourceResult>> addSource(int networkID, Block block);
-    CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block);
+    CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block, boolean ignoreContents);
 
     boolean maybeExpandChest(Block block);
 

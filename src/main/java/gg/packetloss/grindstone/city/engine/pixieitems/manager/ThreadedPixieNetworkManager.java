@@ -255,9 +255,9 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block) {
+    public CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block, boolean ignoreContents) {
         Inventory chestInventory = ((Chest) block.getState()).getInventory();
-        Set<String> itemNames = extractItemNames(chestInventory);
+        Set<String> itemNames = ignoreContents ? Set.of() : extractItemNames(chestInventory);
 
         Location[] locations = getLocationsToAdd(block).toArray(new Location[0]);
 

@@ -92,8 +92,9 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
         // We should always have a network ID if a command action is set.
         int networkID = session.getCurrentNetworkID().get();
-        switch (session.getCurrentCommand()) {
-            case ADD_SOURCE:
+        PixieCommand command = session.getCurrentCommand();
+        switch (command) {
+            case ADD_SOURCE: {
                 manager.addSource(networkID, block).thenAccept((optResult) -> {
                     if (optResult.isEmpty()) {
                         ChatUtil.sendError(player, "An error occurred while attempting to create this source.");
@@ -108,8 +109,12 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     }
                 });
                 break;
+            }
             case ADD_SINK:
-                manager.addSink(networkID, block).thenAccept((optResult) -> {
+            case ADD_VOID_SINK: {
+                boolean ignoreContents = command == PixieCommand.ADD_VOID_SINK;
+
+                manager.addSink(networkID, block, ignoreContents).thenAccept((optResult) -> {
                     if (optResult.isEmpty()) {
                         ChatUtil.sendError(player, "An error occurred while attempting to create this sink.");
                         return;
@@ -128,6 +133,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     }
                 });
                 break;
+            }
         }
 
         session.performedAction();
@@ -269,12 +275,12 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             ChatUtil.sendNotice(sender, "Punch the chest you'd like to make a source.");
         }
 
-        @Command(aliases = {"sink"}, desc = "Add a sink to the network", min = 0, max = 0)
+        @Command(aliases = {"sink"}, desc = "Add a sink to the network", flags = "v", min = 0, max = 0)
         public void addSinkCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player owner = PlayerUtil.checkPlayer(sender);
 
             PixieCommandSession session = sessions.getSession(PixieCommandSession.class, owner);
-            session.setCommandAction(PixieCommand.ADD_SINK);
+            session.setCommandAction(args.hasFlag('v' ) ? PixieCommand.ADD_VOID_SINK : PixieCommand.ADD_SINK);
 
             ChatUtil.sendNotice(sender, "Punch the chest you'd like to make a sink.");
         }
