@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import gg.packetloss.grindstone.EggComponent;
 import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.egg.EggHatchEvent;
@@ -22,23 +23,17 @@ import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
-import org.bukkit.ChatColor;
-import org.bukkit.EntityEffect;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -58,16 +53,19 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     private final Server server = CommandBook.server();
 
     private AdminComponent adminComponent;
+    private EggComponent eggComponent;
 
     private final Random random = new Random();
     private BaseBlockRecordIndex treeMap = new BaseBlockRecordIndex();
     private BaseBlockRecordIndex generalMap = new BaseBlockRecordIndex();
     private Set<Player> noTeeth = new HashSet<>();
 
-    public EnchantedForest(World world, ProtectedRegion region, AdminComponent adminComponent) {
+    public EnchantedForest(World world, ProtectedRegion region, AdminComponent adminComponent,
+                           EggComponent eggComponent) {
 
         super(world, region);
         this.adminComponent = adminComponent;
+        this.eggComponent = eggComponent;
 
         reloadData();
 
@@ -265,6 +263,17 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
                 treeMap.addItem(new BlockRecord(block));
             } else {
+                if (block.getType() != Material.LEAVES) {
+                    if (EnvironmentUtil.isDayTime(getWorld().getTime())) {
+                        if (!eggComponent.isEasterActive(player) && ChanceUtil.getChance(30)) {
+                            eggComponent.dropEggs(EggComponent.EggType.EASTER, block.getLocation());
+                        }
+                    } else {
+                        if (!eggComponent.isHalloweenActive(player) && ChanceUtil.getChance(45)) {
+                            eggComponent.dropEggs(EggComponent.EggType.HALLOWEEN, block.getLocation());
+                        }
+                    }
+                }
                 generalMap.addItem(new BlockRecord(block));
             }
         } else {
@@ -354,18 +363,6 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             event.setCancelled(true);
         }
     }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onEntityDeath(EntityDeathEvent event) {
-
-        Entity ent = event.getEntity();
-
-        if (ent instanceof Slime && contains(ent)) {
-
-            event.getDrops().removeIf(next -> next != null && next.getTypeId() == ItemID.SLIME_BALL);
-        }
-    }
-
 
     @EventHandler(ignoreCancelled = true)
     public void onEggHatch(EggHatchEvent event) {

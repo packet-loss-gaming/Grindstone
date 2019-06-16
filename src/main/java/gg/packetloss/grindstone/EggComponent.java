@@ -26,6 +26,7 @@ import gg.packetloss.grindstone.events.egg.EggHatchEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -149,96 +150,143 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         else sessions.getSession(EggState.class, player).setEggDrop(eggType, false);
     }
 
+    private void attemptEggDrop(EggEntity egg, Location location) {
+        EggDropEvent eggDropEvent = new EggDropEvent(egg, location);
+        server.getPluginManager().callEvent(eggDropEvent);
+        if (!eggDropEvent.isCancelled()) {
+            location.getWorld().dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toSpawnEgg());
+        }
+    }
+
+    private void dropEasterEgg(Location location) {
+        EggEntity attemptedEgg;
+        switch (ChanceUtil.getRandom(8)) {
+            case 1:
+                attemptedEgg = EggEntity.BAT;
+                break;
+            case 2:
+                attemptedEgg = EggEntity.CHICKEN;
+                break;
+            case 3:
+                attemptedEgg = EggEntity.COW;
+                break;
+            case 4:
+                attemptedEgg = EggEntity.MUSHROOM_COW;
+                break;
+            case 5:
+                attemptedEgg = EggEntity.OCELOT;
+                break;
+            case 6:
+                attemptedEgg = EggEntity.WOLF;
+                break;
+            case 7:
+                attemptedEgg = EggEntity.SHEEP;
+                break;
+            case 8:
+            default:
+                attemptedEgg = EggEntity.PIG;
+                break;
+        }
+        attemptEggDrop(attemptedEgg, location);
+    }
+
+    private void dropHalloweenEgg(Location location) {
+        EggEntity attemptedEgg;
+        switch (ChanceUtil.getRandom(8)) {
+            case 1:
+                attemptedEgg = EggEntity.ENDERMAN;
+                break;
+            case 2:
+                attemptedEgg = EggEntity.SPIDER;
+                break;
+            case 3:
+                attemptedEgg = EggEntity.CAVE_SPIDER;
+                break;
+            case 4:
+                attemptedEgg = EggEntity.SLIME;
+                break;
+            case 5:
+                attemptedEgg = EggEntity.MAGMA_CUBE;
+                break;
+            case 6:
+                attemptedEgg = EggEntity.WITCH;
+                break;
+            case 7:
+                attemptedEgg = EggEntity.SKELETON;
+                break;
+            case 8:
+            default:
+                attemptedEgg = EggEntity.ZOMBIE;
+                break;
+        }
+        attemptEggDrop(attemptedEgg, location);
+    }
+
+    private void dropEgg(EggType eggType, Location location) {
+        switch (eggType) {
+            case EASTER:
+                dropEasterEgg(location);
+                break;
+            case HALLOWEEN:
+                dropHalloweenEgg(location);
+                break;
+        }
+    }
+
+    private void dropEasterEggs(Location location) {
+        for (short c = 0; c < ChanceUtil.getRangedRandom(7, 17); ++c) {
+            dropEgg(EggType.EASTER, location);
+        }
+    }
+
+    private void dropHalloweenEggs(Location location) {
+        for (short c = 0; c < ChanceUtil.getRangedRandom(7, 13); ++c) {
+            dropEgg(EggType.HALLOWEEN, location);
+        }
+    }
+
+    public void dropEggs(EggType eggType, Location location) {
+        switch (eggType) {
+            case EASTER:
+                dropEasterEggs(location);
+                break;
+            case HALLOWEEN:
+                dropHalloweenEggs(location);
+                break;
+        }
+    }
+
+    public boolean isEasterActive() {
+        return LocalDate.now().getMonth().equals(Month.APRIL) && config.enableEasterEggs;
+    }
+
+    public boolean isEasterActive(Player player) {
+        return isEasterActive() && allowedEggs(player, EggType.EASTER);
+    }
+
+    public boolean isHalloweenActive() {
+        return LocalDate.now().getMonth().equals(Month.OCTOBER) && config.enableHalloweenEggs;
+    }
+
+    public boolean isHalloweenActive(Player player) {
+        return isHalloweenActive() && allowedEggs(player, EggType.HALLOWEEN);
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
 
         Player player = event.getPlayer();
 
         Block block = event.getBlock();
-        World world = block.getWorld();
         Material blockType = block.getType();
 
         if (EnvironmentUtil.isShrubBlock(blockType)) {
-            if (LocalDate.now().getMonth().equals(Month.APRIL)
-                    && allowedEggs(player, EggType.EASTER)
-                    && config.enableEasterEggs && !ChanceUtil.getChance(5, 6)) {
-
-                for (short c = 0; c < ChanceUtil.getRangedRandom(7, 17); c++) {
-                    EggEntity attemptedEgg;
-                    switch (ChanceUtil.getRandom(8)) {
-                        case 1:
-                            attemptedEgg = EggEntity.BAT;
-                            break;
-                        case 2:
-                            attemptedEgg = EggEntity.CHICKEN;
-                            break;
-                        case 3:
-                            attemptedEgg = EggEntity.COW;
-                            break;
-                        case 4:
-                            attemptedEgg = EggEntity.MUSHROOM_COW;
-                            break;
-                        case 5:
-                            attemptedEgg = EggEntity.OCELOT;
-                            break;
-                        case 6:
-                            attemptedEgg = EggEntity.WOLF;
-                            break;
-                        case 7:
-                            attemptedEgg = EggEntity.SHEEP;
-                            break;
-                        case 8:
-                        default:
-                            attemptedEgg = EggEntity.PIG;
-                            break;
-                    }
-                    EggDropEvent eggDropEvent = new EggDropEvent(attemptedEgg, block.getLocation());
-                    server.getPluginManager().callEvent(eggDropEvent);
-                    if (!eggDropEvent.isCancelled()) {
-                        world.dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toSpawnEgg());
-                    }
-                }
+            if (isEasterActive(player) && !ChanceUtil.getChance(5, 6)) {
+                dropEggs(EggType.EASTER, block.getLocation());
             }
 
-            if (LocalDate.now().getMonth().equals(Month.OCTOBER)
-                    && allowedEggs(player, EggType.HALLOWEEN)
-                    && config.enableHalloweenEggs && !ChanceUtil.getChance(7, 8)) {
-
-                for (short c = 0; c < ChanceUtil.getRangedRandom(7, 13); c++) {
-                    EggEntity attemptedEgg;
-                    switch (ChanceUtil.getRandom(8)) {
-                        case 1:
-                            attemptedEgg = EggEntity.ENDERMAN;
-                            break;
-                        case 2:
-                            attemptedEgg = EggEntity.SPIDER;
-                            break;
-                        case 3:
-                            attemptedEgg = EggEntity.CAVE_SPIDER;
-                            break;
-                        case 4:
-                            attemptedEgg = EggEntity.SLIME;
-                            break;
-                        case 5:
-                            attemptedEgg = EggEntity.MAGMA_CUBE;
-                            break;
-                        case 6:
-                            attemptedEgg = EggEntity.WITCH;
-                            break;
-                        case 7:
-                            attemptedEgg = EggEntity.SKELETON;
-                            break;
-                        case 8:
-                        default:
-                            attemptedEgg = EggEntity.ZOMBIE;
-                            break;
-                    }
-                    EggDropEvent eggDropEvent = new EggDropEvent(attemptedEgg, block.getLocation());
-                    server.getPluginManager().callEvent(eggDropEvent);
-                    if (!eggDropEvent.isCancelled()) {
-                        world.dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toSpawnEgg());
-                    }
-                }
+            if (isHalloweenActive(player) && !ChanceUtil.getChance(7, 8)) {
+                dropEggs(EggType.HALLOWEEN, block.getLocation());
             }
         }
     }
@@ -287,7 +335,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         return false;
     }
 
-    private enum EggType {
+    public enum EggType {
         EASTER,
         HALLOWEEN,
         INVALID

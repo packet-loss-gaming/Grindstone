@@ -22,6 +22,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.EggComponent;
 import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.arena.*;
@@ -49,7 +50,7 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Arena", desc = "Arena Control.")
 @Depend(components = {
         AdminComponent.class, JailComponent.class, PrayerComponent.class, SacrificeComponent.class,
-        ImpersonalComponent.class, RestorationUtil.class
+        ImpersonalComponent.class, RestorationUtil.class, EggComponent.class
 }, plugins = {"WorldEdit", "WorldGuard"})
 public class ArenaComponent extends BukkitComponent implements Listener, Runnable {
 
@@ -67,6 +68,8 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     private ImpersonalComponent impersonalComponent;
     @InjectComponent
     private RestorationUtil restorationUtil;
+    @InjectComponent
+    private EggComponent eggComponent;
 
     private final World world = Bukkit.getWorld("City");
     private LocalConfiguration config;
@@ -174,7 +177,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             for (String region : config.enchantedForest) {
                 try {
                     ProtectedRegion pr = mgr.get(world).getRegion(region);
-                    arenas.add(new EnchantedForest(world, pr, adminComponent));
+                    arenas.add(new EnchantedForest(world, pr, adminComponent, eggComponent));
                     if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
