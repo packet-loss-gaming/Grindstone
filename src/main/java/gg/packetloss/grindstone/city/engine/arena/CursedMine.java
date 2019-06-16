@@ -655,15 +655,16 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         final Player player = event.getPlayer();
         final Block block = event.getBlock();
-        final int typeId = block.getTypeId();
+
+        if (adminComponent.isAdmin(player) || !contains(block)) {
+            return;
+        }
 
         ItemStack itemInHand = player.getItemInHand();
 
-        if (!adminComponent.isAdmin(player)
-                && contains(block)
-                && EnvironmentUtil.isValuableOre(block)
-                && itemInHand != null
-                && ItemUtil.isPickAxe(itemInHand.getTypeId())) {
+        if (EnvironmentUtil.isValuableOre(block)
+                && itemInHand != null && ItemUtil.isPickAxe(itemInHand.getTypeId())) {
+            int typeId = block.getTypeId();
 
             if (ChanceUtil.getChance(4)) {
                 ItemStack rawDrop = EnvironmentUtil.getOreDrop(block.getType(), hasSilkTouch(itemInHand));
@@ -692,7 +693,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
             recordSystem.addItem(player.getName(), new BlockRecord(block));
             restorationUtil.blockAndLogEvent(event);
-        } else if (!adminComponent.isAdmin(player) && contains(block)) {
+        } else {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
         }

@@ -246,10 +246,11 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         final Player player = event.getPlayer();
         final Block block = event.getBlock();
 
-        if (!adminComponent.isAdmin(player)
-                && contains(block)
-                && (block.getTypeId() == BlockID.LOG || EnvironmentUtil.isShrubBlock(block))) {
+        if (adminComponent.isAdmin(player) || !contains(block)) {
+            return;
+        }
 
+        if (block.getTypeId() == BlockID.LOG || EnvironmentUtil.isShrubBlock(block)) {
             if (block.getTypeId() == BlockID.LOG) {
                 short c = 0;
                 for (ItemStack aItemStack : getRandomDropSet(player)) {
@@ -266,7 +267,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             } else {
                 generalMap.addItem(new BlockRecord(block));
             }
-        } else if (!adminComponent.isAdmin(player) && contains(block)) {
+        } else {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
         }

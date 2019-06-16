@@ -13,7 +13,6 @@ import com.sk89q.commandbook.commands.PaginatedResult;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -44,7 +43,6 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryAction;
@@ -116,19 +114,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
         if (permissionProvider != null) permission = permissionProvider.getProvider();
 
         return (permission != null);
-    }
-
-    private boolean isDisabledBlock(Block block) {
-
-        return isDisabledBlock(block.getTypeId());
-    }
-
-    private boolean isDisabledBlock(int block) {
-
-        for (int tryBlock : worldEdit().getLocalConfiguration().disallowedBlocks) {
-            if (block == tryBlock) return true;
-        }
-        return false;
     }
 
     public boolean hasInventoryLoaded(UUID playerID) {
@@ -408,15 +393,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     return;
                 }
             }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockBreak(BlockBreakEvent event) {
-        Block block = event.getBlock();
-
-        if (isDisabledBlock(block) || block.getTypeId() == BlockID.STONE_BRICK && block.getData() == 3) {
-            block.breakNaturally(null);
         }
     }
 
