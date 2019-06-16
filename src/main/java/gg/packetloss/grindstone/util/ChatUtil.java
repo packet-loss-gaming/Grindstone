@@ -43,11 +43,21 @@ public class ChatUtil {
         }
     }
 
-    public static void sendDebug(Object o) {
-        Bukkit.broadcast(
-                ChatColor.BLACK + "[" + ChatColor.DARK_RED + "DEBUG" + ChatColor.BLACK + "] "
-                        + ChatColor.GRAY + o,
-                "aurora.debug");
+    public static void sendDebug(Object... objects) {
+        StringBuilder message  = new StringBuilder(
+                ChatColor.BLACK + "[" + ChatColor.DARK_RED + "DEBUG" + ChatColor.BLACK + "] " + ChatColor.GRAY
+        );
+
+        boolean isFirst = true;
+        for (Object obj : objects) {
+            if (!isFirst) {
+                message.append(" ");
+            }
+            message.append(obj);
+            isFirst = false;
+        }
+
+        Bukkit.broadcast(message.toString(), "aurora.debug");
     }
 
     public static void sendNotice(String playerName, String notice) {
