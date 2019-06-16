@@ -340,7 +340,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         // Fire an event for the bed spawn.
         ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(
-          player, bedLocation.get(), ChanceUtil.getRandom(multiplier)
+          player, freeBedLocation.get(), ChanceUtil.getRandom(multiplier)
         );
         server.getPluginManager().callEvent(apocalypseEvent);
         if (apocalypseEvent.isCancelled()) {
