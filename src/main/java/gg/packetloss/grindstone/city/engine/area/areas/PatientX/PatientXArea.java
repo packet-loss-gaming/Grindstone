@@ -25,6 +25,8 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.player.AdminToolkit;
 import gg.packetloss.grindstone.util.player.PlayerState;
+import gg.packetloss.hackbook.AttributeBook;
+import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -38,6 +40,7 @@ import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
@@ -437,6 +440,13 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
         // Handle name
         boss.setCustomName("Patient X");
 
+        try {
+            AttributeBook.setAttribute(boss, AttributeBook.Attribute.MOVEMENT_SPEED, .5);
+            AttributeBook.setAttribute(boss, AttributeBook.Attribute.FOLLOW_RANGE, 150);
+        } catch (UnsupportedFeatureException ex) {
+            ex.printStackTrace();
+        }
+
         ChatUtil.sendWarning(getContained(Player.class), "Ice to meet you again!");
     }
 
@@ -465,7 +475,18 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
         lastTelep = System.currentTimeMillis();
 
         boss.teleport(getRandomDest());
-        ChatUtil.sendNotice(getContained(Player.class), "Pause for a second chap, I need to answer the teleport!");
+
+        List<Player> players = getContained(Player.class).stream().sorted((p1, p2) -> {
+            double p1Distance = p1.getLocation().distanceSquared(boss.getLocation());
+            double p2Distance = p2.getLocation().distanceSquared(boss.getLocation());
+            return Double.compare(p1Distance, p2Distance);
+        }).collect(Collectors.toList());
+
+        if (!players.isEmpty()) {
+            boss.setTarget(players.get(0));
+        }
+
+        ChatUtil.sendNotice(players, "Pause for a second chap, I need to answer the teleport!");
     }
 
     @Override
