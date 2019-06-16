@@ -348,7 +348,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 itemStack = new ItemStack(BlockID.YELLOW_FLOWER);
                 break;
             case 5:
-                itemStack = new ItemStack(ItemID.INK_SACK, 1, (short) (ChanceUtil.getRandom(16) - 1));
+                itemStack = new ItemStack(ItemID.PUMPKIN_PIE);
                 break;
             case 6:
                 itemStack = new ItemStack(ItemID.SEEDS);
