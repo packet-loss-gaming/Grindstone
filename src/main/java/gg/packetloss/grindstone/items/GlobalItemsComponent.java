@@ -112,6 +112,9 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
         // Slime
         summationCondenser.addSupport(new ItemStack(Material.SLIME_BALL, 9), new ItemStack(Material.SLIME_BLOCK, 1));
+
+        // Wheat
+        summationCondenser.addSupport(new ItemStack(Material.WHEAT, 9), new ItemStack(Material.HAY_BLOCK, 1));
     }
 
     private MigrationManager migrationManager = new MigrationManager();
