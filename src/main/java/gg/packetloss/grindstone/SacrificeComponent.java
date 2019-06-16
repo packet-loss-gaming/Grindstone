@@ -22,6 +22,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
@@ -48,8 +49,11 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -64,7 +68,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Sacrifice", desc = "Sacrifice! Sacrifice! Sacrifice!")
-@Depend(components = {SessionComponent.class, PrayerComponent.class})
+@Depend(components = {SessionComponent.class, PrayerComponent.class, AdminComponent.class})
 public class SacrificeComponent extends BukkitComponent implements Listener, Runnable {
 
     private static final CommandBook inst = CommandBook.inst();
@@ -75,6 +79,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     private SessionComponent sessions;
     @InjectComponent
     private PrayerComponent prayer;
+    @InjectComponent
+    private AdminComponent admin;
 
     private LocalConfiguration config;
     private Map<Integer, Integer> entityTaskId = new HashMap<>();
@@ -432,6 +438,29 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }
     }
 
+    public boolean isSacrificeBlock(Block block) {
+        return block.getTypeId() == config.getSacrificialBlockId() &&
+                block.getData() == config.getSacrificialBlockData();
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent event) {
+        Block block = event.getBlock();
+
+        if (isSacrificeBlock(block)) {
+            event.setDropItems(false);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Block block = event.getBlock();
+
+        if (isSacrificeBlock(block) && !admin.isAdmin(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
     @EventHandler
     public void onEntityCombust(EntityCombustEvent event) {
 
@@ -449,9 +478,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     public void createFire(Block origin) {
-
-        if (origin.getTypeId() != config.getSacrificialBlockId()
-                || origin.getData() != config.getSacrificialBlockData()) return;
+        if (!isSacrificeBlock(origin)) return;
 
         final Block above = origin.getRelative(BlockFace.UP);
         if (above.getTypeId() == BlockID.AIR) {
@@ -483,9 +510,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             } else {
                 final Block searchBlock = item.getLocation().getBlock().getRelative(BlockFace.DOWN);
 
-                int blockTypeId = searchBlock.getTypeId();
-                int blockData = searchBlock.getData();
-                if ((blockTypeId == config.sacrificialBlockId) && (blockData == config.sacrificialBlockData)) {
+                if (isSacrificeBlock(searchBlock)) {
                     try {
                         // Create the event here
                         PlayerSacrificeItemEvent sacrificeItemEvent = new PlayerSacrificeItemEvent(player, searchBlock, item.getItemStack());
@@ -514,8 +539,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         for (Player player : server.getOnlinePlayers()) {
             Location playerLoc = player.getLocation();
             Block searchBlock = playerLoc.getBlock().getRelative(BlockFace.DOWN, 3);
-            if (searchBlock.getTypeId() == config.sacrificialBlockId
-                    && searchBlock.getData() == config.sacrificialBlockData) {
+            if (isSacrificeBlock(searchBlock)) {
                 Location airLoc = LocationUtil.findRandomLoc(searchBlock, 3);
 
                 try {
