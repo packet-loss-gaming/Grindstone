@@ -130,7 +130,6 @@ public class ChatUtil {
     }
 
     public static char loonyCharacter() {
-
         switch (ChanceUtil.getRandom(7)) {
             case 7:
                 return '?';
@@ -150,7 +149,6 @@ public class ChatUtil {
     }
 
     public static ChatColor loonyColor() {
-
         switch (ChanceUtil.getRandom(6)) {
             case 6:
                 return ChatColor.RED;
@@ -167,6 +165,25 @@ public class ChatUtil {
             default:
                 return ChatColor.WHITE;
         }
+    }
+
+    public static String loonizeWord(String word) {
+        return loonizeWord(word, true);
+    }
+
+    public static String loonizeWord(String word, boolean useColor) {
+        StringBuilder loonyFilteredString = new StringBuilder();
+        if (useColor) {
+            for (int f = 0; f < word.length(); f++) {
+                loonyFilteredString.append(ChatUtil.loonyColor()).append(ChatUtil.loonyCharacter());
+            }
+        } else {
+            for (int f = 0; f < word.length(); f++) {
+                loonyFilteredString.append(ChatUtil.loonyCharacter());
+            }
+        }
+
+        return loonyFilteredString.toString();
     }
 
     public static String runeizeString(String string) {

@@ -10,7 +10,7 @@ import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.util.DamageUtil;
-import org.bukkit.Effect;
+import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -28,9 +28,7 @@ public class HealingLight extends EntityAttack implements MeleeSpecial {
         }
 
         owner.setHealth(Math.min(owner.getMaxHealth(), owner.getHealth() + 5));
-        for (int i = 0; i < 4; i++) {
-            target.getWorld().playEffect(target.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
-        }
+        SingleBlockParticleEffect.burstOfFlames(target.getLocation());
 
         DamageUtil.damageWithSpecialAttack(owner, target, this, 20);
         inform("Your weapon glows dimly.");

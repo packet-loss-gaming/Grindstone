@@ -19,15 +19,19 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.database.IOUtil;
+import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
 import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Rabbit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -45,6 +49,8 @@ import org.bukkit.util.Vector;
 import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.util.ChatUtil.loonizeWord;
 
 public class EnchantedForest extends AbstractRegionedArena implements MonitoredArena, PersistentArena, Listener {
 
@@ -85,6 +91,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         equalize();
         restoreBlocks();
+
+        killKillerRabbits();
     }
 
     @Override
@@ -117,6 +125,21 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         generalMap.revertByTime(secMin);
 
         writeData(true);
+    }
+
+    public void killKillerRabbits() {
+        for (Rabbit rabbit : getContained(Rabbit.class)) {
+            if (rabbit.getRabbitType() != Rabbit.Type.THE_KILLER_BUNNY) {
+                continue;
+            }
+
+            if (rabbit.getLocation().add(0, -1, 0).getBlock().getType() == Material.GRASS) {
+                continue;
+            }
+
+            rabbit.setHealth(0);
+            SingleBlockParticleEffect.burstOfFlames(rabbit.getLocation());
+        }
     }
 
     private List<ItemStack> getRandomDropSet(CommandSender player) {
@@ -263,17 +286,31 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
                 treeMap.addItem(new BlockRecord(block));
             } else {
-                if (block.getType() != Material.LEAVES) {
-                    if (EnvironmentUtil.isDayTime(getWorld().getTime())) {
-                        if (!eggComponent.isEasterActive(player) && ChanceUtil.getChance(30)) {
-                            eggComponent.dropEggs(EggComponent.EggType.EASTER, block.getLocation());
-                        }
-                    } else {
-                        if (!eggComponent.isHalloweenActive(player) && ChanceUtil.getChance(45)) {
-                            eggComponent.dropEggs(EggComponent.EggType.HALLOWEEN, block.getLocation());
-                        }
+                if (ChanceUtil.getChance(450)) {
+                    Rabbit rabbit = (Rabbit) getWorld().spawnEntity(block.getLocation(), EntityType.RABBIT);
+                    player.chat("Awwww a cute little bunny!");
+
+                    if (ChanceUtil.getChance(5)) {
+                        rabbit.setRabbitType(Rabbit.Type.THE_KILLER_BUNNY);
+                        rabbit.setTarget(player);
+                        rabbit.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(50);
+
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            player.chat("OH " + loonizeWord("four") + ChatColor.WHITE + "!!!");
+                        }, 10);
                     }
                 }
+
+                if (EnvironmentUtil.isDayTime(getWorld().getTime())) {
+                    if (!eggComponent.isEasterActive(player) && ChanceUtil.getChance(30)) {
+                        eggComponent.dropEggs(EggComponent.EggType.EASTER, block.getLocation());
+                    }
+                } else {
+                    if (!eggComponent.isHalloweenActive(player) && ChanceUtil.getChance(45)) {
+                        eggComponent.dropEggs(EggComponent.EggType.HALLOWEEN, block.getLocation());
+                    }
+                }
+
                 generalMap.addItem(new BlockRecord(block));
             }
         } else {

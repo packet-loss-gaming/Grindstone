@@ -14,4 +14,10 @@ public class SingleBlockParticleEffect {
     public static void puffOfSmoke(Location loc) {
         loc.getWorld().playEffect(loc, Effect.SMOKE, BlockFace.UP);
     }
+
+    public static void burstOfFlames(Location loc) {
+        for (int i = 0; i < 4; i++) {
+            loc.getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 0);
+        }
+    }
 }

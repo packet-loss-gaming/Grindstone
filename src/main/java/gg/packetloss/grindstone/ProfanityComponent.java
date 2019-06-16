@@ -33,6 +33,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import static gg.packetloss.grindstone.util.ChatUtil.loonizeWord;
+
 @ComponentInformation(friendlyName = "Profanity", desc = "Kill Profanity.")
 public class ProfanityComponent extends BukkitComponent implements Listener {
 
@@ -184,24 +186,4 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
         return out.toString();
     }
 
-    public String loonizeWord(String word) {
-
-        return loonizeWord(word, true);
-    }
-
-    public String loonizeWord(String word, boolean useColor) {
-
-        StringBuilder loonyFilteredString = new StringBuilder();
-        if (useColor) {
-            for (int f = 0; f < word.length(); f++) {
-                loonyFilteredString.append(ChatUtil.loonyColor()).append(ChatUtil.loonyCharacter());
-            }
-        } else {
-            for (int f = 0; f < word.length(); f++) {
-                loonyFilteredString.append(ChatUtil.loonyCharacter());
-            }
-        }
-
-        return loonyFilteredString.toString();
-    }
 }
