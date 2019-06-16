@@ -91,6 +91,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         summationCondenser.addSupport(new ItemStack(ItemID.COAL, 9), new ItemStack(BlockID.COAL_BLOCK, 1));
 
         // Iron
+        summationCondenser.addSupport(new ItemStack(Material.IRON_NUGGET, 9), new ItemStack(Material.IRON_INGOT, 1));
         summationCondenser.addSupport(new ItemStack(ItemID.IRON_BAR, 9), new ItemStack(BlockID.IRON_BLOCK, 1));
 
         // Gold
