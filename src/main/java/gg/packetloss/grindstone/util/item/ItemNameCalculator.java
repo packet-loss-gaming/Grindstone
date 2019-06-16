@@ -1,6 +1,7 @@
 package gg.packetloss.grindstone.util.item;
 
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.util.item.legacy.ItemType;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;

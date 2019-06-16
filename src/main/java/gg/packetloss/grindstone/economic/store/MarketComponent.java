@@ -30,7 +30,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
-import gg.packetloss.grindstone.util.item.ItemType;
+import gg.packetloss.grindstone.util.item.legacy.ItemType;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;

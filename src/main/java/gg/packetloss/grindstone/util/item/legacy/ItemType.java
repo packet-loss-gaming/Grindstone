@@ -1,14 +1,26 @@
 /*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * WorldEdit, a Minecraft world manipulation toolkit
+ * Copyright (C) sk89q <http://www.sk89q.com>
+ * Copyright (C) WorldEdit team and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package gg.packetloss.grindstone.util.item;
+package gg.packetloss.grindstone.util.item.legacy;
 
 import com.sk89q.util.StringUtil;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
+import gg.packetloss.grindstone.util.item.BaseItem;
 
 import java.util.*;
 
@@ -227,6 +239,11 @@ public enum ItemType {
     DARK_OAK_LOG(BlockID.LOG2, 1, "Dark Oak Log", "darkoaklog", "darkoaklogs"),
     ACACIA_STAIRS(BlockID.ACACIA_STAIRS, "Acacia Wood Stairs", "acaciawoodstairs", "acaciastairs"),
     DARK_OAK_STAIRS(BlockID.DARK_OAK_STAIRS, "Dark Oak Wood Stairs", "darkoakwoodstairs", "darkoakstairs"),
+    SLIME(BlockID.SLIME, "Slime Block", "slimeblock"),
+    BARRIER(BlockID.BARRIER, "Barrier", "barrier", "wall", "worldborder", "edge"),
+    IRON_TRAP_DOOR(BlockID.IRON_TRAP_DOOR, "Iron Trap Door", "irontrapdoor"),
+    PRISMARINE(BlockID.PRISMARINE, "Prismarine", "prismarine"),
+    SEA_LANTERN(BlockID.SEA_LANTERN, "Sea Lantern", "sealantern"),
     HAY_BLOCK(BlockID.HAY_BLOCK, "Hay Block", "hayblock", "haybale", "wheatbale"),
     CARPET(BlockID.CARPET, 0, "Carpet", "carpet"),
     HARDENED_CLAY(BlockID.HARDENED_CLAY, "Hardened Clay", "hardenedclay", "hardclay"),
@@ -238,6 +255,84 @@ public enum ItemType {
     LARGE_FERN(BlockID.DOUBLE_PLANT, 3, "Large Fern", "largefern"),
     ROSE_BUSH(BlockID.DOUBLE_PLANT, 4, "Rose Bush", "rosebush"),
     PEONY(BlockID.DOUBLE_PLANT, 5, "Peony", "peony"),
+    STANDING_BANNER(BlockID.STANDING_BANNER, "Standing Banner", "standingbannear", "banner"),
+    WALL_BANNER(BlockID.WALL_BANNER, "Wall Banner", "wallbanner"),
+    DAYLIGHT_SENSOR_INVERTED(BlockID.DAYLIGHT_SENSOR_INVERTED, "Inverted Daylight Sensor", "inverteddaylight", "inverteddaylightsensor"),
+    RED_SANDSTONE(BlockID.RED_SANDSTONE, "Red Sandstone", "redsandstone"),
+    RED_SANDSTONE_STAIRS(BlockID.RED_SANDSTONE_STAIRS, "Red Sandstone Stairs", "redsandstonestairs"),
+    DOUBLE_STEP2(BlockID.DOUBLE_STEP2, "Double Step 2", "doublestep2", "doubleslab2", "doublestoneslab2", "doublestonestep2"),
+    STEP2(BlockID.STEP2, "Step 2", "step2", "slab2", "stonestep2", "stoneslab2"),
+    SPRUCE_FENCE_GATE(BlockID.SPRUCE_FENCE_GATE, "Spruce Fence Gate", "spurcefencegate"),
+    BIRCH_FENCE_GATE(BlockID.BIRCH_FENCE_GATE, "Birch Fence Gate", "birchfencegate"),
+    JUNGLE_FENCE_GATE(BlockID.JUNGLE_FENCE_GATE, "Jungle Fence Gate", "junglefencegate"),
+    DARK_OAK_FENCE_GATE(BlockID.DARK_OAK_FENCE_GATE, "Dark Oak Fence Gate", "darkoakfencegate"),
+    ACACIA_FENCE_GATE(BlockID.ACACIA_FENCE_GATE, "Acacia Fence Gate", "acaciafencegate"),
+    SPRUCE_FENCE(BlockID.SPRUCE_FENCE, "Spruce Fence", "sprucefence"),
+    BIRCH_FENCE(BlockID.BIRCH_FENCE, "Birch Fence", "birchfence"),
+    JUNGLE_FENCE(BlockID.JUNGLE_FENCE, "Jungle Fence", "junglefence"),
+    DARK_OAK_FENCE(BlockID.DARK_OAK_FENCE, "Dark Oak Fence", "darkoakfence"),
+    ACACIA_FENCE(BlockID.ACACIA_FENCE, "Acacia Fence", "acaciafence"),
+    SPRUCE_DOOR(BlockID.SPRUCE_DOOR, "Spruce Door", "sprucedoor"),
+    BIRCH_DOOR(BlockID.BIRCH_DOOR, "Birch Door", "birchdoor"),
+    JUNGLE_DOOR(BlockID.JUNGLE_DOOR, "Jungle Door", "jungledoor"),
+    ACACIA_DOOR(BlockID.ACACIA_DOOR, "Acacia Door", "acaciadoor"),
+    DARK_OAK_DOOR(BlockID.DARK_OAK_DOOR, "Dark Oak Door", "darkoakdoor"),
+    END_ROD(BlockID.END_ROD, "End Rod", "endrod", "endtorch"),
+    CHORUS_PLANT(BlockID.CHORUS_PLANT, "Chorus Plant", "chorusplant", "chorusstem"),
+    CHORUS_FLOWER(BlockID.CHORUS_FLOWER, "Chorus Flower", "chorusflower"),
+    PURPUR_BLOCK(BlockID.PURPUR_BLOCK, "Purpur Block", "purpurblock", "blockpurpur"),
+    PURPUR_PILLAR(BlockID.PURPUR_PILLAR, "Purpur Pillar", "purpurpillar"),
+    PURPUR_STAIRS(BlockID.PURPUR_STAIRS, "Purpur Stairs", "purpurstairs"),
+    PURPUR_DOUBLE_SLAB(BlockID.PURPUR_DOUBLE_SLAB, "Purpur Double Slab", "purpurdoubleslab", "doubleslabpurpur", "doublepurpurslab"),
+    PURPUR_SLAB(BlockID.PURPUR_SLAB, "Purpur Slab", "purpurslab", "slabpurpur"),
+    END_BRICKS(BlockID.END_BRICKS, "End Bricks", "endbricks"),
+    BEETROOTS(BlockID.BEETROOTS, "Beetroots", "beetroots", "beetroot_plant"),
+    GRASS_PATH(BlockID.GRASS_PATH, "Grass Path", "grasspath", "dirtpath"),
+    END_GATEWAY(BlockID.END_GATEWAY, "End Gateway", "endgateway"),
+    REPEATING_COMMAND_BLOCK(BlockID.REPEATING_COMMAND_BLOCK, "Repeating Command Block", "repeatingcommandblock", "commandblockrepeating"),
+    CHAIN_COMMAND_BLOCK(BlockID.CHAIN_COMMAND_BLOCK, "Chain Command Block", "chaincommandblock", "commandblockchain"),
+    FROSTED_ICE(BlockID.FROSTED_ICE, "Frosted Ice", "frostedice", "frostwalkerice"),
+    MAGMA_BLOCK(BlockID.MAGMA_BLOCK, "Magma Block", "magmablock", "magma"),
+    NETHER_WART_BLOCK(BlockID.NETHER_WART_BLOCK, "Nether Wart Block", "netherwartblock"),
+    RED_NETHER_BRICK(BlockID.RED_NETHER_BRICK, "Red Nether Brick", "rednetherbrick", "netherbrickred"),
+    BONE_BLOCK(BlockID.BONE_BLOCK, "Bone Block", "boneblock", "blockbone", "fossil", "fossilblock", "blockfossil"),
+    STRUCTURE_VOID(BlockID.STRUCTURE_VOID, "Structure Void", "structurevoid", "structureair"),
+    OBSERVER(BlockID.OBSERVER, "Observer", "observer", "blockupdatedetector"),
+    SHULKER_BOX_WHITE(BlockID.SHULKER_BOX_WHITE, "White Shulker Box", "shulkerboxwhite"),
+    SHULKER_BOX_ORANGE(BlockID.SHULKER_BOX_ORANGE, "Orange Shulker Box", "shulkerboxorange"),
+    SHULKER_BOX_MAGENTA(BlockID.SHULKER_BOX_MAGENTA, "Magenta Shulker Box", "shulkerboxmagenta"),
+    SHULKER_BOX_LIGHT_BLUE(BlockID.SHULKER_BOX_LIGHT_BLUE, "Light Blue Shulker Box", "shulkerboxlightblue"),
+    SHULKER_BOX_YELLOW(BlockID.SHULKER_BOX_YELLOW, "Yellow Shulker Box", "shulkerboxyellow"),
+    SHULKER_BOX_LIME(BlockID.SHULKER_BOX_LIME, "Lime Shulker Box", "shulkerboxlime"),
+    SHULKER_BOX_PINK(BlockID.SHULKER_BOX_PINK, "Pink Shulker Box", "shulkerboxpink"),
+    SHULKER_BOX_GRAY(BlockID.SHULKER_BOX_GRAY, "Gray Shulker Box", "shulkerboxgray"),
+    SHULKER_BOX_LIGHT_GRAY(BlockID.SHULKER_BOX_LIGHT_GRAY, "Light Gray Shulker Box", "shulkerboxlightgray"),
+    SHULKER_BOX_CYAN(BlockID.SHULKER_BOX_CYAN, "Cyan Shulker Box", "shulkerboxcyan"),
+    SHULKER_BOX_PURPLE(BlockID.SHULKER_BOX_PURPLE, "Purple Shulker Box", "shulkerboxpurple"),
+    SHULKER_BOX_BLUE(BlockID.SHULKER_BOX_BLUE, "Blue Shulker Box", "shulkerboxblue"),
+    SHULKER_BOX_BROWN(BlockID.SHULKER_BOX_BROWN, "Brown Shulker Box", "shulkerboxbrown"),
+    SHULKER_BOX_GREEN(BlockID.SHULKER_BOX_GREEN, "Green Shulker Box", "shulkerboxgreen"),
+    SHULKER_BOX_RED(BlockID.SHULKER_BOX_RED, "Red Shulker Box", "shulkerboxred"),
+    SHULKER_BOX_BLACK(BlockID.SHULKER_BOX_BLACK, "Black Shulker Box", "shulkerboxblack"),
+    TERRACOTTA_WHITE(BlockID.TERRACOTTA_WHITE, "White Terracotta", "terracottawhite"),
+    TERRACOTTA_ORANGE(BlockID.TERRACOTTA_ORANGE, "Orange Terracotta", "terracottaorange"),
+    TERRACOTTA_MAGENTA(BlockID.TERRACOTTA_MAGENTA, "Magenta Terracotta", "terracottamagenta"),
+    TERRACOTTA_LIGHT_BLUE(BlockID.TERRACOTTA_LIGHT_BLUE, "Light Blue Terracotta", "terracottalightblue"),
+    TERRACOTTA_YELLOW(BlockID.TERRACOTTA_YELLOW, "Yellow Terracotta", "terracottayellow"),
+    TERRACOTTA_LIME(BlockID.TERRACOTTA_LIME, "Lime Terracotta", "terracottalime"),
+    TERRACOTTA_PINK(BlockID.TERRACOTTA_PINK, "Pink Terracotta", "terracottapink"),
+    TERRACOTTA_GRAY(BlockID.TERRACOTTA_GRAY, "Gray Terracotta", "terracottagray"),
+    TERRACOTTA_LIGHT_GRAY(BlockID.TERRACOTTA_LIGHT_GRAY, "Light Gray Terracotta", "terracottalightgray"),
+    TERRACOTTA_CYAN(BlockID.TERRACOTTA_CYAN, "Cyan Terracotta", "terracottacyan"),
+    TERRACOTTA_PURPLE(BlockID.TERRACOTTA_PURPLE, "Purple Terracotta", "terracottapurple"),
+    TERRACOTTA_BLUE(BlockID.TERRACOTTA_BLUE, "Blue Terracotta", "terracottablue"),
+    TERRACOTTA_BROWN(BlockID.TERRACOTTA_BROWN, "Brown Terracotta", "terracottabrown"),
+    TERRACOTTA_GREEN(BlockID.TERRACOTTA_GREEN, "Green Terracotta", "terracottagreen"),
+    TERRACOTTA_RED(BlockID.TERRACOTTA_RED, "Red Terracotta", "terracottared"),
+    TERRACOTTA_BLACK(BlockID.TERRACOTTA_BLACK, "Black Terracotta", "terracottablack"),
+    CONCRETE(BlockID.CONCRETE, "Concrete", "concrete"),
+    CONCRETE_POWDER(BlockID.CONCRETE_POWDER, "Concrete Powder", "concretepowder"),
+    STRUCTURE_BLOCK(BlockID.STRUCTURE_BLOCK, "Structure Block", "structureblock"),
 
     // Items
     IRON_SHOVEL(ItemID.IRON_SHOVEL, "Iron shovel", "ironshovel"),
@@ -404,11 +499,51 @@ public enum ItemType {
     NETHER_QUARTZ(ItemID.NETHER_QUARTZ, "Nether Quartz", "netherquartz", "quartz"),
     TNT_MINECART(ItemID.TNT_MINECART, "Minecart with TNT", "minecraftwithtnt", "tntminecart", "minecarttnt"),
     HOPPER_MINECART(ItemID.HOPPER_MINECART, "Minecart with Hopper", "minecraftwithhopper", "hopperminecart", "minecarthopper"),
+    PRISMARINE_SHARD(ItemID.PRISMARINE_SHARD, "Prismarine Shard", "prismarineshard"),
+    PRISMARINE_CRYSTALS(ItemID.PRISMARINE_CRYSTALS, "Prismarine Crystals", "prismarinecrystals", "prismarinecrystal"),
+    RABBIT(ItemID.RABBIT, "Raw Rabbit", "rawrabbit", "rabbit"), // raw and wriggling
+    COOKED_RABBIT(ItemID.COOKED_RABBIT, "Cooked Rabbit", "cookedrabbit"), // stupid fat hobbit, you ruins it
+    RABBIT_STEW(ItemID.RABBIT_STEW, "Rabbit Stew", "rabbitstew"), // po-ta-toes
+    RABBIT_FOOT(ItemID.RABBIT_FOOT, "Rabbit's Foot", "rabbitsfoot", "rabbitfoot"),
+    RABBIT_HIDE(ItemID.RABBIT_HIDE, "Rabbit Hide", "rabbithide", "rabbitskin"),
+    ARMOR_STAND(ItemID.ARMOR_STAND, "Armor Stand", "armorstand"),
     HORSE_ARMOR_IRON(ItemID.HORSE_ARMOR_IRON, "Iron Horse Armor", "ironhorsearmor", "ironbarding"),
     HORSE_ARMOR_GOLD(ItemID.HORSE_ARMOR_GOLD, "Gold Horse Armor", "goldhorsearmor", "goldbarding"),
     HORSE_ARMOR_DIAMOND(ItemID.HORSE_ARMOR_DIAMOND, "Diamond Horse Armor", "diamondhorsearmor", "diamondbarding"),
     LEAD(ItemID.LEAD, "Lead", "lead", "leash"),
     NAME_TAG(ItemID.NAME_TAG, "Name Tag", "nametag"),
+    COMMAND_BLOCK_MINECART(ItemID.COMMAND_BLOCK_MINECART, "Minecart with Command Block"),
+    MUTTON(ItemID.MUTTON, "Mutton", "mutton", "rawmutton"),
+    COOKED_MUTTON(ItemID.COOKED_MUTTON, "Cooked Mutton", "cookedmutton"),
+    BANNER(ItemID.BANNER, "Banner", "banner"),
+    END_CRYSTAL(ItemID.END_CRYSTAL, "End Crystal", "endcrystal"),
+    SPRUCE_DOOR_ITEM(ItemID.SPRUCE_DOOR, "Spruce Door", "sprucedoor"),
+    BIRCH_DOOR_ITEM(ItemID.BIRCH_DOOR, "Birch Door", "birchdoor"),
+    JUNGLE_DOOR_ITEM(ItemID.JUNGLE_DOOR, "Jungle Door", "jungledoor"),
+    ACACIA_DOOR_ITEM(ItemID.ACACIA_DOOR, "Acacia Door", "acaciadoor"),
+    DARK_OAK_DOOR_ITEM(ItemID.DARK_OAK_DOOR, "Dark Oak Door", "darkoakdoor"),
+    CHORUS_FRUIT(ItemID.CHORUS_FRUIT, "Chorus Fruit", "chorusfruit"),
+    CHORUS_FRUIT_POPPED(ItemID.CHORUS_FRUIT_POPPED, "Popped Chorus Fruit", "poppedchorusfruit", "chorusfruitpopped", "cookedchorusfruit"),
+    BEETROOT(ItemID.BEETROOT, "Beetroot", "beetroot"),
+    BEETROOT_SEEDS(ItemID.BEETROOT_SEEDS, "Beetroot Seeds", "beetrootseeds"),
+    BEETROOT_SOUP(ItemID.BEETROOT_SOUP, "Beetroot Soup", "beetrootsoup"),
+    DRAGON_BREATH(ItemID.DRAGON_BREATH, "Dragon Breath", "dragonbreath"),
+    SPLASH_POTION(ItemID.SPLASH_POTION, "Splash Potion", "splashpotion", "potionsplash"),
+    SPECTRAL_ARROW(ItemID.SPECTRAL_ARROW, "Spectral Arrow", "spectralarrow", "glowingarrow"),
+    TIPPED_ARROW(ItemID.TIPPED_ARROW, "Tipped Arrow", "tippedarrow", "potionarrow"),
+    LINGERING_POTION(ItemID.LINGERING_POTION, "Lingering Potion", "lingeringpotion", "potionlingering"),
+    SHIELD(ItemID.SHIELD, "Shield", "shield"),
+    ELYTRA(ItemID.ELYTRA, "Elytra", "elytra", "wings"),
+    SPRUCE_BOAT(ItemID.SPRUCE_BOAT, "Spruce Boat", "spruceboat", "boatspruce"),
+    BIRCH_BOAT(ItemID.BIRCH_BOAT, "Birch Boat", "birchboat", "boatbirch"),
+    JUNGLE_BOAT(ItemID.JUNGLE_BOAT, "Jungle Boat", "jungleboat", "boatjungle"),
+    ACACIA_BOAT(ItemID.ACACIA_BOAT, "Acacia Boat", "acaciaboat", "boatacacia"),
+    DARK_OAK_BOAT(ItemID.DARK_OAK_BOAT, "Dark Oak Boat", "darkoakboat", "boatdarkoak"),
+    TOTEM_OF_UNDYING(ItemID.TOTEM_OF_UNDYING, "Totem of Undying", "totemofundying", "undyingtotem"),
+    SHULKER_SHELL(ItemID.SHULKER_SHELL, "Shulker Shell", "shulkershell"),
+    IRON_NUGGET(ItemID.IRON_NUGGET, "Iron Nugget", "ironnugget"),
+    KNOWLEDGE_BOOK(ItemID.KNOWLEDGE_BOOK, "Knowledge Book", "knowledgebook", "recipebook"),
+
     DISC_13(ItemID.DISC_13, "Music Disc - 13", "musicdisc13", "disc_13"),
     DISC_CAT(ItemID.DISC_CAT, "Music Disc - Cat", "musicdisccat", "disc_cat"),
     DISC_BLOCKS(ItemID.DISC_BLOCKS, "Music Disc - blocks", "musicdiscblocks", "disc_blocks"),

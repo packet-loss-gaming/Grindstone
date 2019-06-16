@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.util.item;
 
+import gg.packetloss.grindstone.util.item.legacy.ItemType;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
