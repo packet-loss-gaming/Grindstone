@@ -38,6 +38,7 @@ import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.InventoryUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -107,6 +108,9 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
         // Emerald
         summationCondenser.addSupport(new ItemStack(ItemID.EMERALD, 9), new ItemStack(BlockID.EMERALD_BLOCK, 1));
+
+        // Slime
+        summationCondenser.addSupport(new ItemStack(Material.SLIME_BALL, 9), new ItemStack(Material.SLIME_BLOCK, 1));
     }
 
     private MigrationManager migrationManager = new MigrationManager();
