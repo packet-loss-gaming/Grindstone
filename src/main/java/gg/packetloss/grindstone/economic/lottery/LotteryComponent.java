@@ -86,8 +86,10 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
             setupEconomy();
 
-            long ticks = TimeUtil.getTicksTill(17), nextHour = TimeUtil.getTicksTillHour();
-            server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24);
+            long ticks = TimeUtil.getTicksTill(17, 7);
+            server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24 * 7);
+
+            long nextHour = TimeUtil.getTicksTillHour();
             server.getScheduler().scheduleSyncRepeatingTask(inst, broadcastLottery, nextHour, 20 * 60 * 60);
         }, 1);
     }
@@ -113,6 +115,10 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         public int maxPerLotto = 150;
         @Setting("recent-length")
         public int recentLength = 5;
+        @Setting("cpu.percentage-guaranteed")
+        public double cpuPercentageGuaranteed = .5;
+        @Setting("cpu.players")
+        public int cpuPlayers = 20;
     }
 
     public class Commands {
@@ -306,6 +312,16 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 10);
     }
 
+    private int calculateCPUTicketCount() {
+        int guaranteedPerCPU = (int) (config.maxPerLotto * config.cpuPercentageGuaranteed);
+        int chanceTicketsPerCPU = config.maxPerLotto - guaranteedPerCPU;
+
+        int guaranteedTickets = guaranteedPerCPU * config.cpuPlayers;
+        int chanceTickets = ChanceUtil.getRandom(chanceTicketsPerCPU * config.cpuPlayers);
+
+        return guaranteedTickets + chanceTickets;
+    }
+
     public void completeLottery() {
 
         String name;
@@ -318,13 +334,26 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         double cash = getWinnerCash();
 
         economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
-        economy.depositPlayer(name, cash);
-        Bukkit.broadcastMessage(ChatColor.YELLOW + name + " has won: " +
-                ChatUtil.makeCountString(economy.format(cash), " via the lottery!"));
 
-        lotteryWinnerDatabase.addWinner(name, cash);
+        boolean wasCPUVictory = name.equals(LotteryTicketDatabase.CPU_NAME);
+        if (wasCPUVictory) {
+            Bukkit.broadcastMessage(ChatColor.YELLOW + "An anonymous citizen has won: " +
+                    ChatUtil.makeCountString(economy.format(cash), " via the lottery!"));
+
+            lotteryWinnerDatabase.addCPUWin(cash);
+        } else {
+            economy.depositPlayer(name, cash);
+
+            Bukkit.broadcastMessage(ChatColor.YELLOW + name + " has won: " +
+                    ChatUtil.makeCountString(economy.format(cash), " via the lottery!"));
+            lotteryWinnerDatabase.addWinner(name, cash);
+        }
+
+
         lotteryWinnerDatabase.save();
+
         lotteryTicketDatabase.clearTickets();
+        lotteryTicketDatabase.addCPUTickets(calculateCPUTicketCount());
         lotteryTicketDatabase.save();
     }
 
@@ -369,9 +398,8 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
 
     private String findNewMillionaire() throws NotFoundException {
-
         List<GenericWealthStore> ticketDB = lotteryTicketDatabase.getTickets();
-        if (ticketDB.size() < 2) throw new NotFoundException();
+        if (ticketDB.size() < 2 && config.cpuPlayers < 1) throw new NotFoundException();
 
         List<WeightedTicket> tickets = new ArrayList<>();
         for (GenericWealthStore lotteryTicket : ticketDB) {

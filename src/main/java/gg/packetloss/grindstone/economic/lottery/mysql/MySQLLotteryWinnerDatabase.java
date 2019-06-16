@@ -20,6 +20,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import static gg.packetloss.grindstone.economic.lottery.LotteryTicketDatabase.CPU_NAME;
+
 public class MySQLLotteryWinnerDatabase implements LotteryWinnerDatabase {
 
     private Queue<MySQLPreparedStatement> queue = new LinkedList<>();
@@ -64,10 +66,15 @@ public class MySQLLotteryWinnerDatabase implements LotteryWinnerDatabase {
     @Override
     public void addWinner(String name, double amount) {
         try {
-            queue.add(new LotteryWinnerStatement(MySQLHandle.getPlayerId(name), amount));
+            queue.add(new LotteryWinnerStatement(MySQLHandle.getPlayerId(name).get(), amount));
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void addCPUWin(double amount) {
+        queue.add(new LotteryWinnerStatement(-1, amount));
     }
 
     @Override
@@ -79,7 +86,9 @@ public class MySQLLotteryWinnerDatabase implements LotteryWinnerDatabase {
                 statement.setInt(1, limit);
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
-                        winners.add(new LotteryWinner(MySQLHandle.getPlayerName(results.getInt(1)), results.getDouble(2)));
+                        int userID = results.getInt(1);
+                        String userName = userID == -1 ? CPU_NAME : MySQLHandle.getPlayerName(userID).get();
+                        winners.add(new LotteryWinner(userName, results.getDouble(2)));
                     }
                 }
             }

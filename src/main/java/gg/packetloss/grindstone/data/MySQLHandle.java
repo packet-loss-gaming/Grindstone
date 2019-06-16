@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class MySQLHandle {
@@ -78,27 +79,27 @@ public class MySQLHandle {
         return getPool().getConnection();
     }
 
-    public static int getPlayerId(String name) throws SQLException {
+    public static Optional<Integer> getPlayerId(String name) throws SQLException {
         try (Connection connection = getConnection()) {
             String sql = "SELECT playerid FROM `lb-players` WHERE playername = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, name);
                 ResultSet results = statement.executeQuery();
-                if (results.next()) return results.getInt(1);
+                if (results.next()) return Optional.of(results.getInt(1));
             }
         }
-        return -1;
+        return Optional.empty();
     }
 
-    public static String getPlayerName(int id) throws SQLException {
+    public static Optional<String> getPlayerName(int id) throws SQLException {
         try (Connection connection = getConnection()) {
             String sql = "SELECT playername FROM `lb-players` WHERE playerid = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setInt(1, id);
                 ResultSet results = statement.executeQuery();
-                if (results.next()) return results.getString(1);
+                if (results.next()) return Optional.of(results.getString(1));
             }
         }
-        return null;
+        return Optional.empty();
     }
 }

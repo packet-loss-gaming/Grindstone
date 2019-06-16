@@ -16,6 +16,7 @@ public interface LotteryWinnerDatabase {
     boolean save();
 
     void addWinner(String name, double amount);
+    void addCPUWin(double amount);
 
     List<LotteryWinner> getRecentWinner(int limit);
 }

@@ -65,10 +65,15 @@ public class MySQLLotteryTicketDatabase implements LotteryTicketDatabase {
     @Override
     public void addTickets(String playerName, int count) {
         try {
-            queue.add(new TicketAdditionStatement(MySQLHandle.getPlayerId(playerName), count));
+            queue.add(new TicketAdditionStatement(MySQLHandle.getPlayerId(playerName).get(), count));
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void addCPUTickets(int count) {
+        queue.add(new TicketAdditionStatement(-1, count));
     }
 
     @Override
@@ -76,7 +81,7 @@ public class MySQLLotteryTicketDatabase implements LotteryTicketDatabase {
         try (Connection connection  = MySQLHandle.getConnection()) {
             String sql = "SELECT `tickets` FROM `lottery-tickets` WHERE `player` = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, MySQLHandle.getPlayerId(playerName));
+                statement.setInt(1, MySQLHandle.getPlayerId(playerName).get());
                 try (ResultSet results = statement.executeQuery()) {
                     if (results.next()) {
                         return results.getInt(1);
@@ -116,7 +121,9 @@ public class MySQLLotteryTicketDatabase implements LotteryTicketDatabase {
             try (PreparedStatement statement = connection.prepareStatement("SELECT `player`, `tickets` FROM `lottery-tickets`")) {
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
-                        tickets.add(new WealthStore(MySQLHandle.getPlayerName(results.getInt(1)), results.getInt(2)));
+                        int userID = results.getInt(1);
+                        String userName = userID == -1 ? CPU_NAME : MySQLHandle.getPlayerName(userID).get();
+                        tickets.add(new WealthStore(userName, results.getInt(2)));
                     }
                 }
             }

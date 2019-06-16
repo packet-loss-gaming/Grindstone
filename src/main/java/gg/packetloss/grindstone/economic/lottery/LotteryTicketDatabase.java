@@ -12,12 +12,14 @@ import java.util.List;
 
 
 public interface LotteryTicketDatabase {
+    static final String CPU_NAME = "$$ CPU $$";
 
     boolean load();
 
     boolean save();
 
     void addTickets(String playerName, int count);
+    void addCPUTickets(int count);
 
     int getTickets(String playerName);
 

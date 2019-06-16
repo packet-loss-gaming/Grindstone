@@ -66,7 +66,7 @@ public class MySQLMarketTransactionDatabase implements MarketTransactionDatabase
     @Override
     public void logTransaction(String playerName, String itemName, int amount) {
         try {
-            int playerID = MySQLHandle.getPlayerId(playerName);
+            int playerID = MySQLHandle.getPlayerId(playerName).get();
             int itemID = MySQLItemStoreDatabase.getItemID(itemName);
             ItemTransactionStatement transaction = new ItemTransactionStatement(playerID, itemID, amount);
             try (Connection connection = MySQLHandle.getConnection()) {
