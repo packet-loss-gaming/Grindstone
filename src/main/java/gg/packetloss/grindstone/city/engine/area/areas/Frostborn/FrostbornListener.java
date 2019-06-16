@@ -12,9 +12,10 @@ import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
-import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -58,9 +59,18 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onHymnSing(HymnSingEvent event) {
-        if (!event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) return;
+    public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
+        ItemStack itemStack = event.getItem();
+
+        if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
+            return;
+        }
+
+        if (!ItemUtil.isItem(itemStack, CustomItems.ODE_TO_THE_FROZEN_KING)) {
+            return;
+        }
+
         if (parent.contains(parent.gate_RG, player)) {
             // Teleport inside just past the gate
             player.teleport(parent.gateInner, TeleportCause.UNKNOWN);

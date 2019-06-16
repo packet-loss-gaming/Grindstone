@@ -451,6 +451,15 @@ public class CustomItemCenter {
         ninjaStar.addUse("Teleports the player to the Ninja Guild.");
         addItem(ninjaStar);
 
+        // Magical Items
+        CustomItem odeToTheFrozenKing = new CustomItem(ODE_TO_THE_FROZEN_KING, Material.PAPER);
+        odeToTheFrozenKing.addSource(ItemSource.WILDERNESS_MOBS);
+        odeToTheFrozenKing.addSource(ItemSource.DROP_PARTY);
+        odeToTheFrozenKing.addSource(ItemSource.PATIENT_X);
+        odeToTheFrozenKing.addSource(ItemSource.MARKET);
+        odeToTheFrozenKing.addUse("Provides entry to Frostborn's layer.");
+        addItem(odeToTheFrozenKing);
+
         // Flight Items
         CustomItem pixieDust = new CustomItem(PIXIE_DUST, Material.SUGAR);
         pixieDust.addSource(ItemSource.SACRIFICIAL_PIT);

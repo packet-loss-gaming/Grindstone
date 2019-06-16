@@ -116,6 +116,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         if (populate) {
             for (int i = 0; i < playerCount * modifier; i++) {
                 drops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
+                drops.add(CustomItemCenter.build(CustomItems.ODE_TO_THE_FROZEN_KING));
                 drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
             }
             drops.add(ItemUtil.makeSkull(CollectionUtil.getElement(server.getOnlinePlayers()).getName()));

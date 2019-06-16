@@ -66,6 +66,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.util.EnvironmentUtil.isFrozenBiome;
 import static gg.packetloss.grindstone.util.portal.NoOPTravelAgent.overwriteDestination;
 import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 
@@ -449,6 +450,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         Location location = entity.getLocation();
         int level = getLevel(location);
         if (isWildernessWorld(location.getWorld()) && level > 1) {
+            boolean isFrozenBiome = isFrozenBiome(location.getBlock().getBiome());
 
             List<ItemStack> drops = new ArrayList<>();
             double diffLevel = Math.max(1, level * .63);
@@ -461,6 +463,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 }
                 if (ChanceUtil.getChance(2000)) {
                     drops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
+                }
+                if (ChanceUtil.getChance(isFrozenBiome ? 1000 : 2000)) {
+                    drops.add(CustomItemCenter.build(CustomItems.ODE_TO_THE_FROZEN_KING));
                 }
             }
 

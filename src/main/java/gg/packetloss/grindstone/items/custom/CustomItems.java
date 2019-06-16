@@ -80,7 +80,10 @@ public enum CustomItems {
     // Phantom Items
     PHANTOM_GOLD(ChatColor.GOLD, "Phantom Gold"),
     PHANTOM_CLOCK(ChatColor.DARK_RED, "Phantom Clock"),
-    PHANTOM_HYMN(ChatColor.DARK_RED, "Phantom Hymn"),
+    PHANTOM_HYMN(ChatColor.DARK_RED, "Phantom Song"),
+
+    // Magical Items
+    ODE_TO_THE_FROZEN_KING(ChatColor.AQUA, "Ode to The Frozen King"),
 
     // Ninja Guild
     NINJA_STAR(ChatColor.DARK_GRAY, "Ninja Star"),
@@ -93,12 +96,12 @@ public enum CustomItems {
     BAT_BOW(ChatColor.DARK_RED, "Bat Bow"),
     CHICKEN_BOW(ChatColor.GOLD, "Chicken Bow"),
 
-    // Animal Hymn
-    CHICKEN_HYMN(ChatColor.GOLD, "Chicken Hymn"),
+    // Animal Song
+    CHICKEN_HYMN(ChatColor.GOLD, "Chicken Song"),
 
     // Summation Stuff
     SCROLL_OF_SUMMATION(ChatColor.GOLD, "Scroll of Summation"),
-    HYMN_OF_SUMMATION(ChatColor.GOLD, "Hymn of Summation"),
+    HYMN_OF_SUMMATION(ChatColor.GOLD, "Song of Summation"),
 
     // Miscellaneous
     MAD_MILK(ChatColor.DARK_AQUA, "Mad Milk"),
