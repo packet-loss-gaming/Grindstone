@@ -136,7 +136,7 @@ public class PvPComponent extends BukkitComponent implements Listener {
             try {
                 Prayer[] targetPrayers = new Prayer[]{
                         PrayerComponent.constructPrayer(player, PrayerType.GLASSBOX, 1000 * 60 * 3),
-                        PrayerComponent.constructPrayer(player, PrayerType.NECROSIS, 1000 * 60 * 3),
+                        PrayerComponent.constructPrayer(player, PrayerType.STARVATION, 1000 * 60 * 3),
                 };
 
                 prayers.influencePlayer(player, targetPrayers);
