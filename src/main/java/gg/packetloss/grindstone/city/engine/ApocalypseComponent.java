@@ -443,7 +443,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     private void arm(Entity e, ZombieSpawnConfig spawnConfig) {
-
+        // FIXME: This is 90% the same as the grave yard arm logic
         if (!(e instanceof LivingEntity)) return;
 
         EntityEquipment equipment = ((LivingEntity) e).getEquipment();

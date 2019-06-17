@@ -354,20 +354,26 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
     }
 
     private void arm(Entity e, boolean allowItemPickup) {
+        // FIXME: This is 90% the same as the apocalypse arm logic
+
         if (!(e instanceof LivingEntity)) return;
+
         EntityEquipment equipment = ((LivingEntity) e).getEquipment();
         ((LivingEntity) e).setCanPickupItems(allowItemPickup);
+
         if (ChanceUtil.getChance(50)) {
             if (ChanceUtil.getChance(15)) {
                 equipment.setArmorContents(ItemUtil.DIAMOND_ARMOR);
             } else {
                 equipment.setArmorContents(ItemUtil.IRON_ARMOR);
             }
+
             if (ChanceUtil.getChance(4)) equipment.setHelmet(null);
             if (ChanceUtil.getChance(4)) equipment.setChestplate(null);
             if (ChanceUtil.getChance(4)) equipment.setLeggings(null);
             if (ChanceUtil.getChance(4)) equipment.setBoots(null);
         }
+
         if (ChanceUtil.getChance(50)) {
             ItemStack sword = new ItemStack(ItemID.IRON_SWORD);
             if (ChanceUtil.getChance(35)) sword = new ItemStack(ItemID.DIAMOND_SWORD);
@@ -381,19 +387,12 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
             sword.setItemMeta(meta);
             equipment.setItemInHand(sword);
         }
-        if (allowItemPickup) {
-            equipment.setItemInHandDropChance(equipment.getItemInHand() == null ? 1 : .35F);
-            equipment.setHelmetDropChance(equipment.getHelmet() == null ? 1 : .35F);
-            equipment.setChestplateDropChance(equipment.getChestplate() == null ? 1 : .35F);
-            equipment.setLeggingsDropChance(equipment.getLeggings() == null ? 1 : .35F);
-            equipment.setBootsDropChance(equipment.getBoots() == null ? 1 : .35F);
-        } else {
-            equipment.setItemInHandDropChance(.17F);
-            equipment.setHelmetDropChance(.17F);
-            equipment.setChestplateDropChance(.17F);
-            equipment.setLeggingsDropChance(.17F);
-            equipment.setBootsDropChance(.17F);
-        }
+
+        equipment.setItemInHandDropChance(0.005F);
+        equipment.setHelmetDropChance(0.005F);
+        equipment.setChestplateDropChance(0.005F);
+        equipment.setLeggingsDropChance(0.005F);
+        equipment.setBootsDropChance(0.005F);
     }
 
     public void makeGrave(String name, ItemStack[] itemStacks) {
