@@ -181,7 +181,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(ignoreCancelled = true)
     public void onNinjaGrapple(NinjaGrappleEvent event) {
         Player player = event.getPlayer();
-        if (!parent.contains(player)) {
+        if (!parent.contains(parent.parkour, player)) {
             return;
         }
 
@@ -191,7 +191,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(ignoreCancelled = true)
     public void onRogueBlip(RogueBlipEvent event) {
         Player player = event.getPlayer();
-        if (!parent.contains(player)) {
+        if (!parent.contains(parent.parkour, player)) {
             return;
         }
 
