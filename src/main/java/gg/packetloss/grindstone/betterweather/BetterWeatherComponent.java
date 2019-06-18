@@ -135,9 +135,9 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
             if (newWeather == WeatherType.THUNDER_STORM) {
                 weatherQueue.add(new WeatherEvent(nextWeatherEvent, WeatherType.RAIN));
 
-                nextWeatherEvent += ChanceUtil.getRandomNTimes(
+                nextWeatherEvent += TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(
                         config.shortestThunderWarning, config.longestThunderWarning
-                );
+                ));
             }
 
             weatherQueue.add(new WeatherEvent(nextWeatherEvent, newWeather));
