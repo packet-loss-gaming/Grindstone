@@ -26,6 +26,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.player.GenericWealthStore;
+import gg.packetloss.grindstone.util.probability.WeightedPicker;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -378,46 +379,15 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         return amt;
     }
 
-    private class WeightedTicket {
-        String ticketOwner;
-        int weight;
-
-        public WeightedTicket(String ticketOwner, int weight) {
-            this.ticketOwner = ticketOwner;
-            this.weight = weight;
-        }
-
-        public String getTicketOwner() {
-            return ticketOwner;
-        }
-
-        public int getWeight() {
-            return weight;
-        }
-    }
-
-
     private String findNewMillionaire() throws NotFoundException {
         List<GenericWealthStore> ticketDB = lotteryTicketDatabase.getTickets();
         if (ticketDB.size() < 2 && config.cpuPlayers < 1) throw new NotFoundException();
 
-        List<WeightedTicket> tickets = new ArrayList<>();
+        WeightedPicker<String> tickets = new WeightedPicker<>();
         for (GenericWealthStore lotteryTicket : ticketDB) {
-            int lastTicketValue = tickets.isEmpty() ? 0 : tickets.get(tickets.size() - 1).getWeight();
-            int weightedValue = lotteryTicket.getValue() + lastTicketValue;
-            tickets.add(new WeightedTicket(lotteryTicket.getOwnerName(), weightedValue));
+            tickets.add(lotteryTicket.getOwnerName(), lotteryTicket.getValue());
         }
 
-        int maxWeight = tickets.get(tickets.size() - 1).getWeight();
-        int randomValue = ChanceUtil.getRandom(maxWeight);
-
-        for (WeightedTicket weightedTicket : tickets) {
-            randomValue -= weightedTicket.getWeight();
-            if (randomValue <= 0) {
-                return weightedTicket.getTicketOwner();
-            }
-        }
-
-        throw new IllegalStateException("Probability failed to resolve a winner, this should never happen.");
+        return tickets.pick();
     }
 }

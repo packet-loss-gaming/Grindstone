@@ -94,4 +94,22 @@ public class TimeUtil {
 
         return hour;
     }
+
+    public static String getPrettyTime(long time) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(time);
+
+        int hour = calendar.get(Calendar.HOUR);
+        int minute = calendar.get(Calendar.MINUTE);
+        String ampm = calendar.get(Calendar.AM_PM) == Calendar.AM ? "am" : "pm";
+
+        String minuteString;
+        if (minute < 10) {
+            minuteString = "0" + minute;
+        } else {
+            minuteString = String.valueOf(minute);
+        }
+
+        return hour + ":" + minuteString + " " + ampm;
+    }
 }
