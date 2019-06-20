@@ -63,6 +63,10 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         }
 
         Player player = event.getPlayer();
+        if (parent.admin.isAdmin(player)) {
+            return;
+        }
+
         ItemStack itemStack = event.getItemInHand().clone();
         itemStack.setAmount(1);
 
@@ -100,6 +104,11 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         Block block = event.getBlock();
 
         if (!parent.contains(block)) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        if (parent.admin.isAdmin(player)) {
             return;
         }
 
