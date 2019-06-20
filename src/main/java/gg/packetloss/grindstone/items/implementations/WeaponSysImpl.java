@@ -94,13 +94,17 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
 
             SpecType specType = weaponType.getDefaultSpecType();
             if (spec != null && session.canSpec(specType)) {
+                final SpecialAttack finalSpec = spec;
+                server.getScheduler().runTaskLater(inst, () -> {
+                    if (!target.isDead()) {
+                        SpecialAttackEvent specEvent = callSpec(owner, specType, finalSpec);
 
-                SpecialAttackEvent specEvent = callSpec(owner, specType, spec);
-
-                if (!specEvent.isCancelled()) {
-                    session.updateSpec(specType, specEvent.getContextCoolDown());
-                    specEvent.getSpec().activate();
-                }
+                        if (!specEvent.isCancelled()) {
+                            session.updateSpec(specType, specEvent.getContextCoolDown());
+                            specEvent.getSpec().activate();
+                        }
+                    }
+                }, 1);
             }
         }
     }
