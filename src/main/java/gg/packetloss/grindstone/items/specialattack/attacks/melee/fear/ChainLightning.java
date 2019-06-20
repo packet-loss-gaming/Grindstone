@@ -23,7 +23,8 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
     }
 
     private void chainOn(LivingEntity target, int depth, int delayModifier) {
-        if (depth != 1 && !ChanceUtil.getChance(3 * depth)) {
+        boolean isFirstRun = depth == 1;
+        if (!isFirstRun && !ChanceUtil.getChance(3 * depth)) {
             return;
         }
 
@@ -40,8 +41,11 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
                 server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
             }
 
+            if (!DamageUtil.damageWithSpecialAttack(owner, target, this, 15) && !isFirstRun) {
+                return;
+            }
+
             target.getWorld().strikeLightningEffect(target.getLocation());
-            DamageUtil.damageWithSpecialAttack(owner, target, this, 15);
 
             int localDelayModifier = 0;
             for (Entity entity : target.getNearbyEntities(5, 5, 5)) {
@@ -55,7 +59,7 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
 
                 chainOn((LivingEntity) entity, depth + 1, ++localDelayModifier);
             }
-        }, 10 * delayModifier);
+        }, 4 * delayModifier);
     }
 
     @Override
