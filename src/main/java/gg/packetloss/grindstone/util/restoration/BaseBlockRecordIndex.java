@@ -8,12 +8,11 @@ package gg.packetloss.grindstone.util.restoration;
 
 import java.io.Serializable;
 import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Vector;
 import java.util.function.Predicate;
 
 public class BaseBlockRecordIndex extends BlockRecordIndex implements Serializable {
-    private CopyOnWriteArrayList<BlockRecord> recordList = new CopyOnWriteArrayList<>();
+    private Vector<BlockRecord> recordList = new Vector<>();
 
     public void addItem(BlockRecord record) {
         recordList.add(record);
