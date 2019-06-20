@@ -7,13 +7,13 @@
 package gg.packetloss.grindstone.util.restoration;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 
 public class BaseBlockRecordIndex extends BlockRecordIndex implements Serializable {
-    private List<BlockRecord> recordList = new ArrayList<>();
+    private CopyOnWriteArrayList<BlockRecord> recordList = new CopyOnWriteArrayList<>();
 
     public void addItem(BlockRecord record) {
         recordList.add(record);
