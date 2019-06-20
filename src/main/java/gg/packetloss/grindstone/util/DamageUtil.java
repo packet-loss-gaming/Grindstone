@@ -29,6 +29,10 @@ public class DamageUtil {
 
     public static boolean damageWithSpecialAttack(LivingEntity attacker, LivingEntity defender,
                                                   SpecialAttack spec, double amount) {
+        if (defender.isDead()) {
+            return false;
+        }
+
         SpecialAttackPreDamageEvent event = new SpecialAttackPreDamageEvent(attacker, defender, spec, amount);
         server.getPluginManager().callEvent(event);
 
