@@ -175,6 +175,8 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                     if (entity.equals(player)) continue;
                     if (entity instanceof LivingEntity) {
                         if (entity instanceof Player && !PvPComponent.allowsPvP(player, (Player) entity)) continue;
+                        if (entity.isDead()) continue;
+
                         ((LivingEntity) entity).damage(event.getDamage() * .5, player);
                         event.setCancelled(true);
                         break;
