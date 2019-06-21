@@ -87,7 +87,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
             setupEconomy();
 
-            long ticks = TimeUtil.getTicksTill(17, 7);
+            long ticks = TimeUtil.getTicksTill(17, 6);
             server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24 * 7);
 
             long nextHour = TimeUtil.getTicksTillHour();
