@@ -50,7 +50,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
@@ -200,23 +199,12 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         if (result == null) return;
 
         final LivingEntity attacker = result.getAttacker();
-        final LivingEntity defender = result.getDefender();
 
         if (result.hasProjectile()) {
             Projectile projectile = result.getProjectile();
             if (projectile.hasMetadata("nightmare")) {
                 event.setCancelled(true);
                 return;
-            }
-            if (defender instanceof Player && ChanceUtil.getChance(3)) {
-                RogueState rogueSession = getState((Player) defender);
-                if (rogueSession.isRogue() && rogueSession.canBacklash() && rogueSession.canBlip()) {
-                    if (attacker instanceof Player && !PvPComponent.allowsPvP((Player) attacker, (Player) defender)) return;
-                    server.getScheduler().runTaskLater(inst, () -> {
-                        defender.teleport(attacker, PlayerTeleportEvent.TeleportCause.UNKNOWN);
-                        blip((Player) defender, -.5, true);
-                    }, 1);
-                }
             }
         } else if (attacker instanceof Player && isRogue((Player) attacker)) {
             if (event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
@@ -474,7 +462,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             // Set flags
             rogueSession.limitYVelocity(args.hasFlag('l'));
-            rogueSession.setBacklash(!args.hasFlag('b'));
             rogueSession.setTraitorProtection(args.hasFlag('t') && inst.hasPermission(player, "aurora.rogue.master"));
             rogueSession.setGrenadeSafety(!args.hasFlag('g'));
 
@@ -582,16 +569,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         public void grenade() {
 
             nextGrenade = System.currentTimeMillis() + 3500;
-        }
-
-        public boolean canBacklash() {
-
-            return rogueBacklash;
-        }
-
-        public void setBacklash(boolean enabled) {
-
-            this.rogueBacklash = enabled;
         }
 
         public boolean isTraitorProtected() {

@@ -53,11 +53,13 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.util.HashSet;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Ninja", desc = "Disappear into the night!")
 @Depend(plugins = "Pitfall", components = {SessionComponent.class, RogueComponent.class, PvPComponent.class})
@@ -97,27 +99,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).isNinja();
     }
 
-    public void showToGuild(Player player, boolean showToGuild) {
-
-        sessions.getSession(NinjaState.class, player).showToGuild(showToGuild);
-    }
-
-    public boolean guildCanSee(Player player) {
-
-        return sessions.getSession(NinjaState.class, player).guildCanSee();
-    }
-
-    public void useVanish(Player player, boolean vanish) {
-
-        sessions.getSession(NinjaState.class, player).useVanish(vanish);
-    }
-
-    public boolean canVanish(Player player) {
-
-        return sessions.getSession(NinjaState.class, player).canVanish();
-    }
-
-
     public void useTormentArrows(Player player, boolean tormentArrows) {
 
         sessions.getSession(NinjaState.class, player).usetormentArrows(tormentArrows);
@@ -128,15 +109,14 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).hasTormentArrows();
     }
 
-    public void setLastArrow(Player player, Arrow arrow) {
+    public void addArrow(Player player, Arrow arrow) {
 
-        sessions.getSession(NinjaState.class, player).setLastArrow(arrow);
+        sessions.getSession(NinjaState.class, player).addArrow(arrow);
     }
 
-    public Arrow getLastArrow(Player player) {
+    public List<Arrow> getRecentArrows(Player player) {
 
-        Arrow arrow = sessions.getSession(NinjaState.class, player).getLastArrow();
-        return arrow != null && arrow.isValid() ? arrow : null;
+        return sessions.getSession(NinjaState.class, player).getRecentArrows();
     }
 
     public boolean canArrowBomb(Player player) {
@@ -144,22 +124,36 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).canArrowBomb();
     }
 
-    public void arrowBomb(final Player player) {
-        Arrow arrow = getLastArrow(player);
-
-        if (arrow == null) return;
-
-        sessions.getSession(NinjaState.class, player).arrowBomb();
-
-        for (Entity entity : arrow.getNearbyEntities(7, 7, 7)) {
+    private void handleArrowBombArrow(Player player, Arrow arrow) {
+        for (Entity entity : arrow.getNearbyEntities(4, 4, 4)) {
             if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
             if (entity instanceof Player) {
-                final Player defender = (Player) entity;
+                Player defender = (Player) entity;
                 if (!PvPComponent.allowsPvP(player, defender)) return;
             }
         }
-        arrow.getWorld().createExplosion(arrow.getLocation(), 4);
+
+        if (arrow instanceof TippedArrow) {
+            AreaEffectCloud effectCloud = arrow.getWorld().spawn(arrow.getLocation(), AreaEffectCloud.class);
+            effectCloud.setBasePotionData(((TippedArrow) arrow).getBasePotionData());
+            effectCloud.setDuration(20 * 10);
+        } else {
+            arrow.getWorld().createExplosion(arrow.getLocation(), 2);
+        }
+
         arrow.remove();
+    }
+
+    public void arrowBomb(Player player) {
+        List<Arrow> arrows = getRecentArrows(player);
+
+        if (arrows.isEmpty()) return;
+
+        sessions.getSession(NinjaState.class, player).arrowBomb();
+
+        for (Arrow arrow : arrows) {
+            handleArrowBombArrow(player, arrow);
+        }
     }
 
     public boolean canSmokeBomb(Player player) {
@@ -209,20 +203,22 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         Location k = null;
         for (Entity entity : entities) {
             EntityUtil.forceDamage(entity, 1);
-            if (ChanceUtil.getChance(7)) {
-                EntityUtil.heal(entity, ChanceUtil.getRandom(3));
-            }
+            EntityUtil.heal(player, 1);
+
             if (entity instanceof Player) {
                 if (rogueComponent.isRogue((Player) entity)) {
-                    rogueComponent.getState((Player) entity).blip(1250);
+                    rogueComponent.getState((Player) entity).blip(event.getDelayInMills());
                 }
+
                 ((Player) entity).addPotionEffect(new PotionEffect(
                         PotionEffectType.BLINDNESS,
-                        20 * ChanceUtil.getRandom(3),
+                        event.getDelay() * 2,
                         1
                 ));
+
                 ChatUtil.sendWarning(entity, "You hear a strange ticking sound...");
             }
+
             k = event.getTargetLoc();
             k.setPitch((float) (ChanceUtil.getRandom(361.0) - 1));
             k.setYaw((float) (ChanceUtil.getRandom(181.0) - 91));
@@ -252,7 +248,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
         Location target = event.getTeleportLoc() == null ? oldLoc : event.getTeleportLoc();
         player.teleport(target, PlayerTeleportEvent.TeleportCause.UNKNOWN);
-        session.hide(2500);
     }
 
     public boolean canGrapple(Player player) {
@@ -359,7 +354,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         if (isNinja(player) && hasTormentArrows(player)) {
 
             if (p instanceof Arrow) {
-                setLastArrow(player, (Arrow) p);
+                addArrow(player, (Arrow) p);
                 // p.setMetadata("ninja-arrow", new FixedMetadataValue(inst, true));
             }
         }
@@ -381,13 +376,9 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         switch (event.getCause()) {
             case FALL:
-                event.setDamage(event.getDamage() * .5);
+                event.setDamage(event.getDamage() * .8);
                 break;
-            case DROWNING:
-                player.setRemainingAir(player.getMaximumAir());
             case FIRE:
-                event.setCancelled(true);
-                break;
             case FIRE_TICK:
                 player.setFireTicks(0);
                 event.setCancelled(true);
@@ -468,7 +459,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                         if (LocationUtil.distanceSquared2D(clicked.getLocation().add(.5, 0, .5), player.getLocation()) <= 4) {
                             // If the player is sneaking treat this as a "slowing" option,
                             // if not sneaking, treat this as a proper grapple.
-                            grapple(player, clicked, face, player.isSneaking() ? 0 : 9);
+                            grapple(player, clicked, face, player.isSneaking() ? 0 : 12);
                         }
                     }
                     break;
@@ -551,72 +542,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 unninjaPlayer(player);
                 continue;
             }
-
-            Set<Player> invisibleNewCount = new HashSet<>();
-            Set<Player> visibleNewCount = new HashSet<>();
-
-            Location pLoc = player.getLocation();
-            Location k = player.getLocation();
-
-            double sneakRatio = SNEAK_WATCH_DISTANCE_SQ;
-            double standRatio = Math.max(sneakRatio, (player.getHealth() / player.getMaxHealth()) * WATCH_DISTANCE_SQ);
-
-            if (player.isFlying()) {
-                sneakRatio *= sneakRatio;
-                standRatio *= standRatio;
-            }
-
-            for (Player otherPlayer : server.getOnlinePlayers()) {
-                if (otherPlayer.equals(player)) continue;
-
-                if (otherPlayer.getWorld().equals(player.getWorld()) && canVanish(player)) {
-
-                    // Sets k to the otherPlayer's current location
-                    otherPlayer.getLocation(k);
-
-                    double dist = pLoc.distanceSquared(k);
-
-                    if ((player.isSneaking() && dist >= sneakRatio) || dist >= standRatio || !ninjaState.showPlayer()) {
-                        if (otherPlayer.canSee(player)
-                                && !(guildCanSee(player) && inst.hasPermission(otherPlayer, "aurora.ninja"))
-                                && !inst.hasPermission(otherPlayer, "aurora.ninja.master")) {
-                            otherPlayer.hidePlayer(inst, player);
-                            invisibleNewCount.add(otherPlayer);
-                        }
-                    } else {
-                        if (!otherPlayer.canSee(player)) {
-                            otherPlayer.showPlayer(inst, player);
-                            visibleNewCount.add(otherPlayer);
-                        }
-                    }
-
-                } else {
-                    if (!otherPlayer.canSee(player)) {
-                        otherPlayer.showPlayer(inst, player);
-                        visibleNewCount.add(otherPlayer);
-                    }
-                }
-            }
-
-            if (invisibleNewCount.size() > 0) {
-                if (invisibleNewCount.size() > 3) {
-                    ChatUtil.sendNotice(player, "You are now invisible to multiple players.");
-                } else {
-                    for (Player aPlayer : invisibleNewCount) {
-                        ChatUtil.sendNotice(player, "You are now invisible to " + aPlayer.getDisplayName() + ".");
-                    }
-                }
-            }
-
-            if (visibleNewCount.size() > 0) {
-                if (visibleNewCount.size() > 3) {
-                    ChatUtil.sendNotice(player, "You are now visible to multiple players.");
-                } else {
-                    for (Player aPlayer : visibleNewCount) {
-                        ChatUtil.sendNotice(player, "You are now visible to " + aPlayer.getDisplayName() + ".");
-                    }
-                }
-            }
         }
     }
 
@@ -638,8 +563,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             ninjaPlayer(player);
 
             // Set flags
-            showToGuild(player, args.hasFlag('g'));
-            useVanish(player, !args.hasFlag('i'));
             useTormentArrows(player, !args.hasFlag('t'));
 
             if (!isNinja) {
@@ -664,6 +587,33 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
     }
 
+    private static class NinjaArrow {
+        private final WeakReference<Arrow> arrowRef;
+        private final long creationTimeStamp;
+
+        public NinjaArrow(Arrow arrow) {
+            this.arrowRef = new WeakReference<>(arrow);
+            this.creationTimeStamp = System.currentTimeMillis();
+        }
+
+        public Optional<Arrow> getIfStillRelevant() {
+            if (System.currentTimeMillis() - creationTimeStamp >= TimeUnit.SECONDS.toMillis(5)) {
+                return Optional.empty();
+            }
+
+            Arrow arrow = arrowRef.get();
+            if (arrow == null) {
+                return Optional.empty();
+            }
+
+            if (!arrow.isValid()) {
+                return Optional.empty();
+            }
+
+            return Optional.of(arrow);
+        }
+    }
+
     // Ninja Session
     private static class NinjaState extends PersistentSession {
 
@@ -671,16 +621,11 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         @Setting("ninja-enabled")
         private boolean isNinja = false;
-        @Setting("ninja-vanish")
-        private boolean useVanish = true;
-        @Setting("ninja-show-to-guild")
-        private boolean showToGuild = false;
         @Setting("ninja-torment-arrows")
         private boolean tormentArrows = true;
 
-        private Arrow lastArrow = null;
+        private List<NinjaArrow> recentArrows = new ArrayList<>();
 
-        private long nextSeen = 0;
         private long nextGrapple = 0;
         private long nextSmokeBomb = 0;
         private long nextArrowBomb = 0;
@@ -700,26 +645,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             this.isNinja = isNinja;
         }
 
-        public boolean guildCanSee() {
-
-            return showToGuild;
-        }
-
-        public void showToGuild(boolean showToGuild) {
-
-            this.showToGuild = showToGuild;
-        }
-
-        public boolean canVanish() {
-
-            return useVanish;
-        }
-
-        public void useVanish(boolean useVanish) {
-
-            this.useVanish = useVanish;
-        }
-
         public boolean hasTormentArrows() {
 
             return tormentArrows;
@@ -730,24 +655,19 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             this.tormentArrows = tormentArrows;
         }
 
-        public Arrow getLastArrow() {
+        public List<Arrow> getRecentArrows() {
+            List<Arrow> arrows = recentArrows.stream()
+                    .map(NinjaArrow::getIfStillRelevant)
+                    .flatMap(Optional::stream)
+                    .collect(Collectors.toList());
 
-            return lastArrow;
+            recentArrows.clear();
+
+            return arrows;
         }
 
-        public void setLastArrow(Arrow lastArrow) {
-
-            this.lastArrow = lastArrow;
-        }
-
-        public boolean showPlayer() {
-
-            return nextSeen == 0 || System.currentTimeMillis() >= nextSeen;
-        }
-
-        public void hide(long time) {
-
-            nextSeen = System.currentTimeMillis() + time;
+        public void addArrow(Arrow lastArrow) {
+            recentArrows.add(new NinjaArrow(lastArrow));
         }
 
         public boolean canGrapple() {
@@ -767,7 +687,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         public void smokeBomb() {
 
-            nextSmokeBomb = System.currentTimeMillis() + 5000;
+            nextSmokeBomb = System.currentTimeMillis() + 2000;
         }
 
         public boolean canArrowBomb() {
@@ -777,7 +697,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         public void arrowBomb() {
 
-            nextArrowBomb = System.currentTimeMillis() + 10000;
+            nextArrowBomb = System.currentTimeMillis() + 3000;
         }
 
         public Player getPlayer() {

@@ -48,6 +48,10 @@ public class NinjaSmokeBombEvent extends NinjaEvent implements Cancellable {
         return delay;
     }
 
+    public long getDelayInMills() {
+        return (delay * 1000) / 20;
+    }
+
     public void setDelay(int delay) {
         this.delay = delay;
     }
