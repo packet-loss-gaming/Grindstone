@@ -34,6 +34,10 @@ repositories {
         name 'Vault Repository'
         url 'http://nexus.theyeticave.net/content/repositories/pub_releases'
     }
+    maven {
+        name 'Protocol Lib Repository'
+        url "http://repo.dmulloy2.net/nexus/repository/public/"
+    }
 }
 
 dependencies {
@@ -53,6 +57,7 @@ dependencies {
         exclude group: 'org.spigotmc', module: 'spigot'
     }
 
+    compile group: "com.comphenix.protocol", name: "ProtocolLib", version: "4.4.0"
     compile group: 'net.milkbowl.vault', name: 'Vault', version: '1.5.6'
     compile group: 'fr.neatmonster', name: 'nocheatplus', version: '3.13.7-RC'
     compile group: 'de.diddiz', name: 'logblock', version: 'dev-SNAPSHOT'

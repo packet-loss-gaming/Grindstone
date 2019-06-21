@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import gg.packetloss.grindstone.PacketInterceptionComponent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackPreDamageEvent;
 import gg.packetloss.grindstone.items.CustomItemSession;
@@ -13,6 +14,7 @@ import gg.packetloss.grindstone.items.WeaponType;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
+import gg.packetloss.grindstone.items.implementations.support.SweepPacketFilter;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
@@ -45,10 +47,12 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
     private List<Map<CustomItems, SpecWeaponImpl>> weaponLookup = new ArrayList<>();
 
 
-    public WeaponSysImpl() {
+    public WeaponSysImpl(PacketInterceptionComponent packetInterceptor) {
         for (int i = 0; i < WeaponType.values().length; ++i) {
             weaponLookup.add(new HashMap<>());
         }
+
+        packetInterceptor.addListener(new SweepPacketFilter());
     }
 
     private Map<CustomItems, SpecWeaponImpl> getMapForType(WeaponType type) {
@@ -119,7 +123,7 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
             event.setDamage(event.getDamage() * modifier);
         } else if (cause.equals(EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
             ItemStack targetItem = attackInfo.getUsedItem();
-            if (ItemUtil.isCustomItemKind(targetItem, "Short Sword")) {
+            if (ItemUtil.blocksSweepAttack(targetItem)) {
                 event.setCancelled(true);
             }
         }

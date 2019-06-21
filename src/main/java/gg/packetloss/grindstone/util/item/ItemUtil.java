@@ -399,6 +399,10 @@ public class ItemUtil {
         return isAuthenticCustomItem(name) && name.endsWith(kind);
     }
 
+    public static boolean blocksSweepAttack(ItemStack stack) {
+        return isCustomItemKind(stack, "Short Sword");
+    }
+
     public static boolean hasForgeBook(Player player) {
 
         return player.isValid() && hasForgeBook(player.getItemInHand());

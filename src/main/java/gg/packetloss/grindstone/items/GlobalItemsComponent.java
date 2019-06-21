@@ -22,9 +22,8 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.PacketInterceptionComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
@@ -61,9 +60,8 @@ import java.util.Set;
 
 
 @ComponentInformation(friendlyName = "Global Items Component", desc = "Global Custom Item effects")
-@Depend(components = {SessionComponent.class, AdminComponent.class,
-        AntiCheatCompatibilityComponent.class, PvPComponent.class,
-        PrayerComponent.class
+@Depend(components = {
+        SessionComponent.class, AdminComponent.class, PacketInterceptionComponent.class, PrayerComponent.class
 })
 public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
@@ -74,6 +72,8 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     protected static AdminComponent admin;
     @InjectComponent
     protected static SessionComponent sessions;
+    @InjectComponent
+    protected static PacketInterceptionComponent packetInterceptor;
     @InjectComponent
     protected static PrayerComponent prayers;
 
@@ -165,14 +165,19 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     }
 
     private void registerSpecWeapons() {
-        WeaponSysImpl wepSys = handle(new WeaponSysImpl());
-        wepSys.add(WeaponType.RANGED, CustomItems.FEAR_BOW, handle(new FearBowImpl()));
-        wepSys.add(WeaponType.RANGED, CustomItems.UNLEASHED_BOW, handle(new UnleashedBowImpl()));
+        // Delay by 1 tick to allow the packet interceptor to get setup.
+        // This should be removable once libcomponents respects component dependencies
+        server.getScheduler().runTaskLater(inst, () -> {
+            WeaponSysImpl wepSys = handle(new WeaponSysImpl(packetInterceptor));
 
-        wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SWORD, handle(new FearSwordImpl()));
-        wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SHORT_SWORD, handle(new FearSwordImpl()));
-        wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));
-        wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SHORT_SWORD, handle(new UnleashedSwordImpl()));
+            wepSys.add(WeaponType.RANGED, CustomItems.FEAR_BOW, handle(new FearBowImpl()));
+            wepSys.add(WeaponType.RANGED, CustomItems.UNLEASHED_BOW, handle(new UnleashedBowImpl()));
+
+            wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SWORD, handle(new FearSwordImpl()));
+            wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SHORT_SWORD, handle(new FearSwordImpl()));
+            wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));
+            wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SHORT_SWORD, handle(new UnleashedSwordImpl()));
+        }, 1);
     }
 
     private void registerHymns() {
