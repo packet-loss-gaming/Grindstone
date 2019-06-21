@@ -173,8 +173,25 @@ public class EnvironmentUtil {
 
     private static final Set<Material> interactiveBlocks = Set.of(
             Material.WORKBENCH, Material.ENCHANTMENT_TABLE, Material.BEACON, Material.ANVIL,
-            Material.LEVER, Material.STONE_BUTTON, Material.WOOD_BUTTON, Material.WOODEN_DOOR,
-            Material.FENCE_GATE, Material.TRAP_DOOR
+            Material.LEVER, Material.STONE_BUTTON, Material.WOOD_BUTTON,
+
+            // Doors
+            Material.ACACIA_DOOR,
+            Material.BIRCH_DOOR,
+            Material.DARK_OAK_DOOR,
+            Material.JUNGLE_DOOR,
+            Material.SPRUCE_DOOR,
+            Material.WOODEN_DOOR,
+
+            Material.TRAP_DOOR,
+
+            // Fence Gates
+            Material.ACACIA_FENCE_GATE,
+            Material.BIRCH_FENCE_GATE,
+            Material.DARK_OAK_FENCE_GATE,
+            Material.JUNGLE_FENCE_GATE,
+            Material.SPRUCE_FENCE_GATE,
+            Material.FENCE_GATE
     );
 
     private static boolean isInteractiveBlock(Material material) {
