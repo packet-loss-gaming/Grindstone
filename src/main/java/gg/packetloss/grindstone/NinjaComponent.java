@@ -99,16 +99,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).isNinja();
     }
 
-    public void useTormentArrows(Player player, boolean tormentArrows) {
-
-        sessions.getSession(NinjaState.class, player).usetormentArrows(tormentArrows);
-    }
-
-    public boolean hasTormentArrows(Player player) {
-
-        return sessions.getSession(NinjaState.class, player).hasTormentArrows();
-    }
-
     public void addArrow(Player player, Arrow arrow) {
 
         sessions.getSession(NinjaState.class, player).addArrow(arrow);
@@ -138,7 +128,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             effectCloud.setBasePotionData(((TippedArrow) arrow).getBasePotionData());
             effectCloud.setDuration(20 * 10);
         } else {
-            arrow.getWorld().createExplosion(arrow.getLocation(), 2);
+            float launchForce = arrow.getMetadata("launch-force").get(0).asFloat();
+            arrow.getWorld().createExplosion(arrow.getLocation(), Math.max(2, 4 * launchForce));
         }
 
         arrow.remove();
@@ -345,17 +336,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
     @EventHandler
     public void onProjectileLaunch(EntityShootBowEvent event) {
-
         Entity e = event.getProjectile();
         Projectile p = e instanceof Projectile ? (Projectile) e : null;
         if (p == null || p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
 
         Player player = (Player) p.getShooter();
-        if (isNinja(player) && hasTormentArrows(player)) {
+        if (isNinja(player) && p instanceof Arrow) {
+            addArrow(player, (Arrow) p);
 
-            if (p instanceof Arrow) {
-                addArrow(player, (Arrow) p);
-                // p.setMetadata("ninja-arrow", new FixedMetadataValue(inst, true));
+            if (ChanceUtil.getChance(4)) {
+                event.setConsumeArrow(false);
             }
         }
     }
@@ -548,7 +538,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"ninja"}, desc = "Give a player the Ninja power",
-                flags = "gtpi", min = 0, max = 0)
+                flags = "", min = 0, max = 0)
         @CommandPermissions({"aurora.ninja"})
         public void ninja(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -561,9 +551,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
             // Enter Ninja Mode
             ninjaPlayer(player);
-
-            // Set flags
-            useTormentArrows(player, !args.hasFlag('t'));
 
             if (!isNinja) {
                 ChatUtil.sendNotice(player, "You are inspired and become a ninja!");
@@ -625,8 +612,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         @Setting("ninja-enabled")
         private boolean isNinja = false;
-        @Setting("ninja-torment-arrows")
-        private boolean tormentArrows = true;
 
         private List<NinjaArrow> recentArrows = new ArrayList<>();
 
@@ -647,16 +632,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         public void setIsNinja(boolean isNinja) {
 
             this.isNinja = isNinja;
-        }
-
-        public boolean hasTormentArrows() {
-
-            return tormentArrows;
-        }
-
-        public void usetormentArrows(boolean tormentArrows) {
-
-            this.tormentArrows = tormentArrows;
         }
 
         public List<Arrow> getRecentArrows() {
