@@ -596,8 +596,12 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             this.creationTimeStamp = System.currentTimeMillis();
         }
 
-        public Optional<Arrow> getIfStillRelevant() {
-            if (System.currentTimeMillis() - creationTimeStamp >= TimeUnit.SECONDS.toMillis(5)) {
+        public long getCreationTimeStamp() {
+            return creationTimeStamp;
+        }
+
+        public Optional<Arrow> getIfStillRelevant(long lastArrowTime) {
+            if (lastArrowTime - creationTimeStamp >= TimeUnit.SECONDS.toMillis(5)) {
                 return Optional.empty();
             }
 
@@ -656,8 +660,13 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
 
         public List<Arrow> getRecentArrows() {
+            if (recentArrows.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            long lastArrowTime = recentArrows.get(recentArrows.size() - 1).getCreationTimeStamp();
             List<Arrow> arrows = recentArrows.stream()
-                    .map(NinjaArrow::getIfStillRelevant)
+                    .map(arrow -> arrow.getIfStillRelevant(lastArrowTime))
                     .flatMap(Optional::stream)
                     .collect(Collectors.toList());
 
