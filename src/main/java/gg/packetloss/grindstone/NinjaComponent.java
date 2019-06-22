@@ -49,8 +49,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.lang.ref.WeakReference;
@@ -200,12 +198,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 if (rogueComponent.isRogue((Player) entity)) {
                     rogueComponent.getState((Player) entity).blip(event.getDelayInMills());
                 }
-
-                ((Player) entity).addPotionEffect(new PotionEffect(
-                        PotionEffectType.BLINDNESS,
-                        event.getDelay() * 2,
-                        1
-                ));
 
                 ChatUtil.sendWarning(entity, "You hear a strange ticking sound...");
             }

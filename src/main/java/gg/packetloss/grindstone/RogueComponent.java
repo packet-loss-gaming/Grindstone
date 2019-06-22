@@ -231,6 +231,8 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                 for (Entity entity : p.getNearbyEntities(3, 3, 3)) {
                     if (!entity.isValid() || entity.equals(shooter) || !(entity instanceof LivingEntity)) continue;
 
+                    if (!ChanceUtil.getChance(10)) continue;
+
                     if (entity instanceof Player) {
                         if (((Player) entity).getGameMode().equals(GameMode.CREATIVE)) continue;
                         if (shooter instanceof Player) {
