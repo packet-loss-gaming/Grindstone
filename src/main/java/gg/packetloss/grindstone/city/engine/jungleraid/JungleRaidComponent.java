@@ -595,8 +595,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             e.printStackTrace();
         }
 
-        lobbySpawnLocation = new Location(world, -752, 81, -340);
-        lobbyExitLocation = new Location(world, -752, 81, -336, 180, 0);
+        lobbySpawnLocation = new Location(world, -752, 81, -340, 180, 0);
+        lobbyExitLocation = new Location(world, -752, 81, -336);
         leftFlagActivationSign = new Location(world, -766, 82, -364);
         rightFlagActivationSign = new Location(world, -760, 82, -364);
 
