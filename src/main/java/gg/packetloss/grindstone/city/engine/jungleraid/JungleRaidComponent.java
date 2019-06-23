@@ -324,7 +324,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         player.getInventory().setArmorContents(NO_ARMOR);
 
         // Teleport Player
-        player.teleport(state.getLocation());
+        Location returnLoc = state.getLocation();
+        if (returnLoc != null) {
+            player.teleport(returnLoc);
+        }
 
         // Restore the contents
         player.getInventory().setArmorContents(state.getArmourContents());
@@ -472,7 +475,12 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
         }
 
-        end();
+        for (Map.Entry<String, PlayerState> entry : playerState.entrySet()) {
+            goneState.put(entry.getKey(), entry.getValue());
+        }
+        playerState.clear();
+
+        restore();
 
         log.info("Loaded: " + goneState.size() + " saved identities for: Jungle Raid.");
     }
@@ -551,7 +559,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         config = configure(new LocalConfiguration());
 
         setupEconomy();
-        server.getScheduler().runTaskLater(inst, this::setupRegionInfo, 1);
+        server.getScheduler().runTaskLater(inst, () -> {
+            setupRegionInfo();
+            reloadData();
+        }, 1);
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(new JungleRaidListener());
@@ -1421,8 +1432,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         public void onPlayerDeath(PlayerDeathEvent event) {
 
             final Player player = event.getEntity();
-            Optional<Color> optTeamColor  = getTeamColor(player);
-            if (optTeamColor.isPresent()) {
+            if (playerState.containsKey(player.getName())) {
+                Optional<Color> optTeamColor  = getTeamColor(player);
 
                 // Enable disabled Checks
                 boolean isTitanEnabled = isFlagEnabled(JungleRaidFlag.TITAN_MODE);
@@ -1490,9 +1501,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 }
                 event.getDrops().clear();
                 event.setDroppedExp(0);
-            }
 
-            if (playerState.containsKey(player.getName())) {
                 left(player);
             }
         }
@@ -1618,6 +1627,15 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         @EventHandler(ignoreCancelled = true)
         public void onEggDrop(EggDropEvent event) {
             if (arenaContains(event.getLocation())) event.setCancelled(true);
+        }
+
+        @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+        public void onPlayerTeleport(PlayerTeleportEvent event) {
+            Player player = event.getPlayer();
+
+            if (lobbyContains(event.getTo()) && !playerState.containsKey(player.getName())) {
+                event.setTo(lobbyExitLocation);
+            }
         }
 
         @EventHandler
