@@ -147,18 +147,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         public void setupArenas() {
 
             GlobalRegionManager mgr = getWorldGuard().getGlobalRegionManager();
-            // Add Snow Spleef Arenas
-            for (String region : config.snowSpleefRegions) {
-                try {
-                    ProtectedRegion pr = mgr.get(world).getRegion(region);
-                    arenas.add(new SnowSpleefArena(world, pr, adminComponent));
-                    if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
-                } catch (Exception e) {
-                    log.warning("Failed to add arena: " + region + ".");
-                    e.printStackTrace();
-                }
-            }
-
             // Add Cursed Mines
             for (String region : config.cursedMines) {
                 try {
