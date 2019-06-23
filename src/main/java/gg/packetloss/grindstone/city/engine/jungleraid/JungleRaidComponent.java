@@ -1617,21 +1617,14 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         @EventHandler(ignoreCancelled = true)
         public void onApocalypseLightningStrikeSpawn(ApocalypseLightningStrikeSpawnEvent event) {
-            if (arenaContains(event.getLocation())) {
+            if (anythingContains(event.getLocation())) {
                 event.setCancelled(true);
             }
         }
 
         @EventHandler(ignoreCancelled = true)
         public void onApocalypsePersonSpawn(ApocalypsePersonalSpawnEvent event) {
-            if (arenaContains(event.getLocation())) {
-                event.setCancelled(true);
-            }
-        }
-
-        @EventHandler(ignoreCancelled = true)
-        public void onApocalypseRespawnBoost(ApocalypseRespawnBoostEvent event) {
-            if (arenaContains(event.getLocation())) {
+            if (anythingContains(event.getLocation())) {
                 event.setCancelled(true);
             }
         }
