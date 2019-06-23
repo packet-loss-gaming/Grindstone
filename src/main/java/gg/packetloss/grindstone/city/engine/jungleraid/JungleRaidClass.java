@@ -27,8 +27,8 @@ public enum JungleRaidClass {
         this.tntAmt = tntAmt;
     }
 
-    public short getArrowAmount() {
-        return (short) arrowAmt;
+    public int getArrowAmount() {
+        return arrowAmt;
     }
 
     public boolean hasFlintAndSteel() {

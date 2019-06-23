@@ -63,17 +63,21 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.*;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDamageEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.material.Door;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -197,7 +201,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
                 ItemStack fireBow = new ItemStack(Material.BOW);
                 ItemMeta fireBowMeta = fireBow.getItemMeta();
-                fireBowMeta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
+                fireBowMeta.addEnchant(Enchantment.ARROW_FIRE, 2, true);
                 fireBow.setItemMeta(fireBowMeta);
 
                 gear.add(fireBow);
@@ -207,10 +211,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 ItemStack superBow = new ItemStack(Material.BOW);
                 ItemMeta superBowMeta = superBow.getItemMeta();
                 superBowMeta.addEnchant(Enchantment.ARROW_DAMAGE, 5, true);
-                superBowMeta.addEnchant(Enchantment.FIRE_ASPECT, 1, true);
+                superBowMeta.addEnchant(Enchantment.ARROW_FIRE, 1, true);
                 superBow.setItemMeta(superBowMeta);
 
-                superBow.setDurability(jrClass.getArrowAmount());
+                superBow.setDurability((short) (superBow.getType().getMaxDurability() - jrClass.getArrowAmount()));
 
                 gear.add(superBow);
 
@@ -769,6 +773,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         resetPlayerProperties(player);
         maybeDisableGuild(player);
 
+        prayerComponent.uninfluencePlayer(player);
+
         player.teleport(startingPos.get());
     }
 
@@ -895,6 +901,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
     @Override
     public void run() {
+        if (state == JungleRaidState.RESTORING) {
+            return;
+        }
+
         enforceBounds();
 
         if (state == JungleRaidState.LOBBY) {
@@ -966,10 +976,16 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                         }
                         for (int ii = ChanceUtil.getRandom(5); ii > 0; --ii) {
                             ThrownPotion potion = world.spawn(testLoc, ThrownPotion.class);
-                            Potion brewedPotion = new Potion(type);
-                            brewedPotion.setLevel(type.getMaxLevel());
-                            brewedPotion.setSplash(true);
-                            potion.setItem(brewedPotion.toItemStack(1));
+
+                            ItemStack brewedPotion = new ItemStack(Material.SPLASH_POTION);
+                            PotionMeta potionMeta = (PotionMeta) brewedPotion.getItemMeta();
+                            // Prioritize upgradablility over extendability
+                            boolean isExtended = type.isExtendable() && !type.isUpgradeable();
+                            boolean isUpgraded = type.isUpgradeable();
+                            potionMeta.setBasePotionData(new PotionData(type, isExtended, isUpgraded));
+                            brewedPotion.setItemMeta(potionMeta);
+
+                            potion.setItem(brewedPotion);
                             potion.setVelocity(new org.bukkit.util.Vector(
                                     random.nextDouble() * 2.0 - 1,
                                     0,
@@ -1213,6 +1229,20 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             if (anythingContains(event.getPlayer()) && state != JungleRaidState.IN_PROGRESS) event.setCancelled(true);
         }
 
+        private boolean attemptToDoLobbyAction(Player player) {
+            if (state != JungleRaidState.LOBBY) {
+                if (state == JungleRaidState.RESTORING) {
+                    ChatUtil.sendError(player, "The jungle raid arena is restoring, please wait.");
+                } else {
+                    ChatUtil.sendError(player, "A jungle raid is in progress, please wait.");
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
         private void handleLobbyDoorClick(PlayerInteractEvent event) {
             Block block = event.getClickedBlock();
             if (!(block.getState().getData() instanceof Door)) {
@@ -1222,6 +1252,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             event.setCancelled(true);
 
             Player player = event.getPlayer();
+            if (attemptToDoLobbyAction(player)) {
+                return;
+            }
+
             if (lobbyContains(player)) {
                 removeFromLobby(player);
                 player.teleport(lobbyExitLocation);
@@ -1232,11 +1266,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
 
         private void handleLobbySigns(PlayerInteractEvent event) {
-            if (state != JungleRaidState.LOBBY) {
-                return;
-            }
-
-            if (event.getAction() != Action.LEFT_CLICK_BLOCK) {
+            Player player = event.getPlayer();
+            if (attemptToDoLobbyAction(player)) {
                 return;
             }
 
