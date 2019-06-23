@@ -1437,12 +1437,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
                         // Handle damage modification
                         event.setDamage(event.getDamage() * ratio);
-
-                        // Disable the arrow fire in the Impact event
-                        if (ratio < .7) {
-                            // FIXME: Does this work in bukkit?
-                            projectile.setFireTicks(0);
-                        }
                     }
                 }
 
