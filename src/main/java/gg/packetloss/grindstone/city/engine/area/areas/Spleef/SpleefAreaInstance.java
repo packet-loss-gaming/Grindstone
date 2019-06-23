@@ -7,14 +7,12 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.LocationUtil;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class SpleefAreaInstance {
@@ -87,8 +85,8 @@ public class SpleefAreaInstance {
         }
     }
 
-    public void buildWalls(Collection<Player> players) {
-        if (wallRegion == null || activeTicks < 10) {
+    public void buildWalls() {
+        if (wallRegion == null) {
             return;
         }
 
@@ -102,7 +100,7 @@ public class SpleefAreaInstance {
         int maxY = max.getBlockY();
         int maxZ = max.getBlockZ();
 
-        Material toMat = players.size() > 1 ? Material.ICE : Material.AIR;
+        Material toMat = activeTicks > 5 ? Material.ICE : Material.AIR;
         Material fromMat = toMat == Material.ICE ? Material.AIR : Material.ICE;
 
         for (int y = minY; y < maxY; ++y) {
@@ -122,13 +120,34 @@ public class SpleefAreaInstance {
         return LocationUtil.getPlayersStandingOnRegion(world, floorRegion);
     }
 
+    // This is a heuristic approach to determine if the region is loaded
+    private boolean isLoaded() {
+        BlockVector min = containmentRegion.getMinimumPoint();
+        Chunk minChunk = world.getBlockAt(min.getBlockX(), min.getBlockY(), min.getBlockZ()).getChunk();
+        if (!minChunk.isLoaded()) {
+            return false;
+        }
+
+        BlockVector max = containmentRegion.getMaximumPoint();
+        Chunk maxChunk = world.getBlockAt(max.getBlockX(), max.getBlockY(), max.getBlockZ()).getChunk();
+        if (!maxChunk.isLoaded()) {
+            return false;
+        }
+
+        return true;
+    }
+
     public Collection<Player> run() {
+        if (!isLoaded()) {
+            return List.of();
+        }
+
         Collection<Player> players = getParticipants();
 
         equalize(players);
         feed(players);
         restoreFloor(players);
-        buildWalls(players);
+        buildWalls();
 
         return players;
     }
