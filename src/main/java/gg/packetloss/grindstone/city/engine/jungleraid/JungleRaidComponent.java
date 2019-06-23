@@ -1289,11 +1289,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
 
         private void handleLobbyDoorClick(PlayerInteractEvent event) {
-            Block block = event.getClickedBlock();
-            if (!(block.getState().getData() instanceof Door)) {
-                return;
-            }
-
             event.setCancelled(true);
 
             Player player = event.getPlayer();
@@ -1317,27 +1312,30 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
 
             Block block = event.getClickedBlock();
-            if (block.getType() == Material.WALL_SIGN) {
-                Location blockLoc = block.getLocation();
+            Location blockLoc = block.getLocation();
 
-                if (blockLoc.equals(leftFlagActivationSign)) {
-                    leftFlagListSign();
-                } else if (blockLoc.equals(rightFlagActivationSign)) {
-                    rightFlagListSign();
-                } else if (blockLoc.equals(leftClassActivationSign)) {
-                    leftClassListSign();
-                } else if (blockLoc.equals(rightClassActivationSign)) {
-                    rightClassListSign();
-                } else {
-                    tryToggleFlagSignAt(blockLoc);
-                    tryUseClassSignAt(blockLoc, event.getPlayer());
-                }
+            if (blockLoc.equals(leftFlagActivationSign)) {
+                leftFlagListSign();
+            } else if (blockLoc.equals(rightFlagActivationSign)) {
+                rightFlagListSign();
+            } else if (blockLoc.equals(leftClassActivationSign)) {
+                leftClassListSign();
+            } else if (blockLoc.equals(rightClassActivationSign)) {
+                rightClassListSign();
+            } else {
+                tryToggleFlagSignAt(blockLoc);
+                tryUseClassSignAt(blockLoc, event.getPlayer());
             }
         }
 
         private void handleLobbyOnClick(PlayerInteractEvent event) {
-            handleLobbyDoorClick(event);
-            handleLobbySigns(event);
+            Block block = event.getClickedBlock();
+
+            if (block.getState().getData() instanceof Door) {
+                handleLobbyDoorClick(event);
+            } else if (block.getType() == Material.WALL_SIGN) {
+                handleLobbySigns(event);
+            }
         }
 
         private void handleArenaOnClick(PlayerInteractEvent event) {
