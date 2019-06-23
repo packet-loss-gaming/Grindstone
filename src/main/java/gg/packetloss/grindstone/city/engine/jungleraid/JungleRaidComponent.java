@@ -1119,16 +1119,19 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             // Setup task to progressively restore
             final EditSession fakeEditor = WorldEdit.getInstance()
                     .getEditSessionFactory().getEditSession(new BukkitWorld(world), -1);
+
+            ChunkStore chunkStore;
+
+            try {
+                chunkStore = snap.getChunkStore();
+            } catch (DataException | IOException e) {
+                log.warning("Failed to load snapshot: " + e.getMessage());
+                return;
+            }
+
             for (final Chunk chunk : chunkList) {
                 BukkitTask aTask = server.getScheduler().runTaskLater(inst, () -> {
-                    ChunkStore chunkStore;
-
-                    try {
-                        chunkStore = snap.getChunkStore();
-                    } catch (DataException | IOException e) {
-                        log.warning("Failed to load snapshot: " + e.getMessage());
-                        return;
-                    }
+                    boolean isLastRestore = chunkList.indexOf(chunk) == chunkList.size() - 1;
 
                     try {
                         Block minBlock = chunk.getBlock(0, minY, 0);
@@ -1167,15 +1170,18 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                                         restore.getMissingChunks().size(),
                                         restore.getErrorChunks().size()));
                             }
-                            if (chunkList.indexOf(chunk) == chunkList.size() - 1) {
+
+                            if (isLastRestore) {
                                 Bukkit.broadcastMessage(ChatColor.YELLOW + "Restored successfully.");
                                 state = JungleRaidState.LOBBY;
                             }
                         }
                     } finally {
-                        try {
-                            chunkStore.close();
-                        } catch (IOException ignored) {
+                        if (isLastRestore) {
+                            try {
+                                chunkStore.close();
+                            } catch (IOException ignored) {
+                            }
                         }
                     }
                 }, 5 * chunkList.indexOf(chunk));
