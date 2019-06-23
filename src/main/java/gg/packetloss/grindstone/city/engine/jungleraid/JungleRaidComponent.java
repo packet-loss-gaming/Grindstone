@@ -39,7 +39,6 @@ import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseRespawnBoostEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -1424,6 +1423,25 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 event.setCancelled(true);
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
             } else {
+                if (getClassForPlayer(attackingPlayer) == JungleRaidClass.SNIPER) {
+                    Projectile projectile = result.getProjectile();
+                    if (projectile != null) {
+                        double distSq = attackingPlayer.getLocation().distanceSquared(
+                                defendingPlayer.getLocation()
+                        );
+                        double targetDistSq = Math.pow(70, 2);
+                        double ratio = Math.min(distSq, targetDistSq) / targetDistSq;
+
+                        // Handle damage modification
+                        event.setDamage(event.getDamage() * ratio);
+
+                        // Disable the arrow fire in the Impact event
+                        if (ratio < .7) {
+                            // FIXME: Does this work in bukkit?
+                            projectile.setFireTicks(0);
+                        }
+                    }
+                }
 
                 if (isFlagEnabled(JungleRaidFlag.TITAN_MODE) && attackingPlayer.getUniqueId().equals(flagData.titan)) {
                     if (event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
