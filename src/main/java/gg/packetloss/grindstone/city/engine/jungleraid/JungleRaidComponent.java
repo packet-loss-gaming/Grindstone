@@ -356,6 +356,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         player.getInventory().clear();
         player.getInventory().setArmorContents(NO_ARMOR);
 
+        giveBaseEquipment(player, getClassForPlayer(player));
+
         participants.add(player);
 
         writeData();
@@ -838,6 +840,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
     }
 
+    private JungleRaidClass getClassForPlayer(Player player) {
+        return classMap.getOrDefault(player, JungleRaidClass.BALANCED);
+    }
+
     public void smartStart() {
         List<Player> ffaList = new ArrayList<>();
         List<Player> redList = new ArrayList<>();
@@ -874,9 +880,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             return;
         }
 
-        ffaList.forEach(p -> addFFAPlayer(p, classMap.getOrDefault(p, JungleRaidClass.BALANCED)));
-        redList.forEach(p -> addRedPlayer(p, classMap.getOrDefault(p, JungleRaidClass.BALANCED)));
-        blueList.forEach(p -> addBluePlayer(p, classMap.getOrDefault(p, JungleRaidClass.BALANCED)));
+        ffaList.forEach(p -> addFFAPlayer(p, getClassForPlayer(p)));
+        redList.forEach(p -> addRedPlayer(p, getClassForPlayer(p)));
+        blueList.forEach(p -> addBluePlayer(p, getClassForPlayer(p)));
 
         state = JungleRaidState.INITIALIZE;
         startTime = System.currentTimeMillis();
