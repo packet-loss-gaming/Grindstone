@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.jungleraid;
 
+import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.*;
@@ -50,6 +51,7 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.hackbook.ChunkBook;
+import gg.packetloss.hackbook.ModifierBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.commons.lang.WordUtils;
@@ -259,7 +261,25 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             gear.add(new ItemStack(Material.SHEARS));
         }
         if (jrClass.hasAxe()) {
-            gear.add(new ItemStack(Material.IRON_AXE));
+            try {
+                gear.add(ModifierBook.cloneWithSpecifiedModifiers(
+                        new ItemStack(Material.IRON_AXE),
+                        Lists.newArrayList(
+                                ModifierBook.ITEM_ATTACK_DAMAGE.get(
+                                        1,
+                                        ModifierBook.ModifierOperation.ADDITIVE,
+                                        ModifierBook.Slot.MAIN_HAND
+                                ),
+                                ModifierBook.ITEM_ATTACK_SPEED.get(
+                                        .9,
+                                        ModifierBook.ModifierOperation.ADDITIVE,
+                                        ModifierBook.Slot.MAIN_HAND
+                                )
+                        )
+                ));
+            } catch (UnsupportedFeatureException ex) {
+                ex.printStackTrace();
+            }
         }
         gear.add(new ItemStack(Material.COOKED_BEEF, 64));
         gear.add(new ItemStack(Material.COMPASS));
