@@ -1171,8 +1171,11 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                             }
 
                             if (isLastRestore) {
-                                Bukkit.broadcastMessage(ChatColor.YELLOW + "Restored successfully.");
                                 state = JungleRaidState.LOBBY;
+
+                                for (Player player : lobbyExitLocation.getNearbyEntitiesByType(Player.class, 20)) {
+                                    ChatUtil.sendNotice(player, "Jungle Raid restored successfully.");
+                                }
                             }
                         }
                     } finally {
