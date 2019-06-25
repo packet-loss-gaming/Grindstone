@@ -30,6 +30,7 @@ import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import org.bukkit.Server;
@@ -40,6 +41,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -48,6 +50,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "PvP", desc = "Skelril PvP management.")
@@ -204,6 +207,29 @@ public class PvPComponent extends BukkitComponent implements Listener {
 
         Player attacker = (Player) event.getAttacker();
         Player defender = (Player) event.getDefender();
+
+        if (!allowsPvP(attacker, defender)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamageEvent(EntityDamageEvent event) {
+        if (event.getCause() != EntityDamageEvent.DamageCause.BLOCK_EXPLOSION) {
+            return;
+        }
+
+        if (!(event.getEntity() instanceof Player)) {
+            return;
+        }
+
+        Optional<Player> optCreator = ExplosionStateFactory.getExplosionCreator();
+        if (optCreator.isEmpty()) {
+            return;
+        }
+
+        Player attacker = optCreator.get();
+        Player defender = (Player) event.getEntity();
 
         if (!allowsPvP(attacker, defender)) {
             event.setCancelled(true);

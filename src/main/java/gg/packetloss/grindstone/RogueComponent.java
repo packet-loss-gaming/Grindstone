@@ -31,6 +31,7 @@ import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -253,7 +254,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                     if (entity instanceof Player) {
                         final Player defender = (Player) entity;
                         if (shooter instanceof Player) {
-                            if (!PvPComponent.allowsPvP((Player) shooter, defender)) return;
+                            if (!PvPComponent.allowsPvP((Player) shooter, defender)) continue;
                         }
 
                         if (getState(defender).isTraitorProtected()) {
@@ -276,7 +277,22 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                     }
                 }
 
-                p.getWorld().createExplosion(p.getLocation(), 1.75F);
+                if (shooter instanceof Player) {
+                    ExplosionStateFactory.createPvPExplosion(
+                            (Player) shooter,
+                            p.getLocation(),
+                            1.75F,
+                            false,
+                            true
+                    );
+                } else {
+                    ExplosionStateFactory.createExplosion(
+                            p.getLocation(),
+                            1.75F,
+                            false,
+                            true
+                    );
+                }
             }
         }
     }

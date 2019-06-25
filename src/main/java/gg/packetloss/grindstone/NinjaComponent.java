@@ -30,6 +30,7 @@ import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -113,21 +114,20 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     }
 
     private void handleArrowBombArrow(Player player, Arrow arrow) {
-        for (Entity entity : arrow.getNearbyEntities(4, 4, 4)) {
-            if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
-            if (entity instanceof Player) {
-                Player defender = (Player) entity;
-                if (!PvPComponent.allowsPvP(player, defender)) return;
-            }
-        }
-
         if (arrow instanceof TippedArrow) {
             AreaEffectCloud effectCloud = arrow.getWorld().spawn(arrow.getLocation(), AreaEffectCloud.class);
             effectCloud.setBasePotionData(((TippedArrow) arrow).getBasePotionData());
             effectCloud.setDuration(20 * 10);
+            effectCloud.setSource(arrow.getShooter());
         } else {
             float launchForce = arrow.getMetadata("launch-force").get(0).asFloat();
-            arrow.getWorld().createExplosion(arrow.getLocation(), Math.max(2, 4 * launchForce));
+
+            ExplosionStateFactory.createPvPExplosion(
+                    player,
+                    arrow.getLocation(), Math.max(2, 4 * launchForce),
+                    false,
+                    true
+            );
         }
 
         arrow.remove();
@@ -180,7 +180,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
             modifyCamera = false;
 
             if (entity instanceof Player) {
-                if (!PvPComponent.allowsPvP(player, (Player) entity)) return;
+                if (!PvPComponent.allowsPvP(player, (Player) entity)) continue;
                 modifyCamera = true;
             } else if (entity instanceof Monster) {
                 modifyCamera = true;
@@ -223,8 +223,15 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         }
 
         final Location finalK = k;
-        server.getScheduler().runTaskLater(inst,
-                () -> finalK.getWorld().createExplosion(finalK, event.getExplosionPower(), false), event.getDelay());
+        server.getScheduler().runTaskLater(inst, () -> {
+            ExplosionStateFactory.createPvPExplosion(
+                    player,
+                    finalK,
+                    event.getExplosionPower(),
+                    false,
+                    true
+            );
+        }, event.getDelay());
 
         if (oldLoc != null) {
             oldLoc.setDirection(modifyCamera ? oldLoc.getDirection().multiply(-1) : player.getLocation().getDirection());
