@@ -37,7 +37,6 @@ import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.EntityEffect;
 import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -248,35 +247,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
                     entity.playEffect(EntityEffect.HURT);
                 }
             } else {
-
-                for (Entity entity : p.getNearbyEntities(4, 4, 4)) {
-                    if (entity.equals(shooter) || !(entity instanceof LivingEntity)) continue;
-                    if (entity instanceof Player) {
-                        final Player defender = (Player) entity;
-                        if (shooter instanceof Player) {
-                            if (!PvPComponent.allowsPvP((Player) shooter, defender)) continue;
-                        }
-
-                        if (getState(defender).isTraitorProtected()) {
-                            if (shooter instanceof Player) {
-                                ChatUtil.sendWarning(
-                                        shooter,
-                                        defender.getName() + " sends a band of Rogue marauders after you."
-                                );
-                            }
-                            for (int i = ChanceUtil.getRandom(24) + 20; i > 0; --i) {
-                                server.getScheduler().runTaskLater(inst, () -> {
-                                    if (defender.getLocation().distanceSquared(shooter.getLocation()) > 2500) {
-                                        return;
-                                    }
-                                    Location l = LocationUtil.findRandomLoc(shooter.getLocation().getBlock(), 3, true, false);
-                                    l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 1.75F, true, false);
-                                }, 12 * i);
-                            }
-                        }
-                    }
-                }
-
                 if (shooter instanceof Player) {
                     ExplosionStateFactory.createPvPExplosion(
                             (Player) shooter,
@@ -464,7 +434,7 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
     public class Commands {
 
         @Command(aliases = {"rogue"}, desc = "Give a player the Rogue power",
-                flags = "lgtbl:", min = 0, max = 0)
+                flags = "lgl:", min = 0, max = 0)
         @CommandPermissions({"aurora.rogue"})
         public void rogue(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -480,7 +450,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
             // Set flags
             rogueSession.limitYVelocity(args.hasFlag('l'));
-            rogueSession.setTraitorProtection(args.hasFlag('t') && inst.hasPermission(player, "aurora.rogue.master"));
             rogueSession.setGrenadeSafety(!args.hasFlag('g'));
 
             if (args.hasFlag('l')) {
@@ -519,10 +488,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         private boolean isRogue = false;
         @Setting("rogue-y-limited")
         private boolean limitYVelocity = false;
-        @Setting("rogue-backlash")
-        private boolean rogueBacklash = true;
-        @Setting("rogue-traitor")
-        private boolean rogueTraitor = false;
 
         @Setting("rogue-action-item")
         private int rogueActionItem = -1;
@@ -587,16 +552,6 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
         public void grenade() {
 
             nextGrenade = System.currentTimeMillis() + 3500;
-        }
-
-        public boolean isTraitorProtected() {
-
-            return rogueTraitor;
-        }
-
-        public void setTraitorProtection(boolean rogueTraitor) {
-
-            this.rogueTraitor = rogueTraitor;
         }
 
         public boolean isYLimited() {
