@@ -36,6 +36,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
@@ -274,7 +275,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         if (p instanceof Snowball) {
             if (parent.boss != null && parent.boss.equals(p.getShooter())) {
                 Location pt = p.getLocation();
-                p.getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), 3, false, false);
+                ExplosionStateFactory.createExplosion(pt, 3, false, false);
             }
         }
     }

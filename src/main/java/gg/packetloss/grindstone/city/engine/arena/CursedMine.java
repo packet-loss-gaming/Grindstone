@@ -33,6 +33,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.BookUtil;
@@ -492,7 +493,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                             if (!contains(player)) return;
 
                                             Location l = LocationUtil.findRandomLoc(player.getLocation().getBlock(), 3, true, false);
-                                            l.getWorld().createExplosion(l.getX(), l.getY(), l.getZ(), 3F, true, false);
+                                            ExplosionStateFactory.createExplosion(l, 3, true, false);
                                         }, 12 * i);
                                     }
                                 } else {

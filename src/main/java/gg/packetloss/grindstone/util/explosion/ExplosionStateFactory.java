@@ -23,6 +23,10 @@ public class ExplosionStateFactory {
         createTrackedExplosion(null, loc, power, setFire, breakBlocks);
     }
 
+    public static void createFakeExplosion(Location loc) {
+        createTrackedExplosion(null, loc, 0, false, false);
+    }
+
     public static Optional<Player> getExplosionCreator() {
         return explosionCauseStack.getCurCause();
     }

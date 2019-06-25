@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.prayer.PrayerFX;
 
 import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -22,7 +23,7 @@ public class FakeTNTFX extends AbstractEffect {
     public void add(Player player) {
 
         Location playerLoc = player.getLocation();
-        player.getWorld().createExplosion(playerLoc.getX(), playerLoc.getY(), playerLoc.getZ(), 0, false, false);
+        ExplosionStateFactory.createFakeExplosion(playerLoc);
     }
 
     @Override

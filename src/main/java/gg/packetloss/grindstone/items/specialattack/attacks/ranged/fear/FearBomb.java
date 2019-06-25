@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import gg.packetloss.grindstone.util.DamageUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.Bukkit;
@@ -108,7 +109,7 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
                         loc.add(0, -1, 0);
                     }
 
-                    block.getWorld().createExplosion(loc, 0F);
+                    ExplosionStateFactory.createFakeExplosion(loc);
                     for (Entity entity : block.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
                         if (!entity.isValid()) continue;
                         if (entity.getLocation().distanceSquared(loc) <= 4) {

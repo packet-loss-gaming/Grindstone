@@ -14,6 +14,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import org.bukkit.ChatColor;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
@@ -99,7 +100,7 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
             if (inBlackListedWord(signLine)) {
 
                 // Get rid of that sign!
-                block.getWorld().createExplosion(blockLoc, 0);
+                ExplosionStateFactory.createFakeExplosion(blockLoc);
                 blockLoc.getBlock().breakNaturally(new ItemStack(ItemID.SIGN, 1));
 
                 // Mess with the player

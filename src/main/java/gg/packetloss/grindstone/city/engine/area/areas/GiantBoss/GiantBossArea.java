@@ -27,6 +27,7 @@ import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
@@ -438,7 +439,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                     if (baskInGlory) {
                         int dmgFact = difficulty * 3 + 1;
                         spawnPts.stream().filter(pt -> ChanceUtil.getChance(12)).forEach(pt -> {
-                            getWorld().createExplosion(pt.getX(), pt.getY(), pt.getZ(), dmgFact, false, false);
+                            ExplosionStateFactory.createExplosion(pt, dmgFact, false, false);
                         });
                         return;
                     }

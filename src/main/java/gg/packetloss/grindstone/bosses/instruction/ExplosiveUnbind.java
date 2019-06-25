@@ -11,6 +11,7 @@ import com.skelril.OSBL.entity.EntityDetail;
 import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.instruction.InstructionResult;
 import com.skelril.OSBL.instruction.UnbindInstruction;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 
@@ -30,10 +31,7 @@ public abstract class ExplosiveUnbind<T extends EntityDetail> extends UnbindInst
     public InstructionResult<T, UnbindInstruction<T>> process(LocalControllable<T> controllable) {
         Entity boss = BukkitUtil.getBukkitEntity(controllable);
         Location target = boss.getLocation();
-        double x = target.getX();
-        double y = target.getY();
-        double z = target.getZ();
-        boss.getWorld().createExplosion(x, y, z, getExplosionStrength(controllable.getDetail()), fire, blockBreak);
+        ExplosionStateFactory.createExplosion(target, getExplosionStrength(controllable.getDetail()), fire, blockBreak);
         return null;
     }
 }

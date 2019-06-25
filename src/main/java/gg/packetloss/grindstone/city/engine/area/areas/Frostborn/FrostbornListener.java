@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import org.bukkit.Location;
@@ -208,7 +209,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             }
 
             Location targetLoc = p.getLocation();
-            p.getWorld().createExplosion(targetLoc.getX(), targetLoc.getY(), targetLoc.getZ(), damage, false, blockDamage);
+            ExplosionStateFactory.createExplosion(targetLoc, damage, false, blockDamage);
         }
     }
 

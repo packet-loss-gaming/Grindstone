@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.ChatColor;
 import org.bukkit.EntityEffect;
@@ -256,7 +257,12 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             for (int x = minX; x < maxX; ++x) {
                 for (int z = minZ; z < maxZ; ++z) {
                     if (ChanceUtil.getChance(parent.getConfig().daBombTNT)) {
-                        parent.getWorld().createExplosion(x, FreakyFourArea.groundLevel, z, dmgFact, false, false);
+                        ExplosionStateFactory.createExplosion(
+                                new Location(parent.getWorld(), x, FreakyFourArea.groundLevel, z),
+                                dmgFact,
+                                false,
+                                false
+                        );
                     }
                 }
             }

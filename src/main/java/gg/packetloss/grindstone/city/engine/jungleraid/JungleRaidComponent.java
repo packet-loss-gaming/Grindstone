@@ -45,6 +45,7 @@ import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -1679,7 +1680,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             if (p.getShooter() == null || !(p.getShooter() instanceof Player)) return;
             if (arenaContains(p) && state == JungleRaidState.IN_PROGRESS) {
                 int explosionSize = 2;
-                LivingEntity shooter = (LivingEntity) p.getShooter();
+                Player shooter = (Player) p.getShooter();
 
                 if (p instanceof Arrow) {
                     if (isFlagEnabled(JungleRaidFlag.TORMENT_ARROWS)) {
@@ -1705,7 +1706,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                     } else return;
                 }
 
-                p.getWorld().createExplosion(p.getLocation(), explosionSize);
+                ExplosionStateFactory.createPvPExplosion(
+                        shooter,
+                        p.getLocation(),
+                        explosionSize,
+                        false,
+                        true
+                );
             }
         }
 

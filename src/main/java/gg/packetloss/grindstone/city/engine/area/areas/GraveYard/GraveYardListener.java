@@ -22,6 +22,7 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.WeaponFamily;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
@@ -405,7 +406,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         if (entity instanceof Sheep && parent.contains(entity)) {
             event.setCancelled(true);
             Location loc = entity.getLocation();
-            entity.getWorld().createExplosion(loc.getX(), loc.getY(), loc.getZ(), 4, false, false);
+            ExplosionStateFactory.createExplosion(loc, 4, false, false);
         }
     }
 
