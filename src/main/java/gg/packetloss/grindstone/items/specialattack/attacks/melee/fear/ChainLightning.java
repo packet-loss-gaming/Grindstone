@@ -16,6 +16,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class ChainLightning extends EntityAttack implements MeleeSpecial {
 
     public ChainLightning(LivingEntity owner, LivingEntity target) {
@@ -23,11 +26,6 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
     }
 
     private void chainOn(LivingEntity target, int depth, int delayModifier) {
-        boolean isFirstRun = depth == 1;
-        if (!isFirstRun && !ChanceUtil.getChance(3 * depth)) {
-            return;
-        }
-
         CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (owner.isDead()) {
                 return;
@@ -41,23 +39,37 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
                 server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
             }
 
-            if (!DamageUtil.damageWithSpecialAttack(owner, target, this, 15) && !isFirstRun) {
+            List<Entity> targets = target.getNearbyEntities(5, 5, 5).stream().filter(e -> {
+                if (!(e instanceof LivingEntity)) {
+                    return false;
+                }
+
+                if (e.equals(owner)) {
+                    return false;
+                }
+
+                return true;
+            }).collect(Collectors.toList());
+
+            double damage = 15;
+            if (targets.isEmpty()) {
+                damage *= 3;
+            }
+
+            boolean isFirstRun = depth == 1;
+            if (!DamageUtil.damageWithSpecialAttack(owner, target, this, damage) && !isFirstRun) {
                 return;
             }
 
             target.getWorld().strikeLightningEffect(target.getLocation());
 
             int localDelayModifier = 0;
-            for (Entity entity : target.getNearbyEntities(5, 5, 5)) {
-                if (!(entity instanceof LivingEntity)) {
-                    continue;
-                }
+            for (Entity entity : targets) {
+                int newDepth = depth + 1;
 
-                if (entity.equals(owner)) {
-                    continue;
+                if (ChanceUtil.getChance(3 * newDepth)) {
+                    chainOn((LivingEntity) entity, newDepth, ++localDelayModifier);
                 }
-
-                chainOn((LivingEntity) entity, depth + 1, ++localDelayModifier);
             }
         }, 4 * delayModifier);
     }
