@@ -150,46 +150,60 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         return sessions.getSession(NinjaState.class, player).canSmokeBomb();
     }
 
+    private List<Entity> refineSmokeBombTargets(Player player, List<Entity> entities) {
+        return entities.stream().filter(e -> {
+            if (e instanceof Player) {
+                return PvPComponent.allowsPvP(player, (Player) e);
+            }
+
+            return true;
+        }).sorted(new EntityDistanceComparator(player.getLocation())).collect(Collectors.toList());
+    }
+
+    private Optional<Location> getSmokeBombOldLoc(Player player, List<Entity> entities) {
+        Entity targetEntity = null;
+
+        for (Entity entity : entities) {
+            if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
+
+            targetEntity = entity;
+        }
+
+        if (targetEntity == null) {
+            return Optional.empty();
+        }
+
+        Location targetLoc = targetEntity.getLocation();
+        targetLoc.setDirection(targetLoc.toVector().subtract(player.getLocation().toVector()));
+        return Optional.of(targetLoc);
+    }
+
     public void smokeBomb(final Player player) {
 
         List<Entity> entities = player.getNearbyEntities(4, 4, 4);
-        entities.sort(new EntityDistanceComparator(player.getLocation()));
+        entities = refineSmokeBombTargets(player, entities);
 
-        Location oldLoc = null;
-        for (Entity entity : entities) {
-            if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
-            oldLoc = entity.getLocation();
+        Optional<Location> optSmokeBombLoc = getSmokeBombOldLoc(player, entities);
+        if (optSmokeBombLoc.isEmpty()) {
+            return;
         }
 
-        if (oldLoc == null) return;
+        NinjaSmokeBombEvent event = new NinjaSmokeBombEvent(
+                player,
+                3,
+                30,
+                entities,
+                optSmokeBombLoc.get(),
+                player.getLocation()
+        );
 
-        NinjaSmokeBombEvent event = new NinjaSmokeBombEvent(player, 3, 30, entities, oldLoc, player.getLocation());
         server.getPluginManager().callEvent(event);
         if (event.isCancelled() || entities.isEmpty()) return;
 
         NinjaState session = sessions.getSession(NinjaState.class, player);
         session.smokeBomb();
 
-        entities.sort(new EntityDistanceComparator(player.getLocation()));
-
-        oldLoc = null;
-        boolean modifyCamera = false;
-        for (Entity entity : entities) {
-            if (entity.equals(player) || !(entity instanceof LivingEntity)) continue;
-
-            modifyCamera = false;
-
-            if (entity instanceof Player) {
-                if (!PvPComponent.allowsPvP(player, (Player) entity)) continue;
-                modifyCamera = true;
-            } else if (entity instanceof Monster) {
-                modifyCamera = true;
-            }
-
-            oldLoc = entity.getLocation();
-        }
-
-        Location k = null;
+        Location targetLoc = event.getTargetLoc();
         for (Entity entity : entities) {
             EntityUtil.forceDamage(entity, 1);
             EntityUtil.heal(player, 1);
@@ -202,14 +216,13 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
                 ChatUtil.sendWarning(entity, "You hear a strange ticking sound...");
             }
 
-            k = event.getTargetLoc();
-            k.setPitch((float) (ChanceUtil.getRandom(361.0) - 1));
-            k.setYaw((float) (ChanceUtil.getRandom(181.0) - 91));
+            Location newEntityLoc = targetLoc.clone();
 
-            entity.teleport(k, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+            newEntityLoc.setPitch((float) (ChanceUtil.getRandom(361.0) - 1));
+            newEntityLoc.setYaw((float) (ChanceUtil.getRandom(181.0) - 91));
+
+            entity.teleport(newEntityLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
-
-        if (k == null) return;
 
         Location[] locations = new Location[]{
                 player.getLocation(),
@@ -218,26 +231,22 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         EnvironmentUtil.generateRadialEffect(locations, Effect.SMOKE);
 
         // Offset by 1 so that the bomb is not messed up by blocks
-        if (k.getBlock().getType() != Material.AIR) {
-            k.add(0, 1, 0);
+        if (targetLoc.getBlock().getType() != Material.AIR) {
+            targetLoc.add(0, 1, 0);
         }
 
-        final Location finalK = k;
+        final Location finalTargetLoc = targetLoc;
         server.getScheduler().runTaskLater(inst, () -> {
             ExplosionStateFactory.createPvPExplosion(
                     player,
-                    finalK,
+                    finalTargetLoc,
                     event.getExplosionPower(),
                     false,
                     true
             );
         }, event.getDelay());
 
-        if (oldLoc != null) {
-            oldLoc.setDirection(modifyCamera ? oldLoc.getDirection().multiply(-1) : player.getLocation().getDirection());
-        }
-        Location target = event.getTeleportLoc() == null ? oldLoc : event.getTeleportLoc();
-        player.teleport(target, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        player.teleport(event.getTeleportLoc(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
     public boolean canGrapple(Player player) {

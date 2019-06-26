@@ -32,7 +32,7 @@ public class NinjaSmokeBombEvent extends NinjaEvent implements Cancellable {
         this.explosionPower = explosionPower;
         this.delay = delay;
         this.entities = entities;
-        this.originTeleportLoc = teleportLoc;
+        this.originTeleportLoc = this.teleportLoc = teleportLoc;
         this.targetLoc = targetLoc;
     }
 
@@ -61,15 +61,15 @@ public class NinjaSmokeBombEvent extends NinjaEvent implements Cancellable {
     }
 
     public Location getOriginalTeleportLoc() {
-        return originTeleportLoc;
+        return originTeleportLoc.clone();
     }
 
     public Location getTeleportLoc() {
-        return teleportLoc;
+        return teleportLoc.clone();
     }
 
     public void setTeleportLoc(Location teleportLoc) {
-        this.teleportLoc = teleportLoc;
+        this.teleportLoc = teleportLoc.clone();
     }
 
     public Location getTargetLoc() {
