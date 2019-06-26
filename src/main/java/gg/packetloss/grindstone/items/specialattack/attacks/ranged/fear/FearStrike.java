@@ -34,12 +34,16 @@ public class FearStrike extends EntityAttack implements RangedSpecial {
 
         List<Entity> entityList = target.getNearbyEntities(8, 4, 8);
         entityList.add(target);
+
+        int distance = (int) target.getLocation().distance(owner.getLocation());
+        double damage = 15 + ChanceUtil.getRandom(distance * 2);
+
         for (Entity e : entityList) {
             if (e.isValid() && e instanceof LivingEntity) {
                 if (e.equals(owner)) continue;
 
                 // Check this, and do the damage first so we correctly check PvP boundaries
-                if (!DamageUtil.damageWithSpecialAttack(owner, (LivingEntity) e, this, 10)) {
+                if (!DamageUtil.damageWithSpecialAttack(owner, (LivingEntity) e, this, damage)) {
                     continue;
                 }
 
@@ -53,7 +57,7 @@ public class FearStrike extends EntityAttack implements RangedSpecial {
                 e.setVelocity(velocity);
 
                 // Light entity on fire
-                e.setFireTicks(20 * (ChanceUtil.getRandom(40) + 20));
+                e.setFireTicks(20 * 5);
             }
         }
         inform("You fire a terrifyingly powerful shot.");

@@ -130,9 +130,9 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
             }
         };
 
-        TimedRunnable timedRunnable = new TimedRunnable(bomb, 6);
+        TimedRunnable timedRunnable = new TimedRunnable(bomb, 8);
 
-        BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 20);
+        BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 10);
         timedRunnable.setTask(task);
 
         inform("Your bow creates a powerful bomb.");
