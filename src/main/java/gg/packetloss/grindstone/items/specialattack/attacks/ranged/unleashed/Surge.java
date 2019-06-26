@@ -7,6 +7,8 @@ import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
 import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
@@ -20,11 +22,10 @@ public class Surge extends EntityAttack implements RangedSpecial {
 
     private void runSurge(BlockIterator it, int distance, double totalDamage) {
         if (!it.hasNext()) {
-            int dmgAmt = (int) Math.ceil(totalDamage);
-            int healedAmt = (int) Math.ceil(totalDamage * .005);
-            owner.setHealth(Math.min(owner.getMaxHealth(), owner.getHealth() + healedAmt));
+            owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * distance, 1), true);
 
-            inform("The surge dealt " + dmgAmt + " healing you " + healedAmt + ".");
+            int dmgAmt = (int) Math.ceil(totalDamage);
+            inform("The surge dealt an impressive " + dmgAmt + ".");
             return;
         }
 
