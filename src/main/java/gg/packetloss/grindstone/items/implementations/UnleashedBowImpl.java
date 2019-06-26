@@ -16,6 +16,7 @@ import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.unleashed.Lif
 import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.unleashed.Speed;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.GlowingFog;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Surge;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -33,7 +34,7 @@ import org.bukkit.projectiles.ProjectileSource;
 public class UnleashedBowImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
     @Override
     public SpecialAttack getSpecial(LivingEntity owner, LivingEntity target) {
-        switch (ChanceUtil.getRandom(5)) {
+        switch (ChanceUtil.getRandom(6)) {
             case 1:
                 return new Famine(owner, target);
             case 2:
@@ -44,6 +45,8 @@ public class UnleashedBowImpl extends AbstractItemFeatureImpl implements SpecWea
                 return new Speed(owner, target);
             case 5:
                 return new GlowingFog(owner, target);
+            case 6:
+                return new Surge(owner, target);
         }
         return null;
     }
