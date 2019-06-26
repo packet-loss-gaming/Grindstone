@@ -6,6 +6,7 @@ import gg.packetloss.grindstone.util.DamageUtil;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
 import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
@@ -19,7 +20,11 @@ public class Surge extends EntityAttack implements RangedSpecial {
 
     private void runSurge(BlockIterator it, int distance, double totalDamage) {
         if (!it.hasNext()) {
-            owner.setHealth(Math.min(owner.getMaxHealth(), owner.getHealth() + (totalDamage * .25)));
+            int dmgAmt = (int) Math.ceil(totalDamage);
+            int healedAmt = (int) Math.ceil(totalDamage * .005);
+            owner.setHealth(Math.min(owner.getMaxHealth(), owner.getHealth() + healedAmt));
+
+            inform("The surge dealt " + dmgAmt + " healing you " + healedAmt + ".");
             return;
         }
 
@@ -35,30 +40,31 @@ public class Surge extends EntityAttack implements RangedSpecial {
                     LivingEntity.class, 4,4, 4
             );
 
-            int newDistance = distance + 5;
+            int newDistance = distance + 1;
             double newTotal = totalDamage;
 
             for (LivingEntity e : entityList) {
                 if (e.isValid()) {
                     if (e.equals(owner)) continue;
 
-                    if (!DamageUtil.damageWithSpecialAttack(owner, e, this, newDistance)) {
+                    double damage = (e instanceof Player ? 5 : 15) * newDistance;
+                    if (!DamageUtil.damageWithSpecialAttack(owner, e, this, damage)) {
                         continue;
                     }
 
-                    newTotal += newDistance;
+                    newTotal += damage;
 
                     SingleBlockParticleEffect.burstOfFlames(e.getLocation());
                 }
             }
 
             runSurge(it, newDistance, newTotal);
-        }, 3);
+        }, 2);
     }
 
     @Override
     public void activate() {
-        int maxBlocks = (int) owner.getLocation().distance(target.getLocation()) + 1;
+        int maxBlocks = (int) owner.getLocation().distance(target.getLocation()) + 15;
 
         Vector vel = target.getLocation().toVector().subtract(owner.getLocation().toVector());
 
@@ -70,7 +76,7 @@ public class Surge extends EntityAttack implements RangedSpecial {
                 maxBlocks
         );
 
-        runSurge(it, 0, 3);
+        runSurge(it, 0, 0);
 
         inform("Your bow unleashes a surge of energy.");
     }
