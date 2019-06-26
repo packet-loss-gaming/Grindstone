@@ -54,12 +54,12 @@ public class FearBlaze extends EntityAttack implements MeleeSpecial {
             if (runsRemaining > 0) {
                 ignite(target, runsRemaining, newPower);
             }
-        }, 10);
+        }, 20);
     }
 
     @Override
     public void activate() {
-        ignite(target, ChanceUtil.getRangedRandom(4, 30), 2);
+        ignite(target, ChanceUtil.getRangedRandom(15, 30), 2);
 
         inform("Your eyes ignite with an infernal blaze...");
         inform("... your opponent will suffer!");
