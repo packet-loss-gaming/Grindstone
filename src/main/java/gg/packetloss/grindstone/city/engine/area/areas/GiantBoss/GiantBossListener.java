@@ -288,6 +288,31 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 parent.printBossHealth();
             }, 1);
 
+            if (parent.damageHeals) {
+                boss.setHealth(Math.min(boss.getMaxHealth(), (event.getDamage() * parent.difficulty) + boss.getHealth()));
+                if (ChanceUtil.getChance(4) && acceptedReasons.contains(event.getCause())) {
+                    int affected = 0;
+                    for (Entity e : boss.getNearbyEntities(8, 8, 8)) {
+                        if (e.isValid() && e instanceof Player && parent.contains(e)) {
+                            server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
+                            e.setVelocity(new Vector(
+                                    Math.random() * 3 - 1.5,
+                                    Math.random() * 4,
+                                    Math.random() * 3 - 1.5
+                            ));
+                            e.setFireTicks(ChanceUtil.getRandom(20 * 60));
+                            affected++;
+                        }
+                    }
+                    if (affected > 0) {
+                        ChatUtil.sendNotice(parent.getContained(1, Player.class), "Feel my power!");
+                    }
+                }
+            } else {
+                double zombieBlockingNumber = Math.min(parent.getContained(Zombie.class).size() / 2, 100);
+                double percentageDamageRemaining = (100 - zombieBlockingNumber) / 100;
+                event.setDamage(event.getDamage() * percentageDamageRemaining);
+            }
 
             if (acceptedReasons.contains(event.getCause())) {
                 final ItemStack weapon = new ItemStack(ItemID.BONE);
@@ -319,32 +344,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                         }
                     }
                 }, 1);
-            }
-
-            if (parent.damageHeals) {
-                boss.setHealth(Math.min(boss.getMaxHealth(), (event.getDamage() * parent.difficulty) + boss.getHealth()));
-                if (ChanceUtil.getChance(4) && acceptedReasons.contains(event.getCause())) {
-                    int affected = 0;
-                    for (Entity e : boss.getNearbyEntities(8, 8, 8)) {
-                        if (e.isValid() && e instanceof Player && parent.contains(e)) {
-                            server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
-                            e.setVelocity(new Vector(
-                                    Math.random() * 3 - 1.5,
-                                    Math.random() * 4,
-                                    Math.random() * 3 - 1.5
-                            ));
-                            e.setFireTicks(ChanceUtil.getRandom(20 * 60));
-                            affected++;
-                        }
-                    }
-                    if (affected > 0) {
-                        ChatUtil.sendNotice(parent.getContained(1, Player.class), "Feel my power!");
-                    }
-                }
-            } else {
-                double zombieBlockingNumber = Math.min(parent.getContained(Zombie.class).size() / 2, 100);
-                double percentageDamageRemaining = (100 - zombieBlockingNumber) / 100;
-                event.setDamage(event.getDamage() * percentageDamageRemaining);
             }
 
             if (attacker instanceof Player) {
