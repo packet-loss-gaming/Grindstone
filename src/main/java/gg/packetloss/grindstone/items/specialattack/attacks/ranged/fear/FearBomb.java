@@ -23,9 +23,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -110,11 +108,10 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
                     }
 
                     ExplosionStateFactory.createFakeExplosion(loc);
-                    for (Entity entity : block.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
+                    for (LivingEntity entity : loc.getNearbyLivingEntities(2, 2, 2)) {
                         if (!entity.isValid()) continue;
-                        if (entity.getLocation().distanceSquared(loc) <= 4) {
-                            DamageUtil.damageWithSpecialAttack(owner, target, spec, entity instanceof Player ? 200 : 10000);
-                        }
+
+                        DamageUtil.damageWithSpecialAttack(owner, entity, spec, entity instanceof Player ? 200 : 10000);
                     }
                 }
 
@@ -130,9 +127,9 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
             }
         };
 
-        TimedRunnable timedRunnable = new TimedRunnable(bomb, 8);
+        TimedRunnable timedRunnable = new TimedRunnable(bomb, 15);
 
-        BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 10);
+        BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 5);
         timedRunnable.setTask(task);
 
         inform("Your bow creates a powerful bomb.");
