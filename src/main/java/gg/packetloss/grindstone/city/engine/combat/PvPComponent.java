@@ -282,6 +282,9 @@ public class PvPComponent extends BukkitComponent implements Listener {
     }
 
     public static boolean allowsPvP(Player attacker, Player defender, boolean checkRegions) {
+        if (attacker.equals(defender)) {
+            return true;
+        }
 
         PvPSession attackerSession = sessions.getSession(PvPSession.class, attacker);
         PvPSession defenderSession = sessions.getSession(PvPSession.class, defender);
