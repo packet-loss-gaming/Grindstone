@@ -53,14 +53,13 @@ public class RedFeatherImpl extends AbstractItemFeatureImpl {
             ItemStack[] contents = player.getInventory().getContents();
 
             if (session.canSpec(SpecType.RED_FEATHER) && ItemUtil.hasItem(player, CustomItems.RED_FEATHER)) {
-
                 int redstoneTally = 0;
+
                 for (int i = 0; i < contents.length; ++i) {
                     ItemStack stack = contents[i];
                     if (stack == null) {
                         continue;
                     }
-
 
                     for (Value acceptedValue : acceptedValues) {
                         if (acceptedValue.getType() == stack.getType()) {
@@ -89,6 +88,8 @@ public class RedFeatherImpl extends AbstractItemFeatureImpl {
                 {
                     for (Value acceptedValue : acceptedValues) {
                         final int scale = acceptedValue.getScale();
+                        final Material acceptedMat = acceptedValue.getType();
+
                         for (int i = 0; i < contents.length; ++i) {
                             // Use an insertion position which prefers to declutter the hotbar.
                             int insertionPos = (i + 9) % contents.length;
@@ -97,10 +98,10 @@ public class RedFeatherImpl extends AbstractItemFeatureImpl {
                             int startingAmt = stack == null ? 0 : stack.getAmount();
                             int scaledRAmt = rAmt / scale;
 
-                            if (scaledRAmt > 0 && (startingAmt == 0 || acceptedValue.getType() == stack.getType())) {
-                                int quantity = Math.min(scaledRAmt + startingAmt, acceptedValue.getType().getMaxStackSize());
+                            if (scaledRAmt > 0 && (startingAmt == 0 || acceptedMat == stack.getType())) {
+                                int quantity = Math.min(scaledRAmt + startingAmt, acceptedMat.getMaxStackSize());
                                 rAmt -= (quantity - startingAmt) * scale;
-                                contents[insertionPos] = new ItemStack(acceptedValue.getType(), quantity);
+                                contents[insertionPos] = new ItemStack(acceptedMat, quantity);
 
                                 // Stop early if we no longer have anything to add
                                 if (rAmt == 0) {
@@ -114,18 +115,23 @@ public class RedFeatherImpl extends AbstractItemFeatureImpl {
                 player.getInventory().setContents(contents);
 
                 // Drop any remaining redstone on the floor, the inventory overflowed
-                while (rAmt / 9 > 0) {
-                    int r = Math.min(64, rAmt / 9);
-                    ItemStack is = new ItemStack(Material.REDSTONE_BLOCK, r);
-                    w.dropItem(player.getLocation(), is);
-                    rAmt -= r * 9;
-                }
+                for (Value acceptedValue : acceptedValues) {
+                    final int scale = acceptedValue.getScale();
+                    final Material acceptedMat = acceptedValue.getType();
 
-                while (rAmt > 0) {
-                    int r = Math.min(64, rAmt);
-                    ItemStack is = new ItemStack(Material.REDSTONE, r);
-                    w.dropItem(player.getLocation(), is);
-                    rAmt -= r;
+                    // Drop items while the scaled remainder is larger than the cost per element
+                    while (true) {
+                        int scaledRAmt = rAmt / scale;
+                        if (scaledRAmt == 0) {
+                            break;
+                        }
+
+                        int quantity = Math.min(scaledRAmt, acceptedMat.getMaxStackSize());
+                        ItemStack is = new ItemStack(acceptedMat, quantity);
+                        w.dropItem(player.getLocation(), is);
+
+                        rAmt -= quantity * scale;
+                    }
                 }
 
                 //noinspection deprecation
