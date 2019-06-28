@@ -120,11 +120,20 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
         Vector vel = player.getLocation().getDirection();
         vel.multiply(3 * modifier * Math.max(.1, player.getFoodLevel() / 20.0));
-        if (auto || rogueSession.isYLimited()) {
-            vel.setY(Math.min(.8, Math.max(.175, vel.getY())));
+
+        double yMax;
+        double yMin;
+
+        if (auto) {
+            yMax = .8;
+            yMin = .175;
         } else {
-            vel.setY(Math.min(1.4, vel.getY()));
+            yMax = rogueSession.isYLimited() ? .8 : 1.4;
+            yMin = -2;
         }
+
+        vel.setY(Math.min(yMax, Math.max(yMin, vel.getY())));
+
         player.setVelocity(vel);
     }
 
