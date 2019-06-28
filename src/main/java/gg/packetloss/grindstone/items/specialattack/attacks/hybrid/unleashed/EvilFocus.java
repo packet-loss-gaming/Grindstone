@@ -9,7 +9,6 @@ package gg.packetloss.grindstone.items.specialattack.attacks.hybrid.unleashed;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
-import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.Location;
@@ -24,6 +23,10 @@ public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpeci
 
     public EvilFocus(LivingEntity owner, LivingEntity target) {
         super(owner, target);
+    }
+
+    private int getNumRuns() {
+        return (int) Math.max(3, Math.min(15, target.getHealth()));
     }
 
     private void lockPosition() {
@@ -45,14 +48,14 @@ public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpeci
             }
         };
 
-        TimedRunnable freezeTask = new TimedRunnable(freeze, ChanceUtil.getRangedRandom(3, 8));
-        BukkitTask freezeTaskExecutor = server.getScheduler().runTaskTimer(inst, freezeTask, 20 * 2, 20);
+        TimedRunnable freezeTask = new TimedRunnable(freeze, getNumRuns());
+        BukkitTask freezeTaskExecutor = server.getScheduler().runTaskTimer(inst, freezeTask, 20, 20);
         freezeTask.setTask(freezeTaskExecutor);
     }
 
     @Override
     public void activate() {
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (10 * target.getHealth()), 1), true);
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * (getNumRuns() + 3), 1), true);
         lockPosition();
 
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_GHAST_SCREAM, 1, .02F);
