@@ -40,6 +40,12 @@ public abstract class BloodLustArmor extends AbstractItemFeatureImpl {
             ItemStack itemStack = CollectionUtil.getElement(armour);
 
             int baseDamage = (int) event.getDamage();
+
+            // Restore more armor during PvP
+            if (result.getDefender() instanceof Player) {
+                baseDamage *= 3;
+            }
+
             int damageToHeal = ChanceUtil.getRangedRandom(baseDamage, baseDamage * 3);
             if (damageToHeal > itemStack.getDurability()) {
                 itemStack.setDurability((short) 0);
