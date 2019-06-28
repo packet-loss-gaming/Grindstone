@@ -3,24 +3,26 @@ package gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import gg.packetloss.grindstone.util.DamageUtil;
+import gg.packetloss.grindstone.util.SimpleRayTrace;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
-import org.bukkit.block.Block;
+import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
 
 public class Surge extends EntityAttack implements RangedSpecial {
+    private static final int RADIUS = 4;
+    private static final int RADIUS_SQ = RADIUS * RADIUS;
 
     public Surge(LivingEntity owner, LivingEntity target) {
         super(owner, target);
     }
 
-    private void runSurge(BlockIterator it, int distance, double totalDamage) {
+    private void runSurge(SimpleRayTrace it, int distance, double totalDamage) {
         if (!it.hasNext()) {
             owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * distance, 1), true);
 
@@ -30,15 +32,21 @@ public class Surge extends EntityAttack implements RangedSpecial {
         }
 
         server.getScheduler().runTaskLater(inst, () -> {
-            Block block = it.next();
+            Location loc = it.next();
 
-            for (int i = 0; i < 4 && it.hasNext(); ++i) {
-                block = it.next();
-                SingleBlockParticleEffect.burstOfFlames(block.getLocation());
+            for (int i = 0; i < 5 && it.hasNext(); ++i) {
+                loc = it.next();
+                SingleBlockParticleEffect.burstOfFlames(loc);
             }
 
-            Collection<LivingEntity> entityList = block.getLocation().getNearbyEntitiesByType(
-                    LivingEntity.class, 4,4, 4
+            Location finalLoc = loc;
+            Collection<LivingEntity> entityList = loc.getNearbyEntitiesByType(
+                    LivingEntity.class, RADIUS, (e) -> {
+                        // Prevent targets being hit multiple times on corners, because of this being a bounding box
+                        // as apposed to a proper radius check.
+                        double distSqrd = e.getLocation().distanceSquared(finalLoc);
+                        return distSqrd <= RADIUS_SQ;
+                    }
             );
 
             int newDistance = distance + 1;
@@ -47,6 +55,8 @@ public class Surge extends EntityAttack implements RangedSpecial {
             for (LivingEntity e : entityList) {
                 if (e.isValid()) {
                     if (e.equals(owner)) continue;
+
+                    e.setNoDamageTicks(0);
 
                     double damage = (e instanceof Player ? 5 : 15) * newDistance;
                     if (!DamageUtil.damageWithSpecialAttack(owner, e, this, damage)) {
@@ -69,11 +79,9 @@ public class Surge extends EntityAttack implements RangedSpecial {
 
         Vector vel = target.getLocation().toVector().subtract(owner.getLocation().toVector());
 
-        BlockIterator it = new BlockIterator(
-                owner.getWorld(),
-                owner.getLocation().toVector(),
+        SimpleRayTrace it = new SimpleRayTrace(
+                owner.getLocation(),
                 vel,
-                0,
                 maxBlocks
         );
 
