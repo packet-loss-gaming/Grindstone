@@ -680,6 +680,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         public void smokeBomb() {
 
             nextSmokeBomb = System.currentTimeMillis() + 2000;
+            nextArrowBomb = Math.max(System.currentTimeMillis() + 1000, nextArrowBomb);
         }
 
         public boolean canArrowBomb() {
