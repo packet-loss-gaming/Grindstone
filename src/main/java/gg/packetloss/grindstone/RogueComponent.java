@@ -380,9 +380,8 @@ public class RogueComponent extends BukkitComponent implements Listener, Runnabl
 
     private void metabolizeBadPotions(Player player) {
         List<PotionEffectType> affectedTypes = Arrays.asList(
-          PotionEffectType.SLOW, PotionEffectType.SLOW_DIGGING, PotionEffectType.BLINDNESS,
-          PotionEffectType.POISON, PotionEffectType.CONFUSION, PotionEffectType.WEAKNESS,
-          PotionEffectType.WITHER
+                PotionEffectType.SLOW_DIGGING, PotionEffectType.BLINDNESS, PotionEffectType.POISON,
+                PotionEffectType.CONFUSION, PotionEffectType.WEAKNESS, PotionEffectType.WITHER
         );
 
         for (PotionEffect effect : player.getActivePotionEffects()) {
