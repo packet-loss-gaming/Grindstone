@@ -15,6 +15,10 @@ repositories {
         url 'http://service.packetloss.gg/maven/'
     }
     maven {
+        name 'Paper Repository'
+        url 'https://papermc.io/repo/repository/maven-public/'
+    }
+    maven {
         name 'Spigot Repository'
         url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
     }
