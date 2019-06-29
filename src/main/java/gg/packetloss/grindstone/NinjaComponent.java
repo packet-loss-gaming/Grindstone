@@ -35,6 +35,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
@@ -77,6 +78,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     private static final int SNEAK_WATCH_DISTANCE = 6;
     private static final int SNEAK_WATCH_DISTANCE_SQ = SNEAK_WATCH_DISTANCE * SNEAK_WATCH_DISTANCE;
 
+    private static final double DEFAULT_MAX_HEALTH = 20;
+
     @Override
     public void enable() {
 
@@ -90,6 +93,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     public void ninjaPlayer(Player player) {
 
         sessions.getSession(NinjaState.class, player).setIsNinja(true);
+
+        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(DEFAULT_MAX_HEALTH * 1.3);
     }
 
     public boolean isNinja(Player player) {
@@ -334,6 +339,8 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         NinjaState session = sessions.getSession(NinjaState.class, player);
         session.setIsNinja(false);
+
+        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(DEFAULT_MAX_HEALTH);
     }
 
     @EventHandler
