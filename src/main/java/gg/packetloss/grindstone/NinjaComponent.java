@@ -47,7 +47,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.HorseJumpEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
@@ -73,10 +72,10 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
     @InjectComponent
     private RogueComponent rogueComponent;
 
-    private final int WATCH_DISTANCE = 14;
-    private final int WATCH_DISTANCE_SQ = WATCH_DISTANCE * WATCH_DISTANCE;
-    private final int SNEAK_WATCH_DISTANCE = 6;
-    private final int SNEAK_WATCH_DISTANCE_SQ = SNEAK_WATCH_DISTANCE * SNEAK_WATCH_DISTANCE;
+    private static final int WATCH_DISTANCE = 14;
+    private static final int WATCH_DISTANCE_SQ = WATCH_DISTANCE * WATCH_DISTANCE;
+    private static final int SNEAK_WATCH_DISTANCE = 6;
+    private static final int SNEAK_WATCH_DISTANCE_SQ = SNEAK_WATCH_DISTANCE * SNEAK_WATCH_DISTANCE;
 
     @Override
     public void enable() {
@@ -335,11 +334,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         NinjaState session = sessions.getSession(NinjaState.class, player);
         session.setIsNinja(false);
-
-        for (Player otherPlayer : server.getOnlinePlayers()) {
-            // Show Yourself!
-            if (otherPlayer != player) otherPlayer.showPlayer(inst, player);
-        }
     }
 
     @EventHandler
@@ -481,16 +475,6 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         Entity passenger = event.getEntity().getPassenger();
         if (passenger instanceof Player && isNinja((Player) passenger)) {
             event.setPower(event.getPower() * 1.37F);
-        }
-    }
-
-    @EventHandler
-    public void onPlayerDeath(PlayerRespawnEvent event) {
-
-        Player player = event.getPlayer();
-
-        for (final Player otherPlayer : server.getOnlinePlayers()) {
-            if (otherPlayer != player) otherPlayer.showPlayer(inst, player);
         }
     }
 
