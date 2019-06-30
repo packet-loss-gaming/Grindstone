@@ -79,8 +79,8 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
                 if (isCityWorld(fromWorld)) {
 
                     pLoc.setWorld(Bukkit.getWorld("Halzeil"));
-                    pLoc.setX(pLoc.getBlockX() * 16);
-                    pLoc.setZ(pLoc.getBlockZ() * 16);
+                    pLoc.setX(pLoc.getBlockX() * 128);
+                    pLoc.setZ(pLoc.getBlockZ() * 128);
                     agent.setCanCreatePortal(true);
 
                     event.useTravelAgent(true);
@@ -91,8 +91,8 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
                 } else if (isRangeWorld(fromWorld)) {
 
                     pLoc.setWorld(Bukkit.getWorld("City"));
-                    pLoc.setX(pLoc.getBlockX() / 16);
-                    pLoc.setZ(pLoc.getBlockZ() / 16);
+                    pLoc.setX(pLoc.getBlockX() / 128);
+                    pLoc.setZ(pLoc.getBlockZ() / 128);
                     agent.setCanCreatePortal(false);
 
                     event.useTravelAgent(true);
