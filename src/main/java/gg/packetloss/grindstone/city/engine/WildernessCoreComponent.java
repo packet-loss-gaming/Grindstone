@@ -297,19 +297,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                     event.setTo(agent.findOrCreate(pLoc));
                     return;
                 }
-
-                // FIXME: This should be in the City Core component.
-                // City Code
-                if (from.getWorld().equals(city)) {
-                    // Add 1 block to the 1 position for the city bank, for whatever
-                    // reason this seems to be using the player's head location, rather
-                    // than the location of their feet.
-
-                    // noinspection ConstantConditions
-                    overwriteDestination(event, LocationUtil.grandBank(city));
-                } else if (to.getWorld().equals(city)) {
-                    overwriteDestination(event, city.getSpawnLocation());
-                }
                 break;
             }
         }
