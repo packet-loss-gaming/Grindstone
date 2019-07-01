@@ -63,11 +63,50 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
         event.setCancelled(true);
     }
 
+    private Location getConsistentFrom(Location loc) {
+        Location xTestLoc = loc.clone();
+
+        while (true) {
+            if (xTestLoc.getBlock().getType() == Material.PORTAL) {
+                xTestLoc.add(-1, 0, 0);
+                continue;
+            }
+
+            break;
+        }
+
+        Location zTestLoc = loc.clone();
+        while (true) {
+            if (zTestLoc.getBlock().getType() == Material.PORTAL) {
+                zTestLoc.add(0, 0, -1);
+                continue;
+            }
+
+            break;
+        }
+
+        return new Location(loc.getWorld(), xTestLoc.getBlockX() + 1, loc.getY(), zTestLoc.getBlockZ() + 1);
+    }
+
+    private void updateLocationUsingAgent(PlayerPortalEvent event, TravelAgent agent, Location targetLoc) {
+        event.useTravelAgent(true);
+        event.setPortalTravelAgent(agent);
+
+        for (int i = 0; i < 5; ++i) {
+            Location newLoc = agent.findOrCreate(targetLoc);
+            if (newLoc != null) {
+                event.setTo(newLoc);
+                return;
+            }
+        }
+
+        event.setCancelled(true);
+    }
+
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
         final Player player = event.getPlayer();
-        final Location pLoc = player.getLocation().clone();
-        final Location from = event.getFrom();
+        final Location from = getConsistentFrom(event.getFrom());
 
         World fromWorld = from.getWorld();
 
@@ -77,28 +116,18 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
 
                 // City Code
                 if (isCityWorld(fromWorld)) {
-
-                    pLoc.setWorld(Bukkit.getWorld("Halzeil"));
-                    pLoc.setX(pLoc.getBlockX() * 128);
-                    pLoc.setZ(pLoc.getBlockZ() * 128);
                     agent.setCanCreatePortal(true);
 
-                    event.useTravelAgent(true);
-                    event.setPortalTravelAgent(agent);
-
-                    event.setTo(agent.findOrCreate(pLoc));
+                    World world = Bukkit.getWorld("Halzeil");
+                    Location targetLoc = new Location(world, from.getX() * 64, from.getY(), from.getZ() * 64);
+                    updateLocationUsingAgent(event, agent, targetLoc);
                     return;
                 } else if (isRangeWorld(fromWorld)) {
-
-                    pLoc.setWorld(Bukkit.getWorld("City"));
-                    pLoc.setX(pLoc.getBlockX() / 128);
-                    pLoc.setZ(pLoc.getBlockZ() / 128);
                     agent.setCanCreatePortal(false);
 
-                    event.useTravelAgent(true);
-                    event.setPortalTravelAgent(agent);
-
-                    event.setTo(agent.findOrCreate(pLoc));
+                    World world = Bukkit.getWorld("City");
+                    Location targetLoc = new Location(world, from.getX() / 64, from.getY(), from.getZ() / 64);
+                    updateLocationUsingAgent(event, agent, targetLoc);
                     return;
                 }
                 break;
