@@ -47,14 +47,12 @@ import org.bukkit.event.player.*;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static com.sk89q.commandbook.util.ChatUtil.getFriendlyTime;
 import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 import static gg.packetloss.grindstone.util.portal.NoOPTravelAgent.overwriteDestination;
 
@@ -80,25 +78,19 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onThunderChange(ThunderChangeEvent event) {
         if (!event.getWorld().equals(parent.getWorld())) return;
-        if (event.toThunderState()) {
-            parent.resetPressurePlateLock();
-            parent.isPressurePlateLocked = !parent.checkPressurePlateLock();
-            parent.resetRewardChest();
-            List<Player> returnedList = new ArrayList<>();
-            for (Player player : server.getOnlinePlayers()) {
-                if (player.isValid() && LocationUtil.isInRegion(parent.getWorld(), parent.rewards, player)) returnedList.add(player);
-            }
-            for (Player player : returnedList) {
-                ChatUtil.sendNotice(player, ChatColor.DARK_RED + "You dare disturb our graves!");
-                ChatUtil.sendNotice(player, ChatColor.DARK_RED + "Taste the wrath of thousands!");
-                for (int i = 0; i < 15; i++) {
-                    parent.localSpawn(player, true);
-                }
-            }
-        } else {
+        if (!event.toThunderState()) {
             ChatUtil.sendNotice(parent.getContained(Player.class), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
             for (Entity entity : parent.getContained(Zombie.class)) {
-                if (!ChanceUtil.getChance(5)) ((Zombie) entity).setHealth(0);
+                if (!ChanceUtil.getChance(5)) {
+                    continue;
+                }
+
+                // Only kill zombies not in the dungeon
+                if (parent.isHostileTempleArea(entity.getLocation())) {
+                    continue;
+                }
+
+                ((Zombie) entity).setHealth(0);
             }
         }
     }
@@ -163,18 +155,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                         EffectUtil.Master.doomBlade(player, entities);
                     }
                 }
-            } else if (defender instanceof Player) {
-                Player player = (Player) defender;
-                Iterator<PotionEffect> potionIt = player.getActivePotionEffects().iterator();
-                while (potionIt.hasNext()) {
-                    potionIt.next();
-                    if (ChanceUtil.getChance(18)) {
-                        potionIt.remove();
-                    }
-                }
-                if (ItemUtil.findItemOfName(player.getInventory().getContents(), CustomItems.PHANTOM_HYMN.toString())) {
-                    event.setDamage(event.getDamage() * 1.5);
-                }
+            } else if (defender instanceof Player && parent.contains(parent.rewards, defender)) {
+                event.setDamage(event.getDamage() + (parent.rewardsRoomOccupiedTicks / 3.0));
             }
         }
     }
@@ -327,30 +309,30 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             } else if (customName.equals("Guardian Zombie")) {
                 drops.removeIf(stack -> stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH);
 
-                if (ChanceUtil.getChance(60)) {
+                if (ChanceUtil.getChance(80)) {
                     drops.add(CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION));
-                } else if (ChanceUtil.getChance(40)) {
+                } else if (ChanceUtil.getChance(60)) {
                     drops.add(CustomItemCenter.build(CustomItems.HOLY_COMBAT_POTION));
-                } else if (ChanceUtil.getChance(20)) {
+                } else if (ChanceUtil.getChance(40)) {
                     drops.add(CustomItemCenter.build(CustomItems.EXTREME_COMBAT_POTION));
                 }
-                if (ChanceUtil.getChance(250)) {
-                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_CLOCK, ChanceUtil.getRandom(3)));
+                if (ChanceUtil.getChance(300)) {
+                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_CLOCK));
                 }
                 if (ChanceUtil.getChance(100)) {
                     drops.add(CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL));
                 }
-                if (ChanceUtil.getChance(60) || hasThunderstorm(world) && ChanceUtil.getChance(40)) {
-                    drops.add(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(16)));
+                if (ChanceUtil.getChance(60)) {
+                    drops.add(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(8)));
                 }
-                if (ChanceUtil.getChance(60) || hasThunderstorm(world) && ChanceUtil.getChance(40)) {
+                if (ChanceUtil.getChance(60)) {
                     drops.add(CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS));
                 }
-                if (ChanceUtil.getChance(60) || hasThunderstorm(world) && ChanceUtil.getChance(40)) {
+                if (ChanceUtil.getChance(60)) {
                     drops.add(CustomItemCenter.build(CustomItems.GEM_OF_LIFE));
                 }
                 if (ChanceUtil.getChance(20)) {
-                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_GOLD));
+                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(8)));
                 }
                 if (ChanceUtil.getChance(8000)) {
                     switch (ChanceUtil.getRandom(4)) {
@@ -538,15 +520,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (LocationUtil.isInRegion(parent.getWorld(), parent.creepers, player)) {
                 ChatUtil.sendNotice(player, "A spirit carries you through the maze!");
                 player.teleport(new Location(parent.getWorld(), -162.5, 52, -704), PlayerTeleportEvent.TeleportCause.UNKNOWN);
-            } else if (LocationUtil.isInRegion(parent.getWorld(), parent.rewards, player) && !hasThunderstorm(parent.getWorld())) {
-                if (parent.nextTStorm < System.currentTimeMillis()) {
-                    ChatUtil.sendNotice(player, "A monstrous thunderstorm begins!");
-                    parent.getWorld().setThundering(true);
-                    parent.nextTStorm = System.currentTimeMillis() + parent.getConfig().tStormCoolDown;
-                } else {
-                    ChatUtil.sendError(player, "The book glows a stubborn blood red.");
-                    ChatUtil.sendError(player, "The Phantom Hymn can next start a thunderstorm:\n" + getFriendlyTime(parent.nextTStorm) + ".");
-                }
             }
         }
     }

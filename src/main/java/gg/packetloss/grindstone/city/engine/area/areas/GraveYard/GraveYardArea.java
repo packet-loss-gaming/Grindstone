@@ -85,8 +85,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
         autoBreakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
     }
 
-    // Next Phantom Hymn Reset
-    protected long nextTStorm;
+    // Ticks of active grave yard rewards room
+    protected int rewardsRoomOccupiedTicks = 0;
 
     // Head Stones
     protected List<Location> headStones = new ArrayList<>();
@@ -146,10 +146,30 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
         writeData(false);
     }
 
+    private void handleEmptyRewardsRoom() {
+        if (rewardsRoomOccupiedTicks == 0) {
+            return;
+        }
+
+        rewardsRoomOccupiedTicks = 0;
+
+        getContained(rewards, Projectile.class, Item.class, Zombie.class).forEach(Entity::remove);
+
+        resetPressurePlateLock();
+        isPressurePlateLocked = !checkPressurePlateLock();
+        resetRewardChest();
+    }
+
     @Override
     public void run() {
         restoreBlocks();
-        if (isEmpty()) return;
+        if (isEmpty()) {
+            handleEmptyRewardsRoom();
+            return;
+        }
+
+        boolean playerInRewardsRoom = false;
+
         for (LivingEntity entity : getContained(LivingEntity.class)) {
             if (!entity.isValid()) continue;
             // Cave Spider killer
@@ -163,7 +183,17 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
                 if (admin.isAdmin((Player) entity)) continue;
                 fogPlayer((Player) entity);
                 localSpawn((Player) entity);
+
+                if (!playerInRewardsRoom && contains(rewards, entity)) {
+                    playerInRewardsRoom = true;
+                }
             }
+        }
+
+        if (playerInRewardsRoom) {
+            ++rewardsRoomOccupiedTicks;
+        } else {
+            handleEmptyRewardsRoom();
         }
     }
 
@@ -283,21 +313,14 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
     }
 
     private void localSpawn(Player player) {
-        localSpawn(player, false);
-    }
-
-    protected void localSpawn(Player player, boolean bypass) {
-        if (!ChanceUtil.getChance(3) && !bypass) return;
-        Block playerBlock = player.getLocation().getBlock();
-        Location ls;
         if (LocationUtil.isInRegion(getWorld(), rewards, player)) {
-            for (int i = 0; i < 3; ++i) {
-                ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
-                if (!BlockType.isTranslucent(ls.getBlock().getTypeId())) {
-                    ls = player.getLocation();
-                }
-                Zombie zombie = spawn(ls, Zombie.class, "Guardian Zombie");
+            // Redirect local spawns to be rewards room spawns
+            Location spawnPoint = new Location(world, -130.5, 41, -685);
+
+            for (int i = ChanceUtil.getRandom(rewardsRoomOccupiedTicks / 10); i > 0; --i) {
+                Zombie zombie = spawn(spawnPoint, Zombie.class, "Guardian Zombie");
                 zombie.setCanPickupItems(false);
+
                 EntityEquipment equipment = zombie.getEquipment();
                 equipment.setItemInHand(new ItemStack(ItemID.DIAMOND_SWORD));
                 equipment.setArmorContents(new ItemStack[]{
@@ -306,6 +329,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
                         CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE),
                         CustomItemCenter.build(CustomItems.ANCIENT_HELMET)
                 });
+
                 // Drop Chances
                 equipment.setItemInHandDropChance(0);
                 equipment.setHelmetDropChance(0);
@@ -315,13 +339,17 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
             }
             return;
         }
-        Block aBlock;
+
+        if (!ChanceUtil.getChance(3)) return;
+
+        Block playerBlock = player.getLocation().getBlock();
         for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
-            ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
+            Location ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
             if (!BlockType.isTranslucent(ls.getBlock().getTypeId())) {
                 ls = player.getLocation();
             }
-            aBlock = ls.getBlock().getRelative(BlockFace.DOWN);
+
+            Block aBlock = ls.getBlock().getRelative(BlockFace.DOWN);
             // If the block is a half slab or it is wood, don't do this
             if (aBlock.getTypeId() != BlockID.STEP && aBlock.getTypeId() != BlockID.WOOD) {
                 aBlock = aBlock.getRelative(BlockFace.DOWN, 2);
