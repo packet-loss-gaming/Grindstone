@@ -36,10 +36,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -47,6 +44,7 @@ import org.bukkit.block.Chest;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -535,35 +533,32 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
     @Override
     public void run() {
+        for (World world : server.getWorlds()) {
+            for (LivingEntity entity : world.getEntitiesByClass(LivingEntity.class)) {
+                Location entityLoc = entity.getLocation();
+                Block searchBlock = entityLoc.getBlock().getRelative(BlockFace.DOWN, 3);
+                if (isSacrificeBlock(searchBlock)) {
+                    Location airLoc = LocationUtil.findRandomLoc(searchBlock, 3);
 
-        for (Player player : server.getOnlinePlayers()) {
-            Location playerLoc = player.getLocation();
-            Block searchBlock = playerLoc.getBlock().getRelative(BlockFace.DOWN, 3);
-            if (isSacrificeBlock(searchBlock)) {
-                Location airLoc = LocationUtil.findRandomLoc(searchBlock, 3);
-
-                try {
-                    Location newLoc = new Location(player.getWorld(), airLoc.getX(), airLoc.getY(),
-                            airLoc.getZ(), playerLoc.getYaw(), playerLoc.getPitch());
+                    Location newLoc = new Location(entity.getWorld(), airLoc.getX(), airLoc.getY(),
+                            airLoc.getZ(), entityLoc.getYaw(), entityLoc.getPitch());
 
                     Location[] smokeLocation = new Location[4];
-                    smokeLocation[0] = player.getLocation();
-                    smokeLocation[1] = player.getEyeLocation();
+                    smokeLocation[0] = entity.getLocation();
+                    smokeLocation[1] = entity.getEyeLocation();
                     smokeLocation[2] = newLoc;
                     smokeLocation[3] = newLoc.getBlock().getRelative(BlockFace.UP).getLocation();
 
-                    Entity vehicle = player.getVehicle();
+                    Entity vehicle = entity.getVehicle();
                     if (vehicle != null) {
                         vehicle.eject();
                     }
-                    player.teleport(newLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                    entity.teleport(newLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     if (vehicle != null) {
-                        vehicle.teleport(player, PlayerTeleportEvent.TeleportCause.UNKNOWN);
-                        vehicle.setPassenger(player);
+                        vehicle.teleport(entity, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                        vehicle.setPassenger(entity);
                     }
                     EnvironmentUtil.generateRadialEffect(smokeLocation, Effect.SMOKE);
-                } catch (Exception e) {
-                    log.warning("Could not find a location to teleport the player: " + player.getName() + " to.");
                 }
             }
         }
