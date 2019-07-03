@@ -208,9 +208,10 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
         session.smokeBomb();
 
         Location targetLoc = event.getTargetLoc();
+        int totalHealed = 0;
         for (Entity entity : entities) {
             EntityUtil.forceDamage(entity, 1);
-            EntityUtil.heal(player, 1);
+            totalHealed += 1;
 
             if (entity instanceof Player) {
                 if (rogueComponent.isRogue((Player) entity)) {
@@ -227,6 +228,7 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
             entity.teleport(newEntityLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
+        EntityUtil.heal(player, ChanceUtil.getRandomNTimes(totalHealed, 3));
 
         Location[] locations = new Location[]{
                 player.getLocation(),
