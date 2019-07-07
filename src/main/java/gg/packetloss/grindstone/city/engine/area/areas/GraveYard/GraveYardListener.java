@@ -47,6 +47,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
@@ -126,6 +127,34 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             Projectile.class
     );
 
+    private void degradeGoodPotions(Player player) {
+        List<PotionEffectType> affectedTypes = Arrays.asList(
+                PotionEffectType.INCREASE_DAMAGE, PotionEffectType.REGENERATION, PotionEffectType.DAMAGE_RESISTANCE,
+                PotionEffectType.WATER_BREATHING, PotionEffectType.FIRE_RESISTANCE
+        );
+
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            if (!affectedTypes.contains(effect.getType())) {
+                continue;
+            }
+
+            int newDuration = (int) (effect.getDuration() * .9);
+            if (newDuration == 0) {
+                player.removePotionEffect(effect.getType());
+                continue;
+            }
+
+            PotionEffect newEffect = new PotionEffect(
+                    effect.getType(),
+                    newDuration,
+                    effect.getAmplifier(),
+                    effect.isAmbient(),
+                    effect.hasParticles()
+            );
+            player.addPotionEffect(newEffect, true);
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
 
@@ -157,6 +186,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 }
             } else if (defender instanceof Player && parent.contains(parent.rewards, defender)) {
                 event.setDamage(event.getDamage() + (parent.rewardsRoomOccupiedTicks / 3.0));
+
+                degradeGoodPotions((Player) defender);
             }
         }
     }
