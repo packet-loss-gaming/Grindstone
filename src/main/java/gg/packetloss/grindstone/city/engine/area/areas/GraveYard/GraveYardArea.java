@@ -153,7 +153,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
 
         rewardsRoomOccupiedTicks = 0;
 
-        getContained(rewards, Projectile.class, Item.class, Zombie.class).forEach(Entity::remove);
+        getContained(rewards, Projectile.class, Item.class, ExperienceOrb.class, Zombie.class).forEach(Entity::remove);
 
         resetPressurePlateLock();
         isPressurePlateLocked = !checkPressurePlateLock();
