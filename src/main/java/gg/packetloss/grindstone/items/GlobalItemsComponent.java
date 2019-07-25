@@ -44,10 +44,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -272,6 +274,19 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
                     return;
                 }
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        if (event.getHand() != EquipmentSlot.OFF_HAND) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        ItemStack heldItem = player.getInventory().getItemInMainHand();
+        if (!ItemUtil.isPickAxe(heldItem.getTypeId()) && ItemUtil.isAuthenticCustomItem(heldItem)) {
+            event.setCancelled(true);
         }
     }
 

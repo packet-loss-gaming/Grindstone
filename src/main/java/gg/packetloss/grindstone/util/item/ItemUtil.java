@@ -380,6 +380,15 @@ public class ItemUtil {
         return !(itemName.indexOf(ChatColor.COLOR_CHAR) == -1);
     }
 
+    public static boolean isAuthenticCustomItem(ItemStack stack) {
+        if (!isNamed(stack)) {
+            return false;
+        }
+
+        String name = stack.getItemMeta().getDisplayName();
+        return isAuthenticCustomItem(name);
+    }
+
     public static boolean matchesFilter(ItemStack stack, String filter) {
 
         return matchesFilter(stack, filter, true);
