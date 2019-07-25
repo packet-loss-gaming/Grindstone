@@ -127,9 +127,7 @@ public class EnvironmentUtil {
                 return new ItemStack(Material.COAL);
             }
             if (block == Material.LAPIS_ORE) {
-                ItemStack lapis = new ItemStack(Material.INK_SACK, ChanceUtil.getRangedRandom(4, 8));
-                lapis.setData(new Dye(DyeColor.BLUE));
-                return lapis;
+                return new Dye(DyeColor.BLUE).toItemStack(ChanceUtil.getRangedRandom(4, 8));
             }
             if (block == Material.REDSTONE_ORE || block == Material.GLOWING_REDSTONE_ORE) {
                 return new ItemStack(Material.REDSTONE, ChanceUtil.getRangedRandom(4, 5));
