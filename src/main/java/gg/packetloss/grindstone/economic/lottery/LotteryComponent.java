@@ -323,8 +323,28 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         return guaranteedTickets + chanceTickets;
     }
 
-    public void completeLottery() {
+    private void handleWinner(LotteryWinner winner) {
+        economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
 
+        Bukkit.broadcastMessage(ChatColor.YELLOW + winner.getName() + " has won: " +
+                ChatUtil.makeCountString(economy.format(winner.getAmt()), " via the lottery!"));
+
+        if (winner.isBot()) {
+            lotteryWinnerDatabase.addCPUWin(winner.getAmt());
+        } else {
+            economy.depositPlayer(winner.getName(), winner.getAmt());
+
+            lotteryWinnerDatabase.addWinner(winner.getName(), winner.getAmt());
+        }
+
+        lotteryWinnerDatabase.save();
+
+        lotteryTicketDatabase.clearTickets();
+        lotteryTicketDatabase.addCPUTickets(calculateCPUTicketCount());
+        lotteryTicketDatabase.save();
+    }
+
+    public void completeLottery() {
         String name;
         try {
             name = findNewMillionaire();
@@ -334,28 +354,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
         double cash = getWinnerCash();
 
-        economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
-
-        boolean wasCPUVictory = name.equals(LotteryTicketDatabase.CPU_NAME);
-        if (wasCPUVictory) {
-            Bukkit.broadcastMessage(ChatColor.YELLOW + "An anonymous citizen has won: " +
-                    ChatUtil.makeCountString(economy.format(cash), " via the lottery!"));
-
-            lotteryWinnerDatabase.addCPUWin(cash);
-        } else {
-            economy.depositPlayer(name, cash);
-
-            Bukkit.broadcastMessage(ChatColor.YELLOW + name + " has won: " +
-                    ChatUtil.makeCountString(economy.format(cash), " via the lottery!"));
-            lotteryWinnerDatabase.addWinner(name, cash);
-        }
-
-
-        lotteryWinnerDatabase.save();
-
-        lotteryTicketDatabase.clearTickets();
-        lotteryTicketDatabase.addCPUTickets(calculateCPUTicketCount());
-        lotteryTicketDatabase.save();
+        handleWinner(new LotteryWinner(name, cash));
     }
 
     public void broadcastLottery(Iterable<? extends CommandSender> senders) {

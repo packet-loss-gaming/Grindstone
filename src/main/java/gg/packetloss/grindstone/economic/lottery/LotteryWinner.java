@@ -6,6 +6,10 @@
 
 package gg.packetloss.grindstone.economic.lottery;
 
+import gg.packetloss.grindstone.util.PlayernameGenerator;
+
+import static gg.packetloss.grindstone.economic.lottery.LotteryTicketDatabase.CPU_NAME;
+
 public class LotteryWinner {
     private String name;
     private double amt;
@@ -15,7 +19,15 @@ public class LotteryWinner {
         this.amt = amt;
     }
 
+    public boolean isBot() {
+        return name.equals(CPU_NAME);
+    }
+
     public String getName() {
+        if (isBot()) {
+            return new PlayernameGenerator((long) amt).generate();
+        }
+
         return name;
     }
 
