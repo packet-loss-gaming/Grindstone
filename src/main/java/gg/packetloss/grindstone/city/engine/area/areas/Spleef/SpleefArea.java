@@ -80,6 +80,11 @@ public class SpleefArea extends BukkitComponent implements Runnable, PersistentA
         reloadConfig();
     }
 
+    @Override
+    public void disable() {
+        writeData(false);
+    }
+
     public boolean anyContains(Location location) {
         for (SpleefAreaInstance area : spleefInstances) {
             if (area.contains(location)) {
