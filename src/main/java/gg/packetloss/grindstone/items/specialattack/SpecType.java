@@ -12,6 +12,7 @@ public enum SpecType {
     RANGED(3800),
     MELEE(3800),
     ANIMAL_BOW(15000),
+    OVERLORD(3800),
     PASSIVE(0);
 
     private final long delay;

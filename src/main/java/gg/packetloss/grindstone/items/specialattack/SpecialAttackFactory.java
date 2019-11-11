@@ -7,6 +7,8 @@ import gg.packetloss.grindstone.items.CustomItemSession;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 
+import java.util.function.Consumer;
+
 public class SpecialAttackFactory {
     private final Server server = CommandBook.server();
 
@@ -22,17 +24,22 @@ public class SpecialAttackFactory {
         return event;
     }
 
-    public void process(Player player, SpecialAttack spec, SpecType specType) {
+    public void process(Player player, SpecialAttack spec, SpecType specType, Consumer<SpecialAttackEvent> Modifier) {
         CustomItemSession session = sessions.getSession(CustomItemSession.class, player);
 
         if (session.canSpec(specType)) {
             SpecialAttackEvent specEvent = callSpec(player, specType, spec);
+
+            Modifier.accept(specEvent);
 
             if (!specEvent.isCancelled()) {
                 session.updateSpec(specType, specEvent.getContextCoolDown());
                 specEvent.getSpec().activate();
             }
         }
+    }
 
+    public void process(Player player, SpecialAttack spec, SpecType specType) {
+        process(player, spec, specType, (specEvent) -> {});
     }
 }

@@ -183,28 +183,34 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         throw new IllegalStateException();
     }
 
-    private static final int INIT_OVERLORD_CHANCE = 100;
+    private static final int INIT_OVERLORD_EXTRA = 40;
 
-    private void processOverlord(Player player, LivingEntity target, boolean hasProjectile) {
-        int overlordChance = INIT_OVERLORD_CHANCE;
+    private int calculateOverlordCooldown(Player player) {
+        int overlordCooldown = INIT_OVERLORD_EXTRA;
 
         if (ItemUtil.isHoldingItemInFamily(player, WeaponFamily.MASTER)) {
-            overlordChance /= 4;
+            overlordCooldown /= 2;
         }
 
-        overlordChance -= buffComponent.getBuffLevel(Buff.APOCALYPSE_OVERLORD, player).orElse(0) * 5;
+        overlordCooldown -= buffComponent.getBuffLevel(Buff.APOCALYPSE_OVERLORD, player).orElse(0) * 3;
 
-        // If a master weapon has been used OR the overlord buff is active, enable rolling
-        if (overlordChance != INIT_OVERLORD_CHANCE && ChanceUtil.getChance(Math.max(1, overlordChance))) {
-            SpecType specType = hasProjectile ? SpecType.RANGED : SpecType.MELEE;
+        return overlordCooldown;
+    }
 
+    private void processOverlord(Player player, LivingEntity target, boolean hasProjectile) {
+        int overlordCooldown = calculateOverlordCooldown(player);
+
+        // If a master weapon has been used OR the overlord buff is active, enable overlord specs
+        if (overlordCooldown != INIT_OVERLORD_EXTRA) {
             SpecialAttack spec;
 
             do {
-                spec = getOverlordAttack(player, target, specType);
+                spec = getOverlordAttack(player, target, hasProjectile ? SpecType.RANGED : SpecType.MELEE);
             } while (spec == null);
 
-            new SpecialAttackFactory(sessions).process(player, spec, specType);
+            new SpecialAttackFactory(sessions).process(player, spec, SpecType.OVERLORD, (specEvent) -> {
+                specEvent.setContextCooldown(specEvent.getContextCoolDown() + (1000 * overlordCooldown));
+            });
         }
     }
 
