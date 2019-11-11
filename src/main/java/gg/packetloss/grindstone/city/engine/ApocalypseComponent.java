@@ -524,16 +524,20 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     public boolean checkEntity(LivingEntity e) {
-        if (!(e instanceof Zombie)) {
+        if (e.getCustomName() == null) {
             return false;
         }
 
-        if (e.getCustomName() == null) {
+        if (!(e instanceof Zombie)) {
             return false;
         }
 
         String customName = e.getCustomName();
         if (customName.equals("Apocalyptic Zombie")) {
+            return true;
+        }
+
+        if (customName.equals("Grave Zombie") && hasThunderstorm(e.getWorld())) {
             return true;
         }
 

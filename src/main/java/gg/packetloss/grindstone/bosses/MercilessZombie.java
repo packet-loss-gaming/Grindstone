@@ -61,6 +61,27 @@ public class MercilessZombie {
         mercilessZombie.bind(new BukkitBoss<>(entity, new GenericDetail()));
     }
 
+    private boolean isConsumableZombie(Entity entity) {
+        String customName = entity.getCustomName();
+        if (customName == null) {
+            return false;
+        }
+
+        if (!(entity instanceof Zombie)) {
+            return false;
+        }
+
+        if (customName.equals("Apocalyptic Zombie")) {
+            return true;
+        }
+
+        if (customName.equals("Grave Zombie")) {
+            return true;
+        }
+
+        return false;
+    }
+
     private void setupMercilessZombie() {
         List<BindInstruction<GenericDetail>> bindInstructions = mercilessZombie.bindInstructions;
         bindInstructions.add(new BindInstruction<>() {
@@ -131,7 +152,7 @@ public class MercilessZombie {
                 double totalHealth = 0;
 
                 for (Entity entity : ((Zombie) boss).getNearbyEntities(4, 4, 4)) {
-                    if ("Apocalyptic Zombie".equals(entity.getCustomName())) {
+                    if (isConsumableZombie(entity)) {
                         totalHealth += ((Zombie) entity).getHealth();
                         ((Zombie) entity).setHealth(0);
                     }
