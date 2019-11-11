@@ -1512,7 +1512,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                     }
                 }
 
-                final List<Color> colors = Collections.singletonList(optTeamColor.get());
+                final List<Color> colors = Collections.singletonList(optTeamColor.orElse(Color.WHITE));
                 final List<Color> fades = Collections.singletonList(killerColor);
 
                 final Location playerLoc = player.getLocation().clone();
