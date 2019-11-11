@@ -233,62 +233,72 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         });
     }
 
+    private boolean isInRewardsRoom(Location origin) {
+        return LocationUtil.isInRegion(parent.getWorld(), parent.rewards, origin);
+    }
+
+    private boolean isInRewardsRoom(PlayerSacrificeItemEvent event) {
+        return isInRewardsRoom(event.getBlock().getLocation());
+    }
+
+    private void processSacrificeRepair(PlayerSacrificeItemEvent event, CustomItems repairItem) {
+        Player player = event.getPlayer();
+
+        ItemStack item = event.getItemStack();
+        int o = 1;
+
+        if (!isInRewardsRoom(event)) {
+            o = 2;
+        }
+
+        int m = item.getType().getMaxDurability();
+        int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), repairItem.toString());
+        ItemStack[] i = ItemUtil.removeItemOfName(player.getInventory().getContents(), repairItem.toString());
+        player.getInventory().setContents(i);
+        while (item.getDurability() > 0 && c >= o) {
+            item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
+            c -= o;
+        }
+        player.getInventory().addItem(item);
+        int amount = Math.min(c, 64);
+        while (amount > 0) {
+            player.getInventory().addItem(CustomItemCenter.build(repairItem, amount));
+            c -= amount;
+            amount = Math.min(c, 64);
+        }
+        player.updateInventory();
+
+        event.setItemStack(null);
+    }
+
     @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSacrifice(PlayerSacrificeItemEvent event) {
-        Player player = event.getPlayer();
         ItemStack item = event.getItemStack();
-        Location origin = event.getBlock().getLocation();
-        boolean isInRewardsRoom = LocationUtil.isInRegion(parent.getWorld(), parent.rewards, origin);
-        int c;
-        int o = 1;
-        int m = item.getType().getMaxDurability();
-        ItemStack[] i;
+
         if (ItemUtil.isItem(item, CustomItems.PHANTOM_GOLD)) {
             int amount = 50;
-            if (isInRewardsRoom) {
+
+            if (!isInRewardsRoom(event)) {
                 amount = 100;
             }
+            Player player = event.getPlayer();
             parent.economy.depositPlayer(player.getName(), amount * item.getAmount());
             event.setItemStack(null);
         } else if (ItemUtil.isInItemFamily(item, WeaponFamily.FEAR)) {
-            if (!isInRewardsRoom) {
-                o = 2;
-            }
-            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.GEM_OF_DARKNESS.toString());
-            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), CustomItems.GEM_OF_DARKNESS.toString());
-            player.getInventory().setContents(i);
-            while (item.getDurability() > 0 && c >= o) {
-                item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
-                c -= o;
-            }
-            player.getInventory().addItem(item);
-            int amount = Math.min(c, 64);
-            while (amount > 0) {
-                player.getInventory().addItem(CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS, amount));
-                c -= amount;
-                amount = Math.min(c, 64);
-            }
-            player.updateInventory();
-            event.setItemStack(null);
+            processSacrificeRepair(event, CustomItems.GEM_OF_DARKNESS);
         } else if (ItemUtil.isInItemFamily(item, WeaponFamily.UNLEASHED)) {
-            if (!isInRewardsRoom) {
-                o = 2;
-            }
-            c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.IMBUED_CRYSTAL.toString());
-            i = ItemUtil.removeItemOfName(player.getInventory().getContents(), CustomItems.IMBUED_CRYSTAL.toString());
-            player.getInventory().setContents(i);
-            while (item.getDurability() > 0 && c >= o) {
-                item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
-                c -= o;
-            }
+            processSacrificeRepair(event, CustomItems.IMBUED_CRYSTAL);
+        } else if (ItemUtil.isInItemFamily(item, WeaponFamily.MASTER)) {
+            Player player = event.getPlayer();
+
+            int maxDurability = item.getType().getMaxDurability();
+            int maxRepair = isInRewardsRoom(event) ? 0 : maxDurability / 5;
+            item.setDurability((short) Math.min(item.getDurability(), maxRepair));
+
             player.getInventory().addItem(item);
-            int amount = Math.min(c, 64);
-            while (amount > 0) {
-                player.getInventory().addItem(CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL, amount));
-                c -= amount;
-                amount = Math.min(c, 64);
-            }
+            player.updateInventory();
+
             event.setItemStack(null);
         }
     }

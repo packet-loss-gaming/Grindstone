@@ -576,16 +576,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         final double value = MarketComponent.priceCheck(item);
 
-        if (ItemUtil.isItem(item, CustomItems.MASTER_SWORD)) {
-            pInventory.addItem(CustomItemCenter.build(CustomItems.MASTER_SWORD));
-            return;
-        } else if (ItemUtil.isItem(item, CustomItems.MASTER_SHORT_SWORD)) {
-            pInventory.addItem(CustomItemCenter.build(CustomItems.MASTER_SHORT_SWORD));
-            return;
-        } else if (ItemUtil.isItem(item, CustomItems.MASTER_BOW)) {
-            pInventory.addItem(CustomItemCenter.build(CustomItems.MASTER_BOW));
-            return;
-        } else if (value < 0) {
+        if (value < 0) {
             pInventory.addItem(item);
             ChatUtil.sendError(player, "The gods reject your offer.");
             return;
