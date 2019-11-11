@@ -528,10 +528,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             return false;
         }
 
-        if (!hasThunderstorm(e.getWorld())) {
-            return false;
-        }
-
         if (e.getCustomName() == null) {
             return false;
         }
