@@ -27,6 +27,8 @@ public class SpleefAreaInstance {
     private ProtectedRegion floorRegion;
     private ProtectedRegion wallRegion;
 
+    private boolean isSmallArena;
+
     private int activeTicks = 0;
 
     public SpleefAreaInstance(SpleefArea component, World world, RegionManager manager, String regionName) {
@@ -35,6 +37,8 @@ public class SpleefAreaInstance {
         this.containmentRegion = manager.getRegion(regionName);
         this.floorRegion = manager.getRegion(regionName + "-floor");
         this.wallRegion = manager.getRegion(regionName + "-walls");
+
+        this.isSmallArena = regionName.contains("small");;
     }
 
     public boolean contains(Location location) {
@@ -85,6 +89,18 @@ public class SpleefAreaInstance {
         }
     }
 
+    private boolean shouldBillWalls() {
+        if (activeTicks > 5) {
+            return true;
+        }
+
+        if (isSmallArena && activeTicks > 2) {
+            return true;
+        }
+
+        return false;
+    }
+
     public void buildWalls() {
         if (wallRegion == null) {
             return;
@@ -100,7 +116,7 @@ public class SpleefAreaInstance {
         int maxY = max.getBlockY();
         int maxZ = max.getBlockZ();
 
-        Material toMat = activeTicks > 5 ? Material.ICE : Material.AIR;
+        Material toMat = shouldBillWalls() ? Material.ICE : Material.AIR;
         Material fromMat = toMat == Material.ICE ? Material.AIR : Material.ICE;
 
         for (int y = minY; y < maxY; ++y) {
