@@ -24,6 +24,15 @@ public class EntityUtil {
         ((LivingEntity) entity).setHealth(Math.min(cur + amt, max));
     }
 
+    public static void extendHeal(Entity entity, double amt) {
+        if (entity == null || !entity.isValid() || !(entity instanceof LivingEntity)) return;
+        double cur = ((LivingEntity) entity).getHealth();
+        double max = ((LivingEntity) entity).getMaxHealth();
+
+        ((LivingEntity) entity).setMaxHealth(Math.max(cur + amt, max));
+        ((LivingEntity) entity).setHealth(cur + amt);
+    }
+
     public static void forceDamage(Entity entity, double amt) {
         if (entity == null || !entity.isValid() || !(entity instanceof LivingEntity)) return;
         double cur = ((LivingEntity) entity).getHealth();

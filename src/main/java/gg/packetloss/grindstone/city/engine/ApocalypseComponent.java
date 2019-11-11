@@ -18,7 +18,9 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.bosses.ThunderZombie;
+import gg.packetloss.grindstone.bosses.MercilessZombie;
+import gg.packetloss.grindstone.bosses.ThorZombie;
+import gg.packetloss.grindstone.bosses.ZapperZombie;
 import gg.packetloss.grindstone.buff.Buff;
 import gg.packetloss.grindstone.buff.BuffCategory;
 import gg.packetloss.grindstone.buff.BuffComponent;
@@ -94,12 +96,16 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private static final Class<Zombie> attackMob = Zombie.class;
 
     private LocalConfiguration config;
-    private ThunderZombie bossManager;
+    private ThorZombie thorBossManager;
+    private ZapperZombie zapperBossManager;
+    private MercilessZombie mercilessBossManager;
 
     @Override
     public void enable() {
         config = configure(new LocalConfiguration());
-        bossManager = new ThunderZombie();
+        thorBossManager = new ThorZombie();
+        zapperBossManager = new ZapperZombie();
+        mercilessBossManager = new MercilessZombie();
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
     }
@@ -112,8 +118,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     private static class LocalConfiguration extends ConfigurationBase {
 
-        @Setting("boss-chance")
-        public int bossChance = 100;
+        @Setting("boss-chance.thor")
+        public int thorBossChance = 100;
+        @Setting("boss-chance.zapper")
+        public int zapperBossChance = 60;
+        @Setting("boss-chance.merciless")
+        public int mercilessBossChance = 1000;
         @Setting("baby-chance")
         public int babyChance = 16;
         @Setting("amplification-noise")
@@ -353,18 +363,16 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (checkEntity(ent)) {
             event.getDrops().removeIf(next -> next != null && next.getTypeId() == ItemID.ROTTEN_FLESH);
 
-            if (attackMob.isInstance(ent)) {
-                if (ChanceUtil.getChance(5)) {
-                    event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandomNTimes(16, 7)));
-                }
+            if (ChanceUtil.getChance(5)) {
+                event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandomNTimes(16, 7)));
+            }
 
-                if (killer != null) {
-                    maybeIncreaseBuff(killer);
+            if (killer != null) {
+                maybeIncreaseBuff(killer);
 
-                    buffComponent.getBuffLevel(Buff.APOCALYPSE_LIFE_LEACH, killer).ifPresent((level) -> {
-                        EntityUtil.heal(killer, level);
-                    });
-                }
+                buffComponent.getBuffLevel(Buff.APOCALYPSE_LIFE_LEACH, killer).ifPresent((level) -> {
+                    EntityUtil.heal(killer, level);
+                });
             }
 
             if (ChanceUtil.getChance(10000)) {
@@ -516,35 +524,81 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     public boolean checkEntity(LivingEntity e) {
-
-        return hasThunderstorm(e.getWorld())
-                || (e.getCustomName() != null && e.getCustomName().equals("Apocalyptic Zombie"));
-    }
-
-    private <T extends LivingEntity> void spawnAndArm(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
-        if (!location.getChunk().isLoaded()) return;
-
-        Entity e = spawn(location, clazz, spawnConfig);
-        if (e == null) return;
-        if (e instanceof Zombie && ChanceUtil.getChance(config.babyChance)) {
-            ((Zombie) e).setBaby(true);
+        if (!(e instanceof Zombie)) {
+            return false;
         }
 
-        arm(e, spawnConfig);
+        if (!hasThunderstorm(e.getWorld())) {
+            return false;
+        }
+
+        if (e.getCustomName() == null) {
+            return false;
+        }
+
+        String customName = e.getCustomName();
+        if (customName.equals("Apocalyptic Zombie")) {
+            return true;
+        }
+
+        if (customName.equals(ThorZombie.BOUND_NAME)) {
+            return true;
+        }
+
+        if (customName.equals(ZapperZombie.BOUND_NAME)) {
+            return true;
+        }
+
+        if (customName.equals(MercilessZombie.BOUND_NAME)) {
+            return true;
+        }
+
+        return false;
     }
 
     private <T extends LivingEntity> T spawn(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
-        if (location == null) return null;
         T entity = location.getWorld().spawn(location, clazz);
 
+        // Override baby defaults
+        if (entity instanceof Zombie) {
+            ((Zombie) entity).setBaby(ChanceUtil.getChance(config.babyChance));
+        }
+
+        // Override pickup settings
+        entity.setCanPickupItems(spawnConfig.allowItemPickup);
+
+        // Set default name
         entity.setCustomName("Apocalyptic Zombie");
         entity.setCustomNameVisible(false);
 
-        if (ChanceUtil.getChance(config.bossChance) && spawnConfig.allowMiniBoss) {
-            bossManager.bind(entity);
-        }
+        // Reset equipment
+        EntityEquipment equipment = entity.getEquipment();
+        equipment.clear();
+
+        // Set some default equipment drop chances
+        equipment.setItemInHandDropChance(0.005F);
+        equipment.setHelmetDropChance(0.005F);
+        equipment.setChestplateDropChance(0.005F);
+        equipment.setLeggingsDropChance(0.005F);
+        equipment.setBootsDropChance(0.005F);
 
         return entity;
+    }
+
+    private boolean maybeMakeMiniboss(LivingEntity entity, ZombieSpawnConfig spawnConfig) {
+        if (spawnConfig.allowMiniBoss) {
+            if (ChanceUtil.getChance(config.thorBossChance)) {
+                thorBossManager.bind(entity);
+            } else if (ChanceUtil.getChance(config.zapperBossChance)) {
+                zapperBossManager.bind(entity);
+            } else if (ChanceUtil.getChance(config.mercilessBossChance)) {
+                mercilessBossManager.bind(entity);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private void arm(Entity e, ZombieSpawnConfig spawnConfig) {
@@ -552,7 +606,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (!(e instanceof LivingEntity)) return;
 
         EntityEquipment equipment = ((LivingEntity) e).getEquipment();
-        ((LivingEntity) e).setCanPickupItems(spawnConfig.allowItemPickup);
 
         if (ChanceUtil.getChance(config.armourChance)) {
             if (ChanceUtil.getChance(35)) {
@@ -580,12 +633,17 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             sword.setItemMeta(meta);
             equipment.setItemInHand(sword);
         }
+    }
 
-        equipment.setItemInHandDropChance(0.005F);
-        equipment.setHelmetDropChance(0.005F);
-        equipment.setChestplateDropChance(0.005F);
-        equipment.setLeggingsDropChance(0.005F);
-        equipment.setBootsDropChance(0.005F);
+    private <T extends LivingEntity> void spawnAndArm(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
+        if (!location.getChunk().isLoaded()) return;
+
+        LivingEntity e = spawn(location, clazz, spawnConfig);
+        if (maybeMakeMiniboss(e, spawnConfig)) {
+            return;
+        }
+
+        arm(e, spawnConfig);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
