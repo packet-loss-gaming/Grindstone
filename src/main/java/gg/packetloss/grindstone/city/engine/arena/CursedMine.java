@@ -23,7 +23,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -776,7 +775,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         Player player = result.getDefender();
 
         if (!contains(player)) return;
-        if (ChanceUtil.getChance(5) && ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD) && ItemUtil.hasAncientArmour(player)) {
+        if (ChanceUtil.getChance(5) && ItemUtil.isHoldingMasterSword(player) && ItemUtil.hasAncientArmour(player)) {
             EffectUtil.Master.ultimateStrength(player);
         }
     }

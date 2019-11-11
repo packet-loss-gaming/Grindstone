@@ -575,6 +575,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         if (ItemUtil.isItem(item, CustomItems.MASTER_SWORD)) {
             pInventory.addItem(CustomItemCenter.build(CustomItems.MASTER_SWORD));
             return;
+        } else if (ItemUtil.isItem(item, CustomItems.MASTER_SHORT_SWORD)) {
+            pInventory.addItem(CustomItemCenter.build(CustomItems.MASTER_SHORT_SWORD));
+            return;
         } else if (ItemUtil.isItem(item, CustomItems.MASTER_BOW)) {
             pInventory.addItem(CustomItemCenter.build(CustomItems.MASTER_BOW));
             return;

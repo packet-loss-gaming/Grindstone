@@ -31,8 +31,9 @@ public enum CustomItems {
     NECROS_BOOTS(ChatColor.DARK_RED, "Necros Boots"),
 
     // Master Weapons
-    MASTER_SWORD(ChatColor.DARK_PURPLE, "Master Sword"),
-    MASTER_BOW(ChatColor.DARK_PURPLE, "Master Bow"),
+    MASTER_SWORD(WeaponFamily.MASTER, "Sword"),
+    MASTER_SHORT_SWORD(WeaponFamily.MASTER, "Short Sword"),
+    MASTER_BOW(WeaponFamily.MASTER, "Bow"),
 
     // Unleashed Weapons
     UNLEASHED_SWORD(WeaponFamily.UNLEASHED, "Sword"),

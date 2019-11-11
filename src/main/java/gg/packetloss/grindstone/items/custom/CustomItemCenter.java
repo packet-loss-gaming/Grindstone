@@ -191,12 +191,19 @@ public class CustomItemCenter {
         addItem(necrosBoots);
 
         // Master Weapons
-        CustomWeapon masterSword = new CustomWeapon(MASTER_SWORD, Material.DIAMOND_SWORD, 2);
+        CustomWeapon masterSword = new CustomWeapon(MASTER_SWORD, Material.DIAMOND_SWORD, 3.5);
         masterSword.addSource(ItemSource.GIANT_BOSS);
         masterSword.addSource(ItemSource.MARKET);
         masterSword.addUse("Repairable at any Sacrificial Pit");
         masterSword.addUse("Conditional Effects");
         addItem(masterSword);
+
+        CustomWeapon masterShortSword = new CustomWeapon(MASTER_SHORT_SWORD, Material.DIAMOND_SWORD, 2, 4);
+        masterShortSword.addSource(ItemSource.GIANT_BOSS);
+        masterShortSword.addSource(ItemSource.MARKET);
+        masterShortSword.addUse("Repairable at any Sacrificial Pit");
+        masterShortSword.addUse("Conditional Effects");
+        addItem(masterShortSword);
 
         CustomWeapon masterBow = new CustomWeapon(MASTER_BOW, Material.BOW, 2);
         masterBow.addSource(ItemSource.GIANT_BOSS);

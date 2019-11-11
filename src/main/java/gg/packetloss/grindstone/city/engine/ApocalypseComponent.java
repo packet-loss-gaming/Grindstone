@@ -19,16 +19,27 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.bosses.ThunderZombie;
+import gg.packetloss.grindstone.buff.Buff;
+import gg.packetloss.grindstone.buff.BuffCategory;
+import gg.packetloss.grindstone.buff.BuffComponent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseRespawnBoostEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.WeaponFamily;
+import gg.packetloss.grindstone.items.implementations.FearBowImpl;
+import gg.packetloss.grindstone.items.implementations.FearSwordImpl;
+import gg.packetloss.grindstone.items.implementations.UnleashedBowImpl;
+import gg.packetloss.grindstone.items.implementations.UnleashedSwordImpl;
+import gg.packetloss.grindstone.items.specialattack.SpecType;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -47,6 +58,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
+import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -55,21 +67,21 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 
 
 @ComponentInformation(friendlyName = "Apocalypse", desc = "Sends an invasion force after the residents of the server.")
-@Depend(components = {JailComponent.class, AdminComponent.class, WarpsComponent.class})
+@Depend(components = {BuffComponent.class, JailComponent.class, AdminComponent.class, WarpsComponent.class})
 public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    @InjectComponent
+    private BuffComponent buffComponent;
     @InjectComponent
     private JailComponent jailComponent;
     @InjectComponent
@@ -128,6 +140,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public int safeRespawnRadius = 10;
         @Setting("death-grace")
         public long deathGrace = 60000 * 5;
+        @Setting("buff-chance")
+        public int buffChance = 15;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -150,43 +164,94 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             Projectile.class
     );
 
+    private SpecialAttack getOverlordAttack(Player player, LivingEntity target, SpecType specType) {
+        switch (specType) {
+            case MELEE:
+                if (ChanceUtil.getChance(2)) {
+                    return new FearSwordImpl().getSpecial(player, target);
+                } else {
+                    return new UnleashedSwordImpl().getSpecial(player, target);
+                }
+            case RANGED:
+                if (ChanceUtil.getChance(2)) {
+                    return new FearBowImpl().getSpecial(player, target);
+                } else {
+                    return new UnleashedBowImpl().getSpecial(player, target);
+                }
+        }
+
+        throw new IllegalStateException();
+    }
+
+    private static final int INIT_OVERLORD_CHANCE = 100;
+
+    private void processOverlord(Player player, LivingEntity target, boolean hasProjectile) {
+        int overlordChance = INIT_OVERLORD_CHANCE;
+
+        if (ItemUtil.isHoldingItemInFamily(player, WeaponFamily.MASTER)) {
+            overlordChance /= 4;
+        }
+
+        overlordChance -= buffComponent.getBuffLevel(Buff.APOCALYPSE_OVERLORD, player).orElse(0) * 5;
+
+        // If a master weapon has been used OR the overlord buff is active, enable rolling
+        if (overlordChance != INIT_OVERLORD_CHANCE && ChanceUtil.getChance(Math.max(1, overlordChance))) {
+            SpecType specType = hasProjectile ? SpecType.RANGED : SpecType.MELEE;
+
+            SpecialAttack spec;
+
+            do {
+                spec = getOverlordAttack(player, target, specType);
+            } while (spec == null);
+
+            new SpecialAttackFactory(sessions).process(player, spec, specType);
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         CombatantPair<LivingEntity, LivingEntity, Projectile> result = extractor.extractFrom(event);
 
-        if (result == null || result.hasProjectile()) return;
+        if (result == null) return;
 
         LivingEntity target = result.getDefender();
         LivingEntity attacker = result.getAttacker();
 
-        Player player;
         switch (target.getType()) {
-            case PLAYER:
-                player = (Player) target;
-                if (ItemUtil.hasAncientArmour(player) && checkEntity(attacker)) {
-                    double diff = player.getMaxHealth() - player.getHealth();
-                    if (ChanceUtil.getChance((int) Math.max(3, Math.round(player.getMaxHealth() - diff)))) {
-                        EffectUtil.Ancient.powerBurst(player, event.getDamage());
-                    }
-                }
-                break;
-            default:
-                if (attacker instanceof Player) {
-                    player = (Player) attacker;
-                    if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD) && checkEntity(target)) {
+            case PLAYER: {
+                Player player = (Player) target;
 
-                        if (ChanceUtil.getChance(10)) {
-                            EffectUtil.Master.healingLight(player, target);
-                        }
-
-                        if (ChanceUtil.getChance(18)) {
-                            Set<LivingEntity> entities = player.getNearbyEntities(6, 4, 6).stream().filter(EnvironmentUtil::isHostileEntity).map(e -> (LivingEntity) e).collect(Collectors.toSet());
-                            EffectUtil.Master.doomBlade(player, entities);
+                if (checkEntity(attacker)) {
+                    if (ItemUtil.hasAncientArmour(player)) {
+                        double diff = player.getMaxHealth() - player.getHealth();
+                        if (ChanceUtil.getChance((int) Math.max(3, Math.round(player.getMaxHealth() - diff)))) {
+                            EffectUtil.Ancient.powerBurst(player, event.getDamage());
                         }
                     }
+
+                    buffComponent.getBuffLevel(Buff.APOCALYPSE_MAGIC_SHIELD, player).ifPresent((level) -> {
+                        event.setDamage(Math.max(0, event.getDamage() - ChanceUtil.getRandom(level)));
+                    });
                 }
+
                 break;
+            }
+
+            default: {
+                if (attacker instanceof Player && checkEntity(target)) {
+                    Player player = (Player) attacker;
+
+                    // Handle damage buff
+                    buffComponent.getBuffLevel(Buff.APOCALYPSE_DAMAGE_BOOST, player).ifPresent((level) -> {
+                        event.setDamage(event.getDamage() + ChanceUtil.getRandom(level));
+                    });
+
+                    processOverlord(player, target, result.hasProjectile());
+                }
+
+                break;
+            }
         }
     }
 
@@ -235,13 +300,39 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         sessions.getSession(ApocalypseSession.class, event.getPlayer()).updateDeath(config.deathGrace);
     }
 
+    private void maybeIncreaseBuff(Player player) {
+        if (!hasThunderstorm(player.getWorld())) {
+            return;
+        }
+
+        if (!ChanceUtil.getChance(config.buffChance)) {
+            return;
+        }
+
+        switch (ChanceUtil.getRandom(4)) {
+            case 1:
+                buffComponent.notifyIncrease(Buff.APOCALYPSE_OVERLORD, player);
+                break;
+            case 2:
+                buffComponent.notifyIncrease(Buff.APOCALYPSE_MAGIC_SHIELD, player);
+                break;
+            case 3:
+                buffComponent.notifyIncrease(Buff.APOCALYPSE_DAMAGE_BOOST, player);
+                break;
+            case 4:
+                buffComponent.notifyIncrease(Buff.APOCALYPSE_LIFE_LEACH, player);
+                break;
+        }
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onEntityDeath(EntityDeathEvent event) {
 
         LivingEntity ent = event.getEntity();
         World world = ent.getWorld();
 
-        if (ent instanceof Skeleton && ent.getKiller() != null) {
+        Player killer = ent.getKiller();
+        if (ent instanceof Skeleton &&  killer != null) {
             ItemStack held = ent.getEquipment().getItemInHand();
             if (held != null && held.getTypeId() == ItemID.BOW) {
                 if (hasThunderstorm(world) && ChanceUtil.getChance(5)) {
@@ -256,8 +347,18 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (checkEntity(ent)) {
             event.getDrops().removeIf(next -> next != null && next.getTypeId() == ItemID.ROTTEN_FLESH);
 
-            if (attackMob.isInstance(ent) && ChanceUtil.getChance(5)) {
-                event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandomNTimes(16, 7)));
+            if (attackMob.isInstance(ent)) {
+                if (ChanceUtil.getChance(5)) {
+                    event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandomNTimes(16, 7)));
+                }
+
+                if (killer != null) {
+                    maybeIncreaseBuff(killer);
+
+                    buffComponent.getBuffLevel(Buff.APOCALYPSE_LIFE_LEACH, killer).ifPresent((level) -> {
+                        EntityUtil.heal(killer, level);
+                    });
+                }
             }
 
             if (ChanceUtil.getChance(10000)) {
@@ -479,6 +580,13 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         equipment.setChestplateDropChance(0.005F);
         equipment.setLeggingsDropChance(0.005F);
         equipment.setBootsDropChance(0.005F);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onThunderChange(ThunderChangeEvent event) {
+        if (!event.toThunderState()) {
+            buffComponent.clearBuffs(BuffCategory.APOCALYPSE);
+        }
     }
 
     private static class ZombieSpawnConfig {

@@ -13,7 +13,7 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.WeaponFamily;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.ChatColor;
@@ -71,8 +71,7 @@ public class ClientSideWeatherComponent extends BukkitComponent implements Liste
         String state = event.toThunderState() ? "starting" : "ending";
         enabledFor.stream().filter(player -> player.getWorld().equals(event.getWorld())).forEach(player -> {
             if (!event.toThunderState()) {
-                if (ItemUtil.hasAncientArmour(player) || ItemUtil.isHoldingItem(player, CustomItems.MASTER_BOW)
-                        || ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
+                if (ItemUtil.hasAncientArmour(player) || ItemUtil.isHoldingItemInFamily(player, WeaponFamily.MASTER)) {
                     ChatUtil.sendWarning(player, ChatColor.DARK_RED + "===============[WARNING]===============");
                 }
             }

@@ -266,7 +266,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             if (attacker instanceof Player) {
                 Player player = (Player) attacker;
                 if (defender instanceof LivingEntity) {
-                    if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
+                    if (ItemUtil.isHoldingMasterSword(player)) {
                         if (ChanceUtil.getChance(parent.difficulty * 3 + 1)) {
                             EffectUtil.Master.healingLight(player, (LivingEntity) defender);
                         }
@@ -433,7 +433,11 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
                 }
                 if (ChanceUtil.getChance(138) || m > 1 && ChanceUtil.getChance(84 / m)) {
-                    event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_SWORD));
+                    if (ChanceUtil.getChance(2)) {
+                        event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_SWORD));
+                    } else {
+                        event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_SHORT_SWORD));
+                    }
                 }
                 if (ChanceUtil.getChance(138) || m > 1 && ChanceUtil.getChance(84 / m)) {
                     event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_BOW));

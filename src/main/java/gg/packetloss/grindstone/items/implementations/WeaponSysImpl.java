@@ -7,16 +7,14 @@
 package gg.packetloss.grindstone.items.implementations;
 
 import gg.packetloss.grindstone.PacketInterceptionComponent;
-import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackPreDamageEvent;
-import gg.packetloss.grindstone.items.CustomItemSession;
 import gg.packetloss.grindstone.items.WeaponType;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
 import gg.packetloss.grindstone.items.implementations.support.SweepPacketFilter;
-import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -88,22 +86,13 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
         LivingEntity target = attackInfo.getDefender();
 
         if (target != null && owner != target) {
-
-            CustomItemSession session = getSession(owner);
-
             WeaponType weaponType = attackInfo.wasRangedAttack() ? WeaponType.RANGED : WeaponType.MELEE;
 
             SpecWeaponImpl specImpl = getSpecialImplForItem(attackInfo.getUsedItem(), weaponType);
             SpecialAttack spec = specImpl == null ? null : specImpl.getSpecial(owner, target);
 
-            SpecType specType = weaponType.getDefaultSpecType();
-            if (spec != null && session.canSpec(specType)) {
-                SpecialAttackEvent specEvent = callSpec(owner, specType, spec);
-
-                if (!specEvent.isCancelled()) {
-                    session.updateSpec(specType, specEvent.getContextCoolDown());
-                    specEvent.getSpec().activate();
-                }
+            if (spec != null) {
+                new SpecialAttackFactory(sessions).process(owner, spec, weaponType.getDefaultSpecType());
             }
         }
     }

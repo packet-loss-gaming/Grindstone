@@ -44,6 +44,8 @@ public abstract class AbstractItemFeatureImpl implements Listener {
         return sessions.getSession(CustomItemSession.class, player);
     }
 
+    // Use SpecialAttackFactory
+    @Deprecated
     protected SpecialAttackEvent callSpec(Player owner, SpecType context, SpecialAttack spec) {
         SpecialAttackEvent event = new SpecialAttackEvent(owner, context, spec);
         server.getPluginManager().callEvent(event);

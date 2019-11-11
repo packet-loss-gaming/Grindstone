@@ -175,7 +175,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 Player player = (Player) attacker;
                 player.getActivePotionEffects().stream().filter(effect -> !excludedTypes.contains(effect.getType())).forEach(defender::addPotionEffect);
                 if (hasThunderstorm(parent.getWorld())) return;
-                if (ItemUtil.isHoldingItem(player, CustomItems.MASTER_SWORD)) {
+                if (ItemUtil.isHoldingMasterSword(player)) {
                     if (ChanceUtil.getChance(10)) {
                         EffectUtil.Master.healingLight(player, defender);
                     }

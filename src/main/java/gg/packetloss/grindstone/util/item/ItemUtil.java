@@ -296,10 +296,6 @@ public class ItemUtil {
         return player.isValid() && findItemOfName(player.getInventory().getContents(), type.toString());
     }
 
-    public static boolean isHoldingItem(Player player, CustomItems type) {
-
-        return player.isValid() && isItem(player.getItemInHand(), type);
-    }
 
     public static boolean isItem(ItemStack stack, CustomItems type) {
 
@@ -308,6 +304,21 @@ public class ItemUtil {
 
     public static boolean isInItemFamily(ItemStack stack, WeaponFamily family) {
         return matchesFilter(stack, family.getPrefix());
+    }
+
+    public static boolean isHoldingItem(Player player, CustomItems type) {
+
+        return player.isValid() && isItem(player.getItemInHand(), type);
+    }
+
+    // FIXME: This sucks
+    @Deprecated
+    public static boolean isHoldingMasterSword(Player player) {
+        return isHoldingItem(player, CustomItems.MASTER_SWORD) || isHoldingItem(player, CustomItems.MASTER_SHORT_SWORD);
+    }
+
+    public static boolean isHoldingItemInFamily(Player player, WeaponFamily family) {
+        return player.isValid() && isInItemFamily(player.getItemInHand(), family);
     }
 
     public static boolean swapItem(Inventory target, CustomItems oldItem, CustomItems newItem) {
