@@ -48,6 +48,10 @@ public class SpleefAreaInstance {
     public void equalize(Collection<Player> players) {
         for (Player player : players) {
             component.admin.standardizePlayer(player);
+
+            // Clear flight if set
+            player.setAllowFlight(false);
+            player.setFlying(false);
         }
     }
 
