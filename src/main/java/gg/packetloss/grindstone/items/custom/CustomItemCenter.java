@@ -324,11 +324,17 @@ public class CustomItemCenter {
         addItem(godBoots);
 
         // God Weapons
-        CustomWeapon godSword = new CustomWeapon(GOD_SWORD, Material.DIAMOND_SWORD, 1.5);
+        CustomWeapon godSword = new CustomWeapon(GOD_SWORD, Material.DIAMOND_SWORD, 2.5);
         godSword.addSource(ItemSource.SACRIFICIAL_PIT);
         godSword.addSource(ItemSource.GRAVE_YARD);
         godSword.addSource(ItemSource.MARKET);
         addItem(godSword);
+
+        CustomWeapon godShortSword = new CustomWeapon(GOD_SHORT_SWORD, Material.DIAMOND_SWORD, 1.5, 4);
+        godShortSword.addSource(ItemSource.SACRIFICIAL_PIT);
+        godShortSword.addSource(ItemSource.GRAVE_YARD);
+        godShortSword.addSource(ItemSource.MARKET);
+        addItem(godShortSword);
 
         CustomWeapon godBow = new CustomWeapon(GOD_BOW, Material.BOW, 1.5);
         godBow.addSource(ItemSource.SACRIFICIAL_PIT);

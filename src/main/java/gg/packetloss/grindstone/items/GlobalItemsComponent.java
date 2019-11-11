@@ -30,6 +30,7 @@ import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
 import gg.packetloss.grindstone.items.migration.MigrationManager;
 import gg.packetloss.grindstone.items.migration.migrations.FearSwordMigration;
+import gg.packetloss.grindstone.items.migration.migrations.GodSwordMigration;
 import gg.packetloss.grindstone.items.migration.migrations.MasterSwordMigration;
 import gg.packetloss.grindstone.items.migration.migrations.UnleashedSwordMigration;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -215,6 +216,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         migrationManager.add(new FearSwordMigration());
         migrationManager.add(new UnleashedSwordMigration());
         migrationManager.add(new MasterSwordMigration());
+        migrationManager.add(new GodSwordMigration());
 
         registerCommands(MigrationCommands.class);
     }

@@ -54,6 +54,7 @@ public enum CustomItems {
 
     // God Weapons
     GOD_SWORD(ChatColor.RED, "God Sword"),
+    GOD_SHORT_SWORD(ChatColor.RED, "God Short Sword"),
     GOD_BOW(ChatColor.RED, "God Bow"),
 
     // God Tools

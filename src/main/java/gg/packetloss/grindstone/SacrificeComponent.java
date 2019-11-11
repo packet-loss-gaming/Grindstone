@@ -205,7 +205,11 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         switch (ChanceUtil.getRandom(23)) {
             case 1:
                 if (Util.getChance(sender, modifier, 1.2)) {
-                    itemStack = CustomItemCenter.build(CustomItems.GOD_SWORD);
+                    if (ChanceUtil.getChance(2)) {
+                        itemStack = CustomItemCenter.build(CustomItems.GOD_SWORD);
+                    } else {
+                        itemStack = CustomItemCenter.build(CustomItems.GOD_SHORT_SWORD);
+                    }
                 } else {
                     itemStack = new ItemStack(ItemID.DIAMOND_SWORD);
                 }
