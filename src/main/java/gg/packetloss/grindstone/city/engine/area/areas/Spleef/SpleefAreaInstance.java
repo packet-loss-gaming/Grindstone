@@ -93,7 +93,7 @@ public class SpleefAreaInstance {
         }
     }
 
-    private boolean shouldBillWalls() {
+    private boolean shouldBuildWalls() {
         if (activeTicks > 5) {
             return true;
         }
@@ -120,7 +120,7 @@ public class SpleefAreaInstance {
         int maxY = max.getBlockY();
         int maxZ = max.getBlockZ();
 
-        Material toMat = shouldBillWalls() ? Material.ICE : Material.AIR;
+        Material toMat = shouldBuildWalls() ? Material.ICE : Material.AIR;
         Material fromMat = toMat == Material.ICE ? Material.AIR : Material.ICE;
 
         for (int y = minY; y < maxY; ++y) {
