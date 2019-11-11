@@ -22,10 +22,7 @@ import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
@@ -337,14 +334,10 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private long lastSwitch = System.currentTimeMillis();
 
     private void randomizeLevers() {
-
-        BlockState state;
-        Location mutable;
         if (System.currentTimeMillis() - lastSwitch >= TimeUnit.SECONDS.toMillis(14)) {
             for (Location entry : leverBlocks.keySet()) {
-
                 if (!entry.getBlock().getChunk().isLoaded()) entry.getBlock().getChunk().load();
-                state = entry.getBlock().getState();
+                BlockState state = entry.getBlock().getState();
                 Lever lever = (Lever) state.getData();
                 lever.setPowered(false);
                 state.setData(lever);
@@ -355,41 +348,30 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             randomizeLevers();
         } else if (System.currentTimeMillis() - lastSwitch == 0) {
             for (Map.Entry<Location, Boolean> entry : leverBlocks.entrySet()) {
-
-                mutable = entry.getKey().clone();
-                mutable.add(0, -1, 0);
+                Location mutable = entry.getKey().clone();
+                mutable.add(0, -2, 0);
 
                 if (!mutable.getBlock().getChunk().isLoaded()) mutable.getChunk().load();
-                state = mutable.getBlock().getState();
-                state.setTypeId(BlockID.REDSTONE_LAMP_OFF);
-                state.update(true);
+                mutable.getBlock().setType(Material.SMOOTH_BRICK);
             }
             server.getScheduler().runTaskLater(inst, () -> {
-
-                BlockState aState;
-                Location aMutable;
                 for (Map.Entry<Location, Boolean> entry : leverBlocks.entrySet()) {
-                    aMutable = entry.getKey().clone();
-                    aMutable.add(0, -1, 0);
+                    Location mutable = entry.getKey().clone();
+                    mutable.add(0, -2, 0);
 
-                    if (!aMutable.getBlock().getChunk().isLoaded()) aMutable.getChunk().load();
-                    aState = aMutable.getBlock().getState();
-                    if (entry.getValue()) aState.setTypeId(BlockID.REDSTONE_LAMP_ON);
-                    else aState.setTypeId(BlockID.REDSTONE_LAMP_OFF);
-                    aState.update(true);
+                    if (!mutable.getBlock().getChunk().isLoaded()) mutable.getChunk().load();
+                    Material targetBlock = entry.getValue() ? Material.REDSTONE_BLOCK : Material.SMOOTH_BRICK;
+                    mutable.getBlock().setType(targetBlock);
                 }
                 server.getScheduler().runTaskLater(inst, this::randomizeLevers, 15);
             }, 15);
         } else {
             for (Location entry : leverBlocks.keySet()) {
-
-                mutable = entry.clone();
-                mutable.add(0, -1, 0);
+                Location mutable = entry.clone();
+                mutable.add(0, -2, 0);
 
                 if (!mutable.getChunk().isLoaded()) mutable.getChunk().load();
-                state = mutable.getBlock().getState();
-                state.setTypeId(BlockID.REDSTONE_LAMP_OFF);
-                state.update(true);
+                mutable.getBlock().setType(Material.SMOOTH_BRICK);
             }
         }
     }
