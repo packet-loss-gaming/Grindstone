@@ -18,7 +18,8 @@ public class ChanceTest {
 
     @Before
     public void reseedWithRandom() {
-        ChanceUtil.reseedWithRandom(new Random(1));
+        Random fixedRandom = new Random(1);
+        ChanceUtil.setRandomSupplier(() -> fixedRandom);
     }
 
     @Test
