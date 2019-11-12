@@ -125,9 +125,7 @@ public class MercilessZombie {
                     target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT, 64));
                 }
 
-                if (ChanceUtil.getChance(15)) {
-                    target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
-                }
+                target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
 
                 return null;
             }
