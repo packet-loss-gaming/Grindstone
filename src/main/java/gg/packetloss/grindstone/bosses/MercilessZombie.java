@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.bosses;
 
+import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.OSBL.bukkit.BukkitBossDeclaration;
 import com.skelril.OSBL.bukkit.entity.BukkitBoss;
@@ -50,7 +51,7 @@ public class MercilessZombie {
         server.getScheduler().runTaskTimer(
                 inst,
                 () -> {
-                    mercilessZombie.controlled.values().forEach((ce) -> mercilessZombie.process(ce));
+                    Lists.newArrayList(mercilessZombie.controlled.values()).forEach((ce) -> mercilessZombie.process(ce));
                 },
                 20 * 10,
                 20 * 2
@@ -150,6 +151,12 @@ public class MercilessZombie {
             @Override
             public InstructionResult<GenericDetail, PassiveInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
+
+                // FIXME: This needs fixed in open boss, this just works around the issue
+                if (!boss.isValid()) {
+                    mercilessZombie.silentUnbind(controllable);
+                    return null;
+                }
 
                 double totalHealth = 0;
 
