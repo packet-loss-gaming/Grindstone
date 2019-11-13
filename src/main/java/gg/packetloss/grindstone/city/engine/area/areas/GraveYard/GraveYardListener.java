@@ -98,6 +98,9 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
     @EventHandler(ignoreCancelled = true)
     public void onLightningStrike(LightningStrikeEvent event) {
+        if (event.getLightning().isEffect()) {
+            return;
+        }
 
         World world = event.getWorld();
         if (parent.getWorld().equals(world) && hasThunderstorm(world)) {
