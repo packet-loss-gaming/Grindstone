@@ -121,7 +121,7 @@ public class MercilessZombie {
                 Location target = boss.getLocation();
 
                 int maxHealth = (int) ((Zombie) boss).getMaxHealth();
-                for (int i = ChanceUtil.getRandom(maxHealth / 64); i > 0; --i) {
+                for (int i = ChanceUtil.getRandom(maxHealth / 250); i > 0; --i) {
                     target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT, 64));
                 }
 
@@ -165,7 +165,7 @@ public class MercilessZombie {
                     }
                 }
 
-                EntityUtil.extendHeal((Zombie) boss, totalHealth);
+                EntityUtil.extendHeal((Zombie) boss, totalHealth, 15000);
                 return null;
             }
         });
