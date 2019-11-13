@@ -96,19 +96,29 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
     }
 
+    private boolean graveYardTriggeredSpike = false;
+
     @EventHandler(ignoreCancelled = true)
     public void onLightningStrike(LightningStrikeEvent event) {
-        if (event.getLightning().isEffect()) {
+        if (event.getLightning().isEffect() || graveYardTriggeredSpike) {
             return;
         }
 
         World world = event.getWorld();
         if (parent.getWorld().equals(world) && hasThunderstorm(world)) {
-            for (Location headStone : parent.headStones) {
-                if (world.getEntitiesByClass(Zombie.class).size() > 1000) return;
-                if (ChanceUtil.getChance(18)) {
-                    for (int i = 0; i < ChanceUtil.getRangedRandom(3, 6); i++) {
-                        parent.spawnAndArm(headStone, Zombie.class, true);
+            if (ChanceUtil.getChance(20)) {
+                graveYardTriggeredSpike = true;
+                for (int i = 0; i < 5; ++i) {
+                    world.strikeLightning(CollectionUtil.getElement(parent.headStones));
+                }
+                graveYardTriggeredSpike = false;
+            } else {
+                for (Location headStone : parent.headStones) {
+                    if (world.getEntitiesByClass(Zombie.class).size() > 1000) return;
+                    if (ChanceUtil.getChance(18)) {
+                        for (int i = 0; i < ChanceUtil.getRangedRandom(3, 6); i++) {
+                            parent.spawnAndArm(headStone, Zombie.class, true);
+                        }
                     }
                 }
             }
