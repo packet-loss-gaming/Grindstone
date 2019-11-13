@@ -28,6 +28,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.ArrayList;
@@ -77,8 +78,8 @@ public class ConversionComponent extends BukkitComponent implements Listener {
                 try {
                     int tranCount = Integer.parseInt(sign.getLine(2));
                     int goldCount = 0;
-                    int amount = 0;
-                    int flexAmount;
+
+                    PlayerInventory pInv = player.getInventory();
 
                     for (ItemStack itemStack : player.getInventory().getContents()) {
                         if (itemStack != null) {
@@ -93,38 +94,35 @@ public class ConversionComponent extends BukkitComponent implements Listener {
                         }
                     }
 
-                    if (tranCount >= goldCount) {
-                        amount = goldCount;
-                    } else if (goldCount > tranCount) {
-                        amount = tranCount;
+                    ItemStack[] stacks = pInv.getContents();
+                    ItemUtil.removeItemOfType(stacks, BlockID.GOLD_BLOCK);
+                    ItemUtil.removeItemOfType(stacks, ItemID.GOLD_BAR);
+                    ItemUtil.removeItemOfType(stacks, ItemID.GOLD_NUGGET);
+                    player.getInventory().setContents(stacks);
+
+                    int amount = Math.min(goldCount, tranCount);
+                    int returnAmount = goldCount - amount;
+
+                    while (returnAmount / 81 > 0) {
+                        returnAmount -= 81;
+                        player.getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK));
                     }
 
-                    flexAmount = amount;
-                    while (flexAmount / 81 > 0 && ItemUtil.countItemsOfType(player.getInventory().getContents(), BlockID.GOLD_BLOCK) > 0) {
-                        flexAmount -= 81;
-                        player.getInventory().removeItem(new ItemStack(BlockID.GOLD_BLOCK));
+                    while (returnAmount / 9 > 0) {
+                        returnAmount -= 9;
+                        player.getInventory().addItem(new ItemStack(ItemID.GOLD_BAR));
                     }
 
-                    while (flexAmount / 9 > 0 && ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_BAR) > 0) {
-                        flexAmount -= 9;
-                        player.getInventory().removeItem(new ItemStack(ItemID.GOLD_BAR));
-                    }
-
-                    while (flexAmount > 0 && ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_NUGGET) > 0) {
-                        flexAmount--;
-                        player.getInventory().removeItem(new ItemStack(ItemID.GOLD_NUGGET));
+                    while (returnAmount > 0) {
+                        returnAmount--;
+                        player.getInventory().addItem(new ItemStack(ItemID.GOLD_NUGGET));
                     }
 
                     player.updateInventory();
 
-                    economy.depositPlayer(player.getName(), amount - flexAmount);
-                    if (amount - flexAmount != 1) {
-                        ChatUtil.sendNotice(player, "You deposited: "
-                                + ChatUtil.makeCountString(economy.format(amount - flexAmount), "."));
-                    } else {
-                        ChatUtil.sendNotice(player, "You deposited: "
-                                + ChatUtil.makeCountString(economy.format(amount - flexAmount), "."));
-                    }
+                    economy.depositPlayer(player.getName(), amount);
+                    ChatUtil.sendNotice(player, "You deposited: "
+                            + ChatUtil.makeCountString(economy.format(amount), "."));
 
                 } catch (NumberFormatException ignored) {
                 }
