@@ -18,9 +18,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.bosses.MercilessZombie;
-import gg.packetloss.grindstone.bosses.ThorZombie;
-import gg.packetloss.grindstone.bosses.ZapperZombie;
+import gg.packetloss.grindstone.bosses.*;
 import gg.packetloss.grindstone.buff.Buff;
 import gg.packetloss.grindstone.buff.BuffCategory;
 import gg.packetloss.grindstone.buff.BuffComponent;
@@ -99,6 +97,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private ThorZombie thorBossManager;
     private ZapperZombie zapperBossManager;
     private MercilessZombie mercilessBossManager;
+    private StickyZombie stickyBossManager;
+    private ChuckerZombie chuckerBossManager;
 
     @Override
     public void enable() {
@@ -106,6 +106,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         thorBossManager = new ThorZombie();
         zapperBossManager = new ZapperZombie();
         mercilessBossManager = new MercilessZombie();
+        stickyBossManager = new StickyZombie();
+        chuckerBossManager = new ChuckerZombie();
+
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
     }
@@ -124,6 +127,10 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public int zapperBossChance = 60;
         @Setting("boss-chance.merciless")
         public int mercilessBossChance = 1000;
+        @Setting("boss-chance.sticky")
+        public int stickyBossChance = 60;
+        @Setting("boss-chance.chucker")
+        public int chuckerBossChance = 60;
         @Setting("baby-chance")
         public int babyChance = 16;
         @Setting("amplification-noise")
@@ -553,6 +560,14 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             return true;
         }
 
+        if (customName.equals(StickyZombie.BOUND_NAME)) {
+            return true;
+        }
+
+        if (customName.equals(ChuckerZombie.BOUND_NAME)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -593,6 +608,10 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 zapperBossManager.bind(entity);
             } else if (ChanceUtil.getChance(config.mercilessBossChance)) {
                 mercilessBossManager.bind(entity);
+            } else if (ChanceUtil.getChance(config.stickyBossChance)) {
+                stickyBossManager.bind(entity);
+            }else if (ChanceUtil.getChance(config.chuckerBossChance)) {
+                chuckerBossManager.bind(entity);
             }
 
             return true;
