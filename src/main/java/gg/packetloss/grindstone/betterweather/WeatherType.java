@@ -3,7 +3,7 @@ package gg.packetloss.grindstone.betterweather;
 public enum WeatherType {
     CLEAR(false, false),
     RAIN(true, false),
-    THUNDER_STORM(true, true);
+    THUNDERSTORM(true, true);
 
     private boolean storming;
     private boolean thundering;

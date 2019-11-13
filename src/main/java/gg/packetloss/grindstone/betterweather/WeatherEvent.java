@@ -20,4 +20,8 @@ public class WeatherEvent {
     public WeatherType getWeatherType() {
         return weatherType;
     }
+
+    public void setWeatherType(WeatherType weatherType) {
+        this.weatherType = weatherType;
+    }
 }

@@ -27,6 +27,7 @@ import org.bukkit.event.weather.WeatherChangeEvent;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -116,7 +117,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
 
         weatherTypes.add(WeatherType.CLEAR, config.clearStormTypeWeight);
         weatherTypes.add(WeatherType.RAIN, config.rainStormTypeWeight);
-        weatherTypes.add(WeatherType.THUNDER_STORM, config.thunderStormStormTypeWeight);
+        weatherTypes.add(WeatherType.THUNDERSTORM, config.thunderStormStormTypeWeight);
 
         return weatherTypes.pick();
     }
@@ -132,7 +133,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
             WeatherType newWeather = pickWeather();
 
             // Queue a bit of rain as a warning about the impending thunderstorm
-            if (newWeather == WeatherType.THUNDER_STORM) {
+            if (newWeather == WeatherType.THUNDERSTORM) {
                 weatherQueue.add(new WeatherEvent(nextWeatherEvent, WeatherType.RAIN));
 
                 nextWeatherEvent += TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(
@@ -141,6 +142,72 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
             }
 
             weatherQueue.add(new WeatherEvent(nextWeatherEvent, newWeather));
+        }
+    }
+
+    private void sendWeatherPrintout(CommandSender sender, Deque<WeatherEvent> queue, boolean verbose) {
+        WeatherType lastWeatherType = null;
+        int printed = 0;
+
+        for (WeatherEvent event : queue) {
+            WeatherType weatherType = event.getWeatherType();
+
+            if (!verbose) {
+                if (printed == config.numToPrint) {
+                    break;
+                }
+
+                if (printed == 0 && sender instanceof Player) {
+                    World world = ((Player) sender).getWorld();
+
+                    boolean stormyStateMatches = weatherType.isStorm() == world.hasStorm();
+                    boolean thunderStateMatches = weatherType.hasThunder() == world.isThundering();
+                    if (stormyStateMatches && thunderStateMatches) {
+                        continue;
+                    }
+                }
+
+                if (lastWeatherType == weatherType) {
+                    continue;
+                }
+            }
+
+            long activationTime = event.getActivationTime();
+            String weatherTypeName = weatherType.name();
+
+            String prefix = verbose ? printed + 1 + "). " : " - ";
+            ChatUtil.sendNotice(
+                    sender,
+                    prefix + TimeUtil.getPrettyTime(activationTime) + " " + ChatColor.BLUE + weatherTypeName
+            );
+
+            lastWeatherType = weatherType;
+            ++printed;
+        }
+    }
+
+    private Optional<WeatherType> getWeatherFromToken(String charStr) {
+        switch (charStr.charAt(0)) {
+            case 'c':
+                return Optional.of(WeatherType.CLEAR);
+            case 'r':
+                return Optional.of(WeatherType.RAIN);
+            case 't':
+                return Optional.of(WeatherType.THUNDERSTORM);
+            default:
+                return Optional.empty();
+        }
+    }
+
+    private Optional<Integer> getRepeatsFromToken(String charStr) {
+        if (charStr.length() == 1) {
+            return Optional.of(1);
+        }
+
+        try {
+            return Optional.of(Integer.parseInt(charStr.substring(1)));
+        } catch (NumberFormatException ex) {
+            return Optional.empty();
         }
     }
 
@@ -169,51 +236,56 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
     public class Commands {
         @Command(aliases = {"forecast"},
                 usage = "", desc = "Get the forecast for the server's weather",
-                flags = "", min = 0, max = 0)
+                flags = "v", min = 0, max = 0)
         public void forecastCmd(CommandContext args, CommandSender sender) throws CommandException {
-            WeatherType lastWeatherType = null;
-            int printed = 0;
+            boolean verbose = args.hasFlag('v') && sender.hasPermission("aurora.weather.recast");
+            sendWeatherPrintout(sender, weatherQueue, verbose);
+        }
 
+        @Command(aliases = {"forcecast"},
+                usage = "<weather type stream>", desc = "Redo the server forecast",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions("aurora.weather.recast")
+        public void forcecastCmd(CommandContext args, CommandSender sender) throws CommandException {
+            String newForecastString = args.getString(0);
+            String[] forecastElements = newForecastString.split(",");
+
+            Deque<WeatherType> weatherTypes = new LinkedList<>();
+            for (String el : forecastElements) {
+                Optional<WeatherType> optWeatherType = getWeatherFromToken(el);
+                if (optWeatherType.isEmpty()) {
+                    throw new CommandException("Unknown weather token: " + el);
+                }
+                Optional<Integer> repeats = getRepeatsFromToken(el);
+                if (repeats.isEmpty()) {
+                    throw new CommandException("Non-number formatted repeat: " + el);
+                }
+
+                for (int i = repeats.get(); i > 0; --i) {
+                    weatherTypes.add(optWeatherType.get());
+                }
+            }
+
+            WeatherType initialChange = weatherTypes.poll();
             for (WeatherEvent event : weatherQueue) {
-                if (printed == config.numToPrint) {
+                if (weatherTypes.isEmpty()) {
                     break;
                 }
-
-                if (printed == 0 && sender instanceof Player) {
-                    World world = ((Player) sender).getWorld();
-                    WeatherType weatherType = event.getWeatherType();
-
-                    boolean stormyStateMatches = weatherType.isStorm() == world.hasStorm();
-                    boolean thunderStateMatches = weatherType.hasThunder() == world.isThundering();
-                    if (stormyStateMatches && thunderStateMatches) {
-                        continue;
-                    }
-                }
-
-                WeatherType weatherType = event.getWeatherType();
-                if (lastWeatherType == weatherType) {
-                    continue;
-                }
-
-
-                long activationTime = event.getActivationTime();
-                String weatherTypeName = weatherType.name();
-
-                ChatUtil.sendNotice(
-                        sender,
-                        " - " + TimeUtil.getPrettyTime(activationTime) + " " + ChatColor.BLUE + weatherTypeName
-                );
-
-                lastWeatherType = weatherType;
-                ++printed;
+                event.setWeatherType(weatherTypes.poll());
             }
+            weatherQueue.addFirst(new WeatherEvent(System.currentTimeMillis(), initialChange));
+
+            changeWeather();
+            populateWeatherQueue();
+
+            ChatUtil.sendNotice(sender, "Current weather even changed!");
         }
 
         @Command(aliases = {"recast"},
                 usage = "", desc = "Redo the server forecast",
                 flags = "", min = 0, max = 0)
         @CommandPermissions("aurora.weather.recast")
-        public void showStormCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void recastCmd(CommandContext args, CommandSender sender) throws CommandException {
             weatherQueue.clear();
             populateWeatherQueue();
 
