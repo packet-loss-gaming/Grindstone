@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.economic;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -16,8 +15,9 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.ItemPointTranslator;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -52,6 +52,14 @@ public class ConversionComponent extends BukkitComponent implements Listener {
     private static Economy economy = null;
     private List<Player> recentList = new ArrayList<>();
 
+    private static ItemPointTranslator goldConverter = new ItemPointTranslator();
+
+    static {
+        goldConverter.addMapping(new ItemStack(Material.GOLD_BLOCK), 81);
+        goldConverter.addMapping(new ItemStack(Material.GOLD_INGOT), 9);
+        goldConverter.addMapping(new ItemStack(Material.GOLD_NUGGET), 1);
+    }
+
     @Override
     public void enable() {
 
@@ -60,7 +68,6 @@ public class ConversionComponent extends BukkitComponent implements Listener {
         setupEconomy();
     }
 
-    @SuppressWarnings("deprecation")
     @EventHandler(ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
 
@@ -76,114 +83,75 @@ public class ConversionComponent extends BukkitComponent implements Listener {
             if (!impersonalComponent.check(block, true)) return;
             if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
                 try {
-                    int tranCount = Integer.parseInt(sign.getLine(2));
-                    int goldCount = 0;
-
                     PlayerInventory pInv = player.getInventory();
 
-                    for (ItemStack itemStack : player.getInventory().getContents()) {
-                        if (itemStack != null) {
-                            if (itemStack.getItemMeta() != null && itemStack.getItemMeta().hasDisplayName()) continue;
-                            if (itemStack.getTypeId() == ItemID.GOLD_NUGGET) {
-                                goldCount += itemStack.getAmount();
-                            } else if (itemStack.getTypeId() == ItemID.GOLD_BAR) {
-                                goldCount += itemStack.getAmount() * 9;
-                            } else if (itemStack.getTypeId() == BlockID.GOLD_BLOCK) {
-                                goldCount += itemStack.getAmount() * 81;
-                            }
-                        }
-                    }
-
+                    // Count the amount of gold in the inventory.
                     ItemStack[] stacks = pInv.getContents();
-                    ItemUtil.removeItemOfType(stacks, BlockID.GOLD_BLOCK);
-                    ItemUtil.removeItemOfType(stacks, ItemID.GOLD_BAR);
-                    ItemUtil.removeItemOfType(stacks, ItemID.GOLD_NUGGET);
-                    player.getInventory().setContents(stacks);
+                    int goldCount = goldConverter.calculateValue(stacks, true);
 
-                    int amount = Math.min(goldCount, tranCount);
-                    int returnAmount = goldCount - amount;
+                    // Figure out how much we are trying to deposit, up to the amount of gold in the inventory.
+                    // Then create the new inventory value.
+                    int tranCount = Math.min(goldCount, Integer.parseInt(sign.getLine(2)));
+                    int newInvValue = goldCount - tranCount;
 
-                    while (returnAmount / 81 > 0) {
-                        returnAmount -= 81;
-                        player.getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK));
+                    // Set the new inventory value.
+                    ItemPointTranslator.DepositReport result = goldConverter.assignValue(stacks, newInvValue);
+                    if (result.failedToDeposit()) {
+                        throw new IllegalStateException("Failed to assign gold value while depositing");
                     }
 
-                    while (returnAmount / 9 > 0) {
-                        returnAmount -= 9;
-                        player.getInventory().addItem(new ItemStack(ItemID.GOLD_BAR));
-                    }
-
-                    while (returnAmount > 0) {
-                        returnAmount--;
-                        player.getInventory().addItem(new ItemStack(ItemID.GOLD_NUGGET));
-                    }
-
+                    // Update inventory state.
+                    pInv.setContents(result.getNewStackState());
                     player.updateInventory();
 
-                    economy.depositPlayer(player.getName(), amount);
+                    // Perform the deposit.
+                    economy.depositPlayer(player, tranCount);
                     ChatUtil.sendNotice(player, "You deposited: "
-                            + ChatUtil.makeCountString(economy.format(amount), "."));
-
+                            + ChatUtil.makeCountString(economy.format(tranCount), "."));
                 } catch (NumberFormatException ignored) {
                 }
             } else if (event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
                 if (player.isSneaking()) return;
                 try {
+                    PlayerInventory pInv = player.getInventory();
+
+                    // Establish an existing wallet balance/count of gold in the inventory.
+                    ItemStack[] stacks = pInv.getContents();
+                    int goldCount = goldConverter.calculateValue(stacks, true);
+
+                    // Establish the amount of gold we're trying to place in the inventory,
+                    // and what the new inventory balance should be with that withdraw.
                     int tranCount = Integer.parseInt(sign.getLine(2));
-                    int bankGold = (int) economy.getBalance(player.getName());
-                    int amount = 0;
-                    int flexAmount = 0;
+                    int newInvValue = goldCount + tranCount;
 
-                    if (tranCount >= bankGold) {
-                        amount = bankGold;
-                    } else if (bankGold > tranCount) {
-                        amount = tranCount;
+                    // Set the new inventory value.
+                    ItemPointTranslator.DepositReport result = goldConverter.assignValue(stacks, newInvValue);
+                    if (result.failedToDeposit()) {
+                        // If we failed to place some of the requested withdraw in the inventory, remove
+                        // it from the amount to be withdrawn.
+                        tranCount -= result.getRemainingValue();
                     }
 
-                    flexAmount = amount;
-                    while (flexAmount / 81 > 0 && player.getInventory().firstEmpty() != -1) {
-                        flexAmount -= 81;
-                        player.getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK));
+                    // Check for sufficient balance factoring in inventory space results.
+                    int bankGold = (int) economy.getBalance(player);
+                    if (bankGold < tranCount) {
+                        ChatUtil.sendError(player, "You do not have sufficient funds.");
+                        return;
                     }
 
-                    while (flexAmount / 9 > 0 && player.getInventory().firstEmpty() != -1) {
-                        flexAmount -= 9;
-                        player.getInventory().addItem(new ItemStack(ItemID.GOLD_BAR));
-                    }
-
-                    while (flexAmount > 0 && player.getInventory().firstEmpty() != -1) {
-                        flexAmount--;
-                        player.getInventory().addItem(new ItemStack(ItemID.GOLD_NUGGET));
-                    }
-
-                    while (ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_NUGGET) / 9 > 0
-                            && player.getInventory().firstEmpty() != -1) {
-                        player.getInventory().removeItem(new ItemStack(ItemID.GOLD_NUGGET, 9));
-                        player.getInventory().addItem(new ItemStack(ItemID.GOLD_BAR));
-                    }
-
-                    while (ItemUtil.countItemsOfType(player.getInventory().getContents(), ItemID.GOLD_BAR) / 9 > 0
-                            && player.getInventory().firstEmpty() != -1) {
-                        player.getInventory().removeItem(new ItemStack(ItemID.GOLD_BAR, 9));
-                        player.getInventory().addItem(new ItemStack(BlockID.GOLD_BLOCK));
-                    }
-
+                    // Update inventory state.
+                    pInv.setContents(result.getNewStackState());
                     player.updateInventory();
 
-                    economy.withdrawPlayer(player.getName(), amount - flexAmount);
-                    if (amount - flexAmount != 1) {
-                        ChatUtil.sendNotice(player, "You withdrew: "
-                                + ChatUtil.makeCountString(economy.format(amount - flexAmount), "."));
-                    } else {
-                        ChatUtil.sendNotice(player, "You withdrew: "
-                                + ChatUtil.makeCountString(economy.format(amount - flexAmount), "."));
-                    }
-
+                    // Perform the withdraw.
+                    economy.withdrawPlayer(player, tranCount);
+                    ChatUtil.sendNotice(player, "You withdrew: "
+                            + ChatUtil.makeCountString(economy.format(tranCount), "."));
                 } catch (NumberFormatException ignored) {
                 }
             }
             recentList.add(player);
-            server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 10);
+            server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 1);
         }
     }
 
