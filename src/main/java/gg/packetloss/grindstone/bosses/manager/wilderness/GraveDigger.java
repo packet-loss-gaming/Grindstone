@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.bosses;
+package gg.packetloss.grindstone.bosses.manager.wilderness;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BaseBlock;

@@ -18,7 +18,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.bosses.*;
+import gg.packetloss.grindstone.bosses.manager.apocalypse.*;
 import gg.packetloss.grindstone.buff.Buff;
 import gg.packetloss.grindstone.buff.BuffCategory;
 import gg.packetloss.grindstone.buff.BuffComponent;

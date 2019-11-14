@@ -1,7 +1,6 @@
-package gg.packetloss.grindstone.bosses;
+package gg.packetloss.grindstone.bosses.manager.apocalypse;
 
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.OSBL.bukkit.BukkitBossDeclaration;
 import com.skelril.OSBL.bukkit.entity.BukkitBoss;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
 import com.skelril.OSBL.entity.LocalControllable;
@@ -9,10 +8,10 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
+import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -31,17 +30,12 @@ public class ZapperZombie {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private BukkitBossDeclaration<GenericDetail> zapperZombie;
+    private SimpleRebindableBoss<Zombie> zapperZombie;
 
     public static final String BOUND_NAME = "Zapper Zombie";
 
     public ZapperZombie() {
-        zapperZombie = new BukkitBossDeclaration<>(inst, new SimpleInstructionDispatch<>()) {
-            @Override
-            public boolean matchesBind(LocalEntity entity) {
-                return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), BOUND_NAME);
-            }
-        };
+        zapperZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
         setupZapperZombie();
     }
 

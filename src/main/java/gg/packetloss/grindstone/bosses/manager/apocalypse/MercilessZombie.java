@@ -1,20 +1,15 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
-package gg.packetloss.grindstone.bosses;
+package gg.packetloss.grindstone.bosses.manager.apocalypse;
 
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.OSBL.bukkit.BukkitBossDeclaration;
 import com.skelril.OSBL.bukkit.entity.BukkitBoss;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
 import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
+import com.skelril.OSBL.util.AttackDamage;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
+import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -25,47 +20,44 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Damageable;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 
 import java.util.List;
 import java.util.logging.Logger;
 
-public class ChuckerZombie {
+public class MercilessZombie {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private BukkitBossDeclaration<GenericDetail> chuckerZombie;
+    private SimpleRebindableBoss<Zombie> mercilessZombie;
 
-    public static final String BOUND_NAME = "Chucker Zombie";
+    public static final String BOUND_NAME = "Merciless Zombie";
 
-    public ChuckerZombie() {
-        chuckerZombie = new BukkitBossDeclaration<>(inst, new SimpleInstructionDispatch<>()) {
-            @Override
-            public boolean matchesBind(LocalEntity entity) {
-                return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), BOUND_NAME);
-            }
-        };
-        setupChuckerZombie();
+    public MercilessZombie() {
+        mercilessZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        setupMercilessZombie();
         server.getScheduler().runTaskTimer(
                 inst,
                 () -> {
-                    Lists.newArrayList(chuckerZombie.controlled.values()).forEach((ce) -> chuckerZombie.process(ce));
+                    Lists.newArrayList(mercilessZombie.controlled.values()).forEach((ce) -> mercilessZombie.process(ce));
                 },
                 20 * 10,
-                20 * 4
+                20 * 2
         );
     }
 
     public void bind(Damageable entity) {
-        chuckerZombie.bind(new BukkitBoss<>(entity, new GenericDetail()));
+        mercilessZombie.bind(new BukkitBoss<>(entity, new GenericDetail()));
     }
 
-    private boolean isThrowableZombie(Entity entity) {
+    private boolean isConsumableZombie(Entity entity) {
         String customName = entity.getCustomName();
         if (customName == null) {
             return false;
@@ -83,31 +75,11 @@ public class ChuckerZombie {
             return true;
         }
 
-        if (customName.equals(ThorZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(ZapperZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(MercilessZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(StickyZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(ChuckerZombie.BOUND_NAME)) {
-            return true;
-        }
-
         return false;
     }
 
-    private void setupChuckerZombie() {
-        List<BindInstruction<GenericDetail>> bindInstructions = chuckerZombie.bindInstructions;
+    private void setupMercilessZombie() {
+        List<BindInstruction<GenericDetail>> bindInstructions = mercilessZombie.bindInstructions;
         bindInstructions.add(new BindInstruction<>() {
             @Override
             public InstructionResult<GenericDetail, BindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
@@ -115,19 +87,19 @@ public class ChuckerZombie {
                 if (anEntity instanceof Zombie) {
                     anEntity.setCustomName(BOUND_NAME);
 
-                    // Ensure chucker zombies are never babies
+                    // Ensure merciless zombies are never babies
                     ((Zombie) anEntity).setBaby(false);
 
-                    // Ensure chucker zombies cannot pickup items, they are OP enough
+                    // Ensure merciless zombies cannot pickup items, they are OP enough
                     ((Zombie) anEntity).setCanPickupItems(false);
 
                     // Set health
-                    ((LivingEntity) anEntity).setMaxHealth(500);
-                    ((LivingEntity) anEntity).setHealth(500);
+                    ((LivingEntity) anEntity).setMaxHealth(750);
+                    ((LivingEntity) anEntity).setHealth(750);
 
                     // Gear them up
                     EntityEquipment equipment = ((LivingEntity) anEntity).getEquipment();
-                    ItemStack weapon = new ItemStack(Material.FEATHER);
+                    ItemStack weapon = new ItemStack(Material.GOLD_SWORD);
                     weapon.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
                     equipment.setItemInMainHand(weapon);
                     equipment.setArmorContents(ItemUtil.GOLD_ARMOR);
@@ -136,25 +108,38 @@ public class ChuckerZombie {
             }
         });
 
-        List<UnbindInstruction<GenericDetail>> unbindInstructions = chuckerZombie.unbindInstructions;
+        List<UnbindInstruction<GenericDetail>> unbindInstructions = mercilessZombie.unbindInstructions;
         unbindInstructions.add(new UnbindInstruction<>() {
             @Override
             public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
 
-                if (ChanceUtil.getChance(1000)) {
-                    target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
+                int maxHealth = (int) ((Zombie) boss).getMaxHealth();
+                for (int i = ChanceUtil.getRandom(maxHealth / 250); i > 0; --i) {
+                    target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT, 64));
                 }
+
+                target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
 
                 return null;
             }
         });
 
-        List<DamagedInstruction<GenericDetail>> damagedInstructions = chuckerZombie.damagedInstructions;
+        List<DamageInstruction<GenericDetail>> damageInstructions = mercilessZombie.damageInstructions;
+        damageInstructions.add(new DamageInstruction<>() {
+            @Override
+            public InstructionResult<GenericDetail, DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
+                final Entity toHit = BukkitUtil.getBukkitEntity(entity);
+                ((LivingEntity) toHit).setHealth((int) (((LivingEntity) toHit).getHealth() / 2));
+                return null;
+            }
+        });
+
+        List<DamagedInstruction<GenericDetail>> damagedInstructions = mercilessZombie.damagedInstructions;
         damagedInstructions.add(new HealthPrint<>());
 
-        List<PassiveInstruction<GenericDetail>> passiveInstructions = chuckerZombie.passiveInstructions;
+        List<PassiveInstruction<GenericDetail>> passiveInstructions = mercilessZombie.passiveInstructions;
         passiveInstructions.add(new PassiveInstruction<GenericDetail>() {
             @Override
             public InstructionResult<GenericDetail, PassiveInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
@@ -162,36 +147,20 @@ public class ChuckerZombie {
 
                 // FIXME: This needs fixed in open boss, this just works around the issue
                 if (!boss.isValid()) {
-                    chuckerZombie.silentUnbind(controllable);
+                    mercilessZombie.silentUnbind(controllable);
                     return null;
                 }
 
-                Player closestPlayer = null;
-                double curDist = Double.MAX_VALUE;
-                for (Player player : boss.getWorld().getPlayers()) {
-                    double dist = player.getLocation().distanceSquared(boss.getLocation());
-                    if (dist < curDist) {
-                        closestPlayer = player;
-                        curDist = dist;
-                    }
-                }
-
-                if (closestPlayer == null) {
-                    return null;
-                }
-
-                Vector nearestPlayerVel = closestPlayer.getLocation().subtract(boss.getLocation()).toVector();
-                nearestPlayerVel.normalize();
-                nearestPlayerVel.multiply(2);
-                nearestPlayerVel.setY(0);
-                nearestPlayerVel.add(new Vector(0, ChanceUtil.getRangedRandom(.4, .8), 0));
+                double totalHealth = 0;
 
                 for (Entity entity : ((Zombie) boss).getNearbyEntities(4, 4, 4)) {
-                    if (isThrowableZombie(entity) && ChanceUtil.getChance(5)) {
-                        entity.setVelocity(nearestPlayerVel);
+                    if (isConsumableZombie(entity)) {
+                        totalHealth += ((Zombie) entity).getHealth();
+                        ((Zombie) entity).setHealth(0);
                     }
                 }
 
+                EntityUtil.extendHeal((Zombie) boss, totalHealth, 15000);
                 return null;
             }
         });
