@@ -105,7 +105,8 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
         }
 
         EntityDamageEvent.DamageCause cause = event.getCause();
-        if (cause.equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
+        if (cause.equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK) ||
+                cause.equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
             ItemStack targetItem = attackInfo.getUsedItem();
 
             double modifier = ItemUtil.getDamageModifier(targetItem);
