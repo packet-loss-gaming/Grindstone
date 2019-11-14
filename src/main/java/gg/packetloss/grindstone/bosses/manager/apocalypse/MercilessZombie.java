@@ -145,12 +145,6 @@ public class MercilessZombie {
             public InstructionResult<GenericDetail, PassiveInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
 
-                // FIXME: This needs fixed in open boss, this just works around the issue
-                if (!boss.isValid()) {
-                    mercilessZombie.silentUnbind(controllable);
-                    return null;
-                }
-
                 double totalHealth = 0;
 
                 for (Entity entity : ((Zombie) boss).getNearbyEntities(4, 4, 4)) {

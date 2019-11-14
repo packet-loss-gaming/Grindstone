@@ -153,12 +153,6 @@ public class ChuckerZombie {
             public InstructionResult<GenericDetail, PassiveInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
 
-                // FIXME: This needs fixed in open boss, this just works around the issue
-                if (!boss.isValid()) {
-                    chuckerZombie.silentUnbind(controllable);
-                    return null;
-                }
-
                 Player closestPlayer = null;
                 double curDist = Double.MAX_VALUE;
                 for (Player player : boss.getWorld().getPlayers()) {
