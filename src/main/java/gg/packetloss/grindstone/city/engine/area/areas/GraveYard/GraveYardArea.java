@@ -375,7 +375,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
 
     private  <T extends LivingEntity> T spawn(Location location, Class<T> type, String name) {
         if (location == null) return null;
-        T entity = location.getWorld().spawn(location, type);
+        T entity = location.getWorld().spawn(location, type, (e) -> e.getEquipment().clear());
         entity.setCustomName(name);
         entity.setCustomNameVisible(false);
         return entity;

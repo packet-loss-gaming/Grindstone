@@ -329,11 +329,10 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     if (oldHP < boss.getHealth()) return;
                     for (Location spawnPt : parent.spawnPts) {
                         if (ChanceUtil.getChance(chancePerSpawnPoint)) {
-                            Zombie z = parent.getWorld().spawn(spawnPt, Zombie.class);
+                            Zombie z = parent.getWorld().spawn(spawnPt, Zombie.class,(e) -> e.getEquipment().clear());
                             z.setBaby(true);
                             z.setCanPickupItems(false);
                             EntityEquipment equipment = z.getEquipment();
-                            equipment.clear();
                             equipment.setItemInHand(weapon.clone());
                             equipment.setItemInHandDropChance(0F);
                             if (finalAttacker instanceof LivingEntity) {

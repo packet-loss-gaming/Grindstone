@@ -48,7 +48,6 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.warps.WarpsComponent;
 import org.bukkit.*;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -61,7 +60,6 @@ import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -147,10 +145,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public int localSpawnChance = 3;
         @Setting("max-mobs")
         public int maxMobs = 1000;
-        @Setting("armour-chance")
-        public int armourChance = 100;
-        @Setting("weapon-chance")
-        public int weaponChance = 100;
         @Setting("enable-safe-respawn-location")
         public boolean enableSafeRespawn = true;
         @Setting("safe-respawn-radius")
@@ -470,7 +464,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         // Spawn however many zombies we determined need spawned.
         ZombieSpawnConfig bedSpawnConfig = new ZombieSpawnConfig();
         for (int i = 0; i < apocalypseEvent.getNumberOfZombies(); i++) {
-            spawnAndArm(apocalypseEvent.getLocation(), attackMob, bedSpawnConfig);
+            spawn(apocalypseEvent.getLocation(), attackMob, bedSpawnConfig);
         }
     }
 
@@ -491,7 +485,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         int multiplier = config.strikeMultiplier * config.amplificationNoise;
         for (int i = 0; i < multiplier; ++i) {
-            spawnAndArm(strikeLocation, attackMob, strikeSpawnConfig);
+            spawn(strikeLocation, attackMob, strikeSpawnConfig);
         }
     }
 
@@ -512,7 +506,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 continue;
             }
 
-            spawnAndArm(apocalypseEvent.getLocation(), attackMob, localSpawnConfig);
+            spawn(apocalypseEvent.getLocation(), attackMob, localSpawnConfig);
         }
     }
 
@@ -571,8 +565,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         return false;
     }
 
-    private <T extends LivingEntity> T spawn(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
-        T entity = location.getWorld().spawn(location, clazz);
+    private <T extends LivingEntity> T spawnBase(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
+        T entity = location.getWorld().spawn(location, clazz, (e) -> e.getEquipment().clear());
 
         // Override baby defaults
         if (entity instanceof Zombie) {
@@ -586,83 +580,38 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         entity.setCustomName("Apocalyptic Zombie");
         entity.setCustomNameVisible(false);
 
-        // Reset equipment
-        EntityEquipment equipment = entity.getEquipment();
-        equipment.clear();
-
         // Set some default equipment drop chances
-        equipment.setItemInHandDropChance(0.005F);
-        equipment.setHelmetDropChance(0.005F);
-        equipment.setChestplateDropChance(0.005F);
-        equipment.setLeggingsDropChance(0.005F);
-        equipment.setBootsDropChance(0.005F);
+        EntityEquipment equipment = entity.getEquipment();
+        equipment.setItemInHandDropChance(0F);
+        equipment.setHelmetDropChance(0F);
+        equipment.setChestplateDropChance(0F);
+        equipment.setLeggingsDropChance(0F);
+        equipment.setBootsDropChance(0F);
 
         return entity;
     }
 
-    private boolean maybeMakeMiniboss(LivingEntity entity, ZombieSpawnConfig spawnConfig) {
-        if (spawnConfig.allowMiniBoss) {
-            if (ChanceUtil.getChance(config.thorBossChance)) {
-                thorBossManager.bind(entity);
-            } else if (ChanceUtil.getChance(config.zapperBossChance)) {
-                zapperBossManager.bind(entity);
-            } else if (ChanceUtil.getChance(config.mercilessBossChance)) {
-                mercilessBossManager.bind(entity);
-            } else if (ChanceUtil.getChance(config.stickyBossChance)) {
-                stickyBossManager.bind(entity);
-            }else if (ChanceUtil.getChance(config.chuckerBossChance)) {
-                chuckerBossManager.bind(entity);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private void arm(Entity e, ZombieSpawnConfig spawnConfig) {
-        // FIXME: This is 90% the same as the grave yard arm logic
-        if (!(e instanceof LivingEntity)) return;
-
-        EntityEquipment equipment = ((LivingEntity) e).getEquipment();
-
-        if (ChanceUtil.getChance(config.armourChance)) {
-            if (ChanceUtil.getChance(35)) {
-                equipment.setArmorContents(ItemUtil.DIAMOND_ARMOR);
-            } else {
-                equipment.setArmorContents(ItemUtil.IRON_ARMOR);
-            }
-
-            if (ChanceUtil.getChance(4)) equipment.setHelmet(null);
-            if (ChanceUtil.getChance(4)) equipment.setChestplate(null);
-            if (ChanceUtil.getChance(4)) equipment.setLeggings(null);
-            if (ChanceUtil.getChance(4)) equipment.setBoots(null);
-        }
-
-        if (ChanceUtil.getChance(config.weaponChance)) {
-            ItemStack sword = new ItemStack(ItemID.IRON_SWORD);
-            if (ChanceUtil.getChance(35)) sword = new ItemStack(ItemID.DIAMOND_SWORD);
-            ItemMeta meta = sword.getItemMeta();
-            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_ALL, ChanceUtil.getRandom(5), false);
-            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, ChanceUtil.getRandom(5), false);
-            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_UNDEAD, ChanceUtil.getRandom(5), false);
-            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.FIRE_ASPECT, ChanceUtil.getRandom(2), false);
-            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.KNOCKBACK, ChanceUtil.getRandom(2), false);
-            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.LOOT_BONUS_MOBS, ChanceUtil.getRandom(3), false);
-            sword.setItemMeta(meta);
-            equipment.setItemInHand(sword);
+    private void maybeMakeMiniboss(LivingEntity entity) {
+        if (ChanceUtil.getChance(config.thorBossChance)) {
+            thorBossManager.bind(entity);
+        } else if (ChanceUtil.getChance(config.zapperBossChance)) {
+            zapperBossManager.bind(entity);
+        } else if (ChanceUtil.getChance(config.mercilessBossChance)) {
+            mercilessBossManager.bind(entity);
+        } else if (ChanceUtil.getChance(config.stickyBossChance)) {
+            stickyBossManager.bind(entity);
+        } else if (ChanceUtil.getChance(config.chuckerBossChance)) {
+            chuckerBossManager.bind(entity);
         }
     }
 
-    private <T extends LivingEntity> void spawnAndArm(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
+    private <T extends LivingEntity> void spawn(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
         if (!location.getChunk().isLoaded()) return;
 
-        LivingEntity e = spawn(location, clazz, spawnConfig);
-        if (maybeMakeMiniboss(e, spawnConfig)) {
-            return;
+        LivingEntity monster = spawnBase(location, clazz, spawnConfig);
+        if (spawnConfig.allowMiniBoss) {
+            maybeMakeMiniboss(monster);
         }
-
-        arm(e, spawnConfig);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

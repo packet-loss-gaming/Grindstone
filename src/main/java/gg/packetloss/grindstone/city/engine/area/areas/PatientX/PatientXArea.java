@@ -33,7 +33,6 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
-import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -422,16 +421,14 @@ public class PatientXArea extends AreaComponent<PatientXConfig> implements Persi
         resetDifficulty();
         freezeBlocks(false);
 
-        boss = getWorld().spawn(getCentralLoc(), Zombie.class);
+        boss = getWorld().spawn(getCentralLoc(), Zombie.class, (e) -> e.getEquipment().clear());
 
         // Handle vitals
         boss.setMaxHealth(config.bossHealth);
         boss.setHealth(config.bossHealth);
         boss.setRemoveWhenFarAway(false);
 
-        // Handle items
-        EntityEquipment equipment = boss.getEquipment();
-        equipment.clear();
+        // Handle item pickup
         boss.setCanPickupItems(false);
 
         // Handle name
