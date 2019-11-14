@@ -3,6 +3,7 @@ package gg.packetloss.grindstone.items.custom;
 import org.bukkit.ChatColor;
 
 public enum WeaponFamily {
+    PWNG(ChatColor.DARK_RED, "Pwng"),
     MASTER(ChatColor.DARK_PURPLE, "Master"),
     FEAR(ChatColor.DARK_RED, "Fear"),
     UNLEASHED(ChatColor.DARK_PURPLE, "Unleashed");

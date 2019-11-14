@@ -26,6 +26,7 @@ import gg.packetloss.grindstone.PacketInterceptionComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.WeaponFamily;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
 import gg.packetloss.grindstone.items.migration.MigrationManager;
@@ -42,6 +43,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -51,6 +53,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -291,6 +294,15 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         ItemStack heldItem = player.getInventory().getItemInMainHand();
         if (!ItemUtil.isPickAxe(heldItem.getTypeId()) && ItemUtil.isAuthenticCustomItem(heldItem)) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onItemDrop(PlayerDropItemEvent event) {
+        Item item = event.getItemDrop();
+        if (ItemUtil.isInItemFamily(item.getItemStack(), WeaponFamily.PWNG)) {
+            item.remove();
+            ChatUtil.sendNotice(event.getPlayer(), ChatColor.DARK_RED + "This item is too powerful for mere mortals.");
         }
     }
 

@@ -9,6 +9,9 @@ package gg.packetloss.grindstone.items.custom;
 import org.bukkit.ChatColor;
 
 public enum CustomItems {
+    // Admin Weapons
+    PWNG_SHORT_SWORD(WeaponFamily.PWNG, "Short Sword"),
+    PWNG_BOW(WeaponFamily.PWNG, "Bow"),
 
     // Ancient Armor
     ANCIENT_CROWN(ChatColor.GOLD, "Ancient Crown"),
@@ -16,7 +19,6 @@ public enum CustomItems {
     ANCIENT_CHESTPLATE(ChatColor.GOLD, "Ancient Chestplate"),
     ANCIENT_LEGGINGS(ChatColor.GOLD, "Ancient Leggings"),
     ANCIENT_BOOTS(ChatColor.GOLD, "Ancient Boots"),
-
 
     // Nectric Armor
     NECTRIC_HELMET(ChatColor.DARK_RED, "Nectric Helmet"),

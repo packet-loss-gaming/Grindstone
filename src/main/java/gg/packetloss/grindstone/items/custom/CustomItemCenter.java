@@ -27,6 +27,13 @@ public class CustomItemCenter {
     }
 
     static {
+        // Admin Weapons
+        CustomWeapon pwngShortSword = new CustomWeapon(PWNG_SHORT_SWORD, Material.DIAMOND_SWORD, 10000, 4);
+        addItem(pwngShortSword);
+
+        CustomWeapon pwngBow = new CustomWeapon(PWNG_BOW, Material.BOW, 10000);
+        addItem(pwngBow);
+
         // Ancient Armor
         CustomEquipment ancientCrown = new CustomEquipment(ANCIENT_CROWN, Material.GOLD_HELMET);
         ancientCrown.addEnchant(Enchantment.DURABILITY, 3);
