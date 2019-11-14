@@ -14,6 +14,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.bosses.DebugCow;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.hackbook.ChunkBook;
@@ -23,6 +24,7 @@ import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Cow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -44,14 +46,18 @@ public class DebugComponent extends BukkitComponent {
     private final CommandBook inst = CommandBook.inst();
     private final Server server = CommandBook.server();
 
+    private DebugCow debugCowBoss;
+
     @Override
     public void enable() {
+        debugCowBoss = new DebugCow();
 
         //noinspection AccessStaticViaInstance
         //inst.registerEvents(new InventoryCorruptionFixer());
         //noinspection AccessStaticViaInstance
         //inst.registerEvents(new BlockDebug());
 
+        registerCommands(DebugCowCmd.class);
         //registerCommands(FoodInfo.class);
         //registerCommands(ChunkLighter.class);
         //registerCommands(LocationDebug.class);
@@ -78,6 +84,20 @@ public class DebugComponent extends BukkitComponent {
             ItemStack[] inventory = player.getInventory().getContents();
             inventory = ItemUtil.removeItemOfType(inventory, Material.DOUBLE_PLANT.getId());
             player.getInventory().setContents(inventory);
+        }
+    }
+
+    public class DebugCowCmd {
+        @Command(aliases = {"debugcow"}, desc = "Create a debug cow",
+                usage = "[health]", flags = "", min = 0, max = 1)
+        @CommandPermissions("aurora.debug.debugcow")
+        public void debugCowCmd(CommandContext args, CommandSender sender) throws CommandException {
+            Player player = PlayerUtil.checkPlayer(sender);
+
+            double health = args.getDouble(0, 100000);
+
+            Cow cow = player.getWorld().spawn(player.getLocation(), Cow.class);
+            debugCowBoss.bind(cow, health);
         }
     }
 
