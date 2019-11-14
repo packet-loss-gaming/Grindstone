@@ -170,8 +170,7 @@ public class ChuckerZombie {
                 Vector nearestPlayerVel = closestPlayer.getLocation().subtract(boss.getLocation()).toVector();
                 nearestPlayerVel.normalize();
                 nearestPlayerVel.multiply(2);
-                nearestPlayerVel.setY(0);
-                nearestPlayerVel.add(new Vector(0, ChanceUtil.getRangedRandom(.4, .8), 0));
+                nearestPlayerVel.setY(ChanceUtil.getRangedRandom(.4, .8));
 
                 for (Entity entity : ((Zombie) boss).getNearbyEntities(4, 4, 4)) {
                     if (isThrowableZombie(entity) && ChanceUtil.getChance(5)) {

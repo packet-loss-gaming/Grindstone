@@ -14,6 +14,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.ic.ics.DelayedRepeater;
 import gg.packetloss.grindstone.ic.ics.GroupSentryGun;
 import gg.packetloss.grindstone.ic.ics.NinjaStarSpawner;
+import gg.packetloss.grindstone.ic.ics.RegionPortal;
 import org.bukkit.Server;
 
 import java.util.logging.Logger;
@@ -47,5 +48,6 @@ public class CustomICComponent extends BukkitComponent {
         ICCore.registerIC("SK1278", "group sentry", new GroupSentryGun.Factory(server), ICCore.familySISO, ICCore.familyAISO);
         ICCore.registerIC("SK9001", "star spawner", new NinjaStarSpawner.Factory(server), ICCore.familySISO, ICCore.familyAISO);
         ICCore.registerIC("SK9002", "delay repeater", new DelayedRepeater.Factory(server), ICCore.familySISO, ICCore.familyAISO);
+        ICCore.registerIC("SK9003", "region portal", new RegionPortal.Factory(server), ICCore.familySISO, ICCore.familyAISO);
     }
 }
