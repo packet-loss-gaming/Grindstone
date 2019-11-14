@@ -239,6 +239,13 @@ public class ItemUtil {
         return false;
     }
 
+    public static boolean wasBow(Material item) {
+        return item == Material.BOW;
+    }
+
+    public static boolean wasBow(ItemStack stack) {
+        return wasBow(stack.getType());
+    }
 
     private static final int[] axes = new int[]{
             ItemID.WOOD_AXE, ItemID.STONE_AXE,

@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.bukkit.event.entity.EntityDamageEvent.DamageCause.*;
+
 public class WeaponSysImpl extends AbstractItemFeatureImpl {
 
     private static int ignoredCounter = 0;
@@ -105,13 +107,14 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
         }
 
         EntityDamageEvent.DamageCause cause = event.getCause();
-        if (cause.equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK) ||
-                cause.equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
+        boolean validMeleeAttack = cause.equals(ENTITY_ATTACK) && !wasBowUsed(attackInfo);
+        boolean validRangeAttack = cause.equals(PROJECTILE) && attackInfo.wasRangedAttack();
+        if (validMeleeAttack || validRangeAttack) {
             ItemStack targetItem = attackInfo.getUsedItem();
 
             double modifier = ItemUtil.getDamageModifier(targetItem);
             event.setDamage(event.getDamage() * modifier);
-        } else if (cause.equals(EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
+        } else if (cause.equals(ENTITY_SWEEP_ATTACK)) {
             ItemStack targetItem = attackInfo.getUsedItem();
             if (ItemUtil.blocksSweepAttack(targetItem)) {
                 event.setCancelled(true);
@@ -129,6 +132,10 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
         if (ignoredCounter > 0) {
             --ignoredCounter;
         }
+    }
+
+    private boolean wasBowUsed(WeaponAttackInfo info) {
+        return ItemUtil.wasBow(info.getUsedItem());
     }
 
     private static class WeaponAttackInfo {
