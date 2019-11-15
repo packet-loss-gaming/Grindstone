@@ -310,7 +310,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
                     + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice), "."));
         }
         recentList.add(player);
-        server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 10);
+        server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 1);
     }
 
     private int calculateCPUTicketCount() {
