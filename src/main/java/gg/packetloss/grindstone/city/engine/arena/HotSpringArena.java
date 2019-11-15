@@ -186,7 +186,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                         player.setVelocity(vector);
 
                         player.setFallDistance(0);
-                        return true;
+                        return false;
                     }
 
                     @Override
@@ -202,7 +202,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                     }
                 };
 
-                TimedRunnable timedRunnable = new TimedRunnable(runnable, 14);
+                TimedRunnable timedRunnable = new TimedRunnable(runnable, 1);
                 BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 15);
                 timedRunnable.setTask(task);
             } catch (Exception e) {
