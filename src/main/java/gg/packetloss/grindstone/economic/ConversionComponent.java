@@ -16,7 +16,10 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.ItemPointTranslator;
+import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
+import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import net.milkbowl.vault.economy.Economy;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
@@ -28,7 +31,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.ArrayList;
@@ -83,11 +85,10 @@ public class ConversionComponent extends BukkitComponent implements Listener {
             if (!impersonalComponent.check(block, true)) return;
             if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
                 try {
-                    PlayerInventory pInv = player.getInventory();
+                    InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
 
                     // Count the amount of gold in the inventory.
-                    ItemStack[] stacks = pInv.getContents();
-                    int goldCount = goldConverter.calculateValue(stacks, true);
+                    int goldCount = goldConverter.calculateValue(adapter, true);
 
                     // Figure out how much we are trying to deposit, up to the amount of gold in the inventory.
                     // Then create the new inventory value.
@@ -95,14 +96,11 @@ public class ConversionComponent extends BukkitComponent implements Listener {
                     int newInvValue = goldCount - tranCount;
 
                     // Set the new inventory value.
-                    ItemPointTranslator.DepositReport result = goldConverter.assignValue(stacks, newInvValue);
-                    if (result.failedToDeposit()) {
-                        throw new IllegalStateException("Failed to assign gold value while depositing");
-                    }
+                    int remainingValue = goldConverter.assignValue(adapter, newInvValue);
+                    Validate.isTrue(remainingValue == 0, "Failed to assign gold value while depositing!");
 
                     // Update inventory state.
-                    pInv.setContents(result.getNewStackState());
-                    player.updateInventory();
+                    adapter.applyChanges();
 
                     // Perform the deposit.
                     economy.depositPlayer(player, tranCount);
@@ -113,24 +111,18 @@ public class ConversionComponent extends BukkitComponent implements Listener {
             } else if (event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
                 if (player.isSneaking()) return;
                 try {
-                    PlayerInventory pInv = player.getInventory();
+                    InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
 
                     // Establish an existing wallet balance/count of gold in the inventory.
-                    ItemStack[] stacks = pInv.getContents();
-                    int goldCount = goldConverter.calculateValue(stacks, true);
+                    int goldCount = goldConverter.calculateValue(adapter, true);
 
                     // Establish the amount of gold we're trying to place in the inventory,
                     // and what the new inventory balance should be with that withdraw.
                     int tranCount = Integer.parseInt(sign.getLine(2));
                     int newInvValue = goldCount + tranCount;
 
-                    // Set the new inventory value.
-                    ItemPointTranslator.DepositReport result = goldConverter.assignValue(stacks, newInvValue);
-                    if (result.failedToDeposit()) {
-                        // If we failed to place some of the requested withdraw in the inventory, remove
-                        // it from the amount to be withdrawn.
-                        tranCount -= result.getRemainingValue();
-                    }
+                    // Set the new inventory value, minus any amount that couldn't be placed into the inventory.
+                    tranCount -= goldConverter.assignValue(adapter, newInvValue);
 
                     // Check for sufficient balance factoring in inventory space results.
                     int bankGold = (int) economy.getBalance(player);
@@ -140,8 +132,7 @@ public class ConversionComponent extends BukkitComponent implements Listener {
                     }
 
                     // Update inventory state.
-                    pInv.setContents(result.getNewStackState());
-                    player.updateInventory();
+                    adapter.applyChanges();
 
                     // Perform the withdraw.
                     economy.withdrawPlayer(player, tranCount);

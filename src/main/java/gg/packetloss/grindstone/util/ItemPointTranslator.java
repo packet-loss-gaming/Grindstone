@@ -1,6 +1,6 @@
 package gg.packetloss.grindstone.util;
 
-import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -14,16 +14,16 @@ public class ItemPointTranslator {
         compile();
     }
 
-    public int calculateValue(ItemStack[] itemStacks, boolean removeWhileCounting) {
+    public int calculateValue(InventoryAdapter adapter, boolean removeWhileCounting) {
         int value = 0;
 
-        for (int i = 0; i < itemStacks.length; ++i) {
-            ItemStack curStack = itemStacks[i];
+        for (int i = 0; i < adapter.size(); ++i) {
+            ItemStack curStack = adapter.getAt(i);
             for (PointMapping pointMapping : pointMappings) {
                 if (pointMapping.getItem().isSimilar(curStack)) {
                     value += curStack.getAmount() * pointMapping.getValue();
                     if (removeWhileCounting) {
-                        itemStacks[i] = null;
+                        adapter.setAt(i, null);
                     }
                     break;
                 }
@@ -33,23 +33,21 @@ public class ItemPointTranslator {
         return value;
     }
 
-    public DepositReport assignValue(ItemStack[] itemStacks, int value) {
-        itemStacks = ItemUtil.clone(itemStacks); // Make sure we're working in our domain here
+    public int assignValue(InventoryAdapter adapter, int value) {
         for (PointMapping pointMapping : pointMappings) {
             ItemStack targetStack = pointMapping.getItem();
-            for (int i = 0; i < itemStacks.length; ++i) {
-                // Use an insertion position which prefers to declutter the hotbar.
-                int insertionPos = (i + 9) % itemStacks.length;
-
-                final ItemStack stack = itemStacks[insertionPos];
+            for (int i = 0; i < adapter.size(); ++i) {
+                final ItemStack stack = adapter.getAt(i);
                 int startingAmt = stack == null ? 0 : stack.getAmount();
                 int targetValue = pointMapping.getValue();
 
                 if (value >= targetValue && (startingAmt == 0 || targetStack.isSimilar(stack))) {
                     int quantity = Math.min(value / targetValue, targetStack.getMaxStackSize());
                     value -= quantity * targetValue;
-                    itemStacks[insertionPos] = targetStack.clone();
-                    itemStacks[insertionPos].setAmount(quantity);
+
+                    ItemStack newStack = targetStack.clone();
+                    newStack.setAmount(quantity);
+                    adapter.setAt(i, newStack);
 
                     // Stop early if we no longer have anything to add
                     if (value == 0) {
@@ -58,7 +56,7 @@ public class ItemPointTranslator {
                 }
             }
         }
-        return new DepositReport(itemStacks, value);
+        return value;
     }
 
     private void compile() {
@@ -80,32 +78,6 @@ public class ItemPointTranslator {
 
         public int getValue() {
             return value;
-        }
-    }
-
-    public static class DepositReport {
-        private ItemStack[] newStackState;
-        private int remainingValue;
-
-        private DepositReport(ItemStack[] newStackState, int remainingValue) {
-            this.newStackState = newStackState;
-            this.remainingValue = remainingValue;
-        }
-
-        public ItemStack[] getNewStackState() {
-            return newStackState;
-        }
-
-        public int getRemainingValue() {
-            return remainingValue;
-        }
-
-        public boolean completelyDeposited() {
-            return remainingValue == 0;
-        }
-
-        public boolean failedToDeposit() {
-            return !completelyDeposited();
         }
     }
 }

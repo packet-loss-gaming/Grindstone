@@ -6,10 +6,12 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractCondenserImpl;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
+import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -63,11 +65,9 @@ public class AncientCrownImpl extends AbstractCondenserImpl {
             }
 
             server.getScheduler().runTaskLater(inst, () -> {
-                ItemStack[] result = condenser.operate(player.getInventory().getContents(), true);
-                if (result != null) {
-                    player.getInventory().setContents(result);
-                    //noinspection deprecation
-                    player.updateInventory();
+                InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
+                if (condenser.operate(adapter, true)) {
+                    adapter.applyChanges();
                 }
             }, 1);
         }

@@ -6,12 +6,14 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractCondenserImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
+import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,9 +37,9 @@ public class SummationScrollImpl extends AbstractCondenserImpl {
             // Scrolls
             boolean isScrollOfSummation = ItemUtil.isItem(itemStack, CustomItems.SCROLL_OF_SUMMATION);
             if (isScrollOfSummation) {
-                ItemStack[] result = condenser.operate(player.getInventory().getContents(), false);
-                if (result != null) {
-                    player.getInventory().setContents(result);
+                InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
+                if (condenser.operate(adapter, false)) {
+                    adapter.applyChanges();
                     ItemUtil.removeItemOfName(player, CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION), 1, false);
                     ChatUtil.sendNotice(player, ChatColor.GOLD, "The scroll glows brightly before turning to dust...");
                 }

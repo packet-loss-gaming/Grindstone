@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.util;
 
-import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
@@ -32,11 +32,10 @@ public class ItemCondenser {
 
     /**
      *
-     * @param itemStacks - the old item stacks
-     * @return the new item stacks, or null if the operation could not be completed/did nothing
+     * @param adapter - the inventory adapter
+     * @return false if the operation could not be completed/did nothing
      */
-    public ItemStack[] operate(ItemStack[] itemStacks, boolean enableSpaceSaving) {
-        itemStacks = ItemUtil.clone(itemStacks); // Make sure we're working in our domain here
+    public boolean operate(InventoryAdapter adapter, boolean enableSpaceSaving) {
         List<Remainder> remainders = new ArrayList<>();
         int modified = 0;
         for (Step step : conversionSteps) {
@@ -46,11 +45,11 @@ public class ItemCondenser {
             ItemStack source = step.getOldItem();
             ItemStack dest = step.getNewItem();
 
-            for (int i = 0; i < itemStacks.length; ++i) {
-                ItemStack cur = itemStacks[i];
+            for (int i = 0; i < adapter.size(); ++i) {
+                ItemStack cur = adapter.getAt(i);
                 if (source.isSimilar(cur)) {
                     sourceTotal += cur.getAmount();
-                    itemStacks[i] = null;
+                    adapter.setAt(i, null);
                 } else if (dest.isSimilar(cur) && cur.getAmount() < cur.getMaxStackSize()) {
                     destStackPos.add(i);
                 }
@@ -84,8 +83,8 @@ public class ItemCondenser {
             // extremely unfortunate activation and certainly annoying.
             if (newAmt > 0 || (destStackPos.size() > 1 && enableSpaceSaving)) {
                 for (int position : destStackPos) {
-                    newAmt += itemStacks[position].getAmount();
-                    itemStacks[position] = null;
+                    newAmt += adapter.getAt(position).getAmount();
+                    adapter.setAt(position, null);
                 }
             }
 
@@ -105,19 +104,19 @@ public class ItemCondenser {
 
         for (Remainder remainder : remainders) {
             ItemStack rStack = remainder.getItem();
-            for (int i = 0; i < itemStacks.length; ++i) {
-                // Use an insertion position which prefers to declutter the hotbar.
-                int insertionPos = (i + 9) % itemStacks.length;
-
-                final ItemStack stack = itemStacks[insertionPos];
+            for (int i = 0; i < adapter.size(); ++i) {
+                final ItemStack stack = adapter.getAt(i);
                 int startingAmt = stack == null ? 0 : stack.getAmount();
                 int rAmt = remainder.getAmount();
 
                 if (rAmt > 0 && (startingAmt == 0 || rStack.isSimilar(stack))) {
                     int quantity = Math.min(rAmt + startingAmt, rStack.getMaxStackSize());
                     rAmt -= quantity - startingAmt;
-                    itemStacks[insertionPos] = rStack.clone();
-                    itemStacks[insertionPos].setAmount(quantity);
+
+                    ItemStack newStack = rStack.clone();
+                    newStack.setAmount(quantity);
+                    adapter.setAt(i, newStack);
+
                     remainder.setAmount(rAmt);
 
                     // Stop early if we no longer have anything to add
@@ -127,9 +126,9 @@ public class ItemCondenser {
                 }
             }
             // We couldn't place all items
-            if (remainder.getAmount() > 0) return null;
+            if (remainder.getAmount() > 0) return false;
         }
-        return modified == 0 ? null : itemStacks;
+        return modified != 0;
     }
 
     private void compile() {

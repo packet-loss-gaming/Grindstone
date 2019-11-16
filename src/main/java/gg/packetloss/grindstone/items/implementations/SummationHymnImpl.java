@@ -10,10 +10,11 @@ import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.items.generic.AbstractCondenserImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
+import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
+import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.inventory.ItemStack;
 
 public class SummationHymnImpl extends AbstractCondenserImpl {
 
@@ -28,11 +29,9 @@ public class SummationHymnImpl extends AbstractCondenserImpl {
 
         switch (hymn) {
             case SUMMATION:
-                ItemStack[] result = condenser.operate(player.getInventory().getContents(), true);
-                if (result != null) {
-                    player.getInventory().setContents(result);
-                    //noinspection deprecation
-                    player.updateInventory();
+                InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
+                if (condenser.operate(adapter, true)) {
+                    adapter.applyChanges();
                     ChatUtil.sendNotice(player, ChatColor.GOLD, "The hymn glows brightly...");
                 }
                 break;

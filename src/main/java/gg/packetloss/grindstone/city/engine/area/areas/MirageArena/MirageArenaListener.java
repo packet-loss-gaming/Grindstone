@@ -18,6 +18,8 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
+import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
+import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -246,11 +248,9 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
             }
 
             server.getScheduler().runTaskLater(inst, () -> {
-                ItemStack[] result = goldCondenser.operate(player.getInventory().getContents(), true);
-                if (result != null) {
-                    player.getInventory().setContents(result);
-                    //noinspection deprecation
-                    player.updateInventory();
+                InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
+                if (goldCondenser.operate(adapter, true)) {
+                    adapter.applyChanges();
                 }
             }, 1);
         }
