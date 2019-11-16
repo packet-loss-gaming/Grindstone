@@ -116,7 +116,7 @@ public class MercilessZombie {
                 Location target = boss.getLocation();
 
                 int maxHealth = (int) ((Zombie) boss).getMaxHealth();
-                for (int i = ChanceUtil.getRandom(maxHealth / 250); i > 0; --i) {
+                for (int i = Math.min(60, ChanceUtil.getRandom(maxHealth / 250)); i > 0; --i) {
                     target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT, 64));
                 }
 
