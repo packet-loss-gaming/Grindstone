@@ -42,6 +42,8 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawn
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
@@ -152,6 +154,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     PrayerComponent prayerComponent;
     @InjectComponent
     AntiCheatCompatibilityComponent antiCheat;
+    @InjectComponent
+    HighScoresComponent highScoresComponent;
 
     public JungleRaidComponent() {
         this.workingDir = inst.getDataFolder().getPath() + "/minigames/jr/";
@@ -413,7 +417,12 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         handleTeamLeave(player);
 
         if (economy != null && forced && state != JungleRaidState.LOBBY) {
-            payPlayer(player, state == JungleRaidState.DONE ? 10 : 1);
+            if (state == JungleRaidState.DONE) {
+                highScoresComponent.update(player, ScoreTypes.JUNGLE_RAID_WINS, 1);
+                payPlayer(player, 10);
+            } else {
+                payPlayer(player, 1);
+            }
         }
     }
 

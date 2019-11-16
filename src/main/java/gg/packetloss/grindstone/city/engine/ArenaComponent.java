@@ -31,6 +31,7 @@ import gg.packetloss.grindstone.city.engine.arena.factory.FactoryFloor;
 import gg.packetloss.grindstone.city.engine.arena.factory.FactoryMech;
 import gg.packetloss.grindstone.city.engine.arena.factory.FactorySmelter;
 import gg.packetloss.grindstone.economic.ImpersonalComponent;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -70,6 +71,8 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     private RestorationUtil restorationUtil;
     @InjectComponent
     private EggComponent eggComponent;
+    @InjectComponent
+    private HighScoresComponent highScoresComponent;
 
     private final World world = Bukkit.getWorld("City");
     private LocalConfiguration config;
@@ -207,7 +210,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     PRs[4] = mgr.get(world).getRegion(region + "-room-three");
                     PRs[5] = mgr.get(world).getRegion(region + "-door-one");
                     PRs[6] = mgr.get(world).getRegion(region + "-door-two");
-                    arenas.add(new GoldRush(world, PRs, adminComponent, impersonalComponent));
+                    arenas.add(new GoldRush(world, PRs, adminComponent, impersonalComponent, highScoresComponent));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");

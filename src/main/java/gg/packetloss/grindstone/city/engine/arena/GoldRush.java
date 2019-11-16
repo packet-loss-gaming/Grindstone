@@ -15,6 +15,8 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
@@ -62,6 +64,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private Economy economy;
     private AdminComponent adminComponent;
     private ImpersonalComponent impersonalComponent;
+    private HighScoresComponent highScoresComponent;
 
     private ProtectedRegion lobby;
 
@@ -86,7 +89,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private boolean leversTriggered = false;
 
     public GoldRush(World world, ProtectedRegion[] regions,
-                    AdminComponent adminComponent, ImpersonalComponent impersonalComponent) {
+                    AdminComponent adminComponent, ImpersonalComponent impersonalComponent,
+                    HighScoresComponent highScoresComponent) {
 
         super(world, regions[0]);
 
@@ -101,6 +105,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
         this.adminComponent = adminComponent;
         this.impersonalComponent = impersonalComponent;
+        this.highScoresComponent = highScoresComponent;
 
         findChestAndKeys();         // Setup room one
         findLeversAndFloodBlocks(); // Setup room two
@@ -716,6 +721,10 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 players.remove(event.getPlayer().getName());
                 event.setUseInteractedBlock(Event.Result.DENY);
                 event.getPlayer().teleport(LocationUtil.grandBank(getWorld()));
+
+                highScoresComponent.update(event.getPlayer(), ScoreTypes.GOLD_RUSH_ROBBERIES, 1);
+                int seconds = (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTime);
+                highScoresComponent.update(event.getPlayer(), ScoreTypes.FASTEST_GOLD_RUSH, seconds);
 
                 ChatUtil.sendNotice(event.getPlayer(), "You have successfully robbed the bank!\n");
                 ChatUtil.sendNotice(event.getPlayer(), "[Partner] I've put your split of the money in your account.");

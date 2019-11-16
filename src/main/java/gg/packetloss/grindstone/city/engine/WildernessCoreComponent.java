@@ -29,6 +29,8 @@ import gg.packetloss.grindstone.city.engine.combat.PvPScope;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.entity.item.DropClearPulseEvent;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
@@ -83,6 +85,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private AdminComponent adminComponent;
     @InjectComponent
     private SessionComponent sessions;
+    @InjectComponent
+    private HighScoresComponent highScoresComponent;
 
     private World city;
     private World wilderness;
@@ -436,7 +440,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Location location = entity.getLocation();
         int level = getLevel(location);
-        if (isWildernessWorld(location.getWorld()) && level > 1) {
+        boolean isWilderness = isWildernessWorld(location.getWorld());
+        if (isWilderness && level > 1) {
             boolean isFrozenBiome = isFrozenBiome(location.getBlock().getBiome());
 
             List<ItemStack> drops = new ArrayList<>();
@@ -464,6 +469,11 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             }
             event.getDrops().addAll(drops);
             event.setDroppedExp(event.getDroppedExp() * level);
+        } else if (isWilderness) {
+            Player killer = ((Monster) entity).getKiller();
+            if (killer != null) {
+                highScoresComponent.update(killer, ScoreTypes.WILDERNESS_MOB_KILLS, 1);
+            }
         }
     }
 
@@ -538,6 +548,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             }
         }
         event.getDrops().addAll(grave);
+        highScoresComponent.update(player, ScoreTypes.WILDERNESS_DEATHS, 1);
     }
 
     public int getLevel(Location location) {
@@ -564,6 +575,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             ItemStack stack = player.getItemInHand();
 
             addPool(block, ItemUtil.fortuneLevel(stack), stack.containsEnchantment(Enchantment.SILK_TOUCH));
+            highScoresComponent.update(player, ScoreTypes.WILDERNESS_ORES_MINED, 1);
         }  /* else if (block.getTypeId() == BlockID.SAPLING) {
             event.setCancelled(true);
             ChatUtil.sendError(player, "You cannot break that here.");
