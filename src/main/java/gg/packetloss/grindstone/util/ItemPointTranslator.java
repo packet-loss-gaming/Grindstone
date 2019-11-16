@@ -5,6 +5,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ItemPointTranslator {
     private List<PointMapping> pointMappings = new ArrayList<>();
@@ -31,6 +32,28 @@ public class ItemPointTranslator {
         }
 
         return value;
+    }
+
+    public void streamValue(int value, Consumer<ItemStack> itemStackConsumer) {
+        for (PointMapping pointMapping : pointMappings) {
+            ItemStack targetStack = pointMapping.getItem();
+            int targetValue = pointMapping.getValue();
+
+            while (value >= targetValue) {
+                int quantity = Math.min(value / targetValue, targetStack.getMaxStackSize());
+                value -= quantity * targetValue;
+
+                ItemStack newStack = targetStack.clone();
+                newStack.setAmount(quantity);
+
+                itemStackConsumer.accept(newStack);
+
+                // Stop early if we no longer have anything to add
+                if (value == 0) {
+                    break;
+                }
+            }
+        }
     }
 
     public int assignValue(InventoryAdapter adapter, int value) {

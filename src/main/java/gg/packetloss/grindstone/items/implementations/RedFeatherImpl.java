@@ -10,7 +10,10 @@ import gg.packetloss.grindstone.items.CustomItemSession;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
+import gg.packetloss.grindstone.util.ItemPointTranslator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
+import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -20,9 +23,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class RedFeatherImpl extends AbstractItemFeatureImpl {
@@ -34,11 +35,11 @@ public class RedFeatherImpl extends AbstractItemFeatureImpl {
         ignoredCauses.add(EntityDamageEvent.DamageCause.WITHER);
     }
 
-    private static List<Value> acceptedValues = new ArrayList<>();
+    private static ItemPointTranslator redstoneConverter = new ItemPointTranslator();
 
     static {
-        acceptedValues.add(new Value(Material.REDSTONE_BLOCK, 9));
-        acceptedValues.add(new Value(Material.REDSTONE, 1));
+        redstoneConverter.addMapping(new ItemStack(Material.REDSTONE_BLOCK), 9);
+        redstoneConverter.addMapping(new ItemStack(Material.REDSTONE), 1);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -50,26 +51,12 @@ public class RedFeatherImpl extends AbstractItemFeatureImpl {
 
             Player player = (Player) entity;
             CustomItemSession session = getSession(player);
-            ItemStack[] contents = player.getInventory().getContents();
+
+            InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
+
 
             if (session.canSpec(SpecType.RED_FEATHER) && ItemUtil.hasItem(player, CustomItems.RED_FEATHER)) {
-                int redstoneTally = 0;
-
-                for (int i = 0; i < contents.length; ++i) {
-                    ItemStack stack = contents[i];
-                    if (stack == null) {
-                        continue;
-                    }
-
-                    for (Value acceptedValue : acceptedValues) {
-                        if (acceptedValue.getType() == stack.getType()) {
-                            redstoneTally += stack.getAmount() * acceptedValue.getScale();
-                            contents[i] = null;
-                            break;
-                        }
-                    }
-                }
-
+                int redstoneTally = redstoneConverter.calculateValue(adapter, true);
                 if (redstoneTally == 0) {
                     return;
                 }
@@ -82,60 +69,17 @@ public class RedFeatherImpl extends AbstractItemFeatureImpl {
 
                 int rAmt = (int) ((blockable - blocked) / k);
 
+                // Assign items, and update the remainder
+                rAmt = redstoneConverter.assignValue(adapter, rAmt);
+
+                // Update the player inventory
+                adapter.applyChanges();
+
+                // Drop any remaining redstone on the floor, if the inventory overflowed
                 World w = player.getWorld();
-
-                addRedstone:
-                {
-                    for (Value acceptedValue : acceptedValues) {
-                        final int scale = acceptedValue.getScale();
-                        final Material acceptedMat = acceptedValue.getType();
-
-                        for (int i = 0; i < contents.length; ++i) {
-                            // Use an insertion position which prefers to declutter the hotbar.
-                            int insertionPos = (i + 9) % contents.length;
-
-                            final ItemStack stack = contents[insertionPos];
-                            int startingAmt = stack == null ? 0 : stack.getAmount();
-                            int scaledRAmt = rAmt / scale;
-
-                            if (scaledRAmt > 0 && (startingAmt == 0 || acceptedMat == stack.getType())) {
-                                int quantity = Math.min(scaledRAmt + startingAmt, acceptedMat.getMaxStackSize());
-                                rAmt -= (quantity - startingAmt) * scale;
-                                contents[insertionPos] = new ItemStack(acceptedMat, quantity);
-
-                                // Stop early if we no longer have anything to add
-                                if (rAmt == 0) {
-                                    break addRedstone;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                player.getInventory().setContents(contents);
-
-                // Drop any remaining redstone on the floor, the inventory overflowed
-                for (Value acceptedValue : acceptedValues) {
-                    final int scale = acceptedValue.getScale();
-                    final Material acceptedMat = acceptedValue.getType();
-
-                    // Drop items while the scaled remainder is larger than the cost per element
-                    while (true) {
-                        int scaledRAmt = rAmt / scale;
-                        if (scaledRAmt == 0) {
-                            break;
-                        }
-
-                        int quantity = Math.min(scaledRAmt, acceptedMat.getMaxStackSize());
-                        ItemStack is = new ItemStack(acceptedMat, quantity);
-                        w.dropItem(player.getLocation(), is);
-
-                        rAmt -= quantity * scale;
-                    }
-                }
-
-                //noinspection deprecation
-                player.updateInventory();
+                redstoneConverter.streamValue(rAmt, (stack) -> {
+                    w.dropItem(player.getLocation(), stack);
+                });
 
                 event.setDamage(Math.max(0, dmg - blocked));
                 player.setFireTicks(0);
