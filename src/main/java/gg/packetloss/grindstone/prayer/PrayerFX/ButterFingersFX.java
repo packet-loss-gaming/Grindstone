@@ -7,13 +7,13 @@
 package gg.packetloss.grindstone.prayer.PrayerFX;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
 import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.prayer.PrayerType;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
+import org.bukkit.inventory.PlayerInventory;
 
 public class ButterFingersFX extends AbstractEffect {
 
@@ -31,19 +31,22 @@ public class ButterFingersFX extends AbstractEffect {
             return;
         }
 
-        for (ItemStack itemStack : player.getInventory().getArmorContents()) {
-            if (itemStack != null && itemStack.getTypeId() != BlockID.AIR) {
-                player.getWorld().dropItem(player.getLocation(), itemStack.clone());
+        PlayerInventory pInv = player.getInventory();
+        Location pLoc = player.getLocation();
+        ItemStack[] stacks = pInv.getContents();
+
+        for (int i = 0; i < stacks.length; ++i) {
+            ItemStack stack = stacks[i];
+            if (stack == null || stack.getType() == Material.AIR) {
+                continue;
             }
-        }
-        for (ItemStack itemStack : player.getInventory().getContents()) {
-            if (itemStack != null && itemStack.getTypeId() != BlockID.AIR) {
-                player.getWorld().dropItem(player.getLocation(), itemStack.clone());
-            }
+
+            player.getWorld().dropItem(pLoc, stack);
+            stacks[i] = null;
         }
 
-        player.getInventory().setArmorContents(NO_ARMOR);
-        player.getInventory().clear();
+        pInv.setContents(stacks);
+        player.updateInventory();
     }
 
     @Override
