@@ -86,7 +86,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     private final String stateDir = inst.getDataFolder().getPath() + "/admin/states/";
     String profilesDirectory = stateDir + "/profiles/";
 
-    private static Permission permission = null;
+    private Permission permission = null;
     private final ConcurrentHashMap<UUID, PlayerState> playerState = new ConcurrentHashMap<>();
 
     @Override

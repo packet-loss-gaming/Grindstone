@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.items.custom;
 
 public enum ItemSource {
     ENCHANTED_FOREST("Enchanted Forest"),
+    CURSED_MINE("Cursed Mine"),
     DROP_PARTY("Drop Party"),
     VINEAM_PRISON("Vineam Prison"),
     GIANT_BOSS("Giant Boss"),

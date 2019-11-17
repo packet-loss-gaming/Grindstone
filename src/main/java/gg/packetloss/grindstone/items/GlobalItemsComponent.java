@@ -153,6 +153,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         loadResources();
         registerSpecWeapons();
         registerHymns();
+        registerPermissionBindingTomes();
         registerGeneral();
         registerMigrations();
 
@@ -192,6 +193,19 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         hymnImpl.addHymn(CustomItems.PHANTOM_HYMN, HymnSingEvent.Hymn.PHANTOM);
         hymnImpl.addHymn(CustomItems.CHICKEN_HYMN, HymnSingEvent.Hymn.CHICKEN);
         hymnImpl.addHymn(CustomItems.HYMN_OF_SUMMATION, HymnSingEvent.Hymn.SUMMATION);
+
+        handle(new ChickenHymnImpl());
+        handle(new SummationHymnImpl(summationCondenser));
+    }
+
+    private void registerPermissionBindingTomes() {
+        PermissionBindingTomeImpl tomeImpl = handle(new PermissionBindingTomeImpl());
+        tomeImpl.addTome(CustomItems.TOME_OF_CURSED_SMELTING, "aurora.tome.cursedsmelting");
+        tomeImpl.addTome(CustomItems.TOME_OF_THE_CLEANLY, "aurora.tome.cleanly");
+        tomeImpl.addTome(CustomItems.TOME_OF_SACRIFICE, "aurora.tome.sacrifice");
+        tomeImpl.addTome(CustomItems.TOME_OF_DIVINITY, "aurora.tome.divinity");
+        tomeImpl.addTome(CustomItems.TOME_OF_THE_UNDEAD, "aurora.tome.undead");
+        tomeImpl.addTome(CustomItems.TOME_OF_LEGENDS, "aurora.tome.legends");
 
         handle(new ChickenHymnImpl());
         handle(new SummationHymnImpl(summationCondenser));

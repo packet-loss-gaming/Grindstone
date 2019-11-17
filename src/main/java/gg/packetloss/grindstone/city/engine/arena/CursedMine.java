@@ -25,6 +25,8 @@ import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -674,6 +676,17 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             if (ChanceUtil.getChance(4)) {
                 ItemStack rawDrop = EnvironmentUtil.getOreDrop(block.getType(), hasSilkTouch(itemInHand));
 
+                if (inst.hasPermission(player, "aurora.tome.cursedsmelting") && !hasSilkTouch(itemInHand)) {
+                    switch (typeId) {
+                        case BlockID.GOLD_ORE:
+                            rawDrop.setType(Material.GOLD_INGOT);
+                            break;
+                        case BlockID.IRON_ORE:
+                            rawDrop.setType(Material.IRON_INGOT);
+                            break;
+                    }
+                }
+
                 if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(rawDrop.getType())) {
                     rawDrop.setAmount(rawDrop.getAmount()
                             * ItemUtil.fortuneModifier(typeId, ItemUtil.fortuneLevel(itemInHand)));
@@ -690,6 +703,11 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             if (ChanceUtil.getChance(3000)) {
                 ChatUtil.sendNotice(player, "You feel as though a spirit is trying to tell you something...");
                 player.getInventory().addItem(BookUtil.Lore.Areas.theGreatMine());
+            }
+
+            if (ChanceUtil.getChance(10000)) {
+                ChatUtil.sendNotice(player, "You find a dusty old book...");
+                player.getInventory().addItem(CustomItemCenter.build(CustomItems.TOME_OF_CURSED_SMELTING));
             }
 
             eatFood(player);

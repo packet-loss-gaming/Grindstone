@@ -430,6 +430,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         // Remove any players that have recently died from the list of applicable players.
         applicable.removeIf((player) -> sessions.getSession(ApocalypseSession.class, player).recentlyDied());
 
+        // Remove any players that have the undead tome perk
+        applicable.removeIf((player -> player.hasPermission("aurora.tome.undead")));
+
         // Spawn to all remaining players.
         bedSpawn(applicable);
         localSpawn(applicable);

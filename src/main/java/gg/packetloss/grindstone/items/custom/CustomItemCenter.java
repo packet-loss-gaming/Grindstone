@@ -549,11 +549,29 @@ public class CustomItemCenter {
         scrollOfSummation.addUse("At the cost of the item, will compact coal, iron, gold, redstone, lapis, diamonds, and emerald.");
         addItem(scrollOfSummation);
 
+        CustomItem calmingCrystal = new CustomItem(CALMING_CRYSTAL, Material.DIAMOND);
+        calmingCrystal.addSource(ItemSource.PATIENT_X);
+        calmingCrystal.addSource(ItemSource.MARKET);
+        calmingCrystal.addUse("When present in the inventory, provides calming effects.");
+        addItem(calmingCrystal);
+
+        CustomItem therapistNotes = new CustomItem(PATIENT_X_THERAPY_NOTES, Material.PAPER);
+        therapistNotes.addSource(ItemSource.PATIENT_X);
+        therapistNotes.addSource(ItemSource.MARKET);
+        therapistNotes.addUse("Upon use, calms Patient X using information provided by his therapist.");
+        addItem(therapistNotes);
+
         CustomItem hymnOfSummation = new CustomItem(HYMN_OF_SUMMATION, Material.BOOK);
-        hymnOfSummation.addSource(ItemSource.PATIENT_X);
+        hymnOfSummation.addSource(ItemSource.FROSTBORN);
         hymnOfSummation.addSource(ItemSource.MARKET);
         hymnOfSummation.addUse("Upon use, will compact coal, iron, gold, redstone, lapis, diamonds, and emerald.");
         addItem(hymnOfSummation);
+
+        CustomItem tomeOfShadows = new CustomItem(HYMN_OF_HARVEST, Material.BOOK);
+        tomeOfShadows.addSource(ItemSource.FROSTBORN);
+        tomeOfShadows.addSource(ItemSource.MARKET);
+        tomeOfShadows.addUse("Upon use will immediately grow a crop.");
+        addItem(tomeOfShadows);
 
         CustomItem madMilk = new CustomItem(MAD_MILK, Material.MILK_BUCKET);
         madMilk.addSource(ItemSource.MARKET);
@@ -567,6 +585,48 @@ public class CustomItemCenter {
         tomeOfTheRiftSplitter.addSource(ItemSource.MARKET);
         tomeOfTheRiftSplitter.addUse("Consumable to create a new warp.");
         addItem(tomeOfTheRiftSplitter);
+
+        CustomItem tomeOfCursedSmelting = new CustomItem(TOME_OF_CURSED_SMELTING, Material.BOOK);
+        tomeOfCursedSmelting.addSource(ItemSource.CURSED_MINE);
+        tomeOfCursedSmelting.addSource(ItemSource.MARKET);
+        tomeOfCursedSmelting.addUse("Consumable to permanently add a automatic smelting to cursed ores.");
+        addItem(tomeOfCursedSmelting);
+
+        CustomItem tomeOfPoison = new CustomItem(TOME_OF_POISON, Material.BOOK);
+        tomeOfPoison.addSource(ItemSource.FROSTBORN);
+        tomeOfPoison.addSource(ItemSource.MARKET);
+        tomeOfPoison.addUse("Consumable to permanently add a chance that poison becomes regeneration.");
+        addItem(tomeOfPoison);
+
+        CustomItem tomeOfTheCleanly = new CustomItem(TOME_OF_THE_CLEANLY, Material.BOOK);
+        tomeOfTheCleanly.addSource(ItemSource.FROSTBORN);
+        tomeOfTheCleanly.addSource(ItemSource.MARKET);
+        tomeOfTheCleanly.addUse("Consumable to permanently remove junk from the sacrificial pit.");
+        addItem(tomeOfTheCleanly);
+
+        CustomItem tomeOfSacrifice = new CustomItem(TOME_OF_SACRIFICE, Material.BOOK);
+        tomeOfSacrifice.addSource(ItemSource.FROSTBORN);
+        tomeOfSacrifice.addSource(ItemSource.MARKET);
+        tomeOfSacrifice.addUse("Consumable to permanently increase reward value from the sacrificial pit.");
+        addItem(tomeOfSacrifice);
+
+        CustomItem tomeOfDivinity = new CustomItem(TOME_OF_DIVINITY, Material.BOOK);
+        tomeOfDivinity.addSource(ItemSource.FROSTBORN);
+        tomeOfDivinity.addSource(ItemSource.MARKET);
+        tomeOfDivinity.addUse("Consumable to permanently unlock the ability to use prayers on yourself.");
+        addItem(tomeOfDivinity);
+
+        CustomItem tomeOfTheUndead = new CustomItem(TOME_OF_THE_UNDEAD, Material.BOOK);
+        tomeOfTheUndead.addSource(ItemSource.FROSTBORN);
+        tomeOfTheUndead.addSource(ItemSource.MARKET);
+        tomeOfTheUndead.addUse("Consumable to permanently protect yourself from targeted apocalyptic spawns.");
+        addItem(tomeOfTheUndead);
+
+        CustomItem tomeOfLegends = new CustomItem(TOME_OF_LEGENDS, Material.BOOK);
+        tomeOfLegends.addSource(ItemSource.FROSTBORN);
+        tomeOfLegends.addSource(ItemSource.MARKET);
+        tomeOfLegends.addUse("Consumable to permanently reduce special attack cooldowns by 10%.");
+        addItem(tomeOfLegends);
     }
 
     public static Collection<CustomItem> values() {

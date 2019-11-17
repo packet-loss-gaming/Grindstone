@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.city.engine.area.areas.PatientX;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
@@ -40,10 +39,7 @@ import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -235,10 +231,25 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 return;
             }
 
+            double rageChange = .5;
+
             if (attacker instanceof Player) {
-                ItemStack held = ((Player) attacker).getItemInHand();
-                if (held != null && held.getTypeId() == ItemID.BLAZE_ROD) {
-                    parent.modifyDifficulty(2);
+                if (ItemUtil.hasItem((Player) attacker, CustomItems.CALMING_CRYSTAL)) {
+                    rageChange *= .25;
+                }
+
+                ItemStack held = ((Player) attacker).getInventory().getItemInMainHand();
+                if (ItemUtil.isItem(held, CustomItems.PATIENT_X_THERAPY_NOTES)) {
+                    rageChange = -5;
+
+                    ItemUtil.removeItemOfName(
+                            (Player) attacker,
+                            CustomItemCenter.build(CustomItems.PATIENT_X_THERAPY_NOTES),
+                            1,
+                            false
+                    );
+                } else if (held.getType() == Material.BLAZE_ROD) {
+                    rageChange += 2;
                 }
             }
 
@@ -246,7 +257,8 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 com.sk89q.commandbook.util.entity.EntityUtil
                         .sendProjectilesFromEntity(parent.boss, 12, .5F, Snowball.class);
             }
-            parent.modifyDifficulty(.5);
+
+            parent.modifyDifficulty(rageChange);
             parent.teleportRandom(true);
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
@@ -343,11 +355,11 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 }
 
                 if (ChanceUtil.getChance(100)) {
-                    drops.add(CustomItemCenter.build(CustomItems.HYMN_OF_SUMMATION));
+                    drops.add(CustomItemCenter.build(CustomItems.CALMING_CRYSTAL));
                 }
 
                 for (int i = 0; i < 8 * playerCount; ++i) {
-                    drops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION, ChanceUtil.getRandom(16)));
+                    drops.add(CustomItemCenter.build(CustomItems.PATIENT_X_THERAPY_NOTES, ChanceUtil.getRandom(16)));
                 }
 
                 for (int i = 0; i < 8 * playerCount; ++i) {

@@ -561,14 +561,49 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             }
         }
 
-        // Drop some additional holdover loot
-        for (int i = ChanceUtil.getRandom(8) * players.size(); i > 0; --i) {
-            world.dropItem(bossSpawnLoc, new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRangedRandom(32, 64)));
+        // Drop from custom drop table
+        for (int i = 0; i < 8 * players.size(); ++i) {
+            world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION, ChanceUtil.getRandom(16)));
         }
 
         for (int i = 0; i < players.size(); ++i) {
             if (ChanceUtil.getChance(100)) {
-                world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
+                switch (ChanceUtil.getRandom(2)) {
+                    case 1:
+                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.HYMN_OF_SUMMATION));
+                        break;
+                    case 2:
+                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.HYMN_OF_HARVEST));
+                        break;
+                }
+            }
+            if (ChanceUtil.getChance(300)) {
+                switch (ChanceUtil.getRandom(8)) {
+                    case 1:
+                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
+                        break;
+                    case 2:
+                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_POISON));
+                        break;
+                    case 3:
+                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_THE_CLEANLY));
+                        break;
+                    case 4:
+                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_SACRIFICE));
+                        break;
+                    case 5:
+                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_DIVINITY));
+                        break;
+                    case 6:
+                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_THE_UNDEAD));
+                        break;
+                    case 7:
+                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_LEGENDS));
+                        break;
+                    case 8:
+                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_CURSED_SMELTING));
+                        break;
+                }
             }
         }
 

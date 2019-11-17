@@ -274,7 +274,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
             // Check for valid nameType
             try {
-                if (player.getName().equals(sender.getName()) && !adminComponent.isAdmin(player)) {
+                if (player.getName().equals(sender.getName()) && !inst.hasPermission(sender, "aurora.tome.divinity")) {
                     player.getWorld().strikeLightningEffect(player.getLocation());
                     throw new CommandException("The gods don't take kindly to using their power on yourself.");
                 }

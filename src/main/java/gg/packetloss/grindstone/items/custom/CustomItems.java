@@ -113,7 +113,17 @@ public enum CustomItems {
     OVERSEER_BOW(ChatColor.RED, "Overseer's Bow"),
     BARBARIAN_BONE(ChatColor.DARK_RED, "Barbarian Bone"),
     POTION_OF_RESTITUTION(ChatColor.DARK_RED, "Potion of Restitution"),
-    TOME_OF_THE_RIFT_SPLITTER(ChatColor.BLACK, "Tome of the Rift Splitter");
+    CALMING_CRYSTAL(ChatColor.GOLD, "Calming Crystal"),
+    PATIENT_X_THERAPY_NOTES(ChatColor.YELLOW, "Patient X's Therapy Notes"),
+    HYMN_OF_HARVEST(ChatColor.DARK_GREEN, "Hymn of Harvest"),
+    TOME_OF_THE_RIFT_SPLITTER(ChatColor.BLACK, "Tome of the Rift Splitter"),
+    TOME_OF_CURSED_SMELTING(ChatColor.GOLD, "Tome of Cursed Smelting"),
+    TOME_OF_POISON(ChatColor.DARK_GREEN, "Tome of Poison"),
+    TOME_OF_THE_CLEANLY(ChatColor.BLUE, "Tome of the Cleanly"),
+    TOME_OF_SACRIFICE(ChatColor.BLUE, "Tome of Sacrifice"),
+    TOME_OF_DIVINITY(ChatColor.GOLD, "Tome of Divinity"),
+    TOME_OF_THE_UNDEAD(ChatColor.DARK_RED, "Tome of the Undead"),
+    TOME_OF_LEGENDS(ChatColor.GOLD, "Tome of Legends");
 
     private final WeaponFamily family;
     private final ChatColor color;
