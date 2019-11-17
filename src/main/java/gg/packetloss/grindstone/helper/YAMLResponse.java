@@ -38,13 +38,13 @@ public class YAMLResponse implements Response {
             return false;
         }
 
-        ChatUtil.sendNotice(recipients, getNamePlate() + " @" + player.getName());
+        ChatUtil.sendNotice(recipients, getNamePlate() + "Hey, " + player.getName() + "!");
         response.forEach(msg -> {
             String finalMessage = msg
                     .replaceAll("%player%", player.getName())
                     .replaceAll("%world%", player.getWorld().getName());
             recipients.forEach((recipient) -> {
-                ChatUtil.sendNotice(recipient, "   " + finalMessage);
+                ChatUtil.sendNotice(recipient, getNamePlate() + finalMessage);
             });
         });
         return true;

@@ -1,7 +1,9 @@
 package gg.packetloss.grindstone.helper;
 
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 
@@ -30,9 +32,11 @@ public class CommandResponse implements Response {
             clickableText.addExtra(" " + message);
         }
 
-        TextComponent clickWrapper = new TextComponent(getNamePlate() + " ");
-        clickWrapper.setColor(ChatColor.YELLOW);
-        clickWrapper.addExtra(clickableText);
+        ComponentBuilder clickWrapperBuilder = new ComponentBuilder("");
+        clickWrapperBuilder.append(TextComponent.fromLegacyText(getNamePlate()));
+        clickWrapperBuilder.append(clickableText);
+
+        BaseComponent[] clickWrapper = clickWrapperBuilder.create();
 
         recipients.forEach((recipient) -> {
             recipient.sendMessage(clickWrapper);
