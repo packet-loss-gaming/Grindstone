@@ -535,7 +535,6 @@ public class MarketComponent extends BukkitComponent {
 
             // Database operations
             MarketItemInfo oldItem = itemDatabase.getItem(itemName);
-            itemName = itemName.replace('_', ' ');
             itemDatabase.addItem(sender.getName(), itemName, price, disableBuy, disableSell);
             itemDatabase.save();
 
