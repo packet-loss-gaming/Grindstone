@@ -135,7 +135,7 @@ public class MarketComponent extends BukkitComponent {
             String playerName = checkPlayer(sender);
             Player player = (Player) sender;
 
-            Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0).toLowerCase());
+            Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
             if (optItemName.isEmpty()) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
@@ -377,7 +377,7 @@ public class MarketComponent extends BukkitComponent {
             String itemName;
             double percentageSale = 1;
             if (args.argsLength() > 0) {
-                Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0).toLowerCase());
+                Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
                 if (optItemName.isEmpty()) {
                     throw new CommandException(NOT_AVAILIBLE);
                 }

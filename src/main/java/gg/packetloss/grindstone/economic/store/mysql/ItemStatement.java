@@ -12,6 +12,6 @@ public abstract class ItemStatement implements MySQLPreparedStatement {
     protected final String name;
 
     public ItemStatement(String name) {
-        this.name = name.toUpperCase();
+        this.name = name;
     }
 }

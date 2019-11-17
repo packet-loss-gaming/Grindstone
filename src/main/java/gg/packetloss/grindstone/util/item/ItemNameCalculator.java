@@ -140,7 +140,7 @@ public class ItemNameCalculator {
     private static Optional<String> legacyMatchItemFromNameOrId(String itemName) {
         // If this is a custom item, return that.
         if (legacyHasItemOfName(itemName)) {
-            return Optional.of(itemName);
+            return Optional.of(itemName.toLowerCase());
         }
 
         // Otherwise try to find a builtin item.
