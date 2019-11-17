@@ -140,7 +140,8 @@ public class HighScoresComponent extends BukkitComponent {
                 ChatUtil.sendNotice(sender, ChatColor.GOLD + "High Score Tables");
                 nameToScoreType.keySet().stream()
                         .map(HighScoresComponent.this::createScoreTypeLine)
-                        .forEachOrdered((line) -> {
+                        .sorted()
+                        .forEach((line) -> {
                             ChatUtil.sendNotice(sender, line);
                         });
             }
