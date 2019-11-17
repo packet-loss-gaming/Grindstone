@@ -568,13 +568,21 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }
     }
 
+    private double getValue(ItemStack item) {
+        // FIXME: Hard coded as a workaround for the market no longer working with spawn eggs
+        if (item.getType() == Material.MONSTER_EGG) {
+            return 12.5;
+        }
+        return MarketComponent.priceCheck(item);
+    }
+
     private void sacrifice(Player player, ItemStack item) {
 
         if (item.getTypeId() == 0) return;
 
         PlayerInventory pInventory = player.getInventory();
 
-        final double value = MarketComponent.priceCheck(item);
+        final double value = getValue(item);
 
         if (value < 0) {
             pInventory.addItem(item);

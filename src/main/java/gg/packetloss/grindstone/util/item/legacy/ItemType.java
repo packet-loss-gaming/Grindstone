@@ -470,7 +470,6 @@ public enum ItemType {
     CAULDRON_ITEM(ItemID.CAULDRON, "Cauldron", "cauldron"),
     EYE_OF_ENDER(ItemID.EYE_OF_ENDER, "Eye of Ender", "eyeofender", "endereye"),
     GLISTERING_MELON(ItemID.GLISTERING_MELON, "Glistering Melon", "glisteringmelon", "goldmelon"),
-    SPAWN_EGG(ItemID.SPAWN_EGG, 92, "Spawn Egg", "spawnegg", "spawn", "mobspawnegg"), // Should be 0
     BOTTLE_O_ENCHANTING(ItemID.BOTTLE_O_ENCHANTING, "Bottle o' Enchanting", "xpbottle", "expbottle", "bottleoenchanting", "experiencebottle"),
     FIRE_CHARGE(ItemID.FIRE_CHARGE, "Fire Charge", "firecharge", "firestarter", "firerock"),
     BOOK_AND_QUILL(ItemID.BOOK_AND_QUILL, "Book and Quill", "bookandquill", "quill", "writingbook"),
