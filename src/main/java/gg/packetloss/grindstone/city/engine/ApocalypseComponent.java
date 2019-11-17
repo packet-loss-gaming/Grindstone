@@ -26,6 +26,8 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseRespawnBoostEvent;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.WeaponFamily;
@@ -71,7 +73,8 @@ import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 
 
 @ComponentInformation(friendlyName = "Apocalypse", desc = "Sends an invasion force after the residents of the server.")
-@Depend(components = {BuffComponent.class, JailComponent.class, AdminComponent.class, WarpsComponent.class})
+@Depend(components = {BuffComponent.class, JailComponent.class, AdminComponent.class,
+        WarpsComponent.class, HighScoresComponent.class})
 public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -88,6 +91,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private WarpsComponent warpsComponent;
     @InjectComponent
     private SessionComponent sessions;
+    @InjectComponent
+    private HighScoresComponent highScoresComponent;
+
 
     private static final Class<Zombie> attackMob = Zombie.class;
 
@@ -374,6 +380,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 buffComponent.getBuffLevel(Buff.APOCALYPSE_LIFE_LEACH, killer).ifPresent((level) -> {
                     EntityUtil.heal(killer, level);
                 });
+
+                highScoresComponent.update(killer, ScoreTypes.APOCALYPSE_MOBS_SLAIN, 1);
             }
 
             if (ChanceUtil.getChance(10000)) {

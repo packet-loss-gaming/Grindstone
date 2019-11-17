@@ -15,7 +15,10 @@ import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
@@ -29,6 +32,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
@@ -46,6 +50,9 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
+
+    @InjectComponent
+    private HighScoresComponent highScoresComponent;
 
     private Set<String> players = new HashSet<>();
 
@@ -102,7 +109,25 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
             String name = player.getName();
             if (name.equals("Cow_Fu")) {
                 event.getDrops().add(new ItemStack(ItemID.RAW_BEEF));
+
+                Player killer = player.getKiller();
+                if (killer != null) {
+                    highScoresComponent.update(killer, ScoreTypes.COW_KILLS, 1);
+                }
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onEntityDeath(EntityDeathEvent event) {
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Cow)) {
+            return;
+        }
+
+        Player killer = ((Cow) entity).getKiller();
+        if (killer != null) {
+            highScoresComponent.update(killer, ScoreTypes.COW_KILLS, 1);
         }
     }
 

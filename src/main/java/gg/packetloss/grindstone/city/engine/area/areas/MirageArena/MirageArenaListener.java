@@ -12,6 +12,7 @@ import com.sk89q.worldedit.blocks.ItemID;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -291,6 +292,8 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
             Player killer = player.getKiller();
             if (killer != null) {
                 killer.setHealth(killer.getMaxHealth());
+
+                parent.highScores.update(killer, ScoreTypes.MIRAGE_ARENA_KILLS, 1);
             }
 
             playerState.put(player.getName(), new PlayerState(player.getName(),

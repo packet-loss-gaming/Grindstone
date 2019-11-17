@@ -156,7 +156,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     ProtectedRegion[] PRs = new ProtectedRegion[2];
                     PRs[0] = mgr.get(world).getRegion(region);
                     PRs[1] = mgr.get(world).getRegion(region + "-flood-gate");
-                    arenas.add(new CursedMine(world, PRs, adminComponent, prayerComponent, restorationUtil));
+                    arenas.add(new CursedMine(world, PRs, adminComponent, prayerComponent, highScoresComponent, restorationUtil));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");

@@ -26,6 +26,8 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.prayer.Prayer;
@@ -66,7 +68,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Sacrifice", desc = "Sacrifice! Sacrifice! Sacrifice!")
-@Depend(components = {SessionComponent.class, PrayerComponent.class, AdminComponent.class})
+@Depend(components = {SessionComponent.class, PrayerComponent.class, AdminComponent.class, HighScoresComponent.class})
 public class SacrificeComponent extends BukkitComponent implements Listener, Runnable {
 
     private static final CommandBook inst = CommandBook.inst();
@@ -79,6 +81,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     private PrayerComponent prayer;
     @InjectComponent
     private AdminComponent admin;
+    @InjectComponent
+    private HighScoresComponent highScores;
 
     private LocalConfiguration config;
     private Map<Integer, Integer> entityTaskId = new HashMap<>();
@@ -589,6 +593,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             ChatUtil.sendError(player, "The gods reject your offer.");
             return;
         }
+
+        highScores.update(player, ScoreTypes.SACRIFICED_VALUE, (int) Math.ceil(value));
 
         SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
         session.addItems(getCalculatedLoot(player, -1, value));

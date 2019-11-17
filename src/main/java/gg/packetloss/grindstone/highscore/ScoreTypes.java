@@ -13,4 +13,10 @@ public class ScoreTypes {
     public static final ScoreType JUNGLE_RAID_WINS = new ScoreType(3, true, ScoreType.Order.DESC);
     public static final ScoreType GOLD_RUSH_ROBBERIES = new ScoreType(4, true, ScoreType.Order.DESC);
     public static final ScoreType FASTEST_GOLD_RUSH = new TimeBasedScoreType(5, false, ScoreType.Order.ASC);
+    public static final ScoreType SACRIFICED_VALUE = new ScoreType(6, true, ScoreType.Order.DESC);
+    public static final ScoreType COW_KILLS = new ScoreType(7, true, ScoreType.Order.DESC);
+    public static final ScoreType APOCALYPSE_MOBS_SLAIN = new ScoreType(8, true, ScoreType.Order.DESC);
+    public static final ScoreType CURSED_ORES_MINED = new ScoreType(9, true, ScoreType.Order.DESC);
+    public static final ScoreType CURSED_MINE_DEATHS = new ScoreType(10, true, ScoreType.Order.DESC);
+    public static final ScoreType MIRAGE_ARENA_KILLS = new ScoreType(11, true, ScoreType.Order.DESC);
 }

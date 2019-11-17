@@ -23,6 +23,8 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -79,6 +81,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     private AdminComponent adminComponent;
     private PrayerComponent prayerComponent;
+    private HighScoresComponent highScoresComponent;
     private RestorationUtil restorationUtil;
 
     private WorldGuardPlugin worldGuard;
@@ -101,7 +104,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     };
 
     public CursedMine(World world, ProtectedRegion[] regions, AdminComponent adminComponent,
-                      PrayerComponent prayerComponent, RestorationUtil restorationUtil) {
+                      PrayerComponent prayerComponent, HighScoresComponent highScoresComponent,
+                      RestorationUtil restorationUtil) {
 
         super(world, regions[0]);
 
@@ -109,6 +113,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         this.adminComponent = adminComponent;
         this.prayerComponent = prayerComponent;
+        this.highScoresComponent = highScoresComponent;
         this.restorationUtil = restorationUtil;
 
         //noinspection AccessStaticViaInstance
@@ -693,6 +698,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
             recordSystem.addItem(player.getName(), new BlockRecord(block));
             restorationUtil.blockAndLogEvent(event);
+
+            highScoresComponent.update(player, ScoreTypes.CURSED_ORES_MINED, 1);
         } else {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
@@ -794,6 +801,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         revertPlayer(player);
 
         if (daveHitList.containsKey(playerName) || contains(player)) {
+            highScoresComponent.update(player, ScoreTypes.CURSED_MINE_DEATHS, 1);
 
             if (contains(player) && ChanceUtil.getChance(500)) {
                 ChatUtil.sendNotice(player, "You feel as though a spirit is trying to tell you something...");

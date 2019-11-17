@@ -29,6 +29,7 @@ import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPScope;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.util.APIUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
@@ -49,13 +50,16 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Mirage Arena", desc = "What will you see next?")
-@Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
+@Depend(components = {AdminComponent.class, SessionComponent.class, HighScoresComponent.class},
+        plugins = {"WorldGuard"})
 public class MirageArena extends AreaComponent<MirageArenaConfig> implements PersistentArena {
 
     @InjectComponent
     protected AdminComponent admin;
     @InjectComponent
     protected SessionComponent sessions;
+    @InjectComponent
+    protected HighScoresComponent highScores;
 
     protected boolean voting = false;
     protected int ticks = 0;
