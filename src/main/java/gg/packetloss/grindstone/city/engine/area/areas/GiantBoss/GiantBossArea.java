@@ -310,6 +310,15 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
         }
     }
 
+    private boolean tryDivineWind(Player player) {
+        if (inst.hasPermission(player, "aurora.tome.divinity") && ChanceUtil.getChance(3)) {
+            ChatUtil.sendNotice(player, "A divine wind hides you from the boss.");
+            return true;
+        }
+
+        return false;
+    }
+
     public final int OPTION_COUNT = 9;
 
     public void runAttack(int attackCase) {
@@ -376,6 +385,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
                 server.getScheduler().runTaskLater(inst, () -> {
                     if (!isBossSpawned()) return;
                     for (Player player : getContained(Player.class)) {
+                        if (tryDivineWind(player)) {
+                            continue;
+                        }
+
                         if (boss.hasLineOfSight(player)) {
                             ChatUtil.sendNotice(player, "Come closer...");
                             player.teleport(boss.getLocation());
@@ -429,6 +442,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
 
                     // Check Players
                     for (Player player : getContained(Player.class)) {
+                        if (tryDivineWind(player)) {
+                            continue;
+                        }
+
                         if (boss.hasLineOfSight(player)) {
                             ChatUtil.sendWarning(player, ChatColor.DARK_RED + "You!");
                             baskInGlory = true;

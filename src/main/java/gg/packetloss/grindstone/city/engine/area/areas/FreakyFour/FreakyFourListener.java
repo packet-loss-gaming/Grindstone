@@ -221,8 +221,12 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 event.setDamage(DamageModifier.BASE, event.getDamage() + parent.getConfig().magmaCubedDamageModifier);
             } else if (damager instanceof Creature) {
                 if (projectile != null) {
-                    EntityUtil.forceDamage(entity, ((Player) entity).getMaxHealth() * parent.getConfig().snipeeDamage);
-                    entity.playEffect(EntityEffect.HURT);
+                    if (entity.hasPermission("aurora.tome.divinity") && ChanceUtil.getChance(5)) {
+                        ChatUtil.sendNotice((Player) entity, "A divine force deflects the arrow.");
+                    } else {
+                        EntityUtil.forceDamage(entity, ((Player) entity).getMaxHealth() * parent.getConfig().snipeeDamage);
+                        entity.playEffect(EntityEffect.HURT);
+                    }
                     event.setCancelled(true);
                 } else if (damager instanceof CaveSpider) {
                     EntityUtil.heal(parent.charlotte, event.getDamage());

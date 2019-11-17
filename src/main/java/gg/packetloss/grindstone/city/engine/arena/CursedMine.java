@@ -327,6 +327,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     }
 
     private boolean checkInventory(Player player, ItemStack[] itemStacks) {
+        if (!inst.hasPermission(player, "aurora.tome.divinity")) return false;
+
         for (int aItem : items) {
             if (player.getInventory().containsAtLeast(new ItemStack(aItem), 1)) return true;
         }

@@ -614,6 +614,7 @@ public class CustomItemCenter {
         tomeOfDivinity.addSource(ItemSource.FROSTBORN);
         tomeOfDivinity.addSource(ItemSource.MARKET);
         tomeOfDivinity.addUse("Consumable to permanently unlock the ability to use prayers on yourself.");
+        tomeOfDivinity.addUse("Consumable to permanently unlock divine favours.");
         addItem(tomeOfDivinity);
 
         CustomItem tomeOfTheUndead = new CustomItem(TOME_OF_THE_UNDEAD, Material.BOOK);

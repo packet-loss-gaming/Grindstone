@@ -263,6 +263,11 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
             if (attacker.equals(parent.boss)) {
+                if (inst.hasPermission(player, "aurora.prayer.divinity") && ChanceUtil.getChance(parent.difficulty)) {
+                    ChatUtil.sendNotice(player, "A divine force protects you.");
+                    return;
+                }
+
                 for (DamageModifier modifier : DamageModifier.values()) {
                     if (event.isApplicable(modifier)) {
                         event.setDamage(modifier, 0);
