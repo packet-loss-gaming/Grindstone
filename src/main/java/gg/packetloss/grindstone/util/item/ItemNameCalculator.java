@@ -77,6 +77,22 @@ public class ItemNameCalculator {
         return Optional.of("minecraft:" + mappingResult.toLowerCase());
     }
 
+    @Deprecated
+    public static Optional<String> computeBlockName(int blockID, int data) {
+        String idString = blockID + ":" + data;
+        Optional<String> optLibOverride = getWithoutMapping(idString);
+        if (optLibOverride.isPresent()) {
+            return optLibOverride;
+        }
+
+        IdMappings.Mapping mappedName = IdMappings.get(IdMappings.IdType.NUMERIC, idString);
+        if (mappedName == null) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(mappedName.getFlatteningType());
+    }
+
     public static Optional<String> computeItemName(ItemStack stack) {
         if (stack == null || stack.getType() == Material.AIR) {
             return Optional.empty();
@@ -136,6 +152,7 @@ public class ItemNameCalculator {
         return Optional.of(type.getName());
     }
 
+    @Deprecated
     public static Optional<String> translateLegacyComputedItemName(String name) {
         // if this name is a prefix based name, assume it's updated
         if (name.contains(":")) {
@@ -187,6 +204,7 @@ public class ItemNameCalculator {
         }
     }
 
+    @Deprecated
     public static Optional<NumericItem> toNumeric(String flattenedName) {
         // Check for overrides, this is really dirty
         for (Map.Entry<String, String> entry : overrides.entrySet()) {

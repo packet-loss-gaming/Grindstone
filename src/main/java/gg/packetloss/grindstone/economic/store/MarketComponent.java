@@ -30,6 +30,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
+import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.legacy.ItemType;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
@@ -659,10 +660,10 @@ public class MarketComponent extends BukkitComponent {
     public static double priceCheck(int blockID, int data) {
         if (ignored.contains(blockID)) return 0;
 
-        ItemType type = ItemType.fromNumberic(blockID, data);
-        if (type == null) return 0;
+        Optional<String> optBlockName = ItemNameCalculator.computeBlockName(blockID, data);
+        if (optBlockName.isEmpty()) return 0;
 
-        MarketItemInfo marketItemInfo = itemDatabase.getItem(type.getName());
+        MarketItemInfo marketItemInfo = itemDatabase.getItem(optBlockName.get());
         if (marketItemInfo == null) return 0;
 
         return marketItemInfo.getPrice();
