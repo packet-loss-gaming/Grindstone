@@ -115,20 +115,23 @@ public enum CustomItems {
     POTION_OF_RESTITUTION(ChatColor.DARK_RED, "Potion of Restitution"),
     TOME_OF_THE_RIFT_SPLITTER(ChatColor.BLACK, "Tome of the Rift Splitter");
 
-    private WeaponFamily family;
-    private ChatColor color;
-    private String name;
+    private final WeaponFamily family;
+    private final ChatColor color;
+    private final String name;
+    private final String namespaceName;
 
     CustomItems(WeaponFamily family, String kind) {
         this.family = family;
         this.color = family.getColor();
         this.name = family.getProperName() + " " + kind;
+        this.namespaceName = computeNamespaceName(this.name);
     }
 
     CustomItems(ChatColor color, String name) {
-
+        this.family = null;
         this.color = color;
         this.name = name;
+        this.namespaceName = computeNamespaceName(this.name);
     }
 
     public WeaponFamily getFamily() {
@@ -149,6 +152,14 @@ public enum CustomItems {
 
     public String getSnakecaseName() {
         return this.name().toLowerCase();
+    }
+
+    public String getNamespaceName() {
+        return namespaceName;
+    }
+
+    public static String computeNamespaceName(String name) {
+        return "grindstone:" + name.toLowerCase().replaceAll("'s", "").replaceAll(" ", "_");
     }
 
     @Override

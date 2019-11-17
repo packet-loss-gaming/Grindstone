@@ -27,6 +27,10 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return name;
     }
 
+    public String getDisplayName() {
+        return name.split(":")[1].replaceAll("_", " ").toUpperCase();
+    }
+
     public void setValue(double value) {
         this.value = value;
     }
@@ -64,7 +68,7 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
     public int compareTo(MarketItemInfo record) {
         if (record == null) return -1;
         if (this.getPrice() == record.getPrice()) {
-            int c = String.CASE_INSENSITIVE_ORDER.compare(this.getName(), record.getName());
+            int c = this.getName().compareTo(record.getName());
             return c == 0 ? 1 : c;
         }
         return this.getPrice() > record.getPrice() ? 1 : -1;

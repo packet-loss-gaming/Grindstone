@@ -40,7 +40,11 @@ repositories {
     }
     maven {
         name 'Protocol Lib Repository'
-        url "http://repo.dmulloy2.net/nexus/repository/public/"
+        url 'http://repo.dmulloy2.net/nexus/repository/public/'
+    }
+    maven {
+        name 'minebench-repo'
+        url 'https://repo.minebench.de/'
     }
 }
 
@@ -61,7 +65,9 @@ dependencies {
         exclude group: 'org.spigotmc', module: 'spigot'
     }
 
+    shade group: 'de.themoep.idconverter', name: 'mappings', version: '1.2-SNAPSHOT'
     compile group: "com.comphenix.protocol", name: "ProtocolLib", version: "4.4.0"
+
     compile group: 'net.milkbowl.vault', name: 'Vault', version: '1.5.6'
     compile group: 'fr.neatmonster', name: 'nocheatplus', version: '3.13.7-RC'
     compile group: 'de.diddiz', name: 'logblock', version: 'dev-SNAPSHOT'

@@ -194,7 +194,7 @@ public class MarketComponent extends BukkitComponent {
             StoreSession sess = sessions.getSession(StoreSession.class, player);
             if (amt == 1 && sess.recentPurch() && sess.getLastPurch().equals(itemName)) {
                 ChatUtil.sendNotice(sender, "Did you know you can specify the amount of items to buy?");
-                ChatUtil.sendNotice(sender, "/market buy -a <amount> " + itemName);
+                ChatUtil.sendNotice(sender, "/market buy -a <amount> " + marketItemInfo.getDisplayName());
             }
             sess.setLastPurch(itemName);
         }
@@ -347,22 +347,22 @@ public class MarketComponent extends BukkitComponent {
 
             new PaginatedResult<MarketItemInfo>(ChatColor.GOLD + "Item List") {
                 @Override
-                public String format(MarketItemInfo pair) {
-                    ChatColor color = pair.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
+                public String format(MarketItemInfo info) {
+                    ChatColor color = info.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
                     String buy, sell;
-                    if (pair.isBuyable() || !pair.isEnabled()) {
-                        buy = formatPriceForList(pair.getPrice());
+                    if (info.isBuyable() || !info.isEnabled()) {
+                        buy = formatPriceForList(info.getPrice());
                     } else {
                         buy = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
                     }
-                    if (pair.isSellable() || !pair.isEnabled()) {
-                        sell = formatPriceForList(pair.getSellPrice());
+                    if (info.isSellable() || !info.isEnabled()) {
+                        sell = formatPriceForList(info.getSellPrice());
                     } else {
                         sell = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
                     }
 
-                    String message = color + pair.getName().toUpperCase()
-                            + ChatColor.GRAY + " x" + wholeNumberFormatter.format(pair.getStock())
+                    String message = color + info.getDisplayName()
+                            + ChatColor.GRAY + " x" + wholeNumberFormatter.format(info.getStock())
                             + ChatColor.YELLOW + " (Quick Price: " + buy + " - " + sell + ")";
                     return message.replace(' ' + econ.currencyNamePlural(), "");
                 }
@@ -376,7 +376,12 @@ public class MarketComponent extends BukkitComponent {
             String itemName;
             double percentageSale = 1;
             if (args.argsLength() > 0) {
-                itemName = args.getJoinedStrings(0).toLowerCase();
+                Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0).toLowerCase());
+                if (optItemName.isEmpty()) {
+                    throw new CommandException(NOT_AVAILIBLE);
+                }
+
+                itemName = optItemName.get();
             } else {
                 ItemStack stack = PlayerUtil.checkPlayer(sender).getInventory().getItemInHand();
                 verifyValidItemCommand(stack);
@@ -408,7 +413,7 @@ public class MarketComponent extends BukkitComponent {
             ChatColor color = marketItemInfo.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
             double paymentPrice = marketItemInfo.getSellPrice() * percentageSale;
 
-            ChatUtil.sendNotice(sender, ChatColor.GOLD, "Price Information for: " + color + itemName.toUpperCase());
+            ChatUtil.sendNotice(sender, ChatColor.GOLD, "Price Information for: " + color + marketItemInfo.getDisplayName());
 
             String stockCount = wholeNumberFormatter.format(marketItemInfo.getStock());
             ChatUtil.sendNotice(sender, "There are currently " + ChatColor.GRAY + stockCount + ChatColor.YELLOW + " in stock.");
@@ -573,30 +578,35 @@ public class MarketComponent extends BukkitComponent {
         }
     }
 
+    private static ItemStack getBaseStack(String name) throws CommandException {
+        try {
+            if (name.startsWith("grindstone:")) {
+                name = name.replaceFirst("grindstone:", "");
+                CustomItems item = CustomItems.valueOf(name.toUpperCase());
+                return CustomItemCenter.build(item);
+            }
+
+            NumericItem mapping = toNumeric(name).get();
+
+            return new ItemStack(mapping.getId(), 1, mapping.getData());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new CommandException("Please report this error, " + name + " could not be found.");
+        }
+    }
+
     private static ItemStack[] getItem(String name, int amount) throws CommandException {
 
-        name = name.toUpperCase().replace(" ", "_");
-
         List<ItemStack> itemStacks = new ArrayList<>();
-        ItemStack stack;
 
-        ItemType type = ItemType.lookup(name);
-        if (type == null) {
-            try {
-                CustomItems item = CustomItems.valueOf(name);
-                stack = CustomItemCenter.build(item);
-            } catch (IllegalArgumentException ex) {
-                throw new CommandException("Please report this error, " + name + " could not be found.");
-            }
-        } else {
-            stack = new ItemStack(type.getID(), 1, (short) type.getData());
-        }
+        ItemStack stack = getBaseStack(name);
         for (int i = amount; i > 0;) {
             ItemStack cloned = stack.clone();
             cloned.setAmount(Math.min(stack.getMaxStackSize(), i));
             i -= cloned.getAmount();
             itemStacks.add(cloned);
         }
+
         return itemStacks.toArray(new ItemStack[0]);
     }
 

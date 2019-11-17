@@ -539,7 +539,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 lootIt.remove();
 
                 Optional<String> itemName = computeItemName(bukkitStack);
-                boolean isFrozen = itemName.orElse("").contains("Frozen");
+                boolean isFrozen = itemName.orElse("").contains("frozen");
                 if (!isFrozen && ChanceUtil.getChance(config.chanceofActivation)) {
                     if (ChanceUtil.getChance(config.chanceOfDupe)) {
                         Item firstSpawnedItem = world.dropItem(bossSpawnLoc, bukkitStack.clone());
