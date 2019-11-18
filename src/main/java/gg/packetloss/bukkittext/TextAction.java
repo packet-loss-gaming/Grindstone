@@ -1,6 +1,7 @@
 package gg.packetloss.bukkittext;
 
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.inventory.ItemStack;
 
 public abstract class TextAction {
     protected TextAction() { }
@@ -23,6 +24,10 @@ public abstract class TextAction {
 
         public static TextAction showText(Text text) {
             return new TextHoverActionShowText(text);
+        }
+
+        public static TextAction showItem(ItemStack stack) {
+            return new TextHoverActionShowItem(stack);
         }
     }
 }
