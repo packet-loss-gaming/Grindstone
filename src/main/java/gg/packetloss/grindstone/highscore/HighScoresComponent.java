@@ -1,6 +1,5 @@
 package gg.packetloss.grindstone.highscore;
 
-import com.google.common.base.Joiner;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
@@ -15,7 +14,6 @@ import gg.packetloss.grindstone.highscore.mysql.MySQLHighScoresDatabase;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.chat.ChatConstants;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
-import net.md_5.bungee.api.chat.BaseComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -28,6 +26,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static gg.packetloss.grindstone.util.StringUtil.toTitleCase;
+import static gg.packetloss.grindstone.util.StringUtil.toUppercaseTitle;
 
 @ComponentInformation(friendlyName = "High Scores Component", desc = "High Scores")
 public class HighScoresComponent extends BukkitComponent {
@@ -105,14 +106,6 @@ public class HighScoresComponent extends BukkitComponent {
         return getTop(scoreType, 5);
     }
 
-    private String getFriendlyName(String unfriendlyName) {
-        List<String> words = Arrays.stream(unfriendlyName.split("_")).map(
-                str -> StringUtils.capitalize(str.toLowerCase())
-        ).collect(Collectors.toList());
-
-        return Joiner.on(" ").join(words);
-    }
-
     private Text createScoreLine(int rank, ScoreEntry entry, ScoreType scoreType) {
         String playerName = entry.getPlayer().getName();
 
@@ -123,9 +116,9 @@ public class HighScoresComponent extends BukkitComponent {
 
     private Text createScoreTypeLine(String scoreType) {
         return Text.of(
-                ChatColor.BLUE, getFriendlyName(scoreType),
+                ChatColor.BLUE, toUppercaseTitle(scoreType),
                 TextAction.Click.runCommand("/highscores " + scoreType),
-                TextAction.Hover.showText(Text.of("View high scores for " + getFriendlyName(scoreType)))
+                TextAction.Hover.showText(Text.of("View high scores for " + toTitleCase(scoreType)))
         );
     }
 
@@ -139,7 +132,7 @@ public class HighScoresComponent extends BukkitComponent {
 
             ScoreType scoreType = nameToScoreType.get(scoreTypeString);
             if (scoreType != null) {
-                ChatUtil.sendNotice(sender, ChatColor.GOLD + getFriendlyName(scoreTypeString));
+                ChatUtil.sendNotice(sender, ChatColor.GOLD + toTitleCase(scoreTypeString));
 
                 List<ScoreEntry> scores = getTop(scoreType);
                 for (int i = 0; i < scores.size(); ++i) {
@@ -156,8 +149,8 @@ public class HighScoresComponent extends BukkitComponent {
                     }
 
                     @Override
-                    public BaseComponent[] format(String scoreType) {
-                        return createScoreTypeLine(scoreType).build();
+                    public Text format(String scoreType) {
+                        return createScoreTypeLine(scoreType);
                     }
                 }.display(sender, tables, args.getFlagInteger('p', 1));
             }

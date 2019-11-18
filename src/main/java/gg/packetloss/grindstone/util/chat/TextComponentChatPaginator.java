@@ -4,7 +4,6 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.bukkittext.TextBuilder;
-import net.md_5.bungee.api.chat.BaseComponent;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -51,7 +50,7 @@ public abstract class TextComponentChatPaginator<T> {
 
             sender.sendMessage(Text.of(headerColor, StringUtils.center(headerText, ChatConstants.CHAT_WIDTH)).build());
 
-            results.forEachItemInPage(page, (item) -> sender.sendMessage(format(item)));
+            results.forEachItemInPage(page, (item) -> sender.sendMessage(format(item).build()));
 
             if (lastPage == 1) {
                 return;
@@ -85,5 +84,5 @@ public abstract class TextComponentChatPaginator<T> {
         }
     }
 
-    public abstract BaseComponent[] format(T item);
+    public abstract Text format(T item);
 }

@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.economic.store;
 
 import static gg.packetloss.grindstone.economic.store.MarketComponent.LOWER_MARKET_LOSS_THRESHOLD;
+import static gg.packetloss.grindstone.util.StringUtil.toUppercaseTitle;
 
 public class MarketItemInfo implements Comparable<MarketItemInfo> {
     private String name;
@@ -27,8 +28,12 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return name;
     }
 
+    public String getUnqualifiedName() {
+        return name.split(":")[1];
+    }
+
     public String getDisplayName() {
-        return name.split(":")[1].replaceAll("_", " ").toUpperCase();
+        return toUppercaseTitle(getUnqualifiedName());
     }
 
     public String getLookupName() {
@@ -89,7 +94,7 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
     public int compareTo(MarketItemInfo record) {
         if (record == null) return -1;
         if (this.getPrice() == record.getPrice()) {
-            int c = this.getName().compareTo(record.getName());
+            int c = this.getUnqualifiedName().compareTo(record.getUnqualifiedName());
             return c == 0 ? 1 : c;
         }
         return this.getPrice() > record.getPrice() ? 1 : -1;

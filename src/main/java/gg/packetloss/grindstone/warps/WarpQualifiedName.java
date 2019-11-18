@@ -11,13 +11,12 @@ public class WarpQualifiedName {
     private final String name;
 
     public WarpQualifiedName(String name) {
-        this.namespace = GLOBAL_UUID;
-        this.name = name;
+        this(GLOBAL_UUID, name);
     }
 
     public WarpQualifiedName(UUID namespace, String name) {
         this.namespace = namespace;
-        this.name = name;
+        this.name = name.toUpperCase();
     }
 
     public boolean isGlobal() {
@@ -29,7 +28,11 @@ public class WarpQualifiedName {
     }
 
     public String getName() {
-        return name.toUpperCase();
+        return name;
+    }
+
+    public String getDisplayName() {
+        return name;
     }
 
     public String getFriendlyNamespaceName() {
@@ -52,5 +55,10 @@ public class WarpQualifiedName {
     @Override
     public int hashCode() {
         return namespace.hashCode() + name.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getFriendlyNamespaceName() + ":" + getName();
     }
 }

@@ -36,7 +36,6 @@ import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.legacy.ItemType;
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
@@ -49,6 +48,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static gg.packetloss.grindstone.util.StringUtil.toTitleCase;
 import static gg.packetloss.grindstone.util.item.ItemNameCalculator.*;
 
 @ComponentInformation(friendlyName = "Market", desc = "Buy and sell goods.")
@@ -358,7 +358,7 @@ public class MarketComponent extends BukkitComponent {
                 }
 
                 @Override
-                public BaseComponent[] format(MarketItemInfo info) {
+                public Text format(MarketItemInfo info) {
                     ChatColor color = info.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
                     Text buy = Text.of(ChatColor.GRAY, "unavailable");
                     if (info.isBuyable() || !info.isEnabled()) {
@@ -370,14 +370,16 @@ public class MarketComponent extends BukkitComponent {
                         sell = formatPriceForList(info.getSellPrice());
                     }
 
+                    String titleCaseName = toTitleCase(info.getUnqualifiedName());
+
                     Text itemName = Text.of(
                             color, info.getDisplayName(),
                             TextAction.Click.runCommand("/mk lookup " + info.getLookupName()),
-                            TextAction.Hover.showText(Text.of("Show detailed item information"))
+                            TextAction.Hover.showText(Text.of("Show details for " + titleCaseName))
                     );
 
                     return Text.of(itemName, ChatColor.GRAY, " x", wholeNumberFormatter.format(info.getStock()),
-                            ChatColor.YELLOW, " (Quick Price: ", buy, " - ", sell, ")").build();
+                            ChatColor.YELLOW, " (Quick Price: ", buy, " - ", sell, ")");
                 }
             }.display(sender, marketItemInfoCollection, args.getFlagInteger('p', 1));
         }

@@ -2,15 +2,17 @@ package gg.packetloss.grindstone.warps;
 
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.commands.PaginatedResult;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.commandbook.util.entity.player.iterators.TeleportPlayerIterator;
 import com.sk89q.minecraft.util.commands.*;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.bukkittext.Text;
+import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.events.HomeTeleportEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -36,6 +38,7 @@ import java.util.logging.Logger;
 
 import static com.sk89q.commandbook.util.InputUtil.PlayerParser;
 import static gg.packetloss.grindstone.items.custom.CustomItems.TOME_OF_THE_RIFT_SPLITTER;
+import static gg.packetloss.grindstone.util.StringUtil.toTitleCase;
 
 @ComponentInformation(
         friendlyName = "Rift Warps",
@@ -122,14 +125,26 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         warpManager.setPlayerHomeAndNotify(player, block.getLocation());
     }
 
-    public PaginatedResult<WarpPoint> getListResult() {
-        return new PaginatedResult<>(ChatColor.GOLD + "Warps") {
-            public String format(WarpPoint entry) {
+    public TextComponentChatPaginator<WarpPoint> getListResult() {
+        return new TextComponentChatPaginator<WarpPoint>(ChatColor.GOLD, "Warps") {
+            @Override
+            public Optional<String> getPagerCommand(int page) {
+                return Optional.of("/warps list -p " + page);
+            }
+
+            @Override
+            public Text format(WarpPoint entry) {
                 WarpQualifiedName qualifiedName = entry.getQualifiedName();
-                String line = (qualifiedName.isGlobal() ? ChatColor.BLUE : ChatColor.DARK_BLUE) + qualifiedName.getName().toUpperCase();
-                line += ChatColor.YELLOW;
-                line += " (World: " + ChatColor.WHITE + entry.getWorldName() + ChatColor.YELLOW + ")";
-                return line;
+
+                String titleCaseName = toTitleCase(entry.getQualifiedName().getName());
+                Text warpName = Text.of(
+                        (qualifiedName.isGlobal() ? ChatColor.BLUE : ChatColor.DARK_BLUE),
+                        qualifiedName.getDisplayName().toUpperCase(),
+                        TextAction.Click.runCommand("/warp " + entry.getQualifiedName()),
+                        TextAction.Hover.showText(Text.of("Teleport to ", titleCaseName))
+                );
+
+                return Text.of(warpName, ChatColor.YELLOW, " (World: ", Text.of(entry.getWorldName()), ")");
             }
         };
     }
@@ -253,9 +268,9 @@ public class WarpsComponent extends BukkitComponent implements Listener {
 
             boolean isUpdate = warpManager.setWarp(warpName, player.getLocation()).isPresent();
             if (isUpdate) {
-                ChatUtil.sendNotice(sender, "Warp '" + warpName.getName() + "' updated.");
+                ChatUtil.sendNotice(sender, "Warp '" + warpName.getDisplayName() + "' updated.");
             } else {
-                ChatUtil.sendNotice(sender, "Warp '" + warpName.getName() + "' created.");
+                ChatUtil.sendNotice(sender, "Warp '" + warpName.getDisplayName() + "' created.");
             }
         }
 
@@ -282,9 +297,9 @@ public class WarpsComponent extends BukkitComponent implements Listener {
             }
 
             if (warpManager.destroyWarp(warpName)) {
-                ChatUtil.sendNotice(sender, "Warp '" + warpName.getName() + "' destroyed.");
+                ChatUtil.sendNotice(sender, "Warp '" + warpName.getDisplayName() + "' destroyed.");
             } else {
-                ChatUtil.sendNotice(sender, "Warp '" + warpName.getName() + "' not found.");
+                ChatUtil.sendNotice(sender, "Warp '" + warpName.getDisplayName() + "' not found.");
             }
         }
 
@@ -303,12 +318,12 @@ public class WarpsComponent extends BukkitComponent implements Listener {
             // Filter out unwanted warps
             if (args.argsLength() > 0) {
                 String filter = args.getString(0).toUpperCase();
-                warps.removeIf(warp -> !warp.getQualifiedName().getName().startsWith(filter));
+                warps.removeIf(warp -> !warp.getQualifiedName().getDisplayName().startsWith(filter));
             }
 
             // Sort warps for display
             warps.sort(Comparator.comparing(p -> p.getQualifiedName().isGlobal()));
-            warps.sort(Comparator.comparing(p -> p.getQualifiedName().getName()));
+            warps.sort(Comparator.comparing(p -> p.getQualifiedName().getDisplayName()));
 
             getListResult().display(sender, warps, args.getFlagInteger('p', 1));
         }
