@@ -31,6 +31,10 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return name.split(":")[1].replaceAll("_", " ").toUpperCase();
     }
 
+    public String getLookupName() {
+        return getDisplayName();
+    }
+
     public void setValue(double value) {
         this.value = value;
     }
@@ -39,13 +43,18 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return value;
     }
 
+    private double rounded(double input) {
+        double scale = Math.pow(10, 2);
+        return Math.round(input * scale) / scale;
+    }
+
     public double getPrice() {
-        return price;
+        return rounded(price);
     }
 
     public double getSellPrice() {
         double sellPrice = price >= LOWER_MARKET_LOSS_THRESHOLD ? price * .92 : price * .80;
-        return sellPrice < .01 ? 0 : sellPrice;
+        return rounded(sellPrice);
     }
 
     public int getStock() {
@@ -56,12 +65,24 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return isBuyable() || isSellable();
     }
 
+    public boolean isDisabled() {
+        return !isEnabled();
+    }
+
     public boolean isBuyable() {
         return !disableBuy;
     }
 
     public boolean isSellable() {
         return !disableSell;
+    }
+
+    public boolean displayBuyInfo() {
+        return isBuyable() || isDisabled();
+    }
+
+    public boolean displaySellInfo() {
+        return isSellable() || isDisabled();
     }
 
     @Override

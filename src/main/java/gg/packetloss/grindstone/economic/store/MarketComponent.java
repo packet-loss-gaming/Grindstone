@@ -20,6 +20,9 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.bukkittext.Text;
+import gg.packetloss.bukkittext.TextAction;
+import gg.packetloss.bukkittext.TextBuilder;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.economic.store.mysql.MySQLItemStoreDatabase;
@@ -29,9 +32,11 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
+import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.legacy.ItemType;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
@@ -68,6 +73,7 @@ public class MarketComponent extends BukkitComponent {
 
     private DecimalFormat wholeNumberFormatter = new DecimalFormat("#,###");
     private DecimalFormat oneDecimalFormatter = new DecimalFormat("#,###.#");
+    private DecimalFormat twoDecimalFormatter = new DecimalFormat("#,###.##");
 
     public void simulateMarket() {
         itemDatabase.updatePrices();
@@ -200,7 +206,7 @@ public class MarketComponent extends BukkitComponent {
             sess.setLastPurch(itemName);
         }
 
-        @Command(aliases = {"sell", "s"},
+        @Command(aliases = {"sell"},
                 usage = "", desc = "Sell an item",
                 flags = "haus", min = 0, max = 0)
         public void sellCmd(CommandContext args, CommandSender sender) throws CommandException {
@@ -321,7 +327,7 @@ public class MarketComponent extends BukkitComponent {
             });
         }
 
-        private String formatPriceForList(double price) {
+        private Text formatPriceForList(double price) {
             String result = "";
             result += ChatColor.WHITE;
             if (price >= 10000) {
@@ -329,13 +335,12 @@ public class MarketComponent extends BukkitComponent {
             } else if (price >= 1000) {
                 result += "~" + oneDecimalFormatter.format(price / 1000) + "k";
             } else {
-                result += econ.format(price);
+                result += twoDecimalFormatter.format(price);
             }
-            result += ChatColor.YELLOW;
-            return result;
+            return Text.of(result);
         }
 
-        @Command(aliases = {"list", "l"},
+        @Command(aliases = {"list", "l", "search", "s"},
                 usage = "[-p page] [filter...]", desc = "Get a list of items and their prices",
                 flags = "p:", min = 0
         )
@@ -346,26 +351,33 @@ public class MarketComponent extends BukkitComponent {
                     inst.hasPermission(sender, "aurora.admin.adminstore.disabled"));
             Collections.sort(marketItemInfoCollection);
 
-            new PaginatedResult<MarketItemInfo>(ChatColor.GOLD + "Item List") {
+            new TextComponentChatPaginator<MarketItemInfo>(ChatColor.GOLD, "Item List") {
                 @Override
-                public String format(MarketItemInfo info) {
+                public Optional<String> getPagerCommand(int page) {
+                    return Optional.of("/mk list -p " + page + " " + Optional.ofNullable(filterString).orElse(""));
+                }
+
+                @Override
+                public BaseComponent[] format(MarketItemInfo info) {
                     ChatColor color = info.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
-                    String buy, sell;
+                    Text buy = Text.of(ChatColor.GRAY, "unavailable");
                     if (info.isBuyable() || !info.isEnabled()) {
                         buy = formatPriceForList(info.getPrice());
-                    } else {
-                        buy = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
-                    }
-                    if (info.isSellable() || !info.isEnabled()) {
-                        sell = formatPriceForList(info.getSellPrice());
-                    } else {
-                        sell = ChatColor.GRAY + "unavailable" + ChatColor.YELLOW;
                     }
 
-                    String message = color + info.getDisplayName()
-                            + ChatColor.GRAY + " x" + wholeNumberFormatter.format(info.getStock())
-                            + ChatColor.YELLOW + " (Quick Price: " + buy + " - " + sell + ")";
-                    return message.replace(' ' + econ.currencyNamePlural(), "");
+                    Text sell = Text.of(ChatColor.GRAY, "unavailable");
+                    if (info.isSellable() || !info.isEnabled()) {
+                        sell = formatPriceForList(info.getSellPrice());
+                    }
+
+                    Text itemName = Text.of(
+                            color, info.getDisplayName(),
+                            TextAction.Click.runCommand("/mk lookup " + info.getLookupName()),
+                            TextAction.Hover.showText(Text.of("Show detailed item information"))
+                    );
+
+                    return Text.of(itemName, ChatColor.GRAY, " x", wholeNumberFormatter.format(info.getStock()),
+                            ChatColor.YELLOW, " (Quick Price: ", buy, " - ", sell, ")").build();
                 }
             }.display(sender, marketItemInfoCollection, args.getFlagInteger('p', 1));
         }
@@ -420,7 +432,7 @@ public class MarketComponent extends BukkitComponent {
             ChatUtil.sendNotice(sender, "There are currently " + ChatColor.GRAY + stockCount + ChatColor.YELLOW + " in stock.");
 
             // Purchase Information
-            if (marketItemInfo.isBuyable() || !marketItemInfo.isEnabled()) {
+            if (marketItemInfo.displayBuyInfo()) {
                 String purchasePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(marketItemInfo.getPrice()), "");
 
                 ChatUtil.sendNotice(sender, "When you buy it you pay:");
@@ -430,7 +442,7 @@ public class MarketComponent extends BukkitComponent {
             }
 
             // Sale Information
-            if (marketItemInfo.isSellable() || !marketItemInfo.isEnabled()) {
+            if (marketItemInfo.displayBuyInfo()) {
                 String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), "");
 
                 ChatUtil.sendNotice(sender, "When you sell it you get:");
@@ -449,6 +461,33 @@ public class MarketComponent extends BukkitComponent {
 
                 ChatUtil.sendNotice(sender, "Base price:");
                 ChatUtil.sendNotice(sender, " - " + basePrice + " each.");
+            }
+
+            if (marketItemInfo.isBuyable() && marketItemInfo.getStock() != 0) {
+                TextBuilder builder = Text.builder();
+
+                builder.append(ChatColor.YELLOW, "Quick buy: ");
+
+                for (int i : List.of(1, 16, 32, 64, 128, 256)) {
+                    if (i > marketItemInfo.getStock()) {
+                        break;
+                    }
+
+                    if (i != 1) {
+                        builder.append(", ");
+                    }
+
+                    double intervalPrice = marketItemInfo.getPrice() * i;
+
+                    builder.append(Text.of(
+                            ChatColor.BLUE,
+                            TextAction.Click.runCommand("/market buy -a " + i + " " + marketItemInfo.getLookupName()),
+                            TextAction.Hover.showText(Text.of("Buy ", i, " for ", twoDecimalFormatter.format(intervalPrice))),
+                            i
+                    ));
+                }
+
+                sender.sendMessage(builder.build());
             }
         }
 

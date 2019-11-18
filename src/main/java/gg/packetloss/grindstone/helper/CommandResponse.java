@@ -1,10 +1,10 @@
 package gg.packetloss.grindstone.helper;
 
-import net.md_5.bungee.api.ChatColor;
+import gg.packetloss.bukkittext.Text;
+import gg.packetloss.bukkittext.TextAction;
+import gg.packetloss.bukkittext.TextBuilder;
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
@@ -24,20 +24,14 @@ public class CommandResponse implements Response {
         String message = string.replace(rawCommand, "").replaceFirst("// *", "").trim();
 
         // Send a composite message of the command, a space, and then the comment text
-        TextComponent clickableText = new TextComponent("Run Command: " + command);
-        clickableText.setColor(ChatColor.DARK_GREEN);
-        clickableText.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, command));
-
+        TextBuilder builder = Text.builder();
+        builder.append(getNamePlate());
+        builder.append(Text.of(ChatColor.DARK_GREEN, "Run Command: " + command, TextAction.Click.suggestCommand(command)));
         if (!message.isEmpty()) {
-            clickableText.addExtra(" " + message);
+            builder.append(" " + message);
         }
 
-        ComponentBuilder clickWrapperBuilder = new ComponentBuilder("");
-        clickWrapperBuilder.append(TextComponent.fromLegacyText(getNamePlate()));
-        clickWrapperBuilder.append(clickableText);
-
-        BaseComponent[] clickWrapper = clickWrapperBuilder.create();
-
+        BaseComponent[] clickWrapper = builder.build();
         recipients.forEach((recipient) -> {
             recipient.sendMessage(clickWrapper);
         });
