@@ -426,7 +426,11 @@ public class MarketComponent extends BukkitComponent {
             ChatColor color = marketItemInfo.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
             double paymentPrice = marketItemInfo.getSellPrice() * percentageSale;
 
-            ChatUtil.sendNotice(sender, ChatColor.GOLD, "Price Information for: " + color + marketItemInfo.getDisplayName());
+            Text itemNameText = Text.of(
+                    ChatColor.BLUE, marketItemInfo.getDisplayName(),
+                    TextAction.Hover.showItem(getBaseStack(marketItemInfo.getName()))
+            );
+            sender.sendMessage(Text.of(ChatColor.GOLD, "Price Information for: ", itemNameText).build());
 
             String stockCount = wholeNumberFormatter.format(marketItemInfo.getStock());
             ChatUtil.sendNotice(sender, "There are currently " + ChatColor.GRAY + stockCount + ChatColor.YELLOW + " in stock.");
