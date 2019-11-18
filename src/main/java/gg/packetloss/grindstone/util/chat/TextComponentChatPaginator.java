@@ -49,7 +49,7 @@ public abstract class TextComponentChatPaginator<T> {
             int lastPage = results.getNumberOfPages();
             page = Math.max(1, Math.min(page, lastPage));
 
-            sender.sendMessage(Text.of(headerColor, headerText).build());
+            sender.sendMessage(Text.of(headerColor, StringUtils.center(headerText, ChatConstants.CHAT_WIDTH)).build());
 
             results.forEachItemInPage(page, (item) -> sender.sendMessage(format(item)));
 
@@ -72,7 +72,7 @@ public abstract class TextComponentChatPaginator<T> {
 
             curPageStr = StringUtils.leftPad(curPageStr, maxPageStr.length());
 
-            pagerBuilder.append(Text.of(ChatColor.YELLOW, "Page (", Text.of(ChatColor.GRAY, curPageStr), "/", Text.of(ChatColor.GRAY, maxPageStr), ") "));
+            pagerBuilder.append(Text.of(ChatColor.YELLOW, "Page (", Text.of(ChatColor.GRAY, curPageStr), "/", Text.of(ChatColor.GRAY, maxPageStr), ")"));
             pagerBuilder.append("   ");
 
             pagerBuilder.append(buildPagerText(">", Math.min(lastPage, page + 1), page));
