@@ -280,7 +280,7 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
 
         List<MarketItemInfo> items = new ArrayList<>();
         try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT " + columns + " FROM `market-items` WHERE `name` LIKE ?";
+            String sql = "SELECT " + columns + " FROM `market-items` WHERE SUBSTRING_INDEX(`name`, ':', -1) LIKE ?";
             if (!showHidden) {
                 sql += " AND (`buyable` = true OR `sellable` = true)";
             }
