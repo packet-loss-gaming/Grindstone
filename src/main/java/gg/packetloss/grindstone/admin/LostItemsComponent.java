@@ -15,6 +15,8 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.bukkittext.Text;
+import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -72,7 +74,13 @@ public class LostItemsComponent extends BukkitComponent {
                 ChatUtil.sendNotice(sender, ChatColor.GOLD + "Valid items:");
                 int counter = 0;
                 for (CustomItems aItem : CustomItems.values()) {
-                    ChatUtil.sendNotice(sender, aItem.getColor() + "" + counter++ + "). " + aItem.getSnakecaseName().toUpperCase());
+                    sender.sendMessage(Text.of(
+                            aItem.getColor(),
+                            counter++,
+                            "). ", aItem.getSnakecaseName().toUpperCase(),
+                            TextAction.Click.runCommand("//give " + aItem.getSnakecaseName()),
+                            TextAction.Hover.showText(Text.of("Give self ", aItem.getName()))
+                    ).build());
                 }
 
                 return;
