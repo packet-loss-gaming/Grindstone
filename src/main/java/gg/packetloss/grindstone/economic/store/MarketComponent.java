@@ -448,7 +448,7 @@ public class MarketComponent extends BukkitComponent {
             }
 
             // Sale Information
-            if (marketItemInfo.displayBuyInfo()) {
+            if (marketItemInfo.displaySellInfo()) {
                 String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), "");
 
                 ChatUtil.sendNotice(sender, "When you sell it you get:");
