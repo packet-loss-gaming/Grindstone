@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.helper;
 
-import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.bukkittext.Text;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
@@ -38,13 +38,13 @@ public class YAMLResponse implements Response {
             return false;
         }
 
-        ChatUtil.sendNotice(recipients, getNamePlate() + "Hey, " + player.getName() + "!");
-        response.forEach(msg -> {
-            String finalMessage = msg
-                    .replaceAll("%player%", player.getName())
-                    .replaceAll("%world%", player.getWorld().getName());
-            recipients.forEach((recipient) -> {
-                ChatUtil.sendNotice(recipient, getNamePlate() + finalMessage);
+        recipients.forEach((recipient) -> {
+            recipient.sendMessage(Text.of(getNamePlate(), "Hey, ", player.getName(), "!").build());
+            response.forEach(msg -> {
+                String finalMessage = msg
+                        .replaceAll("%player%", player.getName())
+                        .replaceAll("%world%", player.getWorld().getName());
+                recipient.sendMessage(Text.of(getNamePlate(), finalMessage).build());
             });
         });
         return true;
