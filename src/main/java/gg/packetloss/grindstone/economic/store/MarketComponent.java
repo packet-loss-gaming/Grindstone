@@ -386,7 +386,7 @@ public class MarketComponent extends BukkitComponent {
 
         @Command(aliases = {"lookup", "value", "info", "pc"},
                 usage = "[item name]", desc = "Value an item",
-                flags = "", min = 0)
+                flags = "e", min = 0)
         public void valueCmd(CommandContext args, CommandSender sender) throws CommandException {
             String itemName;
             double percentageSale = 1;
@@ -462,7 +462,11 @@ public class MarketComponent extends BukkitComponent {
             }
 
             // True value / admin information
-            if (sender.hasPermission("aurora.admin.adminstore.truevalue")) {
+            if (args.hasFlag('e')) {
+                if (!sender.hasPermission("aurora.admin.adminstore.truevalue")) {
+                    throw new CommandException("You do not have permission to see extra information about this item.");
+                }
+
                 String basePrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(marketItemInfo.getValue()), "");
 
                 ChatUtil.sendNotice(sender, "Base price:");
