@@ -141,69 +141,88 @@ public class MarketComponent extends BukkitComponent {
             String playerName = checkPlayer(sender);
             Player player = (Player) sender;
 
-            Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
-            if (optItemName.isEmpty()) {
-                throw new CommandException(NOT_AVAILIBLE);
-            }
+            // Calculate the item names
+            String nameWithMacros = args.getJoinedStrings(0);
+            List<String> expandedNames = ItemNameCalculator.expandNameMacros(nameWithMacros);
 
-            String itemName = optItemName.get();
-            MarketItemInfo marketItemInfo = itemDatabase.getItem(itemName);
-            if (marketItemInfo == null || !marketItemInfo.isBuyable()) {
-                throw new CommandException(NOT_AVAILIBLE);
-            }
-
-            itemName = marketItemInfo.getName();
-
+            // Calculate the quantities
             int amt = 1;
             if (args.hasFlag('a')) {
                 amt = Math.max(1, args.getFlagInteger('a'));
             }
 
-            if (amt > marketItemInfo.getStock()) {
-                throw new CommandException("You requested " + wholeNumberFormatter.format(amt) + " however, only "
-                  + wholeNumberFormatter.format(marketItemInfo.getStock()) + " are in stock.");
+            // Start counting the total
+            double totalPrice = 0;
+
+            // Reserve space for resolved items
+            List<MarketItemInfo> resolvedItems = new ArrayList<>(expandedNames.size());
+            for (String expandedName : expandedNames) {
+                Optional<String> optItemName = matchItemFromNameOrId(expandedName);
+                if (optItemName.isEmpty()) {
+                    throw new CommandException(NOT_AVAILIBLE);
+                }
+
+                MarketItemInfo marketItemInfo = itemDatabase.getItem(optItemName.get());
+                if (marketItemInfo == null || !marketItemInfo.isBuyable()) {
+                    throw new CommandException(NOT_AVAILIBLE);
+                }
+
+                if (amt > marketItemInfo.getStock()) {
+                    throw new CommandException("You requested " + wholeNumberFormatter.format(amt) + " however, only "
+                            + wholeNumberFormatter.format(marketItemInfo.getStock()) + " are in stock.");
+                }
+
+                totalPrice += marketItemInfo.getPrice() * amt;
+
+                resolvedItems.add(marketItemInfo);
             }
 
-            double price = marketItemInfo.getPrice() * amt;
-            double lottery = price * .03;
-
-            if (!econ.has(playerName, price)) {
+            // Check funds
+            if (!econ.has(player, totalPrice)) {
                 throw new CommandException("You do not have enough money to purchase that item(s).");
             }
 
-            // Get the items and add them to the inventory
-            ItemStack[] itemStacks = getItem(marketItemInfo.getName(), amt);
-            for (ItemStack itemStack : itemStacks) {
-                if (player.getInventory().firstEmpty() == -1) {
-                    player.getWorld().dropItem(player.getLocation(), itemStack);
-                    continue;
-                }
-                player.getInventory().addItem(itemStack);
-            }
+            // Charge the money and send the sender some feedback
+            econ.withdrawPlayer(player, totalPrice);
 
             // Deposit into the lottery account
+            double lottery = totalPrice * .03;
             econ.bankDeposit("Lottery", lottery);
 
-            // Charge the money and send the sender some feedback
-            econ.withdrawPlayer(playerName, price);
+            // Reserve space for stock adjustments
+            HashMap<String, Integer> adjustments = new HashMap<>();
+
+            // Get the items and add them to the inventory
+            for (MarketItemInfo marketItemInfo : resolvedItems) {
+                String itemName = marketItemInfo.getName();
+
+                ItemStack[] itemStacks = getItem(itemName, amt);
+                for (ItemStack itemStack : itemStacks) {
+                    if (player.getInventory().firstEmpty() == -1) {
+                        player.getWorld().dropItem(player.getLocation(), itemStack);
+                        continue;
+                    }
+                    player.getInventory().addItem(itemStack);
+                }
+
+                adjustments.put(itemName, -amt);
+                transactionDatabase.logTransaction(playerName, itemName, amt);
+            }
 
             // Update market stocks.
-            HashMap<String, Integer> adjustments = new HashMap<>();
-            adjustments.put(itemName, -amt);
             itemDatabase.adjustStocks(adjustments);
-
-            transactionDatabase.logTransaction(playerName, itemName, amt);
             transactionDatabase.save();
-            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), "");
+
+            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(totalPrice), "");
             ChatUtil.sendNotice(sender, "Item(s) purchased for " + priceString + "!");
 
             // Market Command Help
             StoreSession sess = sessions.getSession(StoreSession.class, player);
-            if (amt == 1 && sess.recentPurch() && sess.getLastPurch().equals(itemName)) {
+            if (amt == 1 && sess.recentPurch() && sess.getLastPurch().equals(nameWithMacros)) {
                 ChatUtil.sendNotice(sender, "Did you know you can specify the amount of items to buy?");
-                ChatUtil.sendNotice(sender, "/market buy -a <amount> " + marketItemInfo.getDisplayName());
+                ChatUtil.sendNotice(sender, "/market buy -a <amount> " + nameWithMacros.toUpperCase());
             }
-            sess.setLastPurch(itemName);
+            sess.setLastPurch(nameWithMacros);
         }
 
         @Command(aliases = {"sell"},

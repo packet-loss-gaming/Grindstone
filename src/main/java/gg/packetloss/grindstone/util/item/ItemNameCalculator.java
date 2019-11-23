@@ -3,6 +3,8 @@ package gg.packetloss.grindstone.util.item;
 import de.themoep.idconverter.IdMappings;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.item.legacy.ItemType;
+import gg.packetloss.grindstone.util.macro.ExpansionReplacementMacro;
+import gg.packetloss.grindstone.util.macro.MacroExpander;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -222,5 +224,20 @@ public class ItemNameCalculator {
         }
 
         return Optional.of(new NumericItem(mapping.getNumericId(), (short) mapping.getData()));
+    }
+
+    private static ExpansionReplacementMacro ARMOR_MACRO = new ExpansionReplacementMacro("#armo(|u)r", List.of(
+            "_helmet",
+            "_chestplate",
+            "_leggings",
+            "_boots"
+    ));
+
+    private static MacroExpander ITEM_NAME_MACRO_EXPANDER = new MacroExpander(List.of(
+            ARMOR_MACRO
+    ));
+
+    public static List<String> expandNameMacros(String baseName) {
+        return ITEM_NAME_MACRO_EXPANDER.expand(baseName);
     }
 }

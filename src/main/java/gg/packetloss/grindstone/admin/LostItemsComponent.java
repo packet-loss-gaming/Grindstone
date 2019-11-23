@@ -20,6 +20,7 @@ import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -27,7 +28,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Lost Custom Items", desc = "Lost item commands.")
 public class LostItemsComponent extends BukkitComponent {
@@ -40,6 +43,33 @@ public class LostItemsComponent extends BukkitComponent {
     public void enable() {
 
         registerCommands(Commands.class);
+    }
+
+    private static CustomItems resolveName(String itemName) {
+        try {
+            int itemId = Integer.parseInt(itemName);
+            return CustomItems.values()[itemId];
+        } catch (NumberFormatException ex) {
+            return CustomItems.valueOf(itemName.toUpperCase());
+        }
+    }
+
+    private static void giveItem(CommandSender sender, Player player, CustomItems item, int amount) {
+        Validate.notNull(player);
+
+        ItemStack stack = CustomItemCenter.build(item);
+        amount = Math.max(1, Math.min(amount, stack.getMaxStackSize()));
+        stack.setAmount(amount);
+
+        player.getInventory().addItem(stack);
+
+        if (player.equals(sender)) {
+            ChatUtil.sendNotice(sender, "You've been given " + amount + " " +
+                    item.getColoredName() + ChatColor.YELLOW + ".");
+        } else {
+            ChatUtil.sendNotice(sender, "Gave " + amount + " " +
+                    item.getColoredName() + ChatColor.YELLOW + " to " + player.getName() + ".");
+        }
     }
 
     public class Commands {
@@ -62,14 +92,18 @@ public class LostItemsComponent extends BukkitComponent {
                 itemName = args.getString(0);
             }
 
-            CustomItems item;
             try {
-                try {
-                    int itemId = Integer.parseInt(itemName);
-                    item = CustomItems.values()[itemId];
-                } catch (NumberFormatException ex) {
-                    item = CustomItems.valueOf(itemName.toUpperCase());
-                }
+                // Map all to verify via exceptions first
+                List<CustomItems> items = ItemNameCalculator.expandNameMacros(itemName).stream()
+                        .map(LostItemsComponent::resolveName)
+                        .collect(Collectors.toList());
+
+                // Give resolved items
+                Player finalPlayer = player;
+                int finalAmount = amount;
+                items.forEach((item) -> {
+                    giveItem(sender, finalPlayer, item, finalAmount);
+                });
             } catch (ArrayIndexOutOfBoundsException|IllegalArgumentException ex) {
                 ChatUtil.sendNotice(sender, ChatColor.GOLD + "Valid items:");
                 int counter = 0;
@@ -82,24 +116,6 @@ public class LostItemsComponent extends BukkitComponent {
                             TextAction.Hover.showText(Text.of("Give self ", aItem.getName()))
                     ).build());
                 }
-
-                return;
-            }
-
-            Validate.notNull(player);
-
-            ItemStack stack = CustomItemCenter.build(item);
-            amount = Math.max(1, Math.min(amount, stack.getMaxStackSize()));
-            stack.setAmount(amount);
-
-            player.getInventory().addItem(stack);
-
-            if (player.equals(sender)) {
-                ChatUtil.sendNotice(sender, "You've been given " + amount + " " +
-                        item.getColoredName() + ChatColor.YELLOW + ".");
-            } else {
-                ChatUtil.sendNotice(sender, "Gave " + amount + " " +
-                        item.getColoredName() + ChatColor.YELLOW + " to " + player.getName() + ".");
             }
         }
     }
