@@ -77,11 +77,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.material.Door;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -1017,17 +1015,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                             continue;
                         }
                         for (int ii = ChanceUtil.getRandom(5); ii > 0; --ii) {
-                            ThrownPotion potion = world.spawn(testLoc, ThrownPotion.class);
-
-                            ItemStack brewedPotion = new ItemStack(Material.SPLASH_POTION);
-                            PotionMeta potionMeta = (PotionMeta) brewedPotion.getItemMeta();
-                            // Prioritize upgradablility over extendability
-                            boolean isExtended = type.isExtendable() && !type.isUpgradeable();
-                            boolean isUpgraded = type.isUpgradeable();
-                            potionMeta.setBasePotionData(new PotionData(type, isExtended, isUpgraded));
-                            brewedPotion.setItemMeta(potionMeta);
-
-                            potion.setItem(brewedPotion);
+                            ThrownPotion potion = SplashPotionUtil.throwMaxedSplashPotion(testLoc, type);
                             potion.setVelocity(new org.bukkit.util.Vector(
                                     random.nextDouble() * 2.0 - 1,
                                     0,

@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.util;
 
 import org.bukkit.Location;
 import org.bukkit.entity.ThrownPotion;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
@@ -24,14 +23,10 @@ public class DeathUtil {
     };
 
     public static void throwSlashPotion(Location location) {
-
-        ThrownPotion potionEntity = location.getWorld().spawn(location, ThrownPotion.class);
         PotionType type = CollectionUtil.getElement(thrownTypes);
-        Potion potion = new Potion(type);
-        potion.setLevel(type.getMaxLevel());
-        potion.setSplash(true);
-        potionEntity.setItem(potion.toItemStack(1));
-        potionEntity.setVelocity(new Vector(
+
+        ThrownPotion potion = SplashPotionUtil.throwMaxedSplashPotion(location, type);
+        potion.setVelocity(new Vector(
                 random.nextDouble() * .5 - .25,
                 random.nextDouble() * .4 + .1,
                 random.nextDouble() * .5 - .25
