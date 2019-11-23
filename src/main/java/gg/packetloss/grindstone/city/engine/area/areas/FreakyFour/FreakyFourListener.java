@@ -39,7 +39,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 public class FreakyFourListener extends AreaListener<FreakyFourArea> {
@@ -54,8 +53,8 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
     private ProtectedRegion getRegion(Location location) {
         if (parent.contains(parent.charlotte_RG, location)) {
             return parent.charlotte_RG;
-        } else if (parent.contains(parent.magmacubed_RG, location)) {
-            return parent.magmacubed_RG;
+        } else if (parent.contains(parent.frimus_RG, location)) {
+            return parent.frimus_RG;
         } else if (parent.contains(parent.dabomb_RG, location)) {
             return parent.dabomb_RG;
         } else if (parent.contains(parent.snipee_RG, location)) {
@@ -89,15 +88,15 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         if (parent.contains(player)) {
             parent.validateBosses();
             if (parent.contains(parent.charlotte_RG, player)) {
-                // Teleport to Magma Cubed
-                if (parent.charlotte == null && parent.checkMagmaCubed()) {
-                    parent.cleanupMagmaCubed();
-                    parent.spawnMagmaCubed();
+                // Teleport to Frimus
+                if (parent.charlotte == null && parent.checkFrimus()) {
+                    parent.cleanupFrimus();
+                    parent.spawnFrimus();
                     player.teleport(new Location(parent.getWorld(), 374.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
                 }
-            } else if (parent.contains(parent.magmacubed_RG, player)) {
+            } else if (parent.contains(parent.frimus_RG, player)) {
                 // Teleport to Da Bomb
-                if (parent.magmaCubed.isEmpty() && parent.checkDaBomb()) {
+                if (parent.frimus == null && parent.checkDaBomb()) {
                     parent.cleanupDaBomb();
                     parent.spawnDaBomb();
                     player.teleport(new Location(parent.getWorld(), 350.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
@@ -151,24 +150,6 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onSlimeSplit(SlimeSplitEvent event) {
-        Slime slime = event.getEntity();
-        if (!parent.contains(slime)) return;
-        event.setCount((int) Math.pow(event.getCount(), 2.5));
-        server.getScheduler().runTaskLater(inst, () -> {
-            for (MagmaCube cube : parent.getContained(MagmaCube.class)) {
-                if (parent.magmaCubed.contains(cube)) continue;
-                cube.setCustomName("Magma Cubed");
-                double percentHealth = Math.max(1, Math.round(slime.getMaxHealth() * .75));
-                cube.setMaxHealth(percentHealth);
-                cube.setHealth(percentHealth);
-                parent.magmaCubed.add(cube);
-            }
-        }, 1);
-    }
-
-
     private static Set<DamageCause> healable = new HashSet<>();
 
     static {
@@ -215,10 +196,20 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                     }, 1);
                 }
             }
-        }
-        if (entity instanceof Player) {
-            if (damager instanceof MagmaCube) {
-                event.setDamage(DamageModifier.BASE, event.getDamage() + parent.getConfig().magmaCubedDamageModifier);
+        } else if (entity instanceof Blaze) {
+            if (damager instanceof Player && event.getCause().equals(DamageCause.PROJECTILE)) {
+                ChatUtil.sendNotice(damager, ChatColor.DARK_RED, "Projectiles can't harm me... Mwahahaha!");
+                event.setCancelled(true);
+            }
+        } else if (entity instanceof Player) {
+            if (damager instanceof MagmaCube || event.getCause().equals(DamageCause.LAVA)) {
+                EntityUtil.forceDamage(
+                        entity,
+                        Math.max(
+                                1,
+                                ChanceUtil.getRandom(((LivingEntity) entity).getHealth()) - 5
+                        )
+                );
             } else if (damager instanceof Creature) {
                 if (projectile != null) {
                     if (entity.hasPermission("aurora.tome.divinity") && ChanceUtil.getChance(5)) {
@@ -281,8 +272,8 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             LivingEntity e = event.getEntity();
             if (e.equals(parent.charlotte)) {
                 parent.charlotte = null;
-            } else if (e instanceof MagmaCube && parent.magmaCubed.contains(e)) {
-                parent.magmaCubed.remove(e);
+            } else if (e.equals(parent.frimus)) {
+                parent.frimus = null;
             } else if (e.equals(parent.daBomb)) {
                 parent.daBomb = null;
             } else if (e.equals(parent.snipee)) {

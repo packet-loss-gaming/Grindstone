@@ -28,8 +28,8 @@ import gg.packetloss.grindstone.util.APIUtil;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.checker.Expression;
 import gg.packetloss.grindstone.util.database.IOUtil;
-import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
@@ -39,12 +39,14 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
-import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 @ComponentInformation(friendlyName = "Freaky Four", desc = "The craziest bosses ever")
 @Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
@@ -57,10 +59,10 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
 
     protected Economy economy;
 
-    protected ProtectedRegion charlotte_RG, magmacubed_RG, dabomb_RG, snipee_RG, heads;
+    protected ProtectedRegion charlotte_RG, frimus_RG, dabomb_RG, snipee_RG, heads;
 
     protected Spider charlotte;
-    protected Set<MagmaCube> magmaCubed = new HashSet<>();
+    protected Blaze frimus;
     protected Creeper daBomb;
     protected Skeleton snipee;
 
@@ -77,7 +79,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
             String base = "oblitus-district-freaky-four";
             region = manager.getRegion(base);
             charlotte_RG = manager.getRegion(base + "-charlotte");
-            magmacubed_RG = manager.getRegion(base + "-magma-cubed");
+            frimus_RG = manager.getRegion(base + "-frimus");
             dabomb_RG = manager.getRegion(base + "-da-bomb");
             snipee_RG = manager.getRegion(base + "-snipee");
             heads = manager.getRegion(base + "-heads");
@@ -105,9 +107,11 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
     @Override
     public void run() {
         if (!isEmpty()) {
-            fakeXPGain();
             if (!checkCharlotte()) {
                 runCharlotte();
+            }
+            if (!checkFrimus()) {
+                runFrimus();
             }
             if (!checkSnipee()) {
                 runSnipee();
@@ -139,14 +143,66 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
         return BukkitUtil.toLocation(world, rg.getCenter().setY(groundLevel));
     }
 
-    public void fakeXPGain() {
-        for (Player player : getContained(Player.class)) {
-            if (!ItemUtil.hasNecrosArmour(player)) continue;
-            for (int i = ChanceUtil.getRandom(5); i > 0; --i) {
-                server.getPluginManager().callEvent(new PlayerExpChangeEvent(player,
-                        ChanceUtil.getRandom(config.fakeXP)));
-            }
+    private void createWall(ProtectedRegion region,
+                            Expression<Block, Boolean> oldExpr,
+                            Expression<Block, Boolean> newExpr,
+                            Material oldType, Material newType,
+                            int density, int floodFloor) {
+
+        final BlockVector min = region.getMinimumPoint();
+        final BlockVector max = region.getMaximumPoint();
+        int minX = min.getBlockX();
+        int minY = min.getBlockY();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxY = max.getBlockY();
+        int maxZ = max.getBlockZ();
+
+        boolean[] floodMatrix = new boolean[(maxX - minX) + 1];
+        for (int i = 0; i < floodMatrix.length; ++i) {
+            floodMatrix[i] = ChanceUtil.getChance(density);
         }
+
+        int initialTimes = maxZ - minZ + 1;
+        IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
+            @Override
+            public boolean run(int times) {
+                int startZ = minZ + (initialTimes - times) - 1;
+
+                for (int x = minX; x <= maxX; ++x) {
+                    for (int z = startZ; z < Math.min(maxZ, startZ + 4); ++z) {
+                        boolean flood = floodMatrix[maxX - x];
+                        for (int y = minY; y <= maxY; ++y) {
+                            Block block = world.getBlockAt(x, y, z);
+                            if (z == startZ && newExpr.evaluate(block)) {
+                                block.setType(oldType);
+                            } else if (flood && oldExpr.evaluate(block)) {
+                                block.setType(newType);
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public void end() {
+                if (floodFloor != -1) {
+                    for (int x = minX; x <= maxX; ++x) {
+                        for (int z = minZ; z <= maxZ; ++z) {
+                            if (!ChanceUtil.getChance(floodFloor)) continue;
+                            Block block = world.getBlockAt(x, minY, z);
+                            if (oldExpr.evaluate(block)) {
+                                block.setType(newType);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        TimedRunnable timedRunnable = new TimedRunnable(integratedRunnable, initialTimes);
+        BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 5);
+        timedRunnable.setTask(task);
     }
 
     public void spawnCharlotte() {
@@ -208,42 +264,14 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
 
         switch (ChanceUtil.getRandom(3)) {
             case 1:
-                int intialTimes = maxZ - minZ + 1;
-                IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
-                    @Override
-                    public boolean run(int times) {
-                        int startZ = minZ + (intialTimes - times) - 1;
-                        for (int y = minY; y <= maxY; ++y) {
-                            for (int x = minX; x <= maxX; ++x) {
-                                for (int z = startZ; z < startZ + 4; ++z) {
-                                    Block block = world.getBlockAt(x, y, z);
-                                    if (z == startZ && block.getType() == Material.WEB) {
-                                        block.setType(Material.AIR);
-                                    } else if (block.getType() == Material.AIR) {
-                                        block.setType(Material.WEB);
-                                    }
-                                }
-                            }
-                        }
-                        return true;
-                    }
-
-                    @Override
-                    public void end() {
-                        for (int x = minX; x <= maxX; ++x) {
-                            for (int z = minZ; z <= maxZ; ++z) {
-                                if (!ChanceUtil.getChance(config.charlotteFloorWeb)) continue;
-                                Block block = world.getBlockAt(x, groundLevel, z);
-                                if (block.getType() == Material.AIR) {
-                                    block.setType(Material.WEB);
-                                }
-                            }
-                        }
-                    }
-                };
-                TimedRunnable timedRunnable = new TimedRunnable(integratedRunnable, intialTimes);
-                BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 5);
-                timedRunnable.setTask(task);
+                createWall(charlotte_RG,
+                        input -> input.getType() == Material.AIR,
+                        input -> input.getType() == Material.WEB,
+                        Material.AIR,
+                        Material.WEB,
+                        1,
+                        config.charlotteFloorWeb
+                );
                 break;
             case 2:
                 LivingEntity target = charlotte.getTarget();
@@ -279,31 +307,61 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
         }
     }
 
-    public void spawnMagmaCubed() {
-        final MagmaCube cube = getWorld().spawn(getCentralLoc(magmacubed_RG), MagmaCube.class);
+    public void spawnFrimus() {
+        frimus = getWorld().spawn(getCentralLoc(frimus_RG), Blaze.class);
 
         // Handle vitals
-        cube.setRemoveWhenFarAway(true);
-        cube.setSize(config.magmaCubedSize);
+        frimus.setRemoveWhenFarAway(true);
         // Work around for health
         server.getScheduler().runTaskLater(inst, () -> {
-            cube.setMaxHealth(config.magmaCubedHP);
-            cube.setHealth(config.magmaCubedHP);
+            frimus.setMaxHealth(config.frimusHP);
+            frimus.setHealth(config.frimusHP);
         }, 1);
 
         // Handle name
-        cube.setCustomName("Magma Cubed");
-        magmaCubed.add(cube);
+        frimus.setCustomName("Frimus");
     }
 
-    public boolean checkMagmaCubed() {
-        return !LocationUtil.containsPlayer(world, magmacubed_RG);
+    public boolean checkFrimus() {
+        return !LocationUtil.containsPlayer(world, frimus_RG);
     }
 
-    public void cleanupMagmaCubed() {
-        for (MagmaCube cube : getContained(magmacubed_RG, MagmaCube.class)) {
-            cube.remove();
+    public void cleanupFrimus() {
+        final BlockVector min = frimus_RG.getMinimumPoint();
+        final BlockVector max = frimus_RG.getMaximumPoint();
+        int minX = min.getBlockX();
+        int minY = min.getBlockY();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxY = max.getBlockY();
+        int maxZ = max.getBlockZ();
+
+        for (int y = minY; y <= maxY; ++y) {
+            for (int x = minX; x <= maxX; ++x) {
+                for (int z = minZ; z <= maxZ; ++z) {
+                    Block block = world.getBlockAt(x, y, z);
+                    if (block.getType() == Material.FIRE || EnvironmentUtil.isLava(block.getType())) {
+                        block.setType(Material.AIR);
+                    }
+                }
+            }
         }
+
+        for (Entity spider : getContained(frimus_RG, Blaze.class)) {
+            spider.remove();
+        }
+    }
+
+    private void runFrimus() {
+        if (frimus == null) return;
+        createWall(frimus_RG,
+                input -> input.getType() == Material.AIR,
+                EnvironmentUtil::isLava,
+                Material.AIR,
+                Material.LAVA,
+                config.frimusWallDensity,
+                -1
+        );
     }
 
     public void spawnDaBomb() {
@@ -367,19 +425,14 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> implements P
                 charlotte = null;
             }
         }
-        if (!magmaCubed.isEmpty()) {
-            boolean checkMagmaCubed = checkMagmaCubed();
-            Iterator<MagmaCube> it = magmaCubed.iterator();
-            while (it.hasNext()) {
-                MagmaCube cube = it.next();
-                if (checkMagmaCubed) {
-                    if (cube.isValid()) {
-                        cube.remove();
-                    }
-                    it.remove();
-                } else if (!cube.isValid()) {
-                    it.remove();
+        if (frimus != null) {
+            if (checkFrimus()) {
+                if (frimus.isValid()) {
+                    frimus.remove();
                 }
+                frimus = null;
+            } else if (!frimus.isValid()) {
+                frimus = null;
             }
         }
         if (daBomb != null) {

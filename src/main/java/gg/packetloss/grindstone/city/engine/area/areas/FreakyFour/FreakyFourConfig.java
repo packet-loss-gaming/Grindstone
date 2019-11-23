@@ -24,12 +24,10 @@ public class FreakyFourConfig extends ConfigurationBase {
     public int charlotteFloorWeb = 15;
     @Setting("charlotte.web-to-spider-chance")
     public int charlotteWebSpider = 15;
-    @Setting("magma-cubed.hp")
-    public double magmaCubedHP = 180;
-    @Setting("magma-cubed.size")
-    public int magmaCubedSize = 8;
-    @Setting("magma-cubed.damage-modifier")
-    public double magmaCubedDamageModifier = 4;
+    @Setting("frimus.hp")
+    public double frimusHP = 900;
+    @Setting("frimus.wall-density")
+    public int frimusWallDensity = 3;
     @Setting("da-bomb.hp")
     public double daBombHP = 180;
     @Setting("da-bomb.tnt-chance")
