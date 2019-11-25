@@ -34,6 +34,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
@@ -114,7 +115,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
     private LocalConfiguration config;
     private static Economy economy = null;
-    private static final double BASE_AMT = 1.2;
     private List<BukkitTask> restorationTask = new ArrayList<>();
 
     private JungleRaidGameState gameState = new JungleRaidGameState();
@@ -379,52 +379,68 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private void restorePresentPlayer(Player player) {
         restore(player, playerState.get(player.getUniqueId()));
         playerState.remove(player.getUniqueId());
-        writeData();
     }
 
-    public void left(Player player) {
+    private void rewardPlayer(Player player, boolean won) {
+        if (economy == null) {
+            return;
+        }
+
+        double adjustedPoints = 1.5 * gameState.get(player).getPoints();
+        double amt = adjustedPoints * (won ? 1 : .5);
+
+        for (long i = (long) adjustedPoints; i > 50; i /= 50) {
+            if (ChanceUtil.getChance(1000)) {
+                ChatUtil.sendNotice(player, ChatColor.DARK_GREEN, "You found a rare jungle artifact!");
+                amt += ChanceUtil.getRangedRandom(10000, 100000);
+            } else if (ChanceUtil.getChance(10)) {
+                ChatUtil.sendNotice(player, ChatColor.DARK_GREEN, "You found a jungle artifact!");
+                amt += ChanceUtil.getRandom(10000);
+            }
+        }
+
+        economy.depositPlayer(player, amt);
+        ChatUtil.sendNotice(player, "You received: " + economy.format(amt) + '.');
+    }
+
+    public void left(Player player, boolean giveReward) {
         PlayerState state = playerState.get(player.getUniqueId());
         goneState.put(player.getUniqueId(), state);
         playerState.remove(player.getUniqueId());
 
         gameState.removePlayer(player);
+        if (giveReward) {
+            rewardPlayer(player, false);
+        }
 
         writeData();
     }
 
-    public void removeFromLobby(Player player) {
-        if (!playerState.containsKey(player.getUniqueId())) return;
-
-        restorePresentPlayer(player);
-        gameState.removePlayer(player);
-    }
-
-    public void removeFromTeam(Player player, boolean forced) {
+    private void removeFromLobby(Player player) {
         if (!playerState.containsKey(player.getUniqueId())) return;
 
         restorePresentPlayer(player);
         gameState.removePlayer(player);
 
-        if (economy != null && forced && state != JungleRaidState.LOBBY) {
-            if (state == JungleRaidState.DONE) {
-                highScoresComponent.update(player, ScoreTypes.JUNGLE_RAID_WINS, 1);
-                payPlayer(player, 10);
-            } else {
-                payPlayer(player, 1);
-            }
-        }
+        writeData();
     }
 
-    public void removeGoneFromTeam(Player player, boolean forced) {
+    private void removePlayerForGameEnd(Player player) {
+        if (!playerState.containsKey(player.getUniqueId())) return;
+
+        restorePresentPlayer(player);
+        gameState.removePlayer(player);
+
+        // writeData() contractually handled by caller i.e. end()
+    }
+
+    private void restoreGonePlayer(Player player) {
         if (!goneState.containsKey(player.getUniqueId())) return;
 
         restore(player, goneState.get(player.getUniqueId()));
         goneState.remove(player.getUniqueId());
-        writeData();
 
-        if (economy != null && forced) {
-            payPlayer(player, 1);
-        }
+        writeData();
     }
 
     // Persistence System
@@ -503,14 +519,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         restore();
 
         log.info("Loaded: " + goneState.size() + " saved identities for: Jungle Raid.");
-    }
-
-    private void payPlayer(Player player, double modifier) {
-
-        double amt = BASE_AMT * modifier;
-
-        economy.depositPlayer(player.getName(), amt);
-        ChatUtil.sendNotice(player, "You received: " + economy.format(amt) + '.');
     }
 
     public boolean isFriendlyFire(Player attacker, Player defender) {
@@ -592,9 +600,11 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         while (it.hasNext()) {
             PlayerState state = it.next().getValue();
-            removeFromTeam(Bukkit.getPlayer(state.getOwnerName()), true);
+            removePlayerForGameEnd(Bukkit.getPlayer(state.getOwnerName()));
             it.remove();
         }
+
+        writeData();
 
         restore();
         flagData = new FlagEffectData();
@@ -887,6 +897,16 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         return Optional.ofNullable(profile.getTeam().getColor());
     }
 
+    public void adjustPoints(Player player, JungleRaidPointEvent event) {
+        gameState.get(player).adjustPoints(event.getAdjustment());
+        player.sendMessage(Text.of(
+                ChatColor.DARK_GREEN,
+                Text.of(ChatColor.GOLD, event.getCaption()),
+                " +", Text.of(ChatColor.BLUE, event.getAdjustment()),
+                " points!"
+        ).build());
+    }
+
     public void smartStart() {
         Collection<Player> containedPlayers = getPlayersInLobby();
         if (containedPlayers.size() <= 1) {
@@ -937,6 +957,15 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
     }
 
+    private void handleWin(Player player) {
+        highScoresComponent.update(player, ScoreTypes.JUNGLE_RAID_WINS, 1);
+
+        // Give some final points for victory
+        adjustPoints(player, JungleRaidPointEvent.GAME_WON);
+
+        rewardPlayer(player, true);
+    }
+
     private void processWin(Win win) {
         state = JungleRaidState.DONE;
 
@@ -954,6 +983,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             default:
                 return;
         }
+
+        gameState.getPlayers().forEach(this::handleWin);
 
         Bukkit.broadcastMessage(ChatColor.GOLD + rawWinMessage);
     }
@@ -1457,17 +1488,26 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 event.setCancelled(true);
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
             } else {
-                if (getClassForPlayer(attackingPlayer).orElse(JungleRaidClass.BALANCED) == JungleRaidClass.SNIPER) {
-                    Projectile projectile = result.getProjectile();
-                    if (projectile != null) {
-                        double distSq = attackingPlayer.getLocation().distanceSquared(
-                                defendingPlayer.getLocation()
-                        );
+                Projectile projectile = result.getProjectile();
+                if (projectile != null) {
+                    double distSq = attackingPlayer.getLocation().distanceSquared(
+                            defendingPlayer.getLocation()
+                    );
+
+                    if (getClassForPlayer(attackingPlayer).orElse(JungleRaidClass.BALANCED) == JungleRaidClass.SNIPER) {
                         double targetDistSq = Math.pow(70, 2);
                         double ratio = Math.min(distSq, targetDistSq) / targetDistSq;
 
                         // Handle damage modification
                         event.setDamage(event.getDamage() * ratio);
+                    }
+
+                    double epicLongShotDist = Math.pow(150, 2);
+                    double longShotDist = Math.pow(50, 2);
+                    if (distSq > epicLongShotDist) {
+                        adjustPoints(attackingPlayer, JungleRaidPointEvent.EPIC_LONG_SHOT);
+                    } else if (distSq > longShotDist) {
+                        adjustPoints(attackingPlayer, JungleRaidPointEvent.LONG_SHOT);
                     }
                 }
 
@@ -1509,10 +1549,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 Player killer = player.getKiller();
                 if (killer != null) {
                     Optional<Color> optKillerColor = getTeamColorForPlayer(killer);
-                    if (optKillerColor.isPresent()) {
-                        if (isTitanEnabled && killer.isValid()) {
+                    if (optKillerColor.isPresent() && killer.isValid()) {
+                        adjustPoints(killer, JungleRaidPointEvent.PLAYER_KILL);
+                        if (isTitanEnabled) {
                             if (isTitan) {
                                 flagData.titan = killer.getUniqueId();
+
+                                adjustPoints(killer, JungleRaidPointEvent.TITAN_KILLED);
                                 try {
                                     // Player aPlayer = Bukkit.getPlayerExact(titan);
                                     // antiCheat.exempt(aPlayer, CheckType.FAST_BREAK);
@@ -1560,7 +1603,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 event.getDrops().clear();
                 event.setDroppedExp(0);
 
-                left(player);
+                left(player, true);
             }
         }
 
@@ -1572,7 +1615,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             // Technically forced, but because this
             // happens from disconnect/quit button
             // we don't want it to count as forced
-            server.getScheduler().runTaskLater(inst, () -> removeGoneFromTeam(p, false), 1);
+            server.getScheduler().runTaskLater(inst, () -> restoreGonePlayer(p), 1);
         }
 
         @EventHandler(ignoreCancelled = true)
@@ -1580,7 +1623,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
             final Player p = event.getPlayer();
 
-            server.getScheduler().runTaskLater(inst, () -> removeGoneFromTeam(p, true), 1);
+            server.getScheduler().runTaskLater(inst, () -> restoreGonePlayer(p), 1);
         }
 
         @EventHandler(ignoreCancelled = true)
@@ -1657,7 +1700,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             Player player = event.getPlayer();
 
             if (playerState.containsKey(player.getUniqueId()))  {
-                left(player);
+                left(player, false);
             }
         }
 

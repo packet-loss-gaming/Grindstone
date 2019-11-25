@@ -3,6 +3,7 @@ package gg.packetloss.grindstone.city.engine.jungleraid;
 public class JungleRaidProfile {
     private JungleRaidClass combatClass = JungleRaidClass.BALANCED;
     private JungleRaidTeam team = null;
+    private int points = 0;
 
     public JungleRaidProfile() { }
 
@@ -20,5 +21,22 @@ public class JungleRaidProfile {
 
     public void setTeam(JungleRaidTeam team) {
         this.team = team;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void adjustPoints(int points) {
+        this.points += points;
+
+        // You must have at least 0 points
+        if (this.points < 0) {
+            this.points = 0;
+        }
+    }
+
+    public void setPoints(int points) {
+        this.points = points;
     }
 }
