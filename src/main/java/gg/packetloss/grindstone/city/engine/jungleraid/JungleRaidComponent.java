@@ -89,6 +89,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -110,19 +111,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private ProtectedRegion lobbyRegion;
     private World world;
 
-    private final Random random = new Random();
+    private final ThreadLocalRandom random = ThreadLocalRandom.current();
     private LocalConfiguration config;
     private static Economy economy = null;
     private static final double BASE_AMT = 1.2;
     private List<BukkitTask> restorationTask = new ArrayList<>();
 
-    private List<Player> participants = new ArrayList<>();
-
-    private Map<Player, Set<Player>> teamMapping = new HashMap<>();
-    private Set<Player> freeForAllPlayers = new HashSet<>();
-    private Set<Player> blueTeamPlayers = new HashSet<>();
-    private Set<Player> redTeamPlayers = new HashSet<>();
-    private Map<Player, JungleRaidClass> classMap = new HashMap<>();
+    private JungleRaidGameState gameState = new JungleRaidGameState();
 
     private ConcurrentHashMap<UUID, PlayerState> playerState = new ConcurrentHashMap<>();
     private ConcurrentHashMap<UUID, PlayerState> goneState = new ConcurrentHashMap<>();
@@ -167,11 +162,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         return startTime;
     }
 
-    private void giveBaseEquipment(Player player, JungleRaidClass jrClass) {
+    private void applyClassEquipment(Player player) {
+        JungleRaidClass combatClass = getClassForPlayer(player).get();
+
         player.getInventory().clear();
 
         List<ItemStack> gear = new ArrayList<>();
-        switch (jrClass) {
+        switch (combatClass) {
             case MELEE: {
                 ItemStack enchantedSword = new ItemStack(Material.IRON_SWORD);
                 ItemMeta meta = enchantedSword.getItemMeta();
@@ -218,7 +215,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 superBowMeta.addEnchant(Enchantment.ARROW_FIRE, 1, true);
                 superBow.setItemMeta(superBowMeta);
 
-                superBow.setDurability((short) (superBow.getType().getMaxDurability() - jrClass.getArrowAmount()));
+                superBow.setDurability((short) (superBow.getType().getMaxDurability() - combatClass.getArrowAmount()));
 
                 gear.add(superBow);
 
@@ -247,7 +244,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
         }
 
-        int tntAmt = jrClass.getTNTAmount();
+        int tntAmt = combatClass.getTNTAmount();
         int tntStacks = tntAmt / 64;
         int tntRemainder = tntAmt % 64;
         for (int i = 0; i < tntStacks; ++i) {
@@ -257,13 +254,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             gear.add(new ItemStack(Material.TNT, tntRemainder));
         }
 
-        if (jrClass.hasFlintAndSteel()) {
+        if (combatClass.hasFlintAndSteel()) {
             gear.add(new ItemStack(Material.FLINT_AND_STEEL));
         }
-        if (jrClass.hasShears()) {
+        if (combatClass.hasShears()) {
             gear.add(new ItemStack(Material.SHEARS));
         }
-        if (jrClass.hasAxe()) {
+        if (combatClass.hasAxe()) {
             try {
                 gear.add(ModifierBook.cloneWithSpecifiedModifiers(
                         new ItemStack(Material.IRON_AXE),
@@ -287,7 +284,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         gear.add(new ItemStack(Material.COOKED_BEEF, 64));
         gear.add(new ItemStack(Material.COMPASS));
 
-        int arrowAmt = jrClass.getArrowAmount();
+        int arrowAmt = combatClass.getArrowAmount();
         int arrowStacks = arrowAmt / 64;
         int arrowRemainder = arrowAmt % 64;
         for (int i = 0; i < arrowStacks; ++i) {
@@ -302,7 +299,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
     }
 
-    private void giveTeamEquipment(Player player, Color teamColor) {
+    private void applyTeamEquipment(Player player) {
+        Color teamColor = getTeamColorForPlayer(player).get();
+
         ItemStack[] leatherArmour = ItemUtil.LEATHER_ARMOR;
 
         LeatherArmorMeta helmMeta = (LeatherArmorMeta) leatherArmour[3].getItemMeta();
@@ -330,13 +329,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
     public void restore(Player player) {
         prayerComponent.uninfluencePlayer(player);
-    }
-
-    private void handleTeamLeave(Player player) {
-        Set<Player> teamPlayers = teamMapping.remove(player);
-        if (teamPlayers != null) {
-            teamPlayers.remove(player);
-        }
     }
 
     protected void restore(Player player, PlayerState state) {
@@ -378,9 +370,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         player.getInventory().clear();
         player.getInventory().setArmorContents(NO_ARMOR);
 
-        giveBaseEquipment(player, getClassForPlayer(player));
-
-        participants.add(player);
+        gameState.addPlayer(player);
+        applyClassEquipment(player);
 
         writeData();
     }
@@ -396,7 +387,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         goneState.put(player.getUniqueId(), state);
         playerState.remove(player.getUniqueId());
 
-        handleTeamLeave(player);
+        gameState.removePlayer(player);
 
         writeData();
     }
@@ -405,14 +396,14 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         if (!playerState.containsKey(player.getUniqueId())) return;
 
         restorePresentPlayer(player);
-        handleTeamLeave(player);
+        gameState.removePlayer(player);
     }
 
     public void removeFromTeam(Player player, boolean forced) {
         if (!playerState.containsKey(player.getUniqueId())) return;
 
         restorePresentPlayer(player);
-        handleTeamLeave(player);
+        gameState.removePlayer(player);
 
         if (economy != null && forced && state != JungleRaidState.LOBBY) {
             if (state == JungleRaidState.DONE) {
@@ -514,18 +505,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         log.info("Loaded: " + goneState.size() + " saved identities for: Jungle Raid.");
     }
 
-    public Optional<Color> getTeamColor(Player player) {
-        Set<Player> playerTeam = teamMapping.get(player);
-        if (playerTeam == redTeamPlayers) {
-            return Optional.of(Color.RED);
-        } else if (playerTeam == blueTeamPlayers) {
-            return Optional.of(Color.BLUE);
-        } else if (playerTeam == freeForAllPlayers) {
-            return Optional.of(Color.WHITE);
-        }
-        return Optional.empty();
-    }
-
     private void payPlayer(Player player, double modifier) {
 
         double amt = BASE_AMT * modifier;
@@ -535,11 +514,24 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     public boolean isFriendlyFire(Player attacker, Player defender) {
-        Set<Player> attackerTeam = teamMapping.get(attacker);
-        Set<Player> defenderTeam = teamMapping.get(defender);
+        JungleRaidProfile attackerProfile = gameState.get(attacker);
+        JungleRaidProfile defenderProfile = gameState.get(defender);
 
-        /* We want identity comparison to prevent expensive list comparisons */
-        return attackerTeam == defenderTeam && attackerTeam != freeForAllPlayers && attackerTeam != null;
+        // One of the players is not in th egame, don't consider this friendly fire.
+        if (attackerProfile == null || defenderProfile == null) {
+            return false;
+        }
+
+        JungleRaidTeam attackerTeam = attackerProfile.getTeam();
+        JungleRaidTeam defenderTeam = defenderProfile.getTeam();
+
+        // If either player is on the free for all team, there is no friendly fire.
+        if (attackerTeam == JungleRaidTeam.FREE_FOR_ALL || defenderTeam == JungleRaidTeam.FREE_FOR_ALL) {
+            return false;
+        }
+
+        // Otherwise, there is friendly fire if the teams match.
+        return attackerTeam == defenderTeam;
     }
 
     public boolean arenaContains(Location location) {
@@ -734,8 +726,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         for (int i = 0; i < scrollingClassSigns.size(); ++i) {
             if (loc.equals(scrollingClassSigns.get(i))) {
                 JungleRaidClass targetClass = JungleRaidClass.values()[signScrollClassStart + i];
-                giveBaseEquipment(player, targetClass);
-                classMap.put(player, targetClass);
+                gameState.get(player).setCombatClass(targetClass);
+                applyClassEquipment(player);
                 break;
             }
         }
@@ -765,20 +757,48 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         stopRestore();
     }
 
+    private boolean isTeamLastStanding(JungleRaidTeam currentTeam, int[] liveCounts) {
+        // If this team has no players alive, short circuit.
+        if (liveCounts[currentTeam.ordinal()] < 1) {
+            return false;
+        }
 
-    public Optional<Win> getWinner() {
-        return getWinner(freeForAllPlayers, blueTeamPlayers, redTeamPlayers);
+        for (JungleRaidTeam team : JungleRaidTeam.all()) {
+            if (team == currentTeam) {
+                continue;
+            }
+
+            if (liveCounts[team.ordinal()] > 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    private Optional<Win> getWinner(Collection<Player> ffa, Collection<Player> blue, Collection<Player> red) {
-        if (ffa.size() == 1 && blue.isEmpty() && red.isEmpty()) {
-            return Optional.of(new Win(ffa.iterator().next().getName(), WinType.SOLO));
-        } else if (ffa.isEmpty() && !blue.isEmpty() && red.isEmpty()) {
-            return Optional.of(new Win("Blue", WinType.TEAM));
-        } else if (ffa.isEmpty() && blue.isEmpty() && !red.isEmpty()) {
-            return Optional.of(new Win("Red", WinType.TEAM));
-        } else if (ffa.isEmpty() && blue.isEmpty() && red.isEmpty()) {
+    public Optional<Win> getWinner() {
+        // Do a quick check to see if everyone is dead.
+        if (gameState.hasParticipants()) {
             return Optional.of(new Win(null, WinType.DRAW));
+        }
+
+        // Count the live counts per team.
+        int[] liveCounts = new int[JungleRaidTeam.all().length];
+        for (JungleRaidProfile profile : gameState.getProfiles()) {
+            ++liveCounts[profile.getTeam().ordinal()];
+        }
+
+        // Check the FFA team first, it's the special case.
+        int ffaCount = liveCounts[JungleRaidTeam.FREE_FOR_ALL.ordinal()];
+        if (ffaCount == 1 && isTeamLastStanding(JungleRaidTeam.FREE_FOR_ALL, liveCounts)) {
+            Player player = gameState.getPlayers().iterator().next();
+            return Optional.of(new Win(player.getName(), WinType.SOLO));
+        }
+
+        for (JungleRaidTeam team : JungleRaidTeam.normal()) {
+            if (isTeamLastStanding(team, liveCounts)) {
+                return Optional.of(new Win(StringUtil.toTitleCase(team.name()), WinType.TEAM));
+            }
         }
 
         return Optional.empty();
@@ -802,9 +822,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         adminComponent.deguildPlayer(player);
     }
 
-    private void addPlayer(Player player, Supplier<Location> startingPos, Color teamColor, JungleRaidClass jrClass) {
-        giveBaseEquipment(player, jrClass);
-        giveTeamEquipment(player, teamColor);
+    private void addPlayer(Player player, Supplier<Location> startingPos) {
+        applyClassEquipment(player);
+        applyTeamEquipment(player);
 
         resetPlayerProperties(player);
         maybeDisableGuild(player);
@@ -812,6 +832,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         prayerComponent.uninfluencePlayer(player);
 
         player.teleport(startingPos.get());
+    }
+
+    private void addPlayer(Player player) {
+        addPlayer(player, this::getRandomLocation);
     }
 
     public Location getRandomLocation() {
@@ -835,24 +859,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
     }
 
-    public void addFFAPlayer(Player player, JungleRaidClass jrClass) {
-        addPlayer(player, this::getRandomLocation, Color.WHITE, jrClass);
-        freeForAllPlayers.add(player);
-        teamMapping.put(player, freeForAllPlayers);
-    }
-
-    public void addBluePlayer(Player player, JungleRaidClass jrClass) {
-        addPlayer(player, this::getRandomLocation, Color.BLUE, jrClass);
-        blueTeamPlayers.add(player);
-        teamMapping.put(player, blueTeamPlayers);
-    }
-
-    public void addRedPlayer(Player player, JungleRaidClass jrClass) {
-        addPlayer(player, this::getRandomLocation, Color.RED, jrClass);
-        redTeamPlayers.add(player);
-        teamMapping.put(player, redTeamPlayers);
-    }
-
     private void enforceBounds() {
         for (PlayerState entry : playerState.values()) {
             Player player = Bukkit.getPlayerExact(entry.getOwnerName());
@@ -863,15 +869,25 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
     }
 
-    private JungleRaidClass getClassForPlayer(Player player) {
-        return classMap.getOrDefault(player, JungleRaidClass.BALANCED);
+    public Optional<JungleRaidClass> getClassForPlayer(Player player) {
+        JungleRaidProfile profile = gameState.get(player);
+        if (profile == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(profile.getCombatClass());
+    }
+
+    public Optional<Color> getTeamColorForPlayer(Player player) {
+        JungleRaidProfile profile = gameState.get(player);
+        if (profile == null) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(profile.getTeam().getColor());
     }
 
     public void smartStart() {
-        List<Player> ffaList = new ArrayList<>();
-        List<Player> redList = new ArrayList<>();
-        List<Player> blueList = new ArrayList<>();
-
         Collection<Player> containedPlayers = getPlayersInLobby();
         if (containedPlayers.size() <= 1) {
             return;
@@ -883,29 +899,32 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 return;
             }
 
+            JungleRaidProfile profile = gameState.get(player);
             switch (block.getData()) {
                 case 0:
-                    ffaList.add(player);
+                    profile.setTeam(JungleRaidTeam.FREE_FOR_ALL);
                     break;
                 case 11:
-                    blueList.add(player);
+                    profile.setTeam(JungleRaidTeam.BLUE);
                     break;
                 case 14:
-                    redList.add(player);
+                    profile.setTeam(JungleRaidTeam.RED);
                     break;
                 default:
                     return;
             }
         }
 
-        if (getWinner(ffaList, blueList, redList).isPresent()) {
+        if (getWinner().isPresent()) {
+            for (JungleRaidProfile profile : gameState.getProfiles()) {
+                profile.setTeam(null);
+            }
+
             ChatUtil.sendError(getPlayersInLobby(), "All players are on one team, the game will not start.");
             return;
         }
 
-        ffaList.forEach(p -> addFFAPlayer(p, getClassForPlayer(p)));
-        redList.forEach(p -> addRedPlayer(p, getClassForPlayer(p)));
-        blueList.forEach(p -> addBluePlayer(p, getClassForPlayer(p)));
+        gameState.getPlayers().forEach(this::addPlayer);
 
         state = JungleRaidState.INITIALIZE;
         startTime = System.currentTimeMillis();
@@ -971,7 +990,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
                 if (isFlagEnabled(JungleRaidFlag.TITAN_MODE)) {
                     if (flagData.titan == null) {
-                        flagData.titan = CollectionUtil.getElement(participants).getUniqueId();
+                        flagData.titan = CollectionUtil.getElement(gameState.getPlayers()).getUniqueId();
                     }
 
                     if (player.getUniqueId().equals(flagData.titan)) {
@@ -1438,7 +1457,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 event.setCancelled(true);
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
             } else {
-                if (getClassForPlayer(attackingPlayer) == JungleRaidClass.SNIPER) {
+                if (getClassForPlayer(attackingPlayer).orElse(JungleRaidClass.BALANCED) == JungleRaidClass.SNIPER) {
                     Projectile projectile = result.getProjectile();
                     if (projectile != null) {
                         double distSq = attackingPlayer.getLocation().distanceSquared(
@@ -1472,7 +1491,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
             final Player player = event.getEntity();
             if (playerState.containsKey(player.getUniqueId())) {
-                Optional<Color> optTeamColor  = getTeamColor(player);
+                Optional<Color> optTeamColor = getTeamColorForPlayer(player);
 
                 // Enable disabled Checks
                 boolean isTitanEnabled = isFlagEnabled(JungleRaidFlag.TITAN_MODE);
@@ -1489,7 +1508,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 Color killerColor = Color.WHITE;
                 Player killer = player.getKiller();
                 if (killer != null) {
-                    Optional<Color> optKillerColor = getTeamColor(killer);
+                    Optional<Color> optKillerColor = getTeamColorForPlayer(killer);
                     if (optKillerColor.isPresent()) {
                         if (isTitanEnabled && killer.isValid()) {
                             if (isTitan) {
