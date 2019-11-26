@@ -182,9 +182,11 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                 Chest rightChest = (Chest) doubleChest.getRightSide();
 
                 optNetworkID = manager.getNetworkFromSourceChest(leftChest.getBlock(), rightChest.getBlock());
-            } else {
+            } else if (holder instanceof Chest) { // Mule inventories count as chests for some reason
                 Chest chest = (Chest) holder;
                 optNetworkID = manager.getNetworkFromSourceChest(chest.getBlock());
+            } else {
+                return;
             }
 
             if (optNetworkID.isEmpty()) {
