@@ -633,7 +633,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
 
         for (JungleRaidFlag flag : JungleRaidFlag.values()) {
-            flagState[flag.index] = flag.enabledByDefault;
+            flagState[flag.ordinal()] = flag.isEnabledByDefault();
         }
 
         flagSignPopulate();
@@ -786,7 +786,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     public void setFlag(JungleRaidFlag flag, boolean enabled) {
-        flagState[flag.index] = enabled;
+        flagState[flag.ordinal()] = enabled;
     }
 
     public boolean isSuddenDeath() {
@@ -794,7 +794,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     public boolean isFlagEnabled(JungleRaidFlag flag) {
-        return flagState[flag.index];
+        return flagState[flag.ordinal()];
     }
 
     @Override
@@ -1006,7 +1006,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private void tryBeginCombat() {
-        if (System.currentTimeMillis() - startTime >= TimeUnit.MINUTES.toMillis(1)) {
+        boolean cooldownPassed = System.currentTimeMillis() - startTime >= TimeUnit.MINUTES.toMillis(1);
+        if (isFlagEnabled(JungleRaidFlag.NO_CHILL) || cooldownPassed) {
             state = JungleRaidState.IN_PROGRESS;
             ChatUtil.sendNotice(getPlayersInArena(), ChatColor.DARK_RED + "LET THE SLAUGHTER BEGIN!");
         }
