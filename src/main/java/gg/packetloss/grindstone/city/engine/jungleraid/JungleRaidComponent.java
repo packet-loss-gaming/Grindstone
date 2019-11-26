@@ -131,6 +131,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private Location rightFlagActivationSign;
     private List<Location> scrollingFlagSigns = new ArrayList<>();
 
+    private Location classSelectionModeSign;
     private Location leftClassActivationSign;
     private Location rightClassActivationSign;
     private List<Location> scrollingClassSigns = new ArrayList<>();
@@ -140,6 +141,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
     private FlagEffectData flagData = new FlagEffectData();
     private boolean[] flagState = new boolean[JungleRaidFlag.values().length];
+
+    private JungleRaidClassSelectionMode classSelectionMode = JungleRaidClassSelectionMode.MANUAL;
 
     @InjectComponent
     AdminComponent adminComponent;
@@ -635,6 +638,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         flagSignPopulate();
 
+        classSelectionModeSign = new Location(world, -742, 83, -364);
         leftClassActivationSign = new Location(world, -745, 82, -364);
         rightClassActivationSign = new Location(world, -739, 82, -364);
 
@@ -663,14 +667,14 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             updateFlagSign(i);
         }
 
-        boolean isLeftScrollable = signScrollFlagStart == 0;
+        boolean isLeftScrollable = signScrollFlagStart != 0;
         Sign leftSign = (Sign) leftFlagActivationSign.getBlock().getState();
-        leftSign.setLine(1, isLeftScrollable ? "" : ChatColor.BLUE + "<<");
+        leftSign.setLine(1, isLeftScrollable ? ChatColor.BLUE + "<<" : "");
         leftSign.update(true);
 
-        boolean isRightScrollable = signScrollFlagStart + scrollingFlagSigns.size() == JungleRaidFlag.values().length;
+        boolean isRightScrollable = signScrollFlagStart + scrollingFlagSigns.size() != JungleRaidFlag.values().length;
         Sign rightSign = (Sign) rightFlagActivationSign.getBlock().getState();
-        rightSign.setLine(1, isRightScrollable ? "" : ChatColor.BLUE + ">>");
+        rightSign.setLine(1, isRightScrollable ? ChatColor.BLUE + ">>" : "");
         rightSign.update(true);
     }
 
@@ -694,14 +698,20 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
     }
 
-    private void updateClassSign(int index) {
-        String title = JungleRaidClass.values()[signScrollClassStart + index].toString();
-        if (title.length() > 15) {
-            title = title.substring(0, 15);
-        }
-        title = WordUtils.capitalizeFully(title.replace("_", " "));
+    private boolean allowClassSelection() {
+        return classSelectionMode == JungleRaidClassSelectionMode.MANUAL;
+    }
 
+    private void updateClassSign(int index) {
         Sign sign = (Sign) scrollingClassSigns.get(index).getBlock().getState();
+
+        if (!allowClassSelection()) {
+            sign.setLine(1, classSelectionMode.name());
+            sign.update(true);
+            return;
+        }
+
+        String title = JungleRaidClass.values()[signScrollClassStart + index].getAsTitle();
         sign.setLine(1, title);
         sign.update(true);
     }
@@ -711,15 +721,27 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             updateClassSign(i);
         }
 
-        boolean isLeftScrollable = signScrollClassStart == 0;
+        Sign modeSign = (Sign) classSelectionModeSign.getBlock().getState();
+        modeSign.setLine(1, "Mode");
+        modeSign.setLine(2, ChatColor.BLUE + classSelectionMode.name());
+        modeSign.update(true);
+
+        boolean isLeftScrollable = allowClassSelection() && signScrollClassStart != 0;
         Sign leftSign = (Sign) leftClassActivationSign.getBlock().getState();
-        leftSign.setLine(1, isLeftScrollable ? "" : ChatColor.BLUE + "<<");
+        leftSign.setLine(1, isLeftScrollable ? ChatColor.BLUE + "<<" : "");
         leftSign.update(true);
 
-        boolean isRightScrollable = signScrollClassStart + scrollingClassSigns.size() == JungleRaidClass.values().length;
+        boolean isRightScrollable = allowClassSelection()
+                && signScrollClassStart + scrollingClassSigns.size() != JungleRaidClass.values().length;
         Sign rightSign = (Sign) rightClassActivationSign.getBlock().getState();
-        rightSign.setLine(1, isRightScrollable ? "" : ChatColor.BLUE + ">>");
+        rightSign.setLine(1, isRightScrollable ? ChatColor.BLUE + ">>" : "");
         rightSign.update(true);
+    }
+
+    public void classModeSign() {
+        JungleRaidClassSelectionMode[] modes = JungleRaidClassSelectionMode.values();
+        classSelectionMode = modes[(classSelectionMode.ordinal() + 1) % modes.length];
+        classSignPopulate();
     }
 
     public void leftClassListSign() {
@@ -732,14 +754,34 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         classSignPopulate();
     }
 
-    public void tryUseClassSignAt(Location loc, Player player) {
+    private JungleRaidClass getTargetClassSign(Location loc) {
         for (int i = 0; i < scrollingClassSigns.size(); ++i) {
             if (loc.equals(scrollingClassSigns.get(i))) {
-                JungleRaidClass targetClass = JungleRaidClass.values()[signScrollClassStart + i];
-                gameState.get(player).setCombatClass(targetClass);
-                applyClassEquipment(player);
-                break;
+                return JungleRaidClass.values()[signScrollClassStart + i];
             }
+        }
+
+        return null;
+    }
+
+    private void manualApplyClass(JungleRaidClass targetClass, Player player) {
+        gameState.get(player).setCombatClass(targetClass);
+        applyClassEquipment(player);
+
+    }
+
+    public void tryUseClassSignAt(Location loc, Player player) {
+        JungleRaidClass targetClass = getTargetClassSign(loc);
+        if (targetClass == null) {
+            return;
+        }
+
+        switch (classSelectionMode) {
+            case MANUAL:
+                manualApplyClass(targetClass, player);
+                break;
+            case RANDOM:
+                break;
         }
     }
 
@@ -832,7 +874,20 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         adminComponent.deguildPlayer(player);
     }
 
+    private void tryRandomAssignClass(Player player) {
+        if (classSelectionMode != JungleRaidClassSelectionMode.RANDOM) {
+            return;
+        }
+
+        JungleRaidClass playerClass = CollectionUtil.getElement(JungleRaidClass.values());
+        gameState.get(player).setCombatClass(playerClass);
+
+        ChatUtil.sendNotice(player, "You've been assigned the class:" + playerClass.getAsTitle());
+    }
+
     private void addPlayer(Player player, Supplier<Location> startingPos) {
+        tryRandomAssignClass(player);
+
         applyClassEquipment(player);
         applyTeamEquipment(player);
 
@@ -1362,6 +1417,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 leftFlagListSign();
             } else if (blockLoc.equals(rightFlagActivationSign)) {
                 rightFlagListSign();
+            } else if (blockLoc.equals(classSelectionModeSign)) {
+                classModeSign();
             } else if (blockLoc.equals(leftClassActivationSign)) {
                 leftClassListSign();
             } else if (blockLoc.equals(rightClassActivationSign)) {

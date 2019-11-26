@@ -1,5 +1,7 @@
 package gg.packetloss.grindstone.city.engine.jungleraid;
 
+import org.apache.commons.lang.WordUtils;
+
 public enum JungleRaidClass {
     BALANCED(128),
     ARCHER(128),
@@ -25,6 +27,15 @@ public enum JungleRaidClass {
         this.shears = shears;
         this.axe = axe;
         this.tntAmt = tntAmt;
+    }
+
+    public String getAsTitle() {
+        String title = name();
+        if (title.length() > 15) {
+            title = title.substring(0, 15);
+        }
+        title = WordUtils.capitalizeFully(title.replace("_", " "));
+        return title;
     }
 
     public int getArrowAmount() {
