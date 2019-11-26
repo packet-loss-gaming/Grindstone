@@ -2,6 +2,8 @@ package gg.packetloss.grindstone.city.engine.pixieitems.manager;
 
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.grindstone.city.engine.pixieitems.BrokerTransaction;
+import gg.packetloss.grindstone.city.engine.pixieitems.TransactionBroker;
 import gg.packetloss.grindstone.city.engine.pixieitems.db.*;
 import gg.packetloss.grindstone.city.engine.pixieitems.db.mysql.MySQLPixieChestDatabase;
 import gg.packetloss.grindstone.city.engine.pixieitems.db.mysql.MySQLPixieNetworkDatabase;
@@ -47,8 +49,8 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public CompletableFuture<Optional<Integer>> createNetwork(UUID namespace, String name) {
-        CompletableFuture<Optional<Integer>> future = new CompletableFuture<>();
+    public CompletableFuture<Optional<PixieNetworkDetail>> createNetwork(UUID namespace, String name) {
+        CompletableFuture<Optional<PixieNetworkDetail>> future = new CompletableFuture<>();
 
         CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
             future.complete(networkDatabase.createNetwork(namespace, name));
@@ -58,11 +60,22 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public CompletableFuture<Optional<Integer>> selectNetwork(UUID namespace, String name) {
-        CompletableFuture<Optional<Integer>> future = new CompletableFuture<>();
+    public CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(UUID namespace, String name) {
+        CompletableFuture<Optional<PixieNetworkDetail>> future = new CompletableFuture<>();
 
         CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
             future.complete(networkDatabase.selectNetwork(namespace, name));
+        });
+
+        return future;
+    }
+
+    @Override
+    public CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(int networkID) {
+        CompletableFuture<Optional<PixieNetworkDetail>> future = new CompletableFuture<>();
+
+        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            future.complete(networkDatabase.selectNetwork(networkID));
         });
 
         return future;
@@ -394,7 +407,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public void sourceItems(int networkID, Inventory inventory) {
+    public void sourceItems(TransactionBroker broker, int networkID, Inventory inventory) {
         networkLock.readLock().lock();
 
         try {
@@ -405,6 +418,11 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
 
                 Optional<String> optItemName = computeItemName(item);
                 if (optItemName.isEmpty()) {
+                    continue;
+                }
+
+                BrokerTransaction authorization = broker.authorizeMovement(item);
+                if (!authorization.isAuthorized()) {
                     continue;
                 }
 
@@ -425,10 +443,13 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                     }
                 }
 
+                authorization.complete(item);
+
                 inventory.setItem(i, item);
             }
         } finally {
             networkLock.readLock().unlock();
+            broker.applyCharges();
         }
     }
 

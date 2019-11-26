@@ -2,7 +2,7 @@ package gg.packetloss.grindstone.city.engine.pixieitems;
 
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.minecraft.util.commands.CommandException;
-import org.apache.commons.lang3.Validate;
+import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDetail;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -11,7 +11,7 @@ class PixieCommandSession extends PersistentSession {
     public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
 
     private PixieCommand command = PixieCommand.NOTHING;
-    private int networkID = -1;
+    private PixieNetworkDetail network = null;
 
     protected PixieCommandSession() {
         super(MAX_AGE);
@@ -22,7 +22,7 @@ class PixieCommandSession extends PersistentSession {
     }
 
     public void setCommandAction(PixieCommand commandAction) throws CommandException {
-        if (networkID == -1) {
+        if (network == null) {
             throw new CommandException("No network currently selected!");
         }
         this.command = commandAction;
@@ -32,12 +32,11 @@ class PixieCommandSession extends PersistentSession {
         this.command = PixieCommand.NOTHING;
     }
 
-    public void setCurrentNetwork(int networkID) {
-        Validate.isTrue(networkID >= 0);
-        this.networkID = networkID;
+    public void setCurrentNetwork(PixieNetworkDetail network) {
+        this.network = network;
     }
 
-    public Optional<Integer> getCurrentNetworkID() {
-        return networkID == -1 ? Optional.empty() : Optional.of(networkID);
+    public Optional<PixieNetworkDetail> getCurrentNetwork() {
+        return Optional.ofNullable(network);
     }
 }

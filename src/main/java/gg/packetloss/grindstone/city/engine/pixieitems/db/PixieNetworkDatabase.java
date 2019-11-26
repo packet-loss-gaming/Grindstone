@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PixieNetworkDatabase {
-    Optional<Integer> createNetwork(UUID namespace, String name);
-    Optional<Integer> selectNetwork(UUID namespace, String name);
+    Optional<PixieNetworkDetail> createNetwork(UUID namespace, String name);
+    Optional<PixieNetworkDetail> selectNetwork(UUID namespace, String name);
+    Optional<PixieNetworkDetail> selectNetwork(int networkID);
 }

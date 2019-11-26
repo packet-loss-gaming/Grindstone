@@ -9,12 +9,18 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.city.engine.pixieitems.broker.EconomyBroker;
+import gg.packetloss.grindstone.city.engine.pixieitems.broker.VoidBroker;
+import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDetail;
 import gg.packetloss.grindstone.city.engine.pixieitems.manager.NewSinkResult;
 import gg.packetloss.grindstone.city.engine.pixieitems.manager.NewSourceResult;
 import gg.packetloss.grindstone.city.engine.pixieitems.manager.PixieNetworkManager;
 import gg.packetloss.grindstone.city.engine.pixieitems.manager.ThreadedPixieNetworkManager;
 import gg.packetloss.grindstone.util.ChatUtil;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -34,6 +40,7 @@ import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -50,14 +57,28 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private SessionComponent sessions;
 
+    private Economy economy = null;
+
     private PixieNetworkManager manager = new ThreadedPixieNetworkManager();
 
     @Override
     public void enable() {
+        setupEconomy();
+
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
 
         registerCommands(Commands.class);
+    }
+
+    private boolean setupEconomy() {
+        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
+                .vault.economy.Economy.class);
+        if (economyProvider != null) {
+            economy = economyProvider.getProvider();
+        }
+
+        return (economy != null);
     }
 
     private boolean shouldConsider(Block block) {
@@ -91,7 +112,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         }
 
         // We should always have a network ID if a command action is set.
-        int networkID = session.getCurrentNetworkID().get();
+        int networkID = session.getCurrentNetwork().get().getID();
         PixieCommand command = session.getCurrentCommand();
         switch (command) {
             case ADD_SOURCE: {
@@ -194,7 +215,24 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             }
 
             int networkID = optNetworkID.get();
-            manager.sourceItems(networkID, event.getInventory());
+            manager.selectNetwork(networkID).thenAccept((optNetworkDetail) -> {
+                server.getScheduler().runTask(inst, () -> {
+                    if (optNetworkDetail.isEmpty()) {
+                        return;
+                    }
+
+                    if (!inventory.getViewers().isEmpty()) {
+                        return;
+                    }
+
+                    PixieNetworkDetail networkDetail = optNetworkDetail.get();
+
+                    OfflinePlayer player = Bukkit.getOfflinePlayer(networkDetail.getNamespace());
+                    TransactionBroker broker = player != null ?  new EconomyBroker(economy, player) : new VoidBroker();
+
+                    manager.sourceItems(broker, networkID, event.getInventory());
+                });
+            });
         }, 1);
     }
 
@@ -224,9 +262,9 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             Player owner = PlayerUtil.checkPlayer(sender);
             String name = args.getString(0).toUpperCase();
 
-            manager.createNetwork(owner.getUniqueId(), name).thenAccept((optNetworkID) -> {
+            manager.createNetwork(owner.getUniqueId(), name).thenAccept((optNetworkDetail) -> {
                 server.getScheduler().runTask(inst, () -> {
-                    if (optNetworkID.isEmpty()) {
+                    if (optNetworkDetail.isEmpty()) {
                         ChatUtil.sendError(sender, "Failed to create network!");
                         return;
                     }
@@ -234,7 +272,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     ChatUtil.sendNotice(sender, "New item sorter network '" + name + "' created!");
 
                     PixieCommandSession session = sessions.getSession(PixieCommandSession.class, sender);
-                    session.setCurrentNetwork(optNetworkID.get());
+                    session.setCurrentNetwork(optNetworkDetail.get());
                 });
             });
         }
@@ -245,9 +283,9 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             Player owner = PlayerUtil.checkPlayer(sender);
             String name = args.getString(0).toUpperCase();
 
-            manager.selectNetwork(owner.getUniqueId(), name).thenAccept((optNetworkID) -> {
+            manager.selectNetwork(owner.getUniqueId(), name).thenAccept((optNetworkDetail) -> {
                 server.getScheduler().runTask(inst, () -> {
-                    if (optNetworkID.isEmpty()) {
+                    if (optNetworkDetail.isEmpty()) {
                         ChatUtil.sendError(sender, "Failed to find an item sorter network by that name!");
                         return;
                     }
@@ -255,7 +293,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     ChatUtil.sendNotice(sender, "Item sorter network '" + name + "' selected!");
 
                     PixieCommandSession session = sessions.getSession(PixieCommandSession.class, sender);
-                    session.setCurrentNetwork(optNetworkID.get());
+                    session.setCurrentNetwork(optNetworkDetail.get());
                 });
             });
         }
