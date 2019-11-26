@@ -62,6 +62,7 @@ import org.apache.commons.lang.WordUtils;
 import org.bukkit.Location;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -142,7 +143,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private FlagEffectData flagData = new FlagEffectData();
     private boolean[] flagState = new boolean[JungleRaidFlag.values().length];
 
-    private JungleRaidClassSelectionMode classSelectionMode = JungleRaidClassSelectionMode.MANUAL;
+    private JungleRaidClassSelectionMode classSelectionMode = JungleRaidClassSelectionMode.SELECTION;
 
     @InjectComponent
     AdminComponent adminComponent;
@@ -166,9 +167,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private void applyClassEquipment(Player player) {
-        JungleRaidClass combatClass = getClassForPlayer(player).get();
-
         player.getInventory().clear();
+
+        if (classSelectionMode == JungleRaidClassSelectionMode.SURVIVAL) {
+            return;
+        }
+
+        JungleRaidClass combatClass = getClassForPlayer(player).get();
 
         List<ItemStack> gear = new ArrayList<>();
         switch (combatClass) {
@@ -297,8 +302,20 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             gear.add(new ItemStack(Material.ARROW, arrowRemainder));
         }
 
-        for (ItemStack stack : gear) {
-            player.getInventory().addItem(stack);
+        if (state == JungleRaidState.INITIALIZE && classSelectionMode == JungleRaidClassSelectionMode.SCAVENGER) {
+            for (int i = 0; i < 3; ++i) {
+                Block block = getRandomLocation().getBlock();
+                block.setType(Material.CHEST);
+
+                Chest state = (Chest) block.getState();
+                for (ItemStack stack : gear) {
+                    state.getBlockInventory().addItem(stack);
+                }
+            }
+        } else {
+            for (ItemStack stack : gear) {
+                player.getInventory().addItem(stack);
+            }
         }
     }
 
@@ -699,7 +716,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private boolean allowClassSelection() {
-        return classSelectionMode == JungleRaidClassSelectionMode.MANUAL;
+        return classSelectionMode.allowsSelection();
     }
 
     private void updateClassSign(int index) {
@@ -777,10 +794,12 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
 
         switch (classSelectionMode) {
-            case MANUAL:
+            case SELECTION:
+            case SCAVENGER:
                 manualApplyClass(targetClass, player);
                 break;
             case RANDOM:
+            case SURVIVAL:
                 break;
         }
     }
@@ -999,9 +1018,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             return;
         }
 
+        state = JungleRaidState.INITIALIZE;
         gameState.getPlayers().forEach(this::addPlayer);
 
-        state = JungleRaidState.INITIALIZE;
         startTime = System.currentTimeMillis();
     }
 
