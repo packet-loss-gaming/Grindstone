@@ -554,6 +554,23 @@ public class AdminComponent extends BukkitComponent implements Listener {
         public void userManagementCommands(CommandContext args, CommandSender sender) throws CommandException {
 
         }
+
+        @Command(aliases = {"openinventory", "openinv"},
+                 usage = "<player>", desc = "View a player's inventory",
+                 flags = "e", min = 1, max = 1)
+        @CommandPermissions({"aurora.admin.user.openinv"})
+        public void openInvCmd(CommandContext args, CommandSender sender) throws CommandException {
+            Player admin = PlayerUtil.checkPlayer(sender);
+            Player target = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(0));
+
+            if (args.hasFlag('e')) {
+                admin.openInventory(target.getEnderChest());
+                ChatUtil.sendNotice(sender, "Viewing ender chest inventory of: " + target.getName());
+            } else {
+                admin.openInventory(target.getInventory());
+                ChatUtil.sendNotice(sender, "Viewing inventory of: " + target.getName());
+            }
+        }
     }
 
     public class NestedProfileCommands {
