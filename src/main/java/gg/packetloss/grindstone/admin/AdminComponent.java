@@ -9,7 +9,6 @@ package gg.packetloss.grindstone.admin;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.GodComponent;
 import com.sk89q.commandbook.InfoComponent;
-import com.sk89q.commandbook.commands.PaginatedResult;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
@@ -23,13 +22,13 @@ import gg.packetloss.grindstone.RogueComponent;
 import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
+import gg.packetloss.grindstone.state.PlayerStateComponent;
+import gg.packetloss.grindstone.state.PlayerStateType;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.InventoryUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import net.milkbowl.vault.permission.Permission;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.*;
@@ -49,22 +48,15 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.io.File;
-import java.util.Arrays;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 
 @ComponentInformation(friendlyName = "Admin", desc = "Player Administration commands.")
@@ -81,12 +73,10 @@ public class AdminComponent extends BukkitComponent implements Listener {
     private RogueComponent rogueComponent;
     @InjectComponent
     private GodComponent godComponent;
-
-    private final String stateDir = inst.getDataFolder().getPath() + "/admin/states/";
-    String profilesDirectory = stateDir + "/profiles/";
+    @InjectComponent
+    private PlayerStateComponent stateComponent;
 
     private Permission permission = null;
-    private final ConcurrentHashMap<UUID, PlayerState> playerState = new ConcurrentHashMap<>();
 
     @Override
     public void enable() {
@@ -113,64 +103,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
         if (permissionProvider != null) permission = permissionProvider.getProvider();
 
         return (permission != null);
-    }
-
-    public boolean hasInventoryLoaded(UUID playerID) {
-        return playerState.get(playerID) != null;
-    }
-
-    private File getUUIDStateFile(UUID playerID) {
-        return new File(stateDir + "/" + playerID + ".dat");
-    }
-
-    boolean hasPersistedInventory(UUID playerID) {
-        return getUUIDStateFile(playerID).exists();
-    }
-
-    /**
-     * A thread safe method to load an inventory into the system
-     *
-     * @param playerID - The ID of the player who should be loaded
-     */
-    public void loadInventory(final UUID playerID) {
-        Object o = IOUtil.readBinaryFile(getUUIDStateFile(playerID));
-        Validate.isInstanceOf(PlayerState.class, o);
-
-        PlayerState aPlayerState = (PlayerState) o;
-        playerState.put(playerID, aPlayerState);
-    }
-
-    public void loadInventoryIfUnloaded(UUID playerID) {
-        // If the inventory is already loaded, we're good.
-        if (hasInventoryLoaded(playerID)) {
-            return;
-        }
-
-        // Try and load the player's inventory, they may have just logged in before
-        // we were listening for admin logins.
-        if (hasPersistedInventory(playerID)) {
-            loadInventory(playerID);
-        }
-    }
-
-    public void unloadInventory(final UUID playerID) {
-        playerState.remove(playerID);
-    }
-
-    public void writeInventory(UUID playerID) {
-        writeInventory(playerState.get(playerID));
-    }
-
-    /**
-     * Writes a player's inventory on a seperate thread
-     *
-     * @param state - The player state to write
-     */
-    public void writeInventory(final PlayerState state) {
-
-
-        server.getScheduler().runTaskAsynchronously(inst,
-                () -> IOUtil.toBinaryFile(new File(stateDir), state.getOwnerName(), state));
     }
 
     /**
@@ -207,9 +139,12 @@ public class AdminComponent extends BukkitComponent implements Listener {
             server.getPluginManager().callEvent(event);
 
             if (!event.isCancelled()) {
-                playerState.put(player.getUniqueId(), GeneralPlayerUtil.makeComplexState(player));
-                permission.playerAddGroup((World) null, player.getName(), "Admin");
-                writeInventory(player.getUniqueId());
+                try {
+                    stateComponent.pushState(PlayerStateType.ADMIN, player);
+                    permission.playerAddGroup((World) null, player.getName(), "Admin");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
         return isAdmin(player);
@@ -222,36 +157,16 @@ public class AdminComponent extends BukkitComponent implements Listener {
             server.getPluginManager().callEvent(event);
 
             if (!event.isCancelled()) {
-                // Clear their inventory
-                player.getInventory().clear();
-                player.getInventory().setArmorContents(NO_ARMOR);
+                try {
+                    // Restore the previous state
+                    stateComponent.popState(PlayerStateType.ADMIN, player);
 
-                // Make a last attempt to ensure the inventory is loaded. While the deadmin command
-                // will run this call as well, this is here for cases where automatic depermission
-                // occurs.
-                loadInventoryIfUnloaded(player.getUniqueId());
-
-                // Restore their inventory if they have one stored
-                if (playerState.containsKey(player.getUniqueId())) {
-                    PlayerState identity = playerState.get(player.getUniqueId());
-
-                    // Restore the contents
-                    player.getInventory().setArmorContents(identity.getArmourContents());
-                    player.getInventory().setContents(identity.getInventoryContents());
-                    player.setHealth(Math.min(player.getMaxHealth(), identity.getHealth()));
-                    player.setFoodLevel(identity.getHunger());
-                    player.setSaturation(identity.getSaturation());
-                    player.setExhaustion(identity.getExhaustion());
-                    player.setLevel(identity.getLevel());
-                    player.setExp(identity.getExperience());
-                    player.updateInventory();
-
-                    playerState.remove(player.getUniqueId());
+                    // Change Permissions
+                    permission.playerRemoveGroup((World) null, player.getName(), "Admin");
+                    Validate.isTrue(!isAdmin(player));
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-
-                // Change Permissions
-                permission.playerRemoveGroup((World) null, player.getName(), "Admin");
-                Validate.isTrue(!isAdmin(player));
             }
         }
         return !isAdmin(player);
@@ -313,19 +228,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
      */
     public boolean standardizePlayer(Player player) {
         return deguildPlayer(player);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPreLogin(AsyncPlayerPreLoginEvent event) {
-        UUID playerID = event.getUniqueId();
-        if (hasPersistedInventory(playerID)) {
-            loadInventory(playerID);
-        }
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        unloadInventory(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -484,13 +386,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         }
 
-        @Command(aliases = {"profiles", "p"}, desc = "Profile Commands")
-        @NestedCommand({NestedProfileCommands.class})
-        public void profileCommands(CommandContext args, CommandSender sender) throws CommandException {
-
-        }
-
-
         @Command(aliases = {"admin", "alivemin"},
                 usage = "", desc = "Enter Admin Mode",
                 flags = "", min = 0, max = 0)
@@ -512,16 +407,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
             }
         }
 
-        /**
-         * @return true if there's a problem
-         */
-        private boolean checkInventoryLoaded(UUID playerID) {
-            loadInventoryIfUnloaded(playerID);
-
-            // We have a problem if the inventory is still not loaded.
-            return !hasInventoryLoaded(playerID);
-        }
-
         @Command(aliases = {"deadmin"},
                 usage = "", desc = "Leave Admin Mode",
                 flags = "k", min = 0, max = 0)
@@ -533,8 +418,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 throw new CommandException("You were not in admin mode!");
             }
 
-            UUID playerID = player.getUniqueId();
-            if (!args.hasFlag('k') && checkInventoryLoaded(playerID)) {
+            if (!args.hasFlag('k') && !stateComponent.hasValidStoredState(PlayerStateType.ADMIN, player)) {
                 throw new CommandException("Your inventory is not loaded! \nLeaving admin mode will result in item loss! " +
                   "\nUse \"/deadmin -k\" to ignore this warning and continue anyways.");
             }
@@ -570,117 +454,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 admin.openInventory(target.getInventory());
                 ChatUtil.sendNotice(sender, "Viewing inventory of: " + target.getName());
             }
-        }
-    }
-
-    public class NestedProfileCommands {
-
-        @Command(aliases = {"save"},
-                usage = "<profile name>", desc = "Save an inventory as a profile",
-                flags = "o", min = 1, max = 1)
-        @CommandPermissions({"aurora.admin.profiles.save"})
-        public void profileSaveCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            final Player player = PlayerUtil.checkPlayer(sender);
-
-            final File profileDir = new File(profilesDirectory);
-            final String profileName = args.getString(0);
-
-            File file = IOUtil.getBinaryFile(profileDir, profileName);
-
-            if (file.exists() && !args.hasFlag('o')) {
-                throw new CommandException("A profile by that name already exist!");
-            }
-
-            server.getScheduler().runTaskAsynchronously(inst,
-                    () -> IOUtil.toBinaryFile(profileDir, profileName, GeneralPlayerUtil.makeComplexState(player)));
-            ChatUtil.sendNotice(sender, "Profile: " + profileName + ", saved!");
-        }
-
-        @Command(aliases = {"load"},
-                usage = "<profile name> [target]", desc = "Load a saved inventory profile",
-                flags = "ef", min = 1, max = 2)
-        @CommandPermissions({"aurora.admin.profiles.load"})
-        public void profileLoadCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            Player player;
-
-            if (args.argsLength() > 1) {
-                player = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(1));
-            } else {
-                player = PlayerUtil.checkPlayer(sender);
-            }
-
-            if (!isAdmin(player)) {
-                throw new CommandException("You can only use this command while in Admin Mode!");
-            }
-
-            final File profileDir = new File(profilesDirectory);
-            final String profileName = args.getString(0);
-
-            File file = IOUtil.getBinaryFile(profileDir, profileName);
-
-            if (!file.exists()) {
-                throw new CommandException("A profile by that name doesn't exist!");
-            }
-
-            Object o = IOUtil.readBinaryFile(file);
-
-            if (o instanceof PlayerState) {
-                PlayerState identity = (PlayerState) o;
-
-                // Restore the contents
-                player.getInventory().setArmorContents(identity.getArmourContents());
-                player.getInventory().setContents(identity.getInventoryContents());
-                player.setHealth(Math.min(player.getMaxHealth(), identity.getHealth()));
-                player.setFoodLevel(identity.getHunger());
-                player.setSaturation(identity.getSaturation());
-                player.setExhaustion(identity.getExhaustion());
-                if (args.hasFlag('e')) {
-                    player.setLevel(identity.getLevel());
-                    player.setExp(identity.getExperience());
-                }
-            } else {
-                throw new CommandException("The profile: " + profileName + ", is corrupt!");
-            }
-            ChatUtil.sendNotice(sender, "Profile loaded, and successfully applied!");
-        }
-
-        @Command(aliases = {"list"},
-                usage = "[-p page] [prefix]", desc = "List saved inventory profiles",
-                flags = "p:", min = 0, max = 1)
-        @CommandPermissions({"aurora.admin.profiles.list"})
-        public void profileListCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            new PaginatedResult<File>(ChatColor.GOLD + "Profiles") {
-                @Override
-                public String format(File file) {
-                    return file.getName().replace(".dat", "");
-                }
-            }.display(
-                    sender,
-                    Arrays.asList(new File(profilesDirectory).listFiles((dir, name) ->
-                            (args.argsLength() < 1 || name.startsWith(args.getString(0))) && name.endsWith(".dat"))),
-                    args.getFlagInteger('p', 1)
-            );
-        }
-
-        @Command(aliases = {"delete"},
-                usage = "<profile name>", desc = "Delete a saved inventory profile",
-                flags = "", min = 1, max = 1)
-        @CommandPermissions({"aurora.admin.profiles.delete"})
-        public void profileDeleteCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            File file = IOUtil.getBinaryFile(new File(profilesDirectory), args.getString(0));
-
-            if (!file.exists()) {
-                throw new CommandException("A profile by that name doesn't exist!");
-            }
-
-            if (!file.delete()) {
-                throw new CommandException("That profile couldn't be deleted!");
-            }
-            ChatUtil.sendNotice(sender, "Profile deleted!");
         }
     }
 
