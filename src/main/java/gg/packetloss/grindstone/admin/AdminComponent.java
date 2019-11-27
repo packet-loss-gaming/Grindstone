@@ -52,7 +52,6 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
@@ -458,18 +457,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
             random = ChanceUtil.getRandom(random);
 
             ChatUtil.sendNotice(sender, "Number: " + random + " / " + origin);
-        }
-
-        @Command(aliases = {"simulatedamage"}, desc = "Simulate damage on the currently held item")
-        @CommandPermissions("aurora.admin.simulation.damage")
-        public void simulateDamageCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            ItemStack is = player.getInventory().getItemInHand();
-            is.setDurability((short) Math.max(0, is.getData().getItemType().getMaxDurability() - 20));
-            player.setItemInHand(is);
-            ChatUtil.sendNotice(player, "Damage simulated!");
         }
 
         /*

@@ -58,6 +58,7 @@ public class DebugComponent extends BukkitComponent {
         //inst.registerEvents(new BlockDebug());
 
         registerCommands(DebugCowCmd.class);
+        registerCommands(DamageSimulateCmd.class);
         //registerCommands(FoodInfo.class);
         //registerCommands(ChunkLighter.class);
         //registerCommands(LocationDebug.class);
@@ -98,6 +99,20 @@ public class DebugComponent extends BukkitComponent {
 
             Cow cow = player.getWorld().spawn(player.getLocation(), Cow.class);
             debugCowBoss.bind(cow, health);
+        }
+    }
+
+    public class DamageSimulateCmd {
+        @Command(aliases = {"simulatedamage"}, desc = "Simulate damage on the currently held item")
+        @CommandPermissions("aurora.debug.simulation.damage")
+        public void simulateDamageCmd(CommandContext args, CommandSender sender) throws CommandException {
+
+            Player player = PlayerUtil.checkPlayer(sender);
+
+            ItemStack is = player.getInventory().getItemInHand();
+            is.setDurability((short) Math.max(0, is.getData().getItemType().getMaxDurability() - 20));
+            player.setItemInHand(is);
+            ChatUtil.sendNotice(player, "Damage simulated!");
         }
     }
 
