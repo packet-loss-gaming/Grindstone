@@ -1,9 +1,9 @@
 package gg.packetloss.grindstone.util.chat;
 
-import com.sk89q.minecraft.util.commands.CommandException;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.bukkittext.TextBuilder;
+import gg.packetloss.grindstone.util.ChatUtil;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -24,7 +24,7 @@ public abstract class TextComponentChatPaginator<T> {
 
     public abstract Optional<String> getPagerCommand(int page);
 
-    public void display(CommandSender sender, List<T> collection, int page) throws CommandException {
+    public void display(CommandSender sender, List<T> collection, int page) {
         display(sender, new CollectionPaginationProvider<>(collection), page);
     }
 
@@ -41,9 +41,9 @@ public abstract class TextComponentChatPaginator<T> {
         );
     }
 
-    public void display(CommandSender sender, PaginationProvider<T> results, int page) throws CommandException {
+    public void display(CommandSender sender, PaginationProvider<T> results, int page) {
         if (results.getNumberOfPages() == 0) {
-            throw new CommandException("No results match!");
+            ChatUtil.sendError(sender, "No results match!");
         } else {
             int lastPage = results.getNumberOfPages();
             page = Math.max(1, Math.min(page, lastPage));

@@ -5,6 +5,8 @@ import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDetail;
 import gg.packetloss.grindstone.data.MySQLHandle;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -74,5 +76,31 @@ public class MySQLPixieNetworkDatabase implements PixieNetworkDatabase {
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    public List<PixieNetworkDetail> selectNetworks(UUID namespace) {
+        try (Connection connection = MySQLHandle.getConnection()) {
+            String sql = "SELECT id, name FROM `pixie-networks` WHERE namespace = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, namespace.toString());
+
+                try (ResultSet results = statement.executeQuery()) {
+                    List<PixieNetworkDetail> networks = new ArrayList<>();
+                    while (results.next()) {
+                        networks.add(new PixieNetworkDetail(
+                                results.getInt(1),
+                                namespace,
+                                results.getString(2)
+                        ));
+                    }
+                    return networks;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return List.of();
     }
 }

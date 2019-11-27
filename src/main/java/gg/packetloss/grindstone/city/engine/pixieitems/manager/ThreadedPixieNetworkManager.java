@@ -81,6 +81,17 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         return future;
     }
 
+    @Override
+    public CompletableFuture<List<PixieNetworkDetail>> selectNetworks(UUID namespace) {
+        CompletableFuture<List<PixieNetworkDetail>> future = new CompletableFuture<>();
+
+        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            future.complete(networkDatabase.selectNetworks(namespace));
+        });
+
+        return future;
+    }
+
     private List<Location> getLocationsToAdd(Block block) {
         Chest chest = (Chest) block.getState();
         if (chest.getInventory() instanceof DoubleChestInventory) {

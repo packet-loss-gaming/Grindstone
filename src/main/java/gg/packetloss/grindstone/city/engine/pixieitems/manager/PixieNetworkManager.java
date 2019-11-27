@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.Inventory;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -15,6 +16,7 @@ public interface PixieNetworkManager {
     CompletableFuture<Optional<PixieNetworkDetail>> createNetwork(UUID namespace, String name);
     CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(UUID namespace, String name);
     CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(int networkID);
+    CompletableFuture<List<PixieNetworkDetail>> selectNetworks(UUID namespace);
 
     CompletableFuture<Optional<NewSourceResult>> addSource(int networkID, Block block);
     CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block, boolean ignoreContents);

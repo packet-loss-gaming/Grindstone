@@ -9,6 +9,8 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.bukkittext.Text;
+import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.city.engine.pixieitems.broker.EconomyBroker;
 import gg.packetloss.grindstone.city.engine.pixieitems.broker.VoidBroker;
 import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDetail;
@@ -17,6 +19,7 @@ import gg.packetloss.grindstone.city.engine.pixieitems.manager.NewSourceResult;
 import gg.packetloss.grindstone.city.engine.pixieitems.manager.PixieNetworkManager;
 import gg.packetloss.grindstone.city.engine.pixieitems.manager.ThreadedPixieNetworkManager;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -42,6 +45,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -256,7 +260,19 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
     }
 
     public class SorterCommands {
-        @Command(aliases = {"create"},
+        @Command(aliases = {"network", "networks"}, desc = "View, select, and manage networks")
+        @NestedCommand({NetworkCommands.class})
+        public void networksSubCmds(CommandContext args, CommandSender sender) throws CommandException {
+        }
+
+        @Command(aliases = {"add"}, desc = "Add chests to the current sorter network")
+        @NestedCommand({AdditionCommands.class})
+        public void additionSubCmds(CommandContext args, CommandSender sender) throws CommandException {
+        }
+    }
+
+    public class NetworkCommands {
+        @Command(aliases = {"create", "add"},
                  usage = "<network name>", desc = "Create a new sorter system", min = 1, max = 1)
         public void createCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player owner = PlayerUtil.checkPlayer(sender);
@@ -278,7 +294,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         }
 
         @Command(aliases = {"use", "select"},
-                usage = "<network name>", desc = "Work with an existing sorter system", min = 1, max = 1)
+                 usage = "<network name>", desc = "Work with an existing sorter system", min = 1, max = 1)
         public void useCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player owner = PlayerUtil.checkPlayer(sender);
             String name = args.getString(0).toUpperCase();
@@ -298,9 +314,32 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             });
         }
 
-        @Command(aliases = {"add"}, desc = "Add chests to the item sorter")
-        @NestedCommand({AdditionCommands.class})
-        public void subCmds(CommandContext args, CommandSender sender) throws CommandException {
+        @Command(aliases = {"list"}, desc = "List sorter networks",
+                 usage = "[-p <page>]", min = 0, max = 0)
+        public void listNetworksCmd(CommandContext args, CommandSender sender) throws CommandException {
+            Player owner = PlayerUtil.checkPlayer(sender);
+
+            manager.selectNetworks(owner.getUniqueId()).thenAccept((networks) -> {
+                Collections.sort(networks);
+                server.getScheduler().runTask(inst, () -> {
+                    new TextComponentChatPaginator<PixieNetworkDetail>(ChatColor.GOLD, "Networks") {
+                        @Override
+                        public Optional<String> getPagerCommand(int page) {
+                            return Optional.of("//sorter networks list -p " + page);
+                        }
+
+                        @Override
+                        public Text format(PixieNetworkDetail network) {
+                            return Text.of(
+                                    ChatColor.BLUE,
+                                    network.getName(),
+                                    TextAction.Hover.showText(Text.of("Use ", network.getName()," network")),
+                                    TextAction.Click.runCommand("//sorter networks use " + network.getName())
+                            );
+                        }
+                    }.display(sender, networks, args.getFlagInteger('p', 1));
+                });
+            });
         }
     }
 

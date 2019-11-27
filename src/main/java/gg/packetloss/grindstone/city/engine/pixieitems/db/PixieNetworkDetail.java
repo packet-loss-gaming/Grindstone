@@ -2,7 +2,7 @@ package gg.packetloss.grindstone.city.engine.pixieitems.db;
 
 import java.util.UUID;
 
-public class PixieNetworkDetail {
+public class PixieNetworkDetail implements Comparable<PixieNetworkDetail> {
     private final int networkID;
     private final UUID namespace;
     private final String name;
@@ -23,5 +23,11 @@ public class PixieNetworkDetail {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public int compareTo(PixieNetworkDetail network) {
+        if (network == null) return -1;
+        return this.getName().compareTo(network.getName());
     }
 }
