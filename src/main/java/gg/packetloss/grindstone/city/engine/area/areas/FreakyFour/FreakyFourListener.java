@@ -14,11 +14,12 @@ import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.entity.HallowCreeperEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
+import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.ChatColor;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
@@ -28,12 +29,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.util.Vector;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -293,40 +293,16 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
-
-        HashMap<String, PlayerState> playerState = parent.playerState;
         Player player = event.getEntity();
-        if (parent.contains(player) && !parent.admin.isAdmin(player) && !playerState.containsKey(player.getName())) {
-            playerState.put(player.getName(), new PlayerState(player.getName(),
-                    player.getInventory().getContents(),
-                    player.getInventory().getArmorContents(),
-                    player.getLevel(),
-                    player.getExp()));
-            event.getDrops().clear();
-            parent.addSkull(player);
-        }
-    }
-
-    @EventHandler
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-
-        HashMap<String, PlayerState> playerState = parent.playerState;
-
-        Player player = event.getPlayer();
-        // Restore their inventory if they have one stored
-        if (playerState.containsKey(player.getName()) && !parent.admin.isAdmin(player)) {
-
+        if (parent.contains(player)) {
             try {
-                PlayerState identity = playerState.get(player.getName());
-
-                // Restore the contents
-                player.getInventory().setArmorContents(identity.getArmourContents());
-                player.getInventory().setContents(identity.getInventoryContents());
-            } catch (Exception e) {
+                parent.playerState.pushState(PlayerStateKind.FREAKY_FOUR, player);
+                event.getDrops().clear();
+            } catch (ConflictingPlayerStateException | IOException e) {
                 e.printStackTrace();
-            } finally {
-                playerState.remove(player.getName());
             }
+
+            parent.addSkull(player);
         }
     }
 }
