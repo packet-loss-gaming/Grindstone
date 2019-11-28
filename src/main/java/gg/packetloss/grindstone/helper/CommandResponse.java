@@ -16,20 +16,17 @@ public class CommandResponse implements Response {
             return false;
         }
 
-        // Remove the comment
-        String rawCommand = string.replaceFirst("//.*", "");
         // Replace the "./" with "/" and then trim the string
-        String command = rawCommand.replaceFirst("\\./", "/").trim();
-        // Remove the command, and the comment block, as well as its spaces
-        String message = string.replace(rawCommand, "").replaceFirst("// *", "").trim();
+        String command = string.replaceFirst("\\./", "/").trim();
 
         // Send a composite message of the command, a space, and then the comment text
         TextBuilder builder = Text.builder();
         builder.append(getNamePlate());
-        builder.append(Text.of(ChatColor.DARK_GREEN, "Run Command: " + command, TextAction.Click.suggestCommand(command)));
-        if (!message.isEmpty()) {
-            builder.append(" " + message);
-        }
+        builder.append(Text.of(
+                ChatColor.DARK_GREEN, "Run Command: ",
+                Text.of(ChatColor.BLUE, command),
+                TextAction.Click.suggestCommand(command)
+        ));
 
         BaseComponent[] clickWrapper = builder.build();
         recipients.forEach((recipient) -> {
