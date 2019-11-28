@@ -22,10 +22,10 @@ import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.state.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import net.milkbowl.vault.economy.Economy;
@@ -50,11 +50,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Grave Yard", desc = "The home of the undead")
-@Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
+@Depend(components = {AdminComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
 public class GraveYardArea extends AreaComponent<GraveYardConfig> implements PersistentArena {
 
     @InjectComponent
     protected AdminComponent admin;
+    @InjectComponent
+    protected PlayerStateComponent playerState;
 
     // Other
     protected Economy economy;
@@ -101,8 +103,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
 
     // Block Restoration
     protected BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
-    // Respawn Inventory Map
-    protected HashMap<String, PlayerState> playerState = new HashMap<>();
 
     @Override
     public void setUp() {
@@ -247,7 +247,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
     public void writeData(boolean doAsync) {
         Runnable run = () -> {
             IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
-            IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
         };
 
         if (doAsync) {
@@ -260,7 +259,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
     @Override
     public void reloadData() {
         File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
-        File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
         if (generalFile.exists()) {
             Object generalFileO = IOUtil.readBinaryFile(generalFile);
             if (generalFileO instanceof BaseBlockRecordIndex) {
@@ -276,29 +274,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
                         generalIndex = (BaseBlockRecordIndex) generalFileO;
                         log.info("Backup file loaded successfully!");
                         log.info("Loaded: " + generalIndex.size() + " general records for the grave yard.");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
-            }
-        }
-        if (playerStateFile.exists()) {
-            Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-            if (playerStateFileO instanceof HashMap) {
-                //noinspection unchecked
-                playerState = (HashMap<String, PlayerState>) playerStateFileO;
-                log.info("Loaded: " + playerState.size() + " respawn records for the grave yard.");
-            } else {
-                log.warning("Invalid block record file encountered: " + playerStateFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-                playerStateFile = new File(getWorkingDir().getPath() + "/old-" + playerStateFile.getName());
-                if (playerStateFile.exists()) {
-                    playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-                    if (playerStateFileO instanceof HashMap) {
-                        //noinspection unchecked
-                        playerState = (HashMap<String, PlayerState>) playerStateFileO;
-                        log.info("Backup file loaded successfully!");
-                        log.info("Loaded: " + playerState.size() + " respawn records for the grave yard.");
                     } else {
                         log.warning("Backup file failed to load!");
                     }

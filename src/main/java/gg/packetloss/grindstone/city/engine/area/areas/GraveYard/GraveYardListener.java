@@ -18,16 +18,18 @@ import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.guild.NinjaGrappleEvent;
 import gg.packetloss.grindstone.events.guild.RogueBlipEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.WeaponFamily;
+import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.bukkit.ChatColor;
@@ -47,9 +49,11 @@ import org.bukkit.event.player.*;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -586,68 +590,55 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        HashMap<String, PlayerState> playerState = parent.playerState;
         Player player = event.getEntity();
         boolean contained = parent.contains(player);
         if (contained || hasThunderstorm(player.getWorld())) {
             List<ItemStack> drops = event.getDrops();
+
             ItemStack[] dropArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
             if (ItemUtil.findItemOfName(dropArray, GEM_OF_LIFE)) {
-                if (!playerState.containsKey(player.getName())) {
-                    GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
-                    server.getPluginManager().callEvent(aEvent);
-                    if (!aEvent.isCancelled()) {
-                        playerState.put(player.getName(), new PlayerState(player.getName(),
-                                player.getInventory().getContents(),
-                                player.getInventory().getArmorContents(),
-                                player.getLevel(),
-                                player.getExp()));
-                        if (contained) {
-                            dropArray = null;
-                        } else {
-                            drops.clear();
-                            return;
-                        }
+                GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
+                server.getPluginManager().callEvent(aEvent);
+                if (!aEvent.isCancelled()) {
+                    try {
+                        parent.playerState.pushState(PlayerStateKind.GRAVE_YARD, player);
+                        return;
+                    } catch (IOException | ConflictingPlayerStateException e) {
+                        e.printStackTrace();
                     }
                 }
             }
+
             // Leave admin mode deaths out of this
-            if (!contained || parent.admin.isAdmin(player)) return;
+            if (!parent.admin.isAdmin(player)) return;
             parent.makeGrave(player.getName(), dropArray);
             drops.clear();
             event.setDeathMessage(ChatColor.DARK_RED + "RIP ~ " + player.getDisplayName());
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-        HashMap<String, PlayerState> playerState = parent.playerState;
-        Player player = event.getPlayer();
-        // Restore their inventory if they have one stored
-        if (playerState.containsKey(player.getName()) && !parent.admin.isAdmin(player)) {
-            try {
-                PlayerState identity = playerState.get(player.getName());
-                // Restore the contents
-                player.getInventory().setArmorContents(identity.getArmourContents());
-                player.getInventory().setContents(identity.getInventoryContents());
-                // Count then remove the Gems of Life
-                int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), GEM_OF_LIFE) - 1;
-                ItemStack[] newInv = ItemUtil.removeItemOfName(player.getInventory().getContents(), GEM_OF_LIFE);
-                player.getInventory().setContents(newInv);
-                // Add back the gems of life as needed
-                int amount = Math.min(c, 64);
-                while (amount > 0) {
-                    player.getInventory().addItem(CustomItemCenter.build(CustomItems.GEM_OF_LIFE, amount));
-                    c -= amount;
-                    amount = Math.min(c, 64);
-                }
-                //noinspection deprecation
-                player.updateInventory();
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                playerState.remove(player.getName());
-            }
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerStatePop(PlayerStatePopEvent event) {
+        if (event.getKind() != PlayerStateKind.GRAVE_YARD) {
+            return;
         }
+
+        Player player = event.getPlayer();
+        PlayerInventory pInv = player.getInventory();
+
+        // Count then remove the Gems of Life
+        int c = ItemUtil.countItemsOfName(pInv.getContents(), GEM_OF_LIFE) - 1;
+        ItemStack[] newInv = ItemUtil.removeItemOfName(pInv.getContents(), GEM_OF_LIFE);
+        pInv.setContents(newInv);
+
+        // Add back the gems of life as needed
+        int amount = Math.min(c, 64);
+        while (amount > 0) {
+            player.getInventory().addItem(CustomItemCenter.build(CustomItems.GEM_OF_LIFE, amount));
+            c -= amount;
+            amount = Math.min(c, 64);
+        }
+
+        player.updateInventory();
     }
 }
