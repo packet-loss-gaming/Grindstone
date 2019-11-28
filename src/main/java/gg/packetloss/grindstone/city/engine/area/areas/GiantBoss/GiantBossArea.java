@@ -19,16 +19,14 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
-import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.state.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
-import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.util.timer.TimerUtil;
@@ -47,18 +45,22 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Giant Boss", desc = "Giant, and a true boss")
-@Depend(components = {AdminComponent.class, PrayerComponent.class}, plugins = {"WorldGuard"})
-public class GiantBossArea extends AreaComponent<GiantBossConfig> implements PersistentArena {
+@Depend(components = {AdminComponent.class, PrayerComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
+public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     @InjectComponent
     protected AdminComponent admin;
     @InjectComponent
     protected PrayerComponent prayer;
+    @InjectComponent
+    protected PlayerStateComponent playerState;
 
     protected static final int groundLevel = 82;
     protected static final double scalOffst = 3;
@@ -79,7 +81,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
     protected int difficulty = Difficulty.HARD.getValue();
     protected List<Location> spawnPts = new ArrayList<>();
     protected List<Location> chestPts = new ArrayList<>();
-    protected HashMap<String, PlayerState> playerState = new HashMap<>();
 
     @Override
     public void setUp() {
@@ -104,7 +105,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
             }, 0, 20 * 2);
             // First spawn requirement
             probeArea();
-            reloadData();
             // Set difficulty
             difficulty = getWorld().getDifficulty().getValue();
         } catch (UnknownPluginException e) {
@@ -119,7 +119,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
 
     @Override
     public void disable() {
-        writeData(false);
         removeMobs();
     }
 
@@ -134,7 +133,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
             equalize();
             runAttack(ChanceUtil.getRandom(OPTION_COUNT));
         }
-        writeData(true);
     }
 
     public boolean isBossSpawned() {
@@ -519,47 +517,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> implements Per
         }
         lastAttack = System.currentTimeMillis();
         lastAttackNumber = attackCase;
-    }
-
-    @Override
-    public void writeData(boolean doAsync) {
-        Runnable run = () -> {
-            IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
-        };
-
-        if (doAsync) {
-            server.getScheduler().runTaskAsynchronously(inst, run);
-        } else {
-            run.run();
-        }
-    }
-
-    @Override
-    public void reloadData() {
-        File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
-        if (playerStateFile.exists()) {
-            Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-            if (playerStateFileO instanceof HashMap) {
-                //noinspection unchecked
-                playerState = (HashMap<String, PlayerState>) playerStateFileO;
-                log.info("Loaded: " + playerState.size() + " respawn records for the Giant Boss.");
-            } else {
-                log.warning("Invalid block record file encountered: " + playerStateFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-                playerStateFile = new File(getWorkingDir().getPath() + "/old-" + playerStateFile.getName());
-                if (playerStateFile.exists()) {
-                    playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-                    if (playerStateFileO instanceof HashMap) {
-                        //noinspection unchecked
-                        playerState = (HashMap<String, PlayerState>) playerStateFileO;
-                        log.info("Backup file loaded successfully!");
-                        log.info("Loaded: " + playerState.size() + " respawn records for the Giant Boss.");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
-            }
-        }
     }
 
     public void setDoor(final ProtectedRegion door, int type, int data) {

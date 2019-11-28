@@ -10,6 +10,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     ADMIN(new TogglePlayerStateTypeConfigImpl()),
     LEGIT(new SwapPlayerStateTypeConfigImpl()),
     FREAKY_FOUR(new SafeRespawnPlayerStateTypeConfigImpl()),
+    SHNUGGLES_PRIME(new SafeRespawnPlayerStateTypeConfigImpl()),
     SPLEEF(new TempPlayerStateTypeConfigImpl());
 
     private final PlayerStateTypeConfigImpl config;
