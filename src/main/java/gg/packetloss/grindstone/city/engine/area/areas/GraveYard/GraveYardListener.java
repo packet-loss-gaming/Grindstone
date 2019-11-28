@@ -596,6 +596,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             List<ItemStack> drops = event.getDrops();
 
             ItemStack[] dropArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
+            drops.clear();
+
             if (ItemUtil.findItemOfName(dropArray, GEM_OF_LIFE)) {
                 GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
                 server.getPluginManager().callEvent(aEvent);
@@ -612,7 +614,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             // Leave admin mode deaths out of this
             if (!parent.admin.isAdmin(player)) return;
             parent.makeGrave(player.getName(), dropArray);
-            drops.clear();
             event.setDeathMessage(ChatColor.DARK_RED + "RIP ~ " + player.getDisplayName());
         }
     }
