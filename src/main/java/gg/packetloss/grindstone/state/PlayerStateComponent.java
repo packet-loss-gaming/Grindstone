@@ -5,6 +5,8 @@ import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.state.attribute.TypedPlayerStateAttribute;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -188,6 +190,8 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
             attribute.getWorkerFor(cacheManager).pushState(record, player);
         }
 
+        server.getPluginManager().callEvent(new PlayerStatePushEvent(player, kind));
+
         writeStateRecord(player.getUniqueId());
     }
 
@@ -199,6 +203,8 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
         for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
             attribute.getWorkerFor(cacheManager).popState(record, player);
         }
+
+        server.getPluginManager().callEvent(new PlayerStatePopEvent(player, kind));
 
         writeStateRecord(player.getUniqueId());
     }
