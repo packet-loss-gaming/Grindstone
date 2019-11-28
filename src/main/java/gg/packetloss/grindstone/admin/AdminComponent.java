@@ -17,11 +17,11 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.NinjaComponent;
-import gg.packetloss.grindstone.RogueComponent;
 import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
+import gg.packetloss.grindstone.guild.GuildComponent;
+import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.PlayerStateComponent;
 import gg.packetloss.grindstone.state.PlayerStateKind;
@@ -61,7 +61,7 @@ import java.util.stream.Collectors;
 
 
 @ComponentInformation(friendlyName = "Admin", desc = "Player Administration commands.")
-@Depend(plugins = {"WorldEdit, Vault"}, components = {NinjaComponent.class, RogueComponent.class, GodComponent.class})
+@Depend(plugins = {"WorldEdit, Vault"}, components = {GuildComponent.class, GodComponent.class, PlayerStateComponent.class})
 public class AdminComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -69,9 +69,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     private final Server server = CommandBook.server();
 
     @InjectComponent
-    private NinjaComponent ninjaComponent;
-    @InjectComponent
-    private RogueComponent rogueComponent;
+    private GuildComponent guildComponent;
     @InjectComponent
     private GodComponent godComponent;
     @InjectComponent
@@ -208,15 +206,13 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     /**
-     * This method is used when removing a player's guild powers. Currently this only effects the {@link NinjaComponent}
-     * and the {@link RogueComponent}.
+     * This method is used when removing a player's guild powers.
      *
      * @param player - The player to disable guild powers for
      * @return - true if all active guild powers have been disabled
      */
     public boolean deguildPlayer(Player player) {
-        if (ninjaComponent.isNinja(player)) ninjaComponent.unninjaPlayer(player);
-        if (rogueComponent.isRogue(player)) rogueComponent.deroguePlayer(player);
+        guildComponent.getState(player).ifPresent(GuildState::disablePowers);
         return true;
     }
 

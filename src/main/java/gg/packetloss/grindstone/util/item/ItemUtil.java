@@ -25,6 +25,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ItemUtil {
 
@@ -223,20 +224,14 @@ public class ItemUtil {
         return count;
     }
 
-    private static final int[] swords = new int[]{
-            ItemID.WOOD_SWORD, ItemID.STONE_SWORD,
-            ItemID.IRON_SWORD, ItemID.GOLD_SWORD,
-            ItemID.DIAMOND_SWORD
-    };
+    private static final Set<Material> swords = Set.of(
+            Material.WOOD_SWORD, Material.STONE_SWORD,
+            Material.IRON_SWORD, Material.GOLD_SWORD,
+            Material.DIAMOND_SWORD
+    );
 
-    public static boolean isSword(int itemId) {
-
-        for (int sword : swords) {
-            if (itemId == sword) {
-                return true;
-            }
-        }
-        return false;
+    public static boolean isSword(Material item) {
+        return swords.contains(item);
     }
 
     public static boolean wasBow(Material item) {
