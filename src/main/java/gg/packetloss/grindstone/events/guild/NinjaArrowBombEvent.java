@@ -7,26 +7,26 @@
 package gg.packetloss.grindstone.events.guild;
 
 import com.sk89q.worldedit.event.Cancellable;
-import org.bukkit.entity.Entity;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 
 import java.util.List;
 
-public class NinjaTormentArrowEvent extends NinjaEvent implements Cancellable {
+public class NinjaArrowBombEvent extends NinjaEvent implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
 
-    private List<Entity> entities;
+    private List<Arrow> arrows;
 
-    public NinjaTormentArrowEvent(Player who, List<Entity> entities) {
+    public NinjaArrowBombEvent(Player who, List<Arrow> arrows) {
         super(who);
-        this.entities = entities;
+        this.arrows = arrows;
     }
 
-    public List<Entity> getEntities() {
-        return entities;
+    public List<Arrow> getArrows() {
+        return arrows;
     }
 
     @Override

@@ -25,6 +25,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
+import gg.packetloss.grindstone.events.guild.NinjaArrowBombEvent;
 import gg.packetloss.grindstone.events.guild.NinjaGrappleEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -142,7 +143,16 @@ public class NinjaComponent extends BukkitComponent implements Listener, Runnabl
 
         if (arrows.isEmpty()) return;
 
-        sessions.getSession(NinjaState.class, player).arrowBomb();
+        NinjaArrowBombEvent event = new NinjaArrowBombEvent(
+                player,
+                arrows
+        );
+
+        server.getPluginManager().callEvent(event);
+        if (event.isCancelled() || arrows.isEmpty()) return;
+
+        NinjaState session = sessions.getSession(NinjaState.class, player);
+        session.arrowBomb();
 
         for (Arrow arrow : arrows) {
             handleArrowBombArrow(player, arrow);
