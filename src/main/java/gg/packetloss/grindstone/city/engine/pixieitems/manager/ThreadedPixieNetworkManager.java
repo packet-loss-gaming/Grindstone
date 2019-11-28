@@ -320,7 +320,8 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                     PixieNetworkGraph network = idToNetworkMapping.get(networkID);
 
                     for (Location location : locations) {
-                        if (variant == PixieSinkVariant.ADD) {
+                        // FIXME: This should load the network
+                        if (variant == PixieSinkVariant.ADD && network != null) {
                             itemNames.addAll(network.getSinksAtLocation(location));
                         }
 
