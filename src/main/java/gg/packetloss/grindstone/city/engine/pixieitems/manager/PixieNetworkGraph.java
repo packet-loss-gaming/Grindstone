@@ -3,6 +3,7 @@ package gg.packetloss.grindstone.city.engine.pixieitems.manager;
 import org.bukkit.Location;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class PixieNetworkGraph {
@@ -77,17 +78,20 @@ public class PixieNetworkGraph {
         removeSink(location);
     }
 
+    private List<Location> randomizedCopy(List<Location> sourceList) {
+        List<Location> newList = new ArrayList<>(sourceList.size());
+        sourceList.forEach(loc -> newList.add(loc.clone()));
+        Collections.shuffle(newList, ThreadLocalRandom.current());
+        return newList;
+    }
+
     public List<Location> getSinksForItem(String itemName) {
-        List<Location> prioritizedList = new ArrayList<>();
+        List<Location> targeted = randomizedCopy(itemToDestination.getOrDefault(itemName, new ArrayList<>()));
+        List<Location> misc = randomizedCopy(anyItemDestinations);
 
-        for (Location location : itemToDestination.getOrDefault(itemName, new ArrayList<>())) {
-            prioritizedList.add(location.clone());
-        }
-
-        for (Location location : anyItemDestinations) {
-            prioritizedList.add(location.clone());
-        }
-
-        return prioritizedList;
+        List<Location> combined = new ArrayList<>(targeted.size() + misc.size());
+        combined.addAll(targeted);
+        combined.addAll(misc);
+        return combined;
     }
 }
