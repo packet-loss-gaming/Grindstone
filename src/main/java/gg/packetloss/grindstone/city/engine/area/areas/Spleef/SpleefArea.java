@@ -9,7 +9,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
-import gg.packetloss.grindstone.state.InvalidTempPlayerStateException;
+import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.PlayerStateComponent;
 import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.APIUtil;
@@ -100,7 +100,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
             player.getInventory().setArmorContents(NO_ARMOR);
 
             player.getInventory().addItem(new ItemStack(Material.DIAMOND_SPADE));
-        } catch (IOException | InvalidTempPlayerStateException ex) {
+        } catch (IOException | ConflictingPlayerStateException ex) {
             ex.printStackTrace();
         }
     }

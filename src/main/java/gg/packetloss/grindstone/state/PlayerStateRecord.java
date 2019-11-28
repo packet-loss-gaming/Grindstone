@@ -12,22 +12,40 @@ public class PlayerStateRecord {
     private Map<PlayerStateKind, PlayerVitals> vitals = new EnumMap<>(PlayerStateKind.class);
     private Map<PlayerStateKind, UUID> inventories = new EnumMap<>(PlayerStateKind.class);
 
+    private void validatePush(PlayerStateKind kind) throws ConflictingPlayerStateException {
+        Validate.notNull(kind, "New kind must not be null");
+
+        boolean hasTempKind = tempKind != null;
+        if (hasTempKind) {
+            if (kind.isTemporary()) {
+                throw new ConflictingPlayerStateException(kind, tempKind);
+            }
+
+            if (!kind.allowUseWithTemporaryState()) {
+                throw new ConflictingPlayerStateException(kind, tempKind);
+            }
+        }
+    }
+
+    private void doPush(PlayerStateKind kind) {
+        if (kind.isTemporary()) {
+            tempKind = kind;
+        }
+    }
+
+    public void pushKind(PlayerStateKind kind) throws ConflictingPlayerStateException {
+        validatePush(kind);
+        doPush(kind);
+    }
+
+    public void popKind(PlayerStateKind kind) {
+        if (kind.isTemporary()) {
+            this.tempKind = null;
+        }
+    }
+
     public Optional<PlayerStateKind> getTempKind() {
         return Optional.ofNullable(tempKind);
-    }
-
-    public void pushTempKind(PlayerStateKind tempKind) throws InvalidTempPlayerStateException {
-        if (this.tempKind != null) {
-            throw new InvalidTempPlayerStateException(this.tempKind);
-        }
-
-        Validate.notNull(tempKind, "New temp kind must not be null");
-        this.tempKind = tempKind;
-    }
-
-    public void clearTempKind() {
-        Validate.notNull(this.tempKind, "No existing temp kind to clear");
-        this.tempKind = null;
     }
 
     public Map<PlayerStateKind, PlayerVitals> getVitals() {

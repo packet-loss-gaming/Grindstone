@@ -19,7 +19,7 @@ public class VitalsAttributeImpl implements PlayerStateAttributeImpl {
         return new VitalsAttributeWorker(kind, persistenceManager);
     }
 
-    private static class VitalsAttributeWorker extends AttributeWorker {
+    private static class VitalsAttributeWorker extends AttributeWorker<PlayerVitals> {
         protected VitalsAttributeWorker(PlayerStateKind kind, PlayerStatePersistenceManager persistenceManager) {
             super(kind, persistenceManager);
         }
@@ -36,15 +36,17 @@ public class VitalsAttributeImpl implements PlayerStateAttributeImpl {
         }
 
         @Override
-        public void popState(PlayerStateRecord record, Player player) throws IOException {
-            PlayerVitals vitals = record.getVitals().remove(kind);
-            if (vitals != null) {
-                player.setHealth(Math.min(player.getMaxHealth(), vitals.getHealth()));
-                player.setFoodLevel(vitals.getHunger());
-                player.setSaturation(vitals.getSaturation());
-                player.setExhaustion(vitals.getExhaustion());
-                player.setTotalExperience(vitals.getExperience());
-            }
+        protected PlayerVitals detach(PlayerStateRecord record, Player player) {
+            return record.getVitals().remove(kind);
+        }
+
+        @Override
+        protected void remove(PlayerVitals oldState, Player player) throws IOException {
+            player.setHealth(Math.min(player.getMaxHealth(), oldState.getHealth()));
+            player.setFoodLevel(oldState.getHunger());
+            player.setSaturation(oldState.getSaturation());
+            player.setExhaustion(oldState.getExhaustion());
+            player.setTotalExperience(oldState.getExperience());
         }
     }
 }

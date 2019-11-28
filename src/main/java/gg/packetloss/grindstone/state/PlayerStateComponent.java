@@ -5,6 +5,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.state.attribute.AttributeWorker;
 import gg.packetloss.grindstone.state.attribute.TypedPlayerStateAttribute;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -139,7 +140,8 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
         if (record.isEmpty()) {
             Files.deleteIfExists(stateRecordPath);
         } else {
-            try (BufferedWriter writer = Files.newBufferedWriter(stateRecordPath, StandardOpenOption.CREATE)) {
+            try (BufferedWriter writer = Files.newBufferedWriter(
+                    stateRecordPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                 writer.write(gson.toJson(record));
             }
         }
@@ -173,15 +175,23 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
         }
     }
 
-    public void pushState(PlayerStateKind kind, Player player) throws IOException, InvalidTempPlayerStateException {
-        PlayerStateRecord record = requireStateRecord(player.getUniqueId());
-
-        if (kind.isTemporary()) {
-            record.pushTempKind(kind);
+    public void pushState(PlayerStateKind kind, Player player) throws IOException, ConflictingPlayerStateException {
+        // Automatically handle any conflicts with temporary inventories
+        if (!kind.allowUseWithTemporaryState()) {
+            tryPopTempKind(player);
         }
 
+        PlayerStateRecord record = requireStateRecord(player.getUniqueId());
+
+        record.pushKind(kind);
+
         for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
-            attribute.getWorkerFor(cacheManager).pushState(record, player);
+            AttributeWorker<?> worker = attribute.getWorkerFor(cacheManager);
+            if (attribute.isValidFor(record) && kind.shouldSwapOnDuplicate()) {
+                worker.swapState(record, player);
+            } else {
+                worker.pushState(record, player);
+            }
         }
 
         writeStateRecord(player.getUniqueId());
@@ -190,9 +200,7 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
     public void popState(PlayerStateKind kind, Player player) throws IOException {
         PlayerStateRecord record = requireStateRecord(player.getUniqueId());
 
-        if (kind.isTemporary()) {
-            record.clearTempKind();
-        }
+        record.popKind(kind);
 
         for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
             attribute.getWorkerFor(cacheManager).popState(record, player);

@@ -1,9 +1,5 @@
 package gg.packetloss.grindstone.state.config;
 
-import gg.packetloss.grindstone.state.PlayerStateAttribute;
-
-import java.util.List;
-
 public class TempPlayerStateTypeConfigImpl implements PlayerStateTypeConfigImpl {
     @Override
     public boolean isTemporary() {
@@ -11,7 +7,12 @@ public class TempPlayerStateTypeConfigImpl implements PlayerStateTypeConfigImpl 
     }
 
     @Override
-    public List<PlayerStateAttribute> getAttributes() {
-        return List.of(PlayerStateAttribute.VITALS, PlayerStateAttribute.INVENTORY);
+    public boolean allowUseWithTemporaryState() {
+        return false;
+    }
+
+    @Override
+    public boolean shouldSwapOnDuplicate() {
+        return false;
     }
 }

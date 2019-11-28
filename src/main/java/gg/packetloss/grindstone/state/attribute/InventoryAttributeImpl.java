@@ -21,7 +21,7 @@ public class InventoryAttributeImpl implements PlayerStateAttributeImpl {
         return new InventoryAttributeWorker(kind, persistenceManager);
     }
 
-    private static class InventoryAttributeWorker extends AttributeWorker {
+    private static class InventoryAttributeWorker extends AttributeWorker<UUID> {
         protected InventoryAttributeWorker(PlayerStateKind kind, PlayerStatePersistenceManager persistenceManager) {
             super(kind, persistenceManager);
         }
@@ -35,14 +35,16 @@ public class InventoryAttributeImpl implements PlayerStateAttributeImpl {
         }
 
         @Override
-        public void popState(PlayerStateRecord record, Player player) throws IOException {
-            UUID inventory = record.getInventories().remove(kind);
-            if (inventory != null) {
-                List<ItemStack> contents = persistenceManager.removeInventory(inventory);
+        protected UUID detach(PlayerStateRecord record, Player player) {
+            return record.getInventories().remove(kind);
+        }
 
-                player.getInventory().setContents(contents.toArray(new ItemStack[0]));
-                player.updateInventory();
-            }
+        @Override
+        protected void remove(UUID inventoryID, Player player) throws IOException {
+            List<ItemStack> contents = persistenceManager.removeInventory(inventoryID);
+
+            player.getInventory().setContents(contents.toArray(new ItemStack[0]));
+            player.updateInventory();
         }
     }
 }

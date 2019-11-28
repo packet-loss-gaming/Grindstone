@@ -6,6 +6,11 @@ import java.util.List;
 
 public interface PlayerStateTypeConfigImpl {
     public boolean isTemporary();
+    public boolean allowUseWithTemporaryState();
 
-    public List<PlayerStateAttribute> getAttributes();
+    public boolean shouldSwapOnDuplicate();
+
+    default public List<PlayerStateAttribute> getAttributes() {
+        return List.of(PlayerStateAttribute.VITALS, PlayerStateAttribute.INVENTORY);
+    }
 }
