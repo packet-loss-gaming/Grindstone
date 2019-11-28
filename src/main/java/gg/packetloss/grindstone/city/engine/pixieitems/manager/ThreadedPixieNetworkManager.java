@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.city.engine.pixieitems.manager;
 
+import com.destroystokyo.paper.ParticleBuilder;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.city.engine.pixieitems.BrokerTransaction;
@@ -7,10 +8,13 @@ import gg.packetloss.grindstone.city.engine.pixieitems.TransactionBroker;
 import gg.packetloss.grindstone.city.engine.pixieitems.db.*;
 import gg.packetloss.grindstone.city.engine.pixieitems.db.mysql.MySQLPixieChestDatabase;
 import gg.packetloss.grindstone.city.engine.pixieitems.db.mysql.MySQLPixieNetworkDatabase;
+import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.RefCountedTracker;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
@@ -417,6 +421,32 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         return Optional.empty();
     }
 
+    private static final ParticleBuilder PARTICLE_EFFECT = new ParticleBuilder(Particle.SPELL_INSTANT).count(0).allPlayers();
+
+    private void playEffect(Inventory inv) {
+        if (inv instanceof DoubleChestInventory) {
+            playEffect(((DoubleChestInventory) inv).getLeftSide());
+            playEffect(((DoubleChestInventory) inv).getRightSide());
+            return;
+        }
+
+        Location baseLoc = inv.getLocation();
+        for (int i = 0; i < 16; ++i) {
+            Location loc = baseLoc.clone().add(
+                    ChanceUtil.getRangedRandom(0, 1.0),
+                    1,
+                    ChanceUtil.getRangedRandom(0, 1.0)
+            );
+            PARTICLE_EFFECT.location(loc).offset(0, .3, 0).spawn();
+        }
+        baseLoc.getWorld().playSound(baseLoc, Sound.ITEM_FIRECHARGE_USE, 1, 1);
+    }
+
+    private void playEffect(Inventory from, Inventory to) {
+        playEffect(from);
+        playEffect(to);
+    }
+
     @Override
     public void sourceItems(TransactionBroker broker, int networkID, Inventory inventory) {
         networkLock.readLock().lock();
@@ -447,7 +477,11 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                         continue;
                     }
 
-                    item = ((Chest) state).getInventory().addItem(item).get(0);
+                    Inventory destInv = ((Chest) state).getInventory();
+
+                    playEffect(inventory, destInv);
+
+                    item = destInv.addItem(item).get(0);
                     if (item == null) {
                         // We successfully moved this item, break the inner loop.
                         break;
