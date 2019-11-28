@@ -23,7 +23,7 @@ import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.state.PlayerStateComponent;
-import gg.packetloss.grindstone.state.PlayerStateType;
+import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
@@ -140,7 +140,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
             if (!event.isCancelled()) {
                 try {
-                    stateComponent.pushState(PlayerStateType.ADMIN, player);
+                    stateComponent.pushState(PlayerStateKind.ADMIN, player);
                     permission.playerAddGroup((World) null, player.getName(), "Admin");
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -159,7 +159,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
             if (!event.isCancelled()) {
                 try {
                     // Restore the previous state
-                    stateComponent.popState(PlayerStateType.ADMIN, player);
+                    stateComponent.popState(PlayerStateKind.ADMIN, player);
 
                     // Change Permissions
                     permission.playerRemoveGroup((World) null, player.getName(), "Admin");
@@ -418,7 +418,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 throw new CommandException("You were not in admin mode!");
             }
 
-            if (!args.hasFlag('k') && !stateComponent.hasValidStoredState(PlayerStateType.ADMIN, player)) {
+            if (!args.hasFlag('k') && !stateComponent.hasValidStoredState(PlayerStateKind.ADMIN, player)) {
                 throw new CommandException("Your inventory is not loaded! \nLeaving admin mode will result in item loss! " +
                   "\nUse \"/deadmin -k\" to ignore this warning and continue anyways.");
             }

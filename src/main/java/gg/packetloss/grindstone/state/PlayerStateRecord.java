@@ -1,18 +1,37 @@
 package gg.packetloss.grindstone.state;
 
-import java.util.HashMap;
+import org.apache.commons.lang.Validate;
+
+import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class PlayerStateRecord {
-    private Map<String, PlayerVitals> vitals = new HashMap<>();
-    private Map<String, UUID> inventories = new HashMap<>();
+    private PlayerStateKind tempKind = null;
+    private Map<PlayerStateKind, PlayerVitals> vitals = new EnumMap<>(PlayerStateKind.class);
+    private Map<PlayerStateKind, UUID> inventories = new EnumMap<>(PlayerStateKind.class);
 
-    public Map<String, PlayerVitals> getVitals() {
+    public Optional<PlayerStateKind> getTempKind() {
+        return Optional.ofNullable(tempKind);
+    }
+
+    public void pushTempKind(PlayerStateKind tempKind) {
+        Validate.isTrue(this.tempKind == null, "Temp kind was already set");
+        Validate.notNull(tempKind, "New temp kind must not be null");
+        this.tempKind = tempKind;
+    }
+
+    public void clearTempKind() {
+        Validate.notNull(this.tempKind, "No existing temp kind to clear");
+        this.tempKind = null;
+    }
+
+    public Map<PlayerStateKind, PlayerVitals> getVitals() {
         return vitals;
     }
 
-    public Map<String, UUID> getInventories() {
+    public Map<PlayerStateKind, UUID> getInventories() {
         return inventories;
     }
 

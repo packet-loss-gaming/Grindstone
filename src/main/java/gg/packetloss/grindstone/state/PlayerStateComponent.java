@@ -1,19 +1,19 @@
 package gg.packetloss.grindstone.state;
 
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.state.attribute.TypedPlayerStateAttribute;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,19 +42,21 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
     private Map<UUID, CompletableFuture<PlayerStateRecord>> loadingRecords = new ConcurrentHashMap<>();
 
     private Map<UUID, PlayerStateRecord> recordMapping = new ConcurrentHashMap<>();
-    private Map<UUID, List<ItemStack>> inventoryCache = new ConcurrentHashMap<>();
+    private PlayerStatePersistenceManager cacheManager;
 
     @Override
     public void enable() {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        cacheManager = new PlayerStatePersistenceManager(serializer);
 
         try {
             Path baseDir = Path.of(inst.getDataFolder().getPath(), "state");
             statesDir = Files.createDirectories(baseDir.resolve("states"));
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
+
+        //noinspection AccessStaticViaInstance
+        inst.registerEvents(this);
     }
 
     private Path getStateRecord(UUID playerID) {
@@ -84,7 +86,7 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
 
             // Load associated inventories
             for (UUID associatedInvID : record.getInventories().values()) {
-                inventoryCache.put(associatedInvID, serializer.readItems(associatedInvID));
+                cacheManager.loadInventory(associatedInvID);
             }
 
             // Add the record (this must happen after inventories are loaded so anything requiring a state record
@@ -93,13 +95,13 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
 
             future.complete(record);
             return record;
-        } catch (IOException e) {
-            future.completeExceptionally(e);
-            throw e;
+        } catch (IOException ex) {
+            future.completeExceptionally(ex);
+            throw ex;
         }
     }
 
-    private PlayerStateRecord requireStateRecord(UUID playerID) throws IOException {
+    private PlayerStateRecord requireStateRecord(UUID playerID, boolean loadIfEarly) throws IOException {
         PlayerStateRecord record = recordMapping.get(playerID);
         if (record != null) {
             return record;
@@ -119,7 +121,15 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
         }
 
         // 2. This connection was before the event listener was registered.
-        return loadStateRecord(playerID);
+        if (loadIfEarly) {
+            return loadStateRecord(playerID);
+        }
+
+        return null;
+    }
+
+    private PlayerStateRecord requireStateRecord(UUID playerID) throws IOException {
+        return requireStateRecord(playerID, true);
     }
 
     private void writeStateRecord(UUID playerID) throws IOException {
@@ -135,95 +145,89 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
         }
     }
 
-    private void unloadStateRecord(UUID playerID) {
-        recordMapping.remove(playerID);
+    private void unloadStateRecord(UUID playerID) throws IOException {
+        requireStateRecord(playerID, false);
+
+        PlayerStateRecord record = recordMapping.remove(playerID);
+        if (record != null) {
+            for (UUID associatedInvID : record.getInventories().values()) {
+                cacheManager.loadInventory(associatedInvID);
+            }
+        }
     }
 
-    public boolean hasValidStoredState(PlayerStateType type, Player player) {
+    public boolean hasValidStoredState(PlayerStateKind kind, Player player) {
         try {
             PlayerStateRecord record = requireStateRecord(player.getUniqueId());
 
-            if (type.hasVitals() && record.getVitals().get(type.name()) == null) {
-                return false;
-            }
-
-            if (type.hasInventory() && record.getInventories().get(type.name()) == null) {
-                return false;
+            for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
+                if (!attribute.isValidFor(record)) {
+                    return false;
+                }
             }
 
             return true;
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
             return false;
         }
     }
 
-    public void pushState(PlayerStateType type, Player player) throws IOException {
+    public void pushState(PlayerStateKind kind, Player player) throws IOException {
         PlayerStateRecord record = requireStateRecord(player.getUniqueId());
 
-        if (type.hasVitals()) {
-            record.getVitals().put(type.name(), new PlayerVitals(
-                    player.getHealth(),
-                    player.getFoodLevel(),
-                    player.getSaturation(),
-                    player.getExhaustion(),
-                    player.getTotalExperience()
-            ));
+        if (kind.isTemporary()) {
+            record.pushTempKind(kind);
         }
 
-        if (type.hasInventory()) {
-            UUID inventoryID = UUID.randomUUID();
-            record.getInventories().put(type.name(), inventoryID);
-
-            List<ItemStack> stacks = Lists.newArrayList(ItemUtil.clone(player.getInventory().getContents()));
-            inventoryCache.put(inventoryID, stacks);
-
-            serializer.writeItems(inventoryID, stacks);
+        for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
+            attribute.getWorkerFor(cacheManager).pushState(record, player);
         }
 
         writeStateRecord(player.getUniqueId());
     }
 
-    public void popState(PlayerStateType type, Player player) throws IOException {
+    public void popState(PlayerStateKind kind, Player player) throws IOException {
         PlayerStateRecord record = requireStateRecord(player.getUniqueId());
 
-        if (type.hasVitals()) {
-            PlayerVitals vitals = record.getVitals().remove(type.name());
-            if (vitals != null) {
-                player.setHealth(Math.min(player.getMaxHealth(), vitals.getHealth()));
-                player.setFoodLevel(vitals.getHunger());
-                player.setSaturation(vitals.getSaturation());
-                player.setExhaustion(vitals.getExhaustion());
-                player.setTotalExperience(vitals.getExperience());
-            }
+        if (kind.isTemporary()) {
+            record.clearTempKind();
         }
 
-        if (type.hasInventory()) {
-            UUID inventory = record.getInventories().remove(type.name());
-            if (inventory != null) {
-                List<ItemStack> contents = inventoryCache.remove(inventory);
-
-                player.getInventory().setContents(contents.toArray(new ItemStack[0]));
-                player.updateInventory();
-
-                serializer.removeItems(inventory);
-            }
+        for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
+            attribute.getWorkerFor(cacheManager).popState(record, player);
         }
 
         writeStateRecord(player.getUniqueId());
+    }
+
+    private void tryPopTempKind(Player player) throws IOException {
+        PlayerStateRecord record = requireStateRecord(player.getUniqueId());
+        Optional<PlayerStateKind> optTempKind = record.getTempKind();
+        if (optTempKind.isEmpty()) {
+            return;
+        }
+
+        popState(optTempKind.get(), player);
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPreLogin(AsyncPlayerPreLoginEvent event) {
-        try {
-            loadStateRecord(event.getUniqueId());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void onPreLogin(AsyncPlayerPreLoginEvent event) throws IOException {
+        loadStateRecord(event.getUniqueId());
     }
 
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
+    public void onPlayerQuit(PlayerQuitEvent event) throws IOException {
         unloadStateRecord(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) throws IOException {
+        tryPopTempKind(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) throws IOException {
+        tryPopTempKind(event.getPlayer());
     }
 }
