@@ -170,7 +170,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
             }
 
             GuildState state = optState.get();
-            if (state.isEnabled()) {
+            if (state.isDisabled()) {
                 throw new CommandException("Your powers have already faded!");
             }
 
