@@ -5,7 +5,6 @@ import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.state.attribute.AttributeWorker;
 import gg.packetloss.grindstone.state.attribute.TypedPlayerStateAttribute;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -186,12 +185,7 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
         record.pushKind(kind);
 
         for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
-            AttributeWorker<?> worker = attribute.getWorkerFor(cacheManager);
-            if (attribute.isValidFor(record) && kind.shouldSwapOnDuplicate()) {
-                worker.swapState(record, player);
-            } else {
-                worker.pushState(record, player);
-            }
+            attribute.getWorkerFor(cacheManager).pushState(record, player);
         }
 
         writeStateRecord(player.getUniqueId());

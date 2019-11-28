@@ -6,8 +6,6 @@ import gg.packetloss.grindstone.state.PlayerStateRecord;
 import gg.packetloss.grindstone.state.PlayerVitals;
 import org.bukkit.entity.Player;
 
-import java.io.IOException;
-
 public class VitalsAttributeImpl implements PlayerStateAttributeImpl {
     @Override
     public boolean isValidFor(PlayerStateKind kind, PlayerStateRecord record) {
@@ -16,16 +14,17 @@ public class VitalsAttributeImpl implements PlayerStateAttributeImpl {
 
     @Override
     public AttributeWorker getWorkerFor(PlayerStateKind kind, PlayerStatePersistenceManager persistenceManager) {
-        return new VitalsAttributeWorker(kind, persistenceManager);
+        return new VitalsAttributeWorker(this, kind, persistenceManager);
     }
 
     private static class VitalsAttributeWorker extends AttributeWorker<PlayerVitals> {
-        protected VitalsAttributeWorker(PlayerStateKind kind, PlayerStatePersistenceManager persistenceManager) {
-            super(kind, persistenceManager);
+        protected VitalsAttributeWorker(PlayerStateAttributeImpl attribute, PlayerStateKind kind,
+                                        PlayerStatePersistenceManager persistenceManager) {
+            super(attribute, kind, persistenceManager);
         }
 
         @Override
-        public void pushState(PlayerStateRecord record, Player player) throws IOException {
+        public void attach(PlayerStateRecord record, Player player) {
             record.getVitals().put(kind, new PlayerVitals(
                     player.getHealth(),
                     player.getFoodLevel(),
@@ -41,7 +40,7 @@ public class VitalsAttributeImpl implements PlayerStateAttributeImpl {
         }
 
         @Override
-        protected void remove(PlayerVitals oldState, Player player) throws IOException {
+        protected void remove(PlayerVitals oldState, Player player) {
             player.setHealth(Math.min(player.getMaxHealth(), oldState.getHealth()));
             player.setFoodLevel(oldState.getHunger());
             player.setSaturation(oldState.getSaturation());

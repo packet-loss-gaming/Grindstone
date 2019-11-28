@@ -18,16 +18,17 @@ public class InventoryAttributeImpl implements PlayerStateAttributeImpl {
 
     @Override
     public AttributeWorker getWorkerFor(PlayerStateKind kind, PlayerStatePersistenceManager persistenceManager) {
-        return new InventoryAttributeWorker(kind, persistenceManager);
+        return new InventoryAttributeWorker(this, kind, persistenceManager);
     }
 
     private static class InventoryAttributeWorker extends AttributeWorker<UUID> {
-        protected InventoryAttributeWorker(PlayerStateKind kind, PlayerStatePersistenceManager persistenceManager) {
-            super(kind, persistenceManager);
+        protected InventoryAttributeWorker(PlayerStateAttributeImpl attribute, PlayerStateKind kind,
+                                           PlayerStatePersistenceManager persistenceManager) {
+            super(attribute, kind, persistenceManager);
         }
 
         @Override
-        public void pushState(PlayerStateRecord record, Player player) throws IOException {
+        public void attach(PlayerStateRecord record, Player player) throws IOException {
             UUID inventoryID = UUID.randomUUID();
             record.getInventories().put(kind, inventoryID);
 
