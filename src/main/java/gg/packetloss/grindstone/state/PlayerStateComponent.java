@@ -230,6 +230,11 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) throws IOException {
-        tryPopTempKind(event.getPlayer());
+        Player player = event.getPlayer();
+        if (player.isDead()) {
+            return;
+        }
+
+        tryPopTempKind(player);
     }
 }
