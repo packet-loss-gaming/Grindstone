@@ -30,6 +30,8 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearBomb
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.GlowingFog;
+import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
@@ -38,22 +40,24 @@ import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -415,23 +419,23 @@ public class PatientXListener extends AreaListener<PatientXArea> {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
 
-        HashMap<String, PlayerState> playerState = parent.playerState;
         Zombie boss = parent.boss;
 
         Player player = event.getEntity();
-        if (parent.contains(player) && !parent.admin.isAdmin(player) && !playerState.containsKey(player.getName())) {
+        if (parent.contains(player) && !parent.admin.isAdmin(player)) {
             if (parent.contains(player) && parent.isBossSpawned()) {
                 EntityUtil.heal(boss, boss.getMaxHealth() / 4);
                 parent.resetDifficulty();
                 ChatUtil.sendWarning(parent.getContained(Player.class), "Haha, bow down "
                         + player.getName() + ", show's over for you.");
             }
-            playerState.put(player.getName(), new PlayerState(player.getName(),
-                    player.getInventory().getContents(),
-                    player.getInventory().getArmorContents(),
-                    player.getLevel(),
-                    player.getExp()));
-            event.getDrops().clear();
+
+            try {
+                parent.playerState.pushState(PlayerStateKind.PATIENT_X, player);
+                event.getDrops().clear();
+            } catch (ConflictingPlayerStateException | IOException e) {
+                e.printStackTrace();
+            }
 
             String deathMessage;
             switch (System.currentTimeMillis() > parent.attackDur ? 0 : parent.lastAttack) {
@@ -468,29 +472,6 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             }
 
             event.setDeathMessage(player.getName() + deathMessage);
-        }
-    }
-
-    @EventHandler
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-
-        HashMap<String, PlayerState> playerState = parent.playerState;
-
-        Player player = event.getPlayer();
-        // Restore their inventory if they have one stored
-        if (playerState.containsKey(player.getName()) && !parent.admin.isAdmin(player)) {
-
-            try {
-                PlayerState identity = playerState.get(player.getName());
-
-                // Restore the contents
-                player.getInventory().setArmorContents(identity.getArmourContents());
-                player.getInventory().setContents(identity.getInventoryContents());
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                playerState.remove(player.getName());
-            }
         }
     }
 }

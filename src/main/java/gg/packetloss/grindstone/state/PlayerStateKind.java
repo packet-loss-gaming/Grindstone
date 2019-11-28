@@ -12,6 +12,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     FREAKY_FOUR(new SafeRespawnPlayerStateTypeConfigImpl()),
     SHNUGGLES_PRIME(new SafeRespawnPlayerStateTypeConfigImpl()),
     GRAVE_YARD(new SafeRespawnPlayerStateTypeConfigImpl()),
+    PATIENT_X(new SafeRespawnPlayerStateTypeConfigImpl()),
     SPLEEF(new TempPlayerStateTypeConfigImpl());
 
     private final PlayerStateTypeConfigImpl config;
