@@ -8,12 +8,11 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.state.InvalidTempPlayerStateException;
+import gg.packetloss.grindstone.state.PlayerStateComponent;
+import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.APIUtil;
-import gg.packetloss.grindstone.util.database.IOUtil;
-import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -21,15 +20,17 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.io.File;
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Spleef", desc = "Spleef game implementation")
-@Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
-public class SpleefArea extends BukkitComponent implements Runnable, PersistentArena {
+@Depend(components = {AdminComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
+public class SpleefArea extends BukkitComponent implements Runnable {
     protected final CommandBook inst = CommandBook.inst();
     protected final Logger log = inst.getLogger();
     protected final Server server = CommandBook.server();
@@ -38,8 +39,8 @@ public class SpleefArea extends BukkitComponent implements Runnable, PersistentA
 
     @InjectComponent
     protected AdminComponent admin;
-
-    protected HashMap<UUID, PlayerState> playerState = new HashMap<>();
+    @InjectComponent
+    protected PlayerStateComponent playerState;
 
     protected List<SpleefAreaInstance> spleefInstances = new ArrayList<>();
 
@@ -63,10 +64,7 @@ public class SpleefArea extends BukkitComponent implements Runnable, PersistentA
     public void enable() {
         config = new SpleefConfig();
 
-        server.getScheduler().runTaskLater(inst, () -> {
-            reloadConfig();
-            reloadData();
-        }, 1);
+        server.getScheduler().runTaskLater(inst, this::reloadConfig, 1);
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(new SpleefListener(this));
@@ -80,11 +78,6 @@ public class SpleefArea extends BukkitComponent implements Runnable, PersistentA
         reloadConfig();
     }
 
-    @Override
-    public void disable() {
-        writeData(false);
-    }
-
     public boolean anyContains(Location location) {
         for (SpleefAreaInstance area : spleefInstances) {
             if (area.contains(location)) {
@@ -96,38 +89,28 @@ public class SpleefArea extends BukkitComponent implements Runnable, PersistentA
     }
 
     public boolean isUsingArenaTools(Player player) {
-        return playerState.containsKey(player.getUniqueId());
+        return playerState.hasValidStoredState(PlayerStateKind.SPLEEF, player);
     }
 
     private void addPlayer(Player player) {
-        PlayerState state = GeneralPlayerUtil.makeComplexState(player);
-        state.setOwnerName(player.getName());
-        state.setLocation(player.getLocation());
-        playerState.put(player.getUniqueId(), state);
+        try {
+            playerState.pushState(PlayerStateKind.SPLEEF, player);
 
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(NO_ARMOR);
+            player.getInventory().clear();
+            player.getInventory().setArmorContents(NO_ARMOR);
 
-        player.getInventory().addItem(new ItemStack(Material.DIAMOND_SPADE));
+            player.getInventory().addItem(new ItemStack(Material.DIAMOND_SPADE));
+        } catch (IOException | InvalidTempPlayerStateException ex) {
+            ex.printStackTrace();
+        }
     }
 
     private void removePlayer(Player player) {
-        PlayerState state = playerState.remove(player.getUniqueId());
-
-        // Clear Player
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(NO_ARMOR);
-
-        // Restore the contents
-        player.getInventory().setArmorContents(state.getArmourContents());
-        player.getInventory().setContents(state.getInventoryContents());
-        player.setHealth(Math.min(player.getMaxHealth(), state.getHealth()));
-        player.setFoodLevel(state.getHunger());
-        player.setSaturation(state.getSaturation());
-        player.setExhaustion(state.getExhaustion());
-        player.setLevel(state.getLevel());
-        player.setExp(state.getExperience());
-        player.updateInventory();
+        try {
+            playerState.popState(PlayerStateKind.SPLEEF, player);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     @Override
@@ -140,63 +123,15 @@ public class SpleefArea extends BukkitComponent implements Runnable, PersistentA
         }
 
         for (Player player : allPlayers) {
-            if (!playerState.containsKey(player.getUniqueId())) {
+            if (!isUsingArenaTools(player)) {
                 addPlayer(player);
             }
         }
 
         for (Player player : server.getOnlinePlayers()) {
-            if (playerState.containsKey(player.getUniqueId()) && !allPlayers.contains(player)) {
+            if (isUsingArenaTools(player) && !allPlayers.contains(player)) {
                 removePlayer(player);
             }
         }
-
-        writeData(true);
     }
-
-    @Override
-    public void writeData(boolean doAsync) {
-        Runnable run = () -> {
-            IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
-        };
-
-        if (doAsync) {
-            server.getScheduler().runTaskAsynchronously(inst, run);
-        } else {
-            run.run();
-        }
-    }
-
-    @Override
-    public void reloadData() {
-        File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
-        if (playerStateFile.exists()) {
-            Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-            if (playerStateFileO instanceof HashMap) {
-                //noinspection unchecked
-                playerState = (HashMap<UUID, PlayerState>) playerStateFileO;
-                log.info("Loaded: " + playerState.size() + " respawn records for Spleef.");
-            } else {
-                log.warning("Invalid block record file encountered: " + playerStateFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-                playerStateFile = new File(getWorkingDir().getPath() + "/old-" + playerStateFile.getName());
-                if (playerStateFile.exists()) {
-                    playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-                    if (playerStateFileO instanceof HashMap) {
-                        //noinspection unchecked
-                        playerState = (HashMap<UUID, PlayerState>) playerStateFileO;
-                        log.info("Backup file loaded successfully!");
-                        log.info("Loaded: " + playerState.size() + " respawn records for Spleef.");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
-            }
-        }
-    }
-
-    public File getWorkingDir() {
-        return new File(inst.getDataFolder() + "/area/spleef/");
-    }
-
 }

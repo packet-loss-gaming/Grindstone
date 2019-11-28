@@ -22,6 +22,7 @@ import gg.packetloss.grindstone.RogueComponent;
 import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
+import gg.packetloss.grindstone.state.InvalidTempPlayerStateException;
 import gg.packetloss.grindstone.state.PlayerStateComponent;
 import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -142,8 +143,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 try {
                     stateComponent.pushState(PlayerStateKind.ADMIN, player);
                     permission.playerAddGroup((World) null, player.getName(), "Admin");
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException | InvalidTempPlayerStateException ex) {
+                    ex.printStackTrace();
                 }
             }
         }

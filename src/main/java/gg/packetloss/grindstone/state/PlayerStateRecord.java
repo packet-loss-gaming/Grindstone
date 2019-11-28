@@ -16,8 +16,11 @@ public class PlayerStateRecord {
         return Optional.ofNullable(tempKind);
     }
 
-    public void pushTempKind(PlayerStateKind tempKind) {
-        Validate.isTrue(this.tempKind == null, "Temp kind was already set");
+    public void pushTempKind(PlayerStateKind tempKind) throws InvalidTempPlayerStateException {
+        if (this.tempKind != null) {
+            throw new InvalidTempPlayerStateException(this.tempKind);
+        }
+
         Validate.notNull(tempKind, "New temp kind must not be null");
         this.tempKind = tempKind;
     }

@@ -173,7 +173,7 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
         }
     }
 
-    public void pushState(PlayerStateKind kind, Player player) throws IOException {
+    public void pushState(PlayerStateKind kind, Player player) throws IOException, InvalidTempPlayerStateException {
         PlayerStateRecord record = requireStateRecord(player.getUniqueId());
 
         if (kind.isTemporary()) {
