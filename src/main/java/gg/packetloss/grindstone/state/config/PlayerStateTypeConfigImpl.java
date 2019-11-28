@@ -11,6 +11,6 @@ public interface PlayerStateTypeConfigImpl {
     public boolean shouldSwapOnDuplicate();
 
     default public List<PlayerStateAttribute> getAttributes() {
-        return List.of(PlayerStateAttribute.VITALS, PlayerStateAttribute.INVENTORY);
+        return List.of(PlayerStateAttribute.VITALS, PlayerStateAttribute.EXP, PlayerStateAttribute.INVENTORY);
     }
 }

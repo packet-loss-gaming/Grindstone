@@ -9,10 +9,10 @@ import java.util.stream.Collectors;
 public enum PlayerStateKind implements PlayerStateTypeConfig {
     ADMIN(new TogglePlayerStateTypeConfigImpl()),
     LEGIT(new SwapPlayerStateTypeConfigImpl()),
-    FREAKY_FOUR(new SafeRespawnPlayerStateTypeConfigImpl()),
-    SHNUGGLES_PRIME(new SafeRespawnPlayerStateTypeConfigImpl()),
-    GRAVE_YARD(new SafeRespawnPlayerStateTypeConfigImpl()),
-    PATIENT_X(new SafeRespawnPlayerStateTypeConfigImpl()),
+    FREAKY_FOUR(new BossSafeRespawnPlayerStateTypeConfigImpl()),
+    SHNUGGLES_PRIME(new BossSafeRespawnPlayerStateTypeConfigImpl()),
+    GRAVE_YARD(new BossSafeRespawnPlayerStateTypeConfigImpl()),
+    PATIENT_X(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     SPLEEF(new TempPlayerStateTypeConfigImpl());
 
     private final PlayerStateTypeConfigImpl config;

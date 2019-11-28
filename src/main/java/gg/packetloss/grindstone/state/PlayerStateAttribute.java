@@ -1,12 +1,10 @@
 package gg.packetloss.grindstone.state;
 
-import gg.packetloss.grindstone.state.attribute.AttributeWorker;
-import gg.packetloss.grindstone.state.attribute.InventoryAttributeImpl;
-import gg.packetloss.grindstone.state.attribute.PlayerStateAttributeImpl;
-import gg.packetloss.grindstone.state.attribute.VitalsAttributeImpl;
+import gg.packetloss.grindstone.state.attribute.*;
 
 public enum PlayerStateAttribute implements PlayerStateAttributeImpl {
     VITALS(new VitalsAttributeImpl()),
+    EXP(new ExperienceAttributeImpl()),
     INVENTORY(new InventoryAttributeImpl());
 
     private final PlayerStateAttributeImpl impl;

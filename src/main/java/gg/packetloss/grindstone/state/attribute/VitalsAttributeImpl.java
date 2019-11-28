@@ -29,8 +29,7 @@ public class VitalsAttributeImpl implements PlayerStateAttributeImpl {
                     player.getHealth(),
                     player.getFoodLevel(),
                     player.getSaturation(),
-                    player.getExhaustion(),
-                    player.getTotalExperience()
+                    player.getExhaustion()
             ));
         }
 
@@ -45,7 +44,6 @@ public class VitalsAttributeImpl implements PlayerStateAttributeImpl {
             player.setFoodLevel(oldState.getHunger());
             player.setSaturation(oldState.getSaturation());
             player.setExhaustion(oldState.getExhaustion());
-            player.setTotalExperience(oldState.getExperience());
         }
     }
 }

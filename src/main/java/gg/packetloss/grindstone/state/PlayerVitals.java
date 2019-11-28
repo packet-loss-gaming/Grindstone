@@ -5,14 +5,12 @@ public class PlayerVitals {
     private final int hunger;
     private final float saturation;
     private final float exhaustion;
-    private final int experience;
 
-    public PlayerVitals(double health, int hunger, float saturation, float exhaustion, int experience) {
+    public PlayerVitals(double health, int hunger, float saturation, float exhaustion) {
         this.health = health;
         this.hunger = hunger;
         this.saturation = saturation;
         this.exhaustion = exhaustion;
-        this.experience = experience;
     }
 
     public double getHealth() {
@@ -29,9 +27,5 @@ public class PlayerVitals {
 
     public float getExhaustion() {
         return exhaustion;
-    }
-
-    public int getExperience() {
-        return experience;
     }
 }

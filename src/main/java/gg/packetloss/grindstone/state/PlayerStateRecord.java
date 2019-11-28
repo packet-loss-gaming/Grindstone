@@ -10,6 +10,7 @@ import java.util.UUID;
 public class PlayerStateRecord {
     private PlayerStateKind tempKind = null;
     private Map<PlayerStateKind, PlayerVitals> vitals = new EnumMap<>(PlayerStateKind.class);
+    private Map<PlayerStateKind, Integer> experience = new EnumMap<>(PlayerStateKind.class);
     private Map<PlayerStateKind, UUID> inventories = new EnumMap<>(PlayerStateKind.class);
 
     private void validatePush(PlayerStateKind kind) throws ConflictingPlayerStateException {
@@ -50,6 +51,10 @@ public class PlayerStateRecord {
 
     public Map<PlayerStateKind, PlayerVitals> getVitals() {
         return vitals;
+    }
+
+    public Map<PlayerStateKind, Integer> getExperience() {
+        return experience;
     }
 
     public Map<PlayerStateKind, UUID> getInventories() {
