@@ -19,6 +19,7 @@ import gg.packetloss.grindstone.city.engine.pixieitems.manager.NewSourceResult;
 import gg.packetloss.grindstone.city.engine.pixieitems.manager.PixieNetworkManager;
 import gg.packetloss.grindstone.city.engine.pixieitems.manager.ThreadedPixieNetworkManager;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -37,6 +38,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -46,7 +48,11 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.EnvironmentUtil.isChest;
@@ -65,6 +71,9 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
     private PixieNetworkManager manager = new ThreadedPixieNetworkManager();
 
+    private Lock queuedInventoriesLock = new ReentrantLock();
+    private Set<Inventory> queuedInventories = new HashSet<>();
+
     @Override
     public void enable() {
         setupEconomy();
@@ -73,6 +82,13 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         inst.registerEvents(this);
 
         registerCommands(Commands.class);
+
+        server.getScheduler().runTaskTimerAsynchronously(
+                inst,
+                this::processQueuedInventories,
+                TimeUtil.convertMinutesToTicks(5),
+                TimeUtil.convertMinutesToTicks(5)
+        );
     }
 
     private boolean setupEconomy() {
@@ -95,6 +111,31 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         }
 
         return true;
+    }
+
+    private Set<Inventory> swapInventories() {
+        try {
+            queuedInventoriesLock.lock();
+
+            // If there's nothing there, return an empty list
+            if (queuedInventories.isEmpty()) {
+                return Set.of();
+            }
+
+            Set<Inventory> oldInventories = queuedInventories;
+            // Reset the queue to a slightly smaller list to prevent frequent allocations
+            queuedInventories = new HashSet<>((int) (oldInventories.size() * .9) + 15);
+            return oldInventories;
+        } finally {
+            queuedInventoriesLock.unlock();
+        }
+    }
+
+    public void processQueuedInventories() {
+        Set<Inventory> oldInventories = swapInventories();
+        server.getScheduler().runTask(inst, () -> {
+            oldInventories.forEach(this::processInventory);
+        });
     }
 
     @EventHandler
@@ -186,13 +227,11 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         manager.removeChest(block.getLocation());
     }
 
-    @EventHandler
-    public void onChestClose(InventoryCloseEvent event) {
-        if (event.getInventory().getType() != InventoryType.CHEST) {
-           return;
+    private void processInventory(Inventory inventory) {
+        if (inventory.getType() != InventoryType.CHEST) {
+            return;
         }
 
-        Inventory inventory = event.getInventory();
         server.getScheduler().runTaskLater(inst, () -> {
             if (!inventory.getViewers().isEmpty()) {
                 return;
@@ -234,10 +273,27 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     OfflinePlayer player = Bukkit.getOfflinePlayer(networkDetail.getNamespace());
                     TransactionBroker broker = player != null ?  new EconomyBroker(economy, player) : new VoidBroker();
 
-                    manager.sourceItems(broker, networkID, event.getInventory());
+                    manager.sourceItems(broker, networkID, inventory);
                 });
             });
         }, 1);
+    }
+
+    @EventHandler
+    public void onChestClose(InventoryCloseEvent event) {
+        Inventory inventory = event.getInventory();
+        processInventory(inventory);
+    }
+
+    @EventHandler
+    public void onItemMove(InventoryMoveItemEvent event) {
+        try {
+            queuedInventoriesLock.lock();
+
+            queuedInventories.add(event.getDestination());
+        } finally {
+            queuedInventoriesLock.unlock();
+        }
     }
 
     @EventHandler
