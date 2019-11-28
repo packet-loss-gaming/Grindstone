@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.city.engine.pixieitems.manager;
 
+import gg.packetloss.grindstone.city.engine.pixieitems.PixieSinkVariant;
 import gg.packetloss.grindstone.city.engine.pixieitems.TransactionBroker;
 import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDetail;
 import org.bukkit.Chunk;
@@ -19,7 +20,7 @@ public interface PixieNetworkManager {
     CompletableFuture<List<PixieNetworkDetail>> selectNetworks(UUID namespace);
 
     CompletableFuture<Optional<NewSourceResult>> addSource(int networkID, Block block);
-    CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block, boolean ignoreContents);
+    CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block, PixieSinkVariant variant);
 
     boolean maybeExpandChest(Block block);
 

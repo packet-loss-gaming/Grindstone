@@ -73,9 +73,8 @@ public class PixieNetworkGraph {
         }
     }
 
-    public void removeChest(Location location) {
-        removeSource(location);
-        removeSink(location);
+    public Set<String> getSinksAtLocation(Location location) {
+        return destinationToItem.getOrDefault(location, Set.of());
     }
 
     private List<Location> randomizedCopy(List<Location> sourceList) {

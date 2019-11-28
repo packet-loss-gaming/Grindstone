@@ -4,6 +4,7 @@ import com.destroystokyo.paper.ParticleBuilder;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.city.engine.pixieitems.BrokerTransaction;
+import gg.packetloss.grindstone.city.engine.pixieitems.PixieSinkVariant;
 import gg.packetloss.grindstone.city.engine.pixieitems.TransactionBroker;
 import gg.packetloss.grindstone.city.engine.pixieitems.db.*;
 import gg.packetloss.grindstone.city.engine.pixieitems.db.mysql.MySQLPixieChestDatabase;
@@ -109,11 +110,22 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         }
     }
 
-    private void clearBlockMemoryOnly(@Nullable PixieNetworkGraph network, Location location) {
+    private void clearSinkAtBlock(@Nullable PixieNetworkGraph network, Location location) {
         if (network != null) {
             network.removeSink(location);
         }
+    }
+
+    private void clearSourceAtBlock(@Nullable PixieNetworkGraph network, Location location) {
         sourceToNetworkMapping.remove(location);
+        if (network != null) {
+            network.removeSource(location);
+        }
+    }
+
+    private void clearBlockMemoryOnly(@Nullable PixieNetworkGraph network, Location location) {
+        clearSinkAtBlock(network, location);
+        clearSourceAtBlock(network, location);
     }
 
     private void addSourceMemoryOnly(int networkID, PixieNetworkGraph network, Location location) {
@@ -283,9 +295,17 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block, boolean ignoreContents) {
+    public CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block, PixieSinkVariant variant) {
         Inventory chestInventory = ((Chest) block.getState()).getInventory();
-        Set<String> itemNames = ignoreContents ? Set.of() : extractItemNames(chestInventory);
+        Set<String> itemNames;
+        switch (variant) {
+            case VOID:
+                itemNames = Set.of();
+                break;
+            default:
+                itemNames = extractItemNames(chestInventory);
+                break;
+        }
 
         Location[] locations = getLocationsToAdd(block).toArray(new Location[0]);
 
@@ -300,6 +320,10 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                     PixieNetworkGraph network = idToNetworkMapping.get(networkID);
 
                     for (Location location : locations) {
+                        if (variant == PixieSinkVariant.ADD) {
+                            itemNames.addAll(network.getSinksAtLocation(location));
+                        }
+
                         clearBlockMemoryOnly(network, location);
                         if (network != null) {
                             addSinkMemoryOnly(network, itemNames, location);
