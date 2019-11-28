@@ -428,10 +428,11 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         goneState.put(player.getUniqueId(), state);
         playerState.remove(player.getUniqueId());
 
-        gameState.removePlayer(player);
         if (giveReward) {
             rewardPlayer(player, false);
         }
+
+        gameState.removePlayer(player);
 
         writeData();
     }
