@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.state.attribute;
 
+import gg.packetloss.grindstone.state.PlayerExperience;
 import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.state.PlayerStatePersistenceManager;
 import gg.packetloss.grindstone.state.PlayerStateRecord;
@@ -16,7 +17,7 @@ public class ExperienceAttributeImpl implements PlayerStateAttributeImpl {
         return new ExperienceAttributeWorker(this, kind, persistenceManager);
     }
 
-    private static class ExperienceAttributeWorker extends AttributeWorker<Integer> {
+    private static class ExperienceAttributeWorker extends AttributeWorker<PlayerExperience> {
         protected ExperienceAttributeWorker(PlayerStateAttributeImpl attribute, PlayerStateKind kind,
                                             PlayerStatePersistenceManager persistenceManager) {
             super(attribute, kind, persistenceManager);
@@ -24,17 +25,18 @@ public class ExperienceAttributeImpl implements PlayerStateAttributeImpl {
 
         @Override
         public void attach(PlayerStateRecord record, Player player) {
-            record.getExperience().put(kind, player.getTotalExperience());
+            record.getExperience().put(kind, new PlayerExperience(player.getExp(), player.getLevel()));
         }
 
         @Override
-        protected Integer detach(PlayerStateRecord record, Player player) {
+        protected PlayerExperience detach(PlayerStateRecord record, Player player) {
             return record.getExperience().remove(kind);
         }
 
         @Override
-        protected void remove(Integer oldState, Player player) {
-            player.setTotalExperience(oldState);
+        protected void remove(PlayerExperience oldState, Player player) {
+            player.setExp(oldState.getExp());
+            player.setLevel(oldState.getLevel());
         }
     }
 }

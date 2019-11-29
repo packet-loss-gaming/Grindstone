@@ -230,8 +230,14 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler
-    public void onPlayerRespawn(PlayerRespawnEvent event) throws IOException {
-        tryPopTempKind(event.getPlayer());
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        server.getScheduler().runTask(inst, () -> {
+            try {
+                tryPopTempKind(event.getPlayer());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @EventHandler
