@@ -368,7 +368,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     Material targetBlock = entry.getValue() ? Material.REDSTONE_BLOCK : Material.SMOOTH_BRICK;
                     mutable.getBlock().setType(targetBlock);
                 }
-                server.getScheduler().runTaskLater(inst, this::randomizeLevers, 15);
+                server.getScheduler().runTaskLater(inst, this::randomizeLevers, 1);
             }, 15);
         } else {
             for (Location entry : leverBlocks.keySet()) {
