@@ -69,6 +69,8 @@ public class WarpManager {
 
     public void setPlayerHomeAndNotify(Player player, Location loc) {
         boolean isUpdate = warpData.setWarp(getHomeNameFor(player), loc).isPresent();
+        warpData.save();
+
         if (isUpdate) {
             ChatUtil.sendNotice(player, "Your bed location has been updated.");
         } else {
