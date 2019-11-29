@@ -28,6 +28,10 @@ public class GuildState {
     }
 
     public boolean enablePowers() {
+        if (isEnabled()) {
+            return true;
+        }
+
         GuildPowersEnableEvent event = new GuildPowersEnableEvent(player, state.getType());
         CommandBook.server().getPluginManager().callEvent(event);
 
@@ -40,6 +44,10 @@ public class GuildState {
     }
 
     public boolean disablePowers() {
+        if (isDisabled()) {
+            return true;
+        }
+
         GuildPowersDisableEvent event = new GuildPowersDisableEvent(player, state.getType());
         CommandBook.server().getPluginManager().callEvent(event);
 
