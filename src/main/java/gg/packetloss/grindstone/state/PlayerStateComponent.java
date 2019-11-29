@@ -97,9 +97,9 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
 
             future.complete(record);
             return record;
-        } catch (IOException ex) {
-            future.completeExceptionally(ex);
-            throw ex;
+        } catch (Throwable t) {
+            future.completeExceptionally(t);
+            throw t;
         }
     }
 
