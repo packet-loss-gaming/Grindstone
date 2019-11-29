@@ -13,6 +13,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     SHNUGGLES_PRIME(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     GRAVE_YARD(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     PATIENT_X(new BossSafeRespawnPlayerStateTypeConfigImpl()),
+    MIRAGE_ARENA(new WalkInPvPSafeRespawnPlayerStateTypeConfigImpl()),
     SPLEEF(new TempPlayerStateTypeConfigImpl());
 
     private final PlayerStateTypeConfigImpl config;

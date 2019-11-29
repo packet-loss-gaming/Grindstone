@@ -25,16 +25,14 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
-import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPScope;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.state.PlayerStateComponent;
 import gg.packetloss.grindstone.util.APIUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.util.database.IOUtil;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
 import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import org.bukkit.ChatColor;
@@ -50,9 +48,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Mirage Arena", desc = "What will you see next?")
-@Depend(components = {AdminComponent.class, SessionComponent.class, HighScoresComponent.class},
+@Depend(components = {AdminComponent.class, SessionComponent.class, HighScoresComponent.class, PlayerStateComponent.class},
         plugins = {"WorldGuard"})
-public class MirageArena extends AreaComponent<MirageArenaConfig> implements PersistentArena {
+public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
     @InjectComponent
     protected AdminComponent admin;
@@ -60,6 +58,8 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
     protected SessionComponent sessions;
     @InjectComponent
     protected HighScoresComponent highScores;
+    @InjectComponent
+    protected PlayerStateComponent playerState;
 
     protected boolean voting = false;
     protected int ticks = 0;
@@ -68,8 +68,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
 
     protected BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
     protected Set<Location> manuallyPlacedLocations = new HashSet<>();
-
-    protected HashMap<String, PlayerState> playerState = new HashMap<>();
 
     @Override
     public void setUp() {
@@ -80,7 +78,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             tick = 5 * 20;
             listener = new MirageArenaListener(this);
             config = new MirageArenaConfig();
-            reloadData();
 
             registerScope();
             registerCommands(Commands.class);
@@ -96,17 +93,11 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
     }
 
     @Override
-    public void disable() {
-        writeData(false);
-    }
-
-    @Override
     public void run() {
         if (!isEmpty()) {
             shiftMirage();
             revertBlocks();
         }
-        writeData(true);
     }
 
     private void registerScope() {
@@ -412,47 +403,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> implements Per
             } catch (IOException | DataException e) {
                 e.printStackTrace();
                 ChatUtil.sendError(sender, "Error encountered, check console.");
-            }
-        }
-    }
-
-    @Override
-    public void writeData(boolean doAsync) {
-        Runnable run = () -> {
-            IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
-        };
-
-        if (doAsync) {
-            server.getScheduler().runTaskAsynchronously(inst, run);
-        } else {
-            run.run();
-        }
-    }
-
-    @Override
-    public void reloadData() {
-        File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
-        if (playerStateFile.exists()) {
-            Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-            if (playerStateFileO instanceof HashMap) {
-                //noinspection unchecked
-                playerState = (HashMap<String, PlayerState>) playerStateFileO;
-                log.info("Loaded: " + playerState.size() + " respawn records for the Mirage Arena.");
-            } else {
-                log.warning("Invalid block record file encountered: " + playerStateFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-                playerStateFile = new File(getWorkingDir().getPath() + "/old-" + playerStateFile.getName());
-                if (playerStateFile.exists()) {
-                    playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-                    if (playerStateFileO instanceof HashMap) {
-                        //noinspection unchecked
-                        playerState = (HashMap<String, PlayerState>) playerStateFileO;
-                        log.info("Backup file loaded successfully!");
-                        log.info("Loaded: " + playerState.size() + " respawn records for the Mirage Arena.");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
             }
         }
     }

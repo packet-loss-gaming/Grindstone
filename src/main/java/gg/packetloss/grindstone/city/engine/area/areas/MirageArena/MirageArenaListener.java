@@ -15,13 +15,14 @@ import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
+import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -38,10 +39,9 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -259,25 +259,21 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
-
-        HashMap<String, PlayerState> playerState = parent.playerState;
-
         Player player = event.getEntity();
-        if (!playerState.containsKey(player.getName()) && parent.contains(player) && !parent.admin.isAdmin(player)) {
-
+        if (parent.contains(player)) {
             Location loc = player.getLocation();
             World world = loc.getWorld();
             MirageArenaConfig config = parent.getConfig();
             MirageSession session = parent.sessions.getSession(MirageSession.class, player);
 
-            int lowEnd, highEnd;
+            Material lowEnd, highEnd;
 
             if (ModifierComponent.getModifierCenter().isActive(ModifierType.NONUPLE_MIRAGE_GOLD)) {
-                lowEnd = ItemID.GOLD_BAR;
-                highEnd = BlockID.GOLD_BLOCK;
+                lowEnd = Material.GOLD_INGOT;
+                highEnd = Material.GOLD_BLOCK;
             } else {
-                lowEnd = ItemID.GOLD_NUGGET;
-                highEnd = ItemID.GOLD_BAR;
+                lowEnd = Material.GOLD_NUGGET;
+                highEnd = Material.GOLD_INGOT;
             }
 
             for (double i = session.getDamage(); i > 0; --i) {
@@ -296,41 +292,12 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
                 parent.highScores.update(killer, ScoreTypes.MIRAGE_ARENA_KILLS, 1);
             }
 
-            playerState.put(player.getName(), new PlayerState(player.getName(),
-                    player.getInventory().getContents(),
-                    player.getInventory().getArmorContents(),
-                    player.getLevel(),
-                    player.getExp()));
-            event.getDrops().clear();
-            event.setDroppedExp(0);
-            event.setKeepLevel(true);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-
-        HashMap<String, PlayerState> playerState = parent.playerState;
-
-        Player player = event.getPlayer();
-        final Location fallBack = event.getRespawnLocation();
-
-        // Restore their inventory if they have one stored
-        if (playerState.containsKey(player.getName()) && !parent.admin.isAdmin(player)) {
-
             try {
-                PlayerState identity = playerState.get(player.getName());
-
-                // Restore the contents
-                player.getInventory().setArmorContents(identity.getArmourContents());
-                player.getInventory().setContents(identity.getInventoryContents());
-                player.setLevel(identity.getLevel());
-                player.setExp(identity.getExperience());
-            } catch (Exception e) {
+                parent.playerState.pushState(PlayerStateKind.MIRAGE_ARENA, player);
+                event.getDrops().clear();
+                event.setDroppedExp(0);
+            } catch (ConflictingPlayerStateException | IOException e) {
                 e.printStackTrace();
-                event.setRespawnLocation(fallBack);
-            } finally {
-                playerState.remove(player.getName());
             }
         }
     }
