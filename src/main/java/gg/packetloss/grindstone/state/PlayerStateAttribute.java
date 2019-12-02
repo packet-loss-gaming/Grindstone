@@ -5,7 +5,8 @@ import gg.packetloss.grindstone.state.attribute.*;
 public enum PlayerStateAttribute implements PlayerStateAttributeImpl {
     VITALS(new VitalsAttributeImpl()),
     EXP(new ExperienceAttributeImpl()),
-    INVENTORY(new InventoryAttributeImpl());
+    INVENTORY(new InventoryAttributeImpl()),
+    GUILD(new GuildAttributeImpl());
 
     private final PlayerStateAttributeImpl impl;
 

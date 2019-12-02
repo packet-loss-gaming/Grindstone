@@ -37,9 +37,17 @@ public class GuildComponent extends BukkitComponent implements Listener {
 
     private Map<UUID, InternalGuildState> guildStateMap = new HashMap<>();
 
+    private static GuildComponent guildInst;
+
+    public static GuildComponent inst() {
+        return guildInst;
+    }
+
     @SuppressWarnings("AccessStaticViaInstance")
     @Override
     public void enable() {
+        guildInst = this;
+
         inst.registerEvents(this);
 
         inst.registerEvents(new NinjaListener(this::internalGetState));

@@ -12,6 +12,7 @@ public class PlayerStateRecord {
     private Map<PlayerStateKind, PlayerVitals> vitals = new EnumMap<>(PlayerStateKind.class);
     private Map<PlayerStateKind, PlayerExperience> experience = new EnumMap<>(PlayerStateKind.class);
     private Map<PlayerStateKind, UUID> inventories = new EnumMap<>(PlayerStateKind.class);
+    private Map<PlayerStateKind, PlayerGuild> guilds = new EnumMap<>(PlayerStateKind.class);
 
     private void validatePush(PlayerStateKind kind) throws ConflictingPlayerStateException {
         Validate.notNull(kind, "New kind must not be null");
@@ -61,7 +62,11 @@ public class PlayerStateRecord {
         return inventories;
     }
 
+    public Map<PlayerStateKind, PlayerGuild> getGuilds() {
+        return guilds;
+    }
+
     public boolean isEmpty() {
-        return vitals.isEmpty() && inventories.isEmpty();
+        return vitals.isEmpty() && experience.isEmpty() && inventories.isEmpty() && guilds.isEmpty();
     }
 }
