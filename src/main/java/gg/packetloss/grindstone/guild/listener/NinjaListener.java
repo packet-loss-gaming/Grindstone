@@ -53,7 +53,7 @@ public class NinjaListener implements Listener {
 
     private Optional<NinjaState> getState(Player player) {
         InternalGuildState internalState = internalStateLookup.apply(player);
-        if (internalState.isEnabled() && internalState instanceof NinjaState) {
+        if (internalState instanceof NinjaState && internalState.isEnabled()) {
             return Optional.of((NinjaState) internalState);
         }
         return Optional.empty();

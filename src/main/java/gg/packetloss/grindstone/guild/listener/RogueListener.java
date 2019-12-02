@@ -53,7 +53,7 @@ public class RogueListener implements Listener {
 
     private Optional<RogueState> getState(Player player) {
         InternalGuildState internalState = internalStateLookup.apply(player);
-        if (internalState.isEnabled() && internalState instanceof RogueState) {
+        if (internalState instanceof RogueState && internalState.isEnabled()) {
             return Optional.of((RogueState) internalState);
         }
         return Optional.empty();
