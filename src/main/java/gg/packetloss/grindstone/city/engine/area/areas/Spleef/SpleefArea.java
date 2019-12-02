@@ -13,6 +13,7 @@ import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.PlayerStateComponent;
 import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.APIUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -95,6 +96,9 @@ public class SpleefArea extends BukkitComponent implements Runnable {
     private void addPlayer(Player player) {
         try {
             playerState.pushState(PlayerStateKind.SPLEEF, player);
+
+            admin.standardizePlayer(player);
+            GeneralPlayerUtil.takeFlightSafely(player);
 
             player.getInventory().clear();
             player.getInventory().setArmorContents(NO_ARMOR);

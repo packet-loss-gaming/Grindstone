@@ -1,6 +1,7 @@
 package gg.packetloss.grindstone.city.engine.area.areas.Spleef;
 
 import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import org.bukkit.Server;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -66,5 +67,12 @@ public class SpleefListener implements Listener {
         }
 
         event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGuildEnable(GuildPowersEnableEvent event) {
+        if (parent.anyContains(event.getPlayer().getLocation())) {
+            event.setCancelled(true);
+        }
     }
 }

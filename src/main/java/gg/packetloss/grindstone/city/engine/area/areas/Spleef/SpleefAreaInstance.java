@@ -45,16 +45,6 @@ public class SpleefAreaInstance {
         return LocationUtil.isInRegion(world, containmentRegion, location);
     }
 
-    public void equalize(Collection<Player> players) {
-        for (Player player : players) {
-            component.admin.standardizePlayer(player);
-
-            // Clear flight if set
-            player.setAllowFlight(false);
-            player.setFlying(false);
-        }
-    }
-
     public void feed(Collection<Player> players) {
         for (Player player : players) {
             player.setFoodLevel(20);
@@ -164,7 +154,6 @@ public class SpleefAreaInstance {
 
         Collection<Player> players = getParticipants();
 
-        equalize(players);
         feed(players);
         restoreFloor(players);
         buildWalls();
