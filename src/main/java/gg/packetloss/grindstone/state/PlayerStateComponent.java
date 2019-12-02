@@ -164,12 +164,12 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
             PlayerStateRecord record = requireStateRecord(player.getUniqueId());
 
             for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
-                if (!attribute.isValidFor(record)) {
-                    return false;
+                if (attribute.isValidFor(record)) {
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         } catch (IOException ex) {
             ex.printStackTrace();
             return false;

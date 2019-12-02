@@ -32,6 +32,10 @@ public abstract class AttributeWorker<T> {
     }
 
     public void popState(PlayerStateRecord record, Player player) throws IOException {
+        if (!attribute.isValidFor(kind, record)) {
+            return;
+        }
+
         remove(detach(record, player), player);
     }
 
