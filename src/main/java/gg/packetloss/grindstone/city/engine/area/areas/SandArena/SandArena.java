@@ -14,28 +14,24 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
-import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.state.PlayerStateComponent;
 import gg.packetloss.grindstone.util.APIUtil;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.util.database.IOUtil;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 
-import java.io.File;
-import java.util.HashMap;
-
 @ComponentInformation(friendlyName = "Sand Arena", desc = "It's a bit dry")
-@Depend(components = {AdminComponent.class}, plugins = {"WorldGuard"})
-public class SandArena extends AreaComponent<SandArenaConfig> implements PersistentArena {
+@Depend(components = {AdminComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
+public class SandArena extends AreaComponent<SandArenaConfig> {
 
     @InjectComponent
     protected AdminComponent admin;
+    @InjectComponent
+    protected PlayerStateComponent playerState;
 
     protected int[] respawnBlocks = {BlockID.WOOD, BlockID.STONE_BRICK};
-    protected HashMap<String, PlayerState> playerState = new HashMap<>();
 
     @Override
     public void setUp() {
@@ -46,7 +42,6 @@ public class SandArena extends AreaComponent<SandArenaConfig> implements Persist
             tick = 5 * 20;
             listener = new SandArenaListener(this);
             config = new SandArenaConfig();
-            reloadData();
         } catch (UnknownPluginException e) {
             log.info("WorldGuard could not be found!");
         }
@@ -59,17 +54,11 @@ public class SandArena extends AreaComponent<SandArenaConfig> implements Persist
     }
 
     @Override
-    public void disable() {
-        writeData(false);
-    }
-
-    @Override
     public void run() {
         if (!isEmpty()) {
             addBlocks();
         }
         removeBlocks();
-        writeData(true);
     }
 
     public void addBlocks() {
@@ -167,46 +156,5 @@ public class SandArena extends AreaComponent<SandArenaConfig> implements Persist
 
     private Block getBlock(Vector v) {
         return getWorld().getBlockAt(v.getBlockX(), v.getBlockY(), v.getBlockZ());
-    }
-
-    @Override
-    public void writeData(boolean doAsync) {
-        Runnable run = () -> {
-            IOUtil.toBinaryFile(getWorkingDir(), "respawns", playerState);
-        };
-
-        if (doAsync) {
-            server.getScheduler().runTaskAsynchronously(inst, run);
-        } else {
-            run.run();
-        }
-    }
-
-    @Override
-    public void reloadData() {
-        File playerStateFile = new File(getWorkingDir().getPath() + "/respawns.dat");
-        if (playerStateFile.exists()) {
-            Object playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-            if (playerStateFileO instanceof HashMap) {
-                //noinspection unchecked
-                playerState = (HashMap<String, PlayerState>) playerStateFileO;
-                log.info("Loaded: " + playerState.size() + " respawn records for the Sand Arena.");
-            } else {
-                log.warning("Invalid block record file encountered: " + playerStateFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-                playerStateFile = new File(getWorkingDir().getPath() + "/old-" + playerStateFile.getName());
-                if (playerStateFile.exists()) {
-                    playerStateFileO = IOUtil.readBinaryFile(playerStateFile);
-                    if (playerStateFileO instanceof HashMap) {
-                        //noinspection unchecked
-                        playerState = (HashMap<String, PlayerState>) playerStateFileO;
-                        log.info("Backup file loaded successfully!");
-                        log.info("Loaded: " + playerState.size() + " respawn records for the Sand Arena.");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
-            }
-        }
     }
 }

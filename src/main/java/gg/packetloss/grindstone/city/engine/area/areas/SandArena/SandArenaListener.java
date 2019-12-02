@@ -8,10 +8,11 @@ package gg.packetloss.grindstone.city.engine.area.areas.SandArena;
 
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
+import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.RefCountedTracker;
 import gg.packetloss.grindstone.util.player.FallDamageDeathBlocker;
-import gg.packetloss.grindstone.util.player.PlayerState;
-import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,9 +21,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.UUID;
 
 public class SandArenaListener extends AreaListener<SandArena> {
@@ -70,50 +70,25 @@ public class SandArenaListener extends AreaListener<SandArena> {
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
-
-        HashMap<String, PlayerState> playerState = parent.playerState;
-
         Player player = event.getEntity();
-        if (!playerState.containsKey(player.getName()) && parent.contains(player, 1) && !parent.admin.isAdmin(player)) {
-
-            playerState.put(player.getName(), new PlayerState(player.getName(),
-                    player.getInventory().getContents(),
-                    player.getInventory().getArmorContents(),
-                    player.getLevel(),
-                    player.getExp()));
-            event.getDrops().clear();
-            event.setDroppedExp(0);
-            event.setKeepLevel(true);
+        if (parent.contains(player, 1)) {
+            try {
+                parent.playerState.pushState(PlayerStateKind.SAND_ARENA, player);
+                event.getDrops().clear();
+                event.setDroppedExp(0);
+            } catch (ConflictingPlayerStateException | IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-
-        HashMap<String, PlayerState> playerState = parent.playerState;
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerStatePop(PlayerStatePopEvent event) {
+        if (event.getKind() != PlayerStateKind.SAND_ARENA) {
+            return;
+        }
 
         Player player = event.getPlayer();
-        final Location fallBack = event.getRespawnLocation();
-
-        // Restore their inventory if they have one stored
-        if (playerState.containsKey(player.getName()) && !parent.admin.isAdmin(player)) {
-
-            try {
-                PlayerState identity = playerState.get(player.getName());
-
-                // Restore the contents
-                player.getInventory().setArmorContents(identity.getArmourContents());
-                player.getInventory().setContents(identity.getInventoryContents());
-                player.setLevel(identity.getLevel());
-                player.setExp(identity.getExperience());
-
-                event.setRespawnLocation(parent.getRespawnLocation());
-            } catch (Exception e) {
-                e.printStackTrace();
-                event.setRespawnLocation(fallBack);
-            } finally {
-                playerState.remove(player.getName());
-            }
-        }
+        player.teleport(parent.getRespawnLocation());
     }
 }
