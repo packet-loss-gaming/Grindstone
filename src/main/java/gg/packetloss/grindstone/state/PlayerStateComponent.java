@@ -163,6 +163,12 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
         try {
             PlayerStateRecord record = requireStateRecord(player.getUniqueId());
 
+            // If something is checking, but we're in the process of removing the state, consider it already removed.
+            Optional<PlayerStateKind> kindBeingRemoved = record.getKindBeingRemoved();
+            if (kindBeingRemoved.orElse(null) == kind) {
+                return false;
+            }
+
             for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
                 if (attribute.isValidFor(record)) {
                     return true;
@@ -198,11 +204,13 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
     public void popState(PlayerStateKind kind, Player player) throws IOException {
         PlayerStateRecord record = requireStateRecord(player.getUniqueId());
 
-        record.popKind(kind);
+        record.beginPopKind(kind);
 
         for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
             attribute.getWorkerFor(cacheManager).popState(record, player);
         }
+
+        record.finishPopKind(kind);
 
         server.getPluginManager().callEvent(new PlayerStatePopEvent(player, kind));
 

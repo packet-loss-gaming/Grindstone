@@ -71,7 +71,7 @@ public class SpleefListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onGuildEnable(GuildPowersEnableEvent event) {
-        if (parent.anyContains(event.getPlayer().getLocation())) {
+        if (parent.isUsingArenaTools(event.getPlayer())) {
             event.setCancelled(true);
         }
     }

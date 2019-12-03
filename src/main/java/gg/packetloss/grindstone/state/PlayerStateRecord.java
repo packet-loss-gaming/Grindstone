@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class PlayerStateRecord {
+    private transient PlayerStateKind kindBeingRemoved = null;
     private PlayerStateKind tempKind = null;
     private Map<PlayerStateKind, PlayerVitals> vitals = new EnumMap<>(PlayerStateKind.class);
     private Map<PlayerStateKind, PlayerExperience> experience = new EnumMap<>(PlayerStateKind.class);
@@ -27,6 +28,11 @@ public class PlayerStateRecord {
                 throw new ConflictingPlayerStateException(kind, tempKind);
             }
         }
+
+        boolean isKindCurrentlyBeingRemoved = kindBeingRemoved != null;
+        if (isKindCurrentlyBeingRemoved) {
+            throw new ConflictingPlayerStateException(kind, tempKind);
+        }
     }
 
     private void doPush(PlayerStateKind kind) {
@@ -40,10 +46,20 @@ public class PlayerStateRecord {
         doPush(kind);
     }
 
-    public void popKind(PlayerStateKind kind) {
+    public void beginPopKind(PlayerStateKind kind) {
         if (kind.isTemporary()) {
             this.tempKind = null;
         }
+
+        this.kindBeingRemoved = kind;
+    }
+
+    public void finishPopKind(PlayerStateKind kind) {
+        this.kindBeingRemoved = null;
+    }
+
+    public Optional<PlayerStateKind> getKindBeingRemoved() {
+        return Optional.ofNullable(kindBeingRemoved);
     }
 
     public Optional<PlayerStateKind> getTempKind() {
