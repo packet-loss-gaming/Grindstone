@@ -32,4 +32,8 @@ public class JungleRaidGameState {
     public void removePlayer(Player player) {
         playerProfiles.remove(player);
     }
+
+    public boolean containsPlayer(Player player) {
+        return playerProfiles.containsKey(player);
+    }
 }

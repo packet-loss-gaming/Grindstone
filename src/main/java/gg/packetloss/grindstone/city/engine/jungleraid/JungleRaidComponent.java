@@ -42,18 +42,20 @@ import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
+import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.state.PlayerStateComponent;
+import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
-import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
-import gg.packetloss.grindstone.util.player.PlayerState;
 import gg.packetloss.hackbook.ChunkBook;
 import gg.packetloss.hackbook.ModifierBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -87,10 +89,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -107,8 +107,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
 
-    protected final String workingDir;
-
     private ProtectedRegion region;
     private ProtectedRegion lobbyRegion;
     private World world;
@@ -119,9 +117,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private List<BukkitTask> restorationTask = new ArrayList<>();
 
     private JungleRaidGameState gameState = new JungleRaidGameState();
-
-    private ConcurrentHashMap<UUID, PlayerState> playerState = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<UUID, PlayerState> goneState = new ConcurrentHashMap<>();
 
     private JungleRaidState state = JungleRaidState.LOBBY;
     private long startTime;
@@ -153,10 +148,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     AntiCheatCompatibilityComponent antiCheat;
     @InjectComponent
     HighScoresComponent highScoresComponent;
-
-    public JungleRaidComponent() {
-        this.workingDir = inst.getDataFolder().getPath() + "/minigames/jr/";
-    }
+    @InjectComponent
+    PlayerStateComponent playerStateComponent;
 
     public JungleRaidState getState() {
         return state;
@@ -347,58 +340,20 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         player.getInventory().setArmorContents(leatherArmour);
     }
 
-    public void restore(Player player) {
-        prayerComponent.uninfluencePlayer(player);
-    }
-
-    protected void restore(Player player, PlayerState state) {
-
-        // Clear Player
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(NO_ARMOR);
-
-        // Teleport Player
-        Location returnLoc = state.getLocation();
-        if (returnLoc != null) {
-            player.teleport(returnLoc);
-        }
-
-        // Restore the contents
-        player.getInventory().setArmorContents(state.getArmourContents());
-        player.getInventory().setContents(state.getInventoryContents());
-        player.setHealth(Math.min(player.getMaxHealth(), state.getHealth()));
-        player.setFoodLevel(state.getHunger());
-        player.setSaturation(state.getSaturation());
-        player.setExhaustion(state.getExhaustion());
-        player.setLevel(state.getLevel());
-        player.setExp(state.getExperience());
-        player.updateInventory();
-
-        if (player.getVehicle() != null) {
-            player.getVehicle().eject();
-        }
-    }
-
     public void addToLobby(Player player) {
-        GeneralPlayerUtil.takeFlightSafely(player);
+        try {
+            playerStateComponent.pushState(PlayerStateKind.JUNGLE_RAID, player);
 
-        PlayerState state = GeneralPlayerUtil.makeComplexState(player);
-        state.setOwnerName(player.getName());
-        state.setLocation(player.getLocation());
-        playerState.put(player.getUniqueId(), state);
+            GeneralPlayerUtil.takeFlightSafely(player);
 
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(NO_ARMOR);
+            player.getInventory().clear();
+            player.getInventory().setArmorContents(NO_ARMOR);
 
-        gameState.addPlayer(player);
-        applyClassEquipment(player);
-
-        writeData();
-    }
-
-    private void restorePresentPlayer(Player player) {
-        restore(player, playerState.get(player.getUniqueId()));
-        playerState.remove(player.getUniqueId());
+            gameState.addPlayer(player);
+            applyClassEquipment(player);
+        } catch (ConflictingPlayerStateException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void rewardPlayer(Player player, boolean won) {
@@ -423,123 +378,17 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         ChatUtil.sendNotice(player, "You received: " + economy.format(amt) + '.');
     }
 
-    public void left(Player player, boolean giveReward) {
-        PlayerState state = playerState.get(player.getUniqueId());
-        goneState.put(player.getUniqueId(), state);
-        playerState.remove(player.getUniqueId());
-
-        if (giveReward) {
-            rewardPlayer(player, false);
-        }
-
+    public void died(Player player) {
+        rewardPlayer(player, false);
         gameState.removePlayer(player);
-
-        writeData();
     }
 
-    private void removeFromLobby(Player player) {
-        if (!playerState.containsKey(player.getUniqueId())) return;
-
-        restorePresentPlayer(player);
-        gameState.removePlayer(player);
-
-        writeData();
-    }
-
-    private void removePlayerForGameEnd(Player player) {
-        if (!playerState.containsKey(player.getUniqueId())) return;
-
-        restorePresentPlayer(player);
-        gameState.removePlayer(player);
-
-        // writeData() contractually handled by caller i.e. end()
-    }
-
-    private void restoreGonePlayer(Player player) {
-        if (!goneState.containsKey(player.getUniqueId())) return;
-
-        restore(player, goneState.get(player.getUniqueId()));
-        goneState.remove(player.getUniqueId());
-
-        writeData();
-    }
-
-    // Persistence System
-    public void writeData() {
-
-        File workingDirectory = new File(workingDir);
-
-        IOUtil.toBinaryFile(workingDirectory, "active", playerState);
-        IOUtil.toBinaryFile(workingDirectory, "gone", goneState);
-    }
-
-    public void reloadData() {
-
-        File activeFile = new File(workingDir + "active.dat");
-        File goneFile = new File(workingDir + "gone.dat");
-
-        if (activeFile.exists()) {
-            Object playerStateFileO = IOUtil.readBinaryFile(activeFile);
-
-            if (playerStateFileO instanceof ConcurrentHashMap) {
-                //noinspection unchecked
-                playerState = (ConcurrentHashMap<UUID, PlayerState>) playerStateFileO;
-            } else {
-                log.warning("Invalid identity record file encountered: " + activeFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-
-                activeFile = new File(workingDir + "old-" + activeFile.getName());
-
-                if (activeFile.exists()) {
-
-                    playerStateFileO = IOUtil.readBinaryFile(activeFile);
-
-                    if (playerStateFileO instanceof ConcurrentHashMap) {
-                        //noinspection unchecked
-                        playerState = (ConcurrentHashMap<UUID, PlayerState>) playerStateFileO;
-                        log.info("Backup file loaded successfully!");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
-            }
+    private void removePlayer(Player player) {
+        try {
+            playerStateComponent.popState(PlayerStateKind.JUNGLE_RAID, player);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        if (goneFile.exists()) {
-            Object playerStateFileO = IOUtil.readBinaryFile(goneFile);
-
-            if (playerStateFileO instanceof ConcurrentHashMap) {
-                //noinspection unchecked
-                goneState = (ConcurrentHashMap<UUID, PlayerState>) playerStateFileO;
-            } else {
-                log.warning("Invalid identity record file encountered: " + goneFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-
-                goneFile = new File(workingDir + "old-" + goneFile.getName());
-
-                if (goneFile.exists()) {
-
-                    playerStateFileO = IOUtil.readBinaryFile(goneFile);
-
-                    if (playerStateFileO instanceof ConcurrentHashMap) {
-                        //noinspection unchecked
-                        goneState = (ConcurrentHashMap<UUID, PlayerState>) playerStateFileO;
-                        log.info("Backup file loaded successfully!");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
-            }
-        }
-
-        for (Map.Entry<UUID, PlayerState> entry : playerState.entrySet()) {
-            goneState.put(entry.getKey(), entry.getValue());
-        }
-        playerState.clear();
-
-        restore();
-
-        log.info("Loaded: " + goneState.size() + " saved identities for: Jungle Raid.");
     }
 
     public boolean isFriendlyFire(Player attacker, Player defender) {
@@ -586,7 +435,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     public Collection<Player> getPlayersInLobby() {
-        ProtectedRegion r = region;
         return server.getOnlinePlayers().stream()
                 .filter(p -> lobbyContains(p.getLocation()))
                 .collect(Collectors.toList());
@@ -605,10 +453,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         config = configure(new LocalConfiguration());
 
         setupEconomy();
-        server.getScheduler().runTaskLater(inst, () -> {
-            setupRegionInfo();
-            reloadData();
-        }, 1);
+        server.getScheduler().runTaskLater(inst, this::setupRegionInfo, 1);
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(new JungleRaidListener());
@@ -617,15 +462,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     public void end() {
-        Iterator<Map.Entry<UUID, PlayerState>> it = playerState.entrySet().iterator();
+        Iterator<Player> it = gameState.getPlayers().iterator();
 
         while (it.hasNext()) {
-            PlayerState state = it.next().getValue();
-            removePlayerForGameEnd(Bukkit.getPlayer(state.getOwnerName()));
+            Player player = it.next();
+            removePlayer(player);
             it.remove();
         }
-
-        writeData();
 
         restore();
         flagData = new FlagEffectData();
@@ -945,9 +788,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private void enforceBounds() {
-        for (PlayerState entry : playerState.values()) {
-            Player player = Bukkit.getPlayerExact(entry.getOwnerName());
-            if (player == null || !player.isValid()) continue;
+        for (Player player : gameState.getPlayers()) {
+            if (!player.isValid()) continue;
             if (anythingContains(player)) continue;
 
             player.setHealth(0);
@@ -1108,8 +950,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
 
             // Sudden death
-            boolean suddenD = !isFlagEnabled(JungleRaidFlag.NO_TIME_LIMIT)
-                    && System.currentTimeMillis() - startTime >= TimeUnit.MINUTES.toMillis(15);
+            boolean suddenD = isSuddenDeath();
             if (suddenD) flagData.amt = 100;
 
             // Distributor
@@ -1417,8 +1258,14 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
 
             if (lobbyContains(player)) {
-                removeFromLobby(player);
-                player.teleport(lobbyExitLocation);
+                // Removing the player should teleport them to the exit location,
+                // don't double teleport. This case only exists to prevent players
+                // from somehow getting trapped.
+                if (gameState.containsPlayer(player)) {
+                    removePlayer(player);
+                } else {
+                    player.teleport(lobbyExitLocation);
+                }
             } else {
                 addToLobby(player);
                 player.teleport(lobbySpawnLocation);
@@ -1467,12 +1314,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             if (stack.getType() == Material.COMPASS) {
                 if (state == JungleRaidState.IN_PROGRESS && isFlagEnabled(JungleRaidFlag.ENHANCED_COMPASS)) {
                     Set<String> resultSet = new HashSet<>();
-                    for (PlayerState state : playerState.values()) {
-
-                        Player aPlayer = Bukkit.getPlayerExact(state.getOwnerName());
-
+                    for (Player aPlayer : gameState.getPlayers()) {
                         // Check validity
-                        if (aPlayer == null || !player.isValid() || player.equals(aPlayer)) continue;
+                        if (!player.isValid() || player.equals(aPlayer)) continue;
 
                         // Check team
                         if (isFriendlyFire(player, aPlayer)) continue;
@@ -1518,7 +1362,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             Player player = (Player) e;
 
             if (arenaContains(player)) {
-                if (!playerState.containsKey(player.getUniqueId())) {
+                if (!gameState.containsPlayer(player)) {
                     player.teleport(player.getWorld().getSpawnLocation());
                     event.setCancelled(true);
                     return;
@@ -1608,7 +1452,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         public void onPlayerDeath(PlayerDeathEvent event) {
 
             final Player player = event.getEntity();
-            if (playerState.containsKey(player.getUniqueId())) {
+            if (gameState.containsPlayer(player)) {
                 Optional<Color> optTeamColor = getTeamColorForPlayer(player);
 
                 // Enable disabled Checks
@@ -1681,27 +1525,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 event.getDrops().clear();
                 event.setDroppedExp(0);
 
-                left(player, true);
+                died(player);
             }
-        }
-
-        @EventHandler
-        public void onPlayerJoin(PlayerJoinEvent event) {
-
-            final Player p = event.getPlayer();
-
-            // Technically forced, but because this
-            // happens from disconnect/quit button
-            // we don't want it to count as forced
-            server.getScheduler().runTaskLater(inst, () -> restoreGonePlayer(p), 1);
-        }
-
-        @EventHandler(ignoreCancelled = true)
-        public void onPlayerRespawn(PlayerRespawnEvent event) {
-
-            final Player p = event.getPlayer();
-
-            server.getScheduler().runTaskLater(inst, () -> restoreGonePlayer(p), 1);
         }
 
         @EventHandler(ignoreCancelled = true)
@@ -1774,11 +1599,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         @EventHandler(priority = EventPriority.MONITOR)
         public void onPlayerQuit(PlayerQuitEvent event) {
-
             Player player = event.getPlayer();
 
-            if (playerState.containsKey(player.getUniqueId()))  {
-                left(player, false);
+            if (gameState.containsPlayer(player))  {
+                gameState.removePlayer(player);
             }
         }
 
@@ -1805,7 +1629,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         public void onPlayerTeleport(PlayerTeleportEvent event) {
             Player player = event.getPlayer();
 
-            if (lobbyContains(event.getTo()) && !playerState.containsKey(player.getUniqueId())) {
+            if (lobbyContains(event.getTo()) && !gameState.containsPlayer(player)) {
                 event.setTo(lobbyExitLocation);
             }
         }
@@ -1856,6 +1680,20 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         @EventHandler(ignoreCancelled = true)
         public void onBlockChangePreLog(BlockChangePreLogEvent event) {
             if (arenaContains(event.getLocation())) event.setCancelled(true);
+        }
+
+        @EventHandler
+        public void onPlayerStatePop(PlayerStatePopEvent event) {
+            if (event.getKind() != PlayerStateKind.JUNGLE_RAID) {
+                return;
+            }
+
+            Player player = event.getPlayer();
+
+            gameState.removePlayer(player);
+            prayerComponent.uninfluencePlayer(player);
+
+            player.teleport(lobbyExitLocation);
         }
     }
 

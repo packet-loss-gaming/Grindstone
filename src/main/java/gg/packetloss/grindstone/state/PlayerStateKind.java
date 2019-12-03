@@ -15,6 +15,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     PATIENT_X(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     MIRAGE_ARENA(new WalkInPvPSafeRespawnPlayerStateTypeConfigImpl()),
     SAND_ARENA(new WalkInPvPSafeRespawnPlayerStateTypeConfigImpl()),
+    JUNGLE_RAID(new TempPlayerStateTypeConfigImpl()),
     SPLEEF(new TempPlayerStateTypeConfigImpl());
 
     private final PlayerStateTypeConfigImpl config;
