@@ -127,7 +127,7 @@ public class SpleefAreaInstance {
     }
 
     private Collection<Player> getParticipants() {
-        return LocationUtil.getPlayersStandingOnRegion(world, floorRegion);
+        return LocationUtil.getPlayersStandingOnRegion(world, floorRegion, true);
     }
 
     // This is a heuristic approach to determine if the region is loaded

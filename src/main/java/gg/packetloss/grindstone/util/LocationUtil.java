@@ -204,13 +204,23 @@ public class LocationUtil {
 
     }
 
-    public static List<Player> getPlayersStandingOnRegion(World world, ProtectedRegion region) {
+    public static List<Player> getPlayersStandingOnRegion(World world, ProtectedRegion region,
+                                                          boolean includeInRegion) {
 
         List<Player> playerList = new ArrayList<>();
         for (Player player : world.getPlayers()) {
-            Block block = player.getLocation().getBlock();
-            if (region.contains(block.getX(), block.getY() - 1, block.getZ())
-                    || region.contains(block.getX(), block.getY() - 2, block.getZ())) {
+            Location loc = player.getLocation();
+            if (region.contains(loc.getBlockX(), loc.getBlockY() - 1, loc.getBlockZ())
+                    || region.contains(loc.getBlockX(), loc.getBlockY() - 2, loc.getBlockZ())) {
+                playerList.add(player);
+            }
+
+            if (!includeInRegion) {
+                continue;
+            }
+
+            if (region.contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())
+                    || region.contains(loc.getBlockX(), loc.getBlockY() + 1, loc.getBlockZ())) {
                 playerList.add(player);
             }
         }
