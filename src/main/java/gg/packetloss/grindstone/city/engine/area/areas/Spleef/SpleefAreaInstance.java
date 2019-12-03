@@ -29,6 +29,7 @@ public class SpleefAreaInstance {
 
     private boolean isSmallArena;
 
+    private int innerTick = 0;
     private int activeTicks = 0;
 
     public SpleefAreaInstance(SpleefArea component, World world, RegionManager manager, String regionName) {
@@ -45,6 +46,19 @@ public class SpleefAreaInstance {
         return LocationUtil.isInRegion(world, containmentRegion, location);
     }
 
+    private boolean shouldDoInnerTick() {
+        innerTick = (innerTick + 1) % 8;
+        return innerTick == 0;
+    }
+
+    private void updateActiveTick(Collection<Player> players) {
+        if (players.size() > 1) {
+            ++activeTicks;
+        } else {
+            activeTicks = 0;
+        }
+    }
+
     public void feed(Collection<Player> players) {
         for (Player player : players) {
             player.setFoodLevel(20);
@@ -55,11 +69,8 @@ public class SpleefAreaInstance {
 
     public void restoreFloor(Collection<Player> players) {
         if (players.size() > 1) {
-            ++activeTicks;
             return;
         }
-
-        activeTicks = 0;
 
         CuboidRegion snow = new CuboidRegion(floorRegion.getMaximumPoint(), floorRegion.getMinimumPoint());
 
@@ -154,9 +165,12 @@ public class SpleefAreaInstance {
 
         Collection<Player> players = getParticipants();
 
-        feed(players);
-        restoreFloor(players);
-        buildWalls();
+        if (shouldDoInnerTick()) {
+            updateActiveTick(players);
+            feed(players);
+            restoreFloor(players);
+            buildWalls();
+        }
 
         return players;
     }

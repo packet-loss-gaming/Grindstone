@@ -70,7 +70,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
         //noinspection AccessStaticViaInstance
         inst.registerEvents(new SpleefListener(this));
 
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 20 * 2);
+        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 5);
     }
 
     @Override
