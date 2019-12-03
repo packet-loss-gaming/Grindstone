@@ -61,6 +61,10 @@ public class SpleefAreaInstance {
 
     public void feed(Collection<Player> players) {
         for (Player player : players) {
+            if (!component.isUsingArenaTools(player)) {
+                continue;
+            }
+
             player.setFoodLevel(20);
             player.setSaturation(20F);
             player.setExhaustion(0);
@@ -166,8 +170,8 @@ public class SpleefAreaInstance {
         Collection<Player> players = getParticipants();
 
         if (shouldDoInnerTick()) {
-            updateActiveTick(players);
             feed(players);
+            updateActiveTick(players);
             restoreFloor(players);
             buildWalls();
         }

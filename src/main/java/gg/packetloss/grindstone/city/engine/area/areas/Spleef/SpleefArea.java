@@ -100,6 +100,10 @@ public class SpleefArea extends BukkitComponent implements Runnable {
             admin.standardizePlayer(player);
             GeneralPlayerUtil.takeFlightSafely(player);
 
+            player.setFoodLevel(20);
+            player.setSaturation(20F);
+            player.setExhaustion(0);
+
             player.getInventory().clear();
             player.getInventory().setArmorContents(NO_ARMOR);
 
