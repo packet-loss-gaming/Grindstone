@@ -13,6 +13,10 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
+import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.state.PlayerStateComponent;
+import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import org.bukkit.Location;
@@ -29,10 +33,10 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 public class Prison extends AbstractRegionedArena implements GenericArena, Listener {
@@ -42,21 +46,26 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
     private final Server server = CommandBook.server();
 
     private AdminComponent adminComponent;
+    private PlayerStateComponent playerStateComponent;
 
     private ProtectedRegion office;
 
     // Block - Is unlocked
     private Location rewardChest;
+    private Location entranceLoc;
 
-    public Prison(World world, ProtectedRegion[] regions, AdminComponent adminComponent) {
+    public Prison(World world, ProtectedRegion[] regions,
+                  AdminComponent adminComponent, PlayerStateComponent playerStateComponent) {
 
         super(world, regions[0]);
 
         this.office = regions[1];
 
         this.adminComponent = adminComponent;
+        this.playerStateComponent = playerStateComponent;
 
         findRewardChest();     // Setup office
+        entranceLoc = new Location(getWorld(), 256.18, 81, 136);
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -107,9 +116,43 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         return getRegion().getId();
     }
 
+    public boolean isGuildBlocked(Player player) {
+        return playerStateComponent.hasValidStoredState(PlayerStateKind.PUZZLE_PRISON, player);
+    }
+
+    private void addPlayer(Player player) {
+        try {
+            playerStateComponent.pushState(PlayerStateKind.PUZZLE_PRISON, player);
+
+            adminComponent.standardizePlayer(player);
+        } catch (IOException | ConflictingPlayerStateException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void removePlayer(Player player) {
+        try {
+            playerStateComponent.popState(PlayerStateKind.PUZZLE_PRISON, player);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     @Override
     public void equalize() {
-        getContained(Player.class).forEach(adminComponent::standardizePlayer);
+        Collection<Player> allPlayers = getContained(Player.class);
+
+        for (Player player : allPlayers) {
+            if (!isGuildBlocked(player)) {
+                addPlayer(player);
+            }
+        }
+
+        for (Player player : server.getOnlinePlayers()) {
+            if (isGuildBlocked(player) && !allPlayers.contains(player)) {
+                removePlayer(player);
+            }
+        }
     }
 
     @Override
@@ -118,7 +161,6 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         return ArenaType.MONITORED;
     }
 
-    private Set<String> players = new HashSet<>();
     private static List<PlayerTeleportEvent.TeleportCause> accepted = new ArrayList<>();
 
     static {
@@ -127,18 +169,24 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
+        if (accepted.contains(event.getCause())) {
+            return;
+        }
 
-        if (contains(event.getTo()) && !accepted.contains(event.getCause())) {
+        Player player = event.getPlayer();
+
+        if (adminComponent.isAdmin(player)) {
+            return;
+        }
+
+        Location from = event.getFrom();
+        Location to = event.getTo();
+        if (contains(from) && contains(to)) {
             event.setCancelled(true);
-
-            final String name = event.getPlayer().getName();
-            if (players.contains(name)) {
-                return;
-            } else {
-                players.add(name);
-                server.getScheduler().runTaskLater(inst, () -> players.remove(name), 1);
-            }
-            ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport to that location.");
+            ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport to another location in the prison.");
+        } else if (contains(to)) {
+            event.setTo(entranceLoc);
+            ChatUtil.sendWarning(event.getPlayer(), "The warden catches you and throws you outside!");
         }
     }
 
@@ -160,6 +208,13 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
     }
 
     @EventHandler(ignoreCancelled = true)
+    public void onGuildEnable(GuildPowersEnableEvent event) {
+        if (isGuildBlocked(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerInteractEvent(PlayerInteractEvent event) {
 
         if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) return;
@@ -176,7 +231,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
             event.getPlayer().getInventory().addItem(new ItemStack(ItemID.GOLD_BAR, lootSplit));
             event.getPlayer().getInventory().addItem(loot.toArray(new ItemStack[0]));
 
-            event.getPlayer().teleport(new Location(getWorld(), 256.18, 81, 136));
+            event.getPlayer().teleport(entranceLoc);
             ChatUtil.sendNotice(event.getPlayer(), "You have successfully raided the jail!");
 
             //noinspection deprecation

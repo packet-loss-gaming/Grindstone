@@ -34,6 +34,7 @@ import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
+import gg.packetloss.grindstone.state.PlayerStateComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.bukkit.Bukkit;
@@ -51,7 +52,8 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Arena", desc = "Arena Control.")
 @Depend(components = {
         AdminComponent.class, JailComponent.class, PrayerComponent.class, SacrificeComponent.class,
-        ImpersonalComponent.class, RestorationUtil.class, EggComponent.class
+        ImpersonalComponent.class, RestorationUtil.class, EggComponent.class, HighScoresComponent.class,
+        PlayerStateComponent.class
 }, plugins = {"WorldEdit", "WorldGuard"})
 public class ArenaComponent extends BukkitComponent implements Listener, Runnable {
 
@@ -73,6 +75,8 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     private EggComponent eggComponent;
     @InjectComponent
     private HighScoresComponent highScoresComponent;
+    @InjectComponent
+    private PlayerStateComponent playerStateComponent;
 
     private final World world = Bukkit.getWorld("City");
     private LocalConfiguration config;
@@ -223,7 +227,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     ProtectedRegion[] PRs = new ProtectedRegion[2];
                     PRs[0] = mgr.get(world).getRegion(region);
                     PRs[1] = mgr.get(world).getRegion(region + "-office");
-                    arenas.add(new Prison(world, PRs, adminComponent));
+                    arenas.add(new Prison(world, PRs, adminComponent, playerStateComponent));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
