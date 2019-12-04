@@ -285,7 +285,7 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
                 sql += " AND (`buyable` = true OR `sellable` = true)";
             }
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, "%" + filter + "%");
+                statement.setString(1, "%" + filter.replaceAll("\\s+", "_") + "%");
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
                         items.add(new MarketItemInfo(
