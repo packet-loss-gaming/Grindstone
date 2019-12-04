@@ -24,10 +24,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -37,7 +34,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
 
-    private Deque<WeatherEvent> weatherQueue = new LinkedList<>();
+    private WeatherState weatherState = new WeatherState();
 
     private LocalConfiguration config;
 
@@ -94,16 +91,12 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
     }
 
     private void changeWeather() {
-        if (weatherQueue.size() < 2) {
+        Optional<WeatherEvent> optNewEvent = weatherState.getNewWeatherEvent();
+        if (optNewEvent.isEmpty()) {
             return;
         }
 
-        if (!weatherQueue.peek().shouldActivate()) {
-            return;
-        }
-
-        WeatherEvent event = weatherQueue.poll();
-
+        WeatherEvent event = optNewEvent.get();
         for (String worldName : config.affectedWorlds) {
             World affectedWorld = Bukkit.getWorld(worldName);
             WeatherType weatherType = event.getWeatherType();
@@ -123,9 +116,9 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
     }
 
     private void populateWeatherQueue() {
-        long nextWeatherEvent = weatherQueue.isEmpty() ? System.currentTimeMillis()
-                                                       : weatherQueue.getLast().getActivationTime();
+        long nextWeatherEvent = weatherState.getLastWeatherEvent();
 
+        Deque<WeatherEvent> weatherQueue = weatherState.getQueue();
         while (weatherQueue.size() < config.numToCreate) {
             long offset = TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(config.shortestEvent, config.longestEvent));
             nextWeatherEvent += offset;
@@ -145,11 +138,11 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         }
     }
 
-    private void sendWeatherPrintout(CommandSender sender, Deque<WeatherEvent> queue, boolean verbose) {
+    private void sendWeatherPrintout(CommandSender sender, Collection<WeatherEvent> events, boolean verbose) {
         WeatherType lastWeatherType = null;
         int printed = 0;
 
-        for (WeatherEvent event : queue) {
+        for (WeatherEvent event : events) {
             WeatherType weatherType = event.getWeatherType();
 
             if (!verbose) {
@@ -219,8 +212,33 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
 
     @EventHandler(ignoreCancelled = true)
     public void onStormChange(WeatherChangeEvent event) {
-        if (!event.toWeatherState() && event.getWorld().isThundering()) {
-            event.getWorld().setThundering(false);
+        World world = event.getWorld();
+
+        if (!event.toWeatherState() && world.isThundering()) {
+            world.setThundering(false);
+        }
+
+        if (config.affectedWorlds.contains(world.getName())) {
+            Optional<WeatherType> optCurrentWeather = weatherState.getCurrentWeather();
+            if (optCurrentWeather.isEmpty()) {
+                return;
+            }
+
+            WeatherType weatherType = optCurrentWeather.get();
+
+            switch (weatherType) {
+                case THUNDERSTORM:
+                case RAIN:
+                    if (!event.toWeatherState()) {
+                        event.setCancelled(true);
+                    }
+                    break;
+                case CLEAR:
+                    if (event.toWeatherState()) {
+                        event.setCancelled(true);
+                    }
+                    break;
+            }
         }
     }
 
@@ -228,8 +246,30 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
     public void onThunderChange(ThunderChangeEvent event) {
         World world = event.getWorld();
         if (event.toThunderState() && world.getWeatherDuration() < world.getThunderDuration()) {
-            world.setStorm(true);
             world.setWeatherDuration(world.getThunderDuration());
+        }
+
+        if (config.affectedWorlds.contains(world.getName())) {
+            Optional<WeatherType> optCurrentWeather = weatherState.getCurrentWeather();
+            if (optCurrentWeather.isEmpty()) {
+                return;
+            }
+
+            WeatherType weatherType = optCurrentWeather.get();
+
+            switch (weatherType) {
+                case THUNDERSTORM:
+                    if (!event.toThunderState()) {
+                        event.setCancelled(true);
+                    }
+                    break;
+                case RAIN:
+                case CLEAR:
+                    if (event.toThunderState()) {
+                        event.setCancelled(true);
+                    }
+                    break;
+            }
         }
     }
 
@@ -239,7 +279,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
                 flags = "v", min = 0, max = 0)
         public void forecastCmd(CommandContext args, CommandSender sender) throws CommandException {
             boolean verbose = args.hasFlag('v') && sender.hasPermission("aurora.weather.recast");
-            sendWeatherPrintout(sender, weatherQueue, verbose);
+            sendWeatherPrintout(sender, weatherState.getQueue(), verbose);
         }
 
         @Command(aliases = {"forcecast"},
@@ -267,6 +307,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
             }
 
             WeatherType initialChange = weatherTypes.poll();
+            Deque<WeatherEvent> weatherQueue = weatherState.getQueue();
             for (WeatherEvent event : weatherQueue) {
                 if (weatherTypes.isEmpty()) {
                     break;
@@ -286,7 +327,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
                 flags = "", min = 0, max = 0)
         @CommandPermissions("aurora.weather.recast")
         public void recastCmd(CommandContext args, CommandSender sender) throws CommandException {
-            weatherQueue.clear();
+            weatherState.getQueue().clear();
             populateWeatherQueue();
 
             ChatUtil.sendNotice(sender, "Forecast updated!");
