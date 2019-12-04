@@ -80,7 +80,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         if (parent.isHostileTempleArea(event.getPlayer().getLocation())) event.setCancelled(true);
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onThunderChange(ThunderChangeEvent event) {
         if (!event.getWorld().equals(parent.getWorld())) return;
         if (!event.toThunderState()) {

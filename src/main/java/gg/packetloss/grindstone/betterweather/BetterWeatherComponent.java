@@ -20,6 +20,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
@@ -210,7 +211,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         populateWeatherQueue();
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onStormChange(WeatherChangeEvent event) {
         World world = event.getWorld();
 
@@ -242,7 +243,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onThunderChange(ThunderChangeEvent event) {
         World world = event.getWorld();
         if (event.toThunderState() && world.getWeatherDuration() < world.getThunderDuration()) {
