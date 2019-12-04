@@ -29,6 +29,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.WeaponFamily;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
+import gg.packetloss.grindstone.items.implementations.combotools.*;
 import gg.packetloss.grindstone.items.migration.MigrationManager;
 import gg.packetloss.grindstone.items.migration.migrations.FearSwordMigration;
 import gg.packetloss.grindstone.items.migration.migrations.GodSwordMigration;
@@ -152,6 +153,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         inst.registerEvents(this);
         loadResources();
         registerSpecWeapons();
+        registerTools();
         registerHymns();
         registerPermissionBindingTomes();
         registerGeneral();
@@ -186,6 +188,15 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SHORT_SWORD, handle(new UnleashedSwordImpl()));
         }, 1);
+    }
+
+    private void registerTools() {
+        handle(new LinearAxe());
+        handle(new LinearPickaxe());
+        handle(new LinearShovel());
+        handle(new RadialAxe());
+        handle(new RadialPickaxe());
+        handle(new RadialShovel());
     }
 
     private void registerHymns() {

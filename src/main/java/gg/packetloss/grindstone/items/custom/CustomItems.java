@@ -86,11 +86,21 @@ public enum CustomItems {
     PHANTOM_CLOCK(ChatColor.DARK_RED, "Phantom Clock"),
     PHANTOM_HYMN(ChatColor.DARK_RED, "Phantom Hymn"),
 
-    // Magical Items
-    ODE_TO_THE_FROZEN_KING(ChatColor.AQUA, "Ode to The Frozen King"),
+    // Linear Tools
+    LINEAR_PICKAXE(ChatColor.DARK_GREEN, "Linear Pickaxe"),
+    LINEAR_SHOVEL(ChatColor.DARK_GREEN, "Linear Shovel"),
+    LINEAR_AXE(ChatColor.DARK_GREEN, "Linear Axe"),
+
+    // Radial Tools
+    RADIAL_PICKAXE(ChatColor.DARK_GREEN, "Radial Pickaxe"),
+    RADIAL_SHOVEL(ChatColor.DARK_GREEN, "Radial Shovel"),
+    RADIAL_AXE(ChatColor.DARK_GREEN, "Radial Axe"),
 
     // Ninja Guild
     NINJA_STAR(ChatColor.DARK_GRAY, "Ninja Star"),
+
+    // Magical Items
+    ODE_TO_THE_FROZEN_KING(ChatColor.AQUA, "Ode to The Frozen King"),
 
     // Flight Items
     PIXIE_DUST(ChatColor.GOLD, "Pixie Dust"),

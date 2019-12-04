@@ -31,4 +31,7 @@ public class Tag {
         return prop;
     }
 
+    public void setProp(String prop) {
+        this.prop = prop;
+    }
 }
