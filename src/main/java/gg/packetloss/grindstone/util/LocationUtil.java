@@ -210,8 +210,9 @@ public class LocationUtil {
         List<Player> playerList = new ArrayList<>();
         for (Player player : world.getPlayers()) {
             Location loc = player.getLocation();
-            if (region.contains(loc.getBlockX(), loc.getBlockY() - 1, loc.getBlockZ())
-                    || region.contains(loc.getBlockX(), loc.getBlockY() - 2, loc.getBlockZ())) {
+            com.sk89q.worldedit.Vector vec = new com.sk89q.worldedit.Vector(loc.getX(), loc.getY(), loc.getZ());
+
+            if (region.contains(vec.add(0, -1, 0)) || region.contains(vec.add(0, -2, 0))) {
                 playerList.add(player);
             }
 
@@ -219,8 +220,7 @@ public class LocationUtil {
                 continue;
             }
 
-            if (region.contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())
-                    || region.contains(loc.getBlockX(), loc.getBlockY() + 1, loc.getBlockZ())) {
+            if (region.contains(vec) || region.contains(vec.add(0, 1, 0))) {
                 playerList.add(player);
             }
         }
