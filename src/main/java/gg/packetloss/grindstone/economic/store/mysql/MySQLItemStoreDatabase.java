@@ -89,7 +89,7 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         final int TARGET_MAXIMUM = 1000000;
         final int OFFSET = 100;
 
-        int adjustedChange = (int) ChanceUtil.getRandom(TARGET_MAXIMUM / (baseValue + OFFSET));
+        int adjustedChange = (int) ChanceUtil.getRandom(Math.max(1, TARGET_MAXIMUM / (baseValue + OFFSET)));
 
         if (ChanceUtil.getChance(2)) {
             existingStock += adjustedChange;
