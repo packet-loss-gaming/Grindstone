@@ -13,26 +13,22 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.items.custom.WeaponFamily;
 import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.item.ItemUtil;
-import org.bukkit.ChatColor;
 import org.bukkit.Server;
-import org.bukkit.WeatherType;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.weather.ThunderChangeEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-@ComponentInformation(friendlyName = "Client Side Weather Manager", desc = "Turn off the storm!")
-public class ClientSideWeatherComponent extends BukkitComponent implements Listener {
+@ComponentInformation(friendlyName = "Client Side Time Manager", desc = "Turn off the night!")
+public class ClientSideTimeComponent extends BukkitComponent implements Listener {
+    private static final long START_NIGHT = 12 * 1000;
+
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
@@ -45,41 +41,44 @@ public class ClientSideWeatherComponent extends BukkitComponent implements Liste
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+
+        server.getScheduler().runTaskTimer(inst, this::syncTimes, 0, 20 * 5);
+    }
+
+    private void applyToPlayer(Player player) {
+        if (player.getWorld().getTime() < START_NIGHT) {
+            player.setPlayerTime(0, true);
+        } else {
+            player.setPlayerTime(START_NIGHT, true);
+        }
+    }
+
+    private void syncTimes() {
+        for (Player player : enabledFor) {
+            applyToPlayer(player);
+        }
     }
 
     public class Commands {
-        @Command(aliases = {"stopweather"},
-                usage = "", desc = "Hide all storms",
+        @Command(aliases = {"daylight"},
+                usage = "", desc = "Hide the darkness",
                 flags = "r", min = 0, max = 0)
-        public void showStormCmd(CommandContext args, CommandSender sender) throws CommandException {
+        public void showDaylightCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player player = PlayerUtil.checkPlayer(sender);
 
             if (args.hasFlag('r')) {
                 enabledFor.remove(player);
 
-                player.resetPlayerWeather();
-                ChatUtil.sendNotice(player, "Storms are no longer hidden.");
+                player.resetPlayerTime();
+                ChatUtil.sendNotice(player, "Daylight is no longer forced.");
             } else {
                 enabledFor.add(player);
 
-                player.setPlayerWeather(WeatherType.CLEAR);
-                ChatUtil.sendNotice(player, "Storms are now hidden.");
-                ChatUtil.sendNotice(player, "To show storms again, please use /stopweather -r.");
+                applyToPlayer(player);
+                ChatUtil.sendNotice(player, "Daylight is now forced.");
+                ChatUtil.sendNotice(player, "To stop forcing daylight, please use /daylight -r.");
             }
         }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onThunderChange(ThunderChangeEvent event) {
-        String state = event.toThunderState() ? "starting" : "ending";
-        enabledFor.stream().filter(player -> player.getWorld().equals(event.getWorld())).forEach(player -> {
-            if (!event.toThunderState()) {
-                if (ItemUtil.hasAncientArmour(player) || ItemUtil.isHoldingItemInFamily(player, WeaponFamily.MASTER)) {
-                    ChatUtil.sendWarning(player, ChatColor.DARK_RED + "===============[WARNING]===============");
-                }
-            }
-            ChatUtil.sendNotice(player, "A thunder storm is " + state + " on your world.");
-        });
     }
 
     @EventHandler
