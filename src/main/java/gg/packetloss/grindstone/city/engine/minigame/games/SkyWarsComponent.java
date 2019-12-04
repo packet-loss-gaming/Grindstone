@@ -38,6 +38,7 @@ import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
+import gg.packetloss.grindstone.state.PlayerStateComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
@@ -68,6 +69,7 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -75,7 +77,8 @@ import java.util.stream.Collectors;
 
 
 @ComponentInformation(friendlyName = "Sky Wars", desc = "Sky warfare at it's best!")
-@Depend(components = {AdminComponent.class, PrayerComponent.class}, plugins = {"WorldEdit", "WorldGuard"})
+@Depend(components = {AdminComponent.class, PrayerComponent.class, PlayerStateComponent.class},
+        plugins = {"WorldEdit", "WorldGuard"})
 public class SkyWarsComponent extends MinigameComponent {
 
     private final CommandBook inst = CommandBook.inst();
@@ -93,6 +96,8 @@ public class SkyWarsComponent extends MinigameComponent {
     AntiCheatCompatibilityComponent antiCheat;
     @InjectComponent
     SessionComponent sessions;
+    @InjectComponent
+    PlayerStateComponent playerStateComponent;
 
     public SkyWarsComponent() {
         super("Sky War", "sw", 10);
@@ -129,8 +134,11 @@ public class SkyWarsComponent extends MinigameComponent {
     // Player Management
     @Override
     public boolean addToTeam(Player player, int teamNumber, Set<Character> flags) {
-        if (!adminComponent.deadmin(player)) {
-            ChatUtil.sendError(player, "Failed to disable admin mode, team add cancelled.");
+        try {
+            playerStateComponent.tryPopTempKind(player);
+        } catch (IOException e) {
+            e.printStackTrace();
+            ChatUtil.sendError(player, "Failed to remove conflicting temporary player state.");
             return false;
         }
 
