@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.bosses.manager.apocalypse;
 
+import com.destroystokyo.paper.ParticleBuilder;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.OSBL.bukkit.entity.BukkitBoss;
@@ -18,6 +19,7 @@ import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Damageable;
@@ -75,8 +77,27 @@ public class MercilessZombie {
             return true;
         }
 
+        if (customName.equals(ThorZombie.BOUND_NAME)) {
+            return true;
+        }
+
+        if (customName.equals(MercilessZombie.BOUND_NAME)) {
+            return true;
+        }
+
+        if (customName.equals(StickyZombie.BOUND_NAME)) {
+            return true;
+        }
+
+        if (customName.equals(ChuckerZombie.BOUND_NAME)) {
+            return true;
+        }
+
         return false;
     }
+
+    private static final ParticleBuilder PASSIVE_PARTICLE_EFFECT = new ParticleBuilder(Particle.ENCHANTMENT_TABLE).allPlayers();
+    private static final ParticleBuilder REMOVAL_PARTICLE_EFFECT = new ParticleBuilder(Particle.SMOKE_LARGE).allPlayers();
 
     private void setupMercilessZombie() {
         List<BindInstruction<GenericDetail>> bindInstructions = mercilessZombie.bindInstructions;
@@ -131,7 +152,7 @@ public class MercilessZombie {
             @Override
             public InstructionResult<GenericDetail, DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 final Entity toHit = BukkitUtil.getBukkitEntity(entity);
-                ((LivingEntity) toHit).setHealth((int) (((LivingEntity) toHit).getHealth() / 2));
+                ((LivingEntity) toHit).setHealth((int) (((LivingEntity) toHit).getHealth() / 4));
                 return null;
             }
         });
@@ -145,16 +166,25 @@ public class MercilessZombie {
             public InstructionResult<GenericDetail, PassiveInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
 
-                double totalHealth = 0;
+                double totalHealth = 5;
 
-                for (Entity entity : ((Zombie) boss).getNearbyEntities(4, 4, 4)) {
+                for (Entity entity : boss.getNearbyEntities(4, 4, 4)) {
+                    if (entity == boss) {
+                        continue;
+                    }
+
                     if (isConsumableZombie(entity)) {
                         totalHealth += ((Zombie) entity).getHealth();
                         ((Zombie) entity).setHealth(0);
                     }
                 }
 
-                EntityUtil.extendHeal((Zombie) boss, totalHealth, 15000);
+                PASSIVE_PARTICLE_EFFECT
+                        .location(boss.getLocation().add(0, 1, 0))
+                        .count(15)
+                        .spawn();
+
+                EntityUtil.extendHeal(boss, totalHealth, 15000);
                 return null;
             }
         });

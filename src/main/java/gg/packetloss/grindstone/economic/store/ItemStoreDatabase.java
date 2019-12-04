@@ -26,7 +26,7 @@ public interface ItemStoreDatabase {
      */
     boolean save();
 
-    void updatePrices();
+    void updatePrices(int restockingRounds);
 
     /**
      * Add/Set an item

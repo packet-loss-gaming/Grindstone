@@ -100,8 +100,15 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         return Math.max(0, existingStock);
     }
 
+    private int getNewStock(double baseValue, int existingStock, int restockingRounds) {
+        for (int i = 0; i < restockingRounds; ++i) {
+            existingStock = getNewStock(baseValue, existingStock);
+        }
+        return existingStock;
+    }
+
     @Override
-    public void updatePrices() {
+    public void updatePrices(int restockingRounds) {
         try (Connection connection = MySQLHandle.getConnection()) {
             String updateSql = "UPDATE `market-items` SET `current-price` = ?, `stock` = ? WHERE `id` = ?";
             try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
@@ -115,7 +122,7 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
                             int stock = results.getInt(3);
 
                             updateStatement.setDouble(1, getNewValue(price));
-                            updateStatement.setInt(2, getNewStock(price, stock));
+                            updateStatement.setInt(2, getNewStock(price, stock, restockingRounds));
                             updateStatement.setInt(3, id);
 
                             updateStatement.addBatch();

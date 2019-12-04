@@ -75,10 +75,14 @@ public class MarketComponent extends BukkitComponent {
     private DecimalFormat oneDecimalFormatter = new DecimalFormat("#,###.#");
     private DecimalFormat twoDecimalFormatter = new DecimalFormat("#,###.##");
 
-    public void simulateMarket() {
-        itemDatabase.updatePrices();
+    public void simulateMarket(int restockingRounds) {
+        itemDatabase.updatePrices(restockingRounds);
 
         ChatUtil.sendNotice(server.getOnlinePlayers(), ChatColor.GOLD + "The market has been updated!");
+    }
+
+    public void simulateMarket() {
+        simulateMarket(1);
     }
 
     @Override
@@ -639,10 +643,12 @@ public class MarketComponent extends BukkitComponent {
         }
 
         @Command(aliases = {"simulate"}, desc = "Simulate market activity",
-          flags = "", min = 0, max = 0)
+          usage = "[rounds]", flags = "", min = 0, max = 1)
         @CommandPermissions("aurora.admin.adminstore.simulate")
         public void simulateCmd(CommandContext args, CommandSender sender) throws CommandException {
-            server.getScheduler().runTaskAsynchronously(inst, MarketComponent.this::simulateMarket);
+            server.getScheduler().runTaskAsynchronously(inst, () -> {
+                simulateMarket(Math.max(1, args.getInteger(0, 1)));
+            });
         }
     }
 
