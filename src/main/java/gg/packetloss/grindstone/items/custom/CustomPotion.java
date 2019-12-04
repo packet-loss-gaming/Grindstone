@@ -9,18 +9,26 @@ package gg.packetloss.grindstone.items.custom;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CustomPotion extends CustomItem {
-    List<Potion> effects = new ArrayList<>();
+    private PotionType basePotionType;
+    private List<Potion> effects = new ArrayList<>();
 
-    public CustomPotion(CustomItems item, ItemStack base) {
-        super(item, base);
-        assert base.getType() == Material.POTION;
+    public CustomPotion(CustomItems item, PotionType basePotionType) {
+        super(item, Material.POTION);
+        this.basePotionType = basePotionType;
+    }
+
+    public CustomPotion(CustomPotion potion) {
+        super(potion);
+        effects.addAll(potion.getEffects());
     }
 
     public void addEffect(Potion effect) {
@@ -36,9 +44,15 @@ public class CustomPotion extends CustomItem {
     }
 
     @Override
+    public void accept(CustomItemVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
     public ItemStack build() {
         ItemStack base = super.build();
         PotionMeta meta = (PotionMeta) base.getItemMeta();
+        meta.setBasePotionData(new PotionData(basePotionType));
         for (Potion potion : effects) {
             meta.addCustomEffect(new PotionEffect(potion.getType(), potion.getTime(), potion.getLevel()), false);
         }

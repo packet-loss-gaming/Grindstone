@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Optional;
 
 public class CustomWeapon extends CustomEquipment {
+    private static final double NO_SPEED_MOD = -1;
 
     private final double damageMod;
     private final double speedMod;
@@ -23,7 +24,7 @@ public class CustomWeapon extends CustomEquipment {
     public CustomWeapon(CustomItems item, Material type, double damageMod) {
         super(item, type);
         this.damageMod = damageMod;
-        this.speedMod = -1;
+        this.speedMod = NO_SPEED_MOD;
         addTag(ChatColor.RED, "Damage Modifier", String.valueOf(damageMod));
     }
 
@@ -34,20 +35,26 @@ public class CustomWeapon extends CustomEquipment {
         addTag(ChatColor.RED, "Damage Modifier", String.valueOf(damageMod));
     }
 
+    public CustomWeapon(CustomWeapon item) {
+        super(item);
+        this.damageMod = item.getDamageMod();
+        this.speedMod = item.getSpeedMod().orElse(NO_SPEED_MOD);
+    }
+
     public double getDamageMod() {
         return damageMod;
     }
 
     public boolean hasSpeedMod() {
-        return getSpeedMod().isPresent();
+        return speedMod == NO_SPEED_MOD;
     }
 
     public Optional<Double> getSpeedMod() {
-        return speedMod == -1 ? Optional.empty() : Optional.of(speedMod);
+        return hasSpeedMod() ? Optional.of(speedMod) : Optional.empty();
     }
 
     private int getDefaultDamage() {
-        switch (getBaseMaterial()) {
+        switch (getBaseType()) {
             case WOOD_SWORD:
             case GOLD_SWORD:
                 return 4;
@@ -60,6 +67,11 @@ public class CustomWeapon extends CustomEquipment {
             default:
                 throw new UnsupportedOperationException();
         }
+    }
+
+    @Override
+    public void accept(CustomItemVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override

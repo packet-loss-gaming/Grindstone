@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class CustomItem {
     private final CustomItems item;
-    private final ItemStack base;
+    private final Material baseType;
     private List<Tag> tags = new ArrayList<>();
     private List<String> lore = new ArrayList<>();
     private List<Enchant> enchants = new ArrayList<>();
@@ -27,21 +27,26 @@ public class CustomItem {
     private List<String> useDocs = new ArrayList<>();
     private List<ItemSource> sources = new ArrayList<>();
 
-    public CustomItem(CustomItems item, ItemStack base) {
+    public CustomItem(CustomItems item, Material baseType) {
         this.item = item;
-        this.base = base;
+        this.baseType = baseType;
     }
 
-    public CustomItem(CustomItems item, Material type) {
-        this(item, new ItemStack(type));
+    public CustomItem(CustomItem item) {
+        this(item.getItem(), item.getBaseType());
+        tags.addAll(item.getTags());
+        lore.addAll(item.getLore());
+        enchants.addAll(item.getEnchants());
+        useDocs.addAll(item.getUseDocs());
+        sources.addAll(item.getSources());
     }
 
     public CustomItems getItem() {
         return item;
     }
 
-    public Material getBaseMaterial() {
-        return base.getType();
+    public Material getBaseType() {
+        return baseType;
     }
 
     public void addTag(Tag tag) {
@@ -97,9 +102,12 @@ public class CustomItem {
         return sources;
     }
 
+    public void accept(CustomItemVisitor visitor) {
+        visitor.visit(this);
+    }
 
     public ItemStack build() {
-        ItemStack itemStack = base.clone();
+        ItemStack itemStack = new ItemStack(baseType);
         ItemMeta meta = itemStack.getItemMeta();
         for (Enchant enchant : enchants) {
             meta.addEnchant(enchant.getEnchant(), enchant.getLevel(), true);

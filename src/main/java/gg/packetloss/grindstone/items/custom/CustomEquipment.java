@@ -12,12 +12,17 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.Repairable;
 
 public class CustomEquipment extends CustomItem {
-    public CustomEquipment(CustomItems item, ItemStack base) {
-        super(item, base);
+    public CustomEquipment(CustomItems item, Material type) {
+        super(item, type);
     }
 
-    public CustomEquipment(CustomItems item, Material type) {
-        this(item, new ItemStack(type));
+    public CustomEquipment(CustomEquipment item) {
+        super(item);
+    }
+
+    @Override
+    public void accept(CustomItemVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override

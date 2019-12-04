@@ -10,7 +10,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
@@ -386,8 +385,7 @@ public class CustomItemCenter {
         addItem(legendaryGodPickaxe);
 
         // Combat Potions
-        ItemStack instantDmgPot = new Potion(PotionType.INSTANT_DAMAGE).toItemStack(1);
-        CustomPotion divineCombatPotion = new CustomPotion(DIVINE_COMBAT_POTION, instantDmgPot);
+        CustomPotion divineCombatPotion = new CustomPotion(DIVINE_COMBAT_POTION, PotionType.INSTANT_DAMAGE);
         divineCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 3);
         divineCombatPotion.addEffect(PotionEffectType.REGENERATION, 20 * 600, 3);
         divineCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 3);
@@ -398,7 +396,7 @@ public class CustomItemCenter {
         divineCombatPotion.addSource(ItemSource.MARKET);
         addItem(divineCombatPotion);
 
-        CustomPotion holyCombatPotion = new CustomPotion(HOLY_COMBAT_POTION, instantDmgPot);
+        CustomPotion holyCombatPotion = new CustomPotion(HOLY_COMBAT_POTION, PotionType.INSTANT_DAMAGE);
         holyCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 45, 3);
         holyCombatPotion.addEffect(PotionEffectType.REGENERATION, 20 * 45, 3);
         holyCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 45, 3);
@@ -409,7 +407,7 @@ public class CustomItemCenter {
         holyCombatPotion.addSource(ItemSource.MARKET);
         addItem(holyCombatPotion);
 
-        CustomPotion extremeCombatPotion = new CustomPotion(EXTREME_COMBAT_POTION, instantDmgPot);
+        CustomPotion extremeCombatPotion = new CustomPotion(EXTREME_COMBAT_POTION, PotionType.INSTANT_DAMAGE);
         extremeCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 2);
         extremeCombatPotion.addEffect(PotionEffectType.REGENERATION, 20 * 600, 2);
         extremeCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 2);
@@ -533,8 +531,7 @@ public class CustomItemCenter {
         barbarianBones.addUse("Improves the drops of the Giant Boss if in a suitable quantity.");
         addItem(barbarianBones);
 
-        CustomPotion potionOfRestitution = new CustomPotion(POTION_OF_RESTITUTION,
-                new Potion(PotionType.POISON).toItemStack(1));
+        CustomPotion potionOfRestitution = new CustomPotion(POTION_OF_RESTITUTION, PotionType.POISON);
         potionOfRestitution.addEffect(PotionEffectType.POISON, 20 * 10, 1);
         potionOfRestitution.addSource(ItemSource.WILDERNESS_MOBS);
         potionOfRestitution.addSource(ItemSource.MARKET);
@@ -632,6 +629,12 @@ public class CustomItemCenter {
 
     public static Collection<CustomItem> values() {
         return items.values();
+    }
+
+    public static CustomItem get(CustomItems item) {
+        CustomItemCloneVisitor visitor = new CustomItemCloneVisitor();
+        items.get(item).accept(visitor);
+        return visitor.out();
     }
 
     public static ItemStack build(CustomItems item) {
