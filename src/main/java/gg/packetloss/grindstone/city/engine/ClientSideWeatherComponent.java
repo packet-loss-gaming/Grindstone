@@ -22,6 +22,7 @@ import org.bukkit.WeatherType;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
@@ -66,7 +67,7 @@ public class ClientSideWeatherComponent extends BukkitComponent implements Liste
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onThunderChange(ThunderChangeEvent event) {
         String state = event.toThunderState() ? "starting" : "ending";
         enabledFor.stream().filter(player -> player.getWorld().equals(event.getWorld())).forEach(player -> {
