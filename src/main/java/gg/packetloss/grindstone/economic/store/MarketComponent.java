@@ -44,7 +44,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.text.DecimalFormat;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -70,10 +69,6 @@ public class MarketComponent extends BukkitComponent {
 
     private ProtectedRegion region = null;
     private Economy econ;
-
-    private DecimalFormat wholeNumberFormatter = new DecimalFormat("#,###");
-    private DecimalFormat oneDecimalFormatter = new DecimalFormat("#,###.#");
-    private DecimalFormat twoDecimalFormatter = new DecimalFormat("#,###.##");
 
     public void simulateMarket(int restockingRounds) {
         itemDatabase.updatePrices(restockingRounds);
@@ -172,8 +167,9 @@ public class MarketComponent extends BukkitComponent {
                 }
 
                 if (amt > marketItemInfo.getStock()) {
-                    throw new CommandException("You requested " + wholeNumberFormatter.format(amt) + " however, only "
-                            + wholeNumberFormatter.format(marketItemInfo.getStock()) + " are in stock.");
+                    throw new CommandException("You requested " +
+                            ChatUtil.WHOLE_NUMBER_FORMATTER.format(amt) + " however, only " +
+                            ChatUtil.WHOLE_NUMBER_FORMATTER.format(marketItemInfo.getStock()) + " are in stock.");
                 }
 
                 totalPrice += marketItemInfo.getPrice() * amt;
@@ -354,11 +350,11 @@ public class MarketComponent extends BukkitComponent {
             String result = "";
             result += ChatColor.WHITE;
             if (price >= 10000) {
-                result += "~" + wholeNumberFormatter.format(price / 1000) + "k";
+                result += "~" + ChatUtil.WHOLE_NUMBER_FORMATTER.format(price / 1000) + "k";
             } else if (price >= 1000) {
-                result += "~" + oneDecimalFormatter.format(price / 1000) + "k";
+                result += "~" + ChatUtil.ONE_DECIMAL_FORMATTER.format(price / 1000) + "k";
             } else {
-                result += twoDecimalFormatter.format(price);
+                result += ChatUtil.TWO_DECIMAL_FORMATTER.format(price);
             }
             return Text.of(result);
         }
@@ -401,7 +397,8 @@ public class MarketComponent extends BukkitComponent {
                             TextAction.Hover.showText(Text.of("Show details for " + titleCaseName))
                     );
 
-                    return Text.of(itemName, ChatColor.GRAY, " x", wholeNumberFormatter.format(info.getStock()),
+                    return Text.of(itemName,
+                            ChatColor.GRAY, " x", ChatUtil.WHOLE_NUMBER_FORMATTER.format(info.getStock()),
                             ChatColor.YELLOW, " (Quick Price: ", buy, " - ", sell, ")");
                 }
             }.display(sender, marketItemInfoCollection, args.getFlagInteger('p', 1));
@@ -457,7 +454,7 @@ public class MarketComponent extends BukkitComponent {
             );
             sender.sendMessage(Text.of(ChatColor.GOLD, "Price Information for: ", itemNameText).build());
 
-            String stockCount = wholeNumberFormatter.format(marketItemInfo.getStock());
+            String stockCount = ChatUtil.WHOLE_NUMBER_FORMATTER.format(marketItemInfo.getStock());
             ChatUtil.sendNotice(sender, "There are currently " + ChatColor.GRAY + stockCount + ChatColor.YELLOW + " in stock.");
 
             // Purchase Information
@@ -515,7 +512,9 @@ public class MarketComponent extends BukkitComponent {
                     builder.append(Text.of(
                             ChatColor.BLUE,
                             TextAction.Click.runCommand("/market buy -a " + i + " " + marketItemInfo.getLookupName()),
-                            TextAction.Hover.showText(Text.of("Buy ", i, " for ", twoDecimalFormatter.format(intervalPrice))),
+                            TextAction.Hover.showText(Text.of(
+                                    "Buy ", i, " for ", ChatUtil.TWO_DECIMAL_FORMATTER.format(intervalPrice)
+                            )),
                             i
                     ));
                 }

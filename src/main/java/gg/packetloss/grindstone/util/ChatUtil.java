@@ -13,6 +13,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 
+import java.text.DecimalFormat;
 import java.util.Collection;
 
 public class ChatUtil {
@@ -99,9 +100,12 @@ public class ChatUtil {
         message(senders, MessageType.WARNING, warning);
     }
 
-    public static String makeCountString(int value, String currencyName) {
+    public static final DecimalFormat WHOLE_NUMBER_FORMATTER = new DecimalFormat("#,###");
+    public static final DecimalFormat ONE_DECIMAL_FORMATTER = new DecimalFormat("#,###.#");
+    public static final DecimalFormat TWO_DECIMAL_FORMATTER = new DecimalFormat("#,##0.00");
 
-        return makeCountString(ChatColor.YELLOW, String.valueOf(value), currencyName);
+    public static String makeCountString(int value, String currencyName) {
+        return makeCountString(ChatColor.YELLOW, WHOLE_NUMBER_FORMATTER.format(value), currencyName);
     }
 
     public static String makeCountString(double value, String currencyName) {
