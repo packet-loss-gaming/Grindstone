@@ -164,7 +164,7 @@ public enum ItemType {
     SILVERFISH_BLOCK(BlockID.SILVERFISH_BLOCK, 0, "Silverfish block", "silverfishblock", "silverfish", "silver"),
     COBBLE_SILVERFISH_BLOCK(BlockID.SILVERFISH_BLOCK, 1, "Cobblestone Silverfish block", "cobblestonesilverfish", "cobblesilver"),
     STONE_BRICK_SILVER_FISH(BlockID.SILVERFISH_BLOCK, 1, "Stone brick Silverfish block", "stonebricksilverfish", "stonebricksilver"),
-    STONE_BRICK(BlockID.STONE_BRICK, 0, "Stone brick", "stonebrick", "sbrick", "smoothstonebrick"),
+    STONE_BRICK(BlockID.STONE_BRICK, 0, "Stone Bricks", "stonebricks", "stonebrick", "sbrick", "smoothstonebrick"),
     MOSSY_STONE_BRICK(BlockID.STONE_BRICK, 1, "Mossy Stone brick", "mossystonebrick", "msbrick"),
     CRACKED_STONE_BRICK(BlockID.STONE_BRICK, 2, "Cracked Stone brick", "crackedstonebrick", "csbrick"),
     RED_MUSHROOM_CAP(BlockID.RED_MUSHROOM_CAP, 0, "Red mushroom cap", "giantmushroomred", "redgiantmushroom", "redmushroomcap"),
