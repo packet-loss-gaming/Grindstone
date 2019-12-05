@@ -462,12 +462,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     public void end() {
-        Iterator<Player> it = gameState.getPlayers().iterator();
-
-        while (it.hasNext()) {
-            Player player = it.next();
+        for (Player player : Lists.newArrayList(gameState.getPlayers())) {
             removePlayer(player);
-            it.remove();
         }
 
         restore();
