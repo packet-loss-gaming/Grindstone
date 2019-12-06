@@ -10,7 +10,9 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
+import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
+import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
@@ -47,7 +49,6 @@ import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.weather.LightningStrikeEvent;
-import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
@@ -81,9 +82,9 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onThunderChange(ThunderChangeEvent event) {
+    public void onThunderChange(BetterWeatherChangeEvent event) {
         if (!event.getWorld().equals(parent.getWorld())) return;
-        if (!event.toThunderState()) {
+        if (event.getOldWeatherType() == WeatherType.THUNDERSTORM) {
             ChatUtil.sendNotice(parent.getContained(Player.class), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
             for (Entity entity : parent.getContained(Zombie.class)) {
                 if (!ChanceUtil.getChance(5)) {

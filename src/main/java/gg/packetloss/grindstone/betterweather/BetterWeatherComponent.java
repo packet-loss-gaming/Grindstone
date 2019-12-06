@@ -9,6 +9,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
@@ -28,6 +29,8 @@ import org.bukkit.event.weather.WeatherChangeEvent;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import static com.zachsthings.libcomponents.bukkit.BasePlugin.callEvent;
 
 @ComponentInformation(friendlyName = "Better Weather", desc = "Improves weather mechanics.")
 public class BetterWeatherComponent extends BukkitComponent implements Runnable, Listener {
@@ -92,6 +95,8 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
     }
 
     private void changeWeather() {
+        WeatherType oldWeatherType = weatherState.getCurrentWeather().orElse(WeatherType.CLEAR);
+
         Optional<WeatherEvent> optNewEvent = weatherState.getNewWeatherEvent();
         if (optNewEvent.isEmpty()) {
             return;
@@ -101,6 +106,10 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         for (String worldName : config.affectedWorlds) {
             World affectedWorld = Bukkit.getWorld(worldName);
             WeatherType weatherType = event.getWeatherType();
+
+            if (oldWeatherType != weatherType) {
+                callEvent(new BetterWeatherChangeEvent(affectedWorld, oldWeatherType, weatherType));
+            }
 
             syncWeather(affectedWorld, weatherType);
         }

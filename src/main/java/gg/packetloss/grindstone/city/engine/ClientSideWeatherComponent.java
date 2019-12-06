@@ -13,6 +13,7 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.items.custom.WeaponFamily;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -25,11 +26,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.weather.ThunderChangeEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.betterweather.WeatherType.THUNDERSTORM;
 
 @ComponentInformation(friendlyName = "Client Side Weather Manager", desc = "Turn off the storm!")
 public class ClientSideWeatherComponent extends BukkitComponent implements Listener {
@@ -70,15 +72,28 @@ public class ClientSideWeatherComponent extends BukkitComponent implements Liste
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onThunderChange(ThunderChangeEvent event) {
-        String state = event.toThunderState() ? "starting" : "ending";
+    public void onThunderChange(BetterWeatherChangeEvent event) {
+        boolean ending;
+        String state;
+
+        if (event.getOldWeatherType() == THUNDERSTORM) {
+            ending = true;
+            state = "ending";
+        } else if (event.getNewWeatherType() == THUNDERSTORM) {
+            ending = false;
+            state = "starting";
+        } else {
+            return;
+        }
+
         enabledFor.stream().filter(player -> player.getWorld().equals(event.getWorld())).forEach(player -> {
-            if (!event.toThunderState()) {
+            if (ending) {
                 if (ItemUtil.hasAncientArmour(player) || ItemUtil.isHoldingItemInFamily(player, WeaponFamily.MASTER)) {
                     ChatUtil.sendWarning(player, ChatColor.DARK_RED + "===============[WARNING]===============");
                 }
             }
-            ChatUtil.sendNotice(player, "A thunder storm is " + state + " on your world.");
+
+            ChatUtil.sendWarning(player, "A thunder storm is " + state + " on your world.");
         });
     }
 

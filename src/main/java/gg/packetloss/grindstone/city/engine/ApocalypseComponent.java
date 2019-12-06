@@ -18,10 +18,12 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.bosses.manager.apocalypse.*;
 import gg.packetloss.grindstone.buff.Buff;
 import gg.packetloss.grindstone.buff.BuffCategory;
 import gg.packetloss.grindstone.buff.BuffComponent;
+import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
@@ -59,7 +61,6 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
-import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -626,8 +627,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onThunderChange(ThunderChangeEvent event) {
-        if (!event.toThunderState()) {
+    public void onThunderChange(BetterWeatherChangeEvent event) {
+        if (event.getOldWeatherType() == WeatherType.THUNDERSTORM) {
             buffComponent.clearBuffs(BuffCategory.APOCALYPSE);
         }
     }
