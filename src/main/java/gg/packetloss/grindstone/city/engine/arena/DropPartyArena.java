@@ -11,6 +11,8 @@ import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import gg.packetloss.bukkittext.Text;
+import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.events.entity.item.DropClearPulseEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -18,6 +20,9 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.timer.CountdownTask;
+import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -93,20 +98,56 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         return ArenaType.COMMAND_TRIGGERED;
     }
 
-    public void drop(int populatorValue) {
+    private static final int DROP_PARTY_DELAY = 60;
+    private static final Text DROP_PARTY_TEXT = Text.of(
+            ChatColor.BLUE,
+            "DROP PARTY",
+            TextAction.Click.runCommand("/warp party-room"),
+            TextAction.Hover.showText(Text.of("Click to teleport to the drop party"))
+    );
 
+    public void drop(int populatorValue) {
         drop(populatorValue, 24);
     }
 
     public void drop(int populatorValue, int modifier) {
-
-        // Check for online players
-        final int playerCount = server.getOnlinePlayers().size();
-
-        if (playerCount < 1) return;
-
         // Notify online players
-        Bukkit.broadcastMessage(ChatColor.GOLD + "Drop party in 60 seconds!");
+        if (task == null) {
+            CountdownTask dropPartyCountdown = new CountdownTask() {
+                @Override
+                public boolean matchesFilter(int seconds) {
+                    return seconds > 0 && (seconds % 5 == 0 || seconds <= 10);
+                }
+
+                @Override
+                public void performStep(int seconds) {
+                    BaseComponent[] broadcastText = Text.of(
+                            ChatColor.GOLD,
+                            DROP_PARTY_TEXT,
+                            " in ",
+                            seconds,
+                            " seconds!"
+                    ).build();
+
+                    Bukkit.broadcast(broadcastText);
+                }
+
+                @Override
+                public void performFinal() {
+                    BaseComponent[] broadcastText = Text.of(
+                            ChatColor.GOLD,
+                            DROP_PARTY_TEXT,
+                            " starting now!!!"
+                    ).build();
+
+                    Bukkit.broadcast(broadcastText);
+                }
+            };
+
+            TimedRunnable countdown = new TimedRunnable(dropPartyCountdown, DROP_PARTY_DELAY);
+            BukkitTask task = server.getScheduler().runTaskTimer(inst, countdown, 0, 20);
+            countdown.setTask(task);
+        }
 
         // Setup region variable
         final CuboidRegion rg = new CuboidRegion(getRegion().getMinimumPoint(), getRegion().getMaximumPoint());
@@ -114,12 +155,18 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         // Use the SacrificeComponent to populate the drop party if a populator value is given
         final boolean populate = populatorValue > 0;
         if (populate) {
-            for (int i = 0; i < playerCount * modifier; i++) {
+            int rawPlayerCount = server.getOnlinePlayers().size();
+
+            int adjustedPlayerCount = Math.max(3, rawPlayerCount);
+            for (int i = 0; i < adjustedPlayerCount * modifier; i++) {
                 drops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
                 drops.add(CustomItemCenter.build(CustomItems.ODE_TO_THE_FROZEN_KING));
                 drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
             }
-            drops.add(ItemUtil.makeSkull(CollectionUtil.getElement(server.getOnlinePlayers()).getName()));
+
+            if (rawPlayerCount > 0) {
+                drops.add(ItemUtil.makeSkull(CollectionUtil.getElement(server.getOnlinePlayers()).getName()));
+            }
         }
 
         // Remove null drops and shuffle all other drops
@@ -166,7 +213,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             }
 
             dropPartyPulses--;
-        }, 20 * 60, 20 * 3);
+        }, 20 * DROP_PARTY_DELAY, 20 * 3);
     }
 
     @EventHandler
