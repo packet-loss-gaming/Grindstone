@@ -32,9 +32,11 @@ import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
@@ -228,6 +230,21 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 }
                 entity.remove();
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        if (task != null) {
+            Player player = event.getPlayer();
+
+            Text joinText = Text.of(
+                    ChatColor.GOLD,
+                    DROP_PARTY_TEXT,
+                    " in progress!"
+            );
+
+            player.sendMessage(joinText.build());
         }
     }
 
