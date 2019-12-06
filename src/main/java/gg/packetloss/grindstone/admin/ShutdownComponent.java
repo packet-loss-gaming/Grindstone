@@ -14,6 +14,8 @@ import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.ServerShutdownEvent;
+import gg.packetloss.grindstone.util.timer.CountdownTask;
+import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -61,8 +63,6 @@ public class ShutdownComponent extends BukkitComponent {
         }
     }
 
-    private int seconds = 0;
-    private String downTime;
     private BukkitTask task = null;
 
     private boolean isRequesterOnlyPlayerOnline(Collection<? extends Player> players, @Nullable Player requester) {
@@ -78,37 +78,60 @@ public class ShutdownComponent extends BukkitComponent {
         return player.getUniqueId() == requester.getUniqueId();
     }
 
-    public void shutdown(@Nullable Player requester, final int assignedSeconds, String expectedDownTime) {
+    private TimedRunnable shutdownRunnable;
+    private String expectedDowntime;
 
-        this.downTime = expectedDownTime;
+    private int checkForEarlyShutdown(Player requester, int seconds) {
+        Collection<? extends Player> players = server.getOnlinePlayers();
+        if (players.isEmpty() || isRequesterOnlyPlayerOnline(players, requester)) {
+            shutdownRunnable.setTimes(0);
+            return 0;
+        }
 
-        if (assignedSeconds > 0) {
-            this.seconds = assignedSeconds;
-        } else {
+        return seconds;
+    }
+
+    public void shutdown(@Nullable Player requester, int assignedSeconds, String givenDowntime) {
+        if (assignedSeconds < 1) {
             server.shutdown();
             return;
         }
 
-        if (task != null) return;
+        this.expectedDowntime = givenDowntime;
 
-        // New Task
-        task = inst.getServer().getScheduler().runTaskTimer(inst, () -> {
-            Collection<? extends Player> players = server.getOnlinePlayers();
-            if (players.isEmpty() || isRequesterOnlyPlayerOnline(players, requester)) {
-                seconds = 0;
+        if (shutdownRunnable != null) {
+            shutdownRunnable.setTimes(assignedSeconds);
+            return;
+        }
+
+        CountdownTask shutdownTask = new CountdownTask() {
+            @Override
+            public boolean matchesFilter(int seconds) {
+                return seconds > 0 && (seconds % 5 == 0 || seconds <= 10);
             }
 
-            server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
-
-            if (seconds > 0 && seconds % 5 == 0 || seconds <= 10 && seconds > 0) {
+            @Override
+            public void performStep(int seconds) {
                 Bukkit.broadcastMessage(ChatColor.RED + "Shutting down in " + seconds + " seconds - for "
-                        + downTime + " of downtime!");
-            } else if (seconds < 1) {
+                        + expectedDowntime + " of downtime!");
+            }
+
+            @Override
+            public void performFinal() {
                 Bukkit.broadcastMessage(ChatColor.RED + "Shutting down!");
                 server.shutdown();
-                return;
             }
-            seconds -= 1;
-        }, 0, 20); // Multiply seconds by 20 to convert to ticks
+
+            @Override
+            public void performEvery(int seconds) {
+                seconds = checkForEarlyShutdown(requester, seconds);
+                server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
+            }
+        };
+
+        shutdownRunnable = new TimedRunnable(shutdownTask, assignedSeconds);
+        checkForEarlyShutdown(requester, assignedSeconds);
+
+        server.getScheduler().runTaskTimer(inst, shutdownRunnable, 0, 20);
     }
 }
