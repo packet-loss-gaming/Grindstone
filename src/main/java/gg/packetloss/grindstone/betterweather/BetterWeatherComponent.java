@@ -208,7 +208,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         }
 
         try {
-            return Optional.of(Integer.parseInt(charStr.substring(1)));
+            return Optional.of(Math.max(1, Integer.parseInt(charStr.substring(1))));
         } catch (NumberFormatException ex) {
             return Optional.empty();
         }
