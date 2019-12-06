@@ -126,7 +126,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                     BaseComponent[] broadcastText = Text.of(
                             ChatColor.GOLD,
                             DROP_PARTY_TEXT,
-                            " in ",
+                            " dropping items in ",
                             seconds,
                             " seconds!"
                     ).build();
@@ -139,7 +139,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                     BaseComponent[] broadcastText = Text.of(
                             ChatColor.GOLD,
                             DROP_PARTY_TEXT,
-                            " starting now!!!"
+                            " now dropping items!!!"
                     ).build();
 
                     Bukkit.broadcast(broadcastText);
