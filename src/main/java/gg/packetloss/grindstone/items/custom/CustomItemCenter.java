@@ -602,6 +602,56 @@ public class CustomItemCenter {
         tomeOfShadows.addUse("Upon use will immediately grow a crop.");
         addItem(tomeOfShadows);
 
+        // Party Box
+        CustomItem whitePartyBox = new CustomItem(WHITE_PARTY_BOX, Material.WHITE_SHULKER_BOX);
+        addItem(whitePartyBox);
+
+        CustomItem orangePartyBox = new CustomItem(ORANGE_PARTY_BOX, Material.ORANGE_SHULKER_BOX);
+        addItem(orangePartyBox);
+
+        CustomItem magentaPartyBox = new CustomItem(MAGENTA_PARTY_BOX, Material.MAGENTA_SHULKER_BOX);
+        addItem(magentaPartyBox);
+
+        CustomItem lightBluePartyBox = new CustomItem(LIGHT_BLUE_PARTY_BOX, Material.LIGHT_BLUE_SHULKER_BOX);
+        addItem(lightBluePartyBox);
+
+        CustomItem yellowPartyBox = new CustomItem(YELLOW_PARTY_BOX, Material.YELLOW_SHULKER_BOX);
+        addItem(yellowPartyBox);
+
+        CustomItem limePartyBox = new CustomItem(LIME_PARTY_BOX, Material.LIME_SHULKER_BOX);
+        addItem(limePartyBox);
+
+        CustomItem pinkPartyBox = new CustomItem(PINK_PARTY_BOX, Material.PINK_SHULKER_BOX);
+        addItem(pinkPartyBox);
+
+        CustomItem grayPartyBox = new CustomItem(GRAY_PARTY_BOX, Material.GRAY_SHULKER_BOX);
+        addItem(grayPartyBox);
+
+        CustomItem lightGrayPartyBox = new CustomItem(LIGHT_GRAY_PARTY_BOX, Material.SILVER_SHULKER_BOX);
+        addItem(lightGrayPartyBox);
+
+        CustomItem cyanPartyBox = new CustomItem(CYAN_PARTY_BOX, Material.CYAN_SHULKER_BOX);
+        addItem(cyanPartyBox);
+
+        CustomItem purplePartyBox = new CustomItem(PURPLE_PARTY_BOX, Material.PURPLE_SHULKER_BOX);
+        addItem(purplePartyBox);
+
+        CustomItem bluePartyBox = new CustomItem(BLUE_PARTY_BOX, Material.BLUE_SHULKER_BOX);
+        addItem(bluePartyBox);
+
+        CustomItem brownPartyBox = new CustomItem(BROWN_PARTY_BOX, Material.BROWN_SHULKER_BOX);
+        addItem(brownPartyBox);
+
+        CustomItem greenPartyBox = new CustomItem(GREEN_PARTY_BOX, Material.GREEN_SHULKER_BOX);
+        addItem(greenPartyBox);
+
+        CustomItem redPartyBox = new CustomItem(RED_PARTY_BOX, Material.RED_SHULKER_BOX);
+        addItem(redPartyBox);
+
+        CustomItem blackPartyBox = new CustomItem(BLACK_PARTY_BOX, Material.BLACK_SHULKER_BOX);
+        addItem(blackPartyBox);
+
+        // Miscellaneous
         CustomItem madMilk = new CustomItem(MAD_MILK, Material.MILK_BUCKET);
         madMilk.addSource(ItemSource.MARKET);
         madMilk.addUse("If thrown into a brewing vat at the factory, a melt down will occur in which all undead creatures die.");

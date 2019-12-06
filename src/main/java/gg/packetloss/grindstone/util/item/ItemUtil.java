@@ -10,7 +10,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.items.custom.WeaponFamily;
+import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import org.bukkit.ChatColor;
@@ -304,7 +304,7 @@ public class ItemUtil {
         return matchesFilter(stack, type.toString(), false);
     }
 
-    public static boolean isInItemFamily(ItemStack stack, WeaponFamily family) {
+    public static boolean isInItemFamily(ItemStack stack, ItemFamily family) {
         return matchesFilter(stack, family.getPrefix());
     }
 
@@ -319,7 +319,7 @@ public class ItemUtil {
         return isHoldingItem(player, CustomItems.MASTER_SWORD) || isHoldingItem(player, CustomItems.MASTER_SHORT_SWORD);
     }
 
-    public static boolean isHoldingItemInFamily(Player player, WeaponFamily family) {
+    public static boolean isHoldingItemInFamily(Player player, ItemFamily family) {
         return player.isValid() && isInItemFamily(player.getItemInHand(), family);
     }
 

@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.events.entity.item.DropClearPulseEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -27,6 +28,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.block.ShulkerBox;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Item;
@@ -35,10 +37,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
@@ -108,8 +112,46 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             TextAction.Hover.showText(Text.of("Click to teleport to the drop party"))
     );
 
-    public void drop(int populatorValue) {
-        drop(populatorValue, 24);
+    private static final List<CustomItems> PARTY_BOX_OPTIONS = List.of(
+            CustomItems.WHITE_PARTY_BOX,
+            CustomItems.ORANGE_PARTY_BOX,
+            CustomItems.MAGENTA_PARTY_BOX,
+            CustomItems.LIGHT_BLUE_PARTY_BOX,
+            CustomItems.YELLOW_PARTY_BOX,
+            CustomItems.LIME_PARTY_BOX,
+            CustomItems.PINK_PARTY_BOX,
+            CustomItems.GRAY_PARTY_BOX,
+            CustomItems.LIGHT_GRAY_PARTY_BOX,
+            CustomItems.CYAN_PARTY_BOX,
+            CustomItems.PURPLE_PARTY_BOX,
+            CustomItems.BLUE_PARTY_BOX,
+            CustomItems.BROWN_PARTY_BOX,
+            CustomItems.GREEN_PARTY_BOX,
+            CustomItems.RED_PARTY_BOX,
+            CustomItems.BLACK_PARTY_BOX
+    );
+
+    private void dropPartyBox(Location location, ItemStack item) {
+        ItemStack partyBox = CustomItemCenter.build(CollectionUtil.getElement(PARTY_BOX_OPTIONS));
+
+        BlockStateMeta itemMeta = (BlockStateMeta) partyBox.getItemMeta();
+
+        ShulkerBox shulkerBox = (ShulkerBox) itemMeta.getBlockState();
+        shulkerBox.getInventory().addItem(item);
+        itemMeta.setBlockState(shulkerBox);
+
+        partyBox.setItemMeta(itemMeta);
+
+        location.getWorld().dropItem(location, partyBox);
+    }
+
+    private void openPartyBox(Location location, ItemStack partyBox) {
+        BlockStateMeta itemMeta = (BlockStateMeta) partyBox.getItemMeta();
+
+        ShulkerBox shulkerBox = (ShulkerBox) itemMeta.getBlockState();
+        shulkerBox.getInventory().forEach((item) -> {
+            location.getWorld().dropItem(location, item);
+        });
     }
 
     public void drop(int populatorValue, int modifier) {
@@ -193,7 +235,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 // Pick a random Location
                 Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), checker);
                 if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
-                getWorld().dropItem(l, it.next());
+                dropPartyBox(l, it.next());
 
                 // Remove the drop
                 it.remove();
@@ -216,6 +258,29 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
             dropPartyPulses--;
         }, 20 * DROP_PARTY_DELAY, 20 * 3);
+    }
+
+    public void drop(int populatorValue) {
+        drop(populatorValue, 24);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onItemPickup(EntityPickupItemEvent event) {
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Player)) {
+            return;
+        }
+
+        Item item = event.getItem();
+
+        if (ItemUtil.isInItemFamily(item.getItemStack(), ItemFamily.PARTY_BOX)) {
+            // Override item pickup
+            event.setCancelled(true);
+            item.remove();
+
+            ItemStack stack = item.getItemStack();
+            openPartyBox(item.getLocation(), stack);
+        }
     }
 
     @EventHandler

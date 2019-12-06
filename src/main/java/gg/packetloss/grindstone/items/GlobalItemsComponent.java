@@ -26,7 +26,7 @@ import gg.packetloss.grindstone.PacketInterceptionComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.items.custom.WeaponFamily;
+import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
 import gg.packetloss.grindstone.items.implementations.combotools.*;
@@ -322,7 +322,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onItemDrop(PlayerDropItemEvent event) {
         Item item = event.getItemDrop();
-        if (ItemUtil.isInItemFamily(item.getItemStack(), WeaponFamily.PWNG)) {
+        if (ItemUtil.isInItemFamily(item.getItemStack(), ItemFamily.PWNG)) {
             item.remove();
             ChatUtil.sendNotice(event.getPlayer(), ChatColor.DARK_RED + "This item is too powerful for mere mortals.");
         }

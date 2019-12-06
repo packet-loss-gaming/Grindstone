@@ -10,8 +10,8 @@ import org.bukkit.ChatColor;
 
 public enum CustomItems {
     // Admin Weapons
-    PWNG_SHORT_SWORD(WeaponFamily.PWNG, "Short Sword"),
-    PWNG_BOW(WeaponFamily.PWNG, "Bow"),
+    PWNG_SHORT_SWORD(ItemFamily.PWNG, "Short Sword"),
+    PWNG_BOW(ItemFamily.PWNG, "Bow"),
 
     // Ancient Armor
     ANCIENT_CROWN(ChatColor.GOLD, "Ancient Crown"),
@@ -33,19 +33,19 @@ public enum CustomItems {
     NECROS_BOOTS(ChatColor.DARK_RED, "Necros Boots"),
 
     // Master Weapons
-    MASTER_SWORD(WeaponFamily.MASTER, "Sword"),
-    MASTER_SHORT_SWORD(WeaponFamily.MASTER, "Short Sword"),
-    MASTER_BOW(WeaponFamily.MASTER, "Bow"),
+    MASTER_SWORD(ItemFamily.MASTER, "Sword"),
+    MASTER_SHORT_SWORD(ItemFamily.MASTER, "Short Sword"),
+    MASTER_BOW(ItemFamily.MASTER, "Bow"),
 
     // Unleashed Weapons
-    UNLEASHED_SWORD(WeaponFamily.UNLEASHED, "Sword"),
-    UNLEASHED_SHORT_SWORD(WeaponFamily.UNLEASHED, "Short Sword"),
-    UNLEASHED_BOW(WeaponFamily.UNLEASHED, "Bow"),
+    UNLEASHED_SWORD(ItemFamily.UNLEASHED, "Sword"),
+    UNLEASHED_SHORT_SWORD(ItemFamily.UNLEASHED, "Short Sword"),
+    UNLEASHED_BOW(ItemFamily.UNLEASHED, "Bow"),
 
     // Fear Weapons
-    FEAR_SWORD(WeaponFamily.FEAR, "Sword"),
-    FEAR_SHORT_SWORD(WeaponFamily.FEAR, "Short Sword"),
-    FEAR_BOW(WeaponFamily.FEAR, "Bow"),
+    FEAR_SWORD(ItemFamily.FEAR, "Sword"),
+    FEAR_SHORT_SWORD(ItemFamily.FEAR, "Short Sword"),
+    FEAR_BOW(ItemFamily.FEAR, "Bow"),
 
     // Shadow Items
     SHADOW_SWORD(ChatColor.DARK_RED, "Shadow Sword"),
@@ -117,6 +117,24 @@ public enum CustomItems {
     SCROLL_OF_SUMMATION(ChatColor.GOLD, "Scroll of Summation"),
     HYMN_OF_SUMMATION(ChatColor.GOLD, "Hymn of Summation"),
 
+    // Party Box
+    WHITE_PARTY_BOX(ItemFamily.PARTY_BOX, "White"),
+    ORANGE_PARTY_BOX(ItemFamily.PARTY_BOX, "Orange"),
+    MAGENTA_PARTY_BOX(ItemFamily.PARTY_BOX, "Magenta"),
+    LIGHT_BLUE_PARTY_BOX(ItemFamily.PARTY_BOX, "Light Blue"),
+    YELLOW_PARTY_BOX(ItemFamily.PARTY_BOX, "Yellow"),
+    LIME_PARTY_BOX(ItemFamily.PARTY_BOX, "Lime"),
+    PINK_PARTY_BOX(ItemFamily.PARTY_BOX, "Pink"),
+    GRAY_PARTY_BOX(ItemFamily.PARTY_BOX, "Gray"),
+    LIGHT_GRAY_PARTY_BOX(ItemFamily.PARTY_BOX, "Light Gray"),
+    CYAN_PARTY_BOX(ItemFamily.PARTY_BOX, "Cyan"),
+    PURPLE_PARTY_BOX(ItemFamily.PARTY_BOX, "Purple"),
+    BLUE_PARTY_BOX(ItemFamily.PARTY_BOX, "Blue"),
+    BROWN_PARTY_BOX(ItemFamily.PARTY_BOX, "Brown"),
+    GREEN_PARTY_BOX(ItemFamily.PARTY_BOX, "Green"),
+    RED_PARTY_BOX(ItemFamily.PARTY_BOX, "Red"),
+    BLACK_PARTY_BOX(ItemFamily.PARTY_BOX, "Black"),
+
     // Miscellaneous
     MAD_MILK(ChatColor.DARK_AQUA, "Mad Milk"),
     GOD_FISH(ChatColor.BLUE, "God Fish"),
@@ -135,12 +153,12 @@ public enum CustomItems {
     TOME_OF_THE_UNDEAD(ChatColor.DARK_RED, "Tome of the Undead"),
     TOME_OF_LEGENDS(ChatColor.GOLD, "Tome of Legends");
 
-    private final WeaponFamily family;
+    private final ItemFamily family;
     private final ChatColor color;
     private final String name;
     private final String namespaceName;
 
-    CustomItems(WeaponFamily family, String kind) {
+    CustomItems(ItemFamily family, String kind) {
         this.family = family;
         this.color = family.getColor();
         this.name = family.getProperName() + " " + kind;
@@ -154,7 +172,7 @@ public enum CustomItems {
         this.namespaceName = computeNamespaceName(this.name);
     }
 
-    public WeaponFamily getFamily() {
+    public ItemFamily getFamily() {
         return family;
     }
 

@@ -32,7 +32,7 @@ import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.items.custom.WeaponFamily;
+import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.items.implementations.FearBowImpl;
 import gg.packetloss.grindstone.items.implementations.FearSwordImpl;
 import gg.packetloss.grindstone.items.implementations.UnleashedBowImpl;
@@ -206,7 +206,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private int calculateOverlordCooldown(Player player) {
         int overlordCooldown = INIT_OVERLORD_EXTRA;
 
-        if (ItemUtil.isHoldingItemInFamily(player, WeaponFamily.MASTER)) {
+        if (ItemUtil.isHoldingItemInFamily(player, ItemFamily.MASTER)) {
             overlordCooldown /= 2;
         }
 

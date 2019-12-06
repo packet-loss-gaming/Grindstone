@@ -23,7 +23,7 @@ import gg.packetloss.grindstone.events.guild.RogueBlipEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.items.custom.WeaponFamily;
+import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
@@ -303,11 +303,11 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             Player player = event.getPlayer();
             parent.economy.depositPlayer(player.getName(), amount * item.getAmount());
             event.setItemStack(null);
-        } else if (ItemUtil.isInItemFamily(item, WeaponFamily.FEAR)) {
+        } else if (ItemUtil.isInItemFamily(item, ItemFamily.FEAR)) {
             processSacrificeRepair(event, CustomItems.GEM_OF_DARKNESS);
-        } else if (ItemUtil.isInItemFamily(item, WeaponFamily.UNLEASHED)) {
+        } else if (ItemUtil.isInItemFamily(item, ItemFamily.UNLEASHED)) {
             processSacrificeRepair(event, CustomItems.IMBUED_CRYSTAL);
-        } else if (ItemUtil.isInItemFamily(item, WeaponFamily.MASTER)) {
+        } else if (ItemUtil.isInItemFamily(item, ItemFamily.MASTER)) {
             Player player = event.getPlayer();
 
             int maxDurability = item.getType().getMaxDurability();
