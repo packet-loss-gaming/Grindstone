@@ -6,6 +6,8 @@
 
 package gg.packetloss.grindstone;
 
+import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
+import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.commands.PaginatedResult;
@@ -27,6 +29,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -35,7 +40,7 @@ import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Auto Clear", desc = "Automatically clears items on the ground.")
 @Depend(components = {SessionComponent.class})
-public class AutoClearComponent extends BukkitComponent implements Runnable {
+public class AutoClearComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
@@ -45,15 +50,17 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
     private SessionComponent sessions;
 
     private LocalConfiguration config;
+    private HashMap<World, Integer> worldCount = new HashMap<>();
     private HashMap<World, TimedRunnable> worldTimer = new HashMap<>();
     private Map<World, Collection<ChunkStats>> lastClear = new HashMap<>();
 
     @Override
     public void enable() {
-
         this.config = configure(new LocalConfiguration());
         registerCommands(Commands.class);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 10);
+
+        //noinspection AccessStaticViaInstance
+        inst.registerEvents(this);
     }
 
     @Override
@@ -79,14 +86,52 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
         checkedEntities.add(EntityType.EXPERIENCE_ORB);
     }
 
-    @Override
-    public void run() {
-        for (World world : server.getWorlds()) {
-            int itemCount = checkEntities(world).getEntities().size();
-            if (itemCount >= config.itemCountMin) {
-                dropClear(world, itemCount >= (config.itemCountMin * 3) ? 0 : 10, false);
-            }
+    private BukkitTask nextTickCleanupTask = null;
+
+    @EventHandler
+    public void onEntityAdd(EntityAddToWorldEvent event) {
+        Entity entity = event.getEntity();
+        if (!checkedEntities.contains(entity.getType())) {
+            return;
         }
+
+        World world = event.getEntity().getWorld();
+        worldCount.compute(world, (ignored, existingCount) -> {
+            if (existingCount == null) {
+                existingCount = 0;
+            }
+
+            return ++existingCount;
+        });
+
+        int computedCount = worldCount.getOrDefault(world, 0);
+        if (computedCount >= (config.itemCountMin * 3)) {
+            if (nextTickCleanupTask == null) {
+                nextTickCleanupTask = server.getScheduler().runTask(inst, () -> {
+                    emergencyDropClear(world);
+                    nextTickCleanupTask = null;
+                });
+            }
+        } else if (computedCount > config.itemCountMin) {
+            dropClear(world, 10, false);
+        }
+    }
+
+    @EventHandler
+    public void onEntityRemove(EntityRemoveFromWorldEvent event) {
+        Entity entity = event.getEntity();
+        if (!checkedEntities.contains(entity.getType())) {
+            return;
+        }
+
+        World world = event.getEntity().getWorld();
+        worldCount.compute(world, (ignored, existingCount) -> {
+            if (existingCount == null) {
+                existingCount = 1;
+            }
+
+            return Math.max(0, --existingCount);
+        });
     }
 
     private CheckProfile checkEntities(World world) {
@@ -152,6 +197,15 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
     }
 
     public class DropStatsCommands {
+        @Command(aliases = {"tallies"},
+                usage = "", desc = "List world tallies",
+                min = 0, max = 0)
+        public void talliesCmd(CommandContext args, CommandSender sender) throws CommandException {
+            worldCount.forEach((world, count) -> {
+                ChatUtil.sendNotice(sender, world.getName() + ": " + count);
+            });
+        }
+
         @Command(aliases = {"update"},
                 usage = "<world>", desc = "Updates your copy of stats for that world",
                 min = 1, max = 1)
@@ -311,6 +365,24 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
         }
     }
 
+    private void clearWorld(World world) {
+        Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops!");
+        CheckProfile profile = checkEntities(world);
+        lastClear.put(world, profile.getStats());
+        Collection<Entity> entities = profile.getEntities();
+        entities.forEach(Entity::remove);
+        Bukkit.broadcastMessage(String.valueOf(ChatColor.GREEN) + entities.size() + " drops cleared!");
+    }
+
+    private void emergencyDropClear(World world) {
+        clearWorld(world);
+
+        TimedRunnable runnable = worldTimer.get(world);
+        if (runnable != null && !runnable.isComplete()) {
+            runnable.cancel();
+        }
+    }
+
     private void dropClear(World world, int seconds, boolean overwrite) {
 
         TimedRunnable runnable = worldTimer.get(world);
@@ -337,12 +409,7 @@ public class AutoClearComponent extends BukkitComponent implements Runnable {
 
             @Override
             public void end() {
-                Bukkit.broadcastMessage(ChatColor.RED + "Clearing all " + world.getName() + " drops!");
-                CheckProfile profile = checkEntities(world);
-                lastClear.put(world, profile.getStats());
-                Collection<Entity> entities = profile.getEntities();
-                entities.forEach(Entity::remove);
-                Bukkit.broadcastMessage(String.valueOf(ChatColor.GREEN) + entities.size() + " drops cleared!");
+                clearWorld(world);
             }
         };
 
