@@ -175,7 +175,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         List<ItemStack> loot = new ArrayList<>();
 
         // Calculate the modifier
-        int baseChance = inst.hasPermission(sender, "aurora.tome.sacrifice") ? 100 : 125;
+        int baseChance = sender instanceof Player && inst.hasPermission(sender, "aurora.tome.sacrifice") ? 100 : 125;
         int modifier = calculateModifier(value);
 
         value *= .9;
@@ -194,7 +194,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
             if (itemStack != null) {
                 value -= Math.max(9, MarketComponent.priceCheck(itemStack));
-                if (!wasJunk || !sender.hasPermission("aurora.tome.cleanly")) {
+                if (!wasJunk || !(sender instanceof Player && sender.hasPermission("aurora.tome.cleanly"))) {
                     loot.add(itemStack);
                 }
             }
