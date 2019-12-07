@@ -39,10 +39,14 @@ public class LinearCreationExecutor {
     }
 
     public void process(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        ItemStack item = event.getItem();
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
 
-        if (!ItemUtil.isItem(item, itemType)) return;
+        Player player = event.getPlayer();
+        if (!ItemUtil.isHoldingItem(player, itemType)) {
+            return;
+        }
 
         event.setCancelled(true);
 
@@ -57,10 +61,10 @@ public class LinearCreationExecutor {
 
         switch (event.getAction()) {
             case RIGHT_CLICK_BLOCK:
-                handleRightClick(player, item, event);
+                handleRightClick(player, event);
                 break;
             case LEFT_CLICK_BLOCK:
-                handleLeftClick(player, item);
+                handleLeftClick(player);
                 break;
         }
     }
@@ -73,7 +77,7 @@ public class LinearCreationExecutor {
         return Integer.parseInt(ItemUtil.getItemTags(item).get(ChatColor.RED + "Max Distance"));
     }
 
-    private void handleRightClick(Player player, ItemStack item, PlayerInteractEvent event) {
+    private void handleRightClick(Player player, PlayerInteractEvent event) {
         BlockFace clickedFace = event.getBlockFace();
         Block curTarget = event.getClickedBlock().getRelative(clickedFace);
 
@@ -90,6 +94,8 @@ public class LinearCreationExecutor {
         }
 
         // callEvent(new RapidBlockBreakEvent(player));
+
+        ItemStack item = player.getInventory().getItemInMainHand();
         short degradation = 0;
         int unbreakingLevel = item.getEnchantmentLevel(Enchantment.DURABILITY);
         short curDur = item.getDurability();
@@ -133,7 +139,9 @@ public class LinearCreationExecutor {
         }
     }
 
-    private void handleLeftClick(Player player, ItemStack item) {
+    private void handleLeftClick(Player player) {
+        ItemStack item = player.getInventory().getItemInMainHand();
+
         final int dist = getDist(item);
         final int maxDist = getMaxDist(item);
         final short dur = item.getDurability();
@@ -152,6 +160,7 @@ public class LinearCreationExecutor {
                 ChatUtil.sendNotice(player, "Distance set to: " + newDist);
             }
         }
+
         ItemStack result = cItem.build();
         result.setDurability(dur);
         ItemMeta meta = result.getItemMeta();

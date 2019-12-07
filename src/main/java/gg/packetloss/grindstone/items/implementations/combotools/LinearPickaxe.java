@@ -24,4 +24,9 @@ public class LinearPickaxe extends ComboPickaxe {
     public void onBlockInteract(PlayerInteractEvent event) {
         executor.process(event);
     }
+
+    @Override
+    public boolean onItemRightClick(PlayerInteractEvent event) {
+        return executor.impedeRightClick(event.getPlayer());
+    }
 }

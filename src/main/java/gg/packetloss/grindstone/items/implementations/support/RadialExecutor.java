@@ -25,6 +25,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -42,20 +43,31 @@ public abstract class RadialExecutor {
     public abstract boolean accepts(Material material);
 
     public void process(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
 
         Player player = event.getPlayer();
-        ItemStack item = event.getItem();
-
-        if (!ItemUtil.isItem(item, itemType)) return;
+        if (!ItemUtil.isHoldingItem(player, itemType)) {
+            return;
+        }
 
         switch (event.getAction()) {
             case RIGHT_CLICK_BLOCK:
-                handleRightClick(player, item);
+                handleRightClick(player);
                 break;
             case LEFT_CLICK_BLOCK:
-                handleLeftClick(player, item, event);
+                handleLeftClick(player, event);
                 break;
         }
+    }
+
+    public boolean impedeRightClick(Player player) {
+        if (!ItemUtil.isHoldingItem(player, itemType)) {
+            return false;
+        }
+
+        return player.isSneaking();
     }
 
     private int getRadius(ItemStack item) {
@@ -66,9 +78,12 @@ public abstract class RadialExecutor {
         return Integer.parseInt(ItemUtil.getItemTags(item).get(ChatColor.RED + "Max Radius"));
     }
 
-    private void handleRightClick(Player player, ItemStack item) {
+    private void handleRightClick(Player player) {
+        if (!impedeRightClick(player)) {
+            return;
+        }
 
-        if (!player.isSneaking()) return;
+        ItemStack item = player.getInventory().getItemInMainHand();
 
         final int radius = getRadius(item);
         final int maxRadius = getMaxRadius(item);
@@ -96,7 +111,7 @@ public abstract class RadialExecutor {
         player.setItemInHand(result);
     }
 
-    private void handleLeftClick(Player player, ItemStack item, PlayerInteractEvent event) {
+    private void handleLeftClick(Player player, PlayerInteractEvent event) {
         Block clicked = event.getClickedBlock();
 
         BuildToolUseEvent useEvent = new BuildToolUseEvent(player, clicked.getLocation(), itemType);
@@ -112,7 +127,9 @@ public abstract class RadialExecutor {
 
         event.setCancelled(true);
 
+        ItemStack item = player.getInventory().getItemInMainHand();
         final int radius = getRadius(item);
+
         Vector min = new Vector(clicked.getX(), clicked.getY(), clicked.getZ());
         Vector max = new Vector(clicked.getX(), clicked.getY(), clicked.getZ());
         switch (event.getBlockFace()) {
