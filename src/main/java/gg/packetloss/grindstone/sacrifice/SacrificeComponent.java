@@ -399,8 +399,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         PlayerInventory pInventory = player.getInventory();
 
         final double value = registry.getValue(item);
-        ChatUtil.sendDebug(value);
-
         if (value < 0) {
             pInventory.addItem(item);
             ChatUtil.sendError(player, "The gods reject your offer.");
