@@ -46,6 +46,7 @@ import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.item.BookUtil;
+import gg.packetloss.grindstone.util.region.RegionValueEvaluator;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.ChatColor;
@@ -735,29 +736,36 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             });
         }
 
-        @Command(aliases = {"reclaim"}, usage = "", desc = "", min = 0, max = 0)
-        @CommandPermissions({"aurora.home.admin.reclaim"})
-        public void reclaimHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
-            throw new CommandException("This command needs updated.");
-
-            /*
+        @Command(aliases = {"viewvalue"}, usage = "", desc = "", min = 0, max = 0)
+        @CommandPermissions({"aurora.home.admin.viewvalue"})
+        public void viewValueHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player admin = PlayerUtil.checkPlayer(sender);
-            String player = args.getString(0).toLowerCase();
 
             RegionManager manager = WG.getRegionManager(admin.getWorld());
-            ProtectedRegion region = manager.getRegionExact(getHomeName(player));
-            if (region == null) throw new CommandException("That player doesn't have a home.");
 
-            manager.removeRegion(region.getId());
-            try {
-                manager.save();
-            } catch (ProtectionDatabaseException e) {
-                throw new CommandException("Failed to remove the home of: " + player + ".");
+            RegionValueEvaluator evaluator = new RegionValueEvaluator(true);
+
+            for (ProtectedRegion region : manager.getApplicableRegions(admin.getLocation())) {
+                if (!isHouse(region)) {
+                    continue;
+                }
+
+                Optional<Region> optConvertedRegion = RegionUtil.convert(region);
+                if (optConvertedRegion.isEmpty()) {
+                    continue;
+                }
+
+                ChatUtil.sendNotice(admin, "Found: " + region.getId());
+
+                evaluator.walkRegion(optConvertedRegion.get(), admin.getWorld()).thenAccept((report) -> {
+                    server.getScheduler().runTask(inst, () -> {
+                        ChatUtil.sendNotice(admin, "Report for: " + region.getId());
+                        ChatUtil.sendNotice(admin, "Item price: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getItemPrice()));
+                        ChatUtil.sendNotice(admin, "Block price: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getBlockPrice()));
+                        ChatUtil.sendNotice(admin, "Total: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getTotalPrice()));
+                    });
+                });
             }
-            ChatUtil.sendNotice(admin, "The player: " + player + "'s house has been removed.");
-            ChatUtil.sendNotice(player, "Your home has been removed by: " + admin.getDisplayName() + ".");
-            log.info(admin.getName() + " deleted the player: " + player + "'s home.");
-            */
         }
 
         @Command(aliases = {"help"}, desc = "Admin Help", min = 0, max = 0)

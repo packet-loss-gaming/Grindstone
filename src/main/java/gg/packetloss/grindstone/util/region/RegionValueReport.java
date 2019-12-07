@@ -16,4 +16,8 @@ public class RegionValueReport {
     public double getItemPrice() {
         return itemPrice;
     }
+
+    public double getTotalPrice() {
+        return blockPrice + itemPrice;
+    }
 }
