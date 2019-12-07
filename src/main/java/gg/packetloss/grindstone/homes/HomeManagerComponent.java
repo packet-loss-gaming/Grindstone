@@ -49,6 +49,7 @@ import gg.packetloss.grindstone.util.item.BookUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -143,6 +144,20 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     public boolean isEntityInPlayersHome(Player player, Entity entity) {
         RegionManager manager = WG.getRegionManager(entity.getWorld());
         return isEntityInPlayersHome(player, entity, manager);
+    }
+
+    private boolean isInAnyPlayerHome(Location location, RegionManager manager) {
+        for (ProtectedRegion aRegion : manager.getApplicableRegions(location)) {
+            if (isHouse(aRegion)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isInAnyPlayerHome(Location location) {
+        RegionManager manager = WG.getRegionManager(location.getWorld());
+        return isInAnyPlayerHome(location, manager);
     }
 
     @EventHandler(ignoreCancelled = true)

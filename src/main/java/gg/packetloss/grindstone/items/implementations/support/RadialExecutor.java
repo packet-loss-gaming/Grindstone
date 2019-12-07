@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.items.implementations.support;
 
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import gg.packetloss.grindstone.events.custom.item.BuildToolUseEvent;
 import gg.packetloss.grindstone.items.custom.CustomItem;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -96,8 +97,14 @@ public abstract class RadialExecutor {
     }
 
     private void handleLeftClick(Player player, ItemStack item, PlayerInteractEvent event) {
-
         Block clicked = event.getClickedBlock();
+
+        BuildToolUseEvent useEvent = new BuildToolUseEvent(player, clicked.getLocation(), itemType);
+        callEvent(useEvent);
+        if (useEvent.isCancelled()) {
+            return;
+        }
+
         final World world = clicked.getWorld();
         final Material initialType = clicked.getType();
 

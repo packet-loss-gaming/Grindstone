@@ -1,6 +1,7 @@
 package gg.packetloss.grindstone.items.implementations.support;
 
 import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.grindstone.events.custom.item.BuildToolUseEvent;
 import gg.packetloss.grindstone.items.custom.CustomItem;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -73,14 +74,20 @@ public class LinearCreationExecutor {
     }
 
     private void handleRightClick(Player player, ItemStack item, PlayerInteractEvent event) {
+        BlockFace clickedFace = event.getBlockFace();
+        Block curTarget = event.getClickedBlock().getRelative(clickedFace);
+
+        BuildToolUseEvent useEvent = new BuildToolUseEvent(player, curTarget.getLocation(), itemType);
+        callEvent(useEvent);
+        if (useEvent.isCancelled()) {
+            return;
+        }
+
         ItemStack heldItem = player.getInventory().getItemInOffHand();
         if (heldItem.getType() == Material.AIR || !heldItem.getType().isBlock()) {
             ChatUtil.sendError(player, "Put the block you'd like to place in your off-hand.");
             return;
         }
-
-        BlockFace clickedFace = event.getBlockFace();
-        Block curTarget = event.getClickedBlock().getRelative(clickedFace);
 
         // callEvent(new RapidBlockBreakEvent(player));
         short degradation = 0;

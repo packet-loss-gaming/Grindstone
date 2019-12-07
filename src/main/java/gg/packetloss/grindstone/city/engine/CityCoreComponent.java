@@ -8,7 +8,13 @@ package gg.packetloss.grindstone.city.engine;
 
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.events.custom.item.BuildToolUseEvent;
+import gg.packetloss.grindstone.homes.HomeManagerComponent;
+import gg.packetloss.grindstone.util.ChatUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -24,10 +30,16 @@ import org.bukkit.material.Door;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "City Core", desc = "Operate the core city functionality.")
+@Depend(components = {AdminComponent.class, HomeManagerComponent.class})
 public class CityCoreComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
+
+    @InjectComponent
+    private AdminComponent admin;
+    @InjectComponent
+    private HomeManagerComponent homeManager;
 
     @Override
     public void enable() {
@@ -133,5 +145,26 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
                 break;
             }
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBuildToolUse(BuildToolUseEvent event) {
+        if (admin.isAdmin(event.getPlayer())) {
+            return;
+        }
+
+        Location startingPoint = event.getStartingPoint();
+
+        if (!isCityWorld(startingPoint.getWorld())) {
+            return;
+        }
+
+        if (homeManager.isInAnyPlayerHome(startingPoint)) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        ChatUtil.sendError(player, "The city council has decided this tool shouldn't be used here.");
+        event.setCancelled(true);
     }
 }

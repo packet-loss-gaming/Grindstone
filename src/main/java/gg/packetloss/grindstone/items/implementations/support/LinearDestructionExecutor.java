@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations.support;
 
+import gg.packetloss.grindstone.events.custom.item.BuildToolUseEvent;
 import gg.packetloss.grindstone.items.custom.CustomItem;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -92,8 +93,14 @@ public abstract class LinearDestructionExecutor {
     }
 
     private void handleLeftClick(Player player, ItemStack item, PlayerInteractEvent event) {
-
         Block curTarget = event.getClickedBlock();
+
+        BuildToolUseEvent useEvent = new BuildToolUseEvent(player, curTarget.getLocation(), itemType);
+        callEvent(useEvent);
+        if (useEvent.isCancelled()) {
+            return;
+        }
+
         final Material initialType = curTarget.getType();
 
         if (!accepts(curTarget.getType())) return;
