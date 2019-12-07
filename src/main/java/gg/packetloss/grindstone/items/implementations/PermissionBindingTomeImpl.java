@@ -8,7 +8,6 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -43,25 +42,26 @@ public class PermissionBindingTomeImpl extends AbstractItemFeatureImpl {
         return permissionManager.playerAdd(player, permission);
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerInteract(PlayerInteractEvent event) {
+    @Override
+    public boolean onItemRightClick(PlayerInteractEvent event) {
         if (!checkPermissionsConfigured()) {
-            return;
+            return false;
         }
 
         Player player = event.getPlayer();
-        ItemStack itemStack = event.getItem();
 
         if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
             for (Map.Entry<CustomItems, String> entry : tomes.entrySet()) {
-                if (ItemUtil.isItem(itemStack, entry.getKey())) {
+                if (ItemUtil.isHoldingItem(player, entry.getKey())) {
                     if (tryAddPermission(player, entry.getValue())) {
                         ItemUtil.removeItemOfName(player, CustomItemCenter.build(entry.getKey()), 1, false);
                         ChatUtil.sendNotice(player, ChatColor.GOLD + "You gain new knowledge.");
                     }
-                    break;
+                    return true;
                 }
             }
         }
+
+        return false;
     }
 }
