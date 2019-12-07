@@ -760,9 +760,10 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                 evaluator.walkRegion(optConvertedRegion.get(), admin.getWorld()).thenAccept((report) -> {
                     server.getScheduler().runTask(inst, () -> {
                         ChatUtil.sendNotice(admin, "Report for: " + region.getId());
-                        ChatUtil.sendNotice(admin, "Item price: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getItemPrice()));
+                        ChatUtil.sendNotice(admin, "Item price: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getItemPriceCurrentState()));
+                        ChatUtil.sendNotice(admin, "Maximum item value: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getMaximumItemValue()));
                         ChatUtil.sendNotice(admin, "Block price: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getBlockPrice()));
-                        ChatUtil.sendNotice(admin, "Total: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getTotalPrice()));
+                        ChatUtil.sendNotice(admin, "Auto sell price: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getAutoSellPrice()));
                     });
                 });
             }

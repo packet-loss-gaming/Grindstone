@@ -12,6 +12,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -28,6 +29,18 @@ public class RegionValueEvaluator {
 
     private void walkInventory(ReportSourceInfo reportSource, Inventory inventory) {
         inventory.forEach((item) -> {
+            if (item == null) {
+                return;
+            }
+
+            // Recurse into any shulker boxes/container items
+            if (item.hasItemMeta() && item.getItemMeta() instanceof BlockStateMeta) {
+                BlockState blockState = ((BlockStateMeta) item.getItemMeta()).getBlockState();
+                if (blockState instanceof Container) {
+                    walkInventory(reportSource, ((Container) blockState).getInventory());
+                }
+            }
+
             computeItemName(item).ifPresent((itemName) -> {
                 reportSource.allNames.add(itemName);
                 reportSource.items.add(item.clone());
@@ -86,11 +99,13 @@ public class RegionValueEvaluator {
                 }
 
                 double itemPrice = 0;
+                double maximumItemValue = 0;
                 for (ItemStack entry : reportSource.items) {
                     itemPrice += nameItemMapping.checkSellPrice(entry).orElse(0d);
+                    maximumItemValue += nameItemMapping.checkMaximumValue(entry).orElse(0d);
                 }
 
-                future.complete(new RegionValueReport(blockPrice, itemPrice));
+                future.complete(new RegionValueReport(blockPrice, itemPrice, maximumItemValue));
             });
 
             return future;
