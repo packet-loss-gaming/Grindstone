@@ -92,7 +92,7 @@ public class ItemNameCalculator {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(mappedName.getFlatteningType());
+        return mappingToMCID(mappedName);
     }
 
     public static Optional<String> computeItemName(ItemStack stack) {
