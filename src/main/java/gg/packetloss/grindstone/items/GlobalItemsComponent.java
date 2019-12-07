@@ -307,19 +307,6 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent event) {
-        if (event.getHand() != EquipmentSlot.OFF_HAND) {
-            return;
-        }
-
-        Player player = event.getPlayer();
-        ItemStack heldItem = player.getInventory().getItemInMainHand();
-        if (!ItemUtil.isPickAxe(heldItem.getTypeId()) && ItemUtil.isAuthenticCustomItem(heldItem)) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
     public void onItemDrop(PlayerDropItemEvent event) {
         Item item = event.getItemDrop();
         if (ItemUtil.isInItemFamily(item.getItemStack(), ItemFamily.PWNG)) {
