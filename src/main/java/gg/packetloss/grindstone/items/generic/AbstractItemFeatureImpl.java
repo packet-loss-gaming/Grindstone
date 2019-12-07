@@ -73,7 +73,7 @@ public abstract class AbstractItemFeatureImpl implements Listener {
         return false;
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onRightClick(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) {
             return;
@@ -93,7 +93,7 @@ public abstract class AbstractItemFeatureImpl implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onOffhandBlockPlace(BlockPlaceEvent event) {
         if (event.getHand() != EquipmentSlot.OFF_HAND) {
             return;
