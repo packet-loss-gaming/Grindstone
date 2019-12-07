@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -49,11 +50,11 @@ public class ItemUtil {
             null, null, null, null
     };
 
-    public static ItemStack makeSkull(String name) {
+    public static ItemStack makeSkull(OfflinePlayer offlinePlayer) {
 
-        ItemStack skull = new ItemStack(ItemID.HEAD, 1, (short) 3);
+        ItemStack skull = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
-        skullMeta.setOwner(name);
+        skullMeta.setOwningPlayer(offlinePlayer);
         skull.setItemMeta(skullMeta);
         return skull;
     }

@@ -440,7 +440,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             // Get the price and send it to the player
             CompletableFuture<Optional<Double>> optFutureBlockPrice = RegionUtil.calcBlockPrice(
                     region,
-                    new BukkitWorld(player.getWorld())
+                    player.getWorld()
             );
             optFutureBlockPrice.thenAccept((optBlockPrice) -> {
                 server.getScheduler().runTask(inst, () -> {
@@ -556,7 +556,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             if (player == null) {
                 blockPrice = RegionUtil.calcBlockPrice(
                         region,
-                        new BukkitWorld(admin.getWorld())
+                        admin.getWorld()
                 );
             } else {
                 blockPrice = CompletableFuture.completedFuture(Optional.empty());
@@ -608,11 +608,11 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             });
         }
 
-        @Command(aliases = {"recompile"}, usage = "", desc = "Re evaluates all purchasable plots " +
+        @Command(aliases = {"updateprice"}, usage = "", desc = "Re evaluates all purchasable plots " +
                 "in the location the admin is standing",
                 min = 0, max = 0)
-        @CommandPermissions({"aurora.home.admin.recompile"})
-        public void recompileHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
+        @CommandPermissions({"aurora.home.admin.updateprice"})
+        public void updateHomePriceCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player admin = PlayerUtil.checkPlayer(sender);
 
@@ -624,7 +624,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                 if (region.getId().endsWith("-s") && region.getFlag(DefaultFlag.PRICE) != null) {
                     CompletableFuture<Optional<Double>> blockPrice = RegionUtil.calcBlockPrice(
                             region,
-                            new BukkitWorld(admin.getWorld())
+                            admin.getWorld()
                     );
 
                     regionsComplete.add(blockPrice.thenAccept((optBlockPrice) -> {
@@ -687,7 +687,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             // Block Price
             World world = region.getWorld();
 
-            CompletableFuture<Optional<Double>> blockPrice = RegionUtil.calcBlockPrice(region, world);
+            CompletableFuture<Optional<Double>> blockPrice = RegionUtil.calcBlockPrice(region, ((BukkitWorld) world).getWorld());
             blockPrice.thenAccept((optBlockPrice) -> {
                 server.getScheduler().runTask(inst, () -> {
                     double p1 = RegionUtil.calcChunkPrice(size);
@@ -720,82 +720,9 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             });
         }
 
-        /*
-        @Command(aliases = {"flag"}, usage = "<player> <flag>", desc = "Flag a home",
-                min = 2)
-        @CommandPermissions({"aurora.home.admin.flag"})
-        public void flagHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            Bukkit.dispatchCommand(sender, "rg flag " + getHomeName(args.getString(0)) + " " + args.getJoinedStrings(1));
-        }
-        */
-
-        @Command(aliases = {"move"}, usage = "<player> <newdistrict>", desc = "Move a home",
-                min = 2, max = 2)
-        @CommandPermissions({"aurora.home.admin.move"})
-        public void moveHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            throw new CommandException("This command needs updated.");
-
-            /*
-            Player admin = PlayerUtil.checkPlayer(sender);
-
-            String player = args.getString(0).toLowerCase();
-            String district = args.getString(1).toLowerCase().replace("-district", "");
-
-            RegionManager manager = WG.getRegionManager(admin.getWorld());
-            ProtectedRegion existing = manager.getRegionExact(getHomeName(player));
-            if (existing == null) throw new CommandException("That player doesn't have a home.");
-            Selection sel = WE.getSelection(admin);
-            if (sel == null) throw new CommandException("Select a region with WorldEdit first.");
-
-            ProtectedRegion region;
-
-            // Detect the type of region from WorldEdit
-            if (sel instanceof Polygonal2DSelection) {
-                Polygonal2DSelection polySel = (Polygonal2DSelection) sel;
-                int minY = polySel.getNativeMinimumPoint().getBlockY();
-                int maxY = polySel.getNativeMaximumPoint().getBlockY();
-                region = new ProtectedPolygonalRegion(getHomeName(player), polySel.getNativePoints(), minY, maxY);
-            } else if (sel instanceof CuboidSelection) {
-                BlockVector min = sel.getNativeMinimumPoint().toBlockVector();
-                BlockVector max = sel.getNativeMaximumPoint().toBlockVector();
-                region = new ProtectedCuboidRegion(getHomeName(player), min, max);
-            } else {
-                throw new CommandException("The type of region selected in WorldEdit is unsupported.");
-            }
-
-            region.setMembers(existing.getMembers());
-            region.setOwners(existing.getOwners());
-            region.setFlags(existing.getFlags());
-            region.setPriority(existing.getPriority());
-            ProtectedRegion districtRegion = manager.getRegion(district + "-district");
-            if (districtRegion == null) throw new CommandException("Invalid district specified.");
-            try {
-                region.setParent(districtRegion);
-            } catch (ProtectedRegion.CircularInheritanceException e) {
-                throw new CommandException("Circular inheritance detected.");
-            }
-
-            manager.addRegion(region);
-            try {
-                manager.save();
-            } catch (ProtectionDatabaseException e) {
-                throw new CommandException("Failed to create a home for: " + player + ".");
-            }
-
-            giveRuleBook(sender, player, district);
-
-            ChatUtil.sendNotice(admin, "The player: " + player + "'s house has been moved to: " + district + ".");
-            ChatUtil.sendNotice(player, "Your home has been moved for you by: " + admin.getDisplayName() + ".");
-            log.info(admin.getName() + " moved a home for: " + player + " into the district: " + district + ".");
-            */
-        }
-
-        @Command(aliases = {"remove"}, usage = "<player>", desc = "Remove a home", min = 1, max = 1)
-        @CommandPermissions({"aurora.home.admin.remove"})
-        public void removeHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
-
+        @Command(aliases = {"reclaim"}, usage = "", desc = "", min = 0, max = 0)
+        @CommandPermissions({"aurora.home.admin.reclaim"})
+        public void reclaimHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
             throw new CommandException("This command needs updated.");
 
             /*

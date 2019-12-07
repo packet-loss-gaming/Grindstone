@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone;
+package gg.packetloss.grindstone.sacrifice;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
@@ -15,7 +15,6 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -23,7 +22,6 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
@@ -33,10 +31,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -67,6 +62,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static gg.packetloss.grindstone.sacrifice.SacrificeCommonality.*;
+
 @ComponentInformation(friendlyName = "Sacrifice", desc = "Sacrifice! Sacrifice! Sacrifice!")
 @Depend(components = {SessionComponent.class, PrayerComponent.class, AdminComponent.class, HighScoresComponent.class})
 public class SacrificeComponent extends BukkitComponent implements Listener, Runnable {
@@ -87,10 +84,15 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     private LocalConfiguration config;
     private Map<Integer, Integer> entityTaskId = new HashMap<>();
 
+    private static SacrificialRegistry registry = new SacrificialRegistry();
+
     @Override
     public void enable() {
 
         config = configure(new LocalConfiguration());
+
+        populateRegistry();
+
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         registerCommands(Commands.class);
@@ -156,9 +158,75 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         return getEntityTaskId;
     }
 
-    private static int calculateModifier(double value) {
+    private void populateRegistry() {
+        registry.registerItem(() -> new ItemStack(Material.DIRT), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.STONE), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.RED_ROSE), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.YELLOW_FLOWER), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.PUMPKIN_PIE), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.SEEDS), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.WHEAT), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.WOOD), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.FEATHER), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.GOLD_NUGGET, ChanceUtil.getRandom(9)), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.ARROW), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.BOWL), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.BONE), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.SNOW_BALL), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.FLINT), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.CLAY_BALL, ChanceUtil.getRandom(8)), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.EGG), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.APPLE, ChanceUtil.getRandom(6)), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.GOLDEN_APPLE, ChanceUtil.getRandom(8)), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.ENDER_PEARL, ChanceUtil.getRandom(6)), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.COOKIE, ChanceUtil.getRangedRandom(8, 16)), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.DIAMOND), JUNK);
 
-        return (int) (Math.sqrt(value) * 1.5);
+        registry.registerItem(() -> new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(3)), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.EMERALD, ChanceUtil.getRandom(3)), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.DIAMOND_SWORD), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.DIAMOND_HELMET), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.DIAMOND_CHESTPLATE), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.DIAMOND_LEGGINGS), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.DIAMOND_BOOTS), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.DIAMOND_PICKAXE), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.DIAMOND_AXE), NORMAL);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_FISH), NORMAL);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.OVERSEER_BOW), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.EXP_BOTTLE, ChanceUtil.getRangedRandom(40, 64)), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.BLAZE_ROD, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.SPECKLED_MELON, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.FERMENTED_SPIDER_EYE, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.GHAST_TEAR, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.PIXIE_DUST, ChanceUtil.getRangedRandom(3, 6)), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.NAME_TAG), NORMAL);
+
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_HELMET), RARE_1);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_CHESTPLATE), RARE_1);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_LEGGINGS), RARE_1);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_BOOTS), RARE_1);
+
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_BOW), RARE_2);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_SWORD), RARE_2);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_SHORT_SWORD), RARE_2);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_AXE), RARE_2);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_PICKAXE), RARE_2);
+
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.LEGENDARY_GOD_AXE), RARE_3);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.LEGENDARY_GOD_PICKAXE), RARE_3);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.EXTREME_COMBAT_POTION), RARE_3);
+
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.ANCIENT_HELMET), RARE_4);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE), RARE_4);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS), RARE_4);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.ANCIENT_BOOTS), RARE_4);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.HOLY_COMBAT_POTION), RARE_4);
+
+        registry.registerItem(() -> ItemUtil.makeSkull(CollectionUtil.getElement(server.getOfflinePlayers())), RARE_5);
+
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION), RARE_6);
+
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.PHANTOM_CLOCK), UBER_RARE);
     }
 
     /**
@@ -171,258 +239,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
      * @return - The ItemStacks that should be received
      */
     public static List<ItemStack> getCalculatedLoot(CommandSender sender, int max, double value) {
-
-        List<ItemStack> loot = new ArrayList<>();
-
-        // Calculate the modifier
-        int baseChance = sender instanceof Player && inst.hasPermission(sender, "aurora.tome.sacrifice") ? 100 : 125;
-        int modifier = calculateModifier(value);
-
-        value *= .9;
-
-        while (value > 0 && (max == -1 || max > 0)) {
-
-            ItemStack itemStack;
-            boolean wasJunk = false;
-
-            if (ChanceUtil.getChance(Math.max(1, baseChance - modifier))) {
-                itemStack = getValuableItem(sender, modifier);
-            } else {
-                wasJunk = true;
-                itemStack = getCommonItemStack(sender, modifier);
-            }
-
-            if (itemStack != null) {
-                value -= Math.max(9, MarketComponent.priceCheck(itemStack));
-                if (!wasJunk || !(sender instanceof Player && sender.hasPermission("aurora.tome.cleanly"))) {
-                    loot.add(itemStack);
-                }
-            }
-
-            if (max != -1) {
-                max--;
-            }
-        }
-        return loot;
-    }
-
-    private static ItemStack getValuableItem(CommandSender sender, int modifier) {
-
-        ItemStack itemStack = null;
-
-        switch (ChanceUtil.getRandom(23)) {
-            case 1:
-                if (Util.getChance(sender, modifier, 1.2)) {
-                    if (ChanceUtil.getChance(2)) {
-                        itemStack = CustomItemCenter.build(CustomItems.GOD_SWORD);
-                    } else {
-                        itemStack = CustomItemCenter.build(CustomItems.GOD_SHORT_SWORD);
-                    }
-                } else {
-                    itemStack = new ItemStack(ItemID.DIAMOND_SWORD);
-                }
-                break;
-            case 2:
-                if (Util.getChance(sender, modifier, 1.2)) {
-                    itemStack = CustomItemCenter.build(CustomItems.GOD_BOW);
-                } else {
-                    itemStack = CustomItemCenter.build(CustomItems.OVERSEER_BOW);
-                }
-                break;
-            case 3:
-                if (Util.getChance(sender, modifier, 2)) {
-                    itemStack = CustomItemCenter.build(CustomItems.LEGENDARY_GOD_PICKAXE);
-                } else if (Util.getChance(sender, modifier, .37)) {
-                    itemStack = CustomItemCenter.build(CustomItems.GOD_PICKAXE);
-                } else {
-                    itemStack = new ItemStack(ItemID.DIAMOND_PICKAXE);
-                }
-                break;
-            case 4:
-                if (ChanceUtil.getChance(10000)) {
-                    itemStack = CustomItemCenter.build(CustomItems.PHANTOM_CLOCK);
-                } else {
-                    itemStack = CustomItemCenter.build(CustomItems.GOD_FISH);
-                }
-                break;
-            case 5:
-                itemStack = new ItemStack(ItemID.BOTTLE_O_ENCHANTING, ChanceUtil.getRangedRandom(40, 64));
-                break;
-            case 6:
-                if (sender instanceof Player && Util.getChance(sender, modifier, 3)) {
-                    itemStack = ItemUtil.makeSkull(sender.getName());
-                } else {
-                    itemStack = CustomItemCenter.build(CustomItems.PIXIE_DUST, ChanceUtil.getRangedRandom(3, 6));
-                }
-                break;
-            case 7:
-                if (Util.getChance(sender, modifier, .8)) {
-                    itemStack = CustomItemCenter.build(CustomItems.GOD_CHESTPLATE);
-                } else {
-                    itemStack = new ItemStack(ItemID.DIAMOND_CHEST);
-                }
-                break;
-            case 8:
-                if (Util.getChance(sender, modifier, .8)) {
-                    itemStack = CustomItemCenter.build(CustomItems.GOD_LEGGINGS);
-                } else {
-                    itemStack = new ItemStack(ItemID.DIAMOND_PANTS);
-                }
-                break;
-            case 9:
-                itemStack = new ItemStack(ItemID.BLAZE_ROD, ChanceUtil.getRangedRandom(20, 32));
-                break;
-            case 10:
-                itemStack = new ItemStack(ItemID.GLISTERING_MELON, ChanceUtil.getRangedRandom(20, 32));
-                break;
-            case 11:
-                itemStack = new ItemStack(ItemID.FERMENTED_SPIDER_EYE, ChanceUtil.getRangedRandom(20, 32));
-                break;
-            case 12:
-                itemStack = new ItemStack(ItemID.GHAST_TEAR, ChanceUtil.getRangedRandom(20, 32));
-                break;
-            case 13:
-                if (Util.getChance(sender, modifier, 2.75)) {
-                    itemStack = CustomItemCenter.build(CustomItems.ANCIENT_BOOTS);
-                }
-                break;
-            case 14:
-                if (Util.getChance(sender, modifier, 2.75)) {
-                    itemStack = CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS);
-                }
-                break;
-            case 15:
-                if (Util.getChance(sender, modifier, 2.75)) {
-                    itemStack = CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE);
-                }
-                break;
-            case 16:
-                if (Util.getChance(sender, modifier, 2.75)) {
-                    itemStack = CustomItemCenter.build(CustomItems.ANCIENT_HELMET);
-                }
-                break;
-            case 17:
-                if (Util.getChance(sender, modifier, .8)) {
-                    itemStack = CustomItemCenter.build(CustomItems.GOD_HELMET);
-                } else {
-                    itemStack = new ItemStack(ItemID.DIAMOND_HELMET);
-                }
-                break;
-            case 18:
-                if (Util.getChance(sender, modifier, .8)) {
-                    itemStack = CustomItemCenter.build(CustomItems.GOD_BOOTS);
-                } else {
-                    itemStack = new ItemStack(ItemID.DIAMOND_BOOTS);
-                }
-                break;
-            case 19:
-                if (Util.getChance(sender, modifier, 5)) {
-                    itemStack = CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION);
-                } else if (Util.getChance(sender, modifier, 2)) {
-                    itemStack = CustomItemCenter.build(CustomItems.HOLY_COMBAT_POTION);
-                } else {
-                    itemStack = CustomItemCenter.build(CustomItems.EXTREME_COMBAT_POTION);
-                }
-                break;
-            case 20:
-                itemStack = new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(3));
-                break;
-            case 21:
-                itemStack = new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(3));
-                break;
-            case 22:
-                if (Util.getChance(sender, modifier, 2.5)) {
-                    itemStack = CustomItemCenter.build(CustomItems.LEGENDARY_GOD_AXE);
-                } else if (Util.getChance(sender, modifier, .37)) {
-                    itemStack = CustomItemCenter.build(CustomItems.GOD_AXE);
-                } else {
-                    itemStack = new ItemStack(ItemID.DIAMOND_AXE);
-                }
-                break;
-            case 23:
-                itemStack = new ItemStack(ItemID.NAME_TAG);
-                break;
-        }
-        return itemStack;
-    }
-
-    private static ItemStack getCommonItemStack(CommandSender sender, int modifier) {
-
-        ItemStack itemStack = null;
-
-        switch (ChanceUtil.getRandom(21)) {
-            case 1:
-                itemStack = new ItemStack(BlockID.DIRT);
-                break;
-            case 2:
-                itemStack = new ItemStack(BlockID.STONE);
-                break;
-            case 3:
-                itemStack = new ItemStack(BlockID.RED_FLOWER);
-                break;
-            case 4:
-                itemStack = new ItemStack(BlockID.YELLOW_FLOWER);
-                break;
-            case 5:
-                itemStack = new ItemStack(ItemID.PUMPKIN_PIE);
-                break;
-            case 6:
-                itemStack = new ItemStack(ItemID.SEEDS);
-                break;
-            case 7:
-                itemStack = new ItemStack(ItemID.WHEAT);
-                break;
-            case 8:
-                itemStack = new ItemStack(BlockID.WOOD);
-                break;
-            case 9:
-                itemStack = new ItemStack(ItemID.FEATHER);
-                break;
-            case 10:
-                if (Util.getChance(sender, modifier, .2)) {
-                    itemStack = new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(64));
-                }
-                break;
-            case 11:
-                itemStack = new ItemStack(ItemID.ARROW);
-                break;
-            case 12:
-                itemStack = new ItemStack(ItemID.BOWL);
-                break;
-            case 13:
-                itemStack = new ItemStack(ItemID.BONE);
-                break;
-            case 14:
-                itemStack = new ItemStack(ItemID.SNOWBALL);
-                break;
-            case 15:
-                itemStack = new ItemStack(ItemID.FLINT);
-                break;
-            case 16:
-                if (Util.getChance(sender, modifier, .8)) {
-                    itemStack = new ItemStack(ItemID.CLAY_BALL, ChanceUtil.getRandom(8));
-                }
-                break;
-            case 17:
-                itemStack = new ItemStack(ItemID.EGG);
-                break;
-            case 18:
-                itemStack = new ItemStack(ItemID.RED_APPLE, ChanceUtil.getRandom(6));
-                break;
-            case 19:
-                if (Util.getChance(sender, modifier, .8)) {
-                    itemStack = new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(8));
-                }
-                break;
-            case 20:
-                itemStack = new ItemStack(ItemID.ENDER_PEARL, ChanceUtil.getRandom(6));
-                break;
-            case 21:
-                itemStack = new ItemStack(ItemID.COOKIE, ChanceUtil.getRangedRandom(8, 16));
-                break;
-        }
-
-        return itemStack;
+        return registry.getCalculatedLoot(sender, max, value);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -576,21 +393,13 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }
     }
 
-    private double getValue(ItemStack item) {
-        // FIXME: Hard coded as a workaround for the market no longer working with spawn eggs
-        if (item.getType() == Material.MONSTER_EGG) {
-            return 12.5;
-        }
-        return MarketComponent.priceCheck(item);
-    }
-
     private void sacrifice(Player player, ItemStack item) {
-
         if (item.getTypeId() == 0) return;
 
         PlayerInventory pInventory = player.getInventory();
 
-        final double value = getValue(item);
+        final double value = registry.getValue(item);
+        ChatUtil.sendDebug(value);
 
         if (value < 0) {
             pInventory.addItem(item);
@@ -662,7 +471,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     public class SacrificeCommands {
-
         @Command(aliases = {"value"}, desc = "Value an item", flags = "", min = 0, max = 0)
         public void userGroupSetCmd(CommandContext args, CommandSender sender) throws CommandException {
 
@@ -671,61 +479,47 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             ItemStack questioned = player.getInventory().getItemInHand();
 
             // Check value & validity
-            double value = MarketComponent.priceCheck(questioned);
-            if (value < 0) throw new CommandException("You can't sacrifice that!");
+            double value = registry.getValue(questioned);
+            if (value == 0) {
+                throw new CommandException("You can't sacrifice that!");
+            }
 
             // Mask the value so it doesn't just show the market price and print it
             int shownValue = (int) Math.round(value * 60.243);
-            ChatUtil.sendNotice(player, "That item has a value of: " + shownValue + " in the sacrificial pit.");
-        }
-    }
-
-    private static class Util {
-
-        public static boolean getChance(CommandSender sender, int modifier, double rarityL) {
-
-            boolean hasEfficiency = inst.hasPermission(sender, "aurora.sacrifice.efficiency");
-            int baseChance = (int) (hasEfficiency ? rarityL * 100 : rarityL * 200);
-
-            return ChanceUtil.getChance(Math.max(1, baseChance - modifier));
+            ChatUtil.sendNotice(player, "That item has a value of: " +
+                    ChatUtil.WHOLE_NUMBER_FORMATTER.format(shownValue) +
+                    " in the sacrificial pit.");
         }
     }
 
     // Sacrifice Session
     private static class SacrificeSession extends PersistentSession {
-
         public static final long MAX_AGE = TimeUnit.MINUTES.toMillis(30);
 
         private Queue<ItemStack> queue = new ConcurrentLinkedQueue<>();
 
         protected SacrificeSession() {
-
             super(MAX_AGE);
         }
 
         public Player getPlayer() {
-
             CommandSender sender = super.getOwner();
             return sender instanceof Player ? (Player) sender : null;
         }
 
         public void addItems(List<ItemStack> itemStacks) {
-
             queue.addAll(itemStacks);
         }
 
         public ItemStack pollItem() {
-
             return queue.poll();
         }
 
         public boolean hasItems() {
-
             return !queue.isEmpty();
         }
 
         public int remaining() {
-
             return queue.size();
         }
     }

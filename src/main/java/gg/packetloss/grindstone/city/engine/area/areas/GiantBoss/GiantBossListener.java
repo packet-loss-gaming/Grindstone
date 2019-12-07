@@ -11,7 +11,6 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
@@ -32,6 +31,7 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearBomb
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.GlowingFog;
+import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;

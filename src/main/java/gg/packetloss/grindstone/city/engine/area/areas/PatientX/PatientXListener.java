@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.city.engine.area.areas.PatientX;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.regions.CuboidRegion;
-import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.area.areas.DropParty.DropPartyTask;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
@@ -30,6 +29,7 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearBomb
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.GlowingFog;
+import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;

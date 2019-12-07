@@ -6,6 +6,11 @@
 
 package gg.packetloss.grindstone.economic.store;
 
+import gg.packetloss.grindstone.util.item.legacy.ItemType;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.Optional;
+
 import static gg.packetloss.grindstone.economic.store.MarketComponent.LOWER_MARKET_LOSS_THRESHOLD;
 import static gg.packetloss.grindstone.util.StringUtil.toUppercaseTitle;
 
@@ -60,6 +65,30 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
     public double getSellPrice() {
         double sellPrice = price >= LOWER_MARKET_LOSS_THRESHOLD ? price * .92 : price * .80;
         return rounded(sellPrice);
+    }
+
+    private Optional<Double> computePercentageSale(ItemStack stack) {
+        double percentageSale = 1;
+        if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
+            if (stack.getAmount() > 1) {
+                return Optional.empty();
+            }
+            percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
+        }
+        return Optional.of(percentageSale);
+    }
+
+    public Optional<Double> getSellUnitPriceForStack(ItemStack stack) {
+        Optional<Double> optPercentageSale = computePercentageSale(stack);
+        if (optPercentageSale.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(optPercentageSale.get() * getSellPrice());
+    }
+
+    public Optional<Double> getSellPriceForStack(ItemStack stack) {
+        return getSellUnitPriceForStack(stack).map((value) -> value * stack.getAmount());
     }
 
     public int getStock() {

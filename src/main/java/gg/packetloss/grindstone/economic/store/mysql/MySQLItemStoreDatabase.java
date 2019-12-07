@@ -225,6 +225,10 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     public Map<String, MarketItemInfo> getItems(Collection<String> names) {
         Map<String, MarketItemInfo> nameItemMapping = new HashMap<>();
 
+        if (names.isEmpty()) {
+            return nameItemMapping;
+        }
+
         try (Connection connection  = MySQLHandle.getConnection()) {
             String sql = "SELECT " + columns + " FROM `market-items` WHERE `name` IN (" + preparePlaceHolders(names.size()) + ")";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {

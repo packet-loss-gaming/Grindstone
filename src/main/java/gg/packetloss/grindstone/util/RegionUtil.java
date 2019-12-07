@@ -6,23 +6,20 @@
 
 package gg.packetloss.grindstone.util;
 
-import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Polygonal2DRegion;
 import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.economic.store.MarketComponent;
+import gg.packetloss.grindstone.util.region.RegionValueEvaluator;
+import org.bukkit.World;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -106,56 +103,13 @@ public class RegionUtil {
     }
 
     public static CompletableFuture<Optional<Double>> calcBlockPrice(Region region, World world) {
-        Map<BaseBlock, Integer> blockMapping = new HashMap<>();
-
-        //noinspection ConstantConditions
-        if (region instanceof CuboidRegion) {
-
-            // Doing this for speed
-            Vector min = region.getMinimumPoint();
-            Vector max = region.getMaximumPoint();
-
-            int minX = min.getBlockX();
-            int minY = min.getBlockY();
-            int minZ = min.getBlockZ();
-            int maxX = max.getBlockX();
-            int maxY = max.getBlockY();
-            int maxZ = max.getBlockZ();
-
-            for (int x = minX; x <= maxX; ++x) {
-                for (int y = minY; y <= maxY; ++y) {
-                    for (int z = minZ; z <= maxZ; ++z) {
-                        Vector pt = new Vector(x, y, z);
-                        BaseBlock b = world.getBlock(pt);
-                        Integer count = blockMapping.get(b);
-                        if (count != null) {
-                            count++;
-                        } else {
-                            count = 1;
-                        }
-                        blockMapping.put(b, count);
-                    }
-                }
-            }
-
+        try {
             CompletableFuture<Optional<Double>> future = new CompletableFuture<>();
-
-            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
-                double bp = 0;
-
-                for (Map.Entry<BaseBlock, Integer> entry : blockMapping.entrySet()) {
-                    BaseBlock b = entry.getKey();
-                    bp += MarketComponent.priceCheck(
-                      b.getId(),
-                      b.getData()
-                    ) * entry.getValue();
-                }
-
-                future.complete(Optional.of(bp));
+            new RegionValueEvaluator(false).walkRegion(region, world).thenAccept((report) -> {
+                future.complete(Optional.of(report.getBlockPrice()));
             });
-
             return future;
-        } else {
+        } catch (UnsupportedOperationException ex) {
             return CompletableFuture.completedFuture(Optional.empty());
         }
     }

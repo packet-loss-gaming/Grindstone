@@ -12,7 +12,6 @@ import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -35,9 +34,11 @@ import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
-import gg.packetloss.grindstone.util.item.legacy.ItemType;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -45,6 +46,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.StringUtil.toTitleCase;
@@ -260,7 +262,6 @@ public class MarketComponent extends BukkitComponent {
 
             if (!singleItem && !args.hasFlag('u')) {
                 filter = player.getItemInHand();
-                verifyValidItemCommand(filter);
             }
 
             InventoryView view = new InventoryView(min, max, filter);
@@ -274,7 +275,7 @@ public class MarketComponent extends BukkitComponent {
 
             // FIXME: This is a rat's nest.
             server.getScheduler().runTaskAsynchronously(inst, () -> {
-                Map<String, MarketItemInfo> nameItemMapping = itemDatabase.getItems(itemNamesInFilter);
+                MarketItemLookupInstance lookupInstance = getLookupInstance(itemNamesInFilter);
                 server.getScheduler().runTask(inst, () -> {
                     double[] payment = {0}; // hack to update payment from inside lambda
                     HashMap<String, Integer> transactions = new HashMap<>();
@@ -282,28 +283,20 @@ public class MarketComponent extends BukkitComponent {
                     // Calculate the payment and transactions using the new inventory.
                     ItemStack[] newInventory = player.getInventory().getContents();
                     view.operateOnInventory(newInventory, (item) -> {
-                        Optional<Double> optPercentageSale = computePercentageSale(item);
-                        if (optPercentageSale.isEmpty()) {
+                        Optional<MarketItem> optMarketItem = lookupInstance.getItemDetails(item);
+                        if (optMarketItem.isEmpty()) {
                             return item;
                         }
 
-                        Optional<String> optItemName = computeItemName(item);
-                        if (optItemName.isEmpty()) {
+                        Optional<Double> optSellPrice = optMarketItem.get().getSellPriceForStack(item);
+                        if (optSellPrice.isEmpty()) {
                             return item;
                         }
 
-                        final double percentageSale = optPercentageSale.get();
-                        final String itemName = optItemName.get();
-
-                        MarketItemInfo marketItemInfo = nameItemMapping.get(itemName.toUpperCase());
-                        if (marketItemInfo == null || !marketItemInfo.isSellable()) {
-                            return item;
-                        }
+                        payment[0] += optSellPrice.get();
 
                         int amt = item.getAmount();
-                        payment[0] += marketItemInfo.getSellPrice() * amt * percentageSale;
-
-                        transactions.merge(itemName, amt, (oldItemName, oldAmt) -> oldAmt + amt);
+                        transactions.merge(optMarketItem.get().getName(), amt, (oldItemName, oldAmt) -> oldAmt + amt);
 
                         return null;
                     });
@@ -408,50 +401,39 @@ public class MarketComponent extends BukkitComponent {
                 usage = "[item name]", desc = "Value an item",
                 flags = "e", min = 0)
         public void valueCmd(CommandContext args, CommandSender sender) throws CommandException {
-            String itemName;
-            double percentageSale = 1;
+            ItemStack stack;
+            Optional<String> optItemName;
             if (args.argsLength() > 0) {
-                Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
-                if (optItemName.isEmpty()) {
-                    throw new CommandException(NOT_AVAILIBLE);
-                }
-
-                itemName = optItemName.get();
+                stack = null;
+                optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
             } else {
-                ItemStack stack = PlayerUtil.checkPlayer(sender).getInventory().getItemInHand();
-                verifyValidItemCommand(stack);
-
-                Optional<String> optItemName = computeItemName(stack);
-                if (optItemName.isPresent()) {
-                    itemName = optItemName.get();
-                } else {
-                    throw new CommandException(NOT_AVAILIBLE);
-                }
-
-                Optional<Double> optPercentageSale = computePercentageSale(stack);
-                if (optPercentageSale.isPresent()) {
-                    percentageSale = optPercentageSale.get();
-                } else {
-                    throw new CommandException(NOT_AVAILIBLE);
-                }
+                stack = PlayerUtil.checkPlayer(sender).getInventory().getItemInHand();
+                optItemName = computeItemName(stack);
             }
 
-            MarketItemInfo marketItemInfo = itemDatabase.getItem(itemName);
-            if (marketItemInfo == null) {
+            if (optItemName.isEmpty()) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
+
+            MarketItemLookupInstance lookupInstance = getLookupInstance(Set.of(optItemName.get()));
+
+            Optional<MarketItem> optMarketItemInfo = lookupInstance.getItemDetails(optItemName.get());
+            if (optMarketItemInfo.isEmpty()) {
+                throw new CommandException(NOT_AVAILIBLE);
+            }
+
+            MarketItem marketItemInfo = optMarketItemInfo.get();
 
             if (!marketItemInfo.isEnabled() && !inst.hasPermission(sender, "aurora.admin.adminstore.disabled")) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
 
-            ChatColor color = marketItemInfo.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
-            double paymentPrice = marketItemInfo.getSellPrice() * percentageSale;
-
             Text itemNameText = Text.of(
-                    ChatColor.BLUE, marketItemInfo.getDisplayName(),
+                    marketItemInfo.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED,
+                    marketItemInfo.getDisplayName(),
                     TextAction.Hover.showItem(getBaseStack(marketItemInfo.getName()))
             );
+
             sender.sendMessage(Text.of(ChatColor.GOLD, "Price Information for: ", itemNameText).build());
 
             String stockCount = ChatUtil.WHOLE_NUMBER_FORMATTER.format(marketItemInfo.getStock());
@@ -469,13 +451,16 @@ public class MarketComponent extends BukkitComponent {
 
             // Sale Information
             if (marketItemInfo.displaySellInfo()) {
-                String sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(paymentPrice), "");
+                double fullyRepairedPrice = marketItemInfo.getSellPrice();
+                double sellPrice = stack == null ? fullyRepairedPrice : marketItemInfo.getSellUnitPriceForStack(stack).orElse(0d);
 
+                String sellPriceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(sellPrice), "");
                 ChatUtil.sendNotice(sender, "When you sell it you get:");
-                ChatUtil.sendNotice(sender, " - " + sellPrice + " each.");
-                if (percentageSale != 1.0) {
-                    sellPrice = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(marketItemInfo.getSellPrice()), "");
-                    ChatUtil.sendNotice(sender, " - " + sellPrice + " each when new.");
+                ChatUtil.sendNotice(sender, " - " + sellPriceString + " each.");
+
+                if (fullyRepairedPrice != sellPrice) {
+                    String fullyRepairedPriceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(fullyRepairedPrice), "");
+                    ChatUtil.sendNotice(sender, " - " + fullyRepairedPriceString + " each when new.");
                 }
             } else {
                 ChatUtil.sendNotice(sender, ChatColor.GRAY, "This item cannot be sold.");
@@ -683,102 +668,27 @@ public class MarketComponent extends BukkitComponent {
         return itemStacks.toArray(new ItemStack[0]);
     }
 
-    private static Set<Integer> ignored = new HashSet<>();
-
-    static {
-        ignored.add(BlockID.AIR);
-        ignored.add(BlockID.WATER);
-        ignored.add(BlockID.STATIONARY_WATER);
-        ignored.add(BlockID.LAVA);
-        ignored.add(BlockID.STATIONARY_LAVA);
-        ignored.add(BlockID.GRASS);
-        ignored.add(BlockID.DIRT);
-        ignored.add(BlockID.GRAVEL);
-        ignored.add(BlockID.SAND);
-        ignored.add(BlockID.SANDSTONE);
-        ignored.add(BlockID.SNOW);
-        ignored.add(BlockID.SNOW_BLOCK);
-        ignored.add(BlockID.STONE);
-        ignored.add(BlockID.BEDROCK);
+    public static MarketItemLookupInstance getLookupInstance(Set<String> itemNames) {
+        return new MarketItemLookupInstance(itemDatabase.getItems(itemNames));
     }
 
-    private static boolean verifyValidItemStack(ItemStack stack) {
-        return stack != null && stack.getType() != Material.AIR;
+    public static MarketItemLookupInstance getLookupInstanceFromStacksImmediately(Collection<ItemStack> stacks) {
+        return getLookupInstance(computeItemNames(stacks));
     }
 
+    public static CompletableFuture<MarketItemLookupInstance> getLookupInstanceFromStacks(Collection<ItemStack> stacks) {
+        CompletableFuture<MarketItemLookupInstance> future = new CompletableFuture<>();
 
-    private static void verifyValidItemCommand(ItemStack stack) throws CommandException {
-        if (!verifyValidItemStack(stack)) {
-            throw new CommandException("That's not a valid item!");
-        }
+        Set<String> names = computeItemNames(stacks);
 
-        if (!verifyValidCustomItem(stack)) {
-            throw new CommandException("Renamed items are unsupported!");
-        }
+        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            future.complete(getLookupInstance(names));
+        });
 
-    }
-
-    private static Optional<Double> computePercentageSale(ItemStack stack) {
-        double percentageSale = 1;
-        if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
-            if (stack.getAmount() > 1) {
-                return Optional.empty();
-            }
-            percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
-        }
-        return Optional.of(percentageSale);
-    }
-
-    public static double priceCheck(int blockID, int data) {
-        if (ignored.contains(blockID)) return 0;
-
-        Optional<String> optBlockName = ItemNameCalculator.computeBlockName(blockID, data);
-        if (optBlockName.isEmpty()) return 0;
-
-        MarketItemInfo marketItemInfo = itemDatabase.getItem(optBlockName.get());
-        if (marketItemInfo == null) return 0;
-
-        return marketItemInfo.getPrice();
-    }
-
-    /**
-     * Price checks an item stack
-     *
-     * @param stack the item stack to be price checked
-     * @return -1 if invalid, otherwise returns the price scaled to item stack quantity
-     */
-    public static double priceCheck(ItemStack stack) {
-        return priceCheck(stack, true);
-    }
-
-    public static double priceCheck(ItemStack stack, boolean percentDamage) {
-        if (!verifyValidItemStack(stack)) {
-            return -1;
-        }
-
-        Optional<Double> optPercentageSale = percentDamage ? computePercentageSale(stack) : Optional.of(1D);
-        if (optPercentageSale.isEmpty()) {
-            return -1;
-        }
-
-        Optional<String> optItemName = computeItemName(stack);
-        if (optItemName.isEmpty()) {
-            return -1;
-        }
-
-        final double percentageSale = optPercentageSale.get();
-        final String itemName = optItemName.get();
-
-        MarketItemInfo marketItemInfo = itemDatabase.getItem(itemName);
-        if (marketItemInfo == null) {
-            return -1;
-        }
-
-        return marketItemInfo.getPrice() * percentageSale * stack.getAmount();
+        return future;
     }
 
     public String checkPlayer(CommandSender sender) throws CommandException {
-
         PlayerUtil.checkPlayer(sender);
 
         if (adminComponent.isAdmin((Player) sender)) {

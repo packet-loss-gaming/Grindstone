@@ -135,6 +135,16 @@ public class ItemNameCalculator {
         return mappingToMCID(mappedName);
     }
 
+    public static Set<String> computeItemNames(Collection<ItemStack> stacks) {
+        Set<String> names = new HashSet<>();
+
+        stacks.forEach((stack) -> {
+            computeItemName(stack).ifPresent(names::add);
+        });
+
+        return names;
+    }
+
     private static boolean legacyHasItemOfName(String name) {
         return legacyNames.contains(name.toUpperCase().replaceAll("'S", "").replaceAll(" ", "_"));
     }

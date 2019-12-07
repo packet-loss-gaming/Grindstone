@@ -19,7 +19,6 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import gg.packetloss.grindstone.SacrificeComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.bosses.detail.WBossDetail;
 import gg.packetloss.grindstone.bosses.manager.wilderness.*;
@@ -27,6 +26,7 @@ import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPScope;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
+import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.entity.item.DropClearPulseEvent;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
@@ -35,6 +35,7 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
+import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -484,33 +485,28 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         if (!isWildernessWorld(player.getWorld()) || adminComponent.isAdmin(player)) return;
 
-        boolean hasChest = false;
 
+        List<ItemStack> drops = event.getDrops();
+        MarketItemLookupInstance lookupInstance = MarketComponent.getLookupInstanceFromStacksImmediately(drops);
+        drops.sort((o1, o2) -> {
+            double o1SellPrice = lookupInstance.checkMaximumValue(o1).orElse(0d);
+            double o2SellPrice = lookupInstance.checkMaximumValue(o2).orElse(0d);
+            return (int) (o2SellPrice - o1SellPrice);
+        });
+
+        Iterator<ItemStack> it = drops.iterator();
         List<ItemStack> grave = new ArrayList<>();
-        event.getDrops().sort((o1, o2) -> (int) (MarketComponent.priceCheck(o2, false) - MarketComponent.priceCheck(o1, false)));
-        Iterator<ItemStack> it = event.getDrops().iterator();
-        int kept = 9;
-        while (it.hasNext()) {
+        for (int kept = 9; kept > 0 && it.hasNext(); --kept) {
             ItemStack next = it.next();
-            if (next.getTypeId() == BlockID.CHEST) {
-                hasChest = true;
-                if (next.getAmount() > 1) {
-                    next.setAmount(next.getAmount() - 1);
-                } else {
-                    it.remove();
-                    continue;
-                }
-            }
-            if (kept > 0) {
-                it.remove();
-                grave.add(next);
-                kept--;
-            }
+            grave.add(next);
+            it.remove();
+
+            kept--;
         }
 
         Location location = player.getLocation();
         Block block = location.getBlock();
-        if (hasChest && WGBukkit.getPlugin().canBuild(player, block)) {
+        if (WGBukkit.getPlugin().canBuild(player, block)) {
             try {
                 graveSupplier:
                 {
