@@ -49,13 +49,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -194,6 +192,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         handle(new LinearAxe());
         handle(new LinearPickaxe());
         handle(new LinearShovel());
+        handle(new LinearBlockPlacer());
         handle(new RadialAxe());
         handle(new RadialPickaxe());
         handle(new RadialShovel());

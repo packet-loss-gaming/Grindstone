@@ -21,7 +21,7 @@ public class RadialPickaxe extends ComboPickaxe {
     };
 
     @EventHandler(ignoreCancelled = true)
-    public void onBlockBreak(PlayerInteractEvent event) {
+    public void onBlockInteract(PlayerInteractEvent event) {
         executor.process(event);
     }
 }

@@ -7,13 +7,13 @@
 package gg.packetloss.grindstone.items.implementations.combotools;
 
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.items.implementations.support.LinearExecutor;
+import gg.packetloss.grindstone.items.implementations.support.LinearDestructionExecutor;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class LinearShovel extends ComboShovel {
-    private static LinearExecutor executor = new LinearExecutor(CustomItems.LINEAR_SHOVEL) {
+    private static LinearDestructionExecutor executor = new LinearDestructionExecutor(CustomItems.LINEAR_SHOVEL) {
         @Override
         public boolean accepts(Material material) {
             return acceptedMaterials.contains(material);
@@ -21,7 +21,7 @@ public class LinearShovel extends ComboShovel {
     };
 
     @EventHandler(ignoreCancelled = true)
-    public void onBlockBreak(PlayerInteractEvent event) {
+    public void onBlockInteract(PlayerInteractEvent event) {
         executor.process(event);
     }
 }

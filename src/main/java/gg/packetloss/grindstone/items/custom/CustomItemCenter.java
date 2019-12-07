@@ -480,6 +480,11 @@ public class CustomItemCenter {
         linearShovel.addTag(ChatColor.RED, "Max Distance", "9");
         addItem(linearShovel);
 
+        CustomItem linearBlockPlacer = new CustomItem(LINEAR_BLOCK_PLACER, Material.DIAMOND_HOE);
+        linearBlockPlacer.addTag(ChatColor.RED, "Distance", "3");
+        linearBlockPlacer.addTag(ChatColor.RED, "Max Distance", "9");
+        addItem(linearBlockPlacer);
+
         // Radial Tools
         CustomItem radialAxe = new CustomItem(RADIAL_AXE, Material.DIAMOND_AXE);
         radialAxe.addTag(ChatColor.RED, "Radius", "1");

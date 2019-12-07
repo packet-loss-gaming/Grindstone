@@ -21,7 +21,7 @@ public class RadialShovel extends ComboShovel {
     };
 
     @EventHandler(ignoreCancelled = true)
-    public void onBlockBreak(PlayerInteractEvent event) {
+    public void onBlockInteract(PlayerInteractEvent event) {
         executor.process(event);
     }
 }

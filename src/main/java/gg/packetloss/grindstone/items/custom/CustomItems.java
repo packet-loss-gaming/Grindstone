@@ -90,6 +90,7 @@ public enum CustomItems {
     LINEAR_PICKAXE(ChatColor.DARK_GREEN, "Linear Pickaxe"),
     LINEAR_SHOVEL(ChatColor.DARK_GREEN, "Linear Shovel"),
     LINEAR_AXE(ChatColor.DARK_GREEN, "Linear Axe"),
+    LINEAR_BLOCK_PLACER(ChatColor.DARK_GREEN, "Linear Block Placer"),
 
     // Radial Tools
     RADIAL_PICKAXE(ChatColor.DARK_GREEN, "Radial Pickaxe"),

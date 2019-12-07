@@ -21,7 +21,7 @@ public class RadialAxe extends ComboAxe {
     };
 
     @EventHandler(ignoreCancelled = true)
-    public void onBlockBreak(PlayerInteractEvent event) {
+    public void onBlockInteract(PlayerInteractEvent event) {
         executor.process(event);
     }
 }

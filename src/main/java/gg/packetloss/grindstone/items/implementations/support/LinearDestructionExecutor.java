@@ -27,10 +27,10 @@ import java.util.Map;
 
 import static com.zachsthings.libcomponents.bukkit.BasePlugin.callEvent;
 
-public abstract class LinearExecutor {
+public abstract class LinearDestructionExecutor {
     private CustomItems itemType;
 
-    public LinearExecutor(CustomItems itemType) {
+    public LinearDestructionExecutor(CustomItems itemType) {
         this.itemType = itemType;
     }
 
