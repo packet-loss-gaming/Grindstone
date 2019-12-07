@@ -6,11 +6,15 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import gg.packetloss.grindstone.items.custom.CustomItem;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.Tag;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,17 +26,34 @@ import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Map;
+
 public class MagicBucketImpl extends AbstractItemFeatureImpl {
-    private boolean isGettingFlightElsewhere(Player player) {
-        return admin.isAdmin(player) || GeneralPlayerUtil.hasFlyingGamemode(player);
+    public static final MagicBucketSpeed DEFAULT_SPEED = MagicBucketSpeed.FAST;
+
+    private MagicBucketSpeed getHeldBucketSpeed(Player player) {
+        ItemStack item = player.getInventory().getItemInMainHand();
+
+        Map<String, String> itemTags = ItemUtil.getItemTags(item);
+        if (itemTags == null) {
+            return DEFAULT_SPEED;
+        }
+
+        String value = itemTags.get(ChatColor.GREEN + "Speed");
+        if (value == null) {
+            return DEFAULT_SPEED;
+        }
+
+        return MagicBucketSpeed.valueOf(value);
     }
 
     private boolean grantFlight(Player player) {
         ChatUtil.sendNotice(player, "The bucket glows brightly.");
 
-        player.setFlySpeed(.4F);
+        player.setFlySpeed(getHeldBucketSpeed(player).getSpeed());
         player.setAllowFlight(true);
 
         return true;
@@ -46,24 +67,55 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
         return false;
     }
 
+    private boolean updateBucketSpeed(Player player) {
+        MagicBucketSpeed speed = getHeldBucketSpeed(player);
+
+        CustomItem cItem = CustomItemCenter.get(CustomItems.MAGIC_BUCKET);
+        for (Tag tag : cItem.getTags()) {
+            if (tag.getKey().equals("Speed")) {
+                int newSpeedIndex = (speed.ordinal() + 1) % MagicBucketSpeed.values().length;
+                MagicBucketSpeed newSpeed = MagicBucketSpeed.values()[newSpeedIndex];
+
+                tag.setProp(newSpeed.name());
+
+                ChatUtil.sendNotice(player, "Speed set to: " + newSpeed.name());
+            }
+        }
+
+        player.getInventory().setItemInMainHand(cItem.build());
+
+        return true;
+    }
+
     private boolean handleRightClick(Player player) {
         if (player.getAllowFlight()) {
             return takeFlight(player);
         } else {
-            return grantFlight(player);
+            if (player.isSneaking()) {
+                return updateBucketSpeed(player);
+            } else {
+                return grantFlight(player);
+            }
         }
+    }
+
+    private boolean isHoldingMagicBucket(Player player) {
+        return ItemUtil.isItem(player.getInventory().getItemInMainHand(), CustomItems.MAGIC_BUCKET);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
 
         Player player = event.getPlayer();
-        ItemStack itemStack = event.getItem();
+        if (!isHoldingMagicBucket(player)) {
+            return;
+        }
 
-        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
-            if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) && handleRightClick(player)) {
-                event.setCancelled(true);
-            }
+        if (handleRightClick(player)) {
+            event.setCancelled(true);
         }
     }
 
@@ -71,9 +123,12 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
 
         Player player = event.getPlayer();
-        ItemStack itemStack = player.getItemInHand();
 
-        if (event.getRightClicked() instanceof Cow && ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
+        if (!isHoldingMagicBucket(player)) {
+            return;
+        }
+
+        if (event.getRightClicked() instanceof Cow) {
             server.getScheduler().runTaskLater(inst, () -> {
                 // Swap the magic bucket for mad milk
                 if (!ItemUtil.swapItem(player.getInventory(), CustomItems.MAGIC_BUCKET, CustomItems.MAD_MILK)) {
@@ -91,10 +146,10 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
             return;
         }
 
-        if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) && handleRightClick(player)) {
+        if (handleRightClick(player)) {
             event.setCancelled(true);
         }
-        //noinspection deprecation
+
         server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
     }
 
@@ -102,13 +157,17 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
     public void onPlayerBucketFill(PlayerBucketFillEvent event) {
 
         Player player = event.getPlayer();
-        ItemStack itemStack = player.getItemInHand();
+        ItemStack itemStack = event.getItemStack();
 
-        if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) && handleRightClick(player)) {
+        if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) || isHoldingMagicBucket(player)) {
+            event.setCancelled(true);
+
+            server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
+        }
+
+        if (isHoldingMagicBucket(player) && handleRightClick(player)) {
             event.setCancelled(true);
         }
-        //noinspection deprecation
-        server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -141,7 +200,7 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
@@ -149,6 +208,22 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
 
         if (ItemUtil.findItemOfName(drops, CustomItems.MAGIC_BUCKET.toString())) {
             takeFlight(player);
+        }
+    }
+
+    public enum MagicBucketSpeed {
+        SLOW(.1f),
+        MEDIUM(.2f),
+        FAST(.4f);
+
+        private final float speed;
+
+        private MagicBucketSpeed(float speed) {
+            this.speed = speed;
+        }
+
+        public float getSpeed() {
+            return speed;
         }
     }
 }

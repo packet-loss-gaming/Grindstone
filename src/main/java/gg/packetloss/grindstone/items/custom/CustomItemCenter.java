@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.custom;
 
+import gg.packetloss.grindstone.items.implementations.MagicBucketImpl;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -520,6 +521,7 @@ public class CustomItemCenter {
         addItem(pixieDust);
 
         CustomItem magicbucket = new CustomItem(MAGIC_BUCKET, Material.BUCKET);
+        magicbucket.addTag(ChatColor.GREEN, "Speed", MagicBucketImpl.DEFAULT_SPEED.name());
         magicbucket.addSource(ItemSource.GIANT_BOSS);
         magicbucket.addSource(ItemSource.MARKET);
         magicbucket.addUse("Allows the player to fly indefinitely in permitted areas.");
