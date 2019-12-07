@@ -737,6 +737,7 @@ public enum ItemType {
         usesDamageValue.add(BlockID.SAPLING);
         usesDamageValue.add(BlockID.SAND);
         usesDamageValue.add(BlockID.LOG);
+        usesDamageValue.add(BlockID.LOG2);
         usesDamageValue.add(BlockID.LEAVES);
         usesDamageValue.add(BlockID.SANDSTONE);
         usesDamageValue.add(BlockID.LONG_GRASS);
