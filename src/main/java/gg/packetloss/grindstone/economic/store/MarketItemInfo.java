@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.economic.store;
 
-import gg.packetloss.grindstone.util.item.legacy.ItemType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Optional;
@@ -69,7 +68,7 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
 
     private Optional<Double> computePercentageSale(ItemStack stack) {
         double percentageSale = 1;
-        if (stack.getDurability() != 0 && !ItemType.usesDamageValue(stack.getTypeId())) {
+        if (stack.getDurability() != 0 && stack.getType().getMaxDurability() != 0) {
             if (stack.getAmount() > 1) {
                 return Optional.empty();
             }
