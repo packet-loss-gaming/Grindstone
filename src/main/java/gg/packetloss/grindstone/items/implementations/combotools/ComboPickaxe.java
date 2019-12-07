@@ -31,6 +31,10 @@ public class ComboPickaxe extends AbstractItemFeatureImpl {
             Material.NETHER_FENCE,
             Material.STEP,
             Material.DOUBLE_STEP,
-            Material.OBSIDIAN
+            Material.OBSIDIAN,
+            Material.GLASS,
+            Material.STAINED_GLASS,
+            Material.THIN_GLASS,
+            Material.STAINED_GLASS_PANE
     );
 }
