@@ -46,7 +46,7 @@ public class CustomWeapon extends CustomEquipment {
     }
 
     public boolean hasSpeedMod() {
-        return speedMod == NO_SPEED_MOD;
+        return speedMod != NO_SPEED_MOD;
     }
 
     public Optional<Double> getSpeedMod() {
