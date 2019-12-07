@@ -8,6 +8,8 @@ package gg.packetloss.grindstone.util;
 
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.CommandException;
+import gg.packetloss.bukkittext.Text;
+import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -44,21 +46,19 @@ public class ChatUtil {
         }
     }
 
-    public static void sendDebug(Object... objects) {
-        StringBuilder message  = new StringBuilder(
-                ChatColor.BLACK + "[" + ChatColor.DARK_RED + "DEBUG" + ChatColor.BLACK + "] " + ChatColor.GRAY
-        );
+    public static void sendDebug(Text messageText) {
+        Text debugText = Text.of(ChatColor.BLACK, "[", ChatColor.DARK_RED, "DEBUG", ChatColor.BLACK, "] ", messageText);
+        BaseComponent[] builtDebugText = debugText.build();
 
-        boolean isFirst = true;
-        for (Object obj : objects) {
-            if (!isFirst) {
-                message.append(" ");
+        Bukkit.getOnlinePlayers().forEach((player) -> {
+            if (player.hasPermission("aurora.debug")) {
+                player.sendMessage(builtDebugText);
             }
-            message.append(obj);
-            isFirst = false;
-        }
+        });
+    }
 
-        Bukkit.broadcast(message.toString(), "aurora.debug");
+    public static void sendDebug(Object... objects) {
+        sendDebug(Text.of(objects));
     }
 
     public static void sendNotice(String playerName, String notice) {
