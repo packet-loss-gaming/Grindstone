@@ -52,7 +52,7 @@ public class RegionValueEvaluator {
         Block block = world.getBlockAt(x, y, z);
         computeBlockName(block.getTypeId(), block.getData()).ifPresent((blockName) -> {
             reportSource.allNames.add(blockName);
-            reportSource.blockCounts.merge(blockName, 1, (ignored, count) -> count + 1);
+            reportSource.blockCounts.merge(blockName, 1, Integer::sum);
         });
 
         if (includeItems) {

@@ -296,7 +296,7 @@ public class MarketComponent extends BukkitComponent {
                         payment[0] += optSellPrice.get();
 
                         int amt = item.getAmount();
-                        transactions.merge(optMarketItem.get().getName(), amt, (oldItemName, oldAmt) -> oldAmt + amt);
+                        transactions.merge(optMarketItem.get().getName(), amt, Integer::sum);
 
                         return null;
                     });
