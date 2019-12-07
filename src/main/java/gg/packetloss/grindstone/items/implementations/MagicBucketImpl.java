@@ -19,14 +19,12 @@ import org.bukkit.entity.Cow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
@@ -100,23 +98,22 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
     }
 
     private boolean isHoldingMagicBucket(Player player) {
-        return ItemUtil.isItem(player.getInventory().getItemInMainHand(), CustomItems.MAGIC_BUCKET);
+        return ItemUtil.isHoldingItem(player, CustomItems.MAGIC_BUCKET);
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
-            return;
-        }
-
+    @Override
+    public boolean onItemRightClick(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         if (!isHoldingMagicBucket(player)) {
-            return;
+            return false;
         }
 
         if (handleRightClick(player)) {
             event.setCancelled(true);
+            return true;
         }
+
+        return false;
     }
 
     @EventHandler(ignoreCancelled = true)
