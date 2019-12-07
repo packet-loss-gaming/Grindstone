@@ -9,8 +9,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public class EconomyBroker implements TransactionBroker {
-    private static final double TRANSACTION_BASE_COST = 10;
-    private static final double STACK_BASE_COST = 5;
+    private static final double TRANSACTION_BASE_COST = 3;
+    private static final double STACK_BASE_COST = .5;
+    private static final double PER_ITEM_COST = .1;
 
     private final Economy economy;
     private final OfflinePlayer player;
@@ -72,7 +73,7 @@ public class EconomyBroker implements TransactionBroker {
         public EconomyBrokerTransaction(EconomyBroker broker, ItemStack stack) {
             this.broker = broker;
             this.originalAmount = stack.getAmount();
-            this.isAuthorized = broker.tryAuthorize(STACK_BASE_COST + stack.getAmount());
+            this.isAuthorized = broker.tryAuthorize(STACK_BASE_COST + (PER_ITEM_COST * stack.getAmount()));
         }
 
         @Override
