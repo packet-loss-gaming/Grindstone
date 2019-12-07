@@ -16,8 +16,16 @@ import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public abstract class AbstractItemFeatureImpl implements Listener {
@@ -50,5 +58,49 @@ public abstract class AbstractItemFeatureImpl implements Listener {
         SpecialAttackEvent event = new SpecialAttackEvent(owner, context, spec);
         server.getPluginManager().callEvent(event);
         return event;
+    }
+
+    private static Set<UUID> offhandBlockPlaceBlocked = new HashSet<>();
+
+    /**
+     * Overrideable to represent that this item has a custom right click action, and should block
+     * off-hand actions.
+     *
+     * @param event
+     * @return true if the off hand action should be blocked
+     */
+    public boolean onItemRightClick(PlayerInteractEvent event) {
+        return false;
+    }
+
+    @EventHandler
+    public void onRightClick(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
+
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
+
+        if (onItemRightClick(event)) {
+            Player player = event.getPlayer();
+
+            offhandBlockPlaceBlocked.add(player.getUniqueId());
+            server.getScheduler().runTask(inst, () -> {
+                offhandBlockPlaceBlocked.remove(player.getUniqueId());
+            });
+        }
+    }
+
+    @EventHandler
+    public void onOffhandBlockPlace(BlockPlaceEvent event) {
+        if (event.getHand() != EquipmentSlot.OFF_HAND) {
+            return;
+        }
+
+        if (offhandBlockPlaceBlocked.contains(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
     }
 }
