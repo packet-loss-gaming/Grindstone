@@ -16,7 +16,6 @@ import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
@@ -106,18 +105,19 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
         return true;
     }
 
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerInteract(PlayerInteractEvent event) {
-
+    @Override
+    public boolean onItemRightClick(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        ItemStack itemStack = event.getItem();
-
-        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
-            if (ItemUtil.isItem(itemStack, CustomItems.PIXIE_DUST) && handleRightClick(player)) {
-                event.setCancelled(true);
-            }
+        if (!ItemUtil.isHoldingItem(player, CustomItems.PIXIE_DUST)) {
+            return false;
         }
+
+        if (handleRightClick(player)) {
+            event.setCancelled(true);
+            return true;
+        }
+
+        return false;
     }
 
     @EventHandler(ignoreCancelled = true)
