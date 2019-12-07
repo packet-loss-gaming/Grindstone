@@ -34,7 +34,12 @@ public class CustomItem {
 
     public CustomItem(CustomItem item) {
         this(item.getItem(), item.getBaseType());
-        tags.addAll(item.getTags());
+
+        // Deep copy tags
+        for (Tag tag : item.getTags()) {
+            tags.add(new Tag(tag.getColor(), tag.getKey(), tag.getProp()));
+        }
+
         lore.addAll(item.getLore());
         enchants.addAll(item.getEnchants());
         useDocs.addAll(item.getUseDocs());
