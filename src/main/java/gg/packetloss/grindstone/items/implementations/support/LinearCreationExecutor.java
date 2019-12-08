@@ -174,7 +174,7 @@ public class LinearCreationExecutor {
     private boolean placeBlock(Block b, Player p, BlockFace oppositeFace, ItemStack i) {
         BlockState oldState = b.getState();
 
-        b.setType(i.getType());
+        b.setTypeIdAndData(i.getTypeId(), i.getData().getData(), true);
 
         BlockPlaceEvent event = new BlockPlaceEvent(
                 b,
