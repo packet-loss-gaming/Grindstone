@@ -77,6 +77,15 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return Optional.of(percentageSale);
     }
 
+    public Optional<Double> getValueForStack(ItemStack stack) {
+        Optional<Double> optPercentageSale = computePercentageSale(stack);
+        if (optPercentageSale.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(optPercentageSale.get() * getValue());
+    }
+
     public Optional<Double> getSellUnitPriceForStack(ItemStack stack) {
         Optional<Double> optPercentageSale = computePercentageSale(stack);
         if (optPercentageSale.isEmpty()) {

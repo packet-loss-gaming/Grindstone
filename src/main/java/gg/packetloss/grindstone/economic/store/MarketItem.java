@@ -27,6 +27,10 @@ public class MarketItem {
         return itemInfo.getValue();
     }
 
+    public Optional<Double> getValueForStack(ItemStack stack) {
+        return itemInfo.getValueForStack(stack);
+    }
+
     public double getPrice() {
         return itemInfo.getPrice();
     }

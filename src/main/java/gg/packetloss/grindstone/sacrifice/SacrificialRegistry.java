@@ -78,7 +78,7 @@ class SacrificialRegistry {
         if (itemStack.getType() == Material.MONSTER_EGG) {
             return 12.5;
         }
-        return lookupInstance.checkMaximumValue(itemStack).orElse(0d);
+        return lookupInstance.checkCurrentValue(itemStack).orElse(0d);
     }
 
     public double getValue(ItemStack itemStack) {
