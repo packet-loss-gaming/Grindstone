@@ -18,6 +18,7 @@ public class ComboShovel extends AbstractItemFeatureImpl {
         Material.SAND,
         Material.CLAY,
         Material.MYCEL,
+        Material.SOIL,
         Material.GRAVEL,
         Material.SNOW,
         Material.SNOW_BLOCK,
