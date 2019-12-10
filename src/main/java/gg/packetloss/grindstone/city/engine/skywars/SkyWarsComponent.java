@@ -1145,6 +1145,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
 
             gameState.removePlayer(player);
 
+            player.setFallDistance(0);
             player.teleport(lobbyExitLocation);
         }
     }
