@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.city.engine.jungleraid;
+package gg.packetloss.grindstone.city.engine.minigame;
 
 public class Win {
     private String name;

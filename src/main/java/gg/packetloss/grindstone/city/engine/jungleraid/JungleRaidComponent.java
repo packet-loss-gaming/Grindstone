@@ -37,6 +37,8 @@ import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
+import gg.packetloss.grindstone.city.engine.minigame.Win;
+import gg.packetloss.grindstone.city.engine.minigame.WinType;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
@@ -395,7 +397,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         JungleRaidProfile attackerProfile = gameState.get(attacker);
         JungleRaidProfile defenderProfile = gameState.get(defender);
 
-        // One of the players is not in th egame, don't consider this friendly fire.
+        // One of the players is not in the game, don't consider this friendly fire.
         if (attackerProfile == null || defenderProfile == null) {
             return false;
         }
@@ -715,15 +717,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         return Optional.empty();
     }
 
-    private void resetPlayerProperties(Player player) {
-        player.setHealth(player.getMaxHealth());
-        player.setFoodLevel(20);
-        player.setSaturation(20);
-        player.setExhaustion(0);
-
-        player.getActivePotionEffects().clear();
-    }
-
     private void maybeDisableGuild(Player player) {
         boolean allowGuilds = isFlagEnabled(JungleRaidFlag.ALLOW_GUILDS);
         if (allowGuilds) {
@@ -731,6 +724,18 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
 
         adminComponent.deguildPlayer(player);
+    }
+
+    private void resetPlayerProperties(Player player) {
+        player.setHealth(player.getMaxHealth());
+        player.setFoodLevel(20);
+        player.setSaturation(20);
+        player.setExhaustion(0);
+
+        player.getActivePotionEffects().clear();
+
+        prayerComponent.uninfluencePlayer(player);
+        maybeDisableGuild(player);
     }
 
     private void tryRandomAssignClass(Player player) {
@@ -751,9 +756,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         applyTeamEquipment(player);
 
         resetPlayerProperties(player);
-        maybeDisableGuild(player);
-
-        prayerComponent.uninfluencePlayer(player);
 
         player.teleport(startingPos.get());
     }
@@ -1253,15 +1255,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 return;
             }
 
-            if (lobbyContains(player)) {
-                // Removing the player should teleport them to the exit location,
-                // don't double teleport. This case only exists to prevent players
-                // from somehow getting trapped.
-                if (gameState.containsPlayer(player)) {
-                    removePlayer(player);
-                } else {
-                    player.teleport(lobbyExitLocation);
-                }
+            if (gameState.containsPlayer(player)) {
+                removePlayer(player);
             } else {
                 addToLobby(player);
                 player.teleport(lobbySpawnLocation);
