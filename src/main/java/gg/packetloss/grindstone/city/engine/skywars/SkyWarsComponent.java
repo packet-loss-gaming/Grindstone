@@ -379,6 +379,10 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             removePlayer(player);
         }
 
+        for (Entity chicken : getContainedChickens()) {
+            chicken.remove();
+        }
+
         state = SkyWarsState.LOBBY;
     }
 
@@ -622,13 +626,21 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         return skyFeather;
     }
 
-    public List<Entity> getContainedTargets() {
-        List<Entity> returnedList = new ArrayList<>(getPlayersInGame());
+    public List<Entity> getContainedChickens() {
+        List<Entity> chickens = new ArrayList<>();
+
         for (Entity entity : world.getEntitiesByClasses(Chicken.class)) {
             if (entity.isValid() && LocationUtil.isInRegion(region, entity)) {
-                returnedList.add(entity);
+                chickens.add(entity);
             }
         }
+
+        return chickens;
+    }
+
+    public List<Entity> getContainedTargets() {
+        List<Entity> returnedList = new ArrayList<>(getPlayersInGame());
+        returnedList.addAll(getContainedChickens());
         return returnedList;
     }
 
