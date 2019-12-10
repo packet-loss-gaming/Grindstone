@@ -716,7 +716,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             RegionChecker checker = new RegionChecker(region);
             for (int i = 0; i < gameState.getPlayers().size(); ++i) {
 
-                if (!ChanceUtil.getChance(10) && !isFlagEnabled(SkyWarsFlag.CHICKEN_PLUS_PLUS)) continue;
+                if (!ChanceUtil.getChance(4) && !isFlagEnabled(SkyWarsFlag.CHICKEN_PLUS_PLUS)) continue;
 
                 Location target = LocationUtil.pickLocation(world, region.getMaximumPoint().getY() - 10, checker);
                 Chicken c = world.spawn(target, Chicken.class);
