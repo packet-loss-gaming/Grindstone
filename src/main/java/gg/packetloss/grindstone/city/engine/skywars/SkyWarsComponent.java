@@ -923,6 +923,10 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                         while (it.hasNext()) {
                             Block block = it.next();
 
+                            if (block.getType().isSolid()) {
+                                break;
+                            }
+
                             block.getWorld().playEffect(block.getLocation(k), Effect.MOBSPAWNER_FLAMES, 0);
 
                             for (Entity aEntity : targets) {
