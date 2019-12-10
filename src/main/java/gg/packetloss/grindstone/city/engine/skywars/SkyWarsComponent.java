@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.skywars;
 
+import com.destroystokyo.paper.Title;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
@@ -28,6 +29,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.city.engine.minigame.Win;
@@ -47,6 +49,8 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import gg.packetloss.grindstone.util.timer.CountdownTask;
+import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -69,6 +73,7 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.material.Door;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
@@ -102,7 +107,6 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     private SkyWarsGameState gameState = new SkyWarsGameState();
 
     private SkyWarsState state = SkyWarsState.LOBBY;
-    private long startTime;
 
     @InjectComponent
     private AdminComponent adminComponent;
@@ -260,6 +264,44 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         return Optional.empty();
     }
 
+    private void initFightCountdown() {
+        CountdownTask fightCountdown = new CountdownTask() {
+            @Override
+            public boolean matchesFilter(int times) {
+                return true;
+            }
+
+            @Override
+            public void performStep(int times) {
+                for (Player player : getPlayersInGame()) {
+                    player.sendTitle(Title.builder().title(Text.of(ChatColor.DARK_RED, times).build()).build());
+                }
+            }
+
+            @Override
+            public void performFinal() {
+                state = SkyWarsState.IN_PROGRESS;
+
+                Collection<Player> players = getPlayersInGame();
+
+                for (Player player : players) {
+                    player.sendTitle(Title.builder().title(Text.of(ChatColor.DARK_GREEN, "FIGHT!").build()).build());
+                }
+
+                for (Player player : players) {
+                    launchPlayer(player, 1);
+                    sessions.getSession(SkyWarSession.class, player).stopPushBack();
+                }
+
+                editStartingPad(0, 0);
+            }
+        };
+
+        TimedRunnable countdown = new TimedRunnable(fightCountdown, 3);
+        BukkitTask task = server.getScheduler().runTaskTimer(inst, countdown, 0, 20);
+        countdown.setTask(task);
+    }
+
     public void smartStart() {
         Collection<Player> containedPlayers = getPlayersInGame();
         if (containedPlayers.size() <= 1) {
@@ -325,25 +367,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         state = SkyWarsState.INITIALIZE;
         gameState.getPlayers().forEach(this::addPlayer);
 
-        startTime = System.currentTimeMillis();
-    }
-
-    private void tryBeginCombat() {
-        boolean cooldownPassed = System.currentTimeMillis() - startTime >= TimeUnit.SECONDS.toMillis(5);
-        if (cooldownPassed) {
-            state = SkyWarsState.IN_PROGRESS;
-
-            Collection<Player> players = getPlayersInGame();
-
-            for (Player player : players) {
-                launchPlayer(player, 1);
-                sessions.getSession(SkyWarSession.class, player).stopPushBack();
-            }
-
-            editStartingPad(0, 0);
-
-            ChatUtil.sendNotice(players, ChatColor.DARK_RED + "Fight!");
-        }
+        initFightCountdown();
     }
 
     private void handleWin(Player player) {
@@ -678,7 +702,6 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         }
 
         if (state == SkyWarsState.INITIALIZE) {
-            tryBeginCombat();
             return;
         }
 
