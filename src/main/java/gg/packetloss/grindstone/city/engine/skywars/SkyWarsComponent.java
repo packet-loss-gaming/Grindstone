@@ -423,7 +423,13 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             player.getActivePotionEffects().clear();
 
             gameState.addPlayer(player);
-            applyPlayerEquipment(player);
+
+            // Delay by a tick to prevent leaping at the door
+            server.getScheduler().runTaskLater(inst, () -> {
+                if (lobbyContains(player) && gameState.containsPlayer(player)) {
+                    applyPlayerEquipment(player);
+                }
+            }, 1);
         } catch (ConflictingPlayerStateException | IOException e) {
             e.printStackTrace();
         }
