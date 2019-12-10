@@ -277,14 +277,34 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                 case 0:
                     profile.setTeam(SkyWarsTeam.FREE_FOR_ALL);
                     break;
+                case 1:
+                    profile.setTeam(SkyWarsTeam.ORANGE);
+                    break;
+                case 4:
+                    profile.setTeam(SkyWarsTeam.YELLOW);
+                    break;
+                case 5:
+                    profile.setTeam(SkyWarsTeam.LIME);
+                    break;
+                case 7:
+                    profile.setTeam(SkyWarsTeam.GRAY);
+                    break;
+                case 10:
+                    profile.setTeam(SkyWarsTeam.PURPLE);
+                    break;
                 case 11:
                     profile.setTeam(SkyWarsTeam.BLUE);
+                    break;
+                case 13:
+                    profile.setTeam(SkyWarsTeam.GREEN);
                     break;
                 case 14:
                     profile.setTeam(SkyWarsTeam.RED);
                     break;
+                case 15:
+                    profile.setTeam(SkyWarsTeam.BLACK);
+                    break;
                 default:
-                    ChatUtil.sendError(player, "Team not yet supported");
                     return;
             }
         }

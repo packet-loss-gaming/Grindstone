@@ -10,7 +10,7 @@ public enum SkyWarsTeam {
     BLUE(Color.BLUE),
     GREEN(Color.GREEN),
     ORANGE(Color.ORANGE),
-    MAROON(Color.MAROON),
+    LIME(Color.LIME),
     PURPLE(Color.PURPLE),
     GRAY(Color.GRAY),
     YELLOW(Color.YELLOW),
