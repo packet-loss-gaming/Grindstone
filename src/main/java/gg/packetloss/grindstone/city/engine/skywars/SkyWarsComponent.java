@@ -614,8 +614,9 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     }
 
     private ItemStack makeSkyFeather(int uses, double radius, double flight, double pushBack) {
-
-        return modifySkyFeather(new ItemStack(ItemID.FEATHER), uses, radius, flight, pushBack);
+        ItemStack baseStack = new ItemStack(Material.FEATHER, uses == -1 ? 1 : uses);
+        int adjustedUses = uses == -1 ? -1 : 1;
+        return modifySkyFeather(baseStack, adjustedUses, radius, flight, pushBack);
     }
 
     private ItemStack modifySkyFeather(ItemStack skyFeather, int uses, double radius, double flight, double pushBack) {
