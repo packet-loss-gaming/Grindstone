@@ -60,6 +60,7 @@ import gg.packetloss.grindstone.util.flag.BooleanFlagState;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.signwall.SignWall;
+import gg.packetloss.grindstone.util.signwall.SignWallClickHandler;
 import gg.packetloss.grindstone.util.signwall.enumname.EnumNameDataBackend;
 import gg.packetloss.grindstone.util.signwall.enumname.EnumNamePainter;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagClickHandler;
@@ -133,6 +134,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private Location lobbySpawnLocation;
     private Location lobbyExitLocation;
 
+    private SignWall<JungleRaidClass> classWall;
     private Location classSelectionModeSign;
 
     private FlagEffectData flagData = new FlagEffectData();
@@ -495,11 +497,36 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         );
         flagWall.init();
 
-        SignWall<JungleRaidClass> classWall = new SignWall<>(
+        classWall = new SignWall<>(
                 new Location(world, -745, 82, -364),
                 BlockFace.EAST,
                 7,
                 new EnumNamePainter<>() {
+                    private void paintSelectionMode(Sign targetSign) {
+                        targetSign.setLine(1, classSelectionMode.name());
+                        targetSign.update();
+                    }
+
+                    @Override
+                    public void paintFirst(int numElementsPreceding, Sign targetSign) {
+                        if (classSelectionMode.allowsSelection()) {
+                            super.paintFirst(numElementsPreceding, targetSign);
+                            return;
+                        }
+
+                        paintSelectionMode(targetSign);
+                    }
+
+                    @Override
+                    public void paintLast(int numElementsSucceeding, Sign targetSign) {
+                        if (classSelectionMode.allowsSelection()) {
+                            super.paintLast(numElementsSucceeding, targetSign);
+                            return;
+                        }
+
+                        paintSelectionMode(targetSign);
+                    }
+
                     @Override
                     public void paint(JungleRaidClass value, Sign targetSign) {
                         if (classSelectionMode.allowsSelection()) {
@@ -507,14 +534,25 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                             return;
                         }
 
-                        targetSign.setLine(1, classSelectionMode.name());
-                        targetSign.update();
+                        paintSelectionMode(targetSign);
                     }
                 },
-                this::tryUseClassSign,
+                new SignWallClickHandler<>() {
+                    @Override
+                    public JungleRaidClass handleLeftClick(Player player, JungleRaidClass value) {
+                        return tryUseClassSign(player, value);
+                    }
+
+                    @Override
+                    public boolean allowNavigation() {
+                        return classSelectionMode.allowsSelection();
+                    }
+                },
                 new EnumNameDataBackend<>(JungleRaidClass.class)
         );
         classWall.init();
+
+        classModeSignPopulate();
     }
 
     private void classModeSignPopulate() {
@@ -527,7 +565,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     public void classModeSign() {
         JungleRaidClassSelectionMode[] modes = JungleRaidClassSelectionMode.values();
         classSelectionMode = modes[(classSelectionMode.ordinal() + 1) % modes.length];
+
         classModeSignPopulate();
+        classWall.paint();
     }
 
     private void manualApplyClass(JungleRaidClass targetClass, Player player) {
