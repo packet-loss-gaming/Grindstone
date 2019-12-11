@@ -4,9 +4,9 @@ public class BooleanFlagState<T extends Enum<T>> {
     private final T flag;
     private boolean isEnabled;
 
-    public BooleanFlagState(T flag, boolean isEnabledDefault) {
+    public BooleanFlagState(T flag, boolean isEnabled) {
         this.flag = flag;
-        this.isEnabled = isEnabledDefault;
+        this.isEnabled = isEnabled;
     }
 
     public T getFlag() {
