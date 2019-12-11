@@ -7,8 +7,15 @@ import org.bukkit.ChatColor;
 import org.bukkit.block.Sign;
 
 public class BooleanFlagPainter<T extends Enum<T>> implements SignWallPainter<BooleanFlagState<T>> {
+    private String replaceSpecialNames(String title) {
+        return title.replace("_PLUS_PLUS", "++");
+    }
+
     public String getTitle(T flag) {
-        String title = flag.toString();
+        String title = flag.name();
+
+        title = replaceSpecialNames(title);
+
         if (title.length() > 15) {
             title = title.substring(0, 15);
         }
