@@ -69,6 +69,10 @@ public class SignWall<T> {
         return index - 1;
     }
 
+    private boolean hasValue(int index) {
+        return index + offset < dataBackend.size();
+    }
+
     private T getValue(int index) {
         return dataBackend.get(index + offset);
     }
@@ -100,7 +104,11 @@ public class SignWall<T> {
                 continue;
             }
 
-            painter.paint(getValue(i), optSign.get());
+            if (hasValue(i)) {
+                painter.paint(getValue(i), optSign.get());
+            } else {
+                painter.paintEmpty(optSign.get());
+            }
         }
 
         getSignForIndex(getLastSignIndex()).ifPresent((sign) -> {
@@ -161,9 +169,14 @@ public class SignWall<T> {
         if (index == getFirstSignIndex()) {
             offset = Math.max(0, offset - getNumContentSigns());
         } else if (index == getLastSignIndex()) {
-            offset = Math.min(dataBackend.size() - getNumContentSigns(), offset + getNumContentSigns());
+            int adjustedDataSize = Math.max(getNumContentSigns(), dataBackend.size());
+            offset = Math.min(adjustedDataSize - getNumContentSigns(), offset + getNumContentSigns());
         } else {
             int valueIndex = getValueIndex(index);
+            if (!hasValue(valueIndex)) {
+                return;
+            }
+
             if (leftClick) {
                 setValue(valueIndex, clickHandler.handleLeftClick(player, getValue(valueIndex)));
             } else {
