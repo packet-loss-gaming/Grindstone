@@ -1,6 +1,8 @@
 package gg.packetloss.grindstone.city.engine.skywars;
 
-public enum SkyWarsFlag {
+import gg.packetloss.grindstone.util.flag.BooleanFlag;
+
+public enum SkyWarsFlag implements BooleanFlag {
     REGEN_ENABLED,
     CHICKEN_PLUS_PLUS;
 
@@ -14,6 +16,7 @@ public enum SkyWarsFlag {
         this.enabledByDefault = enabledByDefault;
     }
 
+    @Override
     public boolean isEnabledByDefault() {
         return enabledByDefault;
     }

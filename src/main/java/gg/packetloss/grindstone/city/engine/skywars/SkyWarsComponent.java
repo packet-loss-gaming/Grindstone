@@ -47,8 +47,13 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
+import gg.packetloss.grindstone.util.flag.BooleanFlagState;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import gg.packetloss.grindstone.util.signwall.SignWall;
+import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagClickHandler;
+import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagDataBackend;
+import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagPainter;
 import gg.packetloss.grindstone.util.timer.CountdownTask;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.*;
@@ -105,6 +110,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     private Location gameStartLocation;
 
     private SkyWarsGameState gameState = new SkyWarsGameState();
+    private BooleanFlagDataBackend<SkyWarsFlag> flagState = new BooleanFlagDataBackend<>(SkyWarsFlag.class);
 
     private SkyWarsState state = SkyWarsState.LOBBY;
 
@@ -130,8 +136,17 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         lobbySpawnLocation = new Location(world, 464, 81, 109, 180, 0);
         lobbyExitLocation = new Location(world, 464, 81, 112.5);
         gameStartLocation = new Location(Bukkit.getWorld(config.worldName), config.x, config.y, config.z);
-    }
 
+        SignWall<BooleanFlagState<SkyWarsFlag>> flagWall = new SignWall<>(
+                new Location(world, 460, 82, 77),
+                BlockFace.EAST,
+                8,
+                new BooleanFlagPainter<>(),
+                new BooleanFlagClickHandler<>(),
+                flagState
+        );
+        flagWall.init();
+    }
 
     @Override
     public void enable() {
