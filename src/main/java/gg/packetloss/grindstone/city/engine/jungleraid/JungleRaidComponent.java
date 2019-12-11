@@ -342,6 +342,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         player.getInventory().setArmorContents(leatherArmour);
     }
 
+    private void resetPlayerVitals(Player player) {
+        player.setHealth(player.getMaxHealth());
+        player.setFoodLevel(20);
+        player.setSaturation(20);
+        player.setExhaustion(0);
+    }
+
     public void addToLobby(Player player) {
         try {
             playerStateComponent.pushState(PlayerStateKind.JUNGLE_RAID, player);
@@ -350,6 +357,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
             player.getInventory().clear();
             player.getInventory().setArmorContents(NO_ARMOR);
+
+            resetPlayerVitals(player);
 
             gameState.addPlayer(player);
             applyClassEquipment(player);
@@ -666,10 +675,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private void resetPlayerProperties(Player player) {
-        player.setHealth(player.getMaxHealth());
-        player.setFoodLevel(20);
-        player.setSaturation(20);
-        player.setExhaustion(0);
+        resetPlayerVitals(player);
 
         player.getActivePotionEffects().clear();
 
