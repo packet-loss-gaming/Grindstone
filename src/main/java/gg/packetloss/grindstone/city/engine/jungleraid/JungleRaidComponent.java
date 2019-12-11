@@ -483,6 +483,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         lobbySpawnLocation = new Location(world, -752, 81, -340, 180, 0);
         lobbyExitLocation = new Location(world, -752, 81, -336);
 
+        classSelectionModeSign = new Location(world, -742, 83, -364);
+
         SignWall<BooleanFlagState<JungleRaidFlag>> flagWall = new SignWall<>(
                 new Location(world, -766, 82, -364),
                 BlockFace.EAST,
@@ -513,8 +515,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 new EnumNameDataBackend<>(JungleRaidClass.class)
         );
         classWall.init();
-
-        classSelectionModeSign = new Location(world, -742, 83, -364);
     }
 
     private void classModeSignPopulate() {
