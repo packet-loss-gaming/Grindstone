@@ -1,6 +1,8 @@
 package gg.packetloss.grindstone.city.engine.jungleraid;
 
-public enum JungleRaidFlag {
+import gg.packetloss.grindstone.util.flag.BooleanFlag;
+
+public enum JungleRaidFlag implements BooleanFlag {
     TRAMPOLINE,
     SUPER,
     TITAN_MODE,
@@ -30,6 +32,7 @@ public enum JungleRaidFlag {
         this.enabledByDefault = enabledByDefault;
     }
 
+    @Override
     public boolean isEnabledByDefault() {
         return enabledByDefault;
     }

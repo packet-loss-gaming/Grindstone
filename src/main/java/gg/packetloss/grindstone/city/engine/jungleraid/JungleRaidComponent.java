@@ -56,16 +56,23 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
+import gg.packetloss.grindstone.util.flag.BooleanFlagState;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import gg.packetloss.grindstone.util.signwall.SignWall;
+import gg.packetloss.grindstone.util.signwall.enumname.EnumNameDataBackend;
+import gg.packetloss.grindstone.util.signwall.enumname.EnumNamePainter;
+import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagClickHandler;
+import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagDataBackend;
+import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagPainter;
 import gg.packetloss.hackbook.ChunkBook;
 import gg.packetloss.hackbook.ModifierBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
-import org.apache.commons.lang.WordUtils;
 import org.bukkit.Location;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
@@ -125,20 +132,11 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
     private Location lobbySpawnLocation;
     private Location lobbyExitLocation;
-    private Location leftFlagActivationSign;
-    private Location rightFlagActivationSign;
-    private List<Location> scrollingFlagSigns = new ArrayList<>();
 
     private Location classSelectionModeSign;
-    private Location leftClassActivationSign;
-    private Location rightClassActivationSign;
-    private List<Location> scrollingClassSigns = new ArrayList<>();
-
-    private int signScrollFlagStart;
-    private int signScrollClassStart;
 
     private FlagEffectData flagData = new FlagEffectData();
-    private boolean[] flagState = new boolean[JungleRaidFlag.values().length];
+    private BooleanFlagDataBackend<JungleRaidFlag> flagState = new BooleanFlagDataBackend<>(JungleRaidFlag.class);
 
     private JungleRaidClassSelectionMode classSelectionMode = JungleRaidClassSelectionMode.SELECTION;
 
@@ -484,178 +482,79 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         lobbySpawnLocation = new Location(world, -752, 81, -340, 180, 0);
         lobbyExitLocation = new Location(world, -752, 81, -336);
-        leftFlagActivationSign = new Location(world, -766, 82, -364);
-        rightFlagActivationSign = new Location(world, -760, 82, -364);
 
-        for (int x = leftFlagActivationSign.getBlockX() + 1; x < rightFlagActivationSign.getBlockX(); ++x) {
-            scrollingFlagSigns.add(new Location(world, x, 82, -364));
-        }
+        SignWall<BooleanFlagState<JungleRaidFlag>> flagWall = new SignWall<>(
+                new Location(world, -766, 82, -364),
+                BlockFace.EAST,
+                7,
+                new BooleanFlagPainter<>(),
+                new BooleanFlagClickHandler<>(),
+                flagState
+        );
+        flagWall.init();
 
-        for (JungleRaidFlag flag : JungleRaidFlag.values()) {
-            flagState[flag.ordinal()] = flag.isEnabledByDefault();
-        }
+        SignWall<JungleRaidClass> classWall = new SignWall<>(
+                new Location(world, -745, 82, -364),
+                BlockFace.EAST,
+                7,
+                new EnumNamePainter<>() {
+                    @Override
+                    public void paint(JungleRaidClass value, Sign targetSign) {
+                        if (classSelectionMode.allowsSelection()) {
+                            super.paint(value, targetSign);
+                            return;
+                        }
 
-        flagSignPopulate();
+                        targetSign.setLine(1, classSelectionMode.name());
+                        targetSign.update();
+                    }
+                },
+                this::tryUseClassSign,
+                new EnumNameDataBackend<>(JungleRaidClass.class)
+        );
+        classWall.init();
 
         classSelectionModeSign = new Location(world, -742, 83, -364);
-        leftClassActivationSign = new Location(world, -745, 82, -364);
-        rightClassActivationSign = new Location(world, -739, 82, -364);
-
-        for (int x = leftClassActivationSign.getBlockX() + 1; x < rightClassActivationSign.getBlockX(); ++x) {
-            scrollingClassSigns.add(new Location(world, x, 82, -364));
-        }
-
-        classSignPopulate();
     }
 
-    private void updateFlagSign(int index) {
-        String title = JungleRaidFlag.values()[signScrollFlagStart + index].toString();
-        if (title.length() > 15) {
-            title = title.substring(0, 15);
-        }
-        title = WordUtils.capitalizeFully(title.replace("_", " "));
-
-        Sign sign = (Sign) scrollingFlagSigns.get(index).getBlock().getState();
-        sign.setLine(1, title);
-        sign.setLine(2, flagState[signScrollFlagStart + index] ? ChatColor.DARK_GREEN + "Enabled" : ChatColor.RED + "Disabled");
-        sign.update(true);
-    }
-
-    private void flagSignPopulate() {
-        for (int i = 0; i < scrollingFlagSigns.size(); ++i) {
-            updateFlagSign(i);
-        }
-
-        boolean isLeftScrollable = signScrollFlagStart != 0;
-        Sign leftSign = (Sign) leftFlagActivationSign.getBlock().getState();
-        leftSign.setLine(1, isLeftScrollable ? ChatColor.BLUE + "<<" : "");
-        leftSign.update(true);
-
-        boolean isRightScrollable = signScrollFlagStart + scrollingFlagSigns.size() != JungleRaidFlag.values().length;
-        Sign rightSign = (Sign) rightFlagActivationSign.getBlock().getState();
-        rightSign.setLine(1, isRightScrollable ? ChatColor.BLUE + ">>" : "");
-        rightSign.update(true);
-    }
-
-    public void leftFlagListSign() {
-        signScrollFlagStart = Math.max(0, signScrollFlagStart - scrollingFlagSigns.size());
-        flagSignPopulate();
-    }
-
-    public void rightFlagListSign() {
-        signScrollFlagStart = Math.min(JungleRaidFlag.values().length - scrollingFlagSigns.size(), signScrollFlagStart + scrollingFlagSigns.size());
-        flagSignPopulate();
-    }
-
-    public void tryToggleFlagSignAt(Location loc) {
-        for (int i = 0; i < scrollingFlagSigns.size(); ++i) {
-            if (loc.equals(scrollingFlagSigns.get(i))) {
-                flagState[signScrollFlagStart + i] = !flagState[signScrollFlagStart + i];
-                updateFlagSign(i);
-                break;
-            }
-        }
-    }
-
-    private boolean allowClassSelection() {
-        return classSelectionMode.allowsSelection();
-    }
-
-    private void updateClassSign(int index) {
-        Sign sign = (Sign) scrollingClassSigns.get(index).getBlock().getState();
-
-        if (!allowClassSelection()) {
-            sign.setLine(1, classSelectionMode.name());
-            sign.update(true);
-            return;
-        }
-
-        String title = JungleRaidClass.values()[signScrollClassStart + index].getAsTitle();
-        sign.setLine(1, title);
-        sign.update(true);
-    }
-
-    private void classSignPopulate() {
-        for (int i = 0; i < scrollingClassSigns.size(); ++i) {
-            updateClassSign(i);
-        }
-
+    private void classModeSignPopulate() {
         Sign modeSign = (Sign) classSelectionModeSign.getBlock().getState();
         modeSign.setLine(1, "Mode");
         modeSign.setLine(2, ChatColor.BLUE + classSelectionMode.name());
         modeSign.update(true);
-
-        boolean isLeftScrollable = allowClassSelection() && signScrollClassStart != 0;
-        Sign leftSign = (Sign) leftClassActivationSign.getBlock().getState();
-        leftSign.setLine(1, isLeftScrollable ? ChatColor.BLUE + "<<" : "");
-        leftSign.update(true);
-
-        boolean isRightScrollable = allowClassSelection()
-                && signScrollClassStart + scrollingClassSigns.size() != JungleRaidClass.values().length;
-        Sign rightSign = (Sign) rightClassActivationSign.getBlock().getState();
-        rightSign.setLine(1, isRightScrollable ? ChatColor.BLUE + ">>" : "");
-        rightSign.update(true);
     }
 
     public void classModeSign() {
         JungleRaidClassSelectionMode[] modes = JungleRaidClassSelectionMode.values();
         classSelectionMode = modes[(classSelectionMode.ordinal() + 1) % modes.length];
-        classSignPopulate();
-    }
-
-    public void leftClassListSign() {
-        signScrollClassStart = Math.max(0, signScrollClassStart - scrollingClassSigns.size());
-        classSignPopulate();
-    }
-
-    public void rightClassListSign() {
-        signScrollClassStart = Math.min(JungleRaidClass.values().length - scrollingClassSigns.size(), signScrollClassStart + scrollingClassSigns.size());
-        classSignPopulate();
-    }
-
-    private JungleRaidClass getTargetClassSign(Location loc) {
-        for (int i = 0; i < scrollingClassSigns.size(); ++i) {
-            if (loc.equals(scrollingClassSigns.get(i))) {
-                return JungleRaidClass.values()[signScrollClassStart + i];
-            }
-        }
-
-        return null;
+        classModeSignPopulate();
     }
 
     private void manualApplyClass(JungleRaidClass targetClass, Player player) {
         gameState.get(player).setCombatClass(targetClass);
         applyClassEquipment(player);
-
     }
 
-    public void tryUseClassSignAt(Location loc, Player player) {
-        JungleRaidClass targetClass = getTargetClassSign(loc);
-        if (targetClass == null) {
-            return;
-        }
-
+    private JungleRaidClass tryUseClassSign(Player player, JungleRaidClass jungleRaidClass) {
         switch (classSelectionMode) {
             case SELECTION:
             case SCAVENGER:
-                manualApplyClass(targetClass, player);
+                manualApplyClass(jungleRaidClass, player);
                 break;
             case RANDOM:
             case SURVIVAL:
                 break;
         }
+
+        return jungleRaidClass;
     }
 
-    public void setFlag(JungleRaidFlag flag, boolean enabled) {
-        flagState[flag.ordinal()] = enabled;
+    public boolean isFlagEnabled(JungleRaidFlag flag) {
+        return flagState.isEnabled(flag);
     }
 
     public boolean isSuddenDeath() {
         return !isFlagEnabled(JungleRaidFlag.NO_TIME_LIMIT) && System.currentTimeMillis() - getStartTime() >= TimeUnit.MINUTES.toMillis(15);
-    }
-
-    public boolean isFlagEnabled(JungleRaidFlag flag) {
-        return flagState[flag.ordinal()];
     }
 
     @Override
@@ -746,7 +645,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         JungleRaidClass playerClass = CollectionUtil.getElement(JungleRaidClass.values());
         gameState.get(player).setCombatClass(playerClass);
 
-        ChatUtil.sendNotice(player, "You've been assigned the class:" + playerClass.getAsTitle());
+        ChatUtil.sendNotice(player, "You've been assigned the class:" + playerClass.name());
     }
 
     private void addPlayer(Player player, Supplier<Location> startingPos) {
@@ -1272,19 +1171,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             Block block = event.getClickedBlock();
             Location blockLoc = block.getLocation();
 
-            if (blockLoc.equals(leftFlagActivationSign)) {
-                leftFlagListSign();
-            } else if (blockLoc.equals(rightFlagActivationSign)) {
-                rightFlagListSign();
-            } else if (blockLoc.equals(classSelectionModeSign)) {
+            if (blockLoc.equals(classSelectionModeSign)) {
                 classModeSign();
-            } else if (blockLoc.equals(leftClassActivationSign)) {
-                leftClassListSign();
-            } else if (blockLoc.equals(rightClassActivationSign)) {
-                rightClassListSign();
-            } else {
-                tryToggleFlagSignAt(blockLoc);
-                tryUseClassSignAt(blockLoc, event.getPlayer());
             }
         }
 
