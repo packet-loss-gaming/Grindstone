@@ -7,4 +7,8 @@ public interface SignWallClickHandler<T> {
     public default T handleRightClick(Player player, T value) {
         return handleLeftClick(player, value);
     }
+
+    public default boolean allowNavigation() {
+        return true;
+    }
 }

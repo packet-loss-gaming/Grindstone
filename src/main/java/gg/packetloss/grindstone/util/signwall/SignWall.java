@@ -165,12 +165,22 @@ public class SignWall<T> {
         return Optional.of(getSignIndex(location));
     }
 
+    private void tryUpdateNavigation(Runnable op) {
+        if (clickHandler.allowNavigation()) {
+            op.run();
+        }
+    }
+
     public void handleClick(Player player, int index, boolean leftClick) {
         if (index == getFirstSignIndex()) {
-            offset = Math.max(0, offset - getNumContentSigns());
+            tryUpdateNavigation(() -> {
+                offset = Math.max(0, offset - getNumContentSigns());
+            });
         } else if (index == getLastSignIndex()) {
-            int adjustedDataSize = Math.max(getNumContentSigns(), dataBackend.size());
-            offset = Math.min(adjustedDataSize - getNumContentSigns(), offset + getNumContentSigns());
+            tryUpdateNavigation(() -> {
+                int adjustedDataSize = Math.max(getNumContentSigns(), dataBackend.size());
+                offset = Math.min(adjustedDataSize - getNumContentSigns(), offset + getNumContentSigns());
+            });
         } else {
             int valueIndex = getValueIndex(index);
             if (!hasValue(valueIndex)) {
