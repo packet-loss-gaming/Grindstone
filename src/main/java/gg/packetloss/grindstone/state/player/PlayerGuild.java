@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.state;
+package gg.packetloss.grindstone.state.player;
 
 import gg.packetloss.grindstone.guild.GuildType;
 

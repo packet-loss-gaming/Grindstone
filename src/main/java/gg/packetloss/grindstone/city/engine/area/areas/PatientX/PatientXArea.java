@@ -20,7 +20,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
-import gg.packetloss.grindstone.state.PlayerStateComponent;
+import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.player.AdminToolkit;
 import gg.packetloss.hackbook.AttributeBook;

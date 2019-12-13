@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.state;
+package gg.packetloss.grindstone.state.player;
 
 import com.google.gson.Gson;
 import com.sk89q.commandbook.CommandBook;
@@ -7,7 +7,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
-import gg.packetloss.grindstone.state.attribute.TypedPlayerStateAttribute;
+import gg.packetloss.grindstone.state.player.attribute.TypedPlayerStateAttribute;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

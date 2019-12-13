@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.state;
+package gg.packetloss.grindstone.state.player;
 
 import com.google.common.collect.Lists;
 import gg.packetloss.grindstone.util.item.ItemUtil;

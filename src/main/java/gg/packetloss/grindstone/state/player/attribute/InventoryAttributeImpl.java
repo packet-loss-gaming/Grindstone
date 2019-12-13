@@ -1,8 +1,8 @@
-package gg.packetloss.grindstone.state.attribute;
+package gg.packetloss.grindstone.state.player.attribute;
 
-import gg.packetloss.grindstone.state.PlayerStateKind;
-import gg.packetloss.grindstone.state.PlayerStatePersistenceManager;
-import gg.packetloss.grindstone.state.PlayerStateRecord;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
+import gg.packetloss.grindstone.state.player.PlayerStatePersistenceManager;
+import gg.packetloss.grindstone.state.player.PlayerStateRecord;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 

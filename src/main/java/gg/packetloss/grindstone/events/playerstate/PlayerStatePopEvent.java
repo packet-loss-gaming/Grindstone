@@ -1,6 +1,6 @@
 package gg.packetloss.grindstone.events.playerstate;
 
-import gg.packetloss.grindstone.state.PlayerStateKind;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;

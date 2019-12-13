@@ -32,8 +32,8 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttac
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.GlowingFog;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
-import gg.packetloss.grindstone.state.ConflictingPlayerStateException;
-import gg.packetloss.grindstone.state.PlayerStateKind;
+import gg.packetloss.grindstone.state.player.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.EffectUtil;

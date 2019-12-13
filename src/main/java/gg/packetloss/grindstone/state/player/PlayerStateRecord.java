@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.state;
+package gg.packetloss.grindstone.state.player;
 
 import org.apache.commons.lang.Validate;
 

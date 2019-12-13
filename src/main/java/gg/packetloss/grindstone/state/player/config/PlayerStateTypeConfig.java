@@ -1,6 +1,6 @@
-package gg.packetloss.grindstone.state.config;
+package gg.packetloss.grindstone.state.player.config;
 
-import gg.packetloss.grindstone.state.attribute.TypedPlayerStateAttribute;
+import gg.packetloss.grindstone.state.player.attribute.TypedPlayerStateAttribute;
 
 import java.util.List;
 

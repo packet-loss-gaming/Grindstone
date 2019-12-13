@@ -29,7 +29,7 @@ import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPScope;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
-import gg.packetloss.grindstone.state.PlayerStateComponent;
+import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.APIUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;

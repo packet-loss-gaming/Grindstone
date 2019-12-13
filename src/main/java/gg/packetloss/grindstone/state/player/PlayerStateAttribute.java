@@ -1,6 +1,6 @@
-package gg.packetloss.grindstone.state;
+package gg.packetloss.grindstone.state.player;
 
-import gg.packetloss.grindstone.state.attribute.*;
+import gg.packetloss.grindstone.state.player.attribute.*;
 
 public enum PlayerStateAttribute implements PlayerStateAttributeImpl {
     VITALS(new VitalsAttributeImpl()),

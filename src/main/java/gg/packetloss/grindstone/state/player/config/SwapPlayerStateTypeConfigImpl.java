@@ -1,6 +1,6 @@
-package gg.packetloss.grindstone.state.config;
+package gg.packetloss.grindstone.state.player.config;
 
-public class TogglePlayerStateTypeConfigImpl implements PlayerStateTypeConfigImpl {
+public class SwapPlayerStateTypeConfigImpl implements PlayerStateTypeConfigImpl {
     @Override
     public boolean isTemporary() {
         return false;
@@ -8,11 +8,11 @@ public class TogglePlayerStateTypeConfigImpl implements PlayerStateTypeConfigImp
 
     @Override
     public boolean allowUseWithTemporaryState() {
-        return true;
+        return false;
     }
 
     @Override
     public boolean shouldSwapOnDuplicate() {
-        return false;
+        return true;
     }
 }

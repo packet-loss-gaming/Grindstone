@@ -34,7 +34,7 @@ import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
-import gg.packetloss.grindstone.state.PlayerStateComponent;
+import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.bukkit.Bukkit;

@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.state;
+package gg.packetloss.grindstone.state.player;
 
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -7,7 +7,9 @@ import gg.packetloss.hackbook.ItemSerializer;
 import org.bukkit.Server;
 import org.bukkit.inventory.ItemStack;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

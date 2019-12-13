@@ -22,7 +22,7 @@ import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.state.PlayerStateComponent;
+import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;

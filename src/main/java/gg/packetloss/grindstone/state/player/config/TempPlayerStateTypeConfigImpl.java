@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.state.config;
+package gg.packetloss.grindstone.state.player.config;
 
 public class TempPlayerStateTypeConfigImpl implements PlayerStateTypeConfigImpl {
     @Override
