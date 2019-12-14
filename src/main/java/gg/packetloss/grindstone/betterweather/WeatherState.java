@@ -50,11 +50,11 @@ public class WeatherState {
         return new ArrayList<>(weatherQueue);
     }
 
-    public long getLastWeatherEvent() {
+    public Optional<WeatherEvent> getLastWeatherEventTime() {
         if (weatherQueue.isEmpty()) {
-            return System.currentTimeMillis();
+            return Optional.empty();
         }
 
-        return weatherQueue.getLast().getActivationTime();
+        return Optional.of(weatherQueue.getLast());
     }
 }

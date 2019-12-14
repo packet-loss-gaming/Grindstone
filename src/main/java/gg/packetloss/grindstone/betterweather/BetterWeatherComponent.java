@@ -188,24 +188,37 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
     }
 
     private void populateWeatherQueue() {
-        long nextWeatherEvent = weatherState.getLastWeatherEvent();
+        Optional<WeatherEvent> lastWeatherEvent = weatherState.getLastWeatherEventTime();
+
+        WeatherType lastWeatherType = lastWeatherEvent
+                .map(WeatherEvent::getWeatherType)
+                .orElseGet(() -> weatherState.getCurrentWeather());
+
+        long lastWeatherEventTime = lastWeatherEvent
+                .map(WeatherEvent::getActivationTime)
+                .orElseGet(System::currentTimeMillis);
 
         while (weatherState.getQueueSize() < config.numToCreate) {
-            long offset = TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(config.shortestEvent, config.longestEvent));
-            nextWeatherEvent += offset;
+            // Calculate the new weather event and its time
+            WeatherType newWeatherType = pickWeather();
 
-            WeatherType newWeather = pickWeather();
+            long offset = TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(config.shortestEvent, config.longestEvent));
+            long newWeatherEventTime = lastWeatherEventTime + offset;
 
             // Queue a bit of rain as a warning about the impending thunderstorm
-            if (newWeather == WeatherType.THUNDERSTORM) {
-                weatherState.addToQueue(new WeatherEvent(nextWeatherEvent, WeatherType.RAIN));
+            if (newWeatherType == WeatherType.THUNDERSTORM && lastWeatherType == WeatherType.CLEAR) {
+                weatherState.addToQueue(new WeatherEvent(newWeatherEventTime, WeatherType.RAIN));
 
-                nextWeatherEvent += TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(
+                newWeatherEventTime += TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(
                         config.shortestThunderWarning, config.longestThunderWarning
                 ));
             }
 
-            weatherState.addToQueue(new WeatherEvent(nextWeatherEvent, newWeather));
+            weatherState.addToQueue(new WeatherEvent(newWeatherEventTime, newWeatherType));
+
+            // Update the last value trackers
+            lastWeatherType = newWeatherType;
+            lastWeatherEventTime = newWeatherEventTime;
         }
     }
 
