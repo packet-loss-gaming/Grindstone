@@ -31,6 +31,8 @@ import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.checker.Expression;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import gg.packetloss.hackbook.AttributeBook;
+import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -103,9 +105,6 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             }
             if (!checkFrimus()) {
                 runFrimus();
-            }
-            if (!checkSnipee()) {
-                runSnipee();
             }
         }
     }
@@ -202,6 +201,12 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         charlotte.setMaxHealth(config.charlotteHP);
         charlotte.setHealth(config.charlotteHP);
         charlotte.setRemoveWhenFarAway(true);
+
+        try {
+            AttributeBook.setAttribute(charlotte, AttributeBook.Attribute.FOLLOW_RANGE, 50);
+        } catch (UnsupportedFeatureException ex) {
+            ex.printStackTrace();
+        }
 
         // Handle name
         charlotte.setCustomName("Charlotte");
@@ -302,11 +307,14 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
 
         // Handle vitals
         frimus.setRemoveWhenFarAway(true);
-        // Work around for health
-        server.getScheduler().runTaskLater(inst, () -> {
-            frimus.setMaxHealth(config.frimusHP);
-            frimus.setHealth(config.frimusHP);
-        }, 1);
+        frimus.setMaxHealth(config.frimusHP);
+        frimus.setHealth(config.frimusHP);
+
+        try {
+            AttributeBook.setAttribute(frimus, AttributeBook.Attribute.FOLLOW_RANGE, 50);
+        } catch (UnsupportedFeatureException ex) {
+            ex.printStackTrace();
+        }
 
         // Handle name
         frimus.setCustomName("Frimus");
@@ -362,6 +370,12 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         daBomb.setHealth(config.daBombHP);
         daBomb.setRemoveWhenFarAway(true);
 
+        try {
+            AttributeBook.setAttribute(daBomb, AttributeBook.Attribute.FOLLOW_RANGE, 50);
+        } catch (UnsupportedFeatureException ex) {
+            ex.printStackTrace();
+        }
+
         // Handle name
         daBomb.setCustomName("Da Bomb");
     }
@@ -384,6 +398,13 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         snipee.setHealth(config.snipeeHP);
         snipee.setRemoveWhenFarAway(true);
 
+        try {
+            AttributeBook.setAttribute(snipee, AttributeBook.Attribute.MOVEMENT_SPEED, 0.15);
+            AttributeBook.setAttribute(snipee, AttributeBook.Attribute.FOLLOW_RANGE, 50);
+        } catch (UnsupportedFeatureException ex) {
+            ex.printStackTrace();
+        }
+
         // Handle name
         snipee.setCustomName("Snipee");
     }
@@ -396,11 +417,6 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         for (Skeleton skeleton : getContained(snipee_RG, Skeleton.class)) {
             skeleton.remove();
         }
-    }
-
-    public void runSnipee() {
-        if (snipee == null) return;
-        com.sk89q.commandbook.util.entity.EntityUtil.sendProjectilesFromEntity(snipee, 20, 1.6F, Arrow.class);
     }
 
     // Cleans up empty arenas
