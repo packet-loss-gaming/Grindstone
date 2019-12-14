@@ -28,15 +28,15 @@ import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPScope;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.state.block.BlockStateComponent;
+import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.APIUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
-import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -48,7 +48,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Mirage Arena", desc = "What will you see next?")
-@Depend(components = {AdminComponent.class, SessionComponent.class, HighScoresComponent.class, PlayerStateComponent.class},
+@Depend(components = {AdminComponent.class, SessionComponent.class, HighScoresComponent.class,
+        PlayerStateComponent.class, BlockStateComponent.class},
         plugins = {"WorldGuard"})
 public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
@@ -60,14 +61,15 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
     protected HighScoresComponent highScores;
     @InjectComponent
     protected PlayerStateComponent playerState;
+    @InjectComponent
+    protected BlockStateComponent blockState;
 
     protected boolean voting = false;
     protected int ticks = 0;
     protected PvPScope scope;
     protected boolean editing = false;
 
-    protected BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
-    protected Set<Location> manuallyPlacedLocations = new HashSet<>();
+    protected Set<Vector> manuallyPlacedLocations = new HashSet<>();
 
     @Override
     public void setUp() {
@@ -156,10 +158,16 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
     }
 
     public void revertBlocks() {
-        generalIndex.revertByTimeWithFilter(TimeUnit.MINUTES.toMillis(4), (blockRecord -> {
-            // Skip blocks that were manually placed.
-            return !manuallyPlacedLocations.contains(blockRecord.getLocation());
-        }));
+        long currentTime = System.currentTimeMillis();
+        blockState.popBlocksWhere(BlockStateKind.MIRAGE_ARENA, (blockRecord) -> {
+            if (currentTime - blockRecord.getCreationTime() >= TimeUnit.MINUTES.toMillis(4)) {
+                return manuallyPlacedLocations.contains(
+                        new Vector(blockRecord.getX(), blockRecord.getY(), blockRecord.getZ())
+                );
+            }
+
+            return false;
+        });
     }
 
     public String getNextMirage(boolean clearOldVotes) {
@@ -185,7 +193,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
     }
 
     public void resetBlockRecordIndex() {
-        generalIndex.dropAll();
+        blockState.dropAllBlocks(BlockStateKind.MIRAGE_ARENA);
     }
 
     public void freePlayers() {
@@ -262,11 +270,15 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
     }
 
     protected void handleBlockBreak(Block block) {
-        if (manuallyPlacedLocations.remove(block.getLocation())) {
+        if (manuallyPlacedLocations.remove(new Vector(block.getX(), block.getY(), block.getZ()))) {
             return;
         }
 
-        generalIndex.addItem(new BlockRecord(block));
+        try {
+            blockState.pushAnonymousBlock(BlockStateKind.MIRAGE_ARENA, block.getState());
+        } catch (UnstorableBlockStateException ignored) {
+            // we don't really care, all maps are saved anyways
+        }
     }
 
     public File getFile(String name) {

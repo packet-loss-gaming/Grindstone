@@ -33,6 +33,16 @@ public class BlockStateCollection {
         return false;
     }
 
+    public void dropAll() {
+        if (blocks.isEmpty()) {
+            return;
+        }
+
+        blocks.clear();
+
+        dirty = true;
+    }
+
     public void popAll(Consumer<BlockStateRecord> consumer) {
         if (blocks.isEmpty()) {
             return;

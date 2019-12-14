@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Block State", desc = "Block state management")
@@ -111,6 +112,10 @@ public class BlockStateComponent extends BukkitComponent implements Listener {
         BlockStateRecordTranslator.restore(record);
     }
 
+    public void dropAllBlocks(BlockStateKind kind) {
+        states[kind.ordinal()].dropAll();
+    }
+
     public void popAllBlocks(BlockStateKind kind) {
         states[kind.ordinal()].popAll(this::popBlock);
     }
@@ -138,6 +143,10 @@ public class BlockStateComponent extends BukkitComponent implements Listener {
                 (record) -> recordMatchesPlayer(record, player),
                 this::popBlock
         );
+    }
+
+    public void popBlocksWhere(BlockStateKind kind, Predicate<BlockStateRecord> predicate) {
+        states[kind.ordinal()].popWhere(predicate, this::popBlock);
     }
 
     public boolean hasPlayerBrokenBlocks(BlockStateKind kind, Player player) {

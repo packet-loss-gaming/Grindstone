@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.city.engine.area.areas.MirageArena;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
@@ -73,8 +74,6 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         ItemStack itemStack = event.getItemInHand().clone();
         itemStack.setAmount(1);
 
-        Location blockLoc = block.getLocation();
-
         // If the held item doesn't match what was placed, don't place it.
         //
         // Make an exception for certain blocks, like fire, we'll let them be placed, but simply
@@ -86,12 +85,13 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         }
 
         // Otherwise allow the block place, and schedule a reset
-        parent.manuallyPlacedLocations.add(blockLoc);
+        Vector blockLocVec = new Vector(block.getX(), block.getY(), block.getZ());
+        parent.manuallyPlacedLocations.add(blockLocVec);
         BlockState replacedState = event.getBlockReplacedState();
 
         server.getScheduler().runTaskLater(inst, () -> {
             // If the position was still in the set, restore it to whatever it was before.
-            if (parent.manuallyPlacedLocations.remove(blockLoc)) {
+            if (parent.manuallyPlacedLocations.remove(blockLocVec)) {
                 replacedState.update(true);
             }
 
