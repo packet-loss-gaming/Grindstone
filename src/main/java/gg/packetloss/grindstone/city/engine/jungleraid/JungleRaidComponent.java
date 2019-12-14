@@ -768,6 +768,62 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         ).build());
     }
 
+    private Location getRandomOrePointAtLevel(int minY, int maxY) {
+        Vector min = region.getMinimumPoint();
+        Vector max = region.getMaximumPoint();
+
+        while (true) {
+            Location randomDest = new Location(
+                    world,
+                    ChanceUtil.getRangedRandom(min.getX(), max.getX()),
+                    ChanceUtil.getRangedRandom(minY, maxY),
+                    ChanceUtil.getRangedRandom(min.getZ(), max.getZ())
+            );
+
+
+            if (randomDest.getBlock().getType() == Material.STONE) {
+                return randomDest;
+            }
+        }
+    }
+
+    private static List<Material> SURVIVAL_ORES = List.of(
+            Material.COAL_ORE, Material.IRON_ORE,
+            Material.GOLD_ORE, Material.DIAMOND_ORE
+    );
+
+    private void populateOres() {
+        final int maxY = region.getMaximumPoint().getBlockY();
+        final int oreBandSize = maxY / SURVIVAL_ORES.size();
+
+        int y = maxY;
+
+        for (Material ore : SURVIVAL_ORES) {
+            for (int i = 0; i < config.oreBandOreCount; ++i) {
+                Location loc = getRandomOrePointAtLevel(y - oreBandSize, y);
+                loc.getBlock().setType(ore);
+            }
+
+            y -= oreBandSize;
+        }
+    }
+
+    private static List<EntityType> SURVIVAL_ANIMALS = List.of(
+            EntityType.PIG, EntityType.COW, EntityType.SHEEP
+    );
+
+    private void populateAnimals() {
+        for (int i = config.survivalAnimalCount; i > 0; --i) {
+            Location loc = getRandomLocation();
+            loc.getWorld().spawnEntity(loc, CollectionUtil.getElement(SURVIVAL_ANIMALS));
+        }
+    }
+
+    private void populateSurvivalResource() {
+        populateOres();
+        populateAnimals();
+    }
+
     public void smartStart() {
         Collection<Player> containedPlayers = getPlayersInLobby();
         if (containedPlayers.size() <= 1) {
@@ -806,6 +862,11 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
 
         state = JungleRaidState.INITIALIZE;
+
+        if (classSelectionMode == JungleRaidClassSelectionMode.SURVIVAL) {
+            populateSurvivalResource();
+        }
+
         gameState.getPlayers().forEach(this::addPlayer);
 
         startTime = System.currentTimeMillis();
@@ -995,7 +1056,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         try {
             // Discover chunks
-            world.getEntitiesByClasses(Item.class, TNTPrimed.class).stream()
+            world.getEntitiesByClasses(Item.class, TNTPrimed.class, Creature.class).stream()
                     .filter(entity -> region.contains(BukkitUtil.toVector(entity.getLocation())))
                     .forEach(Entity::remove);
 
@@ -1128,6 +1189,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         public String worldName = "City";
         @Setting("region")
         public String region = "carpe-diem-district-jungle-raid";
+        @Setting("survival.animal-count")
+        private int survivalAnimalCount = 60;
+        @Setting("survival.ore-band-ore-count")
+        private int oreBandOreCount = 40;
 
     }
 
