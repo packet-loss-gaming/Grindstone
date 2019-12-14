@@ -135,7 +135,7 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
     }
 
     private boolean wasBowUsed(WeaponAttackInfo info) {
-        return ItemUtil.wasBow(info.getUsedItem());
+        return ItemUtil.isBow(info.getUsedItem());
     }
 
     private static class WeaponAttackInfo {

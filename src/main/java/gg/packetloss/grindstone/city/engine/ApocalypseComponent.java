@@ -56,6 +56,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
@@ -388,6 +389,19 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             if (ChanceUtil.getChance(10000)) {
                 event.getDrops().add(CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
             }
+        }
+    }
+
+    // Prevent admins from destroying all the shrubbery
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        if (!hasThunderstorm(player.getWorld())) {
+            return;
+        }
+
+        if (ItemUtil.isHoldingWeapon(player)) {
+            event.setCancelled(true);
         }
     }
 

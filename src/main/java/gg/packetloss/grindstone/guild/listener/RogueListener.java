@@ -256,7 +256,7 @@ public class RogueListener implements Listener {
         }
 
         RogueState state = optState.get();
-        if (stack != null && ItemUtil.isSword(stack.getType())) {
+        if (stack != null && ItemUtil.isSword(stack)) {
             switch (event.getAction()) {
                 case LEFT_CLICK_AIR:
                     CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {

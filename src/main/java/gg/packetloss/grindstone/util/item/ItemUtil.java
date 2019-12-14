@@ -235,12 +235,16 @@ public class ItemUtil {
         return swords.contains(item);
     }
 
-    public static boolean wasBow(Material item) {
+    public static boolean isSword(ItemStack stack) {
+        return isSword(stack.getType());
+    }
+
+    public static boolean isBow(Material item) {
         return item == Material.BOW;
     }
 
-    public static boolean wasBow(ItemStack stack) {
-        return wasBow(stack.getType());
+    public static boolean isBow(ItemStack stack) {
+        return isBow(stack.getType());
     }
 
     private static final int[] axes = new int[]{
@@ -318,6 +322,16 @@ public class ItemUtil {
     @Deprecated
     public static boolean isHoldingMasterSword(Player player) {
         return isHoldingItem(player, CustomItems.MASTER_SWORD) || isHoldingItem(player, CustomItems.MASTER_SHORT_SWORD);
+    }
+
+    // FIXME: This also sucks
+    public static boolean isHoldingWeapon(Player player) {
+        if (!player.isValid()) {
+            return false;
+        }
+
+        ItemStack heldItem = player.getInventory().getItemInMainHand();
+        return isSword(heldItem) || isBow(heldItem);
     }
 
     public static boolean isHoldingItemInFamily(Player player, ItemFamily family) {
