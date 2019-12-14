@@ -22,8 +22,8 @@ public class WeatherState {
         return Optional.of(currentEvent);
     }
 
-    public Optional<WeatherType> getCurrentWeather() {
-        return Optional.of(currentWeather);
+    public WeatherType getCurrentWeather() {
+        return currentWeather == null ? WeatherType.CLEAR : currentWeather;
     }
 
     public Deque<WeatherEvent> getQueue() {

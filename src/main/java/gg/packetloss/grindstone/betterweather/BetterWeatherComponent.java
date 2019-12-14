@@ -51,6 +51,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
 
+        server.getScheduler().runTask(inst, this::syncWeather);
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 20 * 60);
     }
 
@@ -94,25 +95,32 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         world.setThundering(weatherType.hasThunder());
     }
 
-    private void changeWeather() {
-        WeatherType oldWeatherType = weatherState.getCurrentWeather().orElse(WeatherType.CLEAR);
+    private void syncWeather(WeatherType newWeatherType) {
+        WeatherType oldWeatherType = weatherState.getCurrentWeather();
 
+        for (String worldName : config.affectedWorlds) {
+            World affectedWorld = Bukkit.getWorld(worldName);
+
+            if (oldWeatherType != newWeatherType) {
+                callEvent(new BetterWeatherChangeEvent(affectedWorld, oldWeatherType, newWeatherType));
+            }
+
+            syncWeather(affectedWorld, newWeatherType);
+        }
+    }
+
+    private void syncWeather() {
+        syncWeather(weatherState.getCurrentWeather());
+    }
+
+    private void changeWeather() {
         Optional<WeatherEvent> optNewEvent = weatherState.getNewWeatherEvent();
         if (optNewEvent.isEmpty()) {
             return;
         }
 
         WeatherEvent event = optNewEvent.get();
-        for (String worldName : config.affectedWorlds) {
-            World affectedWorld = Bukkit.getWorld(worldName);
-            WeatherType weatherType = event.getWeatherType();
-
-            if (oldWeatherType != weatherType) {
-                callEvent(new BetterWeatherChangeEvent(affectedWorld, oldWeatherType, weatherType));
-            }
-
-            syncWeather(affectedWorld, weatherType);
-        }
+        syncWeather(event.getWeatherType());
     }
 
     private WeatherType pickWeather() {
@@ -229,14 +237,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         }
 
         if (config.affectedWorlds.contains(world.getName())) {
-            Optional<WeatherType> optCurrentWeather = weatherState.getCurrentWeather();
-            if (optCurrentWeather.isEmpty()) {
-                return;
-            }
-
-            WeatherType weatherType = optCurrentWeather.get();
-
-            switch (weatherType) {
+            switch (weatherState.getCurrentWeather()) {
                 case THUNDERSTORM:
                 case RAIN:
                     if (!event.toWeatherState()) {
@@ -260,14 +261,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         }
 
         if (config.affectedWorlds.contains(world.getName())) {
-            Optional<WeatherType> optCurrentWeather = weatherState.getCurrentWeather();
-            if (optCurrentWeather.isEmpty()) {
-                return;
-            }
-
-            WeatherType weatherType = optCurrentWeather.get();
-
-            switch (weatherType) {
+            switch (weatherState.getCurrentWeather()) {
                 case THUNDERSTORM:
                     if (!event.toThunderState()) {
                         event.setCancelled(true);
@@ -288,6 +282,9 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
                 usage = "", desc = "Get the forecast for the server's weather",
                 flags = "v", min = 0, max = 0)
         public void forecastCmd(CommandContext args, CommandSender sender) throws CommandException {
+            WeatherType currentWeather = weatherState.getCurrentWeather();
+            ChatUtil.sendNotice(sender, "Currently: " + ChatColor.BLUE + currentWeather.toString());
+
             boolean verbose = args.hasFlag('v') && sender.hasPermission("aurora.weather.recast");
             sendWeatherPrintout(sender, weatherState.getQueue(), verbose);
         }
