@@ -604,6 +604,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         // Override pickup settings
         entity.setCanPickupItems(spawnConfig.allowItemPickup);
 
+        // Override despawn
+        entity.setRemoveWhenFarAway(true);
+
         // Set default name
         entity.setCustomName("Apocalyptic Zombie");
         entity.setCustomNameVisible(false);
