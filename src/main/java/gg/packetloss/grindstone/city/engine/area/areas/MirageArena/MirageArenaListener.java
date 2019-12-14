@@ -12,6 +12,7 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
@@ -117,6 +118,13 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
         event.setDropItems(false);
         parent.handleBlockBreak(block);
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    public void onApocalypseBlockDamage(ApocalypseBlockDamagePreventionEvent event) {
+        if (parent.contains(event.getBlock())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

@@ -41,6 +41,7 @@ import gg.packetloss.grindstone.city.engine.minigame.Win;
 import gg.packetloss.grindstone.city.engine.minigame.WinType;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
@@ -1482,6 +1483,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                         event.setCancelled(true);
                     }
                 }
+            }
+        }
+
+        @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+        public void onApocalypseBlockDamage(ApocalypseBlockDamagePreventionEvent event) {
+            if (arenaContains(event.getPlayer())) {
+                event.setCancelled(true);
             }
         }
 

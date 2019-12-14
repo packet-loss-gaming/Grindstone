@@ -24,10 +24,7 @@ import gg.packetloss.grindstone.buff.Buff;
 import gg.packetloss.grindstone.buff.BuffCategory;
 import gg.packetloss.grindstone.buff.BuffComponent;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseBedSpawnEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseRespawnBoostEvent;
+import gg.packetloss.grindstone.events.apocalypse.*;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -401,14 +398,19 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
 
         if (ItemUtil.isHoldingWeapon(player)) {
-            event.setCancelled(true);
+            var preventionEvent = new ApocalypseBlockDamagePreventionEvent(player, event.getBlock());
+
+            CommandBook.callEvent(preventionEvent);
+
+            if (!preventionEvent.isCancelled()) {
+                event.setCancelled(true);
+            }
         }
     }
 
     // Thunderstorm Attack
     @EventHandler(ignoreCancelled = true)
     public void onLightningStrikeEvent(LightningStrikeEvent event) {
-
         LightningStrike lightning = event.getLightning();
         World world = lightning.getWorld();
         final int mobCount;

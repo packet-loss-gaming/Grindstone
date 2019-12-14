@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
@@ -463,12 +464,19 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             }
             try {
                 parent.blockState.pushAnonymousBlock(BlockStateKind.GRAVEYARD, block.getState());
-            } catch (UnstorableBlockStateException e) {
-                e.printStackTrace();
 
                 block.setTypeId(0);
                 RestorationUtil.handleToolDamage(event.getPlayer());
+            } catch (UnstorableBlockStateException e) {
+                e.printStackTrace();
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    public void onApocalypseBlockDamage(ApocalypseBlockDamagePreventionEvent event) {
+        if (parent.contains(event.getBlock())) {
+            event.setCancelled(true);
         }
     }
 

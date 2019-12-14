@@ -27,6 +27,7 @@ import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPScope;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.entity.item.DropClearPulseEvent;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
@@ -595,6 +596,13 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             treeBase.setTypeIdAndData(BlockID.SAPLING, block.getData().getData(), true);
         }
         */
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    public void onApocalypseBlockDamage(ApocalypseBlockDamagePreventionEvent event) {
+        if (isWildernessWorld(event.getBlock().getWorld())) {
+            event.setCancelled(true);
+        }
     }
 
     private boolean isTree(BlockState block) {
