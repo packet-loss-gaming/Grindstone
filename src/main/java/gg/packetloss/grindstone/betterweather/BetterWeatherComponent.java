@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 import static com.zachsthings.libcomponents.bukkit.BasePlugin.callEvent;
 
 @ComponentInformation(friendlyName = "Better Weather", desc = "Improves weather mechanics.")
-public class BetterWeatherComponent extends BukkitComponent implements Runnable, Listener {
+public class BetterWeatherComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
@@ -72,7 +72,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         inst.registerEvents(this);
 
         server.getScheduler().runTask(inst, this::syncWeather);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 20 * 60);
+        server.getScheduler().scheduleSyncRepeatingTask(inst, this::updateWeather, 0, 20 * 60);
     }
 
     @Override
@@ -123,10 +123,15 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
     }
 
     private void saveWeatherState() {
+        if (!weatherState.isDirty()) {
+            return;
+        }
+
         Path stateFile = getStateFile();
         try (BufferedWriter writer = Files.newBufferedWriter(
                 stateFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             writer.write(gson.toJson(weatherState));
+            weatherState.resetDirtyFlag();
         } catch (IOException e) {
             log.warning("Failed to save previous weather state");
             e.printStackTrace();
@@ -185,10 +190,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
     private void populateWeatherQueue() {
         long nextWeatherEvent = weatherState.getLastWeatherEvent();
 
-        boolean changed = false;
-
-        Deque<WeatherEvent> weatherQueue = weatherState.getQueue();
-        while (weatherQueue.size() < config.numToCreate) {
+        while (weatherState.getQueueSize() < config.numToCreate) {
             long offset = TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(config.shortestEvent, config.longestEvent));
             nextWeatherEvent += offset;
 
@@ -196,21 +198,21 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
 
             // Queue a bit of rain as a warning about the impending thunderstorm
             if (newWeather == WeatherType.THUNDERSTORM) {
-                weatherQueue.add(new WeatherEvent(nextWeatherEvent, WeatherType.RAIN));
+                weatherState.addToQueue(new WeatherEvent(nextWeatherEvent, WeatherType.RAIN));
 
                 nextWeatherEvent += TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(
                         config.shortestThunderWarning, config.longestThunderWarning
                 ));
             }
 
-            weatherQueue.add(new WeatherEvent(nextWeatherEvent, newWeather));
-
-            changed = true;
+            weatherState.addToQueue(new WeatherEvent(nextWeatherEvent, newWeather));
         }
+    }
 
-        if (changed) {
-            saveWeatherState();
-        }
+    private void updateWeather() {
+        populateWeatherQueue();
+        changeWeather();
+        saveWeatherState();
     }
 
     private void sendWeatherPrintout(CommandSender sender, Collection<WeatherEvent> events, boolean verbose) {
@@ -279,12 +281,6 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
         }
     }
 
-    @Override
-    public void run() {
-        changeWeather();
-        populateWeatherQueue();
-    }
-
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onStormChange(WeatherChangeEvent event) {
         World world = event.getWorld();
@@ -343,7 +339,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
             ChatUtil.sendNotice(sender, "Currently: " + ChatColor.BLUE + currentWeather.toString());
 
             boolean verbose = args.hasFlag('v') && sender.hasPermission("aurora.weather.recast");
-            sendWeatherPrintout(sender, weatherState.getQueue(), verbose);
+            sendWeatherPrintout(sender, weatherState.getCopiedQueue(), verbose);
         }
 
         @Command(aliases = {"forcecast"},
@@ -370,18 +366,20 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
                 }
             }
 
-            WeatherType initialChange = weatherTypes.poll();
-            Deque<WeatherEvent> weatherQueue = weatherState.getQueue();
-            for (WeatherEvent event : weatherQueue) {
-                if (weatherTypes.isEmpty()) {
-                    break;
-                }
-                event.setWeatherType(weatherTypes.poll());
-            }
-            weatherQueue.addFirst(new WeatherEvent(System.currentTimeMillis(), initialChange));
+            // Copy and clear the existing queue
+            List<WeatherEvent> weatherQueue = weatherState.getCopiedQueue();
+            weatherState.clearQueue();
 
-            changeWeather();
-            populateWeatherQueue();
+            // Add back the modified events
+            weatherState.addToQueue(new WeatherEvent(System.currentTimeMillis(), weatherTypes.poll()));
+            for (WeatherEvent event : weatherQueue) {
+                if (!weatherTypes.isEmpty()) {
+                    event.setWeatherType(weatherTypes.poll());
+                }
+                weatherState.addToQueue(event);
+            }
+
+            updateWeather();
 
             ChatUtil.sendNotice(sender, "Current weather even changed!");
         }
@@ -391,8 +389,8 @@ public class BetterWeatherComponent extends BukkitComponent implements Runnable,
                 flags = "", min = 0, max = 0)
         @CommandPermissions("aurora.weather.recast")
         public void recastCmd(CommandContext args, CommandSender sender) throws CommandException {
-            weatherState.getQueue().clear();
-            populateWeatherQueue();
+            weatherState.clearQueue();
+            updateWeather();
 
             ChatUtil.sendNotice(sender, "Forecast updated!");
         }

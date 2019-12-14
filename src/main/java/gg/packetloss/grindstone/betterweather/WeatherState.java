@@ -1,24 +1,30 @@
 package gg.packetloss.grindstone.betterweather;
 
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.Optional;
+import java.util.*;
 
 public class WeatherState {
     private Deque<WeatherEvent> weatherQueue = new LinkedList<>();
     private WeatherType currentWeather = WeatherType.CLEAR;
+    private transient boolean dirty = false;
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void resetDirtyFlag() {
+        dirty = false;
+    }
 
     public Optional<WeatherEvent> getNewWeatherEvent() {
-        if (weatherQueue.size() < 2) {
-            return Optional.empty();
-        }
-
         if (!weatherQueue.peek().shouldActivate()) {
             return Optional.empty();
         }
 
         WeatherEvent currentEvent = weatherQueue.poll();
+
         currentWeather = currentEvent.getWeatherType();
+        dirty = true;
+
         return Optional.of(currentEvent);
     }
 
@@ -26,8 +32,22 @@ public class WeatherState {
         return currentWeather == null ? WeatherType.CLEAR : currentWeather;
     }
 
-    public Deque<WeatherEvent> getQueue() {
-        return weatherQueue;
+    public int getQueueSize() {
+        return weatherQueue.size();
+    }
+
+    public void clearQueue() {
+        weatherQueue.clear();
+        dirty = true;
+    }
+
+    public void addToQueue(WeatherEvent event) {
+        weatherQueue.add(event);
+        dirty = true;
+    }
+
+    public List<WeatherEvent> getCopiedQueue() {
+        return new ArrayList<>(weatherQueue);
     }
 
     public long getLastWeatherEvent() {
