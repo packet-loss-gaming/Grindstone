@@ -413,7 +413,10 @@ public class NinjaListener implements Listener {
             case RIGHT_CLICK_BLOCK: {
                 if (!state.canGrapple()) break;
 
-                boolean isClimbableItem = stack.getType() == Material.AIR || ItemUtil.isSword(stack);
+                boolean isClimbableItem = stack.getType() == Material.AIR
+                        || ItemUtil.isSword(stack)
+                        || ItemUtil.isTool(stack);
+
                 if (!isClimbableItem) break;
 
                 // Do not attempt to climb shrubs.

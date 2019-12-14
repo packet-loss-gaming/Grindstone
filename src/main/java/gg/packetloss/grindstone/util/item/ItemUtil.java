@@ -284,6 +284,10 @@ public class ItemUtil {
         return isAxe(itemId) || isPickAxe(itemId);
     }
 
+    public static boolean isTool(ItemStack stack) {
+        return isTool(stack.getTypeId());
+    }
+
     private static final int[] ingots = new int[]{
             ItemID.IRON_BAR, ItemID.GOLD_BAR
     };
