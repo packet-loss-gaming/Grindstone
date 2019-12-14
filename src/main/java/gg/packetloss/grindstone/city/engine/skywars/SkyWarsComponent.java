@@ -430,7 +430,13 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
 
         List<ItemStack> gear = new ArrayList<>();
 
-        gear.add(makeSkyFeather(-1, 3, 2, 2));
+        int uses = isFlagEnabled(SkyWarsFlag.SIXTY_FOUR_CLICK) ? 64 : -1;
+
+        if (isFlagEnabled(SkyWarsFlag.DOOM)) {
+            gear.add(makeDoomFeather(uses));
+        } else {
+            gear.add(makeStandardFeather(uses));
+        }
 
         player.getInventory().addItem(gear.toArray(new ItemStack[0]));
     }
@@ -534,20 +540,68 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         }
     }
 
+    private ItemStack makeBookOfOmens() {
+        ItemStack powerup = new ItemStack(ItemID.BOOK);
+
+        ItemMeta powerMeta = powerup.getItemMeta();
+        powerMeta.setDisplayName(ChatColor.WHITE + "Book o' Omens");
+        powerup.setItemMeta(powerMeta);
+
+        return powerup;
+    }
+
+    private ItemStack makeFrostOrb() {
+        ItemStack powerup = new ItemStack(ItemID.SNOWBALL, 16);
+
+        ItemMeta powerMeta = powerup.getItemMeta();
+        powerMeta.setDisplayName(ChatColor.BLUE + "Frost Orb");
+        powerup.setItemMeta(powerMeta);
+
+        return powerup;
+    }
+
+    private ItemStack makeFlightFeather() {
+        int uses = 5;
+        double radius = 3;
+        double flight = 6;
+        double pushBack = 4;
+
+        return makeSkyFeather("Flight", uses, radius, flight ,pushBack);
+    }
+
+    private ItemStack makePushBackFeather() {
+        int uses = 5;
+        double radius = 5;
+        double flight = 2;
+        double pushBack = 6;
+
+        return makeSkyFeather("Push Back", uses, radius, flight ,pushBack);
+    }
+
+    private ItemStack makeStandardFeather(int uses) {
+        double radius = 3;
+        double flight = 2;
+        double pushBack = 2;
+
+        return makeSkyFeather("Standard", uses, radius, flight, pushBack);
+    }
+
+    private ItemStack makeDoomFeather(int uses) {
+        double radius = 7;
+        double flight = 6;
+        double pushBack = 6;
+
+        return makeSkyFeather("Doom", uses, radius, flight, pushBack);
+    }
+
     private void awardPowerup(Player player, ItemStack held) {
         ItemStack powerup;
 
         if (ChanceUtil.getChance(12)) {
             if (ChanceUtil.getChance(2)) {
-                powerup = new ItemStack(ItemID.BOOK);
-                ItemMeta powerMeta = powerup.getItemMeta();
-                powerMeta.setDisplayName(ChatColor.WHITE + "Book o' Omens");
-                powerup.setItemMeta(powerMeta);
+                powerup = makeBookOfOmens();
             } else {
-                powerup = new ItemStack(ItemID.SNOWBALL, 16);
-                ItemMeta powerMeta = powerup.getItemMeta();
-                powerMeta.setDisplayName(ChatColor.BLUE + "Frost Orb");
-                powerup.setItemMeta(powerMeta);
+                powerup = makeFrostOrb();
             }
         } else if (ChanceUtil.getChance(5)) {
             powerup = new ItemStack(ItemID.WATCH);
@@ -555,36 +609,25 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             powerMeta.setDisplayName(ChatColor.GOLD + "Defroster");
             powerup.setItemMeta(powerMeta);
         } else {
-
             if (ItemUtil.matchesFilter(held, ChatColor.AQUA + "Sky Feather [Doom]", false)) return;
 
-            int uses = 5;
-            double radius = 3;
-            double flight = 2;
-            double pushBack = 4;
-
-            if (ChanceUtil.getChance(2)) {
-                radius = 5;
-                pushBack = 6;
-            } else {
-                flight = 6;
-            }
-
             if (ChanceUtil.getChance(50)) {
-                uses = -1;
-                radius = 7;
-                flight = 6;
-                pushBack = 6;
                 for (Player aPlayer : getPlayersInGame()) {
                     if (player.equals(aPlayer)) continue;
                     ChatUtil.sendWarning(aPlayer, player.getName() + " has been given a Doom feather!");
                 }
 
+                // FIXME: This should really only remove feathers
                 player.getInventory().clear();
-            }
 
-            powerup = makeSkyFeather(uses, radius, flight, pushBack);
+                powerup = makeDoomFeather(-1);
+            } else if (ChanceUtil.getChance(2)) {
+                powerup = makeFlightFeather();
+            } else {
+                powerup = makePushBackFeather();
+            }
         }
+
         player.getInventory().addItem(powerup);
         //noinspection deprecation
         player.updateInventory();
@@ -594,70 +637,39 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                 + powerup.getItemMeta().getDisplayName() + ChatColor.YELLOW + "!");
     }
 
-    private void decrementUses(final Player player, ItemStack itemStack, int uses, double radius, double flight, double pushBack) {
-
+    private void decrementUses(final Player player, ItemStack itemStack, int uses) {
         if (uses == -1) return;
 
-        uses--;
-
-        final ItemStack remainder;
+        final ItemStack newStack;
         if (itemStack.getAmount() > 1) {
-            remainder = itemStack.clone();
-            remainder.setAmount(remainder.getAmount() - 1);
+            newStack = itemStack.clone();
+            newStack.setAmount(newStack.getAmount() - 1);
         } else {
-            remainder = null;
-        }
-
-        final ItemStack newSkyFeather;
-        if (uses < 1) {
-            newSkyFeather = null;
-        } else {
-            newSkyFeather = modifySkyFeather(itemStack, uses, radius, flight, pushBack);
-            newSkyFeather.setAmount(1);
+            newStack = null;
         }
 
         server.getScheduler().runTaskLater(inst, () -> {
-            if (newSkyFeather == null) {
-                player.getInventory().setItemInHand(null);
-            }
-            if (remainder != null) {
-                player.getInventory().addItem(remainder);
-            }
+            player.getInventory().setItemInMainHand(newStack);
+
             //noinspection deprecation
             player.updateInventory();
         }, 1);
     }
 
-    private ItemStack makeSkyFeather(int uses, double radius, double flight, double pushBack) {
-        ItemStack baseStack = new ItemStack(Material.FEATHER, uses == -1 ? 1 : uses);
-        int adjustedUses = uses == -1 ? -1 : 1;
-        return modifySkyFeather(baseStack, adjustedUses, radius, flight, pushBack);
+    private ItemStack makeSkyFeather(String type, int uses, double radius, double flight, double pushBack) {
+        boolean infinite = uses == -1;
+
+        ItemStack baseStack = new ItemStack(Material.FEATHER, infinite ? 1 : uses);
+        return modifySkyFeather(baseStack, type, infinite, radius, flight, pushBack);
     }
 
-    private ItemStack modifySkyFeather(ItemStack skyFeather, int uses, double radius, double flight, double pushBack) {
+    private ItemStack modifySkyFeather(ItemStack skyFeather, String type, boolean infinite,
+                                       double radius, double flight, double pushBack) {
         ItemMeta skyMeta = skyFeather.getItemMeta();
 
-        String suffix;
-
-        if (uses == -1) {
-            if (flight == pushBack && flight > 2) {
-                suffix = "Doom";
-            } else {
-                suffix = "Infinite";
-            }
-        } else {
-            if (flight == pushBack) {
-                suffix = "Balance";
-            } else if (flight > pushBack) {
-                suffix = "Flight";
-            } else {
-                suffix = "Push Back";
-            }
-        }
-
-        skyMeta.setDisplayName(ChatColor.AQUA + "Sky Feather [" + suffix + "]");
+        skyMeta.setDisplayName(ChatColor.AQUA + "Sky Feather [" + type + "]");
         skyMeta.setLore(Arrays.asList(
-                ChatColor.GOLD + "Uses: " + (uses != -1 ? uses : "Infinite"),
+                ChatColor.GOLD + "Uses: " + (infinite ? "Infinite": 1),
                 ChatColor.GOLD + "Radius: " + radius,
                 ChatColor.GOLD + "Flight: " + flight,
                 ChatColor.GOLD + "Push Back: " + pushBack
@@ -693,7 +705,8 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             if (anythingContains(pLoc)) {
                 if (EnvironmentUtil.isWater(pLoc.getBlock())) {
                     if (state == SkyWarsState.LOBBY || state == SkyWarsState.IN_PROGRESS) {
-                        player.damage(ChanceUtil.getRandom(3));
+                        int damageModifier = isFlagEnabled(SkyWarsFlag.ACID_PLUS_PLUS) ? 3 : 1;
+                        player.damage(ChanceUtil.getRandom(damageModifier * 3));
                     } else {
                         player.teleport(gameStartLocation);
                     }
@@ -705,7 +718,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     }
 
     public boolean isFlagEnabled(SkyWarsFlag flag) {
-        return false;
+        return state != SkyWarsState.LOBBY && flagState.isEnabled(flag);
     }
 
     @Override
@@ -922,7 +935,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
 
                         session.stopFlight(250);
 
-                        decrementUses(player, stack, uses, radius, flight, pushBack);
+                        decrementUses(player, stack, uses);
                         break;
                     case RIGHT_CLICK_AIR:
                     case RIGHT_CLICK_BLOCK:
@@ -963,6 +976,9 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                                             // Handle Target
                                             server.getPluginManager().callEvent(new ThrowPlayerEvent(aPlayer));
                                             aPlayer.setVelocity(vel);
+                                            if (isFlagEnabled(SkyWarsFlag.FLAMMABLE)) {
+                                                aPlayer.setFireTicks((int) aPlayer.getHealth() * 20 * 2);
+                                            }
 
                                             SkyWarSession aSession = sessions.getSession(SkyWarSession.class, aPlayer);
                                             if (aSession.canDefrost()) {
@@ -976,7 +992,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                                 }
                             }
                         }
-                        decrementUses(player, stack, uses, radius, flight, pushBack);
+                        decrementUses(player, stack, uses);
                         break;
                 }
             } else if (ItemUtil.matchesFilter(stack, ChatColor.WHITE + "Book o' Omens")) {

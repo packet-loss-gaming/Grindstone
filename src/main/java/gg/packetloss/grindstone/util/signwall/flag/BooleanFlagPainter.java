@@ -8,7 +8,9 @@ import org.bukkit.block.Sign;
 
 public class BooleanFlagPainter<T extends Enum<T>> implements SignWallPainter<BooleanFlagState<T>> {
     private String replaceSpecialNames(String title) {
-        return title.replace("_PLUS_PLUS", "++");
+        title = title.replace("_PLUS_PLUS", "++");
+        title = title.replace("SIXTY_FOUR_", "64 ");
+        return title;
     }
 
     public String getTitle(T flag) {
