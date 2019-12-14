@@ -6,6 +6,8 @@
 
 package gg.packetloss.grindstone.economic.store;
 
+import org.bukkit.entity.Player;
+
 import java.util.List;
 
 public interface MarketTransactionDatabase {
@@ -23,7 +25,7 @@ public interface MarketTransactionDatabase {
      */
     boolean save();
 
-    void logTransaction(String playerName, String itemName, int amount);
+    void logTransaction(Player player, String itemName, int amount);
 
     List<ItemTransaction> getTransactions();
     List<ItemTransaction> getTransactions(String itemName, String playerName);

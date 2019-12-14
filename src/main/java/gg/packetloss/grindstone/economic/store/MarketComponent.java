@@ -138,9 +138,7 @@ public class MarketComponent extends BukkitComponent {
                 usage = "[-a amount] <item name>", desc = "Buy an item",
                 flags = "a:", min = 1)
         public void buyCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            String playerName = checkPlayer(sender);
-            Player player = (Player) sender;
+            Player player = checkPlayer(sender);
 
             // Calculate the item names
             String nameWithMacros = args.getJoinedStrings(0);
@@ -208,7 +206,7 @@ public class MarketComponent extends BukkitComponent {
                 }
 
                 adjustments.put(itemName, -amt);
-                transactionDatabase.logTransaction(playerName, itemName, amt);
+                transactionDatabase.logTransaction(player, itemName, amt);
             }
 
             // Update market stocks.
@@ -231,9 +229,7 @@ public class MarketComponent extends BukkitComponent {
                 usage = "", desc = "Sell an item",
                 flags = "haus", min = 0, max = 0)
         public void sellCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            String playerName = checkPlayer(sender);
-            final Player player = (Player) sender;
+            final Player player = checkPlayer(sender);
 
             ItemStack[] itemStacks = player.getInventory().getContents();
 
@@ -312,7 +308,7 @@ public class MarketComponent extends BukkitComponent {
 
                         for (Map.Entry<String, Integer> entry : transactions.entrySet()) {
                             // Invert quantity this is a sale, and the transactions are from a player perspective.
-                            transactionDatabase.logTransaction(playerName, entry.getKey(), -entry.getValue());
+                            transactionDatabase.logTransaction(player, entry.getKey(), -entry.getValue());
                         }
                         transactionDatabase.save();
                     });
@@ -688,16 +684,16 @@ public class MarketComponent extends BukkitComponent {
         return future;
     }
 
-    public String checkPlayer(CommandSender sender) throws CommandException {
-        PlayerUtil.checkPlayer(sender);
+    public Player checkPlayer(CommandSender sender) throws CommandException {
+        Player player = PlayerUtil.checkPlayer(sender);
 
-        if (adminComponent.isAdmin((Player) sender)) {
+        if (adminComponent.isAdmin(player)) {
             throw new CommandException("You cannot use this command while in admin mode.");
         }
 
-        checkInArea((Player) sender);
+        checkInArea(player);
 
-        return sender.getName();
+        return player;
     }
 
     public void checkInArea(Player player) throws CommandException {

@@ -10,6 +10,7 @@ import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.data.MySQLPreparedStatement;
 import gg.packetloss.grindstone.economic.store.ItemTransaction;
 import gg.packetloss.grindstone.economic.store.MarketTransactionDatabase;
+import org.bukkit.entity.Player;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -64,11 +65,11 @@ public class MySQLMarketTransactionDatabase implements MarketTransactionDatabase
     }
 
     @Override
-    public void logTransaction(String playerName, String itemName, int amount) {
+    public void logTransaction(Player player, String itemName, int amount) {
         try {
-            int playerID = MySQLHandle.getPlayerId(playerName).get();
+            int internalPlayerID = MySQLHandle.getPlayerInternalID(player.getUniqueId()).get();
             int itemID = MySQLItemStoreDatabase.getItemID(itemName);
-            ItemTransactionStatement transaction = new ItemTransactionStatement(playerID, itemID, amount);
+            ItemTransactionStatement transaction = new ItemTransactionStatement(internalPlayerID, itemID, amount);
             try (Connection connection = MySQLHandle.getConnection()) {
                 transaction.setConnection(connection);
                 transaction.executeStatements();

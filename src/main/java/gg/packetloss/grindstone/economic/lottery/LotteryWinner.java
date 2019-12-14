@@ -7,20 +7,32 @@
 package gg.packetloss.grindstone.economic.lottery;
 
 import gg.packetloss.grindstone.util.PlayernameGenerator;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 
-import static gg.packetloss.grindstone.economic.lottery.LotteryTicketDatabase.CPU_NAME;
+import java.util.UUID;
+
+import static gg.packetloss.grindstone.economic.lottery.LotteryTicketDatabase.CPU_ID;
 
 public class LotteryWinner {
-    private String name;
+    private UUID playerID;
     private double amt;
 
-    public LotteryWinner(String name, double amt) {
-        this.name = name;
+    public LotteryWinner(UUID playerID, double amt) {
+        this.playerID = playerID;
         this.amt = amt;
     }
 
     public boolean isBot() {
-        return name.equals(CPU_NAME);
+        return playerID.equals(CPU_ID);
+    }
+
+    public UUID getPlayerID() {
+        return playerID;
+    }
+
+    public OfflinePlayer getAsOfflinePlayer() {
+        return Bukkit.getOfflinePlayer(playerID);
     }
 
     public String getName() {
@@ -28,7 +40,7 @@ public class LotteryWinner {
             return new PlayernameGenerator((long) amt).generate();
         }
 
-        return name;
+        return getAsOfflinePlayer().getName();
     }
 
     public double getAmt() {

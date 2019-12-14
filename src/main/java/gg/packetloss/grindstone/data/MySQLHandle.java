@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class MySQLHandle {
@@ -79,11 +80,11 @@ public class MySQLHandle {
         return getPool().getConnection();
     }
 
-    public static Optional<Integer> getPlayerId(String name) throws SQLException {
+    public static Optional<Integer> getPlayerInternalID(UUID playerID) throws SQLException {
         try (Connection connection = getConnection()) {
-            String sql = "SELECT playerid FROM `lb-players` WHERE playername = ?";
+            String sql = "SELECT playerid FROM `lb-players` WHERE UUID = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, name);
+                statement.setString(1, playerID.toString());
                 ResultSet results = statement.executeQuery();
                 if (results.next()) return Optional.of(results.getInt(1));
             }
@@ -91,13 +92,15 @@ public class MySQLHandle {
         return Optional.empty();
     }
 
-    public static Optional<String> getPlayerName(int id) throws SQLException {
+    public static Optional<UUID> getPlayerUUID(int id) throws SQLException {
         try (Connection connection = getConnection()) {
-            String sql = "SELECT playername FROM `lb-players` WHERE playerid = ?";
+            String sql = "SELECT UUID FROM `lb-players` WHERE playerid = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setInt(1, id);
                 ResultSet results = statement.executeQuery();
-                if (results.next()) return Optional.of(results.getString(1));
+                if (results.next()) {
+                    return Optional.of(UUID.fromString(results.getString(1)));
+                }
             }
         }
         return Optional.empty();

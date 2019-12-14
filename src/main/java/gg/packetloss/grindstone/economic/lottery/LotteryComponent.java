@@ -25,7 +25,6 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
-import gg.packetloss.grindstone.util.player.GenericWealthStore;
 import gg.packetloss.grindstone.util.probability.WeightedPicker;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -46,6 +45,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 
@@ -258,56 +258,33 @@ public class LotteryComponent extends BukkitComponent implements Listener {
     }
 
     public void buyTickets(final Player player, int count) throws CommandException {
-
         if (recentList.contains(player)) return;
 
-        String playerName = player.getName();
+        int maxTicketPurchase = (int) (economy.getBalance(player) / config.ticketPrice);
+        int oldTicketCount = lotteryTicketDatabase.getTickets(player.getUniqueId());
 
-        int b = 0;
-        int m = 0;
-        int sold = 0;
+        int newTicketCount = Math.min(config.maxPerLotto, oldTicketCount + Math.min(count, maxTicketPurchase));
+        int ticketsBought = newTicketCount - oldTicketCount;
 
-        b = (int) (economy.getBalance(playerName) / config.ticketPrice);
-
-        m = config.maxPerLotto - lotteryTicketDatabase.getTickets(playerName);
-
-        if (b > m) {
-            if (m > count) {
-                sold = count;
-            } else {
-                sold = m;
-            }
-        } else if (m > b) {
-            if (b > count) {
-                sold = count;
-            } else {
-                sold = b;
-            }
-        }
-
-        if (sold < 0) {
-            sold = 0;
-        }
-
-        if (!economy.has(playerName, config.ticketPrice * sold)) {
+        if (!economy.has(player, config.ticketPrice * ticketsBought)) {
             throw new CommandException("You do not have enough " + economy.currencyNamePlural() + ".");
         }
 
-        if (sold > 0) {
-            economy.withdrawPlayer(playerName, config.ticketPrice * sold);
+        if (ticketsBought > 0) {
+            economy.withdrawPlayer(player, config.ticketPrice * ticketsBought);
 
-            lotteryTicketDatabase.addTickets(playerName, sold);
+            lotteryTicketDatabase.addTickets(player.getUniqueId(), ticketsBought);
             lotteryTicketDatabase.save();
         }
 
-        if (sold * config.ticketPrice != 1) {
+        if (ticketsBought * config.ticketPrice != 1) {
             ChatUtil.sendNotice(player, "You purchased: "
-                    + ChatUtil.makeCountString(sold, " tickets for: ")
-                    + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice), "."));
+                    + ChatUtil.makeCountString(ticketsBought, " tickets for: ")
+                    + ChatUtil.makeCountString(economy.format(ticketsBought * config.ticketPrice), "."));
         } else {
             ChatUtil.sendNotice(player, "You purchased: "
-                    + ChatUtil.makeCountString(sold, " tickets for: ")
-                    + ChatUtil.makeCountString(economy.format(sold * config.ticketPrice), "."));
+                    + ChatUtil.makeCountString(ticketsBought, " tickets for: ")
+                    + ChatUtil.makeCountString(economy.format(ticketsBought * config.ticketPrice), "."));
         }
         recentList.add(player);
         server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 1);
@@ -332,9 +309,8 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         if (winner.isBot()) {
             lotteryWinnerDatabase.addCPUWin(winner.getAmt());
         } else {
-            economy.depositPlayer(winner.getName(), winner.getAmt());
-
-            lotteryWinnerDatabase.addWinner(winner.getName(), winner.getAmt());
+            economy.depositPlayer(winner.getAsOfflinePlayer(), winner.getAmt());
+            lotteryWinnerDatabase.addWinner(winner.getPlayerID(), winner.getAmt());
         }
 
         lotteryWinnerDatabase.save();
@@ -345,7 +321,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
     }
 
     public void completeLottery() {
-        String name;
+        UUID name;
         try {
             name = findNewMillionaire();
         } catch (NotFoundException ex) {
@@ -378,13 +354,13 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         return amt;
     }
 
-    private String findNewMillionaire() throws NotFoundException {
-        List<GenericWealthStore> ticketDB = lotteryTicketDatabase.getTickets();
+    private UUID findNewMillionaire() throws NotFoundException {
+        List<LotteryTicketEntry> ticketDB = lotteryTicketDatabase.getTickets();
         if (ticketDB.size() < 2 && config.cpuPlayers < 1) throw new NotFoundException();
 
-        WeightedPicker<String> tickets = new WeightedPicker<>();
-        for (GenericWealthStore lotteryTicket : ticketDB) {
-            tickets.add(lotteryTicket.getOwnerName(), lotteryTicket.getValue());
+        WeightedPicker<UUID> tickets = new WeightedPicker<>();
+        for (LotteryTicketEntry lotteryTicket : ticketDB) {
+            tickets.add(lotteryTicket.getPlayerID(), lotteryTicket.getTicketCount());
         }
 
         return tickets.pick();

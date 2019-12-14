@@ -6,26 +6,25 @@
 
 package gg.packetloss.grindstone.economic.lottery;
 
-import gg.packetloss.grindstone.util.player.GenericWealthStore;
-
 import java.util.List;
+import java.util.UUID;
 
 
 public interface LotteryTicketDatabase {
-    static final String CPU_NAME = "$$ CPU $$";
+    static final UUID CPU_ID = UUID.fromString("c0321170-74eb-4f24-b559-b3cb8dc1ddc1");
 
     boolean load();
 
     boolean save();
 
-    void addTickets(String playerName, int count);
+    void addTickets(UUID playerID, int count);
     void addCPUTickets(int count);
 
-    int getTickets(String playerName);
+    int getTickets(UUID playerID);
 
     void clearTickets();
 
     int getTicketCount();
 
-    List<GenericWealthStore> getTickets();
+    List<LotteryTicketEntry> getTickets();
 }

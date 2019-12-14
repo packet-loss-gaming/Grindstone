@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.economic.lottery;
 
 import java.util.List;
+import java.util.UUID;
 
 
 public interface LotteryWinnerDatabase {
@@ -15,7 +16,7 @@ public interface LotteryWinnerDatabase {
 
     boolean save();
 
-    void addWinner(String name, double amount);
+    void addWinner(UUID playerID, double amount);
     void addCPUWin(double amount);
 
     List<LotteryWinner> getRecentWinner(int limit);

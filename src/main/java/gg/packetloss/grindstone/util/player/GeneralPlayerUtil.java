@@ -20,22 +20,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class GeneralPlayerUtil {
-    /**
-     * Make a player state
-     */
-    public static PlayerState makeComplexState(Player player) {
-
-        return new PlayerState(player.getUniqueId().toString(),
-                player.getInventory().getContents(),
-                player.getInventory().getArmorContents(),
-                player.getHealth(),
-                player.getFoodLevel(),
-                player.getSaturation(),
-                player.getExhaustion(),
-                player.getLevel(),
-                player.getExp());
-    }
-
     public static boolean isFlyingGamemode(GameMode gameMode) {
         List<GameMode> flyingGamemodes = Arrays.asList(
           GameMode.CREATIVE,

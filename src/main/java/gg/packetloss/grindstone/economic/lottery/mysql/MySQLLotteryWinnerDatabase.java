@@ -15,12 +15,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
-import static gg.packetloss.grindstone.economic.lottery.LotteryTicketDatabase.CPU_NAME;
+import static gg.packetloss.grindstone.economic.lottery.LotteryTicketDatabase.CPU_ID;
 
 public class MySQLLotteryWinnerDatabase implements LotteryWinnerDatabase {
 
@@ -64,9 +61,9 @@ public class MySQLLotteryWinnerDatabase implements LotteryWinnerDatabase {
     }
 
     @Override
-    public void addWinner(String name, double amount) {
+    public void addWinner(UUID playerID, double amount) {
         try {
-            queue.add(new LotteryWinnerStatement(MySQLHandle.getPlayerId(name).get(), amount));
+            queue.add(new LotteryWinnerStatement(MySQLHandle.getPlayerInternalID(playerID).get(), amount));
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -86,9 +83,9 @@ public class MySQLLotteryWinnerDatabase implements LotteryWinnerDatabase {
                 statement.setInt(1, limit);
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
-                        int userID = results.getInt(1);
-                        String userName = userID == -1 ? CPU_NAME : MySQLHandle.getPlayerName(userID).get();
-                        winners.add(new LotteryWinner(userName, results.getDouble(2)));
+                        int internalID = results.getInt(1);
+                        UUID playerID = internalID == -1 ? CPU_ID : MySQLHandle.getPlayerUUID(internalID).get();
+                        winners.add(new LotteryWinner(playerID, results.getDouble(2)));
                     }
                 }
             }

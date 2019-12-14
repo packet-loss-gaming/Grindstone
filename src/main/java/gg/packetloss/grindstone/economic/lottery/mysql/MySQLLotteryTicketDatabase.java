@@ -9,17 +9,13 @@ package gg.packetloss.grindstone.economic.lottery.mysql;
 import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.data.MySQLPreparedStatement;
 import gg.packetloss.grindstone.economic.lottery.LotteryTicketDatabase;
-import gg.packetloss.grindstone.util.player.GenericWealthStore;
-import gg.packetloss.grindstone.util.player.WealthStore;
+import gg.packetloss.grindstone.economic.lottery.LotteryTicketEntry;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class MySQLLotteryTicketDatabase implements LotteryTicketDatabase {
 
@@ -63,9 +59,9 @@ public class MySQLLotteryTicketDatabase implements LotteryTicketDatabase {
     }
 
     @Override
-    public void addTickets(String playerName, int count) {
+    public void addTickets(UUID playerID, int count) {
         try {
-            queue.add(new TicketAdditionStatement(MySQLHandle.getPlayerId(playerName).get(), count));
+            queue.add(new TicketAdditionStatement(MySQLHandle.getPlayerInternalID(playerID).get(), count));
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -77,11 +73,11 @@ public class MySQLLotteryTicketDatabase implements LotteryTicketDatabase {
     }
 
     @Override
-    public int getTickets(String playerName) {
+    public int getTickets(UUID playerID) {
         try (Connection connection  = MySQLHandle.getConnection()) {
             String sql = "SELECT `tickets` FROM `lottery-tickets` WHERE `player` = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, MySQLHandle.getPlayerId(playerName).get());
+                statement.setInt(1, MySQLHandle.getPlayerInternalID(playerID).get());
                 try (ResultSet results = statement.executeQuery()) {
                     if (results.next()) {
                         return results.getInt(1);
@@ -115,15 +111,15 @@ public class MySQLLotteryTicketDatabase implements LotteryTicketDatabase {
     }
 
     @Override
-    public List<GenericWealthStore> getTickets() {
-        List<GenericWealthStore> tickets = new ArrayList<>();
+    public List<LotteryTicketEntry> getTickets() {
+        List<LotteryTicketEntry> tickets = new ArrayList<>();
         try (Connection connection = MySQLHandle.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement("SELECT `player`, `tickets` FROM `lottery-tickets`")) {
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
-                        int userID = results.getInt(1);
-                        String userName = userID == -1 ? CPU_NAME : MySQLHandle.getPlayerName(userID).get();
-                        tickets.add(new WealthStore(userName, results.getInt(2)));
+                        int internalID = results.getInt(1);
+                        UUID playerID = internalID == -1 ? CPU_ID : MySQLHandle.getPlayerUUID(internalID).get();
+                        tickets.add(new LotteryTicketEntry(playerID, results.getInt(2)));
                     }
                 }
             }
