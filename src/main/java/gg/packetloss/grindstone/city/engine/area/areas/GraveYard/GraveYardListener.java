@@ -21,10 +21,12 @@ import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.guild.NinjaGrappleEvent;
 import gg.packetloss.grindstone.events.guild.RogueBlipEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
+import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.ItemFamily;
-import gg.packetloss.grindstone.state.player.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
@@ -32,7 +34,6 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -460,9 +461,14 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (!parent.accept(baseBlock, GraveYardArea.breakable)) {
                 return;
             }
-            parent.generalIndex.addItem(new BlockRecord(block));
-            block.setTypeId(0);
-            RestorationUtil.handleToolDamage(event.getPlayer());
+            try {
+                parent.blockState.pushAnonymousBlock(BlockStateKind.GRAVEYARD, block.getState());
+            } catch (UnstorableBlockStateException e) {
+                e.printStackTrace();
+
+                block.setTypeId(0);
+                RestorationUtil.handleToolDamage(event.getPlayer());
+            }
         }
     }
 

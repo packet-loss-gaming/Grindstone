@@ -20,12 +20,13 @@ import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.state.block.BlockStateComponent;
+import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.itemstack.ProtectedSerializedItemStack;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
-import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.hackbook.AttributeBook;
@@ -51,7 +52,8 @@ import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemN
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
-@Depend(components = {AdminComponent.class, ProtectedDroppedItemsComponent.class}, plugins = {"WorldGuard"})
+@Depend(components = {AdminComponent.class, ProtectedDroppedItemsComponent.class, BlockStateComponent.class},
+        plugins = {"WorldGuard"})
 public class FrostbornArea extends AreaComponent<FrostbornConfig> implements PersistentArena {
     protected static final int BASE_RAGE = -10;
     protected static final int ARENA_FLOOR_LEVEL = 66;
@@ -60,6 +62,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     protected AdminComponent admin;
     @InjectComponent
     protected ProtectedDroppedItemsComponent dropProtector;
+    @InjectComponent
+    protected BlockStateComponent blockState;
 
     protected Economy economy;
 
@@ -85,9 +89,6 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         restoreable.add(new BaseBlock(BlockID.SNOW_BLOCK, -1));
         restoreable.add(new BaseBlock(BlockID.LIGHTSTONE, -1));
     }
-
-    // Block Restoration
-    protected BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
 
     // Items taken from players returned upon death
     protected ArrayList<ProtectedSerializedItemStack> lootItems = new ArrayList<>();
@@ -159,7 +160,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     public void restoreBlocks() {
-        generalIndex.revertByTime(1000 * config.timeToRestore);
+        blockState.popBlocksOlderThan(BlockStateKind.FROSTBORN, TimeUnit.SECONDS.toMillis(config.timeToRestore));
     }
 
     public void movePlayer(Player player) {
@@ -511,7 +512,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     protected void dropLoot() {
-        generalIndex.revertAll();
+        blockState.popAllBlocks(BlockStateKind.FROSTBORN);
 
         // Gather the players in the arena
         Collection<Player> players = getContained(Player.class);
@@ -619,7 +620,6 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     @Override
     public void writeData(boolean doAsync) {
         Runnable run = () -> {
-            IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
             IOUtil.toBinaryFile(getWorkingDir(), "loot", lootItems);
         };
 
@@ -632,29 +632,6 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     @Override
     public void reloadData() {
-        File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
-        if (generalFile.exists()) {
-            Object generalFileO = IOUtil.readBinaryFile(generalFile);
-            if (generalFileO instanceof BaseBlockRecordIndex) {
-                generalIndex = (BaseBlockRecordIndex) generalFileO;
-                log.info("Loaded: " + generalIndex.size() + " general records for Frostborn.");
-            } else {
-                log.warning("Invalid block record file encountered: " + generalFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-                generalFile = new File(getWorkingDir().getPath() + "/old-" + generalFile.getName());
-                if (generalFile.exists()) {
-                    generalFileO = IOUtil.readBinaryFile(generalFile);
-                    if (generalFileO instanceof BaseBlockRecordIndex) {
-                        generalIndex = (BaseBlockRecordIndex) generalFileO;
-                        log.info("Backup file loaded successfully!");
-                        log.info("Loaded: " + generalIndex.size() + " general records for Frostborn.");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
-            }
-        }
-
         File lootFile = new File(getWorkingDir().getPath() + "/loot.dat");
         if (lootFile.exists()) {
             Object lootFileO = IOUtil.readBinaryFile(lootFile);

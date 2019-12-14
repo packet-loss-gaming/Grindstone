@@ -13,15 +13,15 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.EggComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.egg.EggHatchEvent;
+import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.prayer.PrayerFX.ButterFingersFX;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
+import gg.packetloss.grindstone.state.block.BlockStateComponent;
+import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
-import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
-import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.*;
@@ -46,13 +46,15 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.io.File;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.ChatUtil.loonizeWord;
 
-public class EnchantedForest extends AbstractRegionedArena implements MonitoredArena, PersistentArena, Listener {
+public class EnchantedForest extends AbstractRegionedArena implements MonitoredArena, Listener {
+    private static final long TREE_RESTORE_DELAY = TimeUnit.HOURS.toMillis(3);
+    private static final long SHRUBBERY_RESTORE_DELAY = TimeUnit.MINUTES.toMillis(8);
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -60,20 +62,18 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
     private AdminComponent adminComponent;
     private EggComponent eggComponent;
+    private BlockStateComponent blockStateComponent;
 
     private final Random random = new Random();
-    private BaseBlockRecordIndex treeMap = new BaseBlockRecordIndex();
-    private BaseBlockRecordIndex generalMap = new BaseBlockRecordIndex();
     private Set<Player> noTeeth = new HashSet<>();
 
     public EnchantedForest(World world, ProtectedRegion region, AdminComponent adminComponent,
-                           EggComponent eggComponent) {
+                           EggComponent eggComponent, BlockStateComponent blockStateComponent) {
 
         super(world, region);
         this.adminComponent = adminComponent;
         this.eggComponent = eggComponent;
-
-        reloadData();
+        this.blockStateComponent = blockStateComponent;
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -81,14 +81,12 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
     @Override
     public void forceRestoreBlocks() {
-
-        treeMap.revertAll();
-        generalMap.revertAll();
+        blockStateComponent.popAllBlocks(BlockStateKind.ENCHANTED_FOREST_TREES);
+        blockStateComponent.popAllBlocks(BlockStateKind.ENCHANTED_FOREST_SHRUBBERY);
     }
 
     @Override
     public void run() {
-
         equalize();
         restoreBlocks();
 
@@ -98,7 +96,6 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     @Override
     public void disable() {
 
-        writeData(false);
     }
 
     @Override
@@ -117,14 +114,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     }
 
     public void restoreBlocks() {
-
-        int mainMin = 1000 * 60 * 170;
-        int secMin = mainMin / 20;
-
-        treeMap.revertByTime(mainMin);
-        generalMap.revertByTime(secMin);
-
-        writeData(true);
+        blockStateComponent.popBlocksOlderThan(BlockStateKind.ENCHANTED_FOREST_TREES, TREE_RESTORE_DELAY);
+        blockStateComponent.popBlocksOlderThan(BlockStateKind.ENCHANTED_FOREST_SHRUBBERY, SHRUBBERY_RESTORE_DELAY);
     }
 
     public void killKillerRabbits() {
@@ -271,65 +262,77 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             return;
         }
 
-        if (block.getTypeId() == BlockID.LOG || EnvironmentUtil.isShrubBlock(block)) {
-            if (block.getTypeId() == BlockID.LOG) {
-                short c = 0;
-                for (ItemStack aItemStack : getRandomDropSet(player)) {
-                    if (c >= 3) break;
-                    getWorld().dropItemNaturally(block.getLocation(), aItemStack);
-                    c++;
-                }
-
-                event.setExpToDrop(ChanceUtil.getRandom(4));
-                eatFood(player);
-                trick(player);
-
-                treeMap.addItem(new BlockRecord(block));
-            } else {
-                if (ChanceUtil.getChance(450)) {
-                    Rabbit rabbit = (Rabbit) getWorld().spawnEntity(block.getLocation(), EntityType.RABBIT);
-                    player.chat("Awwww a cute little bunny!");
-
-                    if (ChanceUtil.getChance(5)) {
-                        rabbit.setRabbitType(Rabbit.Type.THE_KILLER_BUNNY);
-                        rabbit.setTarget(player);
-                        rabbit.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(50);
-
-                        server.getScheduler().runTaskLater(inst, () -> {
-                            player.chat("OH " + loonizeWord("four") + ChatColor.WHITE + "!!!");
-                        }, 10);
-                    }
-                }
-
-                if (EnvironmentUtil.isDayTime(getWorld().getTime())) {
-                    if (!eggComponent.isEasterActive(player) && ChanceUtil.getChance(30)) {
-                        eggComponent.dropEggs(EggComponent.EggType.EASTER, block.getLocation());
-                    }
-                } else {
-                    if (!eggComponent.isHalloweenActive(player) && ChanceUtil.getChance(45)) {
-                        eggComponent.dropEggs(EggComponent.EggType.HALLOWEEN, block.getLocation());
-                    }
-                }
-
-                generalMap.addItem(new BlockRecord(block));
+        if (block.getType() == Material.LOG) {
+            short c = 0;
+            for (ItemStack aItemStack : getRandomDropSet(player)) {
+                if (c >= 3) break;
+                getWorld().dropItemNaturally(block.getLocation(), aItemStack);
+                c++;
             }
-        } else {
-            event.setCancelled(true);
-            ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
+
+            event.setExpToDrop(ChanceUtil.getRandom(4));
+            eatFood(player);
+            trick(player);
+
+            try {
+                blockStateComponent.pushBlock(BlockStateKind.ENCHANTED_FOREST_TREES, player, block.getState());
+                return;
+            } catch (UnstorableBlockStateException e) {
+                e.printStackTrace();
+            }
+        } else if (EnvironmentUtil.isShrubBlock(block)) {
+            if (ChanceUtil.getChance(450)) {
+                Rabbit rabbit = (Rabbit) getWorld().spawnEntity(block.getLocation(), EntityType.RABBIT);
+                player.chat("Awwww a cute little bunny!");
+
+                if (ChanceUtil.getChance(5)) {
+                    rabbit.setRabbitType(Rabbit.Type.THE_KILLER_BUNNY);
+                    rabbit.setTarget(player);
+                    rabbit.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(50);
+
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        player.chat("OH " + loonizeWord("four") + ChatColor.WHITE + "!!!");
+                    }, 10);
+                }
+            }
+
+            if (EnvironmentUtil.isDayTime(getWorld().getTime())) {
+                if (!eggComponent.isEasterActive(player) && ChanceUtil.getChance(30)) {
+                    eggComponent.dropEggs(EggComponent.EggType.EASTER, block.getLocation());
+                }
+            } else {
+                if (!eggComponent.isHalloweenActive(player) && ChanceUtil.getChance(45)) {
+                    eggComponent.dropEggs(EggComponent.EggType.HALLOWEEN, block.getLocation());
+                }
+            }
+
+            try {
+                blockStateComponent.pushBlock(BlockStateKind.ENCHANTED_FOREST_SHRUBBERY, player, block.getState());
+                return;
+            } catch (UnstorableBlockStateException e) {
+                e.printStackTrace();
+            }
         }
+
+        event.setCancelled(true);
+        ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onLeafDecay(LeavesDecayEvent event) {
-
         if (contains(event.getBlock())) {
-
             Block block = event.getBlock();
 
-            treeMap.addItem(new BlockRecord(block));
+            try {
+                blockStateComponent.pushAnonymousBlock(BlockStateKind.ENCHANTED_FOREST_TREES, block.getState());
 
-            if (!ChanceUtil.getChance(14)) return;
-            getWorld().dropItemNaturally(block.getLocation(), getRandomDropSet(server.getConsoleSender()).get(0));
+                if (!ChanceUtil.getChance(14)) return;
+                getWorld().dropItemNaturally(block.getLocation(), getRandomDropSet(server.getConsoleSender()).get(0));
+            } catch (UnstorableBlockStateException e) {
+                e.printStackTrace();
+
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -374,10 +377,16 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     public void onBucketFill(PlayerBucketFillEvent event) {
 
         if (contains(event.getBlockClicked())) {
+            Player player = event.getPlayer();
+            Block block = event.getBlockClicked();
 
-            final Block block = event.getBlockClicked();
+            try {
+                blockStateComponent.pushBlock(BlockStateKind.ENCHANTED_FOREST_FLUIDS, player, block.getState());
+            } catch (UnstorableBlockStateException e) {
+                e.printStackTrace();
 
-            generalMap.addItem(new BlockRecord(block));
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -405,81 +414,5 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     public void onEggHatch(EggHatchEvent event) {
 
         if (contains(event.getEgg())) event.setCancelled(true);
-    }
-
-    @Override
-    public void writeData(boolean doAsync) {
-
-        Runnable run = () -> {
-            IOUtil.toBinaryFile(getWorkingDir(), "trees", treeMap);
-            IOUtil.toBinaryFile(getWorkingDir(), "general", generalMap);
-        };
-
-        if (doAsync) {
-            server.getScheduler().runTaskAsynchronously(inst, run);
-        } else {
-            run.run();
-        }
-    }
-
-    @Override
-    public void reloadData() {
-
-        File treeFile = new File(getWorkingDir().getPath() + "/trees.dat");
-        File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
-
-        if (treeFile.exists()) {
-            Object treeFileO = IOUtil.readBinaryFile(treeFile);
-
-            if (treeFileO instanceof BaseBlockRecordIndex) {
-                treeMap = (BaseBlockRecordIndex) treeFileO;
-                log.info("Loaded: " + treeMap.size() + " tree records for: " + getId() + ".");
-            } else {
-                log.warning("Invalid block record file encountered: " + treeFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-
-                treeFile = new File(getWorkingDir().getPath() + "/old-" + treeFile.getName());
-
-                if (treeFile.exists()) {
-
-                    treeFileO = IOUtil.readBinaryFile(treeFile);
-
-                    if (treeFileO instanceof BaseBlockRecordIndex) {
-                        treeMap = (BaseBlockRecordIndex) treeFileO;
-                        log.info("Backup file loaded successfully!");
-                        log.info("Loaded: " + treeMap.size() + " tree records for: " + getId() + ".");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
-            }
-        }
-
-        if (generalFile.exists()) {
-            Object generalFileO = IOUtil.readBinaryFile(generalFile);
-
-            if (generalFileO instanceof BaseBlockRecordIndex) {
-                generalMap = (BaseBlockRecordIndex) generalFileO;
-                log.info("Loaded: " + generalMap.size() + " general records for: " + getId() + ".");
-            } else {
-                log.warning("Invalid block record file encountered: " + generalFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-
-                generalFile = new File(getWorkingDir().getPath() + "/old-" + generalFile.getName());
-
-                if (generalFile.exists()) {
-
-                    generalFileO = IOUtil.readBinaryFile(generalFile);
-
-                    if (generalFileO instanceof BaseBlockRecordIndex) {
-                        generalMap = (BaseBlockRecordIndex) generalFileO;
-                        log.info("Backup file loaded successfully!");
-                        log.info("Loaded: " + generalMap.size() + " general records for: " + getId() + ".");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
-            }
-        }
     }
 }

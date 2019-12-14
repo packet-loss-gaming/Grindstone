@@ -96,7 +96,6 @@ public class RestorationUtil extends BukkitComponent {
                 ExperienceOrb orb = block.getWorld().spawn(block.getLocation(), ExperienceOrb.class);
                 orb.setExperience(xp);
             }
-
         }
     }
 

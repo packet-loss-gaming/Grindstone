@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.state.player;
 
+import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import org.apache.commons.lang.Validate;
 
 import java.util.EnumMap;

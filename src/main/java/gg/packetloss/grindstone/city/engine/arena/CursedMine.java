@@ -22,6 +22,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
@@ -32,6 +33,8 @@ import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerFX.InventoryFX;
 import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.state.block.BlockStateComponent;
+import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
@@ -42,8 +45,6 @@ import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.restoration.BlockRecord;
-import gg.packetloss.grindstone.util.restoration.PlayerMappedBlockRecordIndex;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -84,6 +85,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     private AdminComponent adminComponent;
     private PrayerComponent prayerComponent;
     private HighScoresComponent highScoresComponent;
+    private BlockStateComponent blockStateComponent;
     private RestorationUtil restorationUtil;
 
     private WorldGuardPlugin worldGuard;
@@ -93,8 +95,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     //        BaseBlock>>> map = new ConcurrentHashMap<>();
     private final long lastActivationTime = 18000;
     private long lastActivation = 0;
-    private PlayerMappedBlockRecordIndex recordSystem = new PlayerMappedBlockRecordIndex();
-    private Map<String, Long> daveHitList = new HashMap<>();
+    private Map<UUID, Long> daveHitList = new HashMap<>();
 
     private final int[] items = new int[]{
             BlockID.IRON_BLOCK, BlockID.IRON_ORE, ItemID.IRON_BAR,
@@ -107,7 +108,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     public CursedMine(World world, ProtectedRegion[] regions, AdminComponent adminComponent,
                       PrayerComponent prayerComponent, HighScoresComponent highScoresComponent,
-                      RestorationUtil restorationUtil) {
+                      BlockStateComponent blockStateComponent, RestorationUtil restorationUtil) {
 
         super(world, regions[0]);
 
@@ -116,6 +117,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         this.adminComponent = adminComponent;
         this.prayerComponent = prayerComponent;
         this.highScoresComponent = highScoresComponent;
+        this.blockStateComponent = blockStateComponent;
         this.restorationUtil = restorationUtil;
 
         //noinspection AccessStaticViaInstance
@@ -126,8 +128,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     @Override
     public void forceRestoreBlocks() {
-
-        recordSystem.revertAll();
+        blockStateComponent.popAllBlocks(BlockStateKind.CURSED_MINE);
     }
 
     @Override
@@ -178,13 +179,19 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         this.worldGuard = (WorldGuardPlugin) plugin;
     }
 
-    public void addToHitList(String name) {
+    public void addToHitList(Player player) {
+        daveHitList.put(player.getUniqueId(), System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10));
+    }
 
-        daveHitList.put(name, System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10));
+    public void removeFromHitList(Player player) {
+        daveHitList.remove(player.getUniqueId());
+    }
+
+    public boolean isOnHitList(Player player) {
+        return daveHitList.containsKey(player.getUniqueId());
     }
 
     public void checkHitList() {
-
         daveHitList.entrySet().removeIf(stringLongEntry -> stringLongEntry.getValue() >= System.currentTimeMillis());
     }
 
@@ -218,13 +225,14 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     }
 
     public void randomRestore() {
-
-        recordSystem.revertByTime(ChanceUtil.getRangedRandom(9000, 60000));
+        blockStateComponent.popBlocksOlderThan(
+                BlockStateKind.CURSED_MINE,
+                TimeUnit.SECONDS.toMillis(ChanceUtil.getRangedRandom(9, 60))
+        );
     }
 
     public void revertPlayer(Player player) {
-
-        recordSystem.revertByPlayer(player.getName());
+        blockStateComponent.popBlocksCreatedBy(BlockStateKind.CURSED_MINE, player);
     }
 
     public void sweepFloor() {
@@ -480,7 +488,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 1:
                             if (ChanceUtil.getChance(4)) {
                                 if (blockid == BlockID.DIAMOND_ORE) {
-                                    addToHitList(player.getName());
+                                    addToHitList(player);
                                     ChatUtil.sendWarning(player, "You ignite fumes in the air!");
                                     EditSession ess = WorldEdit.getInstance()
                                             .getEditSessionFactory()
@@ -494,8 +502,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                         final boolean untele = i == 11;
                                         server.getScheduler().runTaskLater(inst, () -> {
                                             if (untele) {
-                                                recordSystem.revertByPlayer(player.getName());
-                                                daveHitList.remove(player.getName());
+                                                revertPlayer(player);
+                                                removeFromHitList(player);
                                             }
 
                                             if (!contains(player)) return;
@@ -505,7 +513,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                         }, 12 * i);
                                     }
                                 } else {
-                                    addToHitList(player.getName());
+                                    addToHitList(player);
                                     player.chat("Who's a good ghost?!?!");
                                     server.getScheduler().runTaskLater(inst, () -> {
                                         player.chat("Don't hurt me!!!");
@@ -525,7 +533,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             }
                         case 2:
                             ChatUtil.sendWarning(player, "You find yourself falling from the sky...");
-                            addToHitList(player.getName());
+                            addToHitList(player);
                             modifiedLoc = new Location(player.getWorld(), player.getLocation().getX(), 350, player.getLocation().getZ());
                             break;
                         case 3:
@@ -556,7 +564,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             break;
                         case 8:
                             ChatUtil.sendWarning(player, "Dave likes your food.");
-                            addToHitList(player.getName());
+                            addToHitList(player);
                             prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                     PrayerType.STARVATION, TimeUnit.MINUTES.toMillis(15)));
                             break;
@@ -579,12 +587,12 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 11:
                             if (blockid == BlockID.EMERALD_ORE) {
                                 ChatUtil.sendNotice(player, "Dave got a chemistry set!");
-                                addToHitList(player.getName());
+                                addToHitList(player);
                                 prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                         PrayerType.DEADLYPOTION, TimeUnit.MINUTES.toMillis(30)));
                             } else {
                                 ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
-                                addToHitList(player.getName());
+                                addToHitList(player);
                                 prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
                                         PrayerType.SLAP, TimeUnit.MINUTES.toMillis(30)));
                                 prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
@@ -716,14 +724,19 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             poison(player, 6);
             ghost(player, typeId);
 
-            recordSystem.addItem(player.getName(), new BlockRecord(block));
-            restorationUtil.blockAndLogEvent(event);
+            try {
+                blockStateComponent.pushBlock(BlockStateKind.CURSED_MINE, player, block.getState());
+                restorationUtil.blockAndLogEvent(event);
 
-            highScoresComponent.update(player, ScoreTypes.CURSED_ORES_MINED, 1);
-        } else {
-            event.setCancelled(true);
-            ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
+                highScoresComponent.update(player, ScoreTypes.CURSED_ORES_MINED, 1);
+                return;
+            } catch (UnstorableBlockStateException e) {
+                e.printStackTrace();
+            }
         }
+
+        event.setCancelled(true);
+        ChatUtil.sendWarning(player, "You cannot break this block for some reason.");
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -748,8 +761,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         Player player = event.getPlayer();
 
-        if ((recordSystem.hasRecordForPlayer(player.getName())
-                || daveHitList.containsKey(player.getName())) && !accepted.contains(event.getCause())) {
+        if ((blockStateComponent.hasPlayerBrokenBlocks(BlockStateKind.CURSED_MINE, player)
+                || isOnHitList(player)) && !accepted.contains(event.getCause())) {
             event.setCancelled(true);
             ChatUtil.sendWarning(player, "You have been tele-blocked!");
         }
@@ -757,12 +770,17 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBucketFill(PlayerBucketFillEvent event) {
-
         if (contains(event.getBlockClicked())) {
+            Player player = event.getPlayer();
+            Block block = event.getBlockClicked();
 
-            final Block block = event.getBlockClicked();
+            try {
+                blockStateComponent.pushBlock(BlockStateKind.CURSED_MINE, event.getPlayer(), block.getState());
+            } catch (UnstorableBlockStateException e) {
+                e.printStackTrace();
 
-            recordSystem.addItem(event.getPlayer().getName(), new BlockRecord(block));
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -817,10 +835,9 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity().getPlayer();
-        String playerName = player.getName();
         revertPlayer(player);
 
-        if (daveHitList.containsKey(playerName) || contains(player)) {
+        if (isOnHitList(player) || contains(player)) {
             highScoresComponent.update(player, ScoreTypes.CURSED_MINE_DEATHS, 1);
 
             if (contains(player) && ChanceUtil.getChance(500)) {
@@ -828,7 +845,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                 event.getDrops().add(BookUtil.Lore.Areas.theGreatMine());
             }
 
-            daveHitList.remove(playerName);
+            removeFromHitList(player);
             switch (ChanceUtil.getRandom(11)) {
                 case 1:
                     event.setDeathMessage(player.getName() + " was killed by Dave");
@@ -870,10 +887,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-
         Player player = event.getPlayer();
-        String playerName = player.getName();
-        if (daveHitList.containsKey(playerName)) {
+        if (isOnHitList(player)) {
             player.setHealth(0);
         }
     }
@@ -881,9 +896,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        String playerName = player.getName();
-        if (recordSystem.hasRecordForPlayer(playerName) && contains(player)) {
-            addToHitList(playerName);
+        if (blockStateComponent.hasPlayerBrokenBlocks(BlockStateKind.CURSED_MINE, player) && contains(player)) {
+            addToHitList(player);
         }
     }
 }

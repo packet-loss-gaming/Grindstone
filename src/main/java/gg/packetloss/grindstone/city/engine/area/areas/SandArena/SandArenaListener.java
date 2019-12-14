@@ -9,7 +9,7 @@ package gg.packetloss.grindstone.city.engine.area.areas.SandArena;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
-import gg.packetloss.grindstone.state.player.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.RefCountedTracker;
 import gg.packetloss.grindstone.util.player.FallDamageDeathBlocker;

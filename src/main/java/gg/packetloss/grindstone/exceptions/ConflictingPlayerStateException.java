@@ -1,4 +1,6 @@
-package gg.packetloss.grindstone.state.player;
+package gg.packetloss.grindstone.exceptions;
+
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 
 public class ConflictingPlayerStateException extends Exception {
     private final PlayerStateKind newKind;

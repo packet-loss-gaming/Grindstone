@@ -7,6 +7,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
+import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.player.attribute.TypedPlayerStateAttribute;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -52,7 +53,7 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
 
         try {
             Path baseDir = Path.of(inst.getDataFolder().getPath(), "state");
-            statesDir = Files.createDirectories(baseDir.resolve("states"));
+            statesDir = Files.createDirectories(baseDir.resolve("states/players"));
         } catch (IOException ex) {
             ex.printStackTrace();
         }

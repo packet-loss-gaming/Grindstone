@@ -34,6 +34,7 @@ import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
+import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
@@ -53,7 +54,7 @@ import java.util.logging.Logger;
 @Depend(components = {
         AdminComponent.class, JailComponent.class, PrayerComponent.class, SacrificeComponent.class,
         ImpersonalComponent.class, RestorationUtil.class, EggComponent.class, HighScoresComponent.class,
-        PlayerStateComponent.class
+        PlayerStateComponent.class, BlockStateComponent.class
 }, plugins = {"WorldEdit", "WorldGuard"})
 public class ArenaComponent extends BukkitComponent implements Listener, Runnable {
 
@@ -77,6 +78,8 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     private HighScoresComponent highScoresComponent;
     @InjectComponent
     private PlayerStateComponent playerStateComponent;
+    @InjectComponent
+    private BlockStateComponent blockStateComponent;
 
     private final World world = Bukkit.getWorld("City");
     private LocalConfiguration config;
@@ -160,7 +163,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     ProtectedRegion[] PRs = new ProtectedRegion[2];
                     PRs[0] = mgr.get(world).getRegion(region);
                     PRs[1] = mgr.get(world).getRegion(region + "-flood-gate");
-                    arenas.add(new CursedMine(world, PRs, adminComponent, prayerComponent, highScoresComponent, restorationUtil));
+                    arenas.add(new CursedMine(world, PRs, adminComponent, prayerComponent, highScoresComponent, blockStateComponent, restorationUtil));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
@@ -172,7 +175,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             for (String region : config.enchantedForest) {
                 try {
                     ProtectedRegion pr = mgr.get(world).getRegion(region);
-                    arenas.add(new EnchantedForest(world, pr, adminComponent, eggComponent));
+                    arenas.add(new EnchantedForest(world, pr, adminComponent, eggComponent, blockStateComponent));
                     if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");

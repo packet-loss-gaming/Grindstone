@@ -12,12 +12,13 @@ import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
+import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -222,15 +223,22 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
         Block block = event.getBlock();
         BaseBlock baseBlock = new BaseBlock(block.getTypeId(), block.getData());
-        if (parent.contains(block) && !parent.admin.isAdmin(event.getPlayer())) {
+        if (parent.contains(block) && !parent.admin.isAdmin(player)) {
             if (!parent.accept(baseBlock, FrostbornArea.breakable)) {
                 event.setCancelled(true);
                 return;
             }
 
-            parent.generalIndex.addItem(new BlockRecord(block));
+            try {
+                parent.blockState.pushBlock(BlockStateKind.FROSTBORN, player, block.getState());
+            } catch (UnstorableBlockStateException e) {
+                e.printStackTrace();
+
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -262,7 +270,12 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             if (!parent.accept(baseBlock, FrostbornArea.restoreable)) {
                 continue;
             }
-            parent.generalIndex.addItem(new BlockRecord(block));
+
+            try {
+                parent.blockState.pushAnonymousBlock(BlockStateKind.FROSTBORN, block.getState());
+            } catch (UnstorableBlockStateException e) {
+                it.remove();
+            }
         }
     }
 

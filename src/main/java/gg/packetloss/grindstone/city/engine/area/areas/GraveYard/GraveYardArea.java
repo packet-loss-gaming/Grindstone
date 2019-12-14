@@ -18,16 +18,15 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
-import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.state.block.BlockStateComponent;
+import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
-import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.restoration.BaseBlockRecordIndex;
-import gg.packetloss.grindstone.util.restoration.BlockRecord;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Chunk;
 import org.bukkit.Effect;
@@ -44,19 +43,22 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Grave Yard", desc = "The home of the undead")
-@Depend(components = {AdminComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
-public class GraveYardArea extends AreaComponent<GraveYardConfig> implements PersistentArena {
+@Depend(components = {AdminComponent.class, PlayerStateComponent.class, BlockStateComponent.class},
+        plugins = {"WorldGuard"})
+public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
     @InjectComponent
     protected AdminComponent admin;
     @InjectComponent
     protected PlayerStateComponent playerState;
+    @InjectComponent
+    protected BlockStateComponent blockState;
 
     // Other
     protected Economy economy;
@@ -101,9 +103,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
     protected boolean isPressurePlateLocked = true;
     protected ConcurrentHashMap<Location, Boolean> pressurePlateLocks = new ConcurrentHashMap<>();
 
-    // Block Restoration
-    protected BaseBlockRecordIndex generalIndex = new BaseBlockRecordIndex();
-
     @Override
     public void setUp() {
         try {
@@ -127,7 +126,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
             findPressurePlateLockLevers();
             findRewardChest();
 
-            reloadData();
             setupEconomy();
 
             spawnBlockBreakerTask();
@@ -139,11 +137,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
     @Override
     public void enable() {
         server.getScheduler().runTaskLater(inst, super::enable, 1);
-    }
-
-    @Override
-    public void disable() {
-        writeData(false);
     }
 
     private void handleEmptyRewardsRoom() {
@@ -243,48 +236,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
         return location.getY() < 69 && contains(location);
     }
 
-    @Override
-    public void writeData(boolean doAsync) {
-        Runnable run = () -> {
-            IOUtil.toBinaryFile(getWorkingDir(), "general", generalIndex);
-        };
-
-        if (doAsync) {
-            server.getScheduler().runTaskAsynchronously(inst, run);
-        } else {
-            run.run();
-        }
-    }
-
-    @Override
-    public void reloadData() {
-        File generalFile = new File(getWorkingDir().getPath() + "/general.dat");
-        if (generalFile.exists()) {
-            Object generalFileO = IOUtil.readBinaryFile(generalFile);
-            if (generalFileO instanceof BaseBlockRecordIndex) {
-                generalIndex = (BaseBlockRecordIndex) generalFileO;
-                log.info("Loaded: " + generalIndex.size() + " general records for the grave yard.");
-            } else {
-                log.warning("Invalid block record file encountered: " + generalFile.getName() + "!");
-                log.warning("Attempting to use backup file...");
-                generalFile = new File(getWorkingDir().getPath() + "/old-" + generalFile.getName());
-                if (generalFile.exists()) {
-                    generalFileO = IOUtil.readBinaryFile(generalFile);
-                    if (generalFileO instanceof BaseBlockRecordIndex) {
-                        generalIndex = (BaseBlockRecordIndex) generalFileO;
-                        log.info("Backup file loaded successfully!");
-                        log.info("Loaded: " + generalIndex.size() + " general records for the grave yard.");
-                    } else {
-                        log.warning("Backup file failed to load!");
-                    }
-                }
-            }
-        }
-    }
-
     public void restoreBlocks() {
-        generalIndex.revertByTime(1000 * 27);
-        writeData(true);
+        blockState.popBlocksOlderThan(BlockStateKind.GRAVEYARD, TimeUnit.SECONDS.toMillis(27));
     }
 
     private void localSpawn(Player player) {
@@ -707,8 +660,12 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> implements Per
                 if (!accept(uABB, autoBreakable)) {
                     return;
                 }
-                generalIndex.addItem(new BlockRecord(aBlock.getLocation(location), uABB));
-                aBlock.setTypeId(0);
+                try {
+                    blockState.pushAnonymousBlock(BlockStateKind.GRAVEYARD, aBlock.getState());
+                    aBlock.setTypeId(0);
+                } catch (UnstorableBlockStateException ex) {
+                    ex.printStackTrace();
+                }
             }, delay);
         }
     }

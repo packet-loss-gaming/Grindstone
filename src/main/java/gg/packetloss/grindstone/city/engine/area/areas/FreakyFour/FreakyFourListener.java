@@ -14,7 +14,7 @@ import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.entity.HallowCreeperEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
-import gg.packetloss.grindstone.state.player.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
