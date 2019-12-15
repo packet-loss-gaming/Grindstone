@@ -793,18 +793,21 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     );
 
     private void populateOres() {
+        final int minY = region.getMinimumPoint().getBlockY();
         final int maxY = region.getMaximumPoint().getBlockY();
-        final int oreBandSize = maxY / SURVIVAL_ORES.size();
 
-        int y = maxY;
+        for (int i = 0; i < config.oreBandOreCount; ++i) {
+            Block block = getRandomOrePointAtLevel(minY, maxY).getBlock();
 
-        for (Material ore : SURVIVAL_ORES) {
-            for (int i = 0; i < config.oreBandOreCount; ++i) {
-                Location loc = getRandomOrePointAtLevel(y - oreBandSize, y);
-                loc.getBlock().setType(ore);
+            Material oreType = CollectionUtil.getElement(SURVIVAL_ORES);
+            for (int ii = ChanceUtil.getRandom(10); ii > 0; --ii) {
+                block.setType(oreType);
+
+                block = block.getRelative(CollectionUtil.getElement(BlockFace.values()));
+                if (block.getType() != Material.STONE || !arenaContains(block.getLocation())) {
+                    break;
+                }
             }
-
-            y -= oreBandSize;
         }
     }
 
