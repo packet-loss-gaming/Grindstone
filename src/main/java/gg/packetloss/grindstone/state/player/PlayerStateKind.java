@@ -17,6 +17,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     SAND_ARENA(new WalkInPvPSafeRespawnPlayerStateTypeConfigImpl()),
     PUZZLE_PRISON(new WalkInNoGuildPlayerStateTypeConfigImpl()),
     JUNGLE_RAID(new TempPlayerStateTypeConfigImpl()),
+    JUNGLE_RAID_SPECTATOR(new TempPlayerStateTypeConfigImpl()),
     SKY_WARS(new TempPlayerStateTypeConfigImpl()),
     SPLEEF(new TempPlayerStateTypeConfigImpl());
 

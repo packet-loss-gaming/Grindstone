@@ -46,11 +46,13 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawn
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
+import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
@@ -153,6 +155,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     HighScoresComponent highScoresComponent;
     @InjectComponent
     PlayerStateComponent playerStateComponent;
+    @InjectComponent
+    SpectatorComponent spectatorComponent;
 
     public JungleRaidState getState() {
         return state;
@@ -465,6 +469,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         config = configure(new LocalConfiguration());
 
         setupEconomy();
+
+        spectatorComponent.registerSpectatorKind(PlayerStateKind.JUNGLE_RAID_SPECTATOR);
         server.getScheduler().runTaskLater(inst, this::setupRegionInfo, 1);
 
         //noinspection AccessStaticViaInstance
@@ -563,6 +569,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         classWall.init();
 
         classModeSignPopulate();
+
+        spectatorComponent.registerSpectatedRegion(PlayerStateKind.JUNGLE_RAID_SPECTATOR, region);
     }
 
     private void classModeSignPopulate() {
@@ -1252,6 +1260,15 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 if (state == JungleRaidState.RESTORING) {
                     ChatUtil.sendError(player, "The jungle raid arena is restoring, please wait.");
                 } else {
+                    if (player.hasPermission("aurora.debug")) {
+                        try {
+                            playerStateComponent.pushState(PlayerStateKind.JUNGLE_RAID_SPECTATOR, player);
+                            return false;
+                        } catch (ConflictingPlayerStateException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
                     ChatUtil.sendError(player, "A jungle raid is in progress, please wait.");
                 }
 
@@ -1684,17 +1701,36 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
 
         @EventHandler
-        public void onPlayerStatePop(PlayerStatePopEvent event) {
-            if (event.getKind() != PlayerStateKind.JUNGLE_RAID) {
+        public void onPlayerStatePush(PlayerStatePushEvent event) {
+            if (event.getKind() != PlayerStateKind.JUNGLE_RAID_SPECTATOR) {
                 return;
             }
 
+            Player player = event.getPlayer();
+            player.teleport(getRandomLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        }
+
+        private void onJungleRaidPop(PlayerStatePopEvent event) {
             Player player = event.getPlayer();
 
             gameState.removePlayer(player);
             prayerComponent.uninfluencePlayer(player);
 
             player.teleport(lobbyExitLocation);
+        }
+
+        private void onJungleRaidSpectatorPop(PlayerStatePopEvent event) {
+            Player player = event.getPlayer();
+            player.teleport(lobbyExitLocation);
+        }
+
+        @EventHandler
+        public void onPlayerStatePop(PlayerStatePopEvent event) {
+            if (event.getKind() == PlayerStateKind.JUNGLE_RAID) {
+                onJungleRaidPop(event);
+            } else if (event.getKind() == PlayerStateKind.JUNGLE_RAID_SPECTATOR) {
+                onJungleRaidSpectatorPop(event);
+            }
         }
     }
 
