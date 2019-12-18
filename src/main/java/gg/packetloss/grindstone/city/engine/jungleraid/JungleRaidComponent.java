@@ -1263,7 +1263,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                     if (player.hasPermission("aurora.debug")) {
                         try {
                             playerStateComponent.pushState(PlayerStateKind.JUNGLE_RAID_SPECTATOR, player);
-                            return false;
+                            return true;
                         } catch (ConflictingPlayerStateException | IOException e) {
                             e.printStackTrace();
                         }

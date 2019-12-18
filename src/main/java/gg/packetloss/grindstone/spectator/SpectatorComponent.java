@@ -95,6 +95,8 @@ public class SpectatorComponent extends BukkitComponent implements Listener {
 
         Player player = event.getPlayer();
         player.setGameMode(GameMode.SPECTATOR);
+
+        playerSpectatorKind.put(player, event.getKind());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
