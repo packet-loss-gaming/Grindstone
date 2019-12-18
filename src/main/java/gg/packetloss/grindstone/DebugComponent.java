@@ -17,6 +17,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.bosses.DebugCow;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.ChunkBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Location;
@@ -25,6 +26,7 @@ import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Cow;
+import org.bukkit.entity.Pig;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -58,6 +60,7 @@ public class DebugComponent extends BukkitComponent {
         //inst.registerEvents(new BlockDebug());
 
         registerCommands(DebugCowCmd.class);
+        registerCommands(TurboPigCmd.class);
         registerCommands(DamageSimulateCmd.class);
         //registerCommands(FoodInfo.class);
         //registerCommands(ChunkLighter.class);
@@ -99,6 +102,27 @@ public class DebugComponent extends BukkitComponent {
 
             Cow cow = player.getWorld().spawn(player.getLocation(), Cow.class);
             debugCowBoss.bind(cow, health);
+        }
+    }
+
+    public class TurboPigCmd {
+        @Command(aliases = {"turbopig"}, desc = "Create a turbo pig",
+                usage = "[speed]", flags = "", min = 0, max = 1)
+        @CommandPermissions("aurora.debug.turbopig")
+        public void turboPigCmd(CommandContext args, CommandSender sender) throws CommandException {
+            Player player = PlayerUtil.checkPlayer(sender);
+
+            double speed = args.getDouble(0, 1);
+
+            Pig pig = player.getWorld().spawn(player.getLocation(), Pig.class);
+            pig.setSaddle(true);
+            pig.setRemoveWhenFarAway(true);
+
+            try {
+                AttributeBook.setAttribute(pig, AttributeBook.Attribute.MOVEMENT_SPEED, speed);
+            } catch (UnsupportedFeatureException e) {
+                e.printStackTrace();
+            }
         }
     }
 
