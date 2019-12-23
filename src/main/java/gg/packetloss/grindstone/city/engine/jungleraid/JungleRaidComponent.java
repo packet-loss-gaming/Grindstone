@@ -35,6 +35,7 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.bukkittext.Text;
+import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.city.engine.minigame.Win;
@@ -96,7 +97,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.material.Door;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -126,7 +126,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
     private LocalConfiguration config;
-    private static Economy economy = null;
     private List<BukkitTask> restorationTask = new ArrayList<>();
 
     private JungleRaidGameState gameState = new JungleRaidGameState();
@@ -157,6 +156,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     PlayerStateComponent playerStateComponent;
     @InjectComponent
     SpectatorComponent spectatorComponent;
+    @InjectComponent
+    EconomyComponent economyComponent;
 
     public JungleRaidState getState() {
         return state;
@@ -373,7 +374,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private void rewardPlayer(Player player, boolean won) {
-        if (economy == null) {
+        if (!economyComponent.isEnabled()) {
             return;
         }
 
@@ -390,8 +391,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
         }
 
-        economy.depositPlayer(player, amt);
-        ChatUtil.sendNotice(player, "You received: " + economy.format(amt) + '.');
+        Economy economyHandle = economyComponent.getHandle();
+        economyHandle.depositPlayer(player, amt);
+        ChatUtil.sendNotice(player, "You received: " + economyHandle.format(amt) + '.');
     }
 
     public void died(Player player) {
@@ -467,8 +469,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     @Override
     public void enable() {
         config = configure(new LocalConfiguration());
-
-        setupEconomy();
 
         spectatorComponent.registerSpectatorKind(PlayerStateKind.JUNGLE_RAID_SPECTATOR);
         server.getScheduler().runTaskLater(inst, this::setupRegionInfo, 1);
@@ -1756,16 +1756,5 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
 
         return (WorldGuardPlugin) plugin;
-    }
-
-    private boolean setupEconomy() {
-
-        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
-                .vault.economy.Economy.class);
-        if (economyProvider != null) {
-            economy = economyProvider.getProvider();
-        }
-
-        return (economy != null);
     }
 }
