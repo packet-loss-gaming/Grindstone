@@ -29,26 +29,22 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.ShulkerBox;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.ExperienceOrb;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.FireworkExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -58,14 +54,14 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private List<ItemStack> drops;
+    private Deque<ItemStack> drops;
     private BukkitTask task = null;
     private long lastDropPulse = 0;
 
     public DropPartyArena(World world, ProtectedRegion region) {
 
         super(world, region);
-        drops = new ArrayList<>();
+        drops = new ArrayDeque<>();
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
@@ -130,11 +126,6 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             CustomItems.BLACK_PARTY_BOX
     );
 
-    private void dropPartyBox(Location location) {
-        ItemStack partyBox = CustomItemCenter.build(CollectionUtil.getElement(PARTY_BOX_OPTIONS));
-        location.getWorld().dropItem(location, partyBox);
-    }
-
     private void dropPartyBox(Location location, ItemStack item) {
         ItemStack partyBox = CustomItemCenter.build(CollectionUtil.getElement(PARTY_BOX_OPTIONS));
 
@@ -156,6 +147,33 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         shulkerBox.getInventory().forEach((item) -> {
             location.getWorld().dropItem(location, item);
         });
+    }
+
+    private static FireworkEffect fireworkEffect;
+
+    static {
+        FireworkEffect.Builder builder = FireworkEffect.builder();
+        builder.flicker(true);
+        builder.trail(true);
+        builder.withColor(Color.GREEN, Color.BLUE, Color.RED);
+        builder.with(FireworkEffect.Type.BALL);
+
+        fireworkEffect = builder.build();
+    }
+
+    private List<Firework> taskedFirework = new ArrayList<>();
+
+    private void createFireworkExplosion(Location l) {
+        Firework firework = l.getWorld().spawn(l, Firework.class);
+
+        FireworkMeta meta = firework.getFireworkMeta();
+        meta.addEffect(fireworkEffect);
+        meta.setPower(0);
+        firework.setFireworkMeta(meta);
+
+        taskedFirework.add(firework);
+
+        server.getScheduler().runTaskLater(inst, firework::detonate, 2);
     }
 
     public void drop(int populatorValue, int modifier) {
@@ -201,25 +219,33 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         final CuboidRegion rg = new CuboidRegion(getRegion().getMinimumPoint(), getRegion().getMaximumPoint());
 
         // Use the SacrificeComponent to populate the drop party if a populator value is given
+        List<ItemStack> newDrops = new ArrayList<>();
         final boolean populate = populatorValue > 0;
         if (populate) {
             int rawPlayerCount = server.getOnlinePlayers().size();
 
             int adjustedPlayerCount = Math.max(3, rawPlayerCount);
-            for (int i = 0; i < adjustedPlayerCount * modifier; i++) {
-                drops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
-                drops.add(CustomItemCenter.build(CustomItems.ODE_TO_THE_FROZEN_KING));
-                drops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
+            for (int k = 0; k < adjustedPlayerCount * modifier; k++) {
+                for (int i = 10; i > 0; --i) {
+                    newDrops.add(new ItemStack(Material.EXP_BOTTLE, 5));
+                }
+
+                newDrops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
+                newDrops.add(CustomItemCenter.build(CustomItems.ODE_TO_THE_FROZEN_KING));
+                newDrops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
             }
 
             if (rawPlayerCount > 0) {
-                drops.add(ItemUtil.makeSkull(CollectionUtil.getElement(server.getOnlinePlayers())));
+                newDrops.add(ItemUtil.makeSkull(CollectionUtil.getElement(server.getOnlinePlayers())));
             }
         }
 
         // Remove null drops and shuffle all other drops
-        drops.removeAll(Collections.singleton(null));
-        Collections.shuffle(drops);
+        newDrops.removeAll(Collections.singleton(null));
+        Collections.shuffle(newDrops);
+
+        // Add new drops to the drop queue
+        drops.addAll(newDrops);
 
         if (task != null) task.cancel();
 
@@ -229,30 +255,12 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 return;
             }
 
-            Iterator<ItemStack> it = drops.iterator();
             for (int i = 3 + (getContained(1, Player.class).size() * 2); i > 0; --i) {
                 // Pick a random Location
                 Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), checker);
                 if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
 
-                // If this is the first item, drop it, otherwise use an empty part box
-                if (i == 1) {
-                    // Drop the xp
-                    if (populate) {
-                        // Throw in some xp cause why not
-                        for (int s = ChanceUtil.getRandom(5); s > 0; s--) {
-                            ExperienceOrb e = getWorld().spawn(l, ExperienceOrb.class);
-                            e.setExperience(8);
-                        }
-                    }
-
-                    dropPartyBox(l, it.next());
-
-                    // Remove the drop
-                    it.remove();
-                } else {
-                    dropPartyBox(l);
-                }
+                createFireworkExplosion(l);
             }
 
             // Cancel if there is nothing more to drop
@@ -260,11 +268,37 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 task.cancel();
                 task = null;
             }
-        }, 20 * DROP_PARTY_DELAY, 10);
+        }, 20 * DROP_PARTY_DELAY, 30);
     }
 
     public void drop(int populatorValue) {
         drop(populatorValue, 24);
+    }
+
+    @EventHandler
+    public void onFireworkTask(FireworkExplodeEvent event) {
+        Firework firework = event.getEntity();
+        if (!taskedFirework.remove(firework)) {
+            return;
+        }
+
+        if (ChanceUtil.getChance(5)) {
+            ItemStack drop = drops.poll();
+            if (drop != null) {
+                if (drop.getType() == Material.EXP_BOTTLE) {
+                    for (int i = drop.getAmount(); i > 0; --i) {
+                        firework.getLocation().getWorld().spawn(firework.getLocation(), ThrownExpBottle.class);
+                    }
+
+                    return;
+                }
+
+                dropPartyBox(firework.getLocation(), drop);
+                return;
+            }
+        }
+
+        dropPartyBox(firework.getLocation(), new ItemStack(Material.GOLD_NUGGET, ChanceUtil.getRandom(18)));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
