@@ -7,7 +7,6 @@ import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -91,7 +90,7 @@ class SacrificialRegistry {
         List<ItemStack> loot = new ArrayList<>();
 
         // Calculate the modifier
-        int baseChance = sender instanceof Player && sender.hasPermission("aurora.tome.sacrifice") ? 100 : 125;
+        int baseChance = sender.hasPermission("aurora.tome.sacrifice") ? 100 : 125;
         int modifier = calculateModifier(value);
 
         value *= .9;
@@ -103,7 +102,7 @@ class SacrificialRegistry {
 
             if (ChanceUtil.getChance(Math.max(1, baseChance - modifier))) {
                 itemStack = getValuableItem(sender, modifier);
-            } else if (sender instanceof Player && sender.hasPermission("aurora.tome.cleanly")) {
+            } else if (sender.hasPermission("aurora.tome.cleanly")) {
                 value -= MINIMUM_REMOVAL_VALUE;
                 continue;
             } else {
