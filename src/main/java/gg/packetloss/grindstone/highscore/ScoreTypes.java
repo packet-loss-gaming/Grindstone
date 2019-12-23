@@ -19,4 +19,5 @@ public class ScoreTypes {
     public static final ScoreType CURSED_ORES_MINED = new ScoreType(9, true, ScoreType.Order.DESC);
     public static final ScoreType CURSED_MINE_DEATHS = new ScoreType(10, true, ScoreType.Order.DESC);
     public static final ScoreType MIRAGE_ARENA_KILLS = new ScoreType(11, true, ScoreType.Order.DESC);
+    public static final ScoreType SKY_WARS_WINS = new ScoreType(12, true, ScoreType.Order.DESC);
 }

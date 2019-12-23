@@ -30,6 +30,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.bukkittext.Text;
+import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.city.engine.minigame.Win;
@@ -40,6 +41,8 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
@@ -56,6 +59,7 @@ import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagDataBackend;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagPainter;
 import gg.packetloss.grindstone.util.timer.CountdownTask;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -122,6 +126,10 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     private SessionComponent sessions;
     @InjectComponent
     private PlayerStateComponent playerStateComponent;
+    @InjectComponent
+    private EconomyComponent economy;
+    @InjectComponent
+    private HighScoresComponent highScores;
 
     private void setupRegionInfo() {
         world = Bukkit.getWorld(config.worldName);
@@ -165,8 +173,31 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         configure(config);
     }
 
+    public void adjustPoints(Player player, SkyWarsPointEvent event) {
+        gameState.get(player).adjustPoints(event.getAdjustment());
+        player.sendMessage(Text.of(
+                ChatColor.DARK_GREEN,
+                Text.of(ChatColor.GOLD, event.getCaption()),
+                " +", Text.of(ChatColor.BLUE, event.getAdjustment()),
+                " points!"
+        ).build());
+    }
+
+    private void rewardPlayer(Player player, boolean won) {
+        if (!economy.isEnabled()) {
+            return;
+        }
+
+        double adjustedPoints = 1.5 * gameState.get(player).getPoints();
+        double amt = adjustedPoints * (won ? 1 : .5);
+
+        Economy economyHandle = economy.getHandle();
+        economyHandle.depositPlayer(player, amt);
+        ChatUtil.sendNotice(player, "You received: " + economyHandle.format(amt) + '.');
+    }
+
     public void died(Player player) {
-        // rewardPlayer(player, false);
+        rewardPlayer(player, false);
         gameState.removePlayer(player);
     }
 
@@ -386,8 +417,12 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     }
 
     private void handleWin(Player player) {
-        // highScoresComponent.update(player, ScoreTypes.JUNGLE_RAID_WINS, 1);
-        // rewardPlayer(player, true);
+        highScores.update(player, ScoreTypes.SKY_WARS_WINS, 1);
+
+        // Give some final points for victory
+        adjustPoints(player, SkyWarsPointEvent.GAME_WON);
+
+        rewardPlayer(player, true);
     }
 
     private void processWin(Win win) {
