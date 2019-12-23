@@ -223,38 +223,35 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
         if (task != null) task.cancel();
 
+        RegionChecker checker = new RegionChecker(rg);
         task = server.getScheduler().runTaskTimer(inst, () -> {
             if (lastDropPulse != 0 && System.currentTimeMillis() - lastDropPulse < TimeUnit.SECONDS.toMillis(3)) {
                 return;
             }
 
             Iterator<ItemStack> it = drops.iterator();
+            for (int i = 3 + (getContained(1, Player.class).size() * 2); i > 0; --i) {
+                // Pick a random Location
+                Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), checker);
+                if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
 
-            RegionChecker checker = new RegionChecker(rg);
-            for (int k = 10; it.hasNext() && k > 0; k--) {
-                for (int i = ChanceUtil.getRandom(10); i > 0; --i) {
-                    // Pick a random Location
-                    Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), checker);
-                    if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
-
-                    // If this is the first item, drop it, otherwise use an empty part box
-                    if (i == 1) {
-                        // Drop the xp
-                        if (populate) {
-                            // Throw in some xp cause why not
-                            for (int s = ChanceUtil.getRandom(5); s > 0; s--) {
-                                ExperienceOrb e = getWorld().spawn(l, ExperienceOrb.class);
-                                e.setExperience(8);
-                            }
+                // If this is the first item, drop it, otherwise use an empty part box
+                if (i == 1) {
+                    // Drop the xp
+                    if (populate) {
+                        // Throw in some xp cause why not
+                        for (int s = ChanceUtil.getRandom(5); s > 0; s--) {
+                            ExperienceOrb e = getWorld().spawn(l, ExperienceOrb.class);
+                            e.setExperience(8);
                         }
-
-                        dropPartyBox(l, it.next());
-
-                        // Remove the drop
-                        it.remove();
-                    } else {
-                        dropPartyBox(l);
                     }
+
+                    dropPartyBox(l, it.next());
+
+                    // Remove the drop
+                    it.remove();
+                } else {
+                    dropPartyBox(l);
                 }
             }
 
@@ -263,7 +260,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 task.cancel();
                 task = null;
             }
-        }, 20 * DROP_PARTY_DELAY, 20 * 3);
+        }, 20 * DROP_PARTY_DELAY, 10);
     }
 
     public void drop(int populatorValue) {
