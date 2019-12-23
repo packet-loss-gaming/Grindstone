@@ -20,6 +20,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
@@ -279,11 +280,13 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             } else if (e.equals(parent.snipee)) {
                 parent.snipee = null;
                 Player killer = e.getKiller();
-                if (killer != null) {
-                    double loot = parent.economy.getBalance(killer.getName()) * parent.getConfig().bankPercent;
+                if (killer != null && parent.economy.isEnabled()) {
+                    Economy economyHandle = parent.economy.getHandle();
+
+                    double loot = economyHandle.getBalance(killer.getName()) * parent.getConfig().bankPercent;
                     loot = Math.max(loot, parent.getConfig().minLoot);
-                    parent.economy.depositPlayer(killer.getName(), loot);
-                    ChatUtil.sendNotice(killer, "The boss drops " + ChatColor.WHITE + parent.economy.format(loot));
+                    economyHandle.depositPlayer(killer.getName(), loot);
+                    ChatUtil.sendNotice(killer, "The boss drops " + ChatColor.WHITE + economyHandle.format(loot));
                 }
             }
             event.getDrops().clear();

@@ -20,6 +20,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
+import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
@@ -33,13 +34,11 @@ import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
@@ -47,7 +46,8 @@ import java.util.Arrays;
 import java.util.List;
 
 @ComponentInformation(friendlyName = "Freaky Four", desc = "The craziest bosses ever")
-@Depend(components = {AdminComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
+@Depend(components = {AdminComponent.class, PlayerStateComponent.class, EconomyComponent.class},
+        plugins = {"WorldGuard"})
 public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
 
     protected static final int groundLevel = 79;
@@ -56,8 +56,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     protected AdminComponent admin;
     @InjectComponent
     protected PlayerStateComponent playerState;
-
-    protected Economy economy;
+    @InjectComponent
+    protected EconomyComponent economy;
 
     protected ProtectedRegion charlotte_RG, frimus_RG, dabomb_RG, snipee_RG, heads;
 
@@ -85,8 +85,6 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             tick = 4 * 20;
             listener = new FreakyFourListener(this);
             config = new FreakyFourConfig();
-
-            setupEconomy();
         } catch (UnknownPluginException e) {
             log.info("WorldGuard could not be found!");
         }
@@ -461,16 +459,5 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                 snipee = null;
             }
         }
-    }
-
-    private boolean setupEconomy() {
-
-        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
-                .vault.economy.Economy.class);
-        if (economyProvider != null) {
-            economy = economyProvider.getProvider();
-        }
-
-        return (economy != null);
     }
 }
