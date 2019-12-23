@@ -61,7 +61,6 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     private List<ItemStack> drops;
     private BukkitTask task = null;
     private long lastDropPulse = 0;
-    private double dropPartyPulses = 0;
 
     public DropPartyArena(World world, ProtectedRegion region) {
 
@@ -130,6 +129,11 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             CustomItems.RED_PARTY_BOX,
             CustomItems.BLACK_PARTY_BOX
     );
+
+    private void dropPartyBox(Location location) {
+        ItemStack partyBox = CustomItemCenter.build(CollectionUtil.getElement(PARTY_BOX_OPTIONS));
+        location.getWorld().dropItem(location, partyBox);
+    }
 
     private void dropPartyBox(Location location, ItemStack item) {
         ItemStack partyBox = CustomItemCenter.build(CollectionUtil.getElement(PARTY_BOX_OPTIONS));
@@ -217,9 +221,6 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         drops.removeAll(Collections.singleton(null));
         Collections.shuffle(drops);
 
-        // Set a maximum drop count
-        dropPartyPulses = drops.size() * .15;
-
         if (task != null) task.cancel();
 
         task = server.getScheduler().runTaskTimer(inst, () -> {
@@ -231,32 +232,37 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
             RegionChecker checker = new RegionChecker(rg);
             for (int k = 10; it.hasNext() && k > 0; k--) {
+                for (int i = ChanceUtil.getRandom(10); i > 0; --i) {
+                    // Pick a random Location
+                    Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), checker);
+                    if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
 
-                // Pick a random Location
-                Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), checker);
-                if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
-                dropPartyBox(l, it.next());
+                    // If this is the first item, drop it, otherwise use an empty part box
+                    if (i == 1) {
+                        // Drop the xp
+                        if (populate) {
+                            // Throw in some xp cause why not
+                            for (int s = ChanceUtil.getRandom(5); s > 0; s--) {
+                                ExperienceOrb e = getWorld().spawn(l, ExperienceOrb.class);
+                                e.setExperience(8);
+                            }
+                        }
 
-                // Remove the drop
-                it.remove();
+                        dropPartyBox(l, it.next());
 
-                // Drop the xp
-                if (populate) {
-                    // Throw in some xp cause why not
-                    for (int s = ChanceUtil.getRandom(5); s > 0; s--) {
-                        ExperienceOrb e = getWorld().spawn(l, ExperienceOrb.class);
-                        e.setExperience(8);
+                        // Remove the drop
+                        it.remove();
+                    } else {
+                        dropPartyBox(l);
                     }
                 }
             }
 
-            // Cancel if we've ran out of drop party pulses or if there is nothing more to drop
-            if (drops.size() < 1 || dropPartyPulses <= 0) {
+            // Cancel if there is nothing more to drop
+            if (drops.size() < 1) {
                 task.cancel();
                 task = null;
             }
-
-            dropPartyPulses--;
         }, 20 * DROP_PARTY_DELAY, 20 * 3);
     }
 
