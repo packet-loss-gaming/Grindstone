@@ -627,9 +627,14 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             }
 
             // Leave admin mode deaths out of this
-            if (parent.admin.isAdmin(player)) return;
-            parent.makeGrave(player.getName(), dropArray);
-            event.setDeathMessage(ChatColor.DARK_RED + "RIP ~ " + player.getDisplayName());
+            try {
+                if (parent.admin.isAdmin(player) || parent.playerState.hasTempKind(player)) return;
+
+                parent.makeGrave(player.getName(), dropArray);
+                event.setDeathMessage(ChatColor.DARK_RED + "RIP ~ " + player.getDisplayName());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

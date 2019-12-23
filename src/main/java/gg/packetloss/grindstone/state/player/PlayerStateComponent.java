@@ -218,6 +218,11 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
         writeStateRecord(player.getUniqueId());
     }
 
+    public boolean hasTempKind(Player player) throws IOException {
+        PlayerStateRecord record = requireStateRecord(player.getUniqueId());
+        return record.getTempKind().isPresent();
+    }
+
     public void tryPopTempKind(Player player) throws IOException {
         PlayerStateRecord record = requireStateRecord(player.getUniqueId());
         Optional<PlayerStateKind> optTempKind = record.getTempKind();
