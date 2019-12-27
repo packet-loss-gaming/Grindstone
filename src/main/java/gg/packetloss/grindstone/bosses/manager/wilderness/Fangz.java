@@ -25,6 +25,8 @@ import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.DamageUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.hackbook.AttributeBook;
+import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Damageable;
@@ -73,6 +75,12 @@ public class Fangz {
                     int level = controllable.getDetail().getLevel();
                     ((LivingEntity) anEntity).setMaxHealth(20 * 50 * level);
                     ((LivingEntity) anEntity).setHealth(20 * 50 * level);
+
+                    try {
+                        AttributeBook.setAttribute((LivingEntity) anEntity, AttributeBook.Attribute.FOLLOW_RANGE, 150);
+                    } catch (UnsupportedFeatureException ex) {
+                        ex.printStackTrace();
+                    }
                 }
                 return null;
             }

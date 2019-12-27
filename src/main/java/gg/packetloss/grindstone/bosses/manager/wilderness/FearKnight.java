@@ -25,6 +25,8 @@ import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.hackbook.AttributeBook;
+import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Damageable;
@@ -84,6 +86,12 @@ public class FearKnight {
 
                     equipment.setItemInHand(CustomItemCenter.build(CustomItems.FEAR_SWORD));
                     equipment.setItemInHandDropChance(.001F);
+
+                    try {
+                        AttributeBook.setAttribute((LivingEntity) anEntity, AttributeBook.Attribute.FOLLOW_RANGE, 150);
+                    } catch (UnsupportedFeatureException ex) {
+                        ex.printStackTrace();
+                    }
                 }
                 return null;
             }
