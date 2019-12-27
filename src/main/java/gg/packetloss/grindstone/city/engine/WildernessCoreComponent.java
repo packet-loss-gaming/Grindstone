@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.city.engine;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
@@ -23,8 +22,6 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.bosses.detail.WBossDetail;
 import gg.packetloss.grindstone.bosses.manager.wilderness.*;
 import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
-import gg.packetloss.grindstone.city.engine.combat.PvPScope;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
@@ -66,7 +63,6 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -96,7 +92,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private static Set<World> wildernessWorlds = new HashSet<>();
 
     private long nextDropTime = 0;
-    private PvPScope scope;
     private LocalConfiguration config;
 
     // Boss Handlers
@@ -118,7 +113,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         // Start TP/Sync task with 2 tick delay
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 2, 20 * 2);
 
-        registerScope();
         registerCommands(Commands.class);
     }
 
@@ -187,20 +181,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         wildernessWorlds.clear();
         wildernessWorlds.add(wilderness = Bukkit.getWorld(config.wildernessWorld));
         wildernessWorlds.add(wildernessNether = Bukkit.getWorld(config.wildernessWorld + "_nether"));
-    }
-
-    private void registerScope() {
-        PvPComponent.registerScope(scope = new PvPScope() {
-            @Override
-            public boolean isApplicable(Player player) {
-                return isWildernessWorld(player.getWorld());
-            }
-
-            @Override
-            public boolean allowed(Player attacker, Player defender) {
-                return !sessions.getSession(WildernessSession.class, attacker).isIgnored(defender.getName());
-            }
-        });
     }
 
     public static boolean isWildernessWorld(World world) {
@@ -420,12 +400,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         // we don't want to allow the processing of onEntityDamage to continue,
         // so we return true instead of false to end the cycle.
         if (defender instanceof Player) {
-            if (!scope.checkFor(attacker, (Player) defender)) {
-                event.setCancelled(true);
-            } else if (!scope.checkFor((Player) defender, attacker)) {
-                // Auto unignore players when they successfully attack a player who is ignoring them
-                sessions.getSession(WildernessSession.class, defender).unignore(attacker.getName());
-            }
             return true;
         }
 
@@ -731,46 +705,12 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             ChatUtil.sendNotice(sender, "Mob Health Modifier: " + (level > 1 ? 5 * (level - 1) : 1) + "x");
         }
 
-        @Command(aliases = {"wparty", "wp"}, desc = "Party Commands")
-        @NestedCommand({PartyCommands.class})
-        public void partyCommands(CommandContext args, CommandSender sender) throws CommandException {
-
-        }
-
         @Command(aliases = {"wboss"}, desc = "Boss Commands")
         @NestedCommand({BossCommands.class})
         @CommandPermissions("aurora.wilderness.boss")
         public void bossCommands(CommandContext args, CommandSender sender) throws CommandException {
 
         }
-    }
-
-    public class PartyCommands {
-
-        @Command(aliases = {"add"},
-                usage = "<player[, player]>", desc = "Ignore a player",
-                flags = "", min = 1, max = 1)
-        public void ignore(CommandContext args, CommandSender sender) throws CommandException {
-            WildernessSession session = sessions.getSession(WildernessSession.class, PlayerUtil.checkPlayer(sender));
-            String[] targets = args.getString(0).split(",");
-            for (String target : targets) {
-                session.ignore(target);
-                ChatUtil.sendNotice(sender, "You will no longer be able to damage " + target + ", unless attacked first.");
-            }
-        }
-
-        @Command(aliases = {"remove"},
-                usage = "<player[, player]>", desc = "Unignore a player",
-                flags = "", min = 1, max = 1)
-        public void unignore(CommandContext args, CommandSender sender) throws CommandException {
-            WildernessSession session = sessions.getSession(WildernessSession.class, PlayerUtil.checkPlayer(sender));
-            String[] targets = args.getString(0).split(",");
-            for (String target : targets) {
-                session.unignore(target);
-                ChatUtil.sendNotice(sender, "You will now be able to damage " + target + ".");
-            }
-        }
-
     }
 
     public class BossCommands {
@@ -906,40 +846,5 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         }
         */
         return EnvironmentUtil.isOre(material);
-    }
-
-    private static class WildernessSession extends PersistentSession {
-
-        public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
-
-        private UUID lastAttacked = null;
-        private Set<String> ignored = new HashSet<>();
-
-        protected WildernessSession() {
-            super(MAX_AGE);
-        }
-
-        public boolean checkLast(UUID lastAttacked) {
-
-            if (this.lastAttacked == lastAttacked) {
-                return true;
-            }
-
-            this.lastAttacked = lastAttacked;
-
-            return false;
-        }
-
-        public boolean isIgnored(String player) {
-            return ignored.contains(player);
-        }
-
-        public void ignore(String player) {
-            ignored.add(player);
-        }
-
-        public void unignore(String player) {
-            ignored.remove(player);
-        }
     }
 }
