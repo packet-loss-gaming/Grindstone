@@ -19,8 +19,7 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventio
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
-import gg.packetloss.grindstone.events.guild.NinjaGrappleEvent;
-import gg.packetloss.grindstone.events.guild.RogueBlipEvent;
+import gg.packetloss.grindstone.events.guild.GuildPowerUseEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
@@ -213,17 +212,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onNinjaGrapple(NinjaGrappleEvent event) {
-        Player player = event.getPlayer();
-        if (!parent.contains(parent.parkour, player)) {
-            return;
-        }
-
-        event.setCancelled(true);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onRogueBlip(RogueBlipEvent event) {
+    public void onRogueBlip(GuildPowerUseEvent event) {
         Player player = event.getPlayer();
         if (!parent.contains(parent.parkour, player)) {
             return;

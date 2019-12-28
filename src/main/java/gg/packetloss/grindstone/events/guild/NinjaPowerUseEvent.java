@@ -7,10 +7,9 @@
 package gg.packetloss.grindstone.events.guild;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerEvent;
 
-public abstract class RogueEvent extends PlayerEvent {
-    public RogueEvent(Player who) {
+public abstract class NinjaPowerUseEvent extends GuildPowerUseEvent {
+    public NinjaPowerUseEvent(Player who) {
         super(who);
     }
 }
