@@ -99,6 +99,10 @@ public enum CustomItems {
 
     // Ninja Guild
     NINJA_STAR(ChatColor.DARK_GRAY, "Ninja Star"),
+    NINJA_OATH(ChatColor.DARK_BLUE, "Ninja Oath"),
+
+    // Rogue Guild
+    ROGUE_OATH(ChatColor.DARK_RED, "Rogue Oath"),
 
     // Magical Items
     ODE_TO_THE_FROZEN_KING(ChatColor.AQUA, "Ode to The Frozen King"),

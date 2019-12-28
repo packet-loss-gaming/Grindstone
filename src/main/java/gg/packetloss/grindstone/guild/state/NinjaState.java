@@ -15,6 +15,10 @@ public class NinjaState extends InternalGuildState {
     private long nextSmokeBomb = 0;
     private long nextArrowBomb = 0;
 
+    public NinjaState(long experience) {
+        super(experience);
+    }
+
     public List<Arrow> getRecentArrows() {
         if (recentArrows.isEmpty()) {
             return new ArrayList<>();

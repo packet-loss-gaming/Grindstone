@@ -13,6 +13,10 @@ public class RogueState extends InternalGuildState {
     private long nextBlip = 0;
     private long nextGrenade = 0;
 
+    public RogueState(long experience) {
+        super(experience);
+    }
+
     public boolean canBlip() {
         return nextBlip == 0 || System.currentTimeMillis() >= nextBlip;
     }

@@ -507,6 +507,17 @@ public class CustomItemCenter {
         ninjaStar.addUse("Teleports the player to the Ninja Guild.");
         addItem(ninjaStar);
 
+        CustomItem ninjaOath = new CustomItem(NINJA_OATH, Material.PAPER);
+        ninjaOath.addSource(ItemSource.NINJA_GUILD);
+        ninjaOath.addUse("Allows entry into the Ninja Guild.");
+        addItem(ninjaOath);
+
+        // Rogue Guild
+        CustomItem rogueOath = new CustomItem(ROGUE_OATH, Material.PAPER);
+        rogueOath.addSource(ItemSource.NINJA_GUILD);
+        rogueOath.addUse("Allows entry into the Rogue Guild.");
+        addItem(rogueOath);
+
         // Magical Items
         CustomItem odeToTheFrozenKing = new CustomItem(ODE_TO_THE_FROZEN_KING, Material.PAPER);
         odeToTheFrozenKing.addSource(ItemSource.WILDERNESS_MOBS);

@@ -8,6 +8,8 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.guild.db.PlayerGuildDatabase;
+import gg.packetloss.grindstone.guild.db.mysql.MySQLPlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.listener.NinjaListener;
 import gg.packetloss.grindstone.guild.listener.RogueListener;
 import gg.packetloss.grindstone.guild.passive.PotionMetabolizer;
@@ -15,11 +17,17 @@ import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.NinjaState;
 import gg.packetloss.grindstone.guild.state.RogueState;
+import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
+import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -27,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Guild Management", desc = "Guild core systems and services")
@@ -35,6 +44,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    private PlayerGuildDatabase database = new MySQLPlayerGuildDatabase();
     private Map<UUID, InternalGuildState> guildStateMap = new HashMap<>();
 
     private static GuildComponent guildInst;
@@ -63,35 +73,15 @@ public class GuildComponent extends BukkitComponent implements Listener {
         registerCommands(Commands.class);
     }
 
+    @Override
+    public void disable() {
+        for (Map.Entry<UUID, InternalGuildState> entry: guildStateMap.entrySet()) {
+            database.updateActive(entry.getKey(), entry.getValue());
+        }
+    }
+
     private InternalGuildState internalGetState(Player player) {
         return guildStateMap.get(player.getUniqueId());
-    }
-
-    public boolean inGuild(GuildType guild, Player player) {
-        switch (guild) {
-            case ROGUE:
-                if (player.hasPermission("aurora.rogue")) {
-                    return true;
-                }
-                break;
-            case NINJA:
-                if (player.hasPermission("aurora.ninja")) {
-                    return true;
-                }
-                break;
-        }
-
-        return false;
-    }
-
-    public Optional<GuildType> getGuild(Player player) {
-        for (GuildType guildType : GuildType.values()) {
-            if (inGuild(guildType, player)) {
-                return Optional.of(guildType);
-            }
-        }
-
-        return Optional.empty();
     }
 
     public Optional<GuildState> getState(Player player) {
@@ -103,25 +93,72 @@ public class GuildComponent extends BukkitComponent implements Listener {
         return Optional.of(new GuildState(player, baseState));
     }
 
-    private GuildState constructGuildState(Player player, GuildType type) {
+    private CompletableFuture<Optional<InternalGuildState>> constructGuildState(Player player) {
+        CompletableFuture<Optional<InternalGuildState>> future = new CompletableFuture<>();
+
+        server.getScheduler().runTaskAsynchronously(inst, () -> {
+            future.complete(database.loadGuild(player.getUniqueId()));
+        });
+
+        return future;
+    }
+
+    private InternalGuildState constructDefaultGuildState(GuildType type) {
+        switch (type) {
+            case ROGUE:
+                return new RogueState(0);
+            case NINJA:
+                return new NinjaState(0);
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean joinGuild(Player player, GuildType guildType) {
         UUID playerID = player.getUniqueId();
 
-        switch (type) {
-            case NINJA:
-                guildStateMap.putIfAbsent(playerID, new NinjaState());
-            case ROGUE:
-                guildStateMap.putIfAbsent(playerID, new RogueState());
+        InternalGuildState currentGuild = guildStateMap.get(playerID);
+        if (currentGuild != null) {
+            if (currentGuild.getType() == guildType) {
+                return false;
+            }
+
+            // Sync the current guild
+            database.updateActive(playerID, currentGuild);
         }
 
-        return new GuildState(player, guildStateMap.get(playerID));
+        Optional<InternalGuildState> optNewGuildState = database.loadGuild(playerID, guildType);
+        InternalGuildState newGuildState;
+        if (optNewGuildState.isPresent()) {
+            newGuildState = optNewGuildState.get();
+            newGuildState.setExperience((long) (newGuildState.getExperience() * .9));
+        } else {
+            newGuildState = constructDefaultGuildState(guildType);
+        }
+
+        // Sync the new guild
+        database.updateActive(playerID, newGuildState);
+        guildStateMap.put(playerID, newGuildState);
+
+        // Swap powers
+        new GuildState(player, currentGuild).disablePowers();
+        new GuildState(player, newGuildState).enablePowers();
+
+        return true;
     }
+
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        getGuild(player).ifPresent((guildType) -> {
-            constructGuildState(player, guildType).enablePowers();
+        constructGuildState(player).thenAccept((optInternalGuildState) -> {
+            optInternalGuildState.ifPresent((internalGuildState -> {
+                server.getScheduler().runTask(inst, () -> {
+                    guildStateMap.put(player.getUniqueId(), internalGuildState);
+
+                    new GuildState(player, internalGuildState).enablePowers();
+                });
+            }));
         });
     }
 
@@ -129,7 +166,46 @@ public class GuildComponent extends BukkitComponent implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        getState(player).ifPresent(GuildState::disablePowers);
+        InternalGuildState internalState = guildStateMap.remove(player.getUniqueId());
+        if (internalState == null) {
+            return;
+        }
+
+        server.getScheduler().runTaskAsynchronously(inst, () -> {
+           database.updateActive(player.getUniqueId(), internalState);
+        });
+
+        new GuildState(player, internalState).disablePowers();
+    }
+
+    private static EDBEExtractor<Player, LivingEntity, Arrow> extractor = new EDBEExtractor<>(
+            Player.class,
+            LivingEntity.class,
+            Arrow.class
+    );
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDeath(EntityDamageByEntityEvent event) {
+        if (event.getFinalDamage() < 1) {
+            return;
+        }
+
+        CombatantPair<Player, LivingEntity, Arrow> result = extractor.extractFrom(event);
+        if (result == null) return;
+
+        final Player attacker = result.getAttacker();
+        InternalGuildState state = internalGetState(attacker);
+        if (state == null) {
+            return;
+        }
+
+        if (!state.isEnabled()) {
+            return;
+        }
+
+        double maxDamage = Math.min(result.getDefender().getMaxHealth(), event.getFinalDamage());
+        int addedExp = (int) Math.max(1, maxDamage * .1);
+        state.setExperience(state.getExperience() + addedExp);
     }
 
     @EventHandler(ignoreCancelled = true)

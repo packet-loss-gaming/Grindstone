@@ -67,9 +67,7 @@ public class RogueListener implements Listener {
 
         Player player = event.getPlayer();
 
-        double multiplier = player.hasPermission("aurora.rogue.master") ? 2.5 : 2;
-
-        player.setWalkSpeed((float) (DEFAULT_SPEED * multiplier));
+        player.setWalkSpeed(DEFAULT_SPEED * 2);
 
         ChatUtil.sendNotice(player, "You gain the power of a rogue warrior!");
     }

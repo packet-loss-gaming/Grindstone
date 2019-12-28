@@ -25,6 +25,8 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.PacketInterceptionComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
+import gg.packetloss.grindstone.guild.GuildComponent;
+import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
@@ -82,6 +84,8 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     protected static PacketInterceptionComponent packetInterceptor;
     @InjectComponent
     protected static PrayerComponent prayers;
+    @InjectComponent
+    protected static GuildComponent guilds;
 
     private static ItemCondenser goldCondenser = new ItemCondenser();
 
@@ -154,6 +158,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         registerTools();
         registerHymns();
         registerPermissionBindingTomes();
+        registerGuildOaths();
         registerGeneral();
         registerMigrations();
 
@@ -170,6 +175,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         AbstractItemFeatureImpl.applyResource(admin);
         AbstractItemFeatureImpl.applyResource(sessions);
         AbstractItemFeatureImpl.applyResource(prayers);
+        AbstractItemFeatureImpl.applyResource(guilds);
     }
 
     private void registerSpecWeapons() {
@@ -216,6 +222,12 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         tomeImpl.addTome(CustomItems.TOME_OF_DIVINITY, "aurora.tome.divinity");
         tomeImpl.addTome(CustomItems.TOME_OF_THE_UNDEAD, "aurora.tome.undead");
         tomeImpl.addTome(CustomItems.TOME_OF_LEGENDS, "aurora.tome.legends");
+    }
+
+    private void registerGuildOaths() {
+        GuildOathImpl oathImpl = handle(new GuildOathImpl());
+        oathImpl.addOath(CustomItems.NINJA_OATH, GuildType.NINJA);
+        oathImpl.addOath(CustomItems.ROGUE_OATH, GuildType.ROGUE);
     }
 
     private void registerGeneral() {
