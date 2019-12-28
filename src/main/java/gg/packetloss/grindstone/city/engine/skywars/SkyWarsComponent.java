@@ -33,11 +33,13 @@ import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
+import gg.packetloss.grindstone.city.engine.jungleraid.JungleRaidFlag;
 import gg.packetloss.grindstone.city.engine.minigame.Win;
 import gg.packetloss.grindstone.city.engine.minigame.WinType;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
+import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
@@ -805,7 +807,11 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         public int z = 205;
         @Setting("region")
         public String region = "vineam-district-sky-wars";
-
+        @Setting("cmd-whitelist")
+        private List<String> commandWhitelist = List.of(
+                "stopweather", "daylight", "me", "say", "pm", "msg", "message", "whisper",
+                "tell", "reply", "r", "mute", "unmute", "debug", "dropclear", "dc"
+        );
     }
 
     private static EDBEExtractor<Player, Player, Snowball> extractor = new EDBEExtractor<>(
@@ -815,19 +821,13 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     );
 
     private class SkyWarsListener implements Listener {
-
-        private final String[] cmdWhiteList = new String[]{
-                "skywar", "sw", "stopweather", "me", "say", "pm", "msg", "message", "whisper", "tell",
-                "reply", "r", "mute", "unmute", "debug", "dropclear", "dc", "auth", "toggleeditwand"
-        };
-
         @EventHandler(ignoreCancelled = true)
         public void onCommandPreProcess(PlayerCommandPreprocessEvent event) {
             Player player = event.getPlayer();
             if (gameState.containsPlayer(player)) {
                 String command = event.getMessage();
                 boolean allowed = false;
-                for (String cmd : cmdWhiteList) {
+                for (String cmd : config.commandWhitelist) {
                     if (command.toLowerCase().startsWith("/" + cmd)) {
                         allowed = true;
                         break;
