@@ -4,28 +4,31 @@ import com.destroystokyo.paper.ParticleBuilder;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.skelril.OSBL.bukkit.entity.BukkitBoss;
+import com.skelril.OSBL.bukkit.util.BukkitAttackDamage;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
 import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
+import com.skelril.OSBL.util.DamageSource;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.hackbook.AttributeBook;
+import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Damageable;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Zombie;
+import org.bukkit.entity.*;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
@@ -99,6 +102,24 @@ public class MercilessZombie {
     private static final ParticleBuilder PASSIVE_PARTICLE_EFFECT = new ParticleBuilder(Particle.ENCHANTMENT_TABLE).allPlayers();
     private static final ParticleBuilder REMOVAL_PARTICLE_EFFECT = new ParticleBuilder(Particle.SMOKE_LARGE).allPlayers();
 
+    private void distanceTrap(LivingEntity boss, LivingEntity toHit) {
+        toHit.teleport(boss);
+
+        server.getScheduler().runTaskLater(inst, () -> {
+            if (boss.isDead()) {
+                return;
+            }
+
+            if (toHit.getLocation().distanceSquared(boss.getLocation()) > Math.pow(4, 2)) {
+                ChatUtil.sendNotice(toHit, "Come back...");
+                toHit.damage(1, boss);
+
+                distanceTrap(boss, toHit);
+            }
+        }, 10);
+
+    }
+
     private void setupMercilessZombie() {
         List<BindInstruction<GenericDetail>> bindInstructions = mercilessZombie.bindInstructions;
         bindInstructions.add(new BindInstruction<>() {
@@ -117,6 +138,14 @@ public class MercilessZombie {
                     // Set health
                     ((LivingEntity) anEntity).setMaxHealth(750);
                     ((LivingEntity) anEntity).setHealth(750);
+
+                    // Modify speed
+                    try {
+                        AttributeBook.setAttribute((LivingEntity) anEntity, AttributeBook.Attribute.MOVEMENT_SPEED, 0.3);
+                        AttributeBook.setAttribute((LivingEntity) anEntity, AttributeBook.Attribute.FOLLOW_RANGE, 75);
+                    } catch (UnsupportedFeatureException ex) {
+                        ex.printStackTrace();
+                    }
 
                     // Gear them up
                     EntityEquipment equipment = ((LivingEntity) anEntity).getEquipment();
@@ -159,12 +188,31 @@ public class MercilessZombie {
 
         List<DamagedInstruction<GenericDetail>> damagedInstructions = mercilessZombie.damagedInstructions;
         damagedInstructions.add(new HealthPrint<>());
+        damagedInstructions.add(new DamagedInstruction<>() {
+            @Override
+            public InstructionResult<GenericDetail, DamagedInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, DamageSource damageSource, AttackDamage damage) {
+                Entity boss = BukkitUtil.getBukkitEntity(controllable);
+                LocalEntity localToHit = damageSource.getDamagingEntity();
+                if (localToHit == null) return null;
+                Entity toHit = BukkitUtil.getBukkitEntity(localToHit);
+                if (getEvent(damage).getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
+                    ChatUtil.sendWarning(toHit, "Cute.");
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        distanceTrap((LivingEntity) boss, (LivingEntity) toHit);
+                    }, 10);
+                }
+                return null;
+            }
+        });
 
         List<PassiveInstruction<GenericDetail>> passiveInstructions = mercilessZombie.passiveInstructions;
         passiveInstructions.add(new PassiveInstruction<GenericDetail>() {
             @Override
             public InstructionResult<GenericDetail, PassiveInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
+                if (boss.isDead()) {
+                    return null;
+                }
 
                 double totalHealth = 5;
 
@@ -176,6 +224,17 @@ public class MercilessZombie {
                     if (isConsumableZombie(entity)) {
                         totalHealth += ((Zombie) entity).getHealth();
                         ((Zombie) entity).setHealth(0);
+                        continue;
+                    }
+
+                    if (entity instanceof Player) {
+                        Location pLoc = entity.getLocation();
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            pLoc.getWorld().strikeLightningEffect(pLoc);
+                            for (Player player : pLoc.getNearbyEntitiesByType(Player.class, 2)) {
+                                player.damage(1, boss);
+                            }
+                        }, 30);
                     }
                 }
 
@@ -188,5 +247,12 @@ public class MercilessZombie {
                 return null;
             }
         });
+    }
+
+    private EntityDamageEvent getEvent(AttackDamage damage) {
+        if (damage instanceof BukkitAttackDamage) {
+            return ((BukkitAttackDamage) damage).getBukkitEvent();
+        }
+        return null;
     }
 }
