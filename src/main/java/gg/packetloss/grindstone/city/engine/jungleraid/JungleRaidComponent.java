@@ -1222,21 +1222,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         @EventHandler(ignoreCancelled = true)
         public void onCommandPreProcess(PlayerCommandPreprocessEvent event) {
             Player player = event.getPlayer();
-            if (anythingContains(player)) {
-                String command = event.getMessage();
-
-                boolean allowed = false;
-                for (String cmd : config.commandWhitelist) {
-                    if (command.toLowerCase().startsWith("/" + cmd)) {
-                        allowed = true;
-                        break;
-                    }
-                }
-
-                if (!allowed) {
-                    ChatUtil.sendError(player, "Command blocked.");
-                    event.setCancelled(true);
-                }
+            if (gameState.containsPlayer(player)) {
+                new CommandBlocker(config.commandWhitelist).handle(event);
             }
         }
 

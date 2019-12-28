@@ -824,18 +824,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         public void onCommandPreProcess(PlayerCommandPreprocessEvent event) {
             Player player = event.getPlayer();
             if (gameState.containsPlayer(player)) {
-                String command = event.getMessage();
-                boolean allowed = false;
-                for (String cmd : config.commandWhitelist) {
-                    if (command.toLowerCase().startsWith("/" + cmd)) {
-                        allowed = true;
-                        break;
-                    }
-                }
-                if (!allowed) {
-                    ChatUtil.sendError(player, "Command blocked.");
-                    event.setCancelled(true);
-                }
+                new CommandBlocker(config.commandWhitelist).handle(event);
             }
         }
 
