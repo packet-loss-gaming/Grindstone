@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.city.engine.pixieitems.manager;
+package gg.packetloss.grindstone.pixieitems.manager;
 
 import com.google.common.collect.ImmutableSet;
 

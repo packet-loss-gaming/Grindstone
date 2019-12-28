@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.city.engine.pixieitems;
+package gg.packetloss.grindstone.pixieitems;
 
 import com.google.common.collect.ImmutableSet;
 import com.sk89q.commandbook.CommandBook;
@@ -11,13 +11,13 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.bukkittext.TextAction;
-import gg.packetloss.grindstone.city.engine.pixieitems.broker.EconomyBroker;
-import gg.packetloss.grindstone.city.engine.pixieitems.broker.VoidBroker;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDetail;
-import gg.packetloss.grindstone.city.engine.pixieitems.manager.NewSinkResult;
-import gg.packetloss.grindstone.city.engine.pixieitems.manager.NewSourceResult;
-import gg.packetloss.grindstone.city.engine.pixieitems.manager.PixieNetworkManager;
-import gg.packetloss.grindstone.city.engine.pixieitems.manager.ThreadedPixieNetworkManager;
+import gg.packetloss.grindstone.pixieitems.broker.EconomyBroker;
+import gg.packetloss.grindstone.pixieitems.broker.VoidBroker;
+import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
+import gg.packetloss.grindstone.pixieitems.manager.NewSinkResult;
+import gg.packetloss.grindstone.pixieitems.manager.NewSourceResult;
+import gg.packetloss.grindstone.pixieitems.manager.PixieNetworkManager;
+import gg.packetloss.grindstone.pixieitems.manager.ThreadedPixieNetworkManager;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;

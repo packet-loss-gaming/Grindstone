@@ -1,11 +1,11 @@
-package gg.packetloss.grindstone.city.engine.pixieitems.db.mysql;
+package gg.packetloss.grindstone.pixieitems.db.mysql;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieChestDatabase;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieChestDefinition;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieChestDetail;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDefinition;
+import gg.packetloss.grindstone.pixieitems.db.PixieChestDatabase;
+import gg.packetloss.grindstone.pixieitems.db.PixieChestDefinition;
+import gg.packetloss.grindstone.pixieitems.db.PixieChestDetail;
+import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDefinition;
 import gg.packetloss.grindstone.data.MySQLHandle;
 import org.bukkit.Chunk;
 import org.bukkit.Location;

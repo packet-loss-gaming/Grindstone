@@ -1,14 +1,14 @@
-package gg.packetloss.grindstone.city.engine.pixieitems.manager;
+package gg.packetloss.grindstone.pixieitems.manager;
 
 import com.destroystokyo.paper.ParticleBuilder;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import gg.packetloss.grindstone.city.engine.pixieitems.BrokerTransaction;
-import gg.packetloss.grindstone.city.engine.pixieitems.PixieSinkVariant;
-import gg.packetloss.grindstone.city.engine.pixieitems.TransactionBroker;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.*;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.mysql.MySQLPixieChestDatabase;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.mysql.MySQLPixieNetworkDatabase;
+import gg.packetloss.grindstone.pixieitems.BrokerTransaction;
+import gg.packetloss.grindstone.pixieitems.PixieSinkVariant;
+import gg.packetloss.grindstone.pixieitems.TransactionBroker;
+import gg.packetloss.grindstone.pixieitems.db.*;
+import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieChestDatabase;
+import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieNetworkDatabase;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.RefCountedTracker;
 import org.apache.commons.lang3.Validate;

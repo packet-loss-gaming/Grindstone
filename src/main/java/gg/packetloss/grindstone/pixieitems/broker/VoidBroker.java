@@ -1,7 +1,7 @@
-package gg.packetloss.grindstone.city.engine.pixieitems.broker;
+package gg.packetloss.grindstone.pixieitems.broker;
 
-import gg.packetloss.grindstone.city.engine.pixieitems.BrokerTransaction;
-import gg.packetloss.grindstone.city.engine.pixieitems.TransactionBroker;
+import gg.packetloss.grindstone.pixieitems.BrokerTransaction;
+import gg.packetloss.grindstone.pixieitems.TransactionBroker;
 import org.bukkit.inventory.ItemStack;
 
 public class VoidBroker implements TransactionBroker {

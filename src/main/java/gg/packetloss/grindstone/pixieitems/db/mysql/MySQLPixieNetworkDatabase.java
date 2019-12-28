@@ -1,7 +1,7 @@
-package gg.packetloss.grindstone.city.engine.pixieitems.db.mysql;
+package gg.packetloss.grindstone.pixieitems.db.mysql;
 
-import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDatabase;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDetail;
+import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDatabase;
+import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
 import gg.packetloss.grindstone.data.MySQLHandle;
 
 import java.sql.*;

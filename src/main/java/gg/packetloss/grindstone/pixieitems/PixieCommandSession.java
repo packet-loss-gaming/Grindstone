@@ -1,8 +1,8 @@
-package gg.packetloss.grindstone.city.engine.pixieitems;
+package gg.packetloss.grindstone.pixieitems;
 
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.minecraft.util.commands.CommandException;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDetail;
+import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
 import org.apache.commons.lang3.Validate;
 
 import java.util.Optional;

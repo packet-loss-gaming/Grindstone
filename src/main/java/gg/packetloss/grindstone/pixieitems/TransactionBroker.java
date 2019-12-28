@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.city.engine.pixieitems;
+package gg.packetloss.grindstone.pixieitems;
 
 import org.bukkit.inventory.ItemStack;
 

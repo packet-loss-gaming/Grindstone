@@ -1,8 +1,8 @@
-package gg.packetloss.grindstone.city.engine.pixieitems.manager;
+package gg.packetloss.grindstone.pixieitems.manager;
 
-import gg.packetloss.grindstone.city.engine.pixieitems.PixieSinkVariant;
-import gg.packetloss.grindstone.city.engine.pixieitems.TransactionBroker;
-import gg.packetloss.grindstone.city.engine.pixieitems.db.PixieNetworkDetail;
+import gg.packetloss.grindstone.pixieitems.PixieSinkVariant;
+import gg.packetloss.grindstone.pixieitems.TransactionBroker;
+import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.block.Block;

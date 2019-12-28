@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.city.engine.pixieitems.db;
+package gg.packetloss.grindstone.pixieitems.db;
 
 import java.util.UUID;
 

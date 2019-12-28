@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.city.engine.pixieitems.manager;
+package gg.packetloss.grindstone.pixieitems.manager;
 
 public class NewSourceResult implements NewChestResult {
     private final boolean isNew;

@@ -1,4 +1,4 @@
-package gg.packetloss.grindstone.city.engine.pixieitems.manager;
+package gg.packetloss.grindstone.pixieitems.manager;
 
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
