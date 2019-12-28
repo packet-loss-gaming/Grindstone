@@ -33,7 +33,6 @@ import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
-import gg.packetloss.grindstone.city.engine.jungleraid.JungleRaidFlag;
 import gg.packetloss.grindstone.city.engine.minigame.Win;
 import gg.packetloss.grindstone.city.engine.minigame.WinType;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
@@ -837,6 +836,13 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                     ChatUtil.sendError(player, "Command blocked.");
                     event.setCancelled(true);
                 }
+            }
+        }
+
+        @EventHandler(ignoreCancelled = true)
+        public void onGuildPowersEnable(GuildPowersEnableEvent event) {
+            if (gameState.containsPlayer(event.getPlayer())) {
+                event.setCancelled(true);
             }
         }
 
