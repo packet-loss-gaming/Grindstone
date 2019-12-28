@@ -10,7 +10,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.HashMap;
@@ -39,7 +38,7 @@ public class PermissionBindingTomeImpl extends AbstractItemFeatureImpl {
             return false;
         }
 
-        return permissionManager.playerAdd(player, permission);
+        return permissionManager.playerAdd(null, player, permission);
     }
 
     @Override
