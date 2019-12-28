@@ -1241,6 +1241,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         }
 
         @EventHandler(ignoreCancelled = true)
+        public void onGuildPowersEnable(GuildPowersEnableEvent event) {
+            if (gameState.containsPlayer(event.getPlayer()) && !isFlagEnabled(JungleRaidFlag.ALLOW_GUILDS)) {
+                event.setCancelled(true);
+            }
+        }
+
+        @EventHandler(ignoreCancelled = true)
         public void onItemDrop(PlayerDropItemEvent event) {
             if (anythingContains(event.getPlayer()) && state != JungleRaidState.IN_PROGRESS) event.setCancelled(true);
         }
