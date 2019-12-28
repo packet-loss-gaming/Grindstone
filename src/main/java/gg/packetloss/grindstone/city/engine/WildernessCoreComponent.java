@@ -213,6 +213,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         public String wildernessWorld = "Wilderness";
         @Setting("enable-sync")
         public boolean enableSync = true;
+        @Setting("entity.drop-count-max-level")
+        public double dropCountMaxLevel = 20;
+        @Setting("entity.drop-value-modifier")
+        public double dropValueModifier = 1.25;
         @Setting("mini-bosses.lost-rogue")
         public int lostRogueChance = 1000;
         @Setting("mini-bosses.fear-knight")
@@ -416,40 +420,56 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Location location = entity.getLocation();
         int level = getLevel(location);
+
         boolean isWilderness = isWildernessWorld(location.getWorld());
-        if (isWilderness && level > 1) {
+        if (!isWilderness) {
+            return;
+        }
+
+        if (level > 1) {
             boolean isFrozenBiome = isFrozenBiome(location.getBlock().getBiome());
 
             List<ItemStack> drops = new ArrayList<>();
-            double diffLevel = Math.max(1, level * .63);
-            for (int i = 0; i < Math.pow(diffLevel, 3); i++) {
-                if (ChanceUtil.getChance(100000)) {
+
+            int dropCountModifier = (int) Math.min(config.dropCountMaxLevel, level - 1);
+            double dropValueModifier = Math.max(1, level * config.dropValueModifier);
+
+            // Handle unique drops
+            for (int i = 0; i < dropCountModifier; ++i) {
+                if (ChanceUtil.getChance(100000 / dropValueModifier)) {
                     drops.add(CustomItemCenter.build(CustomItems.RED_FEATHER));
                 }
-                if (ChanceUtil.getChance(2000)) {
+
+                if (ChanceUtil.getChance(2000 / dropValueModifier)) {
                     drops.add(CustomItemCenter.build(CustomItems.POTION_OF_RESTITUTION));
                 }
-                if (ChanceUtil.getChance(2000)) {
+
+                if (ChanceUtil.getChance(2000 / dropValueModifier)) {
                     drops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
                 }
-                if (ChanceUtil.getChance(isFrozenBiome ? 1000 : 2000)) {
+
+                if (ChanceUtil.getChance((isFrozenBiome ? 1000 : 2000) / dropValueModifier)) {
                     drops.add(CustomItemCenter.build(CustomItems.ODE_TO_THE_FROZEN_KING));
                 }
             }
 
+            // Handle sacrificial pit generated drops
             drops.addAll(
-              SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 1, Math.pow(level, 2) * 64)
+              SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), dropCountModifier, dropValueModifier * 512)
             );
+
+            // Handle double drop modifier
             if (ModifierComponent.getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
                 drops.addAll(drops.stream().map(ItemStack::clone).collect(Collectors.toList()));
             }
+
             event.getDrops().addAll(drops);
             event.setDroppedExp(event.getDroppedExp() * level);
-        } else if (isWilderness) {
-            Player killer = ((Monster) entity).getKiller();
-            if (killer != null) {
-                highScoresComponent.update(killer, ScoreTypes.WILDERNESS_MOB_KILLS, 1);
-            }
+        }
+
+        Player killer = ((Monster) entity).getKiller();
+        if (killer != null) {
+            highScoresComponent.update(killer, ScoreTypes.WILDERNESS_MOB_KILLS, 1);
         }
     }
 
@@ -459,7 +479,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         Player player = event.getEntity();
 
         if (!isWildernessWorld(player.getWorld()) || adminComponent.isAdmin(player)) return;
-
 
         List<ItemStack> drops = event.getDrops();
         MarketItemLookupInstance lookupInstance = MarketComponent.getLookupInstanceFromStacksImmediately(drops);
