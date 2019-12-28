@@ -24,6 +24,8 @@ import com.skelril.OSBL.util.DamageSource;
 import gg.packetloss.grindstone.bosses.detail.WBossDetail;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
 import gg.packetloss.grindstone.bosses.instruction.WDamageModifier;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -60,14 +62,14 @@ public class GraveDigger {
                 return EntityUtil.nameMatches(BukkitUtil.getBukkitEntity(entity), "Grave Digger");
             }
         };
-        setupFangz();
+        setupGraveDigger();
     }
 
     public void bind(Damageable entity, WBossDetail detail) {
         graveDigger.bind(new BukkitBoss<>(entity, detail));
     }
 
-    private void setupFangz() {
+    private void setupGraveDigger() {
         List<BindInstruction<WBossDetail>> bindInstructions = graveDigger.bindInstructions;
         bindInstructions.add(new BindInstruction<>() {
             @Override
@@ -97,6 +99,7 @@ public class GraveDigger {
                 Location target = boss.getLocation();
                 int baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
+
                 for (int i = baseLevel * ChanceUtil.getRandom(2); i > 0; --i) {
                     itemStacks.add(new ItemStack(BlockID.TNT, ChanceUtil.getRandom(16)));
                 }
@@ -109,6 +112,11 @@ public class GraveDigger {
                 for (int i = baseLevel * ChanceUtil.getRandom(8); i > 0; --i) {
                     itemStacks.add(new ItemStack(ItemID.INK_SACK, ChanceUtil.getRandom(64), (short) 4));
                 }
+
+                if (ChanceUtil.getChance(Math.max(3, 20 - baseLevel))) {
+                    itemStacks.add(CustomItemCenter.build(CustomItems.NINJA_OATH));
+                }
+
                 if (ModifierComponent.getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
                     itemStacks.addAll(itemStacks.stream().map(ItemStack::clone).collect(Collectors.toList()));
                 }

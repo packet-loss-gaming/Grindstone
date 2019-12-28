@@ -21,6 +21,8 @@ import gg.packetloss.grindstone.bosses.detail.WBossDetail;
 import gg.packetloss.grindstone.bosses.instruction.ExplosiveUnbind;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
 import gg.packetloss.grindstone.bosses.instruction.WDamageModifier;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
@@ -104,9 +106,15 @@ public class LostRogue {
                 Location target = boss.getLocation();
                 int baseLevel = controllable.getDetail().getLevel();
                 List<ItemStack> itemStacks = new ArrayList<>();
+
                 for (int i = ChanceUtil.getRandom(baseLevel) * ChanceUtil.getRandom(5); i > 0; --i) {
                     itemStacks.add(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRandom(32)));
                 }
+
+                if (ChanceUtil.getChance(Math.max(3, 20 - baseLevel))) {
+                    itemStacks.add(CustomItemCenter.build(CustomItems.ROGUE_OATH));
+                }
+
                 if (ModifierComponent.getModifierCenter().isActive(ModifierType.DOUBLE_WILD_DROPS)) {
                     itemStacks.addAll(itemStacks.stream().map(ItemStack::clone).collect(Collectors.toList()));
                 }

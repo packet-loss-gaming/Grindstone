@@ -9,6 +9,7 @@ enum SacrificeCommonality {
     RARE_4(2.75),
     RARE_5(3),
     RARE_6(5),
+    RARE_7(15),
     UBER_RARE(10000);
 
     private final double additionalChance;

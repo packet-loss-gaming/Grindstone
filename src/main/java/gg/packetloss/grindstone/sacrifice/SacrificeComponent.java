@@ -226,6 +226,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION), RARE_6);
 
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.NINJA_OATH), RARE_7);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.ROGUE_OATH), RARE_7);
+
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.PHANTOM_CLOCK), UBER_RARE);
     }
 
