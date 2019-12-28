@@ -46,6 +46,7 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventio
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
+import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
@@ -1204,7 +1205,11 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         private int survivalAnimalCount = 60;
         @Setting("survival.ore-band-ore-count")
         private int oreBandOreCount = 40;
-
+        @Setting("cmd-whitelist")
+        private List<String> commandWhitelist = List.of(
+                "stopweather", "daylight", "guild", "deguild", "me", "say", "pm", "msg", "message", "whisper",
+                "tell", "reply", "r", "mute", "unmute", "debug", "dropclear", "dc"
+        );
     }
 
     private static EDBEExtractor<Player, Player, Projectile> extractor = new EDBEExtractor<>(
@@ -1214,35 +1219,20 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     );
 
     private class JungleRaidListener implements Listener {
-
-        private final String[] guildCmdList = new String[]{
-                "ninja", "rogue", "unninja", "derogue"
-        };
-        private final String[] cmdWhiteList = new String[]{
-                "ar", "jr", "stopweather", "me", "say", "pm", "msg", "message", "whisper", "tell",
-                "reply", "r", "mute", "unmute", "debug", "dropclear", "dc", "auth", "toggleeditwand"
-        };
-
         @EventHandler(ignoreCancelled = true)
         public void onCommandPreProcess(PlayerCommandPreprocessEvent event) {
             Player player = event.getPlayer();
             if (anythingContains(player)) {
                 String command = event.getMessage();
+
                 boolean allowed = false;
-                for (String cmd : cmdWhiteList) {
+                for (String cmd : config.commandWhitelist) {
                     if (command.toLowerCase().startsWith("/" + cmd)) {
                         allowed = true;
                         break;
                     }
                 }
-                if (!allowed && isFlagEnabled(JungleRaidFlag.ALLOW_GUILDS)) {
-                    for (String cmd : guildCmdList) {
-                        if (command.toLowerCase().startsWith("/" + cmd)) {
-                            allowed = true;
-                            break;
-                        }
-                    }
-                }
+
                 if (!allowed) {
                     ChatUtil.sendError(player, "Command blocked.");
                     event.setCancelled(true);
