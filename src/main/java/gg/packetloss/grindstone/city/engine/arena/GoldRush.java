@@ -14,6 +14,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
+import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
@@ -22,6 +23,8 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
+import gg.packetloss.grindstone.state.player.PlayerStateComponent;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import net.milkbowl.vault.economy.Economy;
@@ -49,6 +52,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Lever;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +70,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private GuildComponent guildComponent;
     private ImpersonalComponent impersonalComponent;
     private HighScoresComponent highScoresComponent;
+    private PlayerStateComponent playerStateComponent;
 
     private ProtectedRegion lobby;
 
@@ -91,7 +96,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     public GoldRush(World world, ProtectedRegion[] regions,
                     GuildComponent guildComponent, ImpersonalComponent impersonalComponent,
-                    HighScoresComponent highScoresComponent) {
+                    HighScoresComponent highScoresComponent, PlayerStateComponent playerStateComponent) {
 
         super(world, regions[0]);
 
@@ -107,6 +112,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         this.guildComponent = guildComponent;
         this.impersonalComponent = impersonalComponent;
         this.highScoresComponent = highScoresComponent;
+        this.playerStateComponent = playerStateComponent;
 
         findChestAndKeys();         // Setup room one
         findLeversAndFloodBlocks(); // Setup room two
@@ -508,28 +514,35 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         for (Player aPlayer : server.getOnlinePlayers()) {
 
             if (LocationUtil.isInRegion(getWorld(), lobby, aPlayer)) {
+                try {
+                    playerStateComponent.pushState(PlayerStateKind.GOLD_RUSH, aPlayer);
 
-                // Teleport
-                Location location;
-                do {
-                    location = BukkitUtil.toLocation(getWorld(),
-                            LocationUtil.pickLocation(roomOne.getMinimumPoint(), roomOne.getMaximumPoint()));
-                    location.setY(roomOne.getMinimumPoint().getBlockY() + 1);
-                } while (location.getBlock().getTypeId() != BlockID.AIR);
-                aPlayer.teleport(location, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                    // Teleport
+                    Location location;
+                    do {
+                        location = BukkitUtil.toLocation(getWorld(),
+                                LocationUtil.pickLocation(roomOne.getMinimumPoint(), roomOne.getMaximumPoint()));
+                        location.setY(roomOne.getMinimumPoint().getBlockY() + 1);
+                    } while (location.getBlock().getTypeId() != BlockID.AIR);
+                    aPlayer.teleport(location, PlayerTeleportEvent.TeleportCause.UNKNOWN);
 
-                // Reset vitals
-                aPlayer.setHealth(20);
-                aPlayer.setFoodLevel(20);
-                aPlayer.setSaturation(5F);
-                aPlayer.setExhaustion(0F);
+                    // Reset vitals
+                    aPlayer.setHealth(20);
+                    aPlayer.setFoodLevel(20);
+                    aPlayer.setSaturation(5F);
+                    aPlayer.setExhaustion(0F);
 
-                // Add
-                players.add(aPlayer.getName());
+                    // Add
+                    players.add(aPlayer.getName());
 
-                // Partner talk
-                ChatUtil.sendWarning(aPlayer, "[Partner] I've disabled the security systems for now.");
-                ChatUtil.sendWarning(aPlayer, "[Partner] For your sake kid I hope you can move quickly.");
+                    guildComponent.getState(aPlayer).ifPresent(GuildState::disablePowers);
+
+                    // Partner talk
+                    ChatUtil.sendWarning(aPlayer, "[Partner] I've disabled the security systems for now.");
+                    ChatUtil.sendWarning(aPlayer, "[Partner] For your sake kid I hope you can move quickly.");
+                } catch (IOException | ConflictingPlayerStateException e) {
+                    e.printStackTrace();
+                }
             }
         }
         if (!players.isEmpty()) {
@@ -582,9 +595,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     @Override
     public void equalize() {
-        getContained(Player.class).forEach((player) -> {
-            guildComponent.getState(player).ifPresent(GuildState::disablePowers);
-        });
     }
 
     @Override
@@ -721,21 +731,27 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 return;
             }
             if (rewardChest.equals(state.getLocation())) {
-                players.remove(event.getPlayer().getName());
-                event.setUseInteractedBlock(Event.Result.DENY);
-                event.getPlayer().teleport(LocationUtil.grandBank(getWorld()));
+                try {
+                    players.remove(event.getPlayer().getName());
+                    event.setUseInteractedBlock(Event.Result.DENY);
+                    event.getPlayer().teleport(LocationUtil.grandBank(getWorld()));
 
-                highScoresComponent.update(event.getPlayer(), ScoreTypes.GOLD_RUSH_ROBBERIES, 1);
-                int seconds = (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTime);
-                highScoresComponent.update(event.getPlayer(), ScoreTypes.FASTEST_GOLD_RUSH, seconds);
+                    playerStateComponent.popState(PlayerStateKind.GOLD_RUSH, event.getPlayer());
 
-                ChatUtil.sendNotice(event.getPlayer(), "You have successfully robbed the bank!\n");
-                ChatUtil.sendNotice(event.getPlayer(), "[Partner] I've put your split of the money in your account.");
-                ChatUtil.sendNotice(event.getPlayer(), "[Partner] Don't question my logic...\n");
-                ChatUtil.sendNotice(event.getPlayer(), "You obtain: "
-                        + ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(lootSplit), " as your split."));
+                    highScoresComponent.update(event.getPlayer(), ScoreTypes.GOLD_RUSH_ROBBERIES, 1);
+                    int seconds = (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTime);
+                    highScoresComponent.update(event.getPlayer(), ScoreTypes.FASTEST_GOLD_RUSH, seconds);
 
-                economy.depositPlayer(event.getPlayer().getName(), lootSplit);
+                    ChatUtil.sendNotice(event.getPlayer(), "You have successfully robbed the bank!\n");
+                    ChatUtil.sendNotice(event.getPlayer(), "[Partner] I've put your split of the money in your account.");
+                    ChatUtil.sendNotice(event.getPlayer(), "[Partner] Don't question my logic...\n");
+                    ChatUtil.sendNotice(event.getPlayer(), "You obtain: "
+                            + ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(lootSplit), " as your split."));
+
+                    economy.depositPlayer(event.getPlayer().getName(), lootSplit);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

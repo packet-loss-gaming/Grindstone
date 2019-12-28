@@ -220,7 +220,10 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     PRs[4] = mgr.get(world).getRegion(region + "-room-three");
                     PRs[5] = mgr.get(world).getRegion(region + "-door-one");
                     PRs[6] = mgr.get(world).getRegion(region + "-door-two");
-                    arenas.add(new GoldRush(world, PRs, guildComponent, impersonalComponent, highScoresComponent));
+                    arenas.add(new GoldRush(
+                            world, PRs, guildComponent, impersonalComponent,
+                            highScoresComponent, playerStateComponent
+                    ));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
