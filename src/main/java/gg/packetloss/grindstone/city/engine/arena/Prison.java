@@ -14,6 +14,8 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.guild.GuildComponent;
+import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
@@ -46,6 +48,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
     private final Server server = CommandBook.server();
 
     private AdminComponent adminComponent;
+    private GuildComponent guildComponent;
     private PlayerStateComponent playerStateComponent;
 
     private ProtectedRegion office;
@@ -55,13 +58,15 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
     private Location entranceLoc;
 
     public Prison(World world, ProtectedRegion[] regions,
-                  AdminComponent adminComponent, PlayerStateComponent playerStateComponent) {
+                  AdminComponent adminComponent, GuildComponent guildComponent,
+                  PlayerStateComponent playerStateComponent) {
 
         super(world, regions[0]);
 
         this.office = regions[1];
 
         this.adminComponent = adminComponent;
+        this.guildComponent = guildComponent;
         this.playerStateComponent = playerStateComponent;
 
         findRewardChest();     // Setup office
@@ -124,7 +129,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         try {
             playerStateComponent.pushState(PlayerStateKind.PUZZLE_PRISON, player);
 
-            adminComponent.standardizePlayer(player);
+            guildComponent.getState(player).ifPresent(GuildState::disablePowers);
         } catch (IOException | ConflictingPlayerStateException ex) {
             ex.printStackTrace();
         }

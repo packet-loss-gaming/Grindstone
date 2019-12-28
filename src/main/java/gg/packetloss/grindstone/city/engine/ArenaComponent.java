@@ -30,6 +30,7 @@ import gg.packetloss.grindstone.city.engine.arena.factory.FactoryFloor;
 import gg.packetloss.grindstone.city.engine.arena.factory.FactoryMech;
 import gg.packetloss.grindstone.city.engine.arena.factory.FactorySmelter;
 import gg.packetloss.grindstone.economic.ImpersonalComponent;
+import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -54,7 +55,7 @@ import java.util.logging.Logger;
 @Depend(components = {
         AdminComponent.class, JailComponent.class, PrayerComponent.class, SacrificeComponent.class,
         ImpersonalComponent.class, RestorationUtil.class, EggComponent.class, HighScoresComponent.class,
-        PlayerStateComponent.class, BlockStateComponent.class
+        PlayerStateComponent.class, BlockStateComponent.class, GuildComponent.class
 }, plugins = {"WorldEdit", "WorldGuard"})
 public class ArenaComponent extends BukkitComponent implements Listener, Runnable {
 
@@ -80,6 +81,8 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     private PlayerStateComponent playerStateComponent;
     @InjectComponent
     private BlockStateComponent blockStateComponent;
+    @InjectComponent
+    private GuildComponent guildComponent;
 
     private final World world = Bukkit.getWorld("City");
     private LocalConfiguration config;
@@ -217,7 +220,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     PRs[4] = mgr.get(world).getRegion(region + "-room-three");
                     PRs[5] = mgr.get(world).getRegion(region + "-door-one");
                     PRs[6] = mgr.get(world).getRegion(region + "-door-two");
-                    arenas.add(new GoldRush(world, PRs, adminComponent, impersonalComponent, highScoresComponent));
+                    arenas.add(new GoldRush(world, PRs, guildComponent, impersonalComponent, highScoresComponent));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");
@@ -230,7 +233,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     ProtectedRegion[] PRs = new ProtectedRegion[2];
                     PRs[0] = mgr.get(world).getRegion(region);
                     PRs[1] = mgr.get(world).getRegion(region + "-office");
-                    arenas.add(new Prison(world, PRs, adminComponent, playerStateComponent));
+                    arenas.add(new Prison(world, PRs, adminComponent, guildComponent, playerStateComponent));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");

@@ -11,10 +11,11 @@ import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
+import gg.packetloss.grindstone.guild.GuildComponent;
+import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -62,7 +63,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private final Server server = CommandBook.server();
 
     private Economy economy;
-    private AdminComponent adminComponent;
+    private GuildComponent guildComponent;
     private ImpersonalComponent impersonalComponent;
     private HighScoresComponent highScoresComponent;
 
@@ -89,7 +90,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private boolean leversTriggered = false;
 
     public GoldRush(World world, ProtectedRegion[] regions,
-                    AdminComponent adminComponent, ImpersonalComponent impersonalComponent,
+                    GuildComponent guildComponent, ImpersonalComponent impersonalComponent,
                     HighScoresComponent highScoresComponent) {
 
         super(world, regions[0]);
@@ -103,7 +104,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         this.doorOne = regions[5];
         this.doorTwo = regions[6];
 
-        this.adminComponent = adminComponent;
+        this.guildComponent = guildComponent;
         this.impersonalComponent = impersonalComponent;
         this.highScoresComponent = highScoresComponent;
 
@@ -581,7 +582,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     @Override
     public void equalize() {
-        getContained(Player.class).forEach(adminComponent::standardizePlayer);
+        getContained(Player.class).forEach((player) -> {
+            guildComponent.getState(player).ifPresent(GuildState::disablePowers);
+        });
     }
 
     @Override

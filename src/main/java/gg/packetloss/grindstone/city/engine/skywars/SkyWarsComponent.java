@@ -42,6 +42,8 @@ import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.guild.GuildComponent;
+import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -120,7 +122,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     private SkyWarsState state = SkyWarsState.LOBBY;
 
     @InjectComponent
-    private AdminComponent adminComponent;
+    private GuildComponent guilds;
     @InjectComponent
     private AntiCheatCompatibilityComponent antiCheat;
     @InjectComponent
@@ -519,7 +521,8 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             playerStateComponent.pushState(PlayerStateKind.SKY_WARS, player);
 
             GeneralPlayerUtil.takeFlightSafely(player);
-            adminComponent.deguildPlayer(player);
+            guilds.getState(player).ifPresent(GuildState::disablePowers);
+
             // prayerComponent.uninfluencePlayer(player);
 
             player.getInventory().clear();

@@ -7,9 +7,10 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.guild.GuildComponent;
+import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.APIUtil;
@@ -30,7 +31,7 @@ import java.util.logging.Logger;
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Spleef", desc = "Spleef game implementation")
-@Depend(components = {AdminComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
+@Depend(components = {GuildComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
 public class SpleefArea extends BukkitComponent implements Runnable {
     protected final CommandBook inst = CommandBook.inst();
     protected final Logger log = inst.getLogger();
@@ -39,7 +40,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
     protected SpleefConfig config;
 
     @InjectComponent
-    protected AdminComponent admin;
+    protected GuildComponent guilds;
     @InjectComponent
     protected PlayerStateComponent playerState;
 
@@ -97,7 +98,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
         try {
             playerState.pushState(PlayerStateKind.SPLEEF, player);
 
-            admin.standardizePlayer(player);
+            guilds.getState(player).ifPresent(GuildState::disablePowers);
             GeneralPlayerUtil.takeFlightSafely(player);
 
             player.setFoodLevel(20);

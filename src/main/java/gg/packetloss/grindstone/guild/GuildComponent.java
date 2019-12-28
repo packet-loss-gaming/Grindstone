@@ -7,7 +7,9 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.guild.db.PlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.db.mysql.MySQLPlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.listener.NinjaListener;
@@ -43,6 +45,9 @@ public class GuildComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
+
+    @InjectComponent
+    private AdminComponent admin;
 
     private PlayerGuildDatabase database = new MySQLPlayerGuildDatabase();
     private Map<UUID, InternalGuildState> guildStateMap = new HashMap<>();
@@ -130,7 +135,11 @@ public class GuildComponent extends BukkitComponent implements Listener {
         InternalGuildState newGuildState;
         if (optNewGuildState.isPresent()) {
             newGuildState = optNewGuildState.get();
-            newGuildState.setExperience((long) (newGuildState.getExperience() * .9));
+
+            // Allow admins to switch guilds for free while in admin mode, for testing purposes
+            if (!admin.isAdmin(player)) {
+                newGuildState.setExperience((long) (newGuildState.getExperience() * .9));
+            }
         } else {
             newGuildState = constructDefaultGuildState(guildType);
         }

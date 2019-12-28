@@ -21,8 +21,6 @@ import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
-import gg.packetloss.grindstone.guild.GuildComponent;
-import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -61,15 +59,13 @@ import java.util.stream.Collectors;
 
 
 @ComponentInformation(friendlyName = "Admin", desc = "Player Administration commands.")
-@Depend(plugins = {"WorldEdit, Vault"}, components = {GuildComponent.class, GodComponent.class, PlayerStateComponent.class})
+@Depend(plugins = {"WorldEdit, Vault"}, components = {GodComponent.class, PlayerStateComponent.class})
 public class AdminComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    @InjectComponent
-    private GuildComponent guildComponent;
     @InjectComponent
     private GodComponent godComponent;
     @InjectComponent
@@ -203,28 +199,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
      */
     public boolean deadmin(Player player) {
         return depowerPlayer(player) && depermission(player);
-    }
-
-    /**
-     * This method is used when removing a player's guild powers.
-     *
-     * @param player - The player to disable guild powers for
-     * @return - true if all active guild powers have been disabled
-     */
-    public boolean deguildPlayer(Player player) {
-        guildComponent.getState(player).ifPresent(GuildState::disablePowers);
-        return true;
-    }
-
-    /**
-     * This method is used when removing a player's guild and admin powers. This method applies to all guilds that the
-     * deguildPlayer method supports.
-     *
-     * @param player - The player to remove from Admin Mode and remove guild and admin powers for
-     * @return - true if all active guild powers have been disabled
-     */
-    public boolean standardizePlayer(Player player) {
-        return deguildPlayer(player);
     }
 
     @EventHandler(ignoreCancelled = true)

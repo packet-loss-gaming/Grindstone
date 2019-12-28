@@ -16,9 +16,10 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
+import gg.packetloss.grindstone.guild.GuildComponent;
+import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.CollectionUtil;
 import org.bukkit.ChatColor;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
 
 
 @ComponentInformation(friendlyName = "Jail", desc = "Jail System")
-@Depend(plugins = {"WorldEdit"}, components = {AdminComponent.class})
+@Depend(plugins = {"WorldEdit"}, components = {GuildComponent.class})
 public class JailComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
@@ -49,7 +50,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     private final Server server = CommandBook.server();
 
     @InjectComponent
-    private AdminComponent adminComponent;
+    private GuildComponent guilds;
 
     private InmateDatabase inmates;
     private JailCellDatabase jailCells;
@@ -228,7 +229,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                         cell = assignCell(player, inmate.getPrisonName());
                     }
 
-                    adminComponent.standardizePlayer(player);
+                    guilds.getState(player).ifPresent(GuildState::disablePowers);
                     player.setFoodLevel(5);
 
                     if (cell == null) {

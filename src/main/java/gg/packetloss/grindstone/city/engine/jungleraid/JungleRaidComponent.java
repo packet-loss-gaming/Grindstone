@@ -36,7 +36,6 @@ import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.EconomyComponent;
-import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.city.engine.minigame.Win;
 import gg.packetloss.grindstone.city.engine.minigame.WinType;
@@ -51,6 +50,8 @@ import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
+import gg.packetloss.grindstone.guild.GuildComponent;
+import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -114,7 +115,7 @@ import java.util.stream.Collectors;
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Jungle Raid", desc = "Warfare at it's best!")
-@Depend(components = {AdminComponent.class, PrayerComponent.class}, plugins = {"WorldEdit", "WorldGuard"})
+@Depend(components = {GuildComponent.class, PrayerComponent.class}, plugins = {"WorldEdit", "WorldGuard"})
 public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
     private final CommandBook inst = CommandBook.inst();
@@ -146,7 +147,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private JungleRaidClassSelectionMode classSelectionMode = JungleRaidClassSelectionMode.SELECTION;
 
     @InjectComponent
-    AdminComponent adminComponent;
+    GuildComponent guilds;
     @InjectComponent
     PrayerComponent prayerComponent;
     @InjectComponent
@@ -681,7 +682,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             return;
         }
 
-        adminComponent.deguildPlayer(player);
+        guilds.getState(player).ifPresent(GuildState::disablePowers);
     }
 
     private void resetPlayerProperties(Player player) {
