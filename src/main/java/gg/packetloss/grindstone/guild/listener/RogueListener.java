@@ -52,12 +52,17 @@ public class RogueListener implements Listener {
         this.internalStateLookup = internalStateLookup;
     }
 
-    private Optional<RogueState> getState(Player player) {
+    private Optional<RogueState> getStateAllowDisabled(Player player) {
         InternalGuildState internalState = internalStateLookup.apply(player);
-        if (internalState instanceof RogueState && internalState.isEnabled()) {
+        if (internalState instanceof RogueState) {
             return Optional.of((RogueState) internalState);
         }
         return Optional.empty();
+
+    }
+
+    private Optional<RogueState> getState(Player player) {
+        return getStateAllowDisabled(player).filter(InternalGuildState::isEnabled);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -68,7 +73,7 @@ public class RogueListener implements Listener {
 
         Player player = event.getPlayer();
 
-        float multiplier = getState(player).orElseThrow().hasPower(RoguePower.SUPER_SPEED) ? 2.5f : 2f;
+        float multiplier = getStateAllowDisabled(player).orElseThrow().hasPower(RoguePower.SUPER_SPEED) ? 2.5f : 2f;
         player.setWalkSpeed(DEFAULT_SPEED * multiplier);
 
         ChatUtil.sendNotice(player, "You gain the power of a rogue warrior!");
