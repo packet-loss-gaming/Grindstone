@@ -48,7 +48,7 @@ public class RegionValueEvaluator {
         });
     }
 
-    private void walkBlocK(ReportSourceInfo reportSource, World world, int x, int y, int z) {
+    private void walkBlock(ReportSourceInfo reportSource, World world, int x, int y, int z) {
         Block block = world.getBlockAt(x, y, z);
         computeBlockName(block.getTypeId(), block.getData()).ifPresent((blockName) -> {
             reportSource.allNames.add(blockName);
@@ -68,8 +68,6 @@ public class RegionValueEvaluator {
 
         //noinspection ConstantConditions
         if (region instanceof CuboidRegion) {
-
-            // Doing this for speed
             Vector min = region.getMinimumPoint();
             Vector max = region.getMaximumPoint();
 
@@ -83,7 +81,7 @@ public class RegionValueEvaluator {
             for (int x = minX; x <= maxX; ++x) {
                 for (int y = minY; y <= maxY; ++y) {
                     for (int z = minZ; z <= maxZ; ++z) {
-                        walkBlocK(reportSource, world, x, y, z);
+                        walkBlock(reportSource, world, x, y, z);
                     }
                 }
             }

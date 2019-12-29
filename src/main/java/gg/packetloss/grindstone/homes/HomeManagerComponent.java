@@ -46,12 +46,11 @@ import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.item.BookUtil;
+import gg.packetloss.grindstone.util.region.RegionContainerClearer;
 import gg.packetloss.grindstone.util.region.RegionValueEvaluator;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.commons.lang3.Validate;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -64,6 +63,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 
@@ -736,6 +736,24 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             });
         }
 
+        @Command(aliases = {"listhomes"}, desc = "List homes for a player",
+                usage = "<player>",
+                flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.home.admin.listhomes"})
+        public void listHomesCmd(CommandContext args, CommandSender sender) throws CommandException {
+            Player admin = PlayerUtil.checkPlayer(sender);
+
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(args.getString(0));
+            if (offlinePlayer == null) {
+                throw new CommandException("No player found by that name.");
+            }
+
+            RegionManager manager = WG.getRegionManager(admin.getWorld());
+            RegionUtil.getHouseStream(WG.wrapOfflinePlayer(offlinePlayer), manager).forEach((house) -> {
+                ChatUtil.sendNotice(admin, house.getId());
+            });
+        }
+
         @Command(aliases = {"viewvalue"}, usage = "", desc = "", min = 0, max = 0)
         @CommandPermissions({"aurora.home.admin.viewvalue"})
         public void viewValueHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
@@ -764,6 +782,158 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                         ChatUtil.sendNotice(admin, "Maximum item value: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getMaximumItemValue()));
                         ChatUtil.sendNotice(admin, "Block price: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getBlockPrice()));
                         ChatUtil.sendNotice(admin, "Auto sell price: " + ChatUtil.TWO_DECIMAL_FORMATTER.format(report.getAutoSellPrice()));
+                    });
+                });
+            }
+        }
+
+        @Command(aliases = {"walkinactive"}, usage = "", desc = "", min = 0, max = 0)
+        @CommandPermissions({"aurora.home.admin.walkinactive"})
+        public void walkInactiveHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
+            Player admin = PlayerUtil.checkPlayer(sender);
+
+            RegionManager manager = WG.getRegionManager(admin.getWorld());
+
+            for (Map.Entry<String, ProtectedRegion> entry : manager.getRegions().entrySet()) {
+                ProtectedRegion region = entry.getValue();
+                if (!isHouse(region)) {
+                    continue;
+                }
+
+                Optional<Region> optConvertedRegion = RegionUtil.convert(region);
+                if (optConvertedRegion.isEmpty()) {
+                    continue;
+                }
+
+                boolean recentlySeen = false;
+                for (UUID playerID : region.getOwners().getUniqueIds()) {
+                    long lastSeen = Bukkit.getOfflinePlayer(playerID).getLastPlayed();
+                    long timeSinceLastSeen = System.currentTimeMillis() - lastSeen;
+                    if (timeSinceLastSeen <= TimeUnit.DAYS.toMillis(365)) {
+                        recentlySeen = true;
+                    }
+                }
+
+                if (recentlySeen) {
+                    continue;
+                }
+
+                ChatUtil.sendNotice(admin, "Found Inactive Home: " + region.getId());
+            }
+        }
+
+        @Command(aliases = {"purgeinactive"}, usage = "", desc = "", flags = "vy", min = 0, max = 0)
+        @CommandPermissions({"aurora.home.admin.purgeinactive"})
+        public void purgeInactiveHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
+            Player admin = PlayerUtil.checkPlayer(sender);
+
+            RegionManager manager = WG.getRegionManager(admin.getWorld());
+
+            RegionValueEvaluator evaluator = new RegionValueEvaluator(true);
+            RegionContainerClearer containerClearer = new RegionContainerClearer();
+
+            for (Map.Entry<String, ProtectedRegion> entry : manager.getRegions().entrySet()) {
+                ProtectedRegion region = entry.getValue();
+                if (!isHouse(region)) {
+                    continue;
+                }
+
+                Optional<Region> optConvertedRegion = RegionUtil.convert(region);
+                if (optConvertedRegion.isEmpty()) {
+                    continue;
+                }
+
+                boolean recentlySeen = false;
+                for (UUID playerID : region.getOwners().getUniqueIds()) {
+                    long lastSeen = Bukkit.getOfflinePlayer(playerID).getLastPlayed();
+                    long timeSinceLastSeen = System.currentTimeMillis() - lastSeen;
+                    if (timeSinceLastSeen <= TimeUnit.DAYS.toMillis(365)) {
+                        recentlySeen = true;
+                    }
+                }
+
+                if (recentlySeen) {
+                    continue;
+                }
+
+                ChatUtil.sendNotice(admin, "Found Inactive Home: " + region.getId());
+
+                evaluator.walkRegion(optConvertedRegion.get(), admin.getWorld()).thenAccept((report) -> {
+                    server.getScheduler().runTask(inst, () -> {
+                        int ownerSize = region.getOwners().getPlayerDomain().size();
+                        if (ownerSize > 1) {
+                            ChatUtil.sendError(sender, region.getId() + " has multiple owners.");
+                            return;
+                        }
+
+                        OfflinePlayer owner;
+                        if (region.getOwners().getUniqueIds().size() == 1) {
+                            owner = Bukkit.getOfflinePlayer(region.getOwners().getUniqueIds().iterator().next());
+                        } else {
+                            owner = Bukkit.getOfflinePlayer(region.getOwners().getPlayers().iterator().next());
+                        }
+
+                        if (owner == null) {
+                            ChatUtil.sendError(sender, region.getId() + " offline owner not found.");
+                            return;
+                        }
+
+                        List<ProtectedRegion> houses = RegionUtil.getHouses(WG.wrapOfflinePlayer(owner), manager);
+                        Optional<Integer> optPreviousChunks = RegionUtil.sumChunks(houses);
+                        if (optPreviousChunks.isEmpty()) {
+                            return;
+                        }
+
+                        Optional<Integer> optSellingChunks = RegionUtil.countChunks(region);
+                        if (optSellingChunks.isEmpty()) {
+                            ChatUtil.sendError(sender, region.getId() + " we could not determine how many chunks are being sold.");
+                            return;
+                        }
+
+                        int chunks = optPreviousChunks.get();
+                        int newChunks = optPreviousChunks.get() - optSellingChunks.get();
+
+                        double autoSellPrice = report.getAutoSellPrice();
+                        double chunkPrice = (RegionUtil.calcChunkPrice(chunks) - RegionUtil.calcChunkPrice(newChunks)) * .9;
+                        double price = autoSellPrice + chunkPrice;
+
+                        String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), "");
+                        ChatUtil.sendNotice(sender, "Owner will receive: " + priceString + " for: " + region.getId() + ".");
+
+                        if (args.hasFlag('v')) {
+                            ChatUtil.sendNotice(sender, "  Total Houses: " + houses.size());
+                            ChatUtil.sendNotice(sender, "  Chunks from: " + chunks + " to: " + newChunks);
+                            String autoSellPriceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(autoSellPrice), "");
+                            ChatUtil.sendNotice(sender, "  Block/Item: " + autoSellPriceString);
+                            String chunkPriceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(chunkPrice), "");
+                            ChatUtil.sendNotice(sender, "  Chunk: " + chunkPriceString);
+                        }
+
+                        // If they have used the flag y proceed to sell the house
+                        // otherwise inform them about how to sell their house
+                        if (args.hasFlag('y')) {
+                            try {
+                                String newName = System.currentTimeMillis() + "-s";
+                                if (RegionUtil.renameRegion(manager, region.getId(), newName, true)) {
+
+                                    // Set the price flag's value and then resave the database
+                                    ProtectedRegion newRegion = manager.getRegion(newName);
+                                    newRegion.setFlag(DefaultFlag.PRICE, report.getBlockPrice() * 1.1);
+                                    manager.addRegion(newRegion);
+                                    manager.save();
+
+                                    containerClearer.walkRegion(optConvertedRegion.get(), admin.getWorld());
+                                    outliner.outline(admin.getWorld(), newRegion);
+
+                                    econ.depositPlayer(owner, price);
+                                } else {
+                                    throw new CommandException();
+                                }
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                ChatUtil.sendNotice(sender, region.getId() + " failed to sell.");
+                            }
+                        }
                     });
                 });
             }
