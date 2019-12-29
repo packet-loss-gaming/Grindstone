@@ -801,6 +801,13 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                 c.setRemoveWhenFarAway(true);
             }
 
+            if (isFlagEnabled(SkyWarsFlag.REGEN_ENABLED) && ChanceUtil.getChance(5)) {
+                for (Player player : gameState.getPlayers()) {
+                    if (player.isValid()) {
+                        EntityUtil.heal(player, 1);
+                    }
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
             Bukkit.broadcastMessage(ChatColor.RED + "[WARNING] Sky Wars logic failed to process.");
@@ -863,7 +870,6 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             if (event.getEntity() instanceof Player) {
                 Player player = (Player) event.getEntity();
                 if (gameState.containsPlayer(player)) {
-                    if (isFlagEnabled(SkyWarsFlag.REGEN_ENABLED)) return;
                     event.setCancelled(true);
                 }
             }
