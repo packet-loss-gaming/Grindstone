@@ -364,11 +364,13 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
 
         for (Player player : containedPlayers) {
             Block block = player.getLocation().add(0, -1, 0).getBlock();
-            if (block.getType() != Material.STAINED_GLASS) {
-                return;
-            }
 
             SkyWarsProfile profile = gameState.get(player);
+            if (block.getType() != Material.STAINED_GLASS) {
+                profile.setTeam(null);
+                continue;
+            }
+
             switch (block.getData()) {
                 case 0:
                     profile.setTeam(SkyWarsTeam.FREE_FOR_ALL);
@@ -406,10 +408,6 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         }
 
         if (getWinner().isPresent()) {
-            for (SkyWarsProfile profile : gameState.getProfiles()) {
-                profile.setTeam(null);
-            }
-
             ChatUtil.sendError(getPlayersInGame(), "All players are on one team, the game will not start.");
             return;
         }
