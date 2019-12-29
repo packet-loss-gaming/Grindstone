@@ -90,7 +90,7 @@ public class GuildState {
             public Text format(GuildLevel level) {
                 boolean belowLevel = currentLevel < level.getLevel();
 
-                ChatColor levelColor = (belowLevel ? ChatColor.RED : ChatColor.GREEN);
+                ChatColor levelColor = (belowLevel ? ChatColor.RED : ChatColor.DARK_GREEN);
 
                 List<GuildPower> unlocks = new ArrayList<>();
                 for (GuildPower power : powers) {
@@ -113,7 +113,7 @@ public class GuildState {
                 );
 
                 // Create hover text
-                Text hoverText = Text.of();
+                Text hoverText;
                 if (belowLevel) {
                     hoverText = Text.of(
                             ChatUtil.WHOLE_NUMBER_FORMATTER.format(
@@ -121,8 +121,9 @@ public class GuildState {
                             ),
                             " experience remaining"
                     );
+                } else {
+                    hoverText = Text.of("Unlocked:");
                 }
-
 
                 for (GuildPower unlock : unlocks) {
                     hoverText = Text.of(
