@@ -225,7 +225,8 @@ public class WarpsComponent extends BukkitComponent implements Listener {
             (new TeleportPlayerIterator(sender, loc, args.hasFlag('s'))).iterate(targets);
         }
 
-        @Command(aliases = {"home"}, desc = "Go to your home")
+        @Command(aliases = {"home"}, desc = "Go to your home",
+                 min = 0, max = 0)
         public void teleportHome(CommandContext args, CommandSender sender) {
             sender.getServer().dispatchCommand(sender, "warp home");
         }

@@ -637,7 +637,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             List<CompletableFuture<Void>> regionsComplete = new ArrayList<>();
 
             for (ProtectedRegion region : manager.getApplicableRegions(admin.getLocation())) {
-                if (region.getId().endsWith("-s") && region.getFlag(DefaultFlag.PRICE) != null) {
+                if (isForSaleHouse(region)) {
                     CompletableFuture<Optional<Double>> blockPrice = RegionUtil.calcBlockPrice(
                             region,
                             admin.getWorld()
@@ -926,6 +926,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                                     outliner.outline(admin.getWorld(), newRegion);
 
                                     econ.depositPlayer(owner, price);
+                                    ChatUtil.sendNotice(sender, region.getId() + " sold.");
                                 } else {
                                     throw new CommandException();
                                 }
@@ -936,6 +937,35 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                         }
                     });
                 });
+            }
+        }
+
+        @Command(aliases = {"clearvacantlots"}, usage = "", desc = "", flags = "y", min = 0, max = 0)
+        @CommandPermissions({"aurora.home.admin.clearvacantlots"})
+        public void clearVacantLotsCmd(CommandContext args, CommandSender sender) throws CommandException {
+            Player admin = PlayerUtil.checkPlayer(sender);
+
+            RegionManager manager = WG.getRegionManager(admin.getWorld());
+
+            RegionContainerClearer containerClearer = new RegionContainerClearer();
+
+            for (Map.Entry<String, ProtectedRegion> entry : manager.getRegions().entrySet()) {
+                ProtectedRegion region = entry.getValue();
+                if (!isForSaleHouse(region)) {
+                    continue;
+                }
+
+                Optional<Region> optConvertedRegion = RegionUtil.convert(region);
+                if (optConvertedRegion.isEmpty()) {
+                    continue;
+                }
+
+                ChatUtil.sendNotice(admin, "Found Vacant Lot: " + region.getId());
+
+                if (args.hasFlag('y')) {
+                    containerClearer.walkRegion(optConvertedRegion.get(), admin.getWorld());
+                    ChatUtil.sendNotice(sender, "Cleared.");
+                }
             }
         }
 
@@ -983,6 +1013,10 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     }
     public static boolean isHouse(ProtectedRegion region) {
         return region.getId().endsWith("-house");
+    }
+
+    public static boolean isForSaleHouse(ProtectedRegion region) {
+        return region.getId().endsWith("-s") && region.getFlag(DefaultFlag.PRICE) != null;
     }
 
     public static boolean isPlayerHouse(ProtectedRegion region, LocalPlayer player) {

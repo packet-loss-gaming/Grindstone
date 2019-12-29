@@ -9,6 +9,7 @@ import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.block.Container;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -57,7 +58,9 @@ public class RegionValueEvaluator {
 
         if (includeItems) {
             BlockState blockState = block.getState();
-            if (blockState instanceof Container) {
+            if (blockState instanceof Chest) {
+                walkInventory(reportSource, ((Chest) blockState).getBlockInventory());
+            } else if (blockState instanceof Container) {
                 walkInventory(reportSource, ((Container) blockState).getInventory());
             }
         }

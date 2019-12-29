@@ -13,7 +13,8 @@ public class RegionContainerClearer {
         Block block = world.getBlockAt(x, y, z);
         BlockState blockState = block.getState();
         if (blockState instanceof Container) {
-            ((Container) blockState).getInventory().clear();
+            ((Container) blockState).getSnapshotInventory().clear();
+            blockState.update();
         }
     }
 
