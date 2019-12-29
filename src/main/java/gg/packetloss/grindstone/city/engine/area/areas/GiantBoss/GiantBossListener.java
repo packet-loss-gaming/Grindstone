@@ -529,6 +529,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             try {
                 parent.playerState.pushState(PlayerStateKind.SHNUGGLES_PRIME, player);
                 event.getDrops().clear();
+                event.setDroppedExp(0);
             } catch (ConflictingPlayerStateException | IOException e) {
                 e.printStackTrace();
             }

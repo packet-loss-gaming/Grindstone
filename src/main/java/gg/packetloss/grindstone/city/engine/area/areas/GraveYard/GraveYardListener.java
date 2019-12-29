@@ -620,6 +620,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 if (!aEvent.isCancelled()) {
                     try {
                         parent.playerState.pushState(PlayerStateKind.GRAVE_YARD, player);
+                        event.setDroppedExp(0);
                         return;
                     } catch (IOException | ConflictingPlayerStateException e) {
                         e.printStackTrace();

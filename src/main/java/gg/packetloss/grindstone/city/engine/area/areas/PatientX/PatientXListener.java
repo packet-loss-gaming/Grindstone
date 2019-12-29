@@ -433,6 +433,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             try {
                 parent.playerState.pushState(PlayerStateKind.PATIENT_X, player);
                 event.getDrops().clear();
+                event.setDroppedExp(0);
             } catch (ConflictingPlayerStateException | IOException e) {
                 e.printStackTrace();
             }

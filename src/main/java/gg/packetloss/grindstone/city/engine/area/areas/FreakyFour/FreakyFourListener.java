@@ -301,6 +301,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             try {
                 parent.playerState.pushState(PlayerStateKind.FREAKY_FOUR, player);
                 event.getDrops().clear();
+                event.setDroppedExp(0);
             } catch (ConflictingPlayerStateException | IOException e) {
                 e.printStackTrace();
             }

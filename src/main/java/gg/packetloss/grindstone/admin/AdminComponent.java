@@ -295,6 +295,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         if (isAdmin(player)) {
             event.getDrops().clear();
+            event.setDroppedExp(0);
+
             EnvironmentUtil.generateRadialEffect(player.getLocation(), Effect.POTION_BREAK);
         }
     }
