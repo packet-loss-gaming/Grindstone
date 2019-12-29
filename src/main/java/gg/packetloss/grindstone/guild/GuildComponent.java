@@ -218,7 +218,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
     );
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onEntityDeath(EntityDamageByEntityEvent event) {
+    public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (event.getFinalDamage() < 1) {
             return;
         }
@@ -236,7 +236,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        double maxDamage = Math.min(result.getDefender().getMaxHealth(), event.getFinalDamage());
+        double maxDamage = Math.min(500, Math.min(result.getDefender().getMaxHealth(), event.getFinalDamage()));
         grantExp(attacker, state, (long) Math.max(1, maxDamage * .1));
     }
 
