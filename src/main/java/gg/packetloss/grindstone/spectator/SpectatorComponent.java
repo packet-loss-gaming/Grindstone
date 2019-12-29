@@ -5,7 +5,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePrePopEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
@@ -100,7 +100,7 @@ public class SpectatorComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerStatePop(PlayerStatePopEvent event) {
+    public void onPlayerStatePop(PlayerStatePrePopEvent event) {
         if (!isSpectator(event.getKind())) {
             return;
         }

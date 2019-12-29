@@ -39,7 +39,7 @@ import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
-import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePrePopEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.guild.GuildComponent;
@@ -1211,7 +1211,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         }
 
         @EventHandler
-        public void onPlayerStatePop(PlayerStatePopEvent event) {
+        public void onPlayerStatePrePop(PlayerStatePrePopEvent event) {
             if (event.getKind() != PlayerStateKind.SKY_WARS) {
                 return;
             }

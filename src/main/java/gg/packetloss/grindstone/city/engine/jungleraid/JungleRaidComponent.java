@@ -46,7 +46,7 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawn
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
-import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePrePopEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.exceptions.UnknownPluginException;
@@ -1695,7 +1695,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             player.teleport(getRandomLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
 
-        private void onJungleRaidPop(PlayerStatePopEvent event) {
+        private void onJungleRaidPop(PlayerStatePrePopEvent event) {
             Player player = event.getPlayer();
 
             gameState.removePlayer(player);
@@ -1704,13 +1704,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             player.teleport(lobbyExitLocation);
         }
 
-        private void onJungleRaidSpectatorPop(PlayerStatePopEvent event) {
+        private void onJungleRaidSpectatorPop(PlayerStatePrePopEvent event) {
             Player player = event.getPlayer();
             player.teleport(lobbyExitLocation);
         }
 
         @EventHandler
-        public void onPlayerStatePop(PlayerStatePopEvent event) {
+        public void onPlayerStatePrePop(PlayerStatePrePopEvent event) {
             if (event.getKind() == PlayerStateKind.JUNGLE_RAID) {
                 onJungleRaidPop(event);
             } else if (event.getKind() == PlayerStateKind.JUNGLE_RAID_SPECTATOR) {
