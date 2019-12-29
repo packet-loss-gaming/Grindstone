@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.guild.state;
 
+import gg.packetloss.grindstone.guild.GuildLevel;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.powers.NinjaPower;
 import org.bukkit.entity.Arrow;
@@ -66,7 +67,7 @@ public class NinjaState extends InternalGuildState {
     }
 
     public boolean hasPower(NinjaPower power) {
-        return getLevel() >= power.getUnlockLevel();
+        return getExperience() >= GuildLevel.getExperienceForLevel(power.getUnlockLevel());
     }
 
     @Override
