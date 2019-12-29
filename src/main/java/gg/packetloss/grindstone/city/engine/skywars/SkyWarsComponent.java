@@ -224,6 +224,11 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         SkyWarsTeam attackerTeam = attackerProfile.getTeam();
         SkyWarsTeam defenderTeam = defenderProfile.getTeam();
 
+        // If either player does not have a team, there is no friendly fire.
+        if (attackerTeam == null || defenderTeam == null) {
+            return false;
+        }
+
         // If either player is on the free for all team, there is no friendly fire.
         if (attackerTeam == SkyWarsTeam.FREE_FOR_ALL || defenderTeam == SkyWarsTeam.FREE_FOR_ALL) {
             return false;
