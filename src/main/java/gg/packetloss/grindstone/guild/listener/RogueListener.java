@@ -158,6 +158,11 @@ public class RogueListener implements Listener {
                 return;
             }
 
+            RogueState state = optState.get();
+            if (!state.hasPower(RoguePower.FALL_DAMAGE_REDIRECTION)) {
+                return;
+            }
+
             List<Entity> entities = player.getNearbyEntities(2, 2, 2);
 
             if (entities.size() < 1) return;
@@ -343,26 +348,30 @@ public class RogueListener implements Listener {
         if (entity instanceof Player) {
             Player player = (Player) entity;
             getState(player).ifPresent((state) -> {
-                blip(player, state, 1, true);
+                if (state.hasPower(RoguePower.PITFALL_LEAP)) {
+                    blip(player, state, 1, true);
+                }
             });
         }
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onSpecialAttack(SpecialAttackEvent event) {
-
         Player player = event.getPlayer();
 
-        if (getState(player).isEmpty()) {
+        Optional<RogueState> optState = getState(player);
+        if (optState.isEmpty()) {
             return;
         }
+
+        RogueState state = optState.get();
 
         SpecialAttack attack = event.getSpec();
 
         if (event.getContext().equals(SpecType.MELEE)) {
-            if (ChanceUtil.getChance(14)) {
+            if (state.hasPower(RoguePower.NIGHTMARE_SPECIAL) && ChanceUtil.getChance(14)) {
                 event.setSpec(new Nightmare(attack.getOwner(), attack.getTarget()));
-            } else {
+            } else if (state.hasPower(RoguePower.SPEEDY_SPECIALS)) {
                 float remainingCooldownPercentage = ChanceUtil.getChance(10) ? .1F : .66F;
                 event.setContextCooldown((long) (event.getContextCoolDown() * remainingCooldownPercentage));
             }

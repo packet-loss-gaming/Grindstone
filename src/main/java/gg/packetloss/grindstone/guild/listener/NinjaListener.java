@@ -148,7 +148,8 @@ public class NinjaListener implements Listener {
         if (result == null) return;
 
         final Player attacker = result.getAttacker();
-        if (getState(attacker).isEmpty()) {
+        Optional<NinjaState> optState = getState(attacker);
+        if (optState.isEmpty()) {
             return;
         }
 
@@ -156,8 +157,9 @@ public class NinjaListener implements Listener {
             return;
         }
 
+        NinjaState state = optState.get();
         EntityDamageEvent lastEvent = attacker.getLastDamageCause();
-        if (lastEvent != null) {
+        if (lastEvent != null && state.hasPower(NinjaPower.HEALING_ARROWS)) {
             double lastDamage = lastEvent.getFinalDamage();
             double scale = ((attacker.getMaxHealth() - attacker.getHealth()) / attacker.getMaxHealth());
             EntityUtil.heal(attacker, ChanceUtil.getRandom(scale * lastDamage));
@@ -174,22 +176,30 @@ public class NinjaListener implements Listener {
         if (!(event.getEntity() instanceof Player)) return;
 
         Player player = (Player) event.getEntity();
-        if (getState(player).isEmpty()) return;
+        Optional<NinjaState> optState = getState(player);
+        if (optState.isEmpty()) {
+            return;
+        }
 
+        NinjaState state = optState.get();
         switch (event.getCause()) {
             case FALL:
-                event.setDamage(event.getDamage() * .8);
+                if (state.hasPower(NinjaPower.GRACEFUL_FALLING)) {
+                    event.setDamage(event.getDamage() * .8);
+                }
                 break;
             case FIRE:
             case FIRE_TICK:
-                player.setFireTicks(0);
-                event.setCancelled(true);
+                if (state.hasPower(NinjaPower.FIREPROOF)) {
+                    player.setFireTicks(0);
+                    event.setCancelled(true);
+                }
                 break;
         }
     }
 
-    private void handleArrowBombArrow(Player player, Arrow arrow) {
-        if (arrow instanceof TippedArrow) {
+    private void handleArrowBombArrow(Player player, NinjaState state, Arrow arrow) {
+        if (arrow instanceof TippedArrow && state.hasPower(NinjaPower.POTION_ARROW_BOMBS)) {
             AreaEffectCloud effectCloud = arrow.getWorld().spawn(arrow.getLocation(), AreaEffectCloud.class);
             effectCloud.setBasePotionData(((TippedArrow) arrow).getBasePotionData());
             effectCloud.setDuration(20 * 10);
@@ -223,7 +233,7 @@ public class NinjaListener implements Listener {
         state.arrowBomb();
 
         for (Arrow arrow : arrows) {
-            handleArrowBombArrow(player, arrow);
+            handleArrowBombArrow(player, state, arrow);
         }
     }
 
@@ -298,7 +308,10 @@ public class NinjaListener implements Listener {
 
             entity.teleport(newEntityLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
-        EntityUtil.heal(player, ChanceUtil.getRandomNTimes(totalHealed, 3));
+
+        if (state.hasPower(NinjaPower.VAMPIRIC_SMOKE_BOMB)) {
+            EntityUtil.heal(player, ChanceUtil.getRandomNTimes(totalHealed, 3));
+        }
 
         Location[] locations = new Location[]{
                 player.getLocation(),
@@ -460,7 +473,7 @@ public class NinjaListener implements Listener {
                     if (LocationUtil.distanceSquared2D(clicked.getLocation().add(.5, 0, .5), player.getLocation()) <= 4) {
                         // If the player is sneaking treat this as a "slowing" option,
                         // if not sneaking, treat this as a proper grapple.
-                        int maxClimb = state.hasPower(NinjaPower.MASTER_CLIMBER) ? 12 : 9;
+                        int maxClimb = state.hasPower(NinjaPower.MASTER_CLIMBER) ? 14 : 9;
                         grapple(player, state, clicked, face, player.isSneaking() ? 0 : maxClimb);
                     }
                 }
@@ -475,7 +488,13 @@ public class NinjaListener implements Listener {
         if (entity instanceof Player) {
             Player player = (Player) entity;
 
-            if (getState(player).isPresent() && player.isSneaking()) {
+            Optional<NinjaState> optState = getState(player);
+            if (optState.isEmpty()) {
+                return;
+            }
+
+            NinjaState state = optState.get();
+            if (state.hasPower(NinjaPower.PITFALL_SNEAK) && player.isSneaking()) {
                 event.setCancelled(true);
             }
         }

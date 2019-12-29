@@ -1,6 +1,7 @@
 package gg.packetloss.grindstone.guild.passive;
 
 import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.grindstone.guild.powers.RoguePower;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -61,6 +62,11 @@ public class PotionMetabolizer implements Runnable {
         for (Player player : CommandBook.server().getOnlinePlayers()) {
             Optional<RogueState> optState = getState(player);
             if (optState.isEmpty()) {
+                continue;
+            }
+
+            RogueState state = optState.get();
+            if (!state.hasPower(RoguePower.POTION_METABOLIZATION)) {
                 continue;
             }
 

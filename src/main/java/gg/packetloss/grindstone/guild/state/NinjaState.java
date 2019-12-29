@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.guild.state;
 
+import com.google.common.collect.Lists;
 import gg.packetloss.grindstone.guild.GuildLevel;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.powers.NinjaPower;
@@ -33,6 +34,10 @@ public class NinjaState extends InternalGuildState {
                 .collect(Collectors.toList());
 
         recentArrows.clear();
+
+        if (arrows.size() > 0 && !hasPower(NinjaPower.MULTI_ARROW_BOMBS)) {
+            return Lists.newArrayList(arrows.get(arrows.size() - 1));
+        }
 
         return arrows;
     }
