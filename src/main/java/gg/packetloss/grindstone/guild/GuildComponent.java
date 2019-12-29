@@ -19,6 +19,8 @@ import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.NinjaState;
 import gg.packetloss.grindstone.guild.state.RogueState;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import org.bukkit.Server;
@@ -187,6 +189,17 @@ public class GuildComponent extends BukkitComponent implements Listener {
         new GuildState(player, internalState).disablePowers();
     }
 
+    private void grantExp(Player player, InternalGuildState state, long exp) {
+        GuildLevel.getNewLevel(state.getExperience(), exp).ifPresent((newLevel) -> {
+            ChatUtil.sendNotice(
+                    player,
+                    "Level up! Now " + StringUtil.toTitleCase(state.getType().name()) + " level: " + newLevel
+            );
+        });
+
+        state.setExperience(state.getExperience() + exp);
+    }
+
     private static EDBEExtractor<Player, LivingEntity, Arrow> extractor = new EDBEExtractor<>(
             Player.class,
             LivingEntity.class,
@@ -213,8 +226,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
         }
 
         double maxDamage = Math.min(result.getDefender().getMaxHealth(), event.getFinalDamage());
-        int addedExp = (int) Math.max(1, maxDamage * .1);
-        state.setExperience(state.getExperience() + addedExp);
+        grantExp(attacker, state, (long) Math.max(1, maxDamage * .1));
     }
 
     @EventHandler(ignoreCancelled = true)
