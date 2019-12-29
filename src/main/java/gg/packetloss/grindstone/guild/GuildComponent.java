@@ -12,6 +12,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.events.guild.GuildLevelUpEvent;
 import gg.packetloss.grindstone.guild.db.PlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.db.mysql.MySQLPlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.listener.NinjaListener;
@@ -192,7 +193,13 @@ public class GuildComponent extends BukkitComponent implements Listener {
     }
 
     private void grantExp(Player player, InternalGuildState state, double exp) {
-        GuildLevel.getNewLevel(state.getExperience(), exp).ifPresent((newLevel) -> {
+        double currentExp = state.getExperience();
+
+        state.setExperience(currentExp + exp);
+
+        GuildLevel.getNewLevel(currentExp, exp).ifPresent((newLevel) -> {
+            CommandBook.callEvent(new GuildLevelUpEvent(player, state.getType(), newLevel));
+
             player.sendTitle(Title.builder().title(
                     Text.of(
                             ChatColor.GOLD,
@@ -207,8 +214,6 @@ public class GuildComponent extends BukkitComponent implements Listener {
                     ).build()
             ).build());
         });
-
-        state.setExperience(state.getExperience() + exp);
     }
 
     private static EDBEExtractor<Player, LivingEntity, Arrow> extractor = new EDBEExtractor<>(
