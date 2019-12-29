@@ -5,9 +5,9 @@ import gg.packetloss.grindstone.guild.GuildType;
 
 public abstract class InternalGuildState {
     private boolean enabled = false;
-    private long experience;
+    private double experience;
 
-    public InternalGuildState(long experience) {
+    public InternalGuildState(double experience) {
         this.experience = experience;
     }
 
@@ -19,11 +19,11 @@ public abstract class InternalGuildState {
         return enabled;
     }
 
-    public long getExperience() {
+    public double getExperience() {
         return experience;
     }
 
-    public void setExperience(long experience) {
+    public void setExperience(double experience) {
         this.experience = experience;
     }
 

@@ -44,7 +44,7 @@ public class GuildLevel {
         return LEVELS[Math.min(MAX_LEVEL, --level)];
     }
 
-    public static int getLevel(long currentExp) {
+    public static int getLevel(double currentExp) {
         for (int i = 0; i < MAX_LEVEL; ++i) {
             if (LEVELS[i] <= currentExp) {
                 continue;
@@ -56,7 +56,7 @@ public class GuildLevel {
         throw new IllegalStateException();
     }
 
-    public static Optional<Integer> getNewLevel(long currentExp, long newExp) {
+    public static Optional<Integer> getNewLevel(double currentExp, double newExp) {
         int currentLevel = getLevel(currentExp);
         if (currentLevel == MAX_LEVEL) {
             return Optional.empty();

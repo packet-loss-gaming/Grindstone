@@ -92,7 +92,7 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
         try (PreparedStatement statement = connection.prepareStatement(SQL)) {
             statement.setString(1, playerID.toString());
             statement.setInt(2, guildState.getType().ordinal());
-            statement.setLong(3, guildState.getExperience());
+            statement.setLong(3, (long) guildState.getExperience());
 
             statement.execute();
         }
