@@ -52,12 +52,17 @@ public class NinjaListener implements Listener {
         this.internalStateLookup = internalStateLookup;
     }
 
-    private Optional<NinjaState> getState(Player player) {
+    private Optional<NinjaState> getStateAllowDisabled(Player player) {
         InternalGuildState internalState = internalStateLookup.apply(player);
-        if (internalState instanceof NinjaState && internalState.isEnabled()) {
+        if (internalState instanceof NinjaState) {
             return Optional.of((NinjaState) internalState);
         }
         return Optional.empty();
+
+    }
+
+    private Optional<NinjaState> getState(Player player) {
+        return getStateAllowDisabled(player).filter(InternalGuildState::isEnabled);
     }
 
     private Optional<RogueState> getRogueState(Player player) {
@@ -68,6 +73,11 @@ public class NinjaListener implements Listener {
         return Optional.empty();
     }
 
+    private void applyPlayerModifications(Player player, NinjaState state) {
+        double multiplier = state.hasPower(NinjaPower.EXTRA_HEALTH) ? 1.3f : 1;
+        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(DEFAULT_MAX_HEALTH * multiplier);
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPowersEnable(GuildPowersEnableEvent event) {
         if (event.getGuild() != GuildType.NINJA) {
@@ -75,9 +85,21 @@ public class NinjaListener implements Listener {
         }
 
         Player player = event.getPlayer();
-        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(DEFAULT_MAX_HEALTH * 1.3);
+        applyPlayerModifications(player, getStateAllowDisabled(player).orElseThrow());
 
         ChatUtil.sendNotice(player, "You are inspired and become a ninja!");
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onLevelUp(GuildLevelUpEvent event) {
+        if (event.getGuild() != GuildType.NINJA) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        getState(player).ifPresent((state) -> {
+            applyPlayerModifications(player, state);
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

@@ -1,6 +1,7 @@
 package gg.packetloss.grindstone.guild.powers;
 
 public enum RoguePower implements GuildPower {
+    DAMAGE_BUFF(3),
     SUPER_SPEED(30);
 
     private final int level;

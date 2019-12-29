@@ -6,10 +6,7 @@ import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
-import gg.packetloss.grindstone.events.guild.GuildPowersDisableEvent;
-import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
-import gg.packetloss.grindstone.events.guild.RogueBlipEvent;
-import gg.packetloss.grindstone.events.guild.RogueGrenadeEvent;
+import gg.packetloss.grindstone.events.guild.*;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.powers.RoguePower;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
@@ -65,6 +62,11 @@ public class RogueListener implements Listener {
         return getStateAllowDisabled(player).filter(InternalGuildState::isEnabled);
     }
 
+    private void applyPlayerModifications(Player player, RogueState state) {
+        float multiplier = state.hasPower(RoguePower.SUPER_SPEED) ? 2.5f : 2f;
+        player.setWalkSpeed(DEFAULT_SPEED * multiplier);
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPowersEnable(GuildPowersEnableEvent event) {
         if (event.getGuild() != GuildType.ROGUE) {
@@ -72,11 +74,21 @@ public class RogueListener implements Listener {
         }
 
         Player player = event.getPlayer();
-
-        float multiplier = getStateAllowDisabled(player).orElseThrow().hasPower(RoguePower.SUPER_SPEED) ? 2.5f : 2f;
-        player.setWalkSpeed(DEFAULT_SPEED * multiplier);
+        applyPlayerModifications(player, getStateAllowDisabled(player).orElseThrow());
 
         ChatUtil.sendNotice(player, "You gain the power of a rogue warrior!");
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onLevelUp(GuildLevelUpEvent event) {
+        if (event.getGuild() != GuildType.ROGUE) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        getState(player).ifPresent((state) -> {
+            applyPlayerModifications(player, state);
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -199,7 +211,9 @@ public class RogueListener implements Listener {
                 RogueState state = optState.get();
                 state.recordAttack();
 
-                event.setDamage(Math.max(event.getDamage(), Math.min((event.getDamage() + 10) * 1.2, 20)));
+                if (state.hasPower(RoguePower.DAMAGE_BUFF)) {
+                    event.setDamage(Math.max(event.getDamage(), Math.min((event.getDamage() + 10) * 1.2, 20)));
+                }
             }
         }
     }
