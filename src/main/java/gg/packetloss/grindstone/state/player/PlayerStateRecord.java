@@ -2,6 +2,7 @@ package gg.packetloss.grindstone.state.player;
 
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import org.apache.commons.lang.Validate;
+import org.bukkit.GameMode;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -15,6 +16,7 @@ public class PlayerStateRecord {
     private Map<PlayerStateKind, PlayerExperience> experience = new EnumMap<>(PlayerStateKind.class);
     private Map<PlayerStateKind, UUID> inventories = new EnumMap<>(PlayerStateKind.class);
     private Map<PlayerStateKind, PlayerGuild> guilds = new EnumMap<>(PlayerStateKind.class);
+    private Map<PlayerStateKind, GameMode> gameModes = new EnumMap<>(PlayerStateKind.class);
 
     private void validatePush(PlayerStateKind kind) throws ConflictingPlayerStateException {
         Validate.notNull(kind, "New kind must not be null");
@@ -81,6 +83,10 @@ public class PlayerStateRecord {
 
     public Map<PlayerStateKind, PlayerGuild> getGuilds() {
         return guilds;
+    }
+
+    public Map<PlayerStateKind, GameMode> getGameModes() {
+        return gameModes;
     }
 
     public boolean isEmpty() {

@@ -1245,16 +1245,12 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 if (state == JungleRaidState.RESTORING) {
                     ChatUtil.sendError(player, "The jungle raid arena is restoring, please wait.");
                 } else {
-                    if (player.hasPermission("aurora.debug")) {
-                        try {
-                            playerStateComponent.pushState(PlayerStateKind.JUNGLE_RAID_SPECTATOR, player);
-                            return true;
-                        } catch (ConflictingPlayerStateException | IOException e) {
-                            e.printStackTrace();
-                        }
+                    try {
+                        playerStateComponent.pushState(PlayerStateKind.JUNGLE_RAID_SPECTATOR, player);
+                        return true;
+                    } catch (ConflictingPlayerStateException | IOException e) {
+                        e.printStackTrace();
                     }
-
-                    ChatUtil.sendError(player, "A jungle raid is in progress, please wait.");
                 }
 
                 return true;

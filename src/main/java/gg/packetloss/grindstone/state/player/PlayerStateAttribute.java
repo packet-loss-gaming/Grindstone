@@ -6,7 +6,8 @@ public enum PlayerStateAttribute implements PlayerStateAttributeImpl {
     VITALS(new VitalsAttributeImpl()),
     EXP(new ExperienceAttributeImpl()),
     INVENTORY(new InventoryAttributeImpl()),
-    GUILD(new GuildAttributeImpl());
+    GUILD(new GuildAttributeImpl()),
+    GAME_MODE(new GameModeAttributeImpl());
 
     private final PlayerStateAttributeImpl impl;
 
