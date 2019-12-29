@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.city.engine.area.areas.SandArena;
 
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
-import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.RefCountedTracker;
@@ -21,6 +20,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -82,13 +82,10 @@ public class SandArenaListener extends AreaListener<SandArena> {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerStatePop(PlayerStatePopEvent event) {
-        if (event.getKind() != PlayerStateKind.SAND_ARENA) {
-            return;
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        if (parent.playerState.hasValidStoredState(PlayerStateKind.SAND_ARENA, event.getPlayer())) {
+            event.setRespawnLocation(parent.getRespawnLocation());
         }
-
-        Player player = event.getPlayer();
-        player.teleport(parent.getRespawnLocation());
     }
 }
