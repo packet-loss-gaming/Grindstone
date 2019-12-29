@@ -27,7 +27,7 @@ public class RogueState extends InternalGuildState {
         long currentLeftClick = System.currentTimeMillis();
 
         // Abort if recently punched something
-        if (currentLeftClick - lastAttack < 500) {
+        if (currentLeftClick - lastAttack < 1250) {
             return false;
         }
 
