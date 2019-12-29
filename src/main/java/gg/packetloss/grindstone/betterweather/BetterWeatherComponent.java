@@ -149,9 +149,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
         world.setThundering(weatherType.hasThunder());
     }
 
-    private void syncWeather(WeatherType newWeatherType) {
-        WeatherType oldWeatherType = weatherState.getCurrentWeather();
-
+    private void syncWeather(WeatherType oldWeatherType, WeatherType newWeatherType) {
         for (String worldName : config.affectedWorlds) {
             World affectedWorld = Bukkit.getWorld(worldName);
 
@@ -164,17 +162,18 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
     }
 
     private void syncWeather() {
-        syncWeather(weatherState.getCurrentWeather());
+        syncWeather(weatherState.getCurrentWeather(), weatherState.getCurrentWeather());
     }
 
     private void changeWeather() {
+        WeatherType oldWeather = weatherState.getCurrentWeather();
         Optional<WeatherEvent> optNewEvent = weatherState.getNewWeatherEvent();
         if (optNewEvent.isEmpty()) {
             return;
         }
 
         WeatherEvent event = optNewEvent.get();
-        syncWeather(event.getWeatherType());
+        syncWeather(oldWeather, event.getWeatherType());
     }
 
     private WeatherType pickWeather() {
