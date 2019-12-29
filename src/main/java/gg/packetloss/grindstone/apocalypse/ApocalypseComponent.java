@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.city.engine;
+package gg.packetloss.grindstone.apocalypse;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
@@ -68,6 +68,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 
 
@@ -169,7 +170,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (!(target instanceof Player) || !targeter.isValid() || !attackMob.isInstance(targeter)) return;
 
         Player player = (Player) target;
-        if (checkEntity((LivingEntity) targeter) && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(8)) {
+        if (checkEntity(targeter) && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(8)) {
             targeter.setFireTicks(ChanceUtil.getRandom(20 * 60));
         }
     }
@@ -369,10 +370,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (checkEntity(ent)) {
             event.getDrops().removeIf(next -> next != null && next.getTypeId() == ItemID.ROTTEN_FLESH);
 
-            if (ChanceUtil.getChance(5)) {
-                event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandomNTimes(16, 7)));
-            }
-
             if (killer != null) {
                 maybeIncreaseBuff(killer);
 
@@ -381,6 +378,14 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 });
 
                 highScoresComponent.update(killer, ScoreTypes.APOCALYPSE_MOBS_SLAIN, 1);
+            }
+
+            if (ApocalypseHelper.areDropsSuppressed()) {
+                return;
+            }
+
+            if (ChanceUtil.getChance(5)) {
+                event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandomNTimes(16, 7)));
             }
 
             if (ChanceUtil.getChance(10000)) {
@@ -550,47 +555,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     public Location findLocation(Location origin) {
         Location l = LocationUtil.findRandomLoc(origin, 8, true, false);
         return BlockType.isTranslucent(l.getBlock().getTypeId()) ? l : origin;
-    }
-
-    public static boolean checkEntity(Entity e) {
-        if (e.getCustomName() == null) {
-            return false;
-        }
-
-        if (!(e instanceof Zombie)) {
-            return false;
-        }
-
-        String customName = e.getCustomName();
-        if (customName.equals("Apocalyptic Zombie")) {
-            return true;
-        }
-
-        if (customName.equals("Grave Zombie") && hasThunderstorm(e.getWorld())) {
-            return true;
-        }
-
-        if (customName.equals(ThorZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(ZapperZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(MercilessZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(StickyZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(ChuckerZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        return false;
     }
 
     private <T extends LivingEntity> T spawnBase(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {

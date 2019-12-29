@@ -7,6 +7,7 @@ import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
+import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -74,6 +75,10 @@ public class ZapperZombie {
         unbindInstructions.add(new UnbindInstruction<>() {
             @Override
             public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+                if (ApocalypseHelper.areDropsSuppressed()) {
+                    return null;
+                }
+
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
 

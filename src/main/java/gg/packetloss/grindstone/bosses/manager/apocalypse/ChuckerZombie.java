@@ -12,10 +12,10 @@ import com.skelril.OSBL.bukkit.entity.BukkitBoss;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
 import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.instruction.*;
+import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
-import gg.packetloss.grindstone.city.engine.ApocalypseComponent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -31,6 +31,8 @@ import org.bukkit.util.Vector;
 
 import java.util.List;
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 
 public class ChuckerZombie {
 
@@ -93,6 +95,10 @@ public class ChuckerZombie {
         unbindInstructions.add(new UnbindInstruction<>() {
             @Override
             public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+                if (ApocalypseHelper.areDropsSuppressed()) {
+                    return null;
+                }
+
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
 
@@ -133,7 +139,7 @@ public class ChuckerZombie {
                 nearestPlayerVel.setY(ChanceUtil.getRangedRandom(.4, .8));
 
                 for (Entity entity : boss.getNearbyEntities(4, 4, 4)) {
-                    if (ApocalypseComponent.checkEntity(entity) && ChanceUtil.getChance(5)) {
+                    if (checkEntity(entity) && ChanceUtil.getChance(5)) {
                         entity.setVelocity(nearestPlayerVel);
                     }
                 }

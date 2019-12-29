@@ -11,6 +11,7 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.OSBL.util.DamageSource;
+import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
@@ -164,6 +165,10 @@ public class MercilessZombie {
         unbindInstructions.add(new UnbindInstruction<>() {
             @Override
             public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+                if (ApocalypseHelper.areDropsSuppressed()) {
+                    return null;
+                }
+
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
 
@@ -218,36 +223,39 @@ public class MercilessZombie {
                     return null;
                 }
 
-                double totalHealth = 5;
+                ApocalypseHelper.suppressDrops(() -> {
+                    double totalHealth = 5;
 
-                for (Entity entity : boss.getNearbyEntities(4, 4, 4)) {
-                    if (entity == boss) {
-                        continue;
+                    for (Entity entity : boss.getNearbyEntities(4, 4, 4)) {
+                        if (entity == boss) {
+                            continue;
+                        }
+
+                        if (isConsumableZombie(entity)) {
+                            totalHealth += ((Zombie) entity).getHealth();
+                            ((Zombie) entity).setHealth(0);
+                            continue;
+                        }
+
+                        if (entity instanceof Player) {
+                            Location pLoc = entity.getLocation();
+                            server.getScheduler().runTaskLater(inst, () -> {
+                                pLoc.getWorld().strikeLightningEffect(pLoc);
+                                for (Player player : pLoc.getNearbyEntitiesByType(Player.class, 2)) {
+                                    player.damage(1, boss);
+                                }
+                            }, 30);
+                        }
                     }
 
-                    if (isConsumableZombie(entity)) {
-                        totalHealth += ((Zombie) entity).getHealth();
-                        ((Zombie) entity).setHealth(0);
-                        continue;
-                    }
+                    PASSIVE_PARTICLE_EFFECT
+                            .location(boss.getLocation().add(0, 1, 0))
+                            .count(15)
+                            .spawn();
 
-                    if (entity instanceof Player) {
-                        Location pLoc = entity.getLocation();
-                        server.getScheduler().runTaskLater(inst, () -> {
-                            pLoc.getWorld().strikeLightningEffect(pLoc);
-                            for (Player player : pLoc.getNearbyEntitiesByType(Player.class, 2)) {
-                                player.damage(1, boss);
-                            }
-                        }, 30);
-                    }
-                }
+                    EntityUtil.extendHeal(boss, totalHealth, 15000);
+                });
 
-                PASSIVE_PARTICLE_EFFECT
-                        .location(boss.getLocation().add(0, 1, 0))
-                        .count(15)
-                        .spawn();
-
-                EntityUtil.extendHeal(boss, totalHealth, 15000);
                 return null;
             }
         });

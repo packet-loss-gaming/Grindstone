@@ -10,8 +10,8 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
+import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.betterweather.WeatherType;
-import gg.packetloss.grindstone.city.engine.ApocalypseComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
@@ -61,6 +61,7 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 import static gg.packetloss.grindstone.util.portal.NoOPTravelAgent.overwriteDestination;
 
@@ -88,26 +89,29 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         if (!event.getWorld().equals(parent.getWorld())) return;
         if (event.getOldWeatherType() == WeatherType.THUNDERSTORM) {
             ChatUtil.sendNotice(server.getOnlinePlayers(), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
-            for (World world : server.getWorlds()) {
-                for (Zombie zombie : world.getEntitiesByClass(Zombie.class)) {
-                    if (!ApocalypseComponent.checkEntity(zombie)) {
-                        continue;
-                    }
 
-                    if (parent.contains(zombie)) {
-                        if (!ChanceUtil.getChance(5)) {
+            ApocalypseHelper.suppressDrops(() -> {
+                for (World world : server.getWorlds()) {
+                    for (Zombie zombie : world.getEntitiesByClass(Zombie.class)) {
+                        if (!checkEntity(zombie)) {
                             continue;
                         }
 
-                        // Only kill zombies not in the dungeon
-                        if (parent.isHostileTempleArea(zombie.getLocation())) {
-                            continue;
-                        }
-                    }
+                        if (parent.contains(zombie)) {
+                            if (!ChanceUtil.getChance(5)) {
+                                continue;
+                            }
 
-                    zombie.setHealth(0);
+                            // Only kill zombies not in the dungeon
+                            if (parent.isHostileTempleArea(zombie.getLocation())) {
+                                continue;
+                            }
+                        }
+
+                        zombie.setHealth(0);
+                    }
                 }
-            }
+            });
         }
     }
 

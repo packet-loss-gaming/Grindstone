@@ -14,7 +14,6 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import gg.packetloss.grindstone.city.engine.ApocalypseComponent;
 import gg.packetloss.grindstone.events.entity.HallowCreeperEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -35,17 +34,16 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.logging.Logger;
 
+import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 
 @ComponentInformation(friendlyName = "Creep Speak", desc = "Make mobs talk.")
-@Depend(components = {ApocalypseComponent.class, SessionComponent.class})
+@Depend(components = {SessionComponent.class})
 public class CreepSpeakComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    @InjectComponent
-    private ApocalypseComponent apocalypse;
     @InjectComponent
     private SessionComponent sessions;
 
@@ -140,7 +138,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                 }
             } else if (entity instanceof Zombie && !(entity instanceof PigZombie)) {
                 try {
-                    if (apocalypse.checkEntity((LivingEntity) entity)) return;
+                    if (checkEntity(entity)) return;
                     color = ChatColor.RED;
                     if (EnvironmentUtil.isServerTimeOdd(time)) {
                         message = "Brainz!!!";
