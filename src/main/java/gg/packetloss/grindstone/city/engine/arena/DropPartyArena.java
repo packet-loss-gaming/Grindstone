@@ -222,10 +222,9 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         List<ItemStack> newDrops = new ArrayList<>();
         final boolean populate = populatorValue > 0;
         if (populate) {
-            int rawPlayerCount = server.getOnlinePlayers().size();
+            int playerCount = server.getOnlinePlayers().size();
 
-            int adjustedPlayerCount = Math.max(3, rawPlayerCount);
-            for (int k = 0; k < adjustedPlayerCount * modifier; k++) {
+            for (int k = 0; k < playerCount * modifier; k++) {
                 for (int i = 10; i > 0; --i) {
                     newDrops.add(new ItemStack(Material.EXP_BOTTLE, 5));
                 }
@@ -235,7 +234,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 newDrops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
             }
 
-            if (rawPlayerCount > 0) {
+            if (playerCount > 0) {
                 newDrops.add(ItemUtil.makeSkull(CollectionUtil.getElement(server.getOnlinePlayers())));
             }
         }
