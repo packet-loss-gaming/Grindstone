@@ -11,6 +11,7 @@ import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.ItemID;
 import gg.packetloss.grindstone.betterweather.WeatherType;
+import gg.packetloss.grindstone.city.engine.ApocalypseComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
@@ -86,18 +87,26 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     public void onThunderChange(BetterWeatherChangeEvent event) {
         if (!event.getWorld().equals(parent.getWorld())) return;
         if (event.getOldWeatherType() == WeatherType.THUNDERSTORM) {
-            ChatUtil.sendNotice(parent.getContained(Player.class), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
-            for (Entity entity : parent.getContained(Zombie.class)) {
-                if (!ChanceUtil.getChance(5)) {
-                    continue;
-                }
+            ChatUtil.sendNotice(server.getOnlinePlayers(), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
+            for (World world : server.getWorlds()) {
+                for (Zombie zombie : world.getEntitiesByClass(Zombie.class)) {
+                    if (!ApocalypseComponent.checkEntity(zombie)) {
+                        continue;
+                    }
 
-                // Only kill zombies not in the dungeon
-                if (parent.isHostileTempleArea(entity.getLocation())) {
-                    continue;
-                }
+                    if (parent.contains(zombie)) {
+                        if (!ChanceUtil.getChance(5)) {
+                            continue;
+                        }
 
-                ((Zombie) entity).setHealth(0);
+                        // Only kill zombies not in the dungeon
+                        if (parent.isHostileTempleArea(zombie.getLocation())) {
+                            continue;
+                        }
+                    }
+
+                    zombie.setHealth(0);
+                }
             }
         }
     }

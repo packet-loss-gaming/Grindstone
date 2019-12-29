@@ -15,6 +15,7 @@ import com.skelril.OSBL.instruction.*;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
+import gg.packetloss.grindstone.city.engine.ApocalypseComponent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -56,47 +57,6 @@ public class ChuckerZombie {
 
     public void bind(Damageable entity) {
         chuckerZombie.bind(new BukkitBoss<>(entity, new GenericDetail()));
-    }
-
-    private boolean isThrowableZombie(Entity entity) {
-        String customName = entity.getCustomName();
-        if (customName == null) {
-            return false;
-        }
-
-        if (!(entity instanceof Zombie)) {
-            return false;
-        }
-
-        if (customName.equals("Apocalyptic Zombie")) {
-            return true;
-        }
-
-        if (customName.equals("Grave Zombie")) {
-            return true;
-        }
-
-        if (customName.equals(ThorZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(ZapperZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(MercilessZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(StickyZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(ChuckerZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        return false;
     }
 
     private void setupChuckerZombie() {
@@ -172,8 +132,8 @@ public class ChuckerZombie {
                 nearestPlayerVel.multiply(2);
                 nearestPlayerVel.setY(ChanceUtil.getRangedRandom(.4, .8));
 
-                for (Entity entity : ((Zombie) boss).getNearbyEntities(4, 4, 4)) {
-                    if (isThrowableZombie(entity) && ChanceUtil.getChance(5)) {
+                for (Entity entity : boss.getNearbyEntities(4, 4, 4)) {
+                    if (ApocalypseComponent.checkEntity(entity) && ChanceUtil.getChance(5)) {
                         entity.setVelocity(nearestPlayerVel);
                     }
                 }

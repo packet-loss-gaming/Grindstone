@@ -552,7 +552,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         return BlockType.isTranslucent(l.getBlock().getTypeId()) ? l : origin;
     }
 
-    public boolean checkEntity(LivingEntity e) {
+    public static boolean checkEntity(Entity e) {
         if (e.getCustomName() == null) {
             return false;
         }
