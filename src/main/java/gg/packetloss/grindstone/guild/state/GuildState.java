@@ -1,10 +1,22 @@
 package gg.packetloss.grindstone.guild.state;
 
 import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.bukkittext.Text;
+import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.events.guild.GuildPowersDisableEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
+import gg.packetloss.grindstone.guild.GuildLevel;
 import gg.packetloss.grindstone.guild.GuildType;
+import gg.packetloss.grindstone.guild.powers.GuildPower;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.StringUtil;
+import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class GuildState {
     private Player player;
@@ -25,6 +37,10 @@ public class GuildState {
 
     public GuildType getType() {
         return state.getType();
+    }
+
+    public int getLevel() {
+        return state.getLevel();
     }
 
     public boolean enablePowers() {
@@ -57,5 +73,78 @@ public class GuildState {
 
         state.setEnabled(false);
         return true;
+    }
+
+    public void sendLevelChart(Player player, int page) {
+        int currentLevel = state.getLevel();
+        GuildPower[] powers = state.getType().getPowers();
+
+        List<GuildLevel> levels = GuildLevel.getLevels();
+        new TextComponentChatPaginator<GuildLevel>(ChatColor.GOLD, "Levels") {
+            @Override
+            public Optional<String> getPagerCommand(int page) {
+                return Optional.of("/level -p " + page);
+            }
+
+            @Override
+            public Text format(GuildLevel level) {
+                boolean belowLevel = currentLevel < level.getLevel();
+
+                ChatColor levelColor = (belowLevel ? ChatColor.RED : ChatColor.GREEN);
+
+                List<GuildPower> unlocks = new ArrayList<>();
+                for (GuildPower power : powers) {
+                    if (power.getUnlockLevel() == level.getLevel()) {
+                        unlocks.add(power);
+                    }
+                }
+
+                // Create level text
+                Text levelText = Text.of(
+                        Text.of(
+                                levelColor,
+                                level.getLevel()
+                        ),
+                        ChatColor.YELLOW,
+                        " (",
+                        ChatUtil.WHOLE_NUMBER_FORMATTER.format(level.getExperience()),
+                        " exp)",
+                        (unlocks.isEmpty() ? Text.of("") : Text.of(" - ", Text.of(ChatColor.GOLD, unlocks.size()), " unlock(s)"))
+                );
+
+                // Create hover text
+                Text hoverText = Text.of();
+                if (belowLevel) {
+                    hoverText = Text.of(
+                            ChatUtil.WHOLE_NUMBER_FORMATTER.format(
+                                    level.getExperience() - state.getExperience()
+                            ),
+                            " experience remaining"
+                    );
+                }
+
+
+                for (GuildPower unlock : unlocks) {
+                    hoverText = Text.of(
+                            hoverText,
+                            "\n",
+                            ChatColor.YELLOW,
+                            " - ",
+                            levelColor,
+                            StringUtil.toTitleCase(unlock.name())
+                    );
+                }
+
+                // Apply hover effect if relevant
+                if (belowLevel || unlocks.size() > 0) {
+                    levelText = Text.of(
+                            levelText,
+                            TextAction.Hover.showText(hoverText)
+                    );
+                }
+
+                return levelText;
+            }
+        }.display(player, levels, page);
     }
 }

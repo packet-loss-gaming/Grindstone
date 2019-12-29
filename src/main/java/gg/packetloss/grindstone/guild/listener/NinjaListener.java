@@ -8,6 +8,7 @@ import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.guild.*;
 import gg.packetloss.grindstone.guild.GuildType;
+import gg.packetloss.grindstone.guild.powers.NinjaPower;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.NinjaState;
 import gg.packetloss.grindstone.guild.state.RogueState;
@@ -437,7 +438,8 @@ public class NinjaListener implements Listener {
                     if (LocationUtil.distanceSquared2D(clicked.getLocation().add(.5, 0, .5), player.getLocation()) <= 4) {
                         // If the player is sneaking treat this as a "slowing" option,
                         // if not sneaking, treat this as a proper grapple.
-                        grapple(player, state, clicked, face, player.isSneaking() ? 0 : 12);
+                        int maxClimb = state.hasPower(NinjaPower.MASTER_CLIMBER) ? 12 : 9;
+                        grapple(player, state, clicked, face, player.isSneaking() ? 0 : maxClimb);
                     }
                 }
                 break;

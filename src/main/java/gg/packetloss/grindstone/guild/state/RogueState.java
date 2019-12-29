@@ -1,6 +1,7 @@
 package gg.packetloss.grindstone.guild.state;
 
 import gg.packetloss.grindstone.guild.GuildType;
+import gg.packetloss.grindstone.guild.powers.RoguePower;
 
 import java.util.concurrent.TimeUnit;
 
@@ -55,6 +56,10 @@ public class RogueState extends InternalGuildState {
 
     public void setGrenadeSafety(boolean grenadeSafety) {
         this.grenadeSafety = grenadeSafety;
+    }
+
+    public boolean hasPower(RoguePower power) {
+        return getLevel() >= power.getUnlockLevel();
     }
 
     @Override

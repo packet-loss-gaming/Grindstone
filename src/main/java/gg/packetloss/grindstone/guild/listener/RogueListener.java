@@ -11,6 +11,7 @@ import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.events.guild.RogueBlipEvent;
 import gg.packetloss.grindstone.events.guild.RogueGrenadeEvent;
 import gg.packetloss.grindstone.guild.GuildType;
+import gg.packetloss.grindstone.guild.powers.RoguePower;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
@@ -67,7 +68,8 @@ public class RogueListener implements Listener {
 
         Player player = event.getPlayer();
 
-        player.setWalkSpeed(DEFAULT_SPEED * 2);
+        float multiplier = getState(player).orElseThrow().hasPower(RoguePower.SUPER_SPEED) ? 2.5f : 2f;
+        player.setWalkSpeed(DEFAULT_SPEED * multiplier);
 
         ChatUtil.sendNotice(player, "You gain the power of a rogue warrior!");
     }

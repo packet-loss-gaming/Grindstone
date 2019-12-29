@@ -1,6 +1,7 @@
 package gg.packetloss.grindstone.guild.state;
 
 import gg.packetloss.grindstone.guild.GuildType;
+import gg.packetloss.grindstone.guild.powers.NinjaPower;
 import org.bukkit.entity.Arrow;
 
 import java.util.ArrayList;
@@ -62,6 +63,10 @@ public class NinjaState extends InternalGuildState {
 
     public void arrowBomb() {
         nextArrowBomb = System.currentTimeMillis() + 3000;
+    }
+
+    public boolean hasPower(NinjaPower power) {
+        return getLevel() >= power.getUnlockLevel();
     }
 
     @Override

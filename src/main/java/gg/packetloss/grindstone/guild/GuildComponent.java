@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.guild;
 
+import com.destroystokyo.paper.Title;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.InfoComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
@@ -9,6 +10,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.guild.db.PlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.db.mysql.MySQLPlayerGuildDatabase;
@@ -19,10 +21,10 @@ import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.NinjaState;
 import gg.packetloss.grindstone.guild.state.RogueState;
-import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
+import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Arrow;
@@ -191,10 +193,19 @@ public class GuildComponent extends BukkitComponent implements Listener {
 
     private void grantExp(Player player, InternalGuildState state, long exp) {
         GuildLevel.getNewLevel(state.getExperience(), exp).ifPresent((newLevel) -> {
-            ChatUtil.sendNotice(
-                    player,
-                    "Level up! Now " + StringUtil.toTitleCase(state.getType().name()) + " level: " + newLevel
-            );
+            player.sendTitle(Title.builder().title(
+                    Text.of(
+                            ChatColor.GOLD,
+                            "LEVEL UP"
+                    ).build()
+            ).subtitle(
+                    Text.of(
+                            ChatColor.GOLD,
+                            StringUtil.toTitleCase(state.getType().name()),
+                            " Level ",
+                            newLevel
+                    ).build()
+            ).build());
         });
 
         state.setExperience(state.getExperience() + exp);
@@ -262,6 +273,20 @@ public class GuildComponent extends BukkitComponent implements Listener {
             if (state.isDisabled()) {
                 throw new CommandException("Your powers failed to apply!");
             }
+        }
+
+        @Command(aliases = {"level"}, desc = "View level information",
+                flags = "p:", min = 0, max = 0)
+        public void guildLevelCmd(CommandContext args, CommandSender sender) throws CommandException {
+            Player player = PlayerUtil.checkPlayer(sender);
+
+            Optional<GuildState> optState = getState(player);
+            if (optState.isEmpty()) {
+                throw new CommandException("You are not in a guild!");
+            }
+
+            GuildState state = optState.get();
+            state.sendLevelChart(player, args.getFlagInteger('p', 1));
         }
 
         @Command(aliases = {"deguild", "unguild"}, desc = "Strip guild powers",

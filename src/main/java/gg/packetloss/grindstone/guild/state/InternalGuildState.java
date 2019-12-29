@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.guild.state;
 
+import gg.packetloss.grindstone.guild.GuildLevel;
 import gg.packetloss.grindstone.guild.GuildType;
 
 public abstract class InternalGuildState {
@@ -24,6 +25,10 @@ public abstract class InternalGuildState {
 
     public void setExperience(long experience) {
         this.experience = experience;
+    }
+
+    public int getLevel() {
+        return GuildLevel.getLevel(getExperience());
     }
 
     public abstract GuildType getType();
