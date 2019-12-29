@@ -107,7 +107,7 @@ public class RogueListener implements Listener {
             yMax = .8;
             yMin = .175;
         } else {
-            yMax = state.isYLimited() ? .8 : 1.4;
+            yMax = 1.4;
             yMin = -2;
         }
 
@@ -184,8 +184,16 @@ public class RogueListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
-        } else if (attacker instanceof Player && getState((Player) attacker).isPresent()) {
+        } else if (attacker instanceof Player) {
+            Optional<RogueState> optState = getState((Player) attacker);
+            if (optState.isEmpty()) {
+                return;
+            }
+
             if (event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
+                RogueState state = optState.get();
+                state.recordAttack();
+
                 event.setDamage(Math.max(event.getDamage(), Math.min((event.getDamage() + 10) * 1.2, 20)));
             }
         }
@@ -259,19 +267,21 @@ public class RogueListener implements Listener {
         if (stack != null && ItemUtil.isSword(stack)) {
             switch (event.getAction()) {
                 case LEFT_CLICK_AIR:
-                    CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                        if (state.canBlip() && !player.isSneaking()) {
-                            blip(player, state, 2, false);
-                        }
-                    }, 1);
+                    if (state.isDoubleLeftClick()) {
+                        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                            if (state.canBlip()) {
+                                blip(player, state, 2, false);
+                            }
+                        }, 1);
+                    }
                     break;
                 case RIGHT_CLICK_AIR:
-                    if (state.canGrenade()) {
+                    if (state.isDoubleRightClick() && state.canGrenade()) {
                         grenade(player, state);
                     }
                     break;
                 case RIGHT_CLICK_BLOCK:
-                    if (state.canGrenade() && state.getGrenadeSafety()) {
+                    if (state.isDoubleRightClick() && state.canGrenade()) {
                         Block clicked = event.getClickedBlock();
                         BlockFace face = event.getBlockFace();
 

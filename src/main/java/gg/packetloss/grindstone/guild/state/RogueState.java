@@ -8,14 +8,42 @@ import java.util.concurrent.TimeUnit;
 public class RogueState extends InternalGuildState {
     public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
 
-    private boolean limitYVelocity = false;
-    private boolean grenadeSafety = true;
+    private long lastAttack = 0;
+    private long lastLeftClick = 0;
+    private long lastRightClick = 0;
 
     private long nextBlip = 0;
     private long nextGrenade = 0;
 
     public RogueState(long experience) {
         super(experience);
+    }
+
+    public void recordAttack() {
+        lastAttack = System.currentTimeMillis();
+    }
+
+    public boolean isDoubleLeftClick() {
+        long currentLeftClick = System.currentTimeMillis();
+
+        // Abort if recently punched something
+        if (currentLeftClick - lastAttack < 500) {
+            return false;
+        }
+
+        boolean isDoubleClick = currentLeftClick - lastLeftClick < 500;
+        lastLeftClick = currentLeftClick;
+
+        return isDoubleClick;
+    }
+
+    public boolean isDoubleRightClick() {
+        long currentRightClick = System.currentTimeMillis();
+
+        boolean isDoubleClick = currentRightClick - lastRightClick < 500;
+        lastRightClick = currentRightClick;
+
+        return isDoubleClick;
     }
 
     public boolean canBlip() {
@@ -40,22 +68,6 @@ public class RogueState extends InternalGuildState {
 
     public void grenade() {
         nextGrenade = System.currentTimeMillis() + 3500;
-    }
-
-    public boolean isYLimited() {
-        return limitYVelocity;
-    }
-
-    public void limitYVelocity(boolean limitYVelocity) {
-        this.limitYVelocity = limitYVelocity;
-    }
-
-    public boolean getGrenadeSafety() {
-        return grenadeSafety;
-    }
-
-    public void setGrenadeSafety(boolean grenadeSafety) {
-        this.grenadeSafety = grenadeSafety;
     }
 
     public boolean hasPower(RoguePower power) {
