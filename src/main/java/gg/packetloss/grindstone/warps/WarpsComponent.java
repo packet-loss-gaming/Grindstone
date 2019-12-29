@@ -80,7 +80,8 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         return getBedLocation(player).orElse(spawnLoc);
     }
 
-    @EventHandler(priority = EventPriority.LOW)
+    // FIXME: Priority set as workaround for Multiverse-Core#1977
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         HomeTeleportEvent HTE = new HomeTeleportEvent(event.getPlayer(), getRespawnLocation(event.getPlayer()));
         server.getPluginManager().callEvent(HTE);

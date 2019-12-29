@@ -82,7 +82,8 @@ public class SandArenaListener extends AreaListener<SandArena> {
         }
     }
 
-    @EventHandler
+    // FIXME: Priority set as workaround for Multiverse-Core#1977
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         if (parent.playerState.hasValidStoredState(PlayerStateKind.SAND_ARENA, event.getPlayer())) {
             event.setRespawnLocation(parent.getRespawnLocation());
