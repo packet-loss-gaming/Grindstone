@@ -191,7 +191,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
         new GuildState(player, internalState).disablePowers();
     }
 
-    private void grantExp(Player player, InternalGuildState state, long exp) {
+    private void grantExp(Player player, InternalGuildState state, double exp) {
         GuildLevel.getNewLevel(state.getExperience(), exp).ifPresent((newLevel) -> {
             player.sendTitle(Title.builder().title(
                     Text.of(
@@ -237,7 +237,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
         }
 
         double maxDamage = Math.min(500, Math.min(result.getDefender().getMaxHealth(), event.getFinalDamage()));
-        grantExp(attacker, state, (long) Math.max(1, maxDamage * .1));
+        grantExp(attacker, state, maxDamage * .1);
     }
 
     @EventHandler(ignoreCancelled = true)
