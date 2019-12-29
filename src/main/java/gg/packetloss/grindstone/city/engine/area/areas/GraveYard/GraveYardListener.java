@@ -86,30 +86,29 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onThunderChange(BetterWeatherChangeEvent event) {
-        if (!event.getWorld().equals(parent.getWorld())) return;
         if (event.getOldWeatherType() == WeatherType.THUNDERSTORM) {
-            ChatUtil.sendNotice(server.getOnlinePlayers(), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
+            World world = event.getWorld();
+
+            ChatUtil.sendNotice(world.getPlayers(), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
 
             ApocalypseHelper.suppressDrops(() -> {
-                for (World world : server.getWorlds()) {
-                    for (Zombie zombie : world.getEntitiesByClass(Zombie.class)) {
-                        if (!checkEntity(zombie)) {
+                for (Zombie zombie : world.getEntitiesByClass(Zombie.class)) {
+                    if (!checkEntity(zombie)) {
+                        continue;
+                    }
+
+                    if (parent.contains(zombie)) {
+                        if (!ChanceUtil.getChance(5)) {
                             continue;
                         }
 
-                        if (parent.contains(zombie)) {
-                            if (!ChanceUtil.getChance(5)) {
-                                continue;
-                            }
-
-                            // Only kill zombies not in the dungeon
-                            if (parent.isHostileTempleArea(zombie.getLocation())) {
-                                continue;
-                            }
+                        // Only kill zombies not in the dungeon
+                        if (parent.isHostileTempleArea(zombie.getLocation())) {
+                            continue;
                         }
-
-                        zombie.setHealth(0);
                     }
+
+                    zombie.setHealth(0);
                 }
             });
         }
