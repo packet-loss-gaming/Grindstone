@@ -362,12 +362,15 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             return;
         }
 
+        boolean allReady = true;
+
         for (Player player : containedPlayers) {
             Block block = player.getLocation().add(0, -1, 0).getBlock();
 
             SkyWarsProfile profile = gameState.get(player);
             if (block.getType() != Material.STAINED_GLASS) {
                 profile.setTeam(null);
+                allReady = false;
                 continue;
             }
 
@@ -403,8 +406,12 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                     profile.setTeam(SkyWarsTeam.BLACK);
                     break;
                 default:
-                    return;
+                    break;
             }
+        }
+
+        if (!allReady) {
+            return;
         }
 
         if (getWinner().isPresent()) {
