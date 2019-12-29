@@ -640,7 +640,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         double flight = 6;
         double pushBack = 6;
 
-        return makeSkyFeather("Doom", uses, radius, flight, pushBack);
+        return makeSkyFeather(uses == -1 ? "Infinite Doom" : "Doom", uses, radius, flight, pushBack);
     }
 
     private void awardPowerup(Player player, ItemStack held) {
@@ -658,12 +658,12 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             powerMeta.setDisplayName(ChatColor.GOLD + "Defroster");
             powerup.setItemMeta(powerMeta);
         } else {
-            if (ItemUtil.matchesFilter(held, ChatColor.AQUA + "Sky Feather [Doom]", false)) return;
+            if (ItemUtil.matchesFilter(held, ChatColor.AQUA + "Sky Feather [Infinite Doom]", false)) return;
 
             if (ChanceUtil.getChance(50)) {
                 for (Player aPlayer : getPlayersInGame()) {
                     if (player.equals(aPlayer)) continue;
-                    ChatUtil.sendWarning(aPlayer, player.getName() + " has been given a Doom feather!");
+                    ChatUtil.sendWarning(aPlayer, player.getName() + " has been given an Infinite Doom feather!");
                 }
 
                 // FIXME: This should really only remove feathers
