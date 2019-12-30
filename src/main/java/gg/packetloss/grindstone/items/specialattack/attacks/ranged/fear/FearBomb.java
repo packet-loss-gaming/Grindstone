@@ -6,9 +6,6 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear;
 
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.BlockType;
-import com.sk89q.worldedit.blocks.ClothColor;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
@@ -23,6 +20,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -73,19 +71,19 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
 
                     World world = loc.getWorld();
 
-                    while (loc.getY() > 0 && BlockType.canPassThrough(world.getBlockTypeIdAt(loc))) {
+                    while (loc.getY() > 0 && !world.getBlockAt(loc).getType().isSolid()) {
                         loc.add(0, -1, 0);
                     }
 
                     if (times % 2 == 0) {
                         for (Player player : players) {
                             if (!player.isValid()) continue;
-                            player.sendBlockChange(loc, BlockID.CLOTH, (byte) ClothColor.WHITE.getID());
+                            player.sendBlockChange(loc, Material.WHITE_WOOL, (byte) 0);
                         }
                     } else {
                         for (Player player : players) {
                             if (!player.isValid()) continue;
-                            player.sendBlockChange(loc, BlockID.CLOTH, (byte) ClothColor.RED.getID());
+                            player.sendBlockChange(loc, Material.RED_WOOL, (byte) 0);
                         }
                     }
                 }
@@ -103,7 +101,7 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
                     loc = block.getLocation(loc);
                     World world = loc.getWorld();
 
-                    while (loc.getY() > 0 && BlockType.canPassThrough(world.getBlockTypeIdAt(loc))) {
+                    while (loc.getY() > 0 && !world.getBlockAt(loc).getType().isSolid()) {
                         loc.add(0, -1, 0);
                     }
 
@@ -117,11 +115,10 @@ public class FearBomb extends EntityAttack implements RangedSpecial {
 
                 List<Player> players = world.getPlayers();
                 for (Location changedLoc : changedLocations) {
-                    Material type = changedLoc.getBlock().getType();
-                    byte data = changedLoc.getBlock().getData();
+                    BlockData blockData = changedLoc.getBlock().getBlockData();
 
                     for (Player player : players) {
-                        player.sendBlockChange(changedLoc, type, data);
+                        player.sendBlockChange(changedLoc, blockData);
                     }
                 }
             }

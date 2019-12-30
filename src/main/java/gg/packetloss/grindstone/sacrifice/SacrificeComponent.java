@@ -14,12 +14,12 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.NestedCommand;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
+import com.zachsthings.libcomponents.config.ConfigurationNode;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
@@ -107,34 +107,23 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     private static class LocalConfiguration extends ConfigurationBase {
+        private Material sacrificialBlockMaterial = null;
 
-        @Setting("sacrificial-block")
-        private String sacrificialBlockString = BlockID.STONE_BRICK + ":3";
-
-        public int sacrificialBlockId = getSacrificialBlockId();
-
-        public byte sacrificialBlockData = getSacrificialBlockData();
-
-        private int getSacrificialBlockId() {
-
-            try {
-                String[] blockData = sacrificialBlockString.trim().split(":");
-                return Integer.parseInt(blockData[0]);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return 98;
-            }
+        @Override
+        public void load(ConfigurationNode node) {
+            super.load(node);
+            sacrificialBlockMaterial = null;
         }
 
-        private byte getSacrificialBlockData() {
+        @Setting("sacrificial-block")
+        private String sacrificialBlockString = Material.CHISELED_STONE_BRICKS.getKey().toString();
 
-            try {
-                String[] blockData = sacrificialBlockString.trim().split(":");
-                return (byte) Integer.parseInt(blockData[1]);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return 3;
+        public Material getSacrificialBlock() {
+            if (sacrificialBlockMaterial == null) {
+                sacrificialBlockMaterial = Material.matchMaterial(sacrificialBlockString);
             }
+
+            return sacrificialBlockMaterial;
         }
     }
 
@@ -161,18 +150,18 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     private void populateRegistry() {
         registry.registerItem(() -> new ItemStack(Material.DIRT), JUNK);
         registry.registerItem(() -> new ItemStack(Material.STONE), JUNK);
-        registry.registerItem(() -> new ItemStack(Material.RED_ROSE), JUNK);
-        registry.registerItem(() -> new ItemStack(Material.YELLOW_FLOWER), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.ROSE_BUSH), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.DANDELION), JUNK);
         registry.registerItem(() -> new ItemStack(Material.PUMPKIN_PIE), JUNK);
-        registry.registerItem(() -> new ItemStack(Material.SEEDS), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.WHEAT_SEEDS), JUNK);
         registry.registerItem(() -> new ItemStack(Material.WHEAT), JUNK);
-        registry.registerItem(() -> new ItemStack(Material.WOOD), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.OAK_PLANKS), JUNK);
         registry.registerItem(() -> new ItemStack(Material.FEATHER), JUNK);
         registry.registerItem(() -> new ItemStack(Material.GOLD_NUGGET, ChanceUtil.getRandom(9)), JUNK);
         registry.registerItem(() -> new ItemStack(Material.ARROW), JUNK);
         registry.registerItem(() -> new ItemStack(Material.BOWL), JUNK);
         registry.registerItem(() -> new ItemStack(Material.BONE), JUNK);
-        registry.registerItem(() -> new ItemStack(Material.SNOW_BALL), JUNK);
+        registry.registerItem(() -> new ItemStack(Material.SNOWBALL), JUNK);
         registry.registerItem(() -> new ItemStack(Material.FLINT), JUNK);
         registry.registerItem(() -> new ItemStack(Material.CLAY_BALL, ChanceUtil.getRandom(8)), JUNK);
         registry.registerItem(() -> new ItemStack(Material.EGG), JUNK);
@@ -193,9 +182,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         registry.registerItem(() -> new ItemStack(Material.DIAMOND_AXE), NORMAL);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_FISH), NORMAL);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.OVERSEER_BOW), NORMAL);
-        registry.registerItem(() -> new ItemStack(Material.EXP_BOTTLE, ChanceUtil.getRangedRandom(40, 64)), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.EXPERIENCE_BOTTLE, ChanceUtil.getRangedRandom(40, 64)), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.BLAZE_ROD, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
-        registry.registerItem(() -> new ItemStack(Material.SPECKLED_MELON, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
+        registry.registerItem(() -> new ItemStack(Material.GLISTERING_MELON_SLICE, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.FERMENTED_SPIDER_EYE, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.GHAST_TEAR, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.PIXIE_DUST, ChanceUtil.getRangedRandom(3, 6)), NORMAL);
@@ -269,8 +258,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     public boolean isSacrificeBlock(Block block) {
-        return block.getTypeId() == config.getSacrificialBlockId() &&
-                block.getData() == config.getSacrificialBlockData();
+        return block.getType() == config.getSacrificialBlock();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -311,9 +299,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         if (!isSacrificeBlock(origin)) return;
 
         final Block above = origin.getRelative(BlockFace.UP);
-        if (above.getTypeId() == BlockID.AIR) {
-            above.setTypeId(BlockID.FIRE);
-            server.getScheduler().runTaskLater(inst, () -> above.setTypeId(BlockID.AIR), 20 * 4);
+        if (above.getType() == Material.AIR) {
+            above.setType(Material.FIRE);
+            server.getScheduler().runTaskLater(inst, () -> above.setType(Material.AIR), 20 * 4);
 
             for (BlockFace face : surrounding) {
                 createFire(origin.getRelative(face));
@@ -397,7 +385,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     private void sacrifice(Player player, ItemStack item) {
-        if (item.getTypeId() == 0) return;
+        if (item.getType() == Material.AIR) return;
 
         PlayerInventory pInventory = player.getInventory();
 

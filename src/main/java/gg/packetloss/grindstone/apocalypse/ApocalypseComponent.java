@@ -9,8 +9,6 @@ package gg.packetloss.grindstone.apocalypse;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
-import com.sk89q.worldedit.blocks.BlockType;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -357,18 +355,18 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         Player killer = ent.getKiller();
         if (ent instanceof Skeleton &&  killer != null) {
             ItemStack held = ent.getEquipment().getItemInHand();
-            if (held != null && held.getTypeId() == ItemID.BOW) {
+            if (ItemUtil.isBow(held)) {
                 if (hasThunderstorm(world) && ChanceUtil.getChance(5)) {
-                    event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8) * 2)));
+                    event.getDrops().add(new ItemStack(Material.ARROW, (ChanceUtil.getRandom(8) * 2)));
                 } else {
-                    event.getDrops().add(new ItemStack(ItemID.ARROW, (ChanceUtil.getRandom(8))));
+                    event.getDrops().add(new ItemStack(Material.ARROW, (ChanceUtil.getRandom(8))));
 
                 }
             }
         }
 
         if (checkEntity(ent)) {
-            event.getDrops().removeIf(next -> next != null && next.getTypeId() == ItemID.ROTTEN_FLESH);
+            event.getDrops().removeIf(next -> next != null && next.getType() == Material.ROTTEN_FLESH);
 
             if (killer != null) {
                 maybeIncreaseBuff(killer);
@@ -554,7 +552,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     public Location findLocation(Location origin) {
         Location l = LocationUtil.findRandomLoc(origin, 8, true, false);
-        return BlockType.isTranslucent(l.getBlock().getTypeId()) ? l : origin;
+        return l.getBlock().getType().isSolid() ? origin : l;
     }
 
     private <T extends LivingEntity> T spawnBase(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {

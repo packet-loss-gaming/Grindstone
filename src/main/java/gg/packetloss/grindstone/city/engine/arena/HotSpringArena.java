@@ -7,8 +7,6 @@
 package gg.packetloss.grindstone.city.engine.arena;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
@@ -19,6 +17,7 @@ import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.Effect;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -159,9 +158,9 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                 player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, divinityMod * 180, 1));
 
                 Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-                if (downward.getTypeId() != BlockID.LAPIS_LAZULI_BLOCK) {
+                if (downward.getType() != Material.LAPIS_BLOCK) {
                     downward = downward.getRelative(BlockFace.DOWN);
-                    if (downward.getTypeId() != BlockID.LAPIS_LAZULI_BLOCK) {
+                    if (downward.getType() != Material.LAPIS_BLOCK) {
                         continue;
                     }
                 }
@@ -181,7 +180,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                         if (!player.isValid()) return true;
 
                         Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-                        if (!BlockType.canPassThrough(downward.getTypeId()) && player.getLocation().getBlockY() > 70) {
+                        if (downward.getType().isSolid() && player.getLocation().getBlockY() > 70) {
                             return true;
                         }
 

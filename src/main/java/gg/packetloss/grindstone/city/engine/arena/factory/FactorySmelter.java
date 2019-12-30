@@ -8,8 +8,6 @@ package gg.packetloss.grindstone.city.engine.arena.factory;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.util.yaml.YAMLProcessor;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
@@ -24,6 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class FactorySmelter extends FactoryMech {
@@ -36,12 +35,9 @@ public class FactorySmelter extends FactoryMech {
 
     private LavaSupply lavaSupply;
 
-    private static final List<Integer> wanted = new ArrayList<>();
-
-    static {
-        wanted.add(BlockID.IRON_ORE);
-        wanted.add(BlockID.GOLD_ORE);
-    }
+    private static final Set<Material> WANTED = Set.of(
+        Material.IRON_ORE, Material.GOLD_ORE
+    );
 
     public FactorySmelter(World world, ProtectedRegion region, YAMLProcessor processor,
                           ProtectedRegion lavaSupply, ProtectedRegion lavaZone) {
@@ -55,7 +51,7 @@ public class FactorySmelter extends FactoryMech {
 
         Collection<Item> lavaContained = lavaSupply.getContained(Item.class);
         if (lavaContained.size() > 0) ChatUtil.sendNotice(playerList, "Adding lava...");
-        int totalLava = items.getOrDefault(ItemID.LAVA_BUCKET, 0);
+        int totalLava = items.getOrDefault(Material.LAVA_BUCKET, 0);
         for (Item e : lavaContained) {
             // Find items and destroy those unwanted
             ItemStack workingStack = e.getItemStack();
@@ -63,18 +59,18 @@ public class FactorySmelter extends FactoryMech {
             // Add the item to the list
             if (workingStack.getType().equals(Material.LAVA_BUCKET)) {
                 int total = workingStack.getAmount();
-                if (items.containsKey(workingStack.getTypeId())) {
-                    total += items.get(workingStack.getTypeId());
+                if (items.containsKey(workingStack.getType())) {
+                    total += items.get(workingStack.getType());
                 }
-                items.put(workingStack.getTypeId(), totalLava = total);
+                items.put(workingStack.getType(), totalLava = total);
             }
             e.remove();
         }
         int lavaRemainder = lavaSupply.addLava(totalLava);
         if (lavaRemainder < 1) {
-            items.remove(ItemID.LAVA_BUCKET);
+            items.remove(Material.LAVA_BUCKET);
         } else {
-            items.put(ItemID.LAVA_BUCKET, lavaRemainder);
+            items.put(Material.LAVA_BUCKET, lavaRemainder);
         }
 
         Collection<Item> contained = getContained(Item.class);
@@ -84,13 +80,13 @@ public class FactorySmelter extends FactoryMech {
             ItemStack workingStack = e.getItemStack();
 
             // Add the item to the list
-            if (wanted.contains(workingStack.getTypeId())) {
+            if (WANTED.contains(workingStack.getType())) {
                 int total = workingStack.getAmount();
                 ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
-                if (items.containsKey(workingStack.getTypeId())) {
-                    total += items.get(workingStack.getTypeId());
+                if (items.containsKey(workingStack.getType())) {
+                    total += items.get(workingStack.getType());
                 }
-                items.put(workingStack.getTypeId(), total);
+                items.put(workingStack.getType(), total);
             }
             e.remove();
         }
@@ -99,8 +95,8 @@ public class FactorySmelter extends FactoryMech {
             save(); // Update save for new Iron & Gold values
         }
 
-        int maxIron = items.getOrDefault(BlockID.IRON_ORE, 0);
-        int maxGold = items.getOrDefault(BlockID.GOLD_ORE, 0);
+        int maxIron = items.getOrDefault(Material.IRON_ORE, 0);
+        int maxGold = items.getOrDefault(Material.GOLD_ORE, 0);
 
         if (maxGold + maxIron < 1) return new ArrayList<>();
 
@@ -111,14 +107,14 @@ public class FactorySmelter extends FactoryMech {
         int goldRemainder = maxGold - (availableLava * 8);
 
         if (ironRemainder < 1) {
-            items.remove(BlockID.IRON_ORE);
+            items.remove(Material.IRON_ORE);
         } else {
-            items.put(BlockID.IRON_ORE, ironRemainder);
+            items.put(Material.IRON_ORE, ironRemainder);
         }
         if (goldRemainder < 1) {
-            items.remove(BlockID.GOLD_ORE);
+            items.remove(Material.GOLD_ORE);
         } else {
-            items.put(BlockID.GOLD_ORE, goldRemainder);
+            items.put(Material.GOLD_ORE, goldRemainder);
         }
         save(); // Update save for new Iron & Gold values
 
@@ -144,8 +140,8 @@ public class FactorySmelter extends FactoryMech {
         }
         // Return the product for the que
         List<ItemStack> product = new ArrayList<>();
-        for (int i = maxIron; i > 0; --i) product.add(new ItemStack(ItemID.IRON_BAR));
-        for (int i = maxGold; i > 0; --i) product.add(new ItemStack(ItemID.GOLD_BAR));
+        for (int i = maxIron; i > 0; --i) product.add(new ItemStack(Material.IRON_INGOT));
+        for (int i = maxGold; i > 0; --i) product.add(new ItemStack(Material.GOLD_INGOT));
         return product;
     }
 }

@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.economic;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -171,7 +170,7 @@ public class ConversionComponent extends BukkitComponent implements Listener {
 
         if (!validHeader) {
             event.setCancelled(true);
-            block.breakNaturally(new ItemStack(ItemID.SIGN));
+            block.breakNaturally(new ItemStack(Material.SIGN));
         }
 
         try {
@@ -180,7 +179,7 @@ public class ConversionComponent extends BukkitComponent implements Listener {
             ChatUtil.sendError(player, "The third line must be the amount of "
                     + economy.currencyNamePlural() + " to be transferred.");
             event.setCancelled(true);
-            block.breakNaturally(new ItemStack(ItemID.SIGN));
+            block.breakNaturally(new ItemStack(Material.SIGN));
         }
     }
 

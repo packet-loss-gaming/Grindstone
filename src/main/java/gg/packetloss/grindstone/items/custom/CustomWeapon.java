@@ -55,8 +55,8 @@ public class CustomWeapon extends CustomEquipment {
 
     private int getDefaultDamage() {
         switch (getBaseType()) {
-            case WOOD_SWORD:
-            case GOLD_SWORD:
+            case WOODEN_SWORD:
+            case GOLDEN_SWORD:
                 return 4;
             case STONE_SWORD:
                 return 5;

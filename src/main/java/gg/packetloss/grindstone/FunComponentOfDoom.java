@@ -12,7 +12,6 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -23,10 +22,7 @@ import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
-import org.bukkit.Color;
-import org.bukkit.FireworkEffect;
-import org.bukkit.Location;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -109,7 +105,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
         if (player.getWorld().getName().contains("City")) {
             String name = player.getName();
             if (name.equals("Cow_Fu")) {
-                event.getDrops().add(new ItemStack(ItemID.RAW_BEEF));
+                event.getDrops().add(new ItemStack(Material.BEEF));
 
                 Player killer = player.getKiller();
                 if (killer != null) {

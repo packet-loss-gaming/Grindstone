@@ -13,9 +13,6 @@ import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
@@ -79,14 +76,14 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     private WorldGuardPlugin WG;
     private Economy econ;
 
-    private static Map<BaseBlock, BaseBlock> blockMapping = new HashMap<>();
+    private static Map<Material, Material> blockMapping = new HashMap<>();
 
     static {
-        blockMapping.put(new BaseBlock(BlockID.GRASS), new BaseBlock(BlockID.STAINED_CLAY, 11));
-        blockMapping.put(new BaseBlock(BlockID.SAND), new BaseBlock(BlockID.STAINED_CLAY, 3));
+        blockMapping.put(Material.GRASS, Material.BLUE_TERRACOTTA);
+        blockMapping.put(Material.SAND, Material.LIGHT_BLUE_TERRACOTTA);
     }
 
-    private static PlotOutliner outliner = new PlotOutliner(blockMapping, BlockType::isNaturalTerrainBlock);
+    private static PlotOutliner outliner = new PlotOutliner(blockMapping);
 
     @Override
     public void enable() {

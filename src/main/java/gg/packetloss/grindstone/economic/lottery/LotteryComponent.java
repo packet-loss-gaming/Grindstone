@@ -9,7 +9,6 @@ package gg.packetloss.grindstone.economic.lottery;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -30,6 +29,7 @@ import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -219,7 +219,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         if (event.getLine(0).equalsIgnoreCase("[lottery]")) {
             if (!inst.hasPermission(player, "aurora.lottery.ticket.sell.sign")) {
                 event.setCancelled(true);
-                block.breakNaturally(new ItemStack(ItemID.SIGN, 1));
+                block.breakNaturally(new ItemStack(Material.SIGN, 1));
             }
             event.setLine(0, "[Lottery]");
             try {
@@ -228,7 +228,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
                     ChatUtil.sendError(player, "The third line must be a number below: "
                             + ChatUtil.makeCountString(config.maxSellCount, "."));
                     event.setCancelled(true);
-                    block.breakNaturally(new ItemStack(ItemID.SIGN, 1));
+                    block.breakNaturally(new ItemStack(Material.SIGN, 1));
                 }
                 event.setLine(2, "for");
                 event.setLine(3, String.valueOf(config.ticketPrice * ticketCount));
@@ -236,7 +236,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
                 ChatUtil.sendError(player, "The third line must be a number below: "
                         + ChatUtil.makeCountString(config.maxSellCount, "."));
                 event.setCancelled(true);
-                block.breakNaturally(new ItemStack(ItemID.SIGN, 1));
+                block.breakNaturally(new ItemStack(Material.SIGN, 1));
             }
         }
     }

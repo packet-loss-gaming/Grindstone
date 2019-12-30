@@ -7,23 +7,18 @@
 package gg.packetloss.grindstone.homes;
 
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.util.checker.Expression;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 
 import java.util.Map;
 
 public class PlotOutliner {
+    private final Map<Material, Material> mapping;
 
-    private final Map<BaseBlock, BaseBlock> mapping;
-    private final Expression<BaseBlock, Boolean> expr;
-
-    public PlotOutliner(Map<BaseBlock, BaseBlock> mapping, Expression<BaseBlock, Boolean> expr) {
+    public PlotOutliner(Map<Material, Material> mapping) {
         this.mapping = mapping;
-        this.expr = expr;
     }
 
     public void outline(World world, ProtectedRegion region) {
@@ -53,14 +48,11 @@ public class PlotOutliner {
         for (int y = world.getMaxHeight(); y > 1; --y) {
 
             Block target = world.getBlockAt(x, y, z);
-            Block below = target.getRelative(BlockFace.DOWN);
 
-            BaseBlock tBase = new BaseBlock(target.getTypeId(), target.getData());
-            BaseBlock bBase = new BaseBlock(below.getTypeId(), below.getData());
+            for (Map.Entry<Material, Material> entry : mapping.entrySet()) {
+                Material from;
+                Material to;
 
-            for (Map.Entry<BaseBlock, BaseBlock> entry : mapping.entrySet()) {
-                BaseBlock from;
-                BaseBlock to;
                 if (!revert) {
                     from = entry.getKey();
                     to = entry.getValue();
@@ -69,8 +61,8 @@ public class PlotOutliner {
                     to = entry.getKey();
                 }
 
-                if (tBase.equals(from) && expr.evaluate(bBase)) {
-                    target.setTypeIdAndData(to.getType(), (byte) to.getData(), true);
+                if (target.getType().equals(from)) {
+                    target.setType(to, true);
                     return;
                 }
             }

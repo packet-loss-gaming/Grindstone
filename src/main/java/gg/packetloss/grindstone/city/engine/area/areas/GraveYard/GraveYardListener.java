@@ -7,9 +7,6 @@
 package gg.packetloss.grindstone.city.engine.area.areas.GraveYard;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
@@ -36,10 +33,7 @@ import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -332,7 +326,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         if (entity.getCustomName() != null) {
             String customName = entity.getCustomName();
             if (customName.equals("Grave Zombie")) {
-                drops.removeIf(stack -> stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH);
+                drops.removeIf(stack -> stack != null && stack.getType() == Material.ROTTEN_FLESH);
 
                 if (ChanceUtil.getChance(15000)) {
                     drops.add(CustomItemCenter.build(CustomItems.PHANTOM_CLOCK, ChanceUtil.getRandom(3)));
@@ -369,7 +363,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     }
                 }
             } else if (customName.equals("Guardian Zombie")) {
-                drops.removeIf(stack -> stack != null && stack.getTypeId() == ItemID.ROTTEN_FLESH);
+                drops.removeIf(stack -> stack != null && stack.getType() == Material.ROTTEN_FLESH);
 
                 if (ChanceUtil.getChance(80)) {
                     drops.add(CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION));
@@ -420,8 +414,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 while (it.hasNext()) {
                     ItemStack stack = it.next();
                     if (stack != null && !ChanceUtil.getChance(15)) {
-                        if (stack.getTypeId() == ItemID.STRING) it.remove();
-                        if (stack.getTypeId() == ItemID.SPIDER_EYE) it.remove();
+                        if (stack.getType() == Material.STRING) it.remove();
+                        if (stack.getType() == Material.SPIDER_EYE) it.remove();
                     }
                 }
             } else if (entity instanceof Creeper) {
@@ -429,7 +423,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 while (it.hasNext()) {
                     ItemStack stack = it.next();
                     if (stack != null && !ChanceUtil.getChance(15)) {
-                        if (stack.getTypeId() == ItemID.SULPHUR) it.remove();
+                        if (stack.getType() == Material.GUNPOWDER) it.remove();
                     }
                 }
             }
@@ -438,8 +432,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockSpread(BlockSpreadEvent event) {
-        int fromType = event.getSource().getTypeId();
-        if (fromType == BlockID.GRASS && parent.contains(event.getBlock())) {
+        Material fromType = event.getSource().getType();
+        if (fromType == Material.GRASS && parent.contains(event.getBlock())) {
             event.setCancelled(true);
         }
     }
@@ -457,16 +451,18 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
-        BaseBlock baseBlock = new BaseBlock(block.getTypeId(), block.getData());
+
         if (parent.contains(block) && !parent.admin.isAdmin(event.getPlayer())) {
             event.setCancelled(true);
-            if (!parent.accept(baseBlock, GraveYardArea.breakable)) {
+
+            if (!GraveYardArea.BREAKABLE.contains(block.getType())) {
                 return;
             }
+
             try {
                 parent.blockState.pushAnonymousBlock(BlockStateKind.GRAVEYARD, block.getState());
 
-                block.setTypeId(0);
+                block.setType(Material.AIR);
                 RestorationUtil.handleToolDamage(event.getPlayer());
             } catch (UnstorableBlockStateException e) {
                 e.printStackTrace();
@@ -493,7 +489,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         Block block = event.getBlock();
         Location contactedLoc = block.getLocation();
         if (parent.isHostileTempleArea(contactedLoc)) {
-            if (block.getTypeId() == BlockID.STONE_PRESSURE_PLATE) {
+            if (block.getType() == Material.STONE_PRESSURE_PLATE) {
                 if (contactedLoc.getBlockY() < 57) {
                     EntityUtil.heal(event.getEntity(), 1);
                 } else if (parent.isPressurePlateLocked) {
@@ -557,13 +553,13 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         ItemStack stack = player.getItemInHand();
         Action action = event.getAction();
         if (parent.isHostileTempleArea(clickedLoc)) {
-            switch (block.getTypeId()) {
-                case BlockID.LEVER:
+            switch (block.getType()) {
+                case LEVER:
                     server.getScheduler().runTaskLater(inst, () -> {
                         parent.isPressurePlateLocked = !parent.checkPressurePlateLock();
                     }, 1);
                     break;
-                case BlockID.STONE_PRESSURE_PLATE:
+                case STONE_PRESSURE_PLATE:
                     if ((parent.isPressurePlateLocked || clickedLoc.getBlockY() < 57) && action.equals(Action.PHYSICAL)) {
                         DeathUtil.throwSlashPotion(clickedLoc);
                     }

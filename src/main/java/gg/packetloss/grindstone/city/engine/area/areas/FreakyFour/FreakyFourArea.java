@@ -228,7 +228,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             for (int x = minX; x <= maxX; ++x) {
                 for (int z = minZ; z <= maxZ; ++z) {
                     Block block = world.getBlockAt(x, y, z);
-                    if (block.getType() == Material.WEB) {
+                    if (block.getType() == Material.COBWEB) {
                         block.setType(Material.AIR);
                     }
                 }
@@ -259,9 +259,9 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             case 1:
                 createWall(charlotte_RG,
                         input -> input.getType() == Material.AIR,
-                        input -> input.getType() == Material.WEB,
+                        input -> input.getType() == Material.COBWEB,
                         Material.AIR,
-                        Material.WEB,
+                        Material.COBWEB,
                         1,
                         config.charlotteFloorWeb
                 );
@@ -279,7 +279,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                     for (Location loc : queList) {
                         Block block = world.getBlockAt(loc);
                         if (block.getType().isSolid()) continue;
-                        block.setType(Material.WEB);
+                        block.setType(Material.COBWEB);
                     }
                 }
                 break;
@@ -289,7 +289,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                         for (int z = minZ; z <= maxZ; ++z) {
                             if (!ChanceUtil.getChance(config.charlotteWebSpider)) continue;
                             Block block = world.getBlockAt(x, y, z);
-                            if (block.getType() == Material.WEB) {
+                            if (block.getType() == Material.COBWEB) {
                                 block.setType(Material.AIR);
                                 world.spawn(block.getLocation(), CaveSpider.class);
                             }

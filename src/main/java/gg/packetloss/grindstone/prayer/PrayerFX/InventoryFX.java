@@ -6,24 +6,25 @@
 
 package gg.packetloss.grindstone.prayer.PrayerFX;
 
-import com.sk89q.worldedit.blocks.BlockID;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public class InventoryFX extends AbstractEffect {
 
-    private int type, amount;
+    private Material type;
+    private int amount;
 
     public InventoryFX() {
         super();
-        this.type = BlockID.DIRT;
+        this.type = Material.DIRT;
         this.amount = 1;
     }
 
-    public InventoryFX(int type, int amount) {
+    public InventoryFX(Material type, int amount) {
         super();
         this.type = type;
         this.amount = amount;
@@ -37,13 +38,14 @@ public class InventoryFX extends AbstractEffect {
 
     @Override
     public void add(Player player) {
-
         ItemStack held = player.getItemInHand().clone();
         ItemStack stack = new ItemStack(type, ChanceUtil.getRandom(amount));
-        if (held != null && held.getTypeId() != BlockID.AIR && !held.isSimilar(stack)) {
+
+        if (held.getType() != Material.AIR && !held.isSimilar(stack)) {
             Item item = player.getWorld().dropItem(player.getLocation(), held);
             item.setPickupDelay(20 * 5);
         }
+
         player.setItemInHand(stack);
     }
 

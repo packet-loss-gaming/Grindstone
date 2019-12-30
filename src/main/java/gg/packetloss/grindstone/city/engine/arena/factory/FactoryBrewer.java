@@ -8,14 +8,13 @@ package gg.packetloss.grindstone.city.engine.arena.factory;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.util.yaml.YAMLProcessor;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.item.BaseItem;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -24,13 +23,10 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionType;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class FactoryBrewer extends FactoryMech {
@@ -45,30 +41,27 @@ public class FactoryBrewer extends FactoryMech {
         super(world, region, processor, "pot-ingredients-" + count++);
     }
 
-    private static final List<BaseItem> wanted = new ArrayList<>();
+    private static final Set<Material> wanted = Set.of(
+        Material.GLASS_BOTTLE,
+        Material.NETHER_WART,
 
-    static {
-        wanted.add(new BaseItem(ItemID.GLASS_BOTTLE));
-        wanted.add(new BaseItem(ItemID.NETHER_WART_SEED));
+        Material.GLOWSTONE_DUST,
+        Material.REDSTONE,
+        Material.GUNPOWDER,
 
-        wanted.add(new BaseItem(ItemID.LIGHTSTONE_DUST));
-        wanted.add(new BaseItem(ItemID.REDSTONE_DUST));
-        wanted.add(new BaseItem(ItemID.SULPHUR));
-
-        wanted.add(new BaseItem(ItemID.MAGMA_CREAM));
-        wanted.add(new BaseItem(ItemID.SUGAR));
-        wanted.add(new BaseItem(ItemID.GLISTERING_MELON));
-        wanted.add(new BaseItem(ItemID.SPIDER_EYE));
-        wanted.add(new BaseItem(ItemID.GHAST_TEAR));
-        wanted.add(new BaseItem(ItemID.BLAZE_POWDER));
-        wanted.add(new BaseItem(ItemID.FERMENTED_SPIDER_EYE));
-        wanted.add(new BaseItem(ItemID.GOLDEN_CARROT));
-        wanted.add(new BaseItem(ItemID.RAW_FISH, 3));
+        Material.MAGMA_CREAM,
+        Material.SUGAR,
+        Material.GLISTERING_MELON_SLICE,
+        Material.SPIDER_EYE,
+        Material.GHAST_TEAR,
+        Material.BLAZE_POWDER,
+        Material.FERMENTED_SPIDER_EYE,
+        Material.GOLDEN_CARROT,
+        Material.PUFFERFISH,
 
         // Special - Non-Vanilla
-        wanted.add(new BaseItem(ItemID.NETHER_QUARTZ));
-        wanted.add(new BaseItem(ItemID.POISONOUS_POTATO));
-    }
+        Material.QUARTZ
+    );
 
     @Override
     public List<ItemStack> process() {
@@ -93,13 +86,13 @@ public class FactoryBrewer extends FactoryMech {
                     ItemStack workingStack = ((Item) e).getItemStack();
 
                     // Add the item to the list
-                    if (wanted.contains(new BaseItem(workingStack.getTypeId(), workingStack.getData().getData()))) {
+                    if (wanted.contains(workingStack.getType())) {
                         int total = workingStack.getAmount();
                         ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
-                        if (items.containsKey(workingStack.getTypeId())) {
-                            total += items.get(workingStack.getTypeId());
+                        if (items.containsKey(workingStack.getType())) {
+                            total += items.get(workingStack.getType());
                         }
-                        items.put(workingStack.getTypeId(), total);
+                        items.put(workingStack.getType(), total);
                     } else if (ItemUtil.isItem(workingStack, CustomItems.MAD_MILK)) {
                         FactoryFloor.factInst.madMilk();
                         ChatUtil.sendWarning(playerList, "The milk is too much for the vat to handle, strange things start happening...");
@@ -111,100 +104,98 @@ public class FactoryBrewer extends FactoryMech {
         }
 
         // Check these to avoid doing more calculations than need be
-        int bottles = items.getOrDefault(ItemID.GLASS_BOTTLE, 0);
-        int max = items.getOrDefault(ItemID.NETHER_WART_SEED, 0);
+        int bottles = items.getOrDefault(Material.GLASS_BOTTLE, 0);
+        int max = items.getOrDefault(Material.NETHER_WART, 0);
         if (bottles <= 0 || max <= 0) return new ArrayList<>();
 
         // Figure out the potion the player is trying to make
-        List<Integer> using = new ArrayList<>();
-        PotionEffectType target;
-        if (items.containsKey(ItemID.MAGMA_CREAM)) {
-            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
-                target = PotionEffectType.SLOW;
-                using.add(ItemID.FERMENTED_SPIDER_EYE);
+        List<Material> using = new ArrayList<>();
+        PotionType target;
+        if (items.containsKey(Material.MAGMA_CREAM)) {
+            if (items.containsKey(Material.FERMENTED_SPIDER_EYE)) {
+                target = PotionType.SLOWNESS;
+                using.add(Material.FERMENTED_SPIDER_EYE);
             } else {
-                target = PotionEffectType.FIRE_RESISTANCE;
+                target = PotionType.FIRE_RESISTANCE;
             }
-            using.add(ItemID.MAGMA_CREAM);
-        } else if (items.containsKey(ItemID.SUGAR)) {
-            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
-                target = PotionEffectType.SLOW;
-                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            using.add(Material.MAGMA_CREAM);
+        } else if (items.containsKey(Material.SUGAR)) {
+            if (items.containsKey(Material.FERMENTED_SPIDER_EYE)) {
+                target = PotionType.SLOWNESS;
+                using.add(Material.FERMENTED_SPIDER_EYE);
             } else {
-                target = PotionEffectType.SPEED;
+                target = PotionType.SPEED;
             }
-            using.add(ItemID.SUGAR);
-        } else if (items.containsKey(ItemID.GLISTERING_MELON)) {
-            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
-                target = PotionEffectType.HARM;
-                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            using.add(Material.SUGAR);
+        } else if (items.containsKey(Material.GLISTERING_MELON_SLICE)) {
+            if (items.containsKey(Material.FERMENTED_SPIDER_EYE)) {
+                target = PotionType.INSTANT_DAMAGE;
+                using.add(Material.FERMENTED_SPIDER_EYE);
             } else {
-                target = PotionEffectType.HEAL;
+                target = PotionType.INSTANT_HEAL;
             }
-            using.add(ItemID.GLISTERING_MELON);
-        } else if (items.containsKey(ItemID.SPIDER_EYE)) {
-            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
-                target = PotionEffectType.HARM;
-                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            using.add(Material.GLISTERING_MELON_SLICE);
+        } else if (items.containsKey(Material.SPIDER_EYE)) {
+            if (items.containsKey(Material.FERMENTED_SPIDER_EYE)) {
+                target = PotionType.INSTANT_DAMAGE;
+                using.add(Material.FERMENTED_SPIDER_EYE);
             } else {
-                target = PotionEffectType.POISON;
+                target = PotionType.POISON;
             }
-            using.add(ItemID.SPIDER_EYE);
-        } else if (items.containsKey(ItemID.GHAST_TEAR)) {
-            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
-                target = PotionEffectType.WEAKNESS;
-                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            using.add(Material.SPIDER_EYE);
+        } else if (items.containsKey(Material.GHAST_TEAR)) {
+            if (items.containsKey(Material.FERMENTED_SPIDER_EYE)) {
+                target = PotionType.WEAKNESS;
+                using.add(Material.FERMENTED_SPIDER_EYE);
             } else {
-                target = PotionEffectType.REGENERATION;
+                target = PotionType.REGEN;
             }
-            using.add(ItemID.GHAST_TEAR);
-        } else if (items.containsKey(ItemID.BLAZE_POWDER)) {
-            if (items.containsKey(ItemID.FERMENTED_SPIDER_EYE)) {
-                target = PotionEffectType.WEAKNESS;
-                using.add(ItemID.FERMENTED_SPIDER_EYE);
+            using.add(Material.GHAST_TEAR);
+        } else if (items.containsKey(Material.BLAZE_POWDER)) {
+            if (items.containsKey(Material.FERMENTED_SPIDER_EYE)) {
+                target = PotionType.WEAKNESS;
+                using.add(Material.FERMENTED_SPIDER_EYE);
             } else {
-                target = PotionEffectType.INCREASE_DAMAGE;
+                target = PotionType.STRENGTH;
             }
-            using.add(ItemID.BLAZE_POWDER);
-        } else if (items.containsKey(ItemID.GOLDEN_CARROT)) {
-            target = PotionEffectType.NIGHT_VISION;
-            using.add(ItemID.GOLDEN_CARROT);
-        } else if (items.containsKey(ItemID.RAW_FISH)) {
-            target = PotionEffectType.WATER_BREATHING;
-            using.add(ItemID.RAW_FISH);
-        } else if (items.containsKey(ItemID.POISONOUS_POTATO)) {
-            target = PotionEffectType.FAST_DIGGING;
+            using.add(Material.BLAZE_POWDER);
+        } else if (items.containsKey(Material.GOLDEN_CARROT)) {
+            target = PotionType.NIGHT_VISION;
+            using.add(Material.GOLDEN_CARROT);
+        } else if (items.containsKey(Material.PUFFERFISH)) {
+            target = PotionType.WATER_BREATHING;
+            using.add(Material.PUFFERFISH);
         } else return new ArrayList<>();
 
         // Always used
-        using.add(ItemID.GLASS_BOTTLE);
-        using.add(ItemID.NETHER_WART_SEED);
+        using.add(Material.GLASS_BOTTLE);
+        using.add(Material.NETHER_WART);
 
         // Setup some important information
         boolean duration, potency, splash, increased;
 
-        duration = items.keySet().contains(ItemID.REDSTONE_DUST);
-        potency = items.keySet().contains(ItemID.LIGHTSTONE_DUST);
-        splash = items.keySet().contains(ItemID.SULPHUR);
-        increased = items.keySet().contains(ItemID.NETHER_QUARTZ);
+        duration = items.containsKey(Material.REDSTONE);
+        potency = items.containsKey(Material.GLOWSTONE_DUST);
+        splash = items.containsKey(Material.GUNPOWDER);
+        increased = items.containsKey(Material.QUARTZ);
 
         // Adapt as needed based on the information above
         if (duration && !target.isInstant()) {
-            using.add(ItemID.REDSTONE_DUST);
+            using.add(Material.REDSTONE);
         } else if (potency) {
-            using.add(ItemID.LIGHTSTONE_DUST);
+            using.add(Material.GLOWSTONE_DUST);
         }
 
         if (splash) {
-            using.add(ItemID.SULPHUR);
+            using.add(Material.GUNPOWDER);
         }
         if (increased) {
-            using.add(ItemID.NETHER_QUARTZ);
+            using.add(Material.QUARTZ);
         }
 
         // Find the max amount skipping glass bottles (too be checked later)
-        for (Integer used : using) {
-            if (used == ItemID.GLASS_BOTTLE) continue;
+        for (Material used : using) {
+            if (used == Material.GLASS_BOTTLE) continue;
             max = Math.min(max, items.get(used));
         }
 
@@ -217,9 +208,9 @@ public class FactoryBrewer extends FactoryMech {
 
         // Remove the used ingredients from the system
         int newAmt;
-        for (Map.Entry<Integer, Integer> entry : items.entrySet()) {
+        for (Map.Entry<Material, Integer> entry : items.entrySet()) {
             if (using.contains(entry.getKey())) {
-                newAmt = entry.getValue() - (entry.getKey() == ItemID.GLASS_BOTTLE ? max * 3 : max);
+                newAmt = entry.getValue() - (entry.getKey() == Material.GLASS_BOTTLE ? max * 3 : max);
                 if (newAmt > 0) items.put(entry.getKey(), newAmt);
                 else items.remove(entry.getKey());
             }
@@ -233,12 +224,12 @@ public class FactoryBrewer extends FactoryMech {
         }
 
         // Calculate damage
-        int level = !duration && potency ? 2 : 1;
-        ItemStack potion = makePotion(target, level, splash, duration);
+        boolean upgraded = !duration && potency;
+        ItemStack potion = makePotion(target, splash, upgraded, duration);
 
         // Tell the player what we are making
-        ChatUtil.sendNotice(playerList, "Brewing: " + max + " " + target.getName() + " "
-                + (level == 1 ? "I" : "II") + (splash ? " splash" : "") + " potions.");
+        ChatUtil.sendNotice(playerList, "Brewing: " + max + " " + target.getEffectType().getName() + " "
+                + (upgraded ? "II" : "I") + (splash ? " splash" : "") + " potions.");
         // Return the product for the que
         List<ItemStack> product = new ArrayList<>();
         for (int i = 0; i < max; i++) product.add(potion.clone());
@@ -250,30 +241,13 @@ public class FactoryBrewer extends FactoryMech {
      *
      * @return The new Item Stack
      */
-    public ItemStack makePotion(PotionEffectType type, int level, boolean splash, boolean extended) {
-        double ticks = 0;
-        if (!type.isInstant()) {
-            // Default is 3 minutes worth of ticks
-            ticks = 20 * 60 * 3 * type.getDurationModifier();
-            // A potion cannot be extended and amplified
-            if (extended) {
-                ticks *= (double) 8/3; // Cast to double to avoid integer division
-            } else if (level == 2) {
-                ticks *= (double) 1/2; // Cast to double to avoid integer division
-            }
+    public ItemStack makePotion(PotionType type, boolean splash, boolean upgraded, boolean extended) {
+        ItemStack potion = new ItemStack(splash ? Material.POTION : Material.SPLASH_POTION);
 
-            if (splash) {
-                ticks *= (double) 3/4; // Cast to double to avoid integer division
-            }
-        }
-
-        // Drinkable: 8192
-        // Splash: 16384
-        ItemStack potion = new ItemStack(ItemID.POTION, 1, (short) (splash ? 16384 : 8192));
         PotionMeta pMeta = (PotionMeta) potion.getItemMeta();
-        pMeta.setMainEffect(type);
-        pMeta.addCustomEffect(new PotionEffect(type, (int) ticks, level - 1), true);
+        pMeta.setBasePotionData(new PotionData(type, extended, upgraded));
         potion.setItemMeta(pMeta);
+
         return potion;
     }
 }

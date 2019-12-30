@@ -4,8 +4,8 @@ import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.CollectionUtil;
+import gg.packetloss.grindstone.util.SpawnEgg;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 
@@ -73,8 +73,8 @@ class SacrificialRegistry {
     }
 
     private double getValue(MarketItemLookupInstance lookupInstance, ItemStack itemStack) {
-        // FIXME: Hard coded as a workaround for the market no longer working with spawn eggs
-        if (itemStack.getType() == Material.MONSTER_EGG) {
+        // FIXME: These can be added back to the market now
+        if (SpawnEgg.fromMaterial(itemStack.getType()) != null) {
             return 12.5;
         }
         return lookupInstance.checkCurrentValue(itemStack).orElse(0d);

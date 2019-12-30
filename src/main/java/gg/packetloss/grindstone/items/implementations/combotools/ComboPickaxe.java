@@ -19,22 +19,22 @@ public class ComboPickaxe extends AbstractItemFeatureImpl {
             Material.GLOWSTONE,
             Material.COBBLESTONE,
             Material.COBBLESTONE_STAIRS,
-            Material.COBBLE_WALL,
+            Material.COBBLESTONE_WALL,
             Material.MOSSY_COBBLESTONE,
-            Material.SMOOTH_BRICK,
-            Material.SMOOTH_STAIRS,
+            Material.STONE_BRICKS,
+            Material.STONE_BRICK_STAIRS,
             Material.BRICK,
             Material.BRICK_STAIRS,
             Material.NETHERRACK,
             Material.NETHER_BRICK,
             Material.NETHER_BRICK_STAIRS,
-            Material.NETHER_FENCE,
-            Material.STEP,
-            Material.DOUBLE_STEP,
+            Material.NETHER_BRICK_FENCE,
+            Material.STONE_SLAB,
             Material.OBSIDIAN,
-            Material.GLASS,
-            Material.STAINED_GLASS,
-            Material.THIN_GLASS,
-            Material.STAINED_GLASS_PANE
+            Material.GLASS
+// FIXME: Add colored glass blocks
+//            Material.STAINED_GLASS,
+//            Material.THIN_GLASS,
+//            Material.STAINED_GLASS_PANE
     );
 }

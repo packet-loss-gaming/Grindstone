@@ -7,20 +7,19 @@
 package gg.packetloss.grindstone.util;
 
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class LocationUtil {
 
@@ -83,7 +82,7 @@ public class LocationUtil {
         int free = 0;
 
         // Look for ground
-        while (block.getY() > 1 && (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED)) {
+        while (block.getY() > 1 && !block.getType().isSolid()) {
             free++;
             block = block.getRelative(0, -1, 0);
         }
@@ -91,13 +90,16 @@ public class LocationUtil {
         if (block.getY() == 0) return null; // No ground below!
 
         if (free >= 2) {
-            if (block.getTypeId() == BlockID.LAVA || block.getTypeId() == BlockID.STATIONARY_LAVA) {
+            if (EnvironmentUtil.isDangerous(block)) {
                 return null; // Not safe
             }
 
             Block tb = block.getRelative(0, 1, 0);
             Location l = tb.getLocation();
-            l.add(new Vector(0, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0));
+
+            // FIXME: Reimplement this
+            // l.add(new Vector(0, BlockType.centralTopLimit(tb.getType(), tb.getData()), 0));
+
             l.setPitch(pos.getPitch());
             l.setYaw(pos.getYaw());
             return l;
@@ -109,17 +111,20 @@ public class LocationUtil {
         boolean foundGround = false;
 
         while (block.getY() + 1 < world.getMaxHeight()) {
-            if (BlockType.canPassThrough(block.getTypeId()) || block.getTypeId() == BlockID.BED) {
+            if (!block.getType().isSolid()) {
                 free++;
             } else {
                 free = 0;
-                foundGround = block.getTypeId() != BlockID.LAVA && block.getTypeId() != BlockID.STATIONARY_LAVA;
+                foundGround = !EnvironmentUtil.isDangerous(block.getType());
             }
 
             if (foundGround && free == 2) {
                 Block tb = block.getRelative(0, -1, 0);
                 Location l = tb.getLocation();
-                l.add(new Vector(0, BlockType.centralTopLimit(tb.getTypeId(), tb.getData()), 0));
+
+                // FIXME: Reimplement this
+                // l.add(new Vector(0, BlockType.centralTopLimit(tb.getType(), tb.getData()), 0));
+
                 l.setPitch(pos.getPitch());
                 l.setYaw(pos.getYaw());
                 return l;
@@ -378,14 +383,14 @@ public class LocationUtil {
         return false;
     }
 
-    public static boolean getBelowID(Location loc, int id) {
+    public static boolean hasBelow(Location loc, Predicate<Material> predicate) {
 
         Block searchBlock = loc.add(0, -1, 0).getBlock();
-        if (searchBlock.getTypeId() == id) return true;
-        if (searchBlock.getTypeId() != BlockID.AIR) return false;
+        if (predicate.test(searchBlock.getType())) return true;
+        if (searchBlock.getType() != Material.AIR) return false;
 
         for (BlockFace blockFace : surroundingBlockFaces) {
-            if (searchBlock.getRelative(blockFace).getTypeId() == id) return true;
+            if (predicate.test(searchBlock.getRelative(blockFace).getType())) return true;
         }
         return false;
     }

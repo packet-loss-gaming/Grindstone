@@ -8,8 +8,6 @@ package gg.packetloss.grindstone.city.engine.area.areas.MirageArena;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
@@ -240,8 +238,8 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
     private static ItemCondenser goldCondenser = new ItemCondenser();
 
     static {
-        goldCondenser.addSupport(new ItemStack(ItemID.GOLD_NUGGET, 9), new ItemStack(ItemID.GOLD_BAR, 1));
-        goldCondenser.addSupport(new ItemStack(ItemID.GOLD_BAR, 9), new ItemStack(BlockID.GOLD_BLOCK, 1));
+        goldCondenser.addSupport(new ItemStack(Material.GOLD_NUGGET, 9), new ItemStack(Material.GOLD_INGOT, 1));
+        goldCondenser.addSupport(new ItemStack(Material.GOLD_INGOT, 9), new ItemStack(Material.GOLD_BLOCK, 1));
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
@@ -250,7 +248,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         final Player player = event.getPlayer();
         ItemStack itemStack = event.getItem().getItemStack();
 
-        if (itemStack.getTypeId() == ItemID.GOLD_BAR || itemStack.getTypeId() == ItemID.GOLD_NUGGET) {
+        if (itemStack.getType() == Material.GOLD_INGOT || itemStack.getType() == Material.GOLD_NUGGET) {
 
             if (!parent.contains(player)) {
                 return;

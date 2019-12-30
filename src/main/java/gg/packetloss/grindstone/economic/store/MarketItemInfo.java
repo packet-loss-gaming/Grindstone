@@ -7,6 +7,8 @@
 package gg.packetloss.grindstone.economic.store;
 
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Optional;
 
@@ -68,12 +70,15 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
 
     private Optional<Double> computePercentageSale(ItemStack stack) {
         double percentageSale = 1;
-        if (stack.getDurability() != 0 && stack.getType().getMaxDurability() != 0) {
+
+        ItemMeta stackMeta = stack.getItemMeta();
+        if (stackMeta instanceof Damageable && ((Damageable) stackMeta).hasDamage()) {
             if (stack.getAmount() > 1) {
                 return Optional.empty();
             }
-            percentageSale = 1 - ((double) stack.getDurability() / (double) stack.getType().getMaxDurability());
+            percentageSale = 1 - ((double) ((Damageable) stackMeta).getDamage() / (double) stack.getType().getMaxDurability());
         }
+
         return Optional.of(percentageSale);
     }
 

@@ -10,9 +10,7 @@ import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.*;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.blocks.BlockType;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitConfiguration;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
@@ -230,7 +228,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
                 gear.add(superBow);
 
-                ItemStack woodSword = new ItemStack(Material.WOOD_SWORD);
+                ItemStack woodSword = new ItemStack(Material.WOODEN_SWORD);
                 gear.add(woodSword);
                 break;
             }
@@ -845,7 +843,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         for (Player player : containedPlayers) {
             Block block = player.getLocation().add(0, -1, 0).getBlock();
-            if (block.getType() != Material.CONCRETE) {
+            if (!EnvironmentUtil.isConcrete(block)) {
                 return;
             }
 
@@ -983,7 +981,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                             bvMin.getZ(), bvMax.getZ()).add(0, bvMax.getY(), 0);
                     Location testLoc = new Location(world, v.getX(), v.getY(), v.getZ());
 
-                    if (testLoc.getBlock().getTypeId() != BlockID.AIR) continue;
+                    if (testLoc.getBlock().getType() != Material.AIR) continue;
 
                     if (isFlagEnabled(JungleRaidFlag.END_OF_DAYS) || suddenD) {
                         TNTPrimed e = world.spawn(testLoc, TNTPrimed.class);
@@ -1008,7 +1006,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                         }
                     }
                     if (isFlagEnabled(JungleRaidFlag.GRENADES)) {
-                        testLoc.getWorld().dropItem(testLoc, new ItemStack(ItemID.SNOWBALL, ChanceUtil.getRandom(3)));
+                        testLoc.getWorld().dropItem(testLoc, new ItemStack(Material.SNOWBALL, ChanceUtil.getRandom(3)));
                     }
                 }
                 if (flagData.amt < 150 && ChanceUtil.getChance(isFlagEnabled(JungleRaidFlag.SUPER) ? 9 : 25)) ++flagData.amt;
@@ -1362,7 +1360,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
                 switch (event.getCause()) {
                     case FALL:
-                        if (LocationUtil.getBelowID(e.getLocation(), BlockID.LEAVES)
+                        if (LocationUtil.hasBelow(e.getLocation(), (type) -> type == Material.JUNGLE_LEAVES)
                                 || (isFlagEnabled(JungleRaidFlag.SUPER) && isFlagEnabled(JungleRaidFlag.TRAMPOLINE))) {
                             server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
                             server.getPluginManager().callEvent(new FallBlockerEvent(player));
@@ -1528,7 +1526,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             Block block = event.getBlock();
 
             if (isFlagEnabled(JungleRaidFlag.TITAN_MODE) && arenaContains(block.getLocation())) {
-                if (player.getUniqueId().equals(flagData.titan) && block.getTypeId() != BlockID.BEDROCK) {
+                if (player.getUniqueId().equals(flagData.titan) && block.getType() != Material.BEDROCK) {
                     event.setInstaBreak(true);
                 }
             }
@@ -1544,7 +1542,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                     ChatUtil.sendError(player, "You cannot break blocks by hand this game.");
                     event.setCancelled(true);
                 } else if (isFlagEnabled(JungleRaidFlag.NO_MINING)) {
-                    if (BlockType.isNaturalTerrainBlock(event.getBlock().getTypeId())) {
+                    if (BlockType.isNaturalTerrainBlock(event.getBlock().getType())) {
                         ChatUtil.sendError(player, "You cannot mine this game.");
                         event.setCancelled(true);
                     }

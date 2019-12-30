@@ -7,9 +7,6 @@
 package gg.packetloss.grindstone.bosses.manager.wilderness;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.bukkit.WGBukkit;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.skelril.OSBL.bukkit.BukkitBossDeclaration;
@@ -101,16 +98,16 @@ public class GraveDigger {
                 List<ItemStack> itemStacks = new ArrayList<>();
 
                 for (int i = baseLevel * ChanceUtil.getRandom(2); i > 0; --i) {
-                    itemStacks.add(new ItemStack(BlockID.TNT, ChanceUtil.getRandom(16)));
+                    itemStacks.add(new ItemStack(Material.TNT, ChanceUtil.getRandom(16)));
                 }
                 for (int i = baseLevel * ChanceUtil.getRandom(4); i > 0; --i) {
-                    itemStacks.add(new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(32)));
+                    itemStacks.add(new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(32)));
                 }
                 for (int i = baseLevel * ChanceUtil.getRandom(4); i > 0; --i) {
-                    itemStacks.add(new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(32)));
+                    itemStacks.add(new ItemStack(Material.EMERALD, ChanceUtil.getRandom(32)));
                 }
                 for (int i = baseLevel * ChanceUtil.getRandom(8); i > 0; --i) {
-                    itemStacks.add(new ItemStack(ItemID.INK_SACK, ChanceUtil.getRandom(64), (short) 4));
+                    itemStacks.add(new ItemStack(Material.LAPIS_LAZULI, ChanceUtil.getRandom(64)));
                 }
 
                 if (ChanceUtil.getChance(Math.max(3, 20 - baseLevel))) {
@@ -173,9 +170,6 @@ public class GraveDigger {
     }
 
     public void makeSphere(Location pos, double radiusX, double radiusY, double radiusZ) {
-
-        BaseBlock block = new BaseBlock(1);
-
         radiusX += 0.5;
         radiusY += 0.5;
         radiusZ += 0.5;
@@ -216,14 +210,14 @@ public class GraveDigger {
                         continue;
                     }
 
-                    setBlock(pos.clone().add(x, y, z), block);
-                    setBlock(pos.clone().add(-x, y, z), block);
-                    setBlock(pos.clone().add(x, -y, z), block);
-                    setBlock(pos.clone().add(x, y, -z), block);
-                    setBlock(pos.clone().add(-x, -y, z), block);
-                    setBlock(pos.clone().add(x, -y, -z), block);
-                    setBlock(pos.clone().add(-x, y, -z), block);
-                    setBlock(pos.clone().add(-x, -y, -z), block);
+                    setBlock(pos.clone().add(x, y, z), Material.STONE);
+                    setBlock(pos.clone().add(-x, y, z), Material.STONE);
+                    setBlock(pos.clone().add(x, -y, z), Material.STONE);
+                    setBlock(pos.clone().add(x, y, -z), Material.STONE);
+                    setBlock(pos.clone().add(-x, -y, z), Material.STONE);
+                    setBlock(pos.clone().add(x, -y, -z), Material.STONE);
+                    setBlock(pos.clone().add(-x, y, -z), Material.STONE);
+                    setBlock(pos.clone().add(-x, -y, -z), Material.STONE);
                 }
             }
         }
@@ -231,12 +225,12 @@ public class GraveDigger {
 
     private WorldGuardPlugin WG = null;
 
-    private void setBlock(Location l, BaseBlock b) {
+    private void setBlock(Location l, Material type) {
         if (WG == null) WG = WGBukkit.getPlugin();
         if (WG.getRegionManager(l.getWorld()).getApplicableRegions(l).size() > 0) return;
         Block blk = l.getBlock();
         if (blk.getType() != Material.AIR) return;
-        blk.setTypeIdAndData(b.getType(), (byte) b.getData(), true);
+        blk.setType(type, true);
     }
 
     private EntityDamageEvent getEvent(AttackDamage damage) {

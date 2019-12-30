@@ -108,7 +108,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
             player.getInventory().clear();
             player.getInventory().setArmorContents(NO_ARMOR);
 
-            player.getInventory().addItem(new ItemStack(Material.DIAMOND_SPADE));
+            player.getInventory().addItem(new ItemStack(Material.DIAMOND_SHOVEL));
         } catch (IOException | ConflictingPlayerStateException ex) {
             ex.printStackTrace();
         }

@@ -1,8 +1,6 @@
 package gg.packetloss.grindstone.guild.listener;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.BlockType;
 import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
@@ -346,8 +344,8 @@ public class NinjaListener implements Listener {
 
         Location k = player.getLocation();
 
-        switch (k.getBlock().getTypeId()) {
-            case BlockID.AIR:
+        switch (k.getBlock().getType()) {
+            case AIR:
                 k.setX(k.getBlockX() + .5);
                 k.setZ(k.getBlockZ() + .5);
                 player.teleport(k, PlayerTeleportEvent.TeleportCause.UNKNOWN);
@@ -381,7 +379,7 @@ public class NinjaListener implements Listener {
         for (i = 0; i < event.getMaxClimb() && (i < z || block.getType().isSolid() || nextBlockIsSolid); i++) {
 
             // Determine whether we need to add more velocity
-            double ctl = nextBlockIsSolid ? 1 : BlockType.centralTopLimit(block.getTypeId(), block.getData());
+            double ctl = nextBlockIsSolid ? 1 : 0; // FIXME: reimplement this BlockType.centralTopLimit(block.getType(), block.getData());
 
             if (EnvironmentUtil.isWater(block.getRelative(clickedFace))) {
                 ctl *= 2;

@@ -6,12 +6,12 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
-import com.sk89q.worldedit.blocks.ItemID;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -37,7 +37,7 @@ public class ChickenHymnImpl extends AbstractItemFeatureImpl {
                 ChatUtil.sendNotice(player, "The item transforms into chickens!");
             } else if (((Chicken) e).getRemoveWhenFarAway()) {
                 if (ChanceUtil.getChance(3)) {
-                    l.getWorld().dropItem(l, new ItemStack(ItemID.COOKED_CHICKEN));
+                    l.getWorld().dropItem(l, new ItemStack(Material.COOKED_CHICKEN));
                 }
                 e.remove();
             }

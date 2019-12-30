@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.city.engine.area.areas.Frostborn;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BaseBlock;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
@@ -95,7 +94,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
 
         Material blockType = clickedBlock.getType();
         if (blockType == Material.SNOW || blockType == Material.SNOW_BLOCK) {
-            event.getPlayer().getInventory().addItem(new ItemStack(Material.SNOW_BALL, 4));
+            event.getPlayer().getInventory().addItem(new ItemStack(Material.SNOWBALL, 4));
         }
     }
 
@@ -225,9 +224,9 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlock();
-        BaseBlock baseBlock = new BaseBlock(block.getTypeId(), block.getData());
+
         if (parent.contains(block) && !parent.admin.isAdmin(player)) {
-            if (!parent.accept(baseBlock, FrostbornArea.breakable)) {
+            if (!FrostbornArea.BREAKABLE.contains(block.getType())) {
                 event.setCancelled(true);
                 return;
             }
@@ -254,8 +253,8 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
         while (it.hasNext()) {
             Block block = it.next();
 
-            BaseBlock baseBlock = new BaseBlock(block.getTypeId(), block.getData());
-            if (!parent.accept(baseBlock, FrostbornArea.breakable)) {
+            Material blockType = block.getType();
+            if (!FrostbornArea.BREAKABLE.contains(blockType)) {
                 it.remove();
                 continue;
             }
@@ -267,7 +266,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             }
 
             // Add restoreable blocks to the restoration system
-            if (!parent.accept(baseBlock, FrostbornArea.restoreable)) {
+            if (!FrostbornArea.RESTOREABLE.contains(blockType)) {
                 continue;
             }
 

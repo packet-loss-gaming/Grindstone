@@ -16,28 +16,21 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.bosses.DebugCow;
 import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.ChunkBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Server;
-import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Pig;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -75,20 +68,6 @@ public class DebugComponent extends BukkitComponent {
         //inst.registerEvents(new ItemSpawnPrinter());
         //noinspection AccessStaticViaInstance
         //inst.registerEvents(new DamageSys());
-    }
-
-    private class InventoryCorruptionFixer implements Listener {
-
-        @EventHandler
-        public void onLogin(PlayerJoinEvent event) {
-
-            Player player = event.getPlayer();
-
-            if (!player.getName().equals("Dark_Arc")) return;
-            ItemStack[] inventory = player.getInventory().getContents();
-            inventory = ItemUtil.removeItemOfType(inventory, Material.DOUBLE_PLANT.getId());
-            player.getInventory().setContents(inventory);
-        }
     }
 
     public class DebugCowCmd {
@@ -180,24 +159,6 @@ public class DebugComponent extends BukkitComponent {
             Location l = PlayerUtil.checkPlayer(sender).getLocation();
             ChatUtil.sendNotice(sender, "X: " + l.getX() + ", Y:" + l.getY() + ", Z: " + l.getZ());
             ChatUtil.sendNotice(sender, "Pitch: " + l.getPitch() + ", Yaw: " + l.getYaw());
-        }
-    }
-
-    private class BlockDebug implements Listener {
-
-        @EventHandler
-        public void onRightClick(PlayerInteractEvent event) {
-
-            ItemStack held = event.getItem();
-            if (held != null && held.getType() == Material.COAL && event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
-                Block block = event.getClickedBlock();
-                ChatUtil.sendNotice(event.getPlayer(),
-                        "Block name: " + block.getType()
-                                + ", Type ID: " + block.getTypeId()
-                                + ", Block data: " + block.getData()
-                );
-                event.setUseInteractedBlock(Event.Result.DENY);
-            }
         }
     }
 

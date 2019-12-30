@@ -7,17 +7,16 @@
 package gg.packetloss.grindstone;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import org.bukkit.ChatColor;
-import org.bukkit.EntityEffect;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -85,14 +84,13 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         Block block = event.getBlock();
         Location blockLoc = block.getLocation();
-        int blockTypeId = event.getBlock().getTypeId();
 
         // Basic Checks
         if (!config.enableSignCensor)
             return;
 
         // Check Block Type
-        if ((blockTypeId == BlockID.SIGN_POST) || (blockTypeId == BlockID.WALL_SIGN)) {
+        if (EnvironmentUtil.isSign(block)) {
             // Get Lines
             String[] signLine = event.getLines();
 
@@ -101,11 +99,10 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
 
                 // Get rid of that sign!
                 ExplosionStateFactory.createFakeExplosion(blockLoc);
-                blockLoc.getBlock().breakNaturally(new ItemStack(ItemID.SIGN, 1));
+                blockLoc.getBlock().breakNaturally(new ItemStack(Material.SIGN, 1));
 
                 // Mess with the player
                 player.setHealth(0);
-                player.playEffect(EntityEffect.DEATH);
                 ChatUtil.sendWarning(player, "Let that be a lesson to you to not use profanity.");
 
                 // Public Embarrassment? :P

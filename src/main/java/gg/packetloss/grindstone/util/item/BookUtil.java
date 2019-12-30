@@ -6,8 +6,8 @@
 
 package gg.packetloss.grindstone.util.item;
 
-import com.sk89q.worldedit.blocks.ItemID;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 
@@ -20,7 +20,7 @@ public class BookUtil {
 
         private static ItemStack generateBook(String title, String author, List<String> text) {
 
-            ItemStack ruleBook = new ItemStack(ItemID.WRITTEN_BOOK);
+            ItemStack ruleBook = new ItemStack(Material.WRITTEN_BOOK);
             BookMeta ruleBookMeta = (BookMeta) ruleBook.getItemMeta();
 
             ruleBookMeta.setTitle(title);
@@ -157,7 +157,7 @@ public class BookUtil {
 
             private static ItemStack generateRuleBook(String district, List<String> text) {
 
-                ItemStack ruleBook = new ItemStack(ItemID.WRITTEN_BOOK);
+                ItemStack ruleBook = new ItemStack(Material.WRITTEN_BOOK);
                 BookMeta ruleBookMeta = (BookMeta) ruleBook.getItemMeta();
 
                 ruleBookMeta.setTitle(district + " Building Code");

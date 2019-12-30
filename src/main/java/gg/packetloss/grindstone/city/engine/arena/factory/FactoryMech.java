@@ -10,6 +10,7 @@ import com.sk89q.util.yaml.YAMLNode;
 import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.city.engine.arena.AbstractRegionedArena;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 
@@ -19,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class FactoryMech extends AbstractRegionedArena {
 
-    protected Map<Integer, Integer> items = new ConcurrentHashMap<>();
+    protected Map<Material, Integer> items = new ConcurrentHashMap<>();
     protected YAMLProcessor processor;
     protected String data;
 
@@ -38,7 +39,7 @@ public abstract class FactoryMech extends AbstractRegionedArena {
             if (nodes != null) {
                 for (Map.Entry<String, YAMLNode> entry : nodes.entrySet()) {
                     YAMLNode node = entry.getValue();
-                    items.put(Integer.parseInt(entry.getKey()), node.getInt("amt"));
+                    items.put(Material.matchMaterial(entry.getKey()), node.getInt("amt"));
                 }
             }
         } catch (Exception ex) {
@@ -48,8 +49,9 @@ public abstract class FactoryMech extends AbstractRegionedArena {
 
     public void save() {
         processor.removeProperty(data);
-        for (Map.Entry<Integer, Integer> entry : items.entrySet()) {
-            YAMLNode node = processor.addNode(data + '.' + entry.getKey());
+        for (Map.Entry<Material, Integer> entry : items.entrySet()) {
+            String nodeKey = entry.getKey().getKey().toString();
+            YAMLNode node = processor.addNode(data + '.' + nodeKey);
             node.setProperty("amt", entry.getValue());
         }
         processor.save();

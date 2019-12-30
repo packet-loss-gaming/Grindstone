@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.city.engine.area.areas.GiantBoss;
 
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
@@ -32,10 +31,7 @@ import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.util.timer.TimerUtil;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import org.bukkit.ChatColor;
-import org.bukkit.Difficulty;
-import org.bukkit.Effect;
-import org.bukkit.Location;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -180,8 +176,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         } catch (UnsupportedFeatureException ex) {
             log.warning("Boss NMS attributes not properly set.");
         }
-        setDoor(eastDoor, BlockID.SANDSTONE, 1);
-        setDoor(westDoor, BlockID.SANDSTONE, 1);
+
+        setDoor(eastDoor, Material.CHISELED_SANDSTONE);
+        setDoor(westDoor, Material.CHISELED_SANDSTONE);
+
         for (Player player : getContained(1, Player.class)) ChatUtil.sendWarning(player, "I live again!");
     }
 
@@ -209,11 +207,11 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                 for (int y = maxY; y >= minY; --y) {
                     block = getWorld().getBlockAt(x, y, z).getState();
                     if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getTypeId() == BlockID.GOLD_BLOCK) {
+                    if (block.getType() == Material.GOLD_BLOCK) {
                         spawnPts.add(block.getLocation().add(0, 2, 0));
                         continue;
                     }
-                    if (block.getTypeId() == BlockID.CHEST) {
+                    if (block.getType() == Material.CHEST) {
                         chestPts.add(block.getLocation());
                     }
                 }
@@ -519,12 +517,12 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         lastAttackNumber = attackCase;
     }
 
-    public void setDoor(final ProtectedRegion door, int type, int data) {
+    public void setDoor(final ProtectedRegion door, Material type) {
         Block sideOne = BukkitUtil.toLocation(world, door.getMaximumPoint()).getBlock();
         Block sideTwo = BukkitUtil.toLocation(world, door.getMinimumPoint().setY(sideOne.getY())).getBlock();
 
-        doNextDoorBlock(door, sideOne, true, type, data, 1);
-        doNextDoorBlock(door, sideTwo, false, type, data, 1);
+        doNextDoorBlock(door, sideOne, true, type, 1);
+        doNextDoorBlock(door, sideTwo, false, type, 1);
     }
 
     private BlockFace[] northFaces = new BlockFace[] {
@@ -534,11 +532,11 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             BlockFace.SOUTH, BlockFace.DOWN
     };
 
-    private void doNextDoorBlock(ProtectedRegion limit, Block block, boolean north, int newType, int data, int depth) {
+    private void doNextDoorBlock(ProtectedRegion limit, Block block, boolean north, Material newType, int depth) {
         if (!LocationUtil.isInRegion(limit, block.getLocation())) return;
         for (BlockFace face : (north ? northFaces : southFaces)) {
-            doNextDoorBlock(limit, block.getRelative(face), north, newType, data, depth + 1);
+            doNextDoorBlock(limit, block.getRelative(face), north, newType, depth + 1);
         }
-        server.getScheduler().runTaskLater(inst, () -> block.setTypeIdAndData(newType, (byte) data, true), 9 * depth);
+        server.getScheduler().runTaskLater(inst, () -> block.setType(newType, true), 9 * depth);
     }
 }

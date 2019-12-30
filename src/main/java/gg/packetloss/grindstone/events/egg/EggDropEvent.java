@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.events.egg;
 
-import gg.packetloss.grindstone.EggComponent;
+import gg.packetloss.grindstone.util.SpawnEgg;
 import org.bukkit.Location;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -16,21 +16,21 @@ public class EggDropEvent extends Event implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
-    private EggComponent.EggEntity eggType;
+    private SpawnEgg eggType;
     private Location location;
 
-    public EggDropEvent(EggComponent.EggEntity eggType, Location location) {
+    public EggDropEvent(SpawnEgg eggType, Location location) {
 
         this.eggType = eggType;
         this.location = location;
     }
 
-    public EggComponent.EggEntity getEggType() {
+    public SpawnEgg getEggType() {
 
         return eggType;
     }
 
-    public void setEggType(EggComponent.EggEntity eggType) {
+    public void setEggType(SpawnEgg eggType) {
 
         this.eggType = eggType;
     }

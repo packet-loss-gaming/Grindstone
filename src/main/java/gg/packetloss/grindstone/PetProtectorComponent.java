@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -17,6 +16,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -117,13 +117,13 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         Entity entity = event.getRightClicked();
         Tameable tameable = (Tameable) entity;
 
-        if (entity instanceof Horse && tameable.isTamed() && player.getItemInHand().getTypeId() == ItemID.RED_APPLE) {
+        if (entity instanceof Horse && tameable.isTamed() && player.getItemInHand().getType() == Material.APPLE) {
             if (tameable.getOwner() == null) {
 
                 tameable.setOwner(player);
                 event.setCancelled(true);
 
-                ItemUtil.removeItemOfType(player, ItemID.RED_APPLE, 1, true);
+                ItemUtil.removeItemOfType(player, Material.APPLE, 1, true);
 
                 ChatUtil.sendNotice(player, "You have gained possession of this horse.");
                 return;
@@ -133,7 +133,7 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
                 tameable.setTamed(true);
                 event.setCancelled(true);
 
-                ItemUtil.removeItemOfType(player, ItemID.RED_APPLE, 1, true);
+                ItemUtil.removeItemOfType(player, Material.APPLE, 1, true);
 
                 ChatUtil.sendNotice(player, "You have lost possession of this horse.");
                 return;

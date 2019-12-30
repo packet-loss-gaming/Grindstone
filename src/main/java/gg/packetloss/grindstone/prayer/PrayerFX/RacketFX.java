@@ -21,7 +21,7 @@ public class RacketFX extends AbstractEffect {
     @Override
     public void add(Player player) {
 
-        player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1, 0);
+        player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, 1, 0);
     }
 
     @Override

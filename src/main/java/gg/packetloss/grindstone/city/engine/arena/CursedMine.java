@@ -12,8 +12,6 @@ import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.blocks.SkullBlock;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
@@ -97,14 +95,14 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     private long lastActivation = 0;
     private Map<UUID, Long> daveHitList = new HashMap<>();
 
-    private final int[] items = new int[]{
-            BlockID.IRON_BLOCK, BlockID.IRON_ORE, ItemID.IRON_BAR,
-            BlockID.GOLD_BLOCK, BlockID.GOLD_ORE, ItemID.GOLD_BAR, ItemID.GOLD_NUGGET,
-            BlockID.REDSTONE_ORE, BlockID.GLOWING_REDSTONE_ORE, ItemID.REDSTONE_DUST,
-            BlockID.LAPIS_LAZULI_BLOCK, BlockID.LAPIS_LAZULI_ORE, ItemID.INK_SACK,
-            BlockID.DIAMOND_BLOCK, BlockID.DIAMOND_ORE, ItemID.DIAMOND,
-            BlockID.EMERALD_BLOCK, BlockID.EMERALD_ORE, ItemID.EMERALD
-    };
+    private static final Set<Material> AFFECTED_ITEMS = Set.of(
+            Material.IRON_BLOCK, Material.IRON_ORE, Material.IRON_INGOT,
+            Material.GOLD_BLOCK, Material.GOLD_ORE, Material.GOLD_INGOT, Material.GOLD_NUGGET,
+            Material.REDSTONE_ORE, Material.REDSTONE,
+            Material.LAPIS_BLOCK, Material.LAPIS_ORE, Material.LAPIS_LAZULI,
+            Material.DIAMOND_BLOCK, Material.DIAMOND_ORE, Material.DIAMOND,
+            Material.EMERALD_BLOCK, Material.EMERALD_ORE, Material.EMERALD
+    );
 
     public CursedMine(World world, ProtectedRegion[] regions, AdminComponent adminComponent,
                       PrayerComponent prayerComponent, HighScoresComponent highScoresComponent,
@@ -236,14 +234,13 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     }
 
     public void sweepFloor() {
-
         for (Item item : getWorld().getEntitiesByClass(Item.class)) {
 
             if (!contains(item)) continue;
 
-            int id = item.getItemStack().getTypeId();
-            for (int aItem : items) {
-                if (aItem == id) {
+            Material type = item.getItemStack().getType();
+            for (Material aItem : AFFECTED_ITEMS) {
+                if (aItem == type) {
                     double newAmt = item.getItemStack().getAmount() * .8;
                     if (newAmt < 1) {
                         item.remove();
@@ -279,7 +276,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             previousLoc = modifiable.clone();
                             modifiable = LocationUtil.findRandomLoc(previousLoc, 5, true, false);
 
-                            if (modifiable.getBlock().getTypeId() != BlockID.AIR) {
+                            if (modifiable.getBlock().getType() != Material.AIR) {
                                 modifiable = previousLoc;
                             }
 
@@ -298,30 +295,30 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     }
 
                     // Iron
-                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.IRON_BLOCK, ChanceUtil.getRandom(2), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.IRON_ORE, ChanceUtil.getRandom(4), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.IRON_BAR, ChanceUtil.getRandom(8), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.IRON_BLOCK, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.IRON_ORE, ChanceUtil.getRandom(4), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.IRON_INGOT, ChanceUtil.getRandom(8), true);
 
                     // Gold
-                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.GOLD_BLOCK, ChanceUtil.getRandom(2), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.GOLD_ORE, ChanceUtil.getRandom(4), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_BAR, ChanceUtil.getRandom(10), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.GOLD_NUGGET, ChanceUtil.getRandom(80), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.GOLD_BLOCK, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.GOLD_ORE, ChanceUtil.getRandom(4), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.GOLD_INGOT, ChanceUtil.getRandom(10), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.GOLD_NUGGET, ChanceUtil.getRandom(80), true);
 
                     // Redstone
-                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.REDSTONE_ORE, ChanceUtil.getRandom(2), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.GLOWING_REDSTONE_ORE, ChanceUtil.getRandom(2), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.REDSTONE_DUST, ChanceUtil.getRandom(34), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.REDSTONE_BLOCK, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.REDSTONE_ORE, ChanceUtil.getRandom(4), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.REDSTONE, ChanceUtil.getRandom(34), true);
 
                     // Lap
-                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.LAPIS_LAZULI_BLOCK, ChanceUtil.getRandom(2), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.LAPIS_LAZULI_ORE, ChanceUtil.getRandom(4), true);
-                    eInventory.removeItem(new ItemStack(ItemID.INK_SACK, ChanceUtil.getRandom(34), (short) 4));
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.LAPIS_BLOCK, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.LAPIS_ORE, ChanceUtil.getRandom(4), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.LAPIS_LAZULI, ChanceUtil.getRandom(34), true);
 
                     // Diamond
-                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.DIAMOND_BLOCK, ChanceUtil.getRandom(2), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, BlockID.DIAMOND_ORE, ChanceUtil.getRandom(4), true);
-                    ItemUtil.removeItemOfType((InventoryHolder) e, ItemID.DIAMOND, ChanceUtil.getRandom(16), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.DIAMOND_BLOCK, ChanceUtil.getRandom(2), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.DIAMOND_ORE, ChanceUtil.getRandom(4), true);
+                    ItemUtil.removeItemOfType((InventoryHolder) e, Material.DIAMOND, ChanceUtil.getRandom(16), true);
                 }
             } catch (Exception ex) {
                 log.warning("=== Cursed Mine Drain System Error ===");
@@ -337,9 +334,16 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     private boolean checkInventory(Player player, ItemStack[] itemStacks) {
         if (!inst.hasPermission(player, "aurora.tome.divinity")) return false;
 
-        for (int aItem : items) {
-            if (player.getInventory().containsAtLeast(new ItemStack(aItem), 1)) return true;
+        for (ItemStack stack : itemStacks) {
+            if (stack == null) {
+                continue;
+            }
+
+            if (AFFECTED_ITEMS.contains(stack.getType())) {
+                return true;
+            }
         }
+
         return false;
     }
 
@@ -353,21 +357,16 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         return item.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS);
     }
 
-    private static Set<Integer> replaceableTypes = new HashSet<>();
-
-    static {
-        replaceableTypes.add(BlockID.WATER);
-        replaceableTypes.add(BlockID.STATIONARY_WATER);
-        replaceableTypes.add(BlockID.WOOD);
-        replaceableTypes.add(BlockID.AIR);
-    }
+    private static final Set<Material> REPLACEABLE_TYPES = Set.of(
+            Material.WATER, Material.OAK_PLANKS, Material.AIR
+    );
 
     private void changeWater() {
-
-        int id = 0;
+        Material newType = Material.AIR;
         if (lastActivation == 0 || System.currentTimeMillis() - lastActivation >= lastActivationTime) {
-            id = BlockID.WOOD;
+            newType = Material.OAK_PLANKS;
         }
+
         com.sk89q.worldedit.Vector min = floodGate.getMinimumPoint();
         com.sk89q.worldedit.Vector max = floodGate.getMaximumPoint();
 
@@ -383,8 +382,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
                 if (!block.getChunk().isLoaded()) continue;
 
-                if (replaceableTypes.contains(block.getTypeId())) {
-                    block.setTypeId(id);
+                if (REPLACEABLE_TYPES.contains(block.getType())) {
+                    block.setType(newType);
                 }
             }
         }
@@ -409,7 +408,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
-    private void ghost(final Player player, int blockid) {
+    private void ghost(final Player player, Material blockType) {
 
         try {
             if (ChanceUtil.getChance(player.getLocation().getBlockY())) {
@@ -418,57 +417,57 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 1:
                             ChatUtil.sendNotice(player, "Caspher the friendly ghost drops some bread.");
                             player.getWorld().dropItemNaturally(player.getLocation(),
-                                    new ItemStack(ItemID.BREAD, ChanceUtil.getRandom(16)));
+                                    new ItemStack(Material.BREAD, ChanceUtil.getRandom(16)));
                             break;
                         case 2:
                             ChatUtil.sendNotice(player, "COOKIE gives you a cookie.");
-                            player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(ItemID.COOKIE));
+                            player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.COOKIE));
                             break;
                         case 3:
                             ChatUtil.sendNotice(player, "Caspher the friendly ghost appears.");
                             for (int i = 0; i < 8; i++) {
                                 player.getWorld().dropItemNaturally(player.getLocation(),
-                                        new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(64)));
+                                        new ItemStack(Material.IRON_INGOT, ChanceUtil.getRandom(64)));
                                 player.getWorld().dropItemNaturally(player.getLocation(),
-                                        new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(64)));
+                                        new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandom(64)));
                                 player.getWorld().dropItemNaturally(player.getLocation(),
-                                        new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(64)));
+                                        new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(64)));
                             }
                             break;
                         case 4:
                             ChatUtil.sendNotice(player, "John gives you a new jacket.");
-                            player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(ItemID.LEATHER_CHEST));
+                            player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.LEATHER_CHESTPLATE));
                             break;
                         case 5:
                             ChatUtil.sendNotice(player, "Tim teleports items to you.");
                             getContained(Item.class).forEach(i -> i.teleport(player));
 
                             // Add in some extra drops just in case the loot wasn't very juicy
-                            player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.IRON_BAR, ChanceUtil.getRandom(64)));
-                            player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(64)));
-                            player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(64)));
+                            player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.IRON_INGOT, ChanceUtil.getRandom(64)));
+                            player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandom(64)));
+                            player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(64)));
                             break;
                         case 6:
                             ChatUtil.sendNotice(player, "Dan gives you a sparkling touch.");
 
-                            int id;
+                            Material type;
                             switch (ChanceUtil.getRandom(3)) {
                                 case 1:
-                                    id = ItemID.IRON_BAR;
+                                    type = Material.IRON_INGOT;
                                     break;
                                 case 2:
-                                    id = ItemID.GOLD_BAR;
+                                    type = Material.GOLD_INGOT;
                                     break;
                                 case 3:
-                                    id = ItemID.DIAMOND;
+                                    type = Material.DIAMOND;
                                     break;
                                 default:
-                                    id = ItemID.REDSTONE_DUST;
+                                    type = Material.REDSTONE;
                                     break;
                             }
 
                             prayerComponent.influencePlayer(player,
-                                    PrayerComponent.constructPrayer(player, new InventoryFX(id, 64), 5000));
+                                    PrayerComponent.constructPrayer(player, new InventoryFX(type, 64), 5000));
                             break;
                         default:
                             break;
@@ -487,14 +486,14 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                     switch (ChanceUtil.getRandom(11)) {
                         case 1:
                             if (ChanceUtil.getChance(4)) {
-                                if (blockid == BlockID.DIAMOND_ORE) {
+                                if (blockType == Material.DIAMOND_ORE) {
                                     addToHitList(player);
                                     ChatUtil.sendWarning(player, "You ignite fumes in the air!");
                                     EditSession ess = WorldEdit.getInstance()
                                             .getEditSessionFactory()
                                             .getEditSession(new BukkitWorld(player.getWorld()), -1);
                                     try {
-                                        ess.fillXZ(BukkitUtil.toVector(player.getLocation()), new BaseBlock(BlockID.FIRE), 20, 20, true);
+                                        ess.fillXZ(BukkitUtil.toVector(player.getLocation()), new BaseBlock(Material.FIRE), 20, 20, true);
                                     } catch (MaxChangedBlocksException ignored) {
 
                                     }
@@ -544,7 +543,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                         case 4:
                             ChatUtil.sendWarning(player, "Simon says pick up sticks.");
                             for (int i = 0; i < player.getInventory().getContents().length * 1.5; i++) {
-                                player.getWorld().dropItem(player.getLocation(), new ItemStack(ItemID.STICK, 64));
+                                player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.STICK, 64));
                             }
                             break;
                         case 5:
@@ -585,7 +584,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                             }
                             break;
                         case 11:
-                            if (blockid == BlockID.EMERALD_ORE) {
+                            if (blockType == Material.EMERALD_ORE) {
                                 ChatUtil.sendNotice(player, "Dave got a chemistry set!");
                                 addToHitList(player);
                                 prayerComponent.influencePlayer(player, PrayerComponent.constructPrayer(player,
@@ -642,23 +641,20 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         ChatUtil.sendWarning(player, "You cannot do that here.");
     }
 
-    private static Set<Integer> triggerBlocks = new HashSet<>();
-    private static Set<Action> triggerInteractions = new HashSet<>();
+    private static final Set<Material> TRIGGER_BLOCKS = Set.of(
+            Material.STONE_BUTTON, Material.TRIPWIRE
+    );
 
-    static {
-        triggerBlocks.add(BlockID.STONE_BUTTON);
-        triggerBlocks.add(BlockID.TRIPWIRE);
-
-        triggerInteractions.add(Action.PHYSICAL);
-        triggerInteractions.add(Action.RIGHT_CLICK_BLOCK);
-    }
+    private static final Set<Action> TRIGGER_INTERACTIONS = Set.of(
+            Action.PHYSICAL, Action.RIGHT_CLICK_BLOCK
+    );
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
 
         final Block block = event.getClickedBlock();
 
-        if (contains(block) && triggerBlocks.contains(block.getTypeId()) && triggerInteractions.contains(event.getAction())) {
+        if (contains(block) && TRIGGER_BLOCKS.contains(block.getType()) && TRIGGER_INTERACTIONS.contains(event.getAction())) {
             long temp = lastActivation;
             lastActivation = System.currentTimeMillis();
             if (System.currentTimeMillis() - temp <= lastActivationTime * 5) {
@@ -679,19 +675,18 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         ItemStack itemInHand = player.getItemInHand();
 
-        if (EnvironmentUtil.isValuableOre(block)
-                && itemInHand != null && ItemUtil.isPickAxe(itemInHand.getTypeId())) {
-            int typeId = block.getTypeId();
+        if (EnvironmentUtil.isValuableOre(block) && ItemUtil.isPickaxe(itemInHand)) {
+            Material type = block.getType();
 
             if (ChanceUtil.getChance(4)) {
                 ItemStack rawDrop = EnvironmentUtil.getOreDrop(block.getType(), hasSilkTouch(itemInHand));
 
                 if (inst.hasPermission(player, "aurora.tome.cursedsmelting") && !hasSilkTouch(itemInHand)) {
-                    switch (typeId) {
-                        case BlockID.GOLD_ORE:
+                    switch (type) {
+                        case GOLD_ORE:
                             rawDrop.setType(Material.GOLD_INGOT);
                             break;
-                        case BlockID.IRON_ORE:
+                        case IRON_ORE:
                             rawDrop.setType(Material.IRON_INGOT);
                             break;
                     }
@@ -699,7 +694,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
                 if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(rawDrop.getType())) {
                     rawDrop.setAmount(rawDrop.getAmount()
-                            * ItemUtil.fortuneModifier(typeId, ItemUtil.fortuneLevel(itemInHand)));
+                            * ItemUtil.fortuneModifier(type, ItemUtil.fortuneLevel(itemInHand)));
                 }
                 rawDrop.setAmount(rawDrop.getAmount() * ChanceUtil.getRangedRandom(4, 8));
 
@@ -722,7 +717,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
             eatFood(player);
             poison(player, 6);
-            ghost(player, typeId);
+            ghost(player, type);
 
             try {
                 blockStateComponent.pushBlock(BlockStateKind.CURSED_MINE, player, block.getState());

@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.bosses.manager.wilderness;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.skelril.OSBL.bukkit.BukkitBossDeclaration;
 import com.skelril.OSBL.bukkit.entity.BukkitBoss;
 import com.skelril.OSBL.bukkit.util.BukkitAttackDamage;
@@ -32,6 +31,7 @@ import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
@@ -108,7 +108,7 @@ public class LostRogue {
                 List<ItemStack> itemStacks = new ArrayList<>();
 
                 for (int i = ChanceUtil.getRandom(baseLevel) * ChanceUtil.getRandom(5); i > 0; --i) {
-                    itemStacks.add(new ItemStack(BlockID.GOLD_BLOCK, ChanceUtil.getRandom(32)));
+                    itemStacks.add(new ItemStack(Material.GOLD_BLOCK, ChanceUtil.getRandom(32)));
                 }
 
                 if (ChanceUtil.getChance(Math.max(3, 20 - baseLevel))) {

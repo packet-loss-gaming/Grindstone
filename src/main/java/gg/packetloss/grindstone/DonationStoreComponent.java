@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockType;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.item.EffectUtil;
@@ -16,6 +15,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -74,19 +75,20 @@ public class DonationStoreComponent extends BukkitComponent implements Listener,
             Vector additive = player.getLocation().getDirection().multiply(-1);
             loc.add(additive);
 
-            final Location locClone = loc.clone();
+            Location locClone = loc.clone();
 
-            final int type = loc.getBlock().getTypeId();
-            final byte data = loc.getBlock().getData();
+            Block block = loc.getBlock();
+            BlockData blockData = block.getBlockData();
 
-            if (!BlockType.canPassThrough(type)) continue;
+            if (block.getType() != Material.AIR) continue;
+
             for (Player aPlayer : players) {
                 aPlayer.sendBlockChange(loc, Material.FIRE, (byte) 0);
             }
 
             server.getScheduler().runTaskLater(inst, () -> {
                 for (Player aPlayer : players) {
-                    aPlayer.sendBlockChange(locClone, type, data);
+                    aPlayer.sendBlockChange(locClone, blockData);
                 }
             }, 20 * 8);
         }

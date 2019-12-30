@@ -7,8 +7,6 @@
 package gg.packetloss.grindstone.city.engine.arena;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.EggComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
@@ -172,18 +170,18 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             switch (ChanceUtil.getRandom(5)) {
                 case 1:
                     boolean hasAxe = true;
-                    switch (pInv.getItemInHand().getTypeId()) {
-                        case ItemID.DIAMOND_AXE:
-                            pInv.addItem(new ItemStack(ItemID.DIAMOND, 2), new ItemStack(ItemID.STICK, 2));
+                    switch (pInv.getItemInHand().getType()) {
+                        case DIAMOND_AXE:
+                            pInv.addItem(new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.STICK, 2));
                             break;
-                        case ItemID.GOLD_AXE:
-                            pInv.addItem(new ItemStack(ItemID.GOLD_BAR, 2), new ItemStack(ItemID.STICK, 2));
+                        case GOLDEN_AXE:
+                            pInv.addItem(new ItemStack(Material.GOLD_INGOT, 2), new ItemStack(Material.STICK, 2));
                             break;
-                        case ItemID.IRON_AXE:
-                            pInv.addItem(new ItemStack(ItemID.IRON_BAR, 2), new ItemStack(ItemID.STICK, 2));
+                        case IRON_AXE:
+                            pInv.addItem(new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.STICK, 2));
                             break;
-                        case ItemID.WOOD_AXE:
-                            pInv.addItem(new ItemStack(BlockID.WOOD, 2), new ItemStack(ItemID.STICK, 2));
+                        case WOODEN_AXE:
+                            pInv.addItem(new ItemStack(Material.OAK_WOOD, 2), new ItemStack(Material.STICK, 2));
                             break;
                         default:
                             hasAxe = false;
@@ -262,7 +260,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
             return;
         }
 
-        if (block.getType() == Material.LOG) {
+        if (EnvironmentUtil.isLog(block)) {
             short c = 0;
             for (ItemStack aItemStack : getRandomDropSet(player)) {
                 if (c >= 3) break;
@@ -341,8 +339,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         Item item = event.getEntity();
         if (contains(item)) {
-            int typeId = item.getItemStack().getTypeId();
-            if (typeId == BlockID.LOG || typeId == BlockID.SAPLING) {
+            Material type = item.getItemStack().getType();
+            if (EnvironmentUtil.isLog(type) || EnvironmentUtil.isSapling(type)) {
                 event.setCancelled(true);
             }
         }
@@ -353,8 +351,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         Item item = event.getItemDrop();
         if (contains(item)) {
-            int typeId = item.getItemStack().getTypeId();
-            if (typeId == BlockID.LOG || typeId == BlockID.SAPLING) {
+            Material type = item.getItemStack().getType();
+            if (EnvironmentUtil.isLog(type) || EnvironmentUtil.isSapling(type)) {
                 event.setCancelled(true);
                 ChatUtil.sendError(event.getPlayer(), "You cannot drop that here.");
             }
@@ -404,7 +402,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
     public void onItemConsume(PlayerItemConsumeEvent event) {
 
         Player player = event.getPlayer();
-        if (noTeeth.contains(player) && event.getItem().getTypeId() != ItemID.POTION) {
+        if (noTeeth.contains(player) && event.getItem().getType() != Material.POTION) {
             ChatUtil.sendWarning(player, "You find it impossible to eat that without any teeth.");
             event.setCancelled(true);
         }

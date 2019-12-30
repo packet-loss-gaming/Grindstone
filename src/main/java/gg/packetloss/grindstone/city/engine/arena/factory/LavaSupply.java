@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.city.engine.arena.factory;
 
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.city.engine.arena.AbstractRegionedArena;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
@@ -43,7 +42,7 @@ public class LavaSupply extends AbstractRegionedArena {
                     if (added < amount) {
                         Block block = getWorld().getBlockAt(x, y, z);
                         if (block.getType() == Material.AIR) {
-                            block.setTypeIdAndData(BlockID.STATIONARY_LAVA, (byte) 0, false);
+                            block.setType(Material.LAVA, false);
                             ++added;
                         }
                     }
@@ -73,7 +72,7 @@ public class LavaSupply extends AbstractRegionedArena {
                     if (found < amount) {
                         Block block = getWorld().getBlockAt(x, y, z);
                         if (EnvironmentUtil.isLava(block)) {
-                            block.setTypeIdAndData(0, (byte) 0, false);
+                            block.setType(Material.AIR, false);
                             ++found;
                         }
                     }

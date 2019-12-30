@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.util.item;
 
-import gg.packetloss.grindstone.util.item.legacy.ItemType;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
@@ -104,10 +103,7 @@ public class InventoryUtil {
             this.max = max;
 
             if (filter != null) {
-                this.filter = filter.clone();
-                if (!ItemType.usesDamageValue(this.filter.getTypeId())) {
-                    this.filter.setDurability((short) 0);
-                }
+                this.filter = ItemUtil.getUndamagedStack(filter);
             }
         }
 
@@ -125,11 +121,7 @@ public class InventoryUtil {
             }
 
             if (filter != null) {
-                ItemStack testStack = item.clone();
-                if (!ItemType.usesDamageValue(testStack.getTypeId())) {
-                    testStack.setDurability((short) 0);
-                }
-
+                ItemStack testStack = ItemUtil.getUndamagedStack(item);
                 if (!filter.isSimilar(testStack)) return true;
             }
 

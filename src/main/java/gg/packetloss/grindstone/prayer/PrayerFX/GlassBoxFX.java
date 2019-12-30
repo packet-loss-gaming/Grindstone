@@ -6,11 +6,11 @@
 
 package gg.packetloss.grindstone.prayer.PrayerFX;
 
-import com.sk89q.worldedit.blocks.BlockID;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
@@ -39,7 +39,7 @@ public class GlassBoxFX extends AbstractEffect {
             }
         }
         for (Location loc : queList) {
-            player.sendBlockChange(loc, BlockID.GLASS, (byte) 0);
+            player.sendBlockChange(loc, Material.GLASS, (byte) 0);
         }
     }
 

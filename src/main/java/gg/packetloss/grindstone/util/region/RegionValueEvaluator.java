@@ -51,7 +51,7 @@ public class RegionValueEvaluator {
 
     private void walkBlock(ReportSourceInfo reportSource, World world, int x, int y, int z) {
         Block block = world.getBlockAt(x, y, z);
-        computeBlockName(block.getTypeId(), block.getData()).ifPresent((blockName) -> {
+        computeBlockName(block).ifPresent((blockName) -> {
             reportSource.allNames.add(blockName);
             reportSource.blockCounts.merge(blockName, 1, Integer::sum);
         });

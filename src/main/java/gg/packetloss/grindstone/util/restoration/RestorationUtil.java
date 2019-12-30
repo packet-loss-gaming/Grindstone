@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.util.restoration;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import de.diddiz.LogBlock.Actor;
@@ -15,6 +14,7 @@ import de.diddiz.LogBlock.Consumer;
 import de.diddiz.LogBlock.LogBlock;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ExperienceOrb;
@@ -74,15 +74,15 @@ public class RestorationUtil extends BukkitComponent {
                 server.getScheduler().runTaskLater(inst, () -> {
 
                     if (amt > 1) {
-                        player.setItemInHand(new ItemStack(ItemID.BUCKET, amt));
+                        player.setItemInHand(new ItemStack(Material.BUCKET, amt));
                     } else {
                         player.setItemInHand(null);
                     }
 
                     if (isWater) {
-                        player.getInventory().addItem(new ItemStack(ItemID.WATER_BUCKET));
+                        player.getInventory().addItem(new ItemStack(Material.WATER_BUCKET));
                     } else {
-                        player.getInventory().addItem(new ItemStack(ItemID.LAVA_BUCKET));
+                        player.getInventory().addItem(new ItemStack(Material.LAVA_BUCKET));
                     }
                 }, 1);
             } else {
@@ -90,7 +90,7 @@ public class RestorationUtil extends BukkitComponent {
             }
             consumer.queueBlockBreak(new Actor(player.getName(), player.getUniqueId()), block.getState());
 
-            block.setTypeId(0);
+            block.setType(Material.AIR);
 
             if (xp > 0) {
                 ExperienceOrb orb = block.getWorld().spawn(block.getLocation(), ExperienceOrb.class);
@@ -103,7 +103,7 @@ public class RestorationUtil extends BukkitComponent {
 
         server.getScheduler().runTaskLater(inst, () -> {
             ItemStack held = player.getItemInHand();
-            if (!ItemUtil.isTool(held.getTypeId())) return;
+            if (!ItemUtil.isTool(held.getType())) return;
             short newDurability = (short) (held.getDurability() + 1);
             short maxDurability = held.getType().getMaxDurability();
             if (newDurability >= maxDurability) {

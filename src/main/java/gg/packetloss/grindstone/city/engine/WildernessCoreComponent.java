@@ -10,7 +10,6 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldguard.bukkit.WGBukkit;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -34,7 +33,10 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
-import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.DamageUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -143,9 +145,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
                     if (stack.getAmount() > 1) continue;
 
-                    if (item.getTicksLived() > 20 * 60 && stack.getTypeId() == BlockID.SAPLING) {
-                        item.getLocation().getBlock().setTypeIdAndData(stack.getTypeId(),
-                          stack.getData().getData(), true);
+                    if (item.getTicksLived() > 20 * 60 && EnvironmentUtil.isSapling(stack.getType())) {
+                        item.getLocation().getBlock().setType(stack.getType(), true);
                         item.remove();
                     }
                 }
@@ -191,7 +192,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         final Entity passenger = vehicle == null ? null : vehicle.getPassenger();
 
-        if (passenger != null && vehicle.getLocation().getBlock().getTypeId() == BlockID.END_PORTAL) {
+        if (passenger != null && vehicle.getLocation().getBlock().getType() == Material.END_PORTAL) {
             vehicle.eject();
             server.getScheduler().runTaskLater(inst, () -> {
                 if (!vehicle.isValid() || !passenger.isValid()) return;
@@ -509,12 +510,12 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                         for (BlockFace face : BlockFace.values()) {
                             if (face.getModY() != 0) continue;
                             Block aBlock = block.getRelative(face);
-                            if (aBlock.getTypeId() == BlockID.CHEST) {
+                            if (aBlock.getType() == Material.CHEST) {
                                 block = aBlock;
                                 break checkGrave;
                             }
                         }
-                        block.setTypeIdAndData(BlockID.CHEST, (byte) 0, true);
+                        block.setType(Material.CHEST, true);
                     }
                     Chest chest = (Chest) block.getState();
                     it = grave.iterator();
@@ -566,7 +567,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
             addPool(block, ItemUtil.fortuneLevel(stack), stack.containsEnchantment(Enchantment.SILK_TOUCH));
             highScoresComponent.update(player, ScoreTypes.WILDERNESS_ORES_MINED, 1);
-        }  /* else if (block.getTypeId() == BlockID.SAPLING) {
+        }  /* else if (block.getTypeId() == Material.SAPLING) {
             event.setCancelled(true);
             ChatUtil.sendError(player, "You cannot break that here.");
         }
@@ -578,7 +579,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         if (isTree(block)) {
 
             Block treeBase = block.getBlock();
-            while (treeBase.getTypeId() != BlockID.GRASS && treeBase.getTypeId() != BlockID.DIRT) {
+            while (treeBase.getTypeId() != Material.GRASS && treeBase.getTypeId() != Material.DIRT) {
                 treeBase = treeBase.getRelative(BlockFace.DOWN);
                 if (treeBase.getY() < 3) break;
             }
@@ -586,7 +587,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             treeBase = treeBase.getRelative(BlockFace.UP);
 
             treeBase.breakNaturally();
-            treeBase.setTypeIdAndData(BlockID.SAPLING, block.getData().getData(), true);
+            treeBase.setTypeIdAndData(Material.SAPLING, block.getData().getData(), true);
         }
         */
     }
@@ -596,23 +597,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         if (isWildernessWorld(event.getBlock().getWorld())) {
             event.setCancelled(true);
         }
-    }
-
-    private boolean isTree(BlockState block) {
-
-        int worldHeightLimit = block.getWorld().getMaxHeight();
-        if (block.getTypeId() == BlockID.LOG) {
-
-            Block testBlock = block.getBlock();
-            do {
-                testBlock = testBlock.getRelative(BlockFace.UP);
-                Location[] nearbyLocs = LocationUtil.getNearbyLocations(testBlock.getLocation(), 1);
-                for (Location aLocation : nearbyLocs) {
-                    if (aLocation.getBlock().getTypeId() == BlockID.LEAVES) return true;
-                }
-            } while (testBlock.getY() < Math.min(worldHeightLimit, testBlock.getY() + 20));
-        }
-        return false;
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -638,7 +622,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 continue;
             }
 
-            if (next.getTypeId() == BlockID.CHEST) {
+            if (next.getType() == Material.CHEST) {
                 it.remove();
                 continue;
             }
@@ -693,7 +677,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             if (isEffectedOre(typeId)) {
                 event.setCancelled(true);
                 ChatUtil.sendError(player, "You find yourself unable to place that ore.");
-            } /* else if (typeId == BlockID.SAPLING) {
+            } /* else if (typeId == Material.SAPLING) {
                 event.setCancelled(true);
                 ChatUtil.sendError(player, "You cannot plant that here.");
             }
@@ -830,7 +814,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
                 if (nextDropTime != 0 && System.currentTimeMillis() < nextDropTime) return false;
 
-                for (int i = 0; i < ItemUtil.fortuneModifier(block.getTypeId(), fortune); i++) {
+                for (int i = 0; i < ItemUtil.fortuneModifier(block.getType(), fortune); i++) {
                     world.dropItem(location, EnvironmentUtil.getOreDrop(block.getType(), hasSilkTouch));
                 }
                 world.playSound(location, Sound.ENTITY_BLAZE_BURN, Math.min(1, (((float) timesL / times) * .6F) + vol), 0);
@@ -853,7 +837,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
     /*
     private static final int[] ores = {
-            BlockID.GOLD_ORE
+            Material.GOLD_ORE
     };
     */
 

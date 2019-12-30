@@ -12,11 +12,11 @@ import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.events.HomeTeleportEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -116,7 +116,7 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
         Block block = event.getClickedBlock();
 
-        if (block.getType() != Material.BED_BLOCK) {
+        if (!EnvironmentUtil.isBed(block)) {
             return;
         }
         if (!canSetPlayerBed(block.getLocation()))  {

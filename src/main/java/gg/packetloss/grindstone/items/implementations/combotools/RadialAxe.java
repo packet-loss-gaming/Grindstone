@@ -16,7 +16,7 @@ public class RadialAxe extends ComboAxe {
     private static RadialExecutor executor = new RadialExecutor(CustomItems.RADIAL_AXE) {
         @Override
         public boolean accepts(Material material) {
-            return acceptedMaterials.contains(material);
+            return ComboAxe.accepts(material);
         }
     };
 

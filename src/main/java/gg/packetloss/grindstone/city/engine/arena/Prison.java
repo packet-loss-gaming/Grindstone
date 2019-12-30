@@ -7,8 +7,6 @@
 package gg.packetloss.grindstone.city.engine.arena;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
@@ -22,6 +20,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.BlockState;
@@ -94,7 +93,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
                 for (int y = maxY; y >= minY; --y) {
                     block = getWorld().getBlockAt(x, y, z).getState();
                     if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getTypeId() == BlockID.CHEST) {
+                    if (block.getType() == Material.CHEST) {
                         rewardChest = block.getLocation();
                         return;
                     }
@@ -225,7 +224,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) return;
 
         BlockState state = event.getClickedBlock().getLocation().getBlock().getState();
-        if (state.getTypeId() == BlockID.CHEST && rewardChest.equals(state.getLocation())) {
+        if (state.getType() == Material.CHEST && rewardChest.equals(state.getLocation())) {
 
             List<ItemStack> loot = SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 10, 4000);
             int lootSplit = ChanceUtil.getRangedRandom(64 * 2, 64 * 4);
@@ -233,7 +232,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
             else if (ChanceUtil.getChance(65)) lootSplit *= 2;
 
             event.setUseInteractedBlock(Event.Result.DENY);
-            event.getPlayer().getInventory().addItem(new ItemStack(ItemID.GOLD_BAR, lootSplit));
+            event.getPlayer().getInventory().addItem(new ItemStack(Material.GOLD_INGOT, lootSplit));
             event.getPlayer().getInventory().addItem(loot.toArray(new ItemStack[0]));
 
             event.getPlayer().teleport(entranceLoc);

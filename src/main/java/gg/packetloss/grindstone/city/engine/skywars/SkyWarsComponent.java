@@ -15,8 +15,6 @@ import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.patterns.Pattern;
 import com.sk89q.worldedit.patterns.SingleBlockPattern;
@@ -347,7 +345,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                     sessions.getSession(SkyWarSession.class, player).stopPushBack();
                 }
 
-                editStartingPad(0, 0);
+                editStartingPad(Material.AIR);
             }
         };
 
@@ -368,7 +366,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             Block block = player.getLocation().add(0, -1, 0).getBlock();
 
             SkyWarsProfile profile = gameState.get(player);
-            if (block.getType() != Material.STAINED_GLASS) {
+            if (!EnvironmentUtil.isStainedGlassBlock(block)) {
                 profile.setTeam(null);
                 allReady = false;
                 continue;
@@ -420,7 +418,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         }
 
         if (gameStartLocation.getBlock().getRelative(BlockFace.DOWN).getType().equals(Material.AIR)) {
-            edit(BlockID.STAINED_GLASS, 15, gameStartLocation);
+            edit(Material.BLACK_STAINED_GLASS, gameStartLocation);
         }
 
         state = SkyWarsState.INITIALIZE;
@@ -569,11 +567,11 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         player.teleport(gameStartLocation);
     }
 
-    private void editStartingPad(int toType, int toData) {
-        edit(toType, toData, new Location(Bukkit.getWorld(config.worldName), config.x, config.y, config.z));
+    private void editStartingPad(Material toType) {
+        edit(toType, new Location(Bukkit.getWorld(config.worldName), config.x, config.y, config.z));
     }
 
-    private void edit(int toType, int toData, Location battleLoc) {
+    private void edit(Material toType, Location battleLoc) {
         battleLoc = battleLoc.clone().add(0, -1, 0);
 
         EditSession editor = WorldEdit.getInstance()
@@ -581,7 +579,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         com.sk89q.worldedit.Vector origin = new com.sk89q.worldedit.Vector(
                 battleLoc.getX(), battleLoc.getY(), battleLoc.getZ()
         );
-        Pattern pattern = new SingleBlockPattern(new BaseBlock(toType, toData));
+        Pattern pattern = new SingleBlockPattern(new BaseBlock(toType));
         try {
             editor.makeCylinder(origin, pattern, 12, 1, true);
         } catch (MaxChangedBlocksException e) {
@@ -590,7 +588,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     }
 
     private ItemStack makeBookOfOmens() {
-        ItemStack powerup = new ItemStack(ItemID.BOOK);
+        ItemStack powerup = new ItemStack(Material.BOOK);
 
         ItemMeta powerMeta = powerup.getItemMeta();
         powerMeta.setDisplayName(ChatColor.WHITE + "Book o' Omens");
@@ -600,7 +598,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     }
 
     private ItemStack makeFrostOrb() {
-        ItemStack powerup = new ItemStack(ItemID.SNOWBALL, 16);
+        ItemStack powerup = new ItemStack(Material.SNOWBALL, 16);
 
         ItemMeta powerMeta = powerup.getItemMeta();
         powerMeta.setDisplayName(ChatColor.BLUE + "Frost Orb");
@@ -653,7 +651,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                 powerup = makeFrostOrb();
             }
         } else if (ChanceUtil.getChance(5)) {
-            powerup = new ItemStack(ItemID.WATCH);
+            powerup = new ItemStack(Material.CLOCK);
             ItemMeta powerMeta = powerup.getItemMeta();
             powerMeta.setDisplayName(ChatColor.GOLD + "Defroster");
             powerup.setItemMeta(powerMeta);

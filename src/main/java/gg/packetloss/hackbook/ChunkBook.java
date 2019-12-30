@@ -8,7 +8,7 @@ package gg.packetloss.hackbook;
 
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Chunk;
-import org.bukkit.craftbukkit.v1_12_R1.CraftChunk;
+import org.bukkit.craftbukkit.v1_13_R2.CraftChunk;
 
 public class ChunkBook {
 

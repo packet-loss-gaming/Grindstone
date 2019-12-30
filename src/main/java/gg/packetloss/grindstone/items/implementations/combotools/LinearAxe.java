@@ -16,7 +16,7 @@ public class LinearAxe extends ComboAxe {
     private static LinearDestructionExecutor executor = new LinearDestructionExecutor(CustomItems.LINEAR_AXE) {
         @Override
         public boolean accepts(Material material) {
-            return acceptedMaterials.contains(material);
+            return ComboAxe.accepts(material);
         }
     };
 

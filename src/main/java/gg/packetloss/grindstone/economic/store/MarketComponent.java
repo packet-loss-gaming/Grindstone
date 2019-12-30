@@ -35,10 +35,7 @@ import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -111,7 +108,7 @@ public class MarketComponent extends BukkitComponent {
 
             // Schedule an update task for every two hours
             server.getScheduler().runTaskTimerAsynchronously(
-              inst, this::simulateMarket, nextRunDelay, TimeUtil.convertHoursToTicks(2)
+              inst, (Runnable) this::simulateMarket, nextRunDelay, TimeUtil.convertHoursToTicks(2)
             );
         }, 1);
     }
@@ -156,7 +153,7 @@ public class MarketComponent extends BukkitComponent {
             // Reserve space for resolved items
             List<MarketItemInfo> resolvedItems = new ArrayList<>(expandedNames.size());
             for (String expandedName : expandedNames) {
-                Optional<String> optItemName = matchItemFromNameOrId(expandedName);
+                Optional<String> optItemName = matchItem(expandedName);
                 if (optItemName.isEmpty()) {
                     throw new CommandException(NOT_AVAILIBLE);
                 }
@@ -401,7 +398,7 @@ public class MarketComponent extends BukkitComponent {
             Optional<String> optItemName;
             if (args.argsLength() > 0) {
                 stack = null;
-                optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
+                optItemName = matchItem(args.getJoinedStrings(0));
             } else {
                 stack = PlayerUtil.checkPlayer(sender).getInventory().getItemInHand();
                 optItemName = computeItemName(stack);
@@ -520,7 +517,7 @@ public class MarketComponent extends BukkitComponent {
         public void logCmd(CommandContext args, CommandSender sender) throws CommandException {
             String item = args.getFlag('i', null);
             if (item != null) {
-                Optional<String> optItemName = matchItemFromNameOrId(item);
+                Optional<String> optItemName = matchItem(item);
                 if (optItemName.isPresent()) {
                     item = optItemName.get();
                 } else {
@@ -574,7 +571,7 @@ public class MarketComponent extends BukkitComponent {
                 flags = "bsp:", min = 1)
         @CommandPermissions("aurora.admin.adminstore.add")
         public void addCmd(CommandContext args, CommandSender sender) throws CommandException {
-            Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
+            Optional<String> optItemName = matchItem(args.getJoinedStrings(0));
             if (optItemName.isEmpty()) {
                 throw new CommandException("No item by that name was found.");
             }
@@ -607,7 +604,7 @@ public class MarketComponent extends BukkitComponent {
           flags = "", min = 1)
         @CommandPermissions("aurora.admin.adminstore.remove")
         public void removeCmd(CommandContext args, CommandSender sender) throws CommandException {
-            Optional<String> optItemName = matchItemFromNameOrId(args.getJoinedStrings(0));
+            Optional<String> optItemName = matchItem(args.getJoinedStrings(0));
             if (optItemName.isEmpty()) {
                 throw new CommandException(NOT_AVAILIBLE);
             }
@@ -640,9 +637,8 @@ public class MarketComponent extends BukkitComponent {
                 return CustomItemCenter.build(item);
             }
 
-            NumericItem mapping = toNumeric(name).get();
 
-            return new ItemStack(mapping.getId(), 1, mapping.getData());
+            return new ItemStack(Objects.requireNonNull(Material.matchMaterial(name)), 1);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new CommandException("Please report this error, " + name + " could not be found.");

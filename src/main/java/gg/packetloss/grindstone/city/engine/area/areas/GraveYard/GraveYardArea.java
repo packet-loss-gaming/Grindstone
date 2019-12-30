@@ -6,10 +6,6 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.GraveYard;
 
-import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.BlockType;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -31,6 +27,7 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Chunk;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -67,27 +64,22 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     protected ProtectedRegion temple, pressurePlateLockArea, creepers, parkour, rewards;
 
     // Block information
-    protected static Set<BaseBlock> breakable = new HashSet<>();
+    protected static final Set<Material> BREAKABLE = Set.of(
+            Material.TALL_GRASS,
+            Material.ROSE_BUSH,
+            Material.DANDELION,
+            Material.DIRT,
+            Material.TORCH,
+            Material.CRACKED_STONE_BRICKS,
+            Material.COBWEB,
+            Material.OAK_LEAVES
+    );
 
-    static {
-        breakable.add(new BaseBlock(BlockID.LONG_GRASS, -1));
-        breakable.add(new BaseBlock(BlockID.RED_FLOWER, -1));
-        breakable.add(new BaseBlock(BlockID.YELLOW_FLOWER, -1));
-        breakable.add(new BaseBlock(BlockID.DIRT, -1));
-        breakable.add(new BaseBlock(BlockID.TORCH, -1));
-        breakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
-        breakable.add(new BaseBlock(BlockID.WEB, -1));
-        breakable.add(new BaseBlock(BlockID.LEAVES, -1));
-    }
-
-    protected static Set<BaseBlock> autoBreakable = new HashSet<>();
-
-    static {
-        autoBreakable.add(new BaseBlock(BlockID.STEP, 5));
-        autoBreakable.add(new BaseBlock(BlockID.STEP, 13));
-        autoBreakable.add(new BaseBlock(BlockID.WOODEN_STEP, 8));
-        autoBreakable.add(new BaseBlock(BlockID.STONE_BRICK, 2));
-    }
+    protected static final Set<Material> AUTO_BREAKABLE =  Set.of(
+            Material.OAK_SLAB,
+            Material.STONE_BRICK_SLAB,
+            Material.CRACKED_STONE_BRICKS
+    );
 
     // Ticks of active grave yard rewards room
     protected int rewardsRoomOccupiedTicks = 0;
@@ -211,13 +203,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 .collect(Collectors.toList());
     }
 
-    protected boolean accept(BaseBlock baseBlock, Set<BaseBlock> baseBlocks) {
-        for (BaseBlock aBaseBlock : baseBlocks) {
-            if (baseBlock.equalsFuzzy(aBaseBlock)) return true;
-        }
-        return false;
-    }
-
     private boolean isEvilMode(Block block) {
         // Weather/Day Check
         //noinspection SimplifiableIfStatement
@@ -250,7 +235,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 zombie.setCanPickupItems(false);
 
                 EntityEquipment equipment = zombie.getEquipment();
-                equipment.setItemInHand(new ItemStack(ItemID.DIAMOND_SWORD));
+                equipment.setItemInHand(new ItemStack(Material.DIAMOND_SWORD));
                 equipment.setArmorContents(new ItemStack[]{
                         CustomItemCenter.build(CustomItems.ANCIENT_BOOTS),
                         CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS),
@@ -273,18 +258,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         Block playerBlock = player.getLocation().getBlock();
         for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
             Location ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
-            if (!BlockType.isTranslucent(ls.getBlock().getTypeId())) {
+            if (ls.getBlock().getType().isSolid()) {
                 ls = player.getLocation();
             }
 
-            Block aBlock = ls.getBlock().getRelative(BlockFace.DOWN);
-            // If the block is a half slab or it is wood, don't do this
-            if (aBlock.getTypeId() != BlockID.STEP && aBlock.getTypeId() != BlockID.WOOD) {
-                aBlock = aBlock.getRelative(BlockFace.DOWN, 2);
-                if (BlockType.canPassThrough(aBlock.getTypeId())) {
-                    ls.add(0, -3, 0);
-                }
-            }
             spawnAndArm(ls, Zombie.class, true);
         }
     }
@@ -331,8 +308,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
 
         if (ChanceUtil.getChance(50)) {
-            ItemStack sword = new ItemStack(ItemID.IRON_SWORD);
-            if (ChanceUtil.getChance(35)) sword = new ItemStack(ItemID.DIAMOND_SWORD);
+            ItemStack sword = new ItemStack(Material.IRON_SWORD);
+            if (ChanceUtil.getChance(35)) sword = new ItemStack(Material.DIAMOND_SWORD);
             ItemMeta meta = sword.getItemMeta();
             if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_ALL, ChanceUtil.getRandom(5), false);
             if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, ChanceUtil.getRandom(5), false);
@@ -392,7 +369,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                     ((Chest) chestState).getInventory().addItem(itemStacks);
                 } else {
                     org.bukkit.material.Sign sign =
-                            new org.bukkit.material.Sign(BlockID.WALL_SIGN, signState.getRawData());
+                            new org.bukkit.material.Sign(Material.WALL_SIGN, signState.getRawData());
                     BlockFace attachedFace = sign.getAttachedFace();
                     headStone = headStone.getBlock().getRelative(attachedFace, 2).getLocation();
                     headStone.add(0, 2, 0);
@@ -475,7 +452,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 for (int y = maxY; y >= minY; --y) {
                     block = getWorld().getBlockAt(x, y, z).getState();
                     if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getTypeId() == BlockID.LEVER) {
+                    if (block.getType() == Material.LEVER) {
                         Lever lever = (Lever) block.getData();
                         lever.setPowered(false);
                         block.setData(lever);
@@ -525,7 +502,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 for (int y = maxY; y >= minY; --y) {
                     block = getWorld().getBlockAt(x, y, z).getState();
                     if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getTypeId() == BlockID.CHEST) {
+                    if (block.getType() == Material.CHEST) {
                         rewardChest.add(block.getLocation());
                     }
                 }
@@ -609,25 +586,25 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             case 20:
                 return CustomItemCenter.build(CustomItems.LEGENDARY_GOD_PICKAXE);
             case 21:
-                return new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRandom(64));
+                return new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandom(64));
             case 22:
-                return new ItemStack(ItemID.DIAMOND, ChanceUtil.getRandom(64));
+                return new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(64));
             case 23:
-                return new ItemStack(ItemID.EMERALD, ChanceUtil.getRandom(64));
+                return new ItemStack(Material.EMERALD, ChanceUtil.getRandom(64));
             case 24:
-                return new ItemStack(ItemID.REDSTONE_DUST, ChanceUtil.getRandom(64));
+                return new ItemStack(Material.REDSTONE, ChanceUtil.getRandom(64));
             case 25:
-                return new ItemStack(ItemID.ENDER_PEARL, ChanceUtil.getRandom(16));
+                return new ItemStack(Material.ENDER_PEARL, ChanceUtil.getRandom(16));
             case 26:
-                return new ItemStack(ItemID.GOLD_APPLE, ChanceUtil.getRandom(64), (short) 1);
+                return new ItemStack(Material.ENCHANTED_GOLDEN_APPLE, ChanceUtil.getRandom(64));
             case 28:
-                return new ItemStack(ItemID.SADDLE);
+                return new ItemStack(Material.SADDLE);
             case 29:
-                return new ItemStack(ItemID.HORSE_ARMOR_IRON);
+                return new ItemStack(Material.IRON_HORSE_ARMOR);
             case 30:
-                return new ItemStack(ItemID.HORSE_ARMOR_GOLD);
+                return new ItemStack(Material.GOLDEN_HORSE_ARMOR);
             case 31:
-                return new ItemStack(ItemID.HORSE_ARMOR_DIAMOND);
+                return new ItemStack(Material.DIAMOND_HORSE_ARMOR);
             default:
                 return CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(5));
         }
@@ -636,33 +613,36 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     private void breakBlock(Entity e, Location location) {
         int chance = e instanceof Player ? 2 : e instanceof CaveSpider ? 30 : 6;
         Block block = location.getBlock();
-        BaseBlock bb = new BaseBlock(block.getTypeId(), block.getData());
-        BaseBlock crackedBrick = new BaseBlock(BlockID.STONE_BRICK, 2);
+
+        Material blockType = block.getType();
+        if (blockType == Material.AIR) return;
+
         BlockFace[] targets;
-        if (bb.getType() == BlockID.AIR) return;
-        if (bb.equals(crackedBrick)) {
+        if (blockType.equals(Material.CRACKED_STONE_BRICKS)) {
             targets = new BlockFace[] {BlockFace.SELF};
         } else {
             targets = EnvironmentUtil.getNearbyBlockFaces();
         }
+
         for (BlockFace face : targets) {
             if (!ChanceUtil.getChance(chance)) continue;
             final Block aBlock = block.getRelative(face);
             Block bBlock = aBlock.getRelative(BlockFace.DOWN);
-            if (!BlockType.canPassThrough(bBlock.getTypeId())) continue;
-            BaseBlock aBB = new BaseBlock(aBlock.getTypeId(), aBlock.getData());
+            if (bBlock.getType().isSolid()) continue;
+
             int delay = 20;
-            if (aBB.equals(crackedBrick)) {
+            if (aBlock.getType().equals(Material.CRACKED_STONE_BRICKS)) {
                 delay *= .75;
             }
+
             server.getScheduler().runTaskLater(inst, () -> {
-                BaseBlock uABB = new BaseBlock(aBlock.getTypeId(), aBlock.getData());
-                if (!accept(uABB, autoBreakable)) {
+                if (!AUTO_BREAKABLE.contains(aBlock.getType())) {
                     return;
                 }
+
                 try {
                     blockState.pushAnonymousBlock(BlockStateKind.GRAVEYARD, aBlock.getState());
-                    aBlock.setTypeId(0);
+                    aBlock.setType(Material.AIR);
                 } catch (UnstorableBlockStateException ex) {
                     ex.printStackTrace();
                 }

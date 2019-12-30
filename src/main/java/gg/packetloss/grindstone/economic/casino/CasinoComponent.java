@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.economic.casino;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -21,6 +20,7 @@ import gg.packetloss.grindstone.util.EnvironmentUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.EntityEffect;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -167,7 +167,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
 
         if (!validHeader) {
             event.setCancelled(true);
-            block.breakNaturally(new ItemStack(ItemID.SIGN));
+            block.breakNaturally(new ItemStack(Material.SIGN));
         }
 
         try {
@@ -176,7 +176,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
             ChatUtil.sendError(player, "The third line must be the amount of "
                     + economy.currencyNamePlural() + " to bet.");
             event.setCancelled(true);
-            block.breakNaturally(new ItemStack(ItemID.SIGN));
+            block.breakNaturally(new ItemStack(Material.SIGN));
         }
     }
 

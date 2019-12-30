@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.city.engine.area.areas.PatientX;
 
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
@@ -28,6 +27,7 @@ import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
@@ -83,7 +83,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             config = new PatientXConfig();
             adminKit = new AdminToolkit(admin);
 
-            server.getScheduler().runTaskTimer(inst, this::runAttack, 0, 20 * 20);
+            server.getScheduler().runTaskTimer(inst, (Runnable) this::runAttack, 0, 20 * 20);
 
             destinations.add(new Location(world, -180, 54, 109.5));
             destinations.add(new Location(world, -173, 54, 120));
@@ -336,14 +336,14 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         for (int x = minX; x < maxX; x++) {
             for (int z = minZ; z < maxZ; z++) {
                 Block block = world.getBlockAt(x, y, z);
-                if (block.getRelative(BlockFace.UP).getTypeId() == 0
+                if (block.getRelative(BlockFace.UP).getType() == Material.AIR
                         && EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN))) {
                     if (percentage >= 100) {
-                        block.setTypeId(BlockID.ICE);
+                        block.setType(Material.ICE);
                         continue;
                     }
-                    if (block.getTypeId() == BlockID.PACKED_ICE || block.getTypeId() == BlockID.ICE) {
-                        block.setTypeId(BlockID.STATIONARY_WATER);
+                    if (block.getType() == Material.PACKED_ICE || block.getType() == Material.ICE) {
+                        block.setType(Material.WATER);
                         if (!ChanceUtil.getChance(config.snowBallChance) || !throwExplosives) continue;
                         Location target = block.getRelative(BlockFace.UP).getLocation();
                         for (int i = ChanceUtil.getRandom(3); i > 0; i--) {
@@ -352,7 +352,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                             melvin.setShooter(boss);
                         }
                     } else if (ChanceUtil.getChance(percentage, 100)) {
-                        block.setTypeId(BlockID.PACKED_ICE);
+                        block.setType(Material.PACKED_ICE);
                     }
                 }
             }

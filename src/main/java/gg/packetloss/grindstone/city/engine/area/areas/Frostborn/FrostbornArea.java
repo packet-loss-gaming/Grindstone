@@ -3,7 +3,6 @@ package gg.packetloss.grindstone.city.engine.area.areas.Frostborn;
 import com.sk89q.commandbook.util.entity.ProjectileUtil;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
@@ -75,20 +74,14 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     protected Location bossSpawnLoc;
 
     // Block information
-    protected static Set<BaseBlock> breakable = new HashSet<>();
+    protected static final Set<Material> BREAKABLE = Set.of(
+            Material.SNOW, Material.SNOW_BLOCK, Material.GLOWSTONE
+    );
 
-    static {
-        breakable.add(new BaseBlock(BlockID.SNOW, -1));
-        breakable.add(new BaseBlock(BlockID.SNOW_BLOCK, -1));
-        breakable.add(new BaseBlock(BlockID.LIGHTSTONE, -1));
-    }
+    protected static final Set<Material> RESTOREABLE = Set.of(
+            Material.SNOW_BLOCK, Material.GLOWSTONE
+    );
 
-    protected static Set<BaseBlock> restoreable = new HashSet<>();
-
-    static {
-        restoreable.add(new BaseBlock(BlockID.SNOW_BLOCK, -1));
-        restoreable.add(new BaseBlock(BlockID.LIGHTSTONE, -1));
-    }
 
     // Items taken from players returned upon death
     protected ArrayList<ProtectedSerializedItemStack> lootItems = new ArrayList<>();

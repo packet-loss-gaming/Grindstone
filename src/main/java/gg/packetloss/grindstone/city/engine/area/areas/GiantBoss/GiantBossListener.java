@@ -8,8 +8,6 @@ package gg.packetloss.grindstone.city.engine.area.areas.GiantBoss;
 
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
@@ -195,16 +193,16 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         Block block = event.getClickedBlock();
         Action action = event.getAction();
         if (parent.boss != null && action.equals(Action.PHYSICAL) && parent.contains(player, 1)) {
-            switch (block.getTypeId()) {
-                case BlockID.PRESSURE_PLATE_HEAVY:
+            switch (block.getType()) {
+                case STONE_PRESSURE_PLATE:
                     ProtectedRegion door;
                     if (LocationUtil.isInRegion(parent.eastDoor, block.getRelative(BlockFace.WEST).getLocation())) {
                         door = parent.eastDoor;
                     } else {
                         door = parent.westDoor;
                     }
-                    parent.setDoor(door, BlockID.AIR, 0);
-                    server.getScheduler().runTaskLater(inst, () -> parent.setDoor(door, BlockID.SANDSTONE, 1), 20 * 10);
+                    parent.setDoor(door, Material.AIR);
+                    server.getScheduler().runTaskLater(inst, () -> parent.setDoor(door, Material.CHISELED_SANDSTONE), 20 * 10);
                     break;
             }
         }
@@ -318,7 +316,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             }
 
             if (acceptedReasons.contains(event.getCause())) {
-                final ItemStack weapon = new ItemStack(ItemID.BONE);
+                final ItemStack weapon = new ItemStack(Material.BONE);
                 ItemMeta weaponMeta = weapon.getItemMeta();
                 weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
                 weapon.setItemMeta(weaponMeta);
@@ -428,7 +426,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 4000));
                 // Gold drops
                 for (int i = 0; i < Math.sqrt(amt + m) + GiantBossArea.scalOffst; i++) {
-                    event.getDrops().add(new ItemStack(ItemID.GOLD_BAR, ChanceUtil.getRangedRandom(32, 64)));
+                    event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRangedRandom(32, 64)));
                 }
                 // Unique drops
                 if (ChanceUtil.getChance(25) || m > 1 && ChanceUtil.getChance(27 / m)) {
@@ -481,8 +479,8 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 for (int i = 0; i < 7; i++) {
                     server.getScheduler().runTaskLater(inst, parent.spawnXP, i * 2 * 20);
                 }
-                parent.setDoor(parent.eastDoor, BlockID.AIR, 0);
-                parent.setDoor(parent.westDoor, BlockID.AIR, 0);
+                parent.setDoor(parent.eastDoor, Material.AIR);
+                parent.setDoor(parent.westDoor, Material.AIR);
                 // Buff babies
                 containedEntities.stream()
                         .filter(entity -> entity instanceof Zombie)
@@ -512,7 +510,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
                 event.getDrops().clear();
                 if (ChanceUtil.getChance(28)) {
-                    event.getDrops().add(new ItemStack(ItemID.GOLD_NUGGET, ChanceUtil.getRandom(3)));
+                    event.getDrops().add(new ItemStack(Material.GOLD_NUGGET, ChanceUtil.getRandom(3)));
                 }
             }
         }

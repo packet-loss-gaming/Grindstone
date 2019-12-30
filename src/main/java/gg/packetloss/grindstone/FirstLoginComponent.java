@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -131,14 +130,14 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
             // Declare Item Stacks
             ItemStack[] startKit = new ItemStack[]{
                     // BookUtil.Tutorial.newbieBook(),
-                    new ItemStack(ItemID.COOKED_BEEF, 32),
-                    new ItemStack(ItemID.STONE_PICKAXE),
-                    new ItemStack(ItemID.STONE_AXE),
-                    new ItemStack(ItemID.STONE_SHOVEL),
-                    new ItemStack(ItemID.STONE_SWORD),
-                    new ItemStack(ItemID.STONE_HOE),
-                    new ItemStack(ItemID.MAP),
-                    new ItemStack(ItemID.BED_ITEM),
+                    new ItemStack(Material.COOKED_BEEF, 32),
+                    new ItemStack(Material.STONE_PICKAXE),
+                    new ItemStack(Material.STONE_AXE),
+                    new ItemStack(Material.STONE_SHOVEL),
+                    new ItemStack(Material.STONE_SWORD),
+                    new ItemStack(Material.STONE_HOE),
+                    new ItemStack(Material.MAP),
+                    new ItemStack(Material.RED_BED),
                     CustomItemCenter.build(CustomItems.GEM_OF_LIFE, 3)
             };
 
@@ -158,7 +157,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
             if (ChanceUtil.getChance(10) && config.luckyDiamond) {
 
                 // Give Items
-                inventory.addItem(new ItemStack(ItemID.DIAMOND, 1));
+                inventory.addItem(new ItemStack(Material.DIAMOND));
 
                 // Notify Player
                 ChatUtil.sendNotice(player, ChatColor.GOLD, "What's this, a diamond! You are very luck!");

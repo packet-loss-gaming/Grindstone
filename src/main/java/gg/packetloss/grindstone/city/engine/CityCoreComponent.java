@@ -79,7 +79,7 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
         Location xTestLoc = loc.clone();
 
         while (true) {
-            if (xTestLoc.getBlock().getType() == Material.PORTAL) {
+            if (xTestLoc.getBlock().getType() == Material.NETHER_PORTAL) {
                 xTestLoc.add(-1, 0, 0);
                 continue;
             }
@@ -89,7 +89,7 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
 
         Location zTestLoc = loc.clone();
         while (true) {
-            if (zTestLoc.getBlock().getType() == Material.PORTAL) {
+            if (zTestLoc.getBlock().getType() == Material.NETHER_PORTAL) {
                 zTestLoc.add(0, 0, -1);
                 continue;
             }

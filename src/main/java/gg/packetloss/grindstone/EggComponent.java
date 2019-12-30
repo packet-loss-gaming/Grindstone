@@ -9,7 +9,6 @@ package gg.packetloss.grindstone;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
@@ -26,6 +25,7 @@ import gg.packetloss.grindstone.events.egg.EggHatchEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.SpawnEgg;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -94,12 +94,16 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
 
         for (World world : server.getWorlds()) {
             for (Item item : world.getEntitiesByClass(Item.class)) {
+                if (item.getTicksLived() < 300) {
+                    continue;
+                }
 
                 ItemStack itemStack = item.getItemStack();
-                if (itemStack.getTypeId() != ItemID.SPAWN_EGG || item.getTicksLived() < 300) continue;
+                SpawnEgg eggInfo = SpawnEgg.fromMaterial(itemStack.getType());
+                if (eggInfo == null) continue;
 
                 // Attempt to hatch the egg
-                hatchEgg(item);
+                hatchEgg(item, eggInfo);
             }
         }
     }
@@ -150,73 +154,73 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         else sessions.getSession(EggState.class, player).setEggDrop(eggType, false);
     }
 
-    private void attemptEggDrop(EggEntity egg, Location location) {
+    private void attemptEggDrop(SpawnEgg egg, Location location) {
         EggDropEvent eggDropEvent = new EggDropEvent(egg, location);
         server.getPluginManager().callEvent(eggDropEvent);
         if (!eggDropEvent.isCancelled()) {
-            location.getWorld().dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toSpawnEgg());
+            location.getWorld().dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toItemStack());
         }
     }
 
     private void dropEasterEgg(Location location) {
-        EggEntity attemptedEgg;
+        SpawnEgg attemptedEgg;
         switch (ChanceUtil.getRandom(8)) {
             case 1:
-                attemptedEgg = EggEntity.BAT;
+                attemptedEgg = SpawnEgg.BAT;
                 break;
             case 2:
-                attemptedEgg = EggEntity.CHICKEN;
+                attemptedEgg = SpawnEgg.CHICKEN;
                 break;
             case 3:
-                attemptedEgg = EggEntity.COW;
+                attemptedEgg = SpawnEgg.COW;
                 break;
             case 4:
-                attemptedEgg = EggEntity.MUSHROOM_COW;
+                attemptedEgg = SpawnEgg.MUSHROOM_COW;
                 break;
             case 5:
-                attemptedEgg = EggEntity.OCELOT;
+                attemptedEgg = SpawnEgg.OCELOT;
                 break;
             case 6:
-                attemptedEgg = EggEntity.WOLF;
+                attemptedEgg = SpawnEgg.WOLF;
                 break;
             case 7:
-                attemptedEgg = EggEntity.SHEEP;
+                attemptedEgg = SpawnEgg.SHEEP;
                 break;
             case 8:
             default:
-                attemptedEgg = EggEntity.PIG;
+                attemptedEgg = SpawnEgg.PIG;
                 break;
         }
         attemptEggDrop(attemptedEgg, location);
     }
 
     private void dropHalloweenEgg(Location location) {
-        EggEntity attemptedEgg;
+        SpawnEgg attemptedEgg;
         switch (ChanceUtil.getRandom(8)) {
             case 1:
-                attemptedEgg = EggEntity.ENDERMAN;
+                attemptedEgg = SpawnEgg.ENDERMAN;
                 break;
             case 2:
-                attemptedEgg = EggEntity.SPIDER;
+                attemptedEgg = SpawnEgg.SPIDER;
                 break;
             case 3:
-                attemptedEgg = EggEntity.CAVE_SPIDER;
+                attemptedEgg = SpawnEgg.CAVE_SPIDER;
                 break;
             case 4:
-                attemptedEgg = EggEntity.SLIME;
+                attemptedEgg = SpawnEgg.SLIME;
                 break;
             case 5:
-                attemptedEgg = EggEntity.MAGMA_CUBE;
+                attemptedEgg = SpawnEgg.MAGMA_CUBE;
                 break;
             case 6:
-                attemptedEgg = EggEntity.WITCH;
+                attemptedEgg = SpawnEgg.WITCH;
                 break;
             case 7:
-                attemptedEgg = EggEntity.SKELETON;
+                attemptedEgg = SpawnEgg.SKELETON;
                 break;
             case 8:
             default:
-                attemptedEgg = EggEntity.ZOMBIE;
+                attemptedEgg = SpawnEgg.ZOMBIE;
                 break;
         }
         attemptEggDrop(attemptedEgg, location);
@@ -291,10 +295,8 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         }
     }
 
-    private boolean hatchEgg(Item egg) {
-
-        EggHatchEvent event = new EggHatchEvent(egg, EntityType.fromId(egg.getItemStack().getData().getData()),
-                egg.getLocation());
+    private boolean hatchEgg(Item egg, SpawnEgg eggInfo) {
+        EggHatchEvent event = new EggHatchEvent(egg, eggInfo.getEntityType(), egg.getLocation());
         server.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
@@ -339,61 +341,6 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         EASTER,
         HALLOWEEN,
         INVALID
-    }
-
-    public enum EggEntity {
-
-        // FRIENDLY - 7
-        BAT(EntityType.BAT, 65),
-        CHICKEN(EntityType.CHICKEN, 93),
-        COW(EntityType.COW, 92),
-        MUSHROOM_COW(EntityType.MUSHROOM_COW, 96),
-        OCELOT(EntityType.OCELOT, 98),
-        PIG(EntityType.PIG, 90),
-        SHEEP(EntityType.SHEEP, 91),
-
-        // NEUTRAL - 1
-        WOLF(EntityType.WOLF, 95),
-
-        // MEAN - 8
-        ENDERMAN(EntityType.ENDERMAN, 58),
-        SPIDER(EntityType.SPIDER, 52),
-        CAVE_SPIDER(EntityType.CAVE_SPIDER, 59),
-        SLIME(EntityType.SLIME, 55),
-        MAGMA_CUBE(EntityType.MAGMA_CUBE, 62),
-        WITCH(EntityType.WITCH, 66),
-        SKELETON(EntityType.SKELETON, 51),
-        ZOMBIE(EntityType.ZOMBIE, 54);
-
-
-        private final EntityType entityType;
-        private final byte networkId;
-
-        EggEntity(EntityType entityType, int networkId) {
-
-            this.entityType = entityType;
-            this.networkId = (byte) networkId;
-        }
-
-        public EntityType getType() {
-
-            return entityType;
-        }
-
-        public short getNetworkId() {
-
-            return networkId;
-        }
-
-        public ItemStack toSpawnEgg(int amt) {
-
-            return new ItemStack(ItemID.SPAWN_EGG, amt, getNetworkId());
-        }
-
-        public ItemStack toSpawnEgg() {
-
-            return toSpawnEgg(1);
-        }
     }
 
     private static class EggState extends PersistentSession {

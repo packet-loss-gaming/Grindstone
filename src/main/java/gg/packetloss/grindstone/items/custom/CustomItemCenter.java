@@ -35,7 +35,7 @@ public class CustomItemCenter {
         addItem(pwngBow);
 
         // Ancient Armor
-        CustomEquipment ancientCrown = new CustomEquipment(ANCIENT_CROWN, Material.GOLD_HELMET);
+        CustomEquipment ancientCrown = new CustomEquipment(ANCIENT_CROWN, Material.GOLDEN_HELMET);
         ancientCrown.addEnchant(Enchantment.DURABILITY, 3);
         ancientCrown.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         ancientCrown.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
@@ -450,7 +450,7 @@ public class CustomItemCenter {
                 "if sacrificed in the Grave Yard rewards room.");
         addItem(phantomGold);
 
-        CustomItem phantomClock = new CustomItem(PHANTOM_CLOCK, Material.WATCH);
+        CustomItem phantomClock = new CustomItem(PHANTOM_CLOCK, Material.CLOCK);
         phantomClock.addSource(ItemSource.GRAVE_YARD);
         phantomClock.addUse("Teleports the player strait to the rewards room of the Grave Yard.");
         addItem(phantomClock);
@@ -475,7 +475,7 @@ public class CustomItemCenter {
         linearPickaxe.addTag(ChatColor.RED, "Max Distance", "9");
         addItem(linearPickaxe);
 
-        CustomItem linearShovel = new CustomItem(LINEAR_SHOVEL, Material.DIAMOND_SPADE);
+        CustomItem linearShovel = new CustomItem(LINEAR_SHOVEL, Material.DIAMOND_SHOVEL);
         linearShovel.addTag(ChatColor.RED, "Distance", "3");
         linearShovel.addTag(ChatColor.RED, "Max Distance", "9");
         addItem(linearShovel);
@@ -496,7 +496,7 @@ public class CustomItemCenter {
         radialPickaxe.addTag(ChatColor.RED, "Max Radius", "1");
         addItem(radialPickaxe);
 
-        CustomItem radialShovel = new CustomItem(RADIAL_SHOVEL, Material.DIAMOND_SPADE);
+        CustomItem radialShovel = new CustomItem(RADIAL_SHOVEL, Material.DIAMOND_SHOVEL);
         radialShovel.addTag(ChatColor.RED, "Radius", "1");
         radialShovel.addTag(ChatColor.RED, "Max Radius", "1");
         addItem(radialShovel);
@@ -562,7 +562,7 @@ public class CustomItemCenter {
         chickenHymn.addUse("Turns nearby items into chickens, and nearby chickens into cooked chicken.");
         addItem(chickenHymn);
 
-        CustomItem godFish = new CustomItem(GOD_FISH, Material.RAW_FISH);
+        CustomItem godFish = new CustomItem(GOD_FISH, Material.COD);
         godFish.addSource(ItemSource.ARROW_FISHING);
         godFish.addSource(ItemSource.MARKET);
         godFish.addUse("On consumption applies 30 seconds of the Hulk prayer.");
@@ -645,7 +645,7 @@ public class CustomItemCenter {
         CustomItem grayPartyBox = new CustomItem(GRAY_PARTY_BOX, Material.GRAY_SHULKER_BOX);
         addItem(grayPartyBox);
 
-        CustomItem lightGrayPartyBox = new CustomItem(LIGHT_GRAY_PARTY_BOX, Material.SILVER_SHULKER_BOX);
+        CustomItem lightGrayPartyBox = new CustomItem(LIGHT_GRAY_PARTY_BOX, Material.LIGHT_GRAY_SHULKER_BOX);
         addItem(lightGrayPartyBox);
 
         CustomItem cyanPartyBox = new CustomItem(CYAN_PARTY_BOX, Material.CYAN_SHULKER_BOX);

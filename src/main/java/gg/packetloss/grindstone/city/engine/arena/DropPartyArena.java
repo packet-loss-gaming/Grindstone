@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.city.engine.arena;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.bukkittext.Text;
@@ -226,7 +225,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
             for (int k = 0; k < playerCount * modifier; k++) {
                 for (int i = 10; i > 0; --i) {
-                    newDrops.add(new ItemStack(Material.EXP_BOTTLE, 5));
+                    newDrops.add(new ItemStack(Material.EXPERIENCE_BOTTLE, 5));
                 }
 
                 newDrops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
@@ -284,7 +283,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         if (ChanceUtil.getChance(5)) {
             ItemStack drop = drops.poll();
             if (drop != null) {
-                if (drop.getType() == Material.EXP_BOTTLE) {
+                if (drop.getType() == Material.EXPERIENCE_BOTTLE) {
                     for (int i = drop.getAmount(); i > 0; --i) {
                         firework.getLocation().getWorld().spawn(firework.getLocation(), ThrownExpBottle.class);
                     }
@@ -354,7 +353,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
         Block block = event.getClickedBlock();
 
-        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && block.getTypeId() == BlockID.STONE_BUTTON
+        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && block.getType() == Material.STONE_BUTTON
                 && getRegion().getParent().contains(new Vector(block.getX(), block.getY(), block.getZ()).floor())) {
 
             Player player = event.getPlayer();

@@ -7,8 +7,6 @@
 package gg.packetloss.grindstone.city.engine.arena;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.economic.ImpersonalComponent;
@@ -90,7 +88,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     // Session
     private long startTime = System.currentTimeMillis();
     private int lootSplit = 0;
-    private int floodBlockType = BlockID.WATER;
+    private Material floodBlockType = Material.WATER;
     private List<String> players = new ArrayList<>();
     private boolean leversTriggered = false;
 
@@ -131,8 +129,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         drainAll();
         resetFloodType();
         resetLevers();
-        setDoor(doorOne, BlockID.IRON_BLOCK);
-        setDoor(doorTwo, BlockID.IRON_BLOCK);
+        setDoor(doorOne, Material.IRON_BLOCK);
+        setDoor(doorTwo, Material.IRON_BLOCK);
     }
 
     private void clearFloor() {
@@ -159,7 +157,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 for (int y = maxY; y >= minY; --y) {
                     block = getWorld().getBlockAt(x, y, z).getState();
                     if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getTypeId() == BlockID.CHEST) {
+                    if (block.getType() == Material.CHEST) {
                         rewardChest = block.getLocation();
                         return;
                     }
@@ -186,11 +184,11 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 for (int y = maxY; y >= minY; --y) {
                     block = getWorld().getBlockAt(x, y, z).getState();
                     if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getTypeId() == BlockID.CHEST) {
+                    if (block.getType() == Material.CHEST) {
                         ((Chest) block).getInventory().clear();
                         block.update(true);
                         chestBlocks.add(block.getLocation());
-                    } else if (block.getTypeId() == BlockID.WALL_SIGN) {
+                    } else if (block.getType() == Material.WALL_SIGN) {
                         ((Sign) block).setLine(2, "- Locked -");
                         ((Sign) block).setLine(3, "Unlocked");
                         block.update(true);
@@ -201,10 +199,10 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         }
     }
 
-    private static final ItemStack goldBar = new ItemStack(ItemID.GOLD_BAR);
+    private static final ItemStack goldBar = new ItemStack(Material.GOLD_INGOT);
     private static final ItemStack[] keys = new ItemStack[]{
-            new ItemStack(BlockID.CLOTH, 1, (short) 11),
-            new ItemStack(BlockID.CLOTH, 1, (short) 14)
+            new ItemStack(Material.BLUE_WOOL),
+            new ItemStack(Material.RED_WOOL)
     };
 
     private void populateChest() {
@@ -214,7 +212,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         for (Location chest : chestBlocks) {
 
             if (!chest.getChunk().isLoaded()) chest.getChunk().load();
-            if (chest.getBlock().getTypeId() != BlockID.CHEST) continue;
+            if (chest.getBlock().getType() != Material.CHEST) continue;
 
             chestState = (Chest) chest.getBlock().getState();
             Inventory inventory = chestState.getBlockInventory();
@@ -262,7 +260,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         for (Location chest : chestBlocks) {
 
             if (!chest.getChunk().isLoaded()) chest.getChunk().load();
-            if (chest.getBlock().getTypeId() != BlockID.CHEST) continue;
+            if (chest.getBlock().getType() != Material.CHEST) continue;
 
             chestState = (Chest) chest.getBlock().getState();
             chestState.getBlockInventory().clear();
@@ -297,7 +295,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 for (int y = maxY; y >= minY; --y) {
                     block = getWorld().getBlockAt(x, y, z).getState();
                     if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getTypeId() == BlockID.LEVER) {
+                    if (block.getType() == Material.LEVER) {
                         Lever lever = (Lever) block.getData();
                         lever.setPowered(false);
                         block.setData(lever);
@@ -305,7 +303,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                         leverBlocks.put(block.getLocation(), !ChanceUtil.getChance(3));
                         for (int i = y; i < maxY; i++) {
                             block = getWorld().getBlockAt(x, i, z).getState();
-                            if (block.getTypeId() == BlockID.AIR) {
+                            if (block.getType() == Material.AIR) {
                                 floodBlocks.add(block.getLocation());
                                 break;
                             }
@@ -364,7 +362,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 mutable.add(0, -2, 0);
 
                 if (!mutable.getBlock().getChunk().isLoaded()) mutable.getChunk().load();
-                mutable.getBlock().setType(Material.SMOOTH_BRICK);
+                mutable.getBlock().setType(Material.STONE_BRICKS);
             }
             server.getScheduler().runTaskLater(inst, () -> {
                 for (Map.Entry<Location, Boolean> entry : leverBlocks.entrySet()) {
@@ -372,7 +370,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     mutable.add(0, -2, 0);
 
                     if (!mutable.getBlock().getChunk().isLoaded()) mutable.getChunk().load();
-                    Material targetBlock = entry.getValue() ? Material.REDSTONE_BLOCK : Material.SMOOTH_BRICK;
+                    Material targetBlock = entry.getValue() ? Material.REDSTONE_BLOCK : Material.STONE_BRICKS;
                     mutable.getBlock().setType(targetBlock);
                 }
                 server.getScheduler().runTaskLater(inst, this::randomizeLevers, 1);
@@ -383,7 +381,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 mutable.add(0, -2, 0);
 
                 if (!mutable.getChunk().isLoaded()) mutable.getChunk().load();
-                mutable.getBlock().setType(Material.SMOOTH_BRICK);
+                mutable.getBlock().setType(Material.STONE_BRICKS);
             }
         }
     }
@@ -393,14 +391,14 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
             if (!players.contains(player.getName())) continue;
             if (ItemUtil.findItemOfName(player.getInventory().getContents(), CustomItems.PHANTOM_HYMN.toString())) {
                 drainAll(); // Force away all water
-                floodBlockType = BlockID.LAVA;
+                floodBlockType = Material.LAVA;
                 break;
             }
         }
     }
 
     private void resetFloodType() {
-        floodBlockType = BlockID.WATER;
+        floodBlockType = Material.WATER;
     }
 
     private long lastFlood = System.currentTimeMillis();
@@ -411,7 +409,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         if (System.currentTimeMillis() - startTime >= TimeUnit.SECONDS.toMillis((3 * 60) / playerMod)) {
 
             for (Location floodBlock : floodBlocks) {
-                floodBlock.getBlock().setTypeId(floodBlockType);
+                floodBlock.getBlock().setType(floodBlockType);
             }
 
             if (System.currentTimeMillis() - lastFlood >= TimeUnit.SECONDS.toMillis(30 / Math.max(1, playerMod))) {
@@ -430,8 +428,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                         for (int y = minY; y <= maxY; y++) {
                             Block block = getWorld().getBlockAt(x, y, z);
                             if (!block.getChunk().isLoaded()) block.getChunk().load();
-                            if (block.getTypeId() == BlockID.AIR) {
-                                block.setTypeIdAndData(floodBlockType, (byte) 0, false);
+                            if (block.getType() == Material.AIR) {
+                                block.setType(floodBlockType, false);
                                 break;
                             }
                         }
@@ -442,7 +440,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         }
     }
 
-    private void setDoor(ProtectedRegion door, int typeId) {
+    private void setDoor(ProtectedRegion door, Material type) {
 
         com.sk89q.worldedit.Vector min = door.getMinimumPoint();
         com.sk89q.worldedit.Vector max = door.getMaximumPoint();
@@ -459,7 +457,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 for (int y = minY; y <= maxY; y++) {
                     Block block = getWorld().getBlockAt(x, y, z);
                     if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    block.setTypeId(typeId);
+                    block.setType(type);
                 }
             }
         }
@@ -482,7 +480,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 for (int y = maxY; y >= minY; --y) {
                     Block block = getWorld().getBlockAt(x, y, z);
                     if (EnvironmentUtil.isLiquid(block.getType())) {
-                        block.setTypeId(BlockID.AIR);
+                        block.setType(Material.AIR);
                     }
                 }
             }
@@ -523,7 +521,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                         location = BukkitUtil.toLocation(getWorld(),
                                 LocationUtil.pickLocation(roomOne.getMinimumPoint(), roomOne.getMaximumPoint()));
                         location.setY(roomOne.getMinimumPoint().getBlockY() + 1);
-                    } while (location.getBlock().getTypeId() != BlockID.AIR);
+                    } while (location.getBlock().getType() != Material.AIR);
                     aPlayer.teleport(location, PlayerTeleportEvent.TeleportCause.UNKNOWN);
 
                     // Reset vitals
@@ -566,12 +564,12 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         equalize();
         if (checkKeys()) {
             if (LocationUtil.containsPlayer(getWorld(), roomOne)) {
-                setDoor(doorOne, BlockID.AIR);
+                setDoor(doorOne, Material.AIR);
             } else {
-                setDoor(doorOne, BlockID.IRON_BLOCK);
+                setDoor(doorOne, Material.IRON_BLOCK);
                 if (checkLevers() || leversTriggered) {
                     drainAll();
-                    setDoor(doorTwo, BlockID.AIR);
+                    setDoor(doorTwo, Material.AIR);
                 } else {
                     randomizeLevers();
                     checkFloodType();
@@ -664,14 +662,14 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) return;
 
         BlockState state = event.getClickedBlock().getLocation().getBlock().getState();
-        if (state.getTypeId() == BlockID.STONE_BUTTON && lobby.contains(BukkitUtil.toVector(state.getBlock()))) {
+        if (state.getType() == Material.STONE_BUTTON && lobby.contains(BukkitUtil.toVector(state.getBlock()))) {
             int waitingTime = moveLobby();
             if (waitingTime != 0) {
                 ChatUtil.sendWarning(event.getPlayer(), "There is already a robbery in progress.");
                 ChatUtil.sendWarning(event.getPlayer(), "The current robbery will end within: "
                         + waitingTime + " seconds.");
             }
-        } else if (state.getTypeId() == BlockID.WALL_SIGN && locks.contains(state.getLocation())) {
+        } else if (state.getType() == Material.WALL_SIGN && locks.contains(state.getLocation())) {
             Sign sign = (Sign) state;
             if (sign.getLine(1).toLowerCase().contains("blue")) {
                 if (event.getPlayer().getInventory().containsAtLeast(keys[0], 1)) {
@@ -694,7 +692,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     event.getPlayer().updateInventory();
                 }
             }
-        } else if (state.getTypeId() == BlockID.WALL_SIGN) {
+        } else if (state.getType() == Material.WALL_SIGN) {
             Sign sign = (Sign) state;
             if (sign.getLine(1).equals("Play Gold Rush")) {
 
@@ -713,15 +711,15 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     location = BukkitUtil.toLocation(getWorld(),
                             LocationUtil.pickLocation(lobby.getMinimumPoint(), lobby.getMaximumPoint()));
                     location.setY(lobby.getMinimumPoint().getBlockY() + 1);
-                } while (location.getBlock().getTypeId() != BlockID.AIR);
+                } while (location.getBlock().getType() != Material.AIR);
                 event.getPlayer().teleport(location);
                 ChatUtil.sendNotice(event.getPlayer(), "[Partner] Ey there kid, just press that button over there to start.");
             }
-        } else if (state.getTypeId() == BlockID.LEVER && leverBlocks.containsKey(state.getLocation())) {
+        } else if (state.getType() == Material.LEVER && leverBlocks.containsKey(state.getLocation())) {
             server.getScheduler().runTaskLater(inst, () -> {
                 if (checkLevers()) leversTriggered = true;
             }, 1);
-        } else if (state.getTypeId() == BlockID.CHEST && contains(state.getLocation())) {
+        } else if (state.getType() == Material.CHEST && contains(state.getLocation())) {
             if (!players.contains(event.getPlayer().getName())) {
                 event.setUseInteractedBlock(Event.Result.DENY);
                 ChatUtil.sendWarning(event.getPlayer(), "[Partner] Thought you'd scam me huh kid?");

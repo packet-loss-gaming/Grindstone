@@ -7,9 +7,9 @@
 package gg.packetloss.grindstone;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -41,7 +41,7 @@ public class PumpkinScubaHelmetComponent extends BukkitComponent implements List
 
         Player player = (Player) e;
 
-        if (player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getTypeId() == BlockID.PUMPKIN) {
+        if (player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getType() == Material.PUMPKIN) {
             player.setRemainingAir(player.getMaximumAir());
             event.setCancelled(true);
         }

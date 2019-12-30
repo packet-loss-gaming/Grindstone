@@ -6,13 +6,11 @@
 
 package gg.packetloss.grindstone.util.item;
 
-import com.sk89q.worldedit.blocks.BlockID;
-import com.sk89q.worldedit.blocks.ItemID;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -21,6 +19,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
@@ -31,28 +30,27 @@ import java.util.Set;
 public class ItemUtil {
 
     public static final ItemStack[] LEATHER_ARMOR = new ItemStack[]{
-            new ItemStack(ItemID.LEATHER_BOOTS), new ItemStack(ItemID.LEATHER_PANTS),
-            new ItemStack(ItemID.LEATHER_CHEST), new ItemStack(ItemID.LEATHER_HELMET)
+            new ItemStack(Material.LEATHER_BOOTS), new ItemStack(Material.LEATHER_LEGGINGS),
+            new ItemStack(Material.LEATHER_CHESTPLATE), new ItemStack(Material.LEATHER_HELMET)
     };
     public static final ItemStack[] IRON_ARMOR = new ItemStack[]{
-            new ItemStack(ItemID.IRON_BOOTS), new ItemStack(ItemID.IRON_PANTS),
-            new ItemStack(ItemID.IRON_CHEST), new ItemStack(ItemID.IRON_HELMET)
+            new ItemStack(Material.IRON_BOOTS), new ItemStack(Material.IRON_LEGGINGS),
+            new ItemStack(Material.IRON_CHESTPLATE), new ItemStack(Material.IRON_HELMET)
     };
     public static final ItemStack[] GOLD_ARMOR = new ItemStack[]{
-            new ItemStack(ItemID.GOLD_BOOTS), new ItemStack(ItemID.GOLD_PANTS),
-            new ItemStack(ItemID.GOLD_CHEST), new ItemStack(ItemID.GOLD_HELMET)
+            new ItemStack(Material.GOLDEN_BOOTS), new ItemStack(Material.GOLDEN_LEGGINGS),
+            new ItemStack(Material.GOLDEN_CHESTPLATE), new ItemStack(Material.GOLDEN_HELMET)
     };
     public static final ItemStack[] DIAMOND_ARMOR = new ItemStack[]{
-            new ItemStack(ItemID.DIAMOND_BOOTS), new ItemStack(ItemID.DIAMOND_PANTS),
-            new ItemStack(ItemID.DIAMOND_CHEST), new ItemStack(ItemID.DIAMOND_HELMET)
+            new ItemStack(Material.DIAMOND_BOOTS), new ItemStack(Material.DIAMOND_LEGGINGS),
+            new ItemStack(Material.DIAMOND_CHESTPLATE), new ItemStack(Material.DIAMOND_HELMET)
     };
     public static final ItemStack[] NO_ARMOR = new ItemStack[] {
             null, null, null, null
     };
 
     public static ItemStack makeSkull(OfflinePlayer offlinePlayer) {
-
-        ItemStack skull = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
         skullMeta.setOwningPlayer(offlinePlayer);
         skull.setItemMeta(skullMeta);
@@ -67,25 +65,7 @@ public class ItemUtil {
         }
         return returnStack;
     }
-
-    public static SerializableItemStack[] serialize(ItemStack[] stacks) {
-
-        SerializableItemStack[] returnStack = new SerializableItemStack[stacks.length];
-        for (int i = 0; i < stacks.length; i++) {
-            returnStack[i] = stacks[i] == null ? null : new SerializableItemStack(stacks[i]);
-        }
-        return returnStack;
-    }
-
-    public static ItemStack[] unSerialize(SerializableItemStack[] stacks) {
-
-        ItemStack[] returnStack = new ItemStack[stacks.length];
-        for (int i = 0; i < stacks.length; i++) {
-            returnStack[i] = stacks[i] == null ? null : stacks[i].bukkitRestore();
-        }
-        return returnStack;
-    }
-
+    
     public static int countFilledSlots(Player player) {
 
         PlayerInventory inventory = player.getInventory();
@@ -96,7 +76,7 @@ public class ItemUtil {
 
         int count = 0;
         for (ItemStack aItemStack : inventory) {
-            if (aItemStack != null && aItemStack.getTypeId() != 0) count++;
+            if (aItemStack != null && aItemStack.getType() != Material.AIR) count++;
         }
         return count;
     }
@@ -109,21 +89,21 @@ public class ItemUtil {
         return false;
     }
 
-    public static boolean removeItemOfType(InventoryHolder inventoryHolder, int typeId, int quantity, boolean ignoreToSmall) {
+    public static boolean removeItemOfType(InventoryHolder inventoryHolder, Material type, int quantity, boolean ignoreToSmall) {
 
-        int c = ItemUtil.countItemsOfType(inventoryHolder.getInventory().getContents(), typeId);
+        int c = ItemUtil.countItemsOfType(inventoryHolder.getInventory().getContents(), type);
 
         if (c == 0 || (c < quantity && !ignoreToSmall)) return false;
 
         c -= Math.min(c, quantity);
 
-        ItemStack[] stacks = ItemUtil.removeItemOfType(inventoryHolder.getInventory().getContents(), typeId);
+        ItemStack[] stacks = ItemUtil.removeItemOfType(inventoryHolder.getInventory().getContents(), type);
 
         inventoryHolder.getInventory().setContents(stacks);
 
-        int amount = Math.min(c, Material.getMaterial(typeId).getMaxStackSize());
+        int amount = Math.min(c, type.getMaxStackSize());
         while (amount > 0) {
-            inventoryHolder.getInventory().addItem(new ItemStack(typeId, amount));
+            inventoryHolder.getInventory().addItem(new ItemStack(type, amount));
             c -= amount;
             amount = Math.min(c, 64);
         }
@@ -135,11 +115,11 @@ public class ItemUtil {
         return true;
     }
 
-    public static ItemStack[] removeItemOfType(ItemStack[] itemStacks, int typeId) {
+    public static ItemStack[] removeItemOfType(ItemStack[] itemStacks, Material type) {
 
         for (int i = 0; i < itemStacks.length; i++) {
             ItemStack is = itemStacks[i];
-            if (is != null && !isNamed(is) && is.getTypeId() == typeId) {
+            if (is != null && !isNamed(is) && is.getType() == type) {
                 itemStacks[i] = null;
             }
         }
@@ -174,7 +154,7 @@ public class ItemUtil {
 
         inventoryHolder.getInventory().setContents(stacks);
 
-        int amount = Math.min(c, Material.getMaterial(stack.getTypeId()).getMaxStackSize());
+        int amount = Math.min(c, stack.getType().getMaxStackSize());
         while (amount > 0) {
             // Clone the item and add it
             ItemStack aStack = stack.clone();
@@ -201,11 +181,11 @@ public class ItemUtil {
     }
 
 
-    public static int countItemsOfType(ItemStack[] itemStacks, int typeId) {
+    public static int countItemsOfType(ItemStack[] itemStacks, Material type) {
 
         int count = 0;
         for (ItemStack itemStack : itemStacks) {
-            if (itemStack != null && !isNamed(itemStack) && itemStack.getTypeId() == typeId) {
+            if (itemStack != null && !isNamed(itemStack) && itemStack.getType() == type) {
                 count += itemStack.getAmount();
             }
         }
@@ -226,8 +206,8 @@ public class ItemUtil {
     }
 
     private static final Set<Material> swords = Set.of(
-            Material.WOOD_SWORD, Material.STONE_SWORD,
-            Material.IRON_SWORD, Material.GOLD_SWORD,
+            Material.WOODEN_SWORD, Material.STONE_SWORD,
+            Material.IRON_SWORD, Material.GOLDEN_SWORD,
             Material.DIAMOND_SWORD
     );
 
@@ -247,63 +227,51 @@ public class ItemUtil {
         return isBow(stack.getType());
     }
 
-    private static final int[] axes = new int[]{
-            ItemID.WOOD_AXE, ItemID.STONE_AXE,
-            ItemID.IRON_AXE, ItemID.GOLD_AXE,
-            ItemID.DIAMOND_AXE
-    };
+    private static final Set<Material> AXES = Set.of(
+            Material.WOODEN_AXE, Material.STONE_AXE,
+            Material.IRON_AXE, Material.GOLDEN_AXE,
+            Material.DIAMOND_AXE
+    );
 
-    public static boolean isAxe(int itemId) {
-
-        for (int axe : axes) {
-            if (itemId == axe) {
-                return true;
-            }
-        }
-        return false;
+    public static boolean isAxe(Material type) {
+        return AXES.contains(type);
     }
 
-    private static final int[] pickAxes = new int[]{
-            ItemID.WOOD_PICKAXE, ItemID.STONE_PICKAXE,
-            ItemID.IRON_PICK, ItemID.GOLD_PICKAXE,
-            ItemID.DIAMOND_PICKAXE
-    };
-
-    public static boolean isPickAxe(int itemId) {
-
-        for (int pickAxe : pickAxes) {
-            if (itemId == pickAxe) {
-                return true;
-            }
-        }
-        return false;
+    public static boolean isAxe(ItemStack itemStack) {
+        return isAxe(itemStack.getType());
     }
 
-    public static boolean isTool(int itemId) {
+    private static final Set<Material> PICKAXES = Set.of(
+            Material.WOODEN_PICKAXE, Material.STONE_PICKAXE,
+            Material.IRON_PICKAXE, Material.GOLDEN_PICKAXE,
+            Material.DIAMOND_PICKAXE
+    );
 
-        return isAxe(itemId) || isPickAxe(itemId);
+    public static boolean isPickaxe(Material type) {
+        return PICKAXES.contains(type);
+    }
+
+    public static boolean isPickaxe(ItemStack stack) {
+        return isPickaxe(stack.getType());
+    }
+
+    public static boolean isTool(Material type) {
+        return isAxe(type) || isPickaxe(type);
     }
 
     public static boolean isTool(ItemStack stack) {
-        return isTool(stack.getTypeId());
+        return isTool(stack.getType());
     }
 
-    private static final int[] ingots = new int[]{
-            ItemID.IRON_BAR, ItemID.GOLD_BAR
-    };
+    private static final Set<Material> INGOTS = Set.of(
+            Material.IRON_INGOT, Material.GOLD_INGOT
+    );
 
-    public static boolean isIngot(int itemId) {
-
-        for (int ingot : ingots) {
-            if (itemId == ingot) {
-                return true;
-            }
-        }
-        return false;
+    public static boolean isIngot(Material type) {
+        return INGOTS.contains(type);
     }
 
     public static boolean hasItem(Player player, CustomItems type) {
-
         return player.isValid() && findItemOfName(player.getInventory().getContents(), type.toString());
     }
 
@@ -318,7 +286,6 @@ public class ItemUtil {
     }
 
     public static boolean isHoldingItem(Player player, CustomItems type) {
-
         return player.isValid() && isItem(player.getItemInHand(), type);
     }
 
@@ -479,43 +446,35 @@ public class ItemUtil {
         return pickaxe.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
     }
 
-    public static int fortuneModifier(int typeId, int fortuneLevel) {
-
+    public static int fortuneModifier(Material type, int fortuneLevel) {
         int returnValue = 1;
-        switch (typeId) {
-            case BlockID.IRON_ORE:
-            case BlockID.COAL_ORE:
-            case BlockID.GOLD_ORE:
-            case BlockID.LAPIS_LAZULI_ORE:
-            case BlockID.REDSTONE_ORE:
-            case BlockID.GLOWING_REDSTONE_ORE:
-            case BlockID.DIAMOND_ORE:
-            case BlockID.EMERALD_ORE:
-            case BlockID.QUARTZ_ORE:
-                switch (fortuneLevel) {
-                    case 1:
-                        if (ChanceUtil.getChance(3)) {
-                            returnValue *= 2;
-                        }
-                        break;
-                    case 2:
-                        if (ChanceUtil.getChance(4)) {
-                            returnValue *= 3;
-                        } else if (ChanceUtil.getChance(4)) {
-                            returnValue *= 2;
-                        }
-                        break;
-                    case 3:
-                        if (ChanceUtil.getChance(5)) {
-                            returnValue *= 4;
-                        } else if (ChanceUtil.getChance(5)) {
-                            returnValue *= 3;
-                        } else if (ChanceUtil.getChance(5)) {
-                            returnValue *= 2;
-                        }
-                        break;
-                }
+
+        if (EnvironmentUtil.isOre(type)) {
+            switch (fortuneLevel) {
+                case 1:
+                    if (ChanceUtil.getChance(3)) {
+                        returnValue *= 2;
+                    }
+                    break;
+                case 2:
+                    if (ChanceUtil.getChance(4)) {
+                        returnValue *= 3;
+                    } else if (ChanceUtil.getChance(4)) {
+                        returnValue *= 2;
+                    }
+                    break;
+                case 3:
+                    if (ChanceUtil.getChance(5)) {
+                        returnValue *= 4;
+                    } else if (ChanceUtil.getChance(5)) {
+                        returnValue *= 3;
+                    } else if (ChanceUtil.getChance(5)) {
+                        returnValue *= 2;
+                    }
+                    break;
+            }
         }
+
         return returnValue;
     }
 
@@ -547,5 +506,17 @@ public class ItemUtil {
             newMeta.addEnchant(enchantment, level, true);
         });
         destination.setItemMeta(newMeta);
+    }
+
+    public static ItemStack getUndamagedStack(ItemStack stack) {
+        stack = stack.clone();
+
+        ItemMeta filterMeta = stack.getItemMeta();
+        if (filterMeta instanceof Damageable && ((Damageable) filterMeta).hasDamage()) {
+            ((Damageable) filterMeta).setDamage(0);
+            stack.setItemMeta(filterMeta);
+        }
+
+        return stack;
     }
 }

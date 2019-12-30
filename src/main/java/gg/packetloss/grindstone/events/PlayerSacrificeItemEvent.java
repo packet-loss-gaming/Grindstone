@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.events;
 
-import com.sk89q.worldedit.blocks.BlockID;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -35,9 +35,8 @@ public class PlayerSacrificeItemEvent extends PlayerEvent implements Cancellable
     }
 
     public void setItemStack(ItemStack itemStack) {
-
         if (itemStack == null) {
-            itemStack = new ItemStack(BlockID.AIR);
+            itemStack = new ItemStack(Material.AIR);
         }
 
         this.itemStack = itemStack;

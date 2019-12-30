@@ -7,11 +7,11 @@
 package gg.packetloss.grindstone;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.blocks.BlockID;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
@@ -45,7 +45,7 @@ public class SoftWoolComponent extends BukkitComponent implements Listener {
         EntityDamageEvent.DamageCause damageCause = event.getCause();
 
         if (damageCause.equals(EntityDamageEvent.DamageCause.FALL)
-                && LocationUtil.getBelowID(entity.getLocation(), BlockID.CLOTH)) {
+                && LocationUtil.hasBelow(entity.getLocation(), EnvironmentUtil::isWool)) {
             if (entity instanceof Player) {
                 FallBlockerEvent fEvent = new FallBlockerEvent((Player) entity);
                 server.getPluginManager().callEvent(fEvent);
