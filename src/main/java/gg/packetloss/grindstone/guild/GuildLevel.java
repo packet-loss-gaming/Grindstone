@@ -12,7 +12,7 @@ public class GuildLevel {
     private static final long[] LEVELS = new long[MAX_LEVEL];
 
     private static void computeLevel(int levelIndex) {
-        LEVELS[levelIndex] = levelIndex * levelIndex * 600;
+        LEVELS[levelIndex] = levelIndex * (levelIndex * 3) * 100;
     }
 
     static {
