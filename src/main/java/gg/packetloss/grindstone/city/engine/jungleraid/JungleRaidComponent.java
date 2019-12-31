@@ -1131,6 +1131,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
                         try {
                             restore.restore();
+                            fakeEditor.flushSession();
+
                             ChunkBook.relight(chunk);
                         } catch (MaxChangedBlocksException e) {
                             log.warning("Congratulations! You got an error which makes no sense!");
