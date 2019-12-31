@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.util;
 
-import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import org.bukkit.Location;
@@ -215,7 +215,7 @@ public class LocationUtil {
         List<Player> playerList = new ArrayList<>();
         for (Player player : world.getPlayers()) {
             Location loc = player.getLocation();
-            com.sk89q.worldedit.Vector vec = new com.sk89q.worldedit.Vector(loc.getX(), loc.getY(), loc.getZ());
+            BlockVector3 vec = BlockVector3.at(loc.getX(), loc.getY(), loc.getZ());
 
             if (region.contains(vec.add(0, -1, 0)) || region.contains(vec.add(0, -2, 0))) {
                 playerList.add(player);
@@ -322,23 +322,24 @@ public class LocationUtil {
     }
 
     public static Location pickLocation(World world, double y, RegionChecker checker) {
-        com.sk89q.worldedit.Vector max = checker.get().getMaximumPoint();
-        com.sk89q.worldedit.Vector min = checker.get().getMinimumPoint();
+        BlockVector3 max = checker.get().getMaximumPoint();
+        BlockVector3 min = checker.get().getMinimumPoint();
 
-        com.sk89q.worldedit.Vector v;
+        BlockVector3 v;
         do {
-            v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ()).setY(y);
+            v = LocationUtil.pickLocation(y, min.getX(), max.getX(), min.getZ(), max.getZ());
         } while (!checker.evaluate(v));
 
         return new Location(world, v.getX(), y, v.getZ());
     }
 
-    public static com.sk89q.worldedit.Vector pickLocation(BlockVector min, BlockVector max) {
-        return pickLocation(min.getX(), max.getX(), min.getZ(), max.getZ());
+    public static Location pickLocation(World world, double y, BlockVector3 min, BlockVector3 max) {
+        BlockVector3 loc = pickLocation(y, min.getX(), max.getX(), min.getZ(), max.getZ());
+        return new Location(world, loc.getX(), loc.getY(), loc.getZ());
     }
 
-    public static com.sk89q.worldedit.Vector pickLocation(double minX, double maxX,
-                                                          double minZ, double maxZ) {
+    public static BlockVector3 pickLocation(double y, double minX, double maxX,
+                                            double minZ, double maxZ) {
 
         double x;
         double z;
@@ -355,12 +356,12 @@ public class LocationUtil {
             z = ChanceUtil.getRangedRandom(minZ, maxZ);
         }
 
-        return new com.sk89q.worldedit.Vector(x, 0, z);
+        return BlockVector3.at(x, y, z);
     }
 
-    public static com.sk89q.worldedit.Vector pickLocation(double minX, double maxX,
-                                                          double minY, double maxY,
-                                                          double minZ, double maxZ) {
+    public static BlockVector3 pickLocation(double minX, double maxX,
+                                            double minY, double maxY,
+                                            double minZ, double maxZ) {
 
         double y;
 
@@ -370,7 +371,30 @@ public class LocationUtil {
             y = ChanceUtil.getRangedRandom(minY, maxY);
         }
 
-        return pickLocation(minX, maxX, minZ, maxZ).add(0, y, 0);
+        return pickLocation(y, minX, maxX, minZ, maxZ);
+    }
+
+    public static Location pickLocation(World world,
+                                        double minX, double maxX,
+                                        double minY, double maxY,
+                                        double minZ, double maxZ) {
+        BlockVector3 pos = pickLocation(minX, maxX, minY, maxY, minZ, maxZ);
+        return new Location(world, pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    public static Location pickLocation(World world, ProtectedRegion region) {
+        final BlockVector3 min = region.getMinimumPoint();
+        final BlockVector3 max = region.getMaximumPoint();
+
+        int minX = min.getBlockX();
+        int minY = min.getBlockY();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxY = max.getBlockY();
+        int maxZ = max.getBlockZ();
+
+        BlockVector3 v = LocationUtil.pickLocation(minX, maxX, minY, maxY, minZ, maxZ);
+        return new Location(world, v.getX(), v.getY(), v.getZ());
     }
 
     public static boolean isLocNearby(Location startLocation, Location location, int searchRadius) {

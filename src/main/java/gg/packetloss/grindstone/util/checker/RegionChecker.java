@@ -6,12 +6,12 @@
 
 package gg.packetloss.grindstone.util.checker;
 
-import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-public class RegionChecker extends Checker<Region, Vector> {
+public class RegionChecker extends Checker<Region, BlockVector3> {
 
     public RegionChecker(Region region) {
         super(region);
@@ -22,7 +22,7 @@ public class RegionChecker extends Checker<Region, Vector> {
     }
 
     @Override
-    public Boolean evaluate(Vector vector) {
+    public Boolean evaluate(BlockVector3 vector) {
         return get().contains(vector);
     }
 }

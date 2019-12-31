@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.GraveYard;
 
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -14,7 +14,6 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -22,7 +21,9 @@ import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.region.RegionWalker;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Chunk;
 import org.bukkit.Effect;
@@ -97,33 +98,28 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
     @Override
     public void setUp() {
-        try {
-            WorldGuardPlugin WG = APIUtil.getWorldGuard();
-            world = server.getWorlds().get(0);
+        world = server.getWorlds().get(0);
 
-            RegionManager manager = WG.getRegionManager(world);
-            String base = "carpe-diem-district-grave-yard";
-            region = manager.getRegion(base);
-            temple = manager.getRegion(base + "-temple");
-            pressurePlateLockArea = manager.getRegion(base + "-temple-puzzle-one");
-            creepers = manager.getRegion(base + "-creepers");
-            parkour = manager.getRegion(base + "-parkour");
-            rewards = manager.getRegion(base + "-temple-rewards");
+        RegionManager manager = WorldGuardBridge.getManagerFor(world);
+        String base = "carpe-diem-district-grave-yard";
+        region = manager.getRegion(base);
+        temple = manager.getRegion(base + "-temple");
+        pressurePlateLockArea = manager.getRegion(base + "-temple-puzzle-one");
+        creepers = manager.getRegion(base + "-creepers");
+        parkour = manager.getRegion(base + "-parkour");
+        rewards = manager.getRegion(base + "-temple-rewards");
 
-            tick = 4 * 20;
-            listener = new GraveYardListener(this);
-            config = new GraveYardConfig();
+        tick = 4 * 20;
+        listener = new GraveYardListener(this);
+        config = new GraveYardConfig();
 
-            findHeadStones();
-            findPressurePlateLockLevers();
-            findRewardChest();
+        findHeadStones();
+        findPressurePlateLockLevers();
+        findRewardChest();
 
-            setupEconomy();
+        setupEconomy();
 
-            spawnBlockBreakerTask();
-        } catch (UnknownPluginException e) {
-            log.info("WorldGuard could not be found!");
-        }
+        spawnBlockBreakerTask();
     }
 
     @Override
@@ -400,8 +396,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     private void findHeadStones() {
         headStones.clear();
         final List<Chunk> chunkList = new ArrayList<>();
-        com.sk89q.worldedit.Vector min = getRegion().getMinimumPoint();
-        com.sk89q.worldedit.Vector max = getRegion().getMaximumPoint();
+        BlockVector3 min = getRegion().getMinimumPoint();
+        BlockVector3 max = getRegion().getMaximumPoint();
         final int minX = min.getBlockX();
         final int minZ = min.getBlockZ();
         final int minY = min.getBlockY();
@@ -438,30 +434,17 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     private void findPressurePlateLockLevers() {
-        com.sk89q.worldedit.Vector min = pressurePlateLockArea.getMinimumPoint();
-        com.sk89q.worldedit.Vector max = pressurePlateLockArea.getMaximumPoint();
-        int minX = min.getBlockX();
-        int minZ = min.getBlockZ();
-        int minY = min.getBlockY();
-        int maxX = max.getBlockX();
-        int maxZ = max.getBlockZ();
-        int maxY = max.getBlockY();
-        BlockState block;
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                for (int y = maxY; y >= minY; --y) {
-                    block = getWorld().getBlockAt(x, y, z).getState();
-                    if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getType() == Material.LEVER) {
-                        Lever lever = (Lever) block.getData();
-                        lever.setPowered(false);
-                        block.setData(lever);
-                        block.update(true);
-                        pressurePlateLocks.put(block.getLocation(), !ChanceUtil.getChance(3));
-                    }
-                }
+        RegionWalker.walk(pressurePlateLockArea, (x, y, z) -> {
+            BlockState block = getWorld().getBlockAt(x, y, z).getState();
+            if (!block.getChunk().isLoaded()) block.getChunk().load();
+            if (block.getType() == Material.LEVER) {
+                Lever lever = (Lever) block.getData();
+                lever.setPowered(false);
+                block.setData(lever);
+                block.update(true);
+                pressurePlateLocks.put(block.getLocation(), !ChanceUtil.getChance(3));
             }
-        }
+        });
     }
 
     public boolean checkPressurePlateLock() {
@@ -475,10 +458,9 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     protected void resetPressurePlateLock() {
-        BlockState state;
         for (Location entry : pressurePlateLocks.keySet()) {
             if (!entry.getBlock().getChunk().isLoaded()) entry.getBlock().getChunk().load();
-            state = entry.getBlock().getState();
+            BlockState state = entry.getBlock().getState();
             Lever lever = (Lever) state.getData();
             lever.setPowered(false);
             state.setData(lever);
@@ -488,26 +470,13 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     private void findRewardChest() {
-        com.sk89q.worldedit.Vector min = rewards.getMinimumPoint();
-        com.sk89q.worldedit.Vector max = rewards.getMaximumPoint();
-        int minX = min.getBlockX();
-        int minZ = min.getBlockZ();
-        int minY = min.getBlockY();
-        int maxX = max.getBlockX();
-        int maxZ = max.getBlockZ();
-        int maxY = max.getBlockY();
-        BlockState block;
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                for (int y = maxY; y >= minY; --y) {
-                    block = getWorld().getBlockAt(x, y, z).getState();
-                    if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getType() == Material.CHEST) {
-                        rewardChest.add(block.getLocation());
-                    }
-                }
+        RegionWalker.walk(pressurePlateLockArea, (x, y, z) -> {
+            BlockState block = getWorld().getBlockAt(x, y, z).getState();
+            if (!block.getChunk().isLoaded()) block.getChunk().load();
+            if (block.getType() == Material.CHEST) {
+                rewardChest.add(block.getLocation());
             }
-        }
+        });
     }
 
     protected void resetRewardChest() {

@@ -12,10 +12,10 @@ import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.bukkit.protection.events.DisallowedPVPEvent;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.events.DisallowedPVPEvent;
-import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.flags.Flags;
+import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -23,13 +23,13 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackPreDamageEvent;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.homes.HomeManagerComponent;
 import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -46,12 +46,13 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 @ComponentInformation(friendlyName = "PvP", desc = "Skelril PvP management.")
 @Depend(components = {SessionComponent.class, PrayerComponent.class}, plugins = "WorldGuard")
@@ -67,36 +68,15 @@ public class PvPComponent extends BukkitComponent implements Listener {
     private PrayerComponent prayers;
 
     private static List<PvPScope> pvpLimitors = new ArrayList<>();
-    private static WorldGuardPlugin WG;
 
     @Override
     public void enable() {
-
-        try {
-            setUpWorldGuard();
-        } catch (UnknownPluginException e) {
-            log.warning("Plugin not found: " + e.getMessage() + ".");
-            return;
-        }
         registerCommands(Commands.class);
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
     }
 
-    private void setUpWorldGuard() throws UnknownPluginException {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (!(plugin instanceof WorldGuardPlugin)) {
-            throw new UnknownPluginException("WorldGuard");
-        }
-
-        WG = (WorldGuardPlugin) plugin;
-    }
-
     public class Commands {
-
         @Command(aliases = {"pvp"},
                 usage = "", desc = "Toggle PvP",
                 flags = "s", min = 0, max = 0)
@@ -295,23 +275,24 @@ public class PvPComponent extends BukkitComponent implements Listener {
 
         if (attackerSession.hasPvPOn() && defenderSession.hasPvPOn()) {
             if (attackerSession.useSafeSpots() || defenderSession.useSafeSpots()) {
-                RegionManager manager = WG.getRegionManager(attacker.getWorld());
+                RegionManager manager = WorldGuardBridge.getManagerFor(attacker.getWorld());
 
-                if (!checkSafeZone(manager.getApplicableRegions(attacker.getLocation()), attacker, defender)) {
+                if (!checkSafeZone(manager.getApplicableRegions(toBlockVec3(attacker.getLocation())), attacker, defender)) {
                     return false;
                 }
 
-                if (!checkSafeZone(manager.getApplicableRegions(defender.getLocation()), attacker, defender)) {
+                if (!checkSafeZone(manager.getApplicableRegions(toBlockVec3(defender.getLocation())), attacker, defender)) {
                     return false;
                 }
             }
             return true;
         } else if (checkRegions) {
-            RegionManager manager = WG.getRegionManager(attacker.getWorld());
-            ApplicableRegionSet attackerApplicable = manager.getApplicableRegions(attacker.getLocation());
-            ApplicableRegionSet defenderApplicable = manager.getApplicableRegions(defender.getLocation());
+            RegionManager manager = WorldGuardBridge.getManagerFor(attacker.getWorld());
+            ApplicableRegionSet attackerApplicable = manager.getApplicableRegions(toBlockVec3(attacker.getLocation()));
+            ApplicableRegionSet defenderApplicable = manager.getApplicableRegions(toBlockVec3(defender.getLocation()));
 
-            return attackerApplicable.allows(DefaultFlag.PVP) && defenderApplicable.allows(DefaultFlag.PVP);
+            return attackerApplicable.queryValue(WorldGuardBridge.wrap(attacker), Flags.PVP) == StateFlag.State.ALLOW &&
+                    defenderApplicable.queryValue(WorldGuardBridge.wrap(attacker), Flags.PVP) == StateFlag.State.ALLOW;
         }
         return false;
     }

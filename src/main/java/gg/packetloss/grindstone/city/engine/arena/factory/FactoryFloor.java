@@ -10,11 +10,7 @@ import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.util.yaml.YAMLNode;
 import com.sk89q.util.yaml.YAMLProcessor;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
-import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.arena.ArenaType;
 import gg.packetloss.grindstone.city.engine.arena.GenericArena;
 import gg.packetloss.grindstone.city.engine.arena.PersistentArena;
@@ -22,6 +18,7 @@ import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.DamageUtil;
+import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.item.itemstack.StackSerializer;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -46,18 +43,14 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
 
     protected static FactoryFloor factInst;
 
-    private AdminComponent adminComponent;
-
     private YAMLProcessor processor;
     private List<FactoryMech> mechs;
     private LinkedList<ItemStack> que = new LinkedList<>();
     private long nextMobSpawn = 0L;
 
-    public FactoryFloor(World world, ProtectedRegion[] regions, List<FactoryMech> mechs, YAMLProcessor processor,
-                        AdminComponent adminComponent) {
+    public FactoryFloor(World world, ProtectedRegion[] regions, List<FactoryMech> mechs, YAMLProcessor processor) {
         super(world, regions[0], regions[1], Arrays.copyOfRange(regions, 2, 4));
         this.processor = processor;
-        this.adminComponent = adminComponent;
         this.mechs = Lists.newArrayList(mechs);
 
         reloadData();
@@ -108,8 +101,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
 
     public void produce(ItemStack product) {
         ProtectedRegion region = getChamber(getProductType(product));
-        Vector vec = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint()).getCenter();
-        getWorld().dropItem(BukkitUtil.toLocation(getWorld(), vec), product);
+        getWorld().dropItem(RegionUtil.getCenter(getWorld(), region), product);
     }
 
     @Override

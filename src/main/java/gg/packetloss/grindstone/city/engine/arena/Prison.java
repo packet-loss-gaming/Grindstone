@@ -19,6 +19,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.region.RegionWalker;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -76,30 +77,16 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
     }
 
     private void findRewardChest() {
-
-        com.sk89q.worldedit.Vector min = office.getMinimumPoint();
-        com.sk89q.worldedit.Vector max = office.getMaximumPoint();
-
-        int minX = min.getBlockX();
-        int minZ = min.getBlockZ();
-        int minY = min.getBlockY();
-        int maxX = max.getBlockX();
-        int maxZ = max.getBlockZ();
-        int maxY = max.getBlockY();
-
-        BlockState block;
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                for (int y = maxY; y >= minY; --y) {
-                    block = getWorld().getBlockAt(x, y, z).getState();
-                    if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getType() == Material.CHEST) {
-                        rewardChest = block.getLocation();
-                        return;
-                    }
-                }
+        RegionWalker.testWalk(office, (x, y, z) -> {
+            BlockState block = getWorld().getBlockAt(x, y, z).getState();
+            if (!block.getChunk().isLoaded()) block.getChunk().load();
+            if (block.getType() == Material.CHEST) {
+                rewardChest = block.getLocation();
+                return true;
             }
-        }
+
+            return false;
+        });
     }
 
     @Override

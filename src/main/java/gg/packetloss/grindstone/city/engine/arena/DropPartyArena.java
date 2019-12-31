@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.city.engine.arena;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.bukkittext.Text;
@@ -18,8 +17,10 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.CountdownTask;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -354,7 +355,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         Block block = event.getClickedBlock();
 
         if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && block.getType() == Material.STONE_BUTTON
-                && getRegion().getParent().contains(new Vector(block.getX(), block.getY(), block.getZ()).floor())) {
+                && getRegion().getParent().contains(WorldEditBridge.toBlockVec3(block))) {
 
             Player player = event.getPlayer();
 
@@ -365,31 +366,17 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             }
 
             // Scan for, and absorb chest contents
-            Vector min = getRegion().getParent().getMinimumPoint();
-            Vector max = getRegion().getParent().getMaximumPoint();
+            RegionWalker.walk(getRegion().getParent(), (x, y, z) -> {
+                BlockState chest = getWorld().getBlockAt(x, y, z).getState();
 
-            int minX = min.getBlockX();
-            int minY = min.getBlockY();
-            int minZ = min.getBlockZ();
-            int maxX = max.getBlockX();
-            int maxY = max.getBlockY();
-            int maxZ = max.getBlockZ();
+                if (chest instanceof Chest) {
 
-            for (int x = minX; x <= maxX; x++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    for (int y = minY; y <= maxY; y++) {
-                        BlockState chest = getWorld().getBlockAt(x, y, z).getState();
+                    Inventory chestInventory = ((Chest) chest).getBlockInventory();
+                    Collections.addAll(drops, chestInventory.getContents());
 
-                        if (chest instanceof Chest) {
-
-                            Inventory chestInventory = ((Chest) chest).getBlockInventory();
-                            Collections.addAll(drops, chestInventory.getContents());
-
-                            chestInventory.clear();
-                        }
-                    }
+                    chestInventory.clear();
                 }
-            }
+            });
 
             drop(0);
         }

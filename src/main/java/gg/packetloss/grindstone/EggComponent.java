@@ -9,10 +9,15 @@ package gg.packetloss.grindstone;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.world.entity.EntityType;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.domains.Association;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.association.Associables;
+import com.sk89q.worldguard.protection.association.RegionAssociable;
+import com.sk89q.worldguard.protection.flags.Flags;
+import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -26,13 +31,13 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.SpawnEgg;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -46,6 +51,8 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 @ComponentInformation(friendlyName = "Eggs", desc = "Mob Eggs")
 @Depend(components = {SessionComponent.class})
@@ -303,16 +310,17 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
 
             if (config.strictMode && worldGuard != null) {
 
-                RegionManager mgr = worldGuard.getGlobalRegionManager().get(egg.getWorld());
-                ApplicableRegionSet set = mgr.getApplicableRegions(BukkitUtil.toVector(event.getLocation()));
+                RegionManager mgr = WorldGuardBridge.getManagerFor(egg.getWorld());
+                ApplicableRegionSet set = mgr.getApplicableRegions(toBlockVec3(event.getLocation()));
+                RegionAssociable associate = Associables.constant(Association.NON_MEMBER);
 
-                if (!set.allows(DefaultFlag.MOB_SPAWNING)) {
+                if (set.queryState(associate, Flags.MOB_SPAWNING) == StateFlag.State.ALLOW) {
                     event.setCancelled(true);
                     return false;
                 }
 
-                Set<EntityType> entityTypes = set.getFlag(DefaultFlag.DENY_SPAWN);
-                if (entityTypes != null && entityTypes.contains(event.getEggType())) {
+                Set<EntityType> entityTypes = set.queryValue(associate, Flags.DENY_SPAWN);
+                if (entityTypes != null && entityTypes.contains(BukkitAdapter.adapt(event.getEggType()))) {
                     event.setCancelled(true);
                     return false;
                 }

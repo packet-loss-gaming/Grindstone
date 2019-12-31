@@ -1,10 +1,10 @@
 package gg.packetloss.grindstone.warps;
 
 
-import com.sk89q.worldedit.Vector;
 import gg.packetloss.grindstone.util.LocationUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.util.Vector;
 
 public class WarpPoint {
     private WarpQualifiedName qualifiedName;

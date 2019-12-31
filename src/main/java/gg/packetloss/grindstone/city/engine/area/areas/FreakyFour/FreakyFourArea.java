@@ -6,15 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.FreakyFour;
 
-import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.blocks.SkullBlock;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
-import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -23,13 +15,11 @@ import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
-import gg.packetloss.grindstone.util.APIUtil;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.checker.Expression;
+import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.hackbook.AttributeBook;
@@ -70,24 +60,19 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
 
     @Override
     public void setUp() {
-        try {
-            WorldGuardPlugin WG = APIUtil.getWorldGuard();
-            world = server.getWorlds().get(0);
-            entrance = new Location(world, 401.5, 79, -304, 270, 0);
-            RegionManager manager = WG.getRegionManager(world);
-            String base = "oblitus-district-freaky-four";
-            region = manager.getRegion(base);
-            charlotte_RG = manager.getRegion(base + "-charlotte");
-            frimus_RG = manager.getRegion(base + "-frimus");
-            dabomb_RG = manager.getRegion(base + "-da-bomb");
-            snipee_RG = manager.getRegion(base + "-snipee");
-            heads = manager.getRegion(base + "-heads");
-            tick = 4 * 20;
-            listener = new FreakyFourListener(this);
-            config = new FreakyFourConfig();
-        } catch (UnknownPluginException e) {
-            log.info("WorldGuard could not be found!");
-        }
+        world = server.getWorlds().get(0);
+        entrance = new Location(world, 401.5, 79, -304, 270, 0);
+        RegionManager manager = WorldGuardBridge.getManagerFor(world);
+        String base = "oblitus-district-freaky-four";
+        region = manager.getRegion(base);
+        charlotte_RG = manager.getRegion(base + "-charlotte");
+        frimus_RG = manager.getRegion(base + "-frimus");
+        dabomb_RG = manager.getRegion(base + "-da-bomb");
+        snipee_RG = manager.getRegion(base + "-snipee");
+        heads = manager.getRegion(base + "-heads");
+        tick = 4 * 20;
+        listener = new FreakyFourListener(this);
+        config = new FreakyFourConfig();
     }
 
     @Override
@@ -108,26 +93,12 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     public void addSkull(Player player) {
-        final BlockVector min = heads.getMinimumPoint();
-        final BlockVector max = heads.getMaximumPoint();
-        int minX = min.getBlockX();
-        int minY = min.getBlockY();
-        int minZ = min.getBlockZ();
-        int maxX = max.getBlockX();
-        int maxY = max.getBlockY();
-        int maxZ = max.getBlockZ();
-        com.sk89q.worldedit.Vector v = LocationUtil.pickLocation(minX, maxX, minY, maxY, minZ, maxZ);
-        BukkitWorld world = new BukkitWorld(this.world);
-        EditSession skullEditor = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, 1);
-        skullEditor.rawSetBlock(v, new SkullBlock(12, (byte) 12, player.getName()));
+        Location v = LocationUtil.pickLocation(world, heads);
+        SkullPlacer.placePlayerSkullOnWall(v, BlockFace.WEST, player);
     }
 
     protected Location getCentralLoc(ProtectedRegion region) {
-        BlockVector min = region.getMinimumPoint();
-        BlockVector max = region.getMaximumPoint();
-
-        Region rg = new CuboidRegion(min, max);
-        return BukkitUtil.toLocation(world, rg.getCenter().setY(groundLevel));
+        return RegionUtil.getCenterAt(world, groundLevel, region);
     }
 
     private void createWall(ProtectedRegion region,
@@ -136,8 +107,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                             Material oldType, Material newType,
                             int density, int floodFloor) {
 
-        final BlockVector min = region.getMinimumPoint();
-        final BlockVector max = region.getMaximumPoint();
+        final BlockVector3 min = region.getMinimumPoint();
+        final BlockVector3 max = region.getMaximumPoint();
         int minX = min.getBlockX();
         int minY = min.getBlockY();
         int minZ = min.getBlockZ();
@@ -215,25 +186,12 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     public void cleanupCharlotte() {
-        final BlockVector min = charlotte_RG.getMinimumPoint();
-        final BlockVector max = charlotte_RG.getMaximumPoint();
-        int minX = min.getBlockX();
-        int minY = min.getBlockY();
-        int minZ = min.getBlockZ();
-        int maxX = max.getBlockX();
-        int maxY = max.getBlockY();
-        int maxZ = max.getBlockZ();
-
-        for (int y = minY; y <= maxY; ++y) {
-            for (int x = minX; x <= maxX; ++x) {
-                for (int z = minZ; z <= maxZ; ++z) {
-                    Block block = world.getBlockAt(x, y, z);
-                    if (block.getType() == Material.COBWEB) {
-                        block.setType(Material.AIR);
-                    }
-                }
+        RegionWalker.walk(charlotte_RG, (x, y, z) -> {
+            Block block = world.getBlockAt(x, y, z);
+            if (block.getType() == Material.COBWEB) {
+                block.setType(Material.AIR);
             }
-        }
+        });
 
         for (Entity spider : getContained(charlotte_RG, Spider.class, CaveSpider.class)) {
             spider.remove();
@@ -245,15 +203,6 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         for (int i = ChanceUtil.getRandom(10); i > 0; --i) {
             world.spawn(charlotte.getLocation(), CaveSpider.class);
         }
-
-        final BlockVector min = charlotte_RG.getMinimumPoint();
-        final BlockVector max = charlotte_RG.getMaximumPoint();
-        int minX = min.getBlockX();
-        int minY = min.getBlockY();
-        int minZ = min.getBlockZ();
-        int maxX = max.getBlockX();
-        int maxY = max.getBlockY();
-        int maxZ = max.getBlockZ();
 
         switch (ChanceUtil.getRandom(3)) {
             case 1:
@@ -284,18 +233,15 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                 }
                 break;
             case 3:
-                for (int y = minY; y <= maxY; ++y) {
-                    for (int x = minX; x <= maxX; ++x) {
-                        for (int z = minZ; z <= maxZ; ++z) {
-                            if (!ChanceUtil.getChance(config.charlotteWebSpider)) continue;
-                            Block block = world.getBlockAt(x, y, z);
-                            if (block.getType() == Material.COBWEB) {
-                                block.setType(Material.AIR);
-                                world.spawn(block.getLocation(), CaveSpider.class);
-                            }
-                        }
+                RegionWalker.walk(charlotte_RG, (x, y, z) -> {
+                    if (!ChanceUtil.getChance(config.charlotteWebSpider)) return;
+
+                    Block block = world.getBlockAt(x, y, z);
+                    if (block.getType() == Material.COBWEB) {
+                        block.setType(Material.AIR);
+                        world.spawn(block.getLocation(), CaveSpider.class);
                     }
-                }
+                });
                 break;
         }
     }
@@ -323,25 +269,12 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     public void cleanupFrimus() {
-        final BlockVector min = frimus_RG.getMinimumPoint();
-        final BlockVector max = frimus_RG.getMaximumPoint();
-        int minX = min.getBlockX();
-        int minY = min.getBlockY();
-        int minZ = min.getBlockZ();
-        int maxX = max.getBlockX();
-        int maxY = max.getBlockY();
-        int maxZ = max.getBlockZ();
-
-        for (int y = minY; y <= maxY; ++y) {
-            for (int x = minX; x <= maxX; ++x) {
-                for (int z = minZ; z <= maxZ; ++z) {
-                    Block block = world.getBlockAt(x, y, z);
-                    if (block.getType() == Material.FIRE || EnvironmentUtil.isLava(block.getType())) {
-                        block.setType(Material.AIR);
-                    }
-                }
+        RegionWalker.walk(frimus_RG, (x, y, z) -> {
+            Block block = world.getBlockAt(x, y, z);
+            if (block.getType() == Material.FIRE || EnvironmentUtil.isLava(block.getType())) {
+                block.setType(Material.AIR);
             }
-        }
+        });
 
         for (Entity spider : getContained(frimus_RG, Blaze.class)) {
             spider.remove();

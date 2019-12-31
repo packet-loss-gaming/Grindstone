@@ -9,13 +9,8 @@ package gg.packetloss.grindstone.city.engine.arena;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.blocks.SkullBlock;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
-import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.world.block.BlockTypes;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
@@ -33,10 +28,9 @@ import gg.packetloss.grindstone.prayer.PrayerFX.InventoryFX;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -46,6 +40,7 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
@@ -64,13 +59,14 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 public class CursedMine extends AbstractRegionedArena implements MonitoredArena, Listener {
 
@@ -86,11 +82,6 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     private BlockStateComponent blockStateComponent;
     private RestorationUtil restorationUtil;
 
-    private WorldGuardPlugin worldGuard;
-
-
-    //private ConcurrentHashMap<Player, ConcurrentHashMap<Location, AbstractMap.SimpleEntry<Long,
-    //        BaseBlock>>> map = new ConcurrentHashMap<>();
     private final long lastActivationTime = 18000;
     private long lastActivation = 0;
     private Map<UUID, Long> daveHitList = new HashMap<>();
@@ -120,8 +111,6 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-
-        setUpWorldGuard();
     }
 
     @Override
@@ -165,18 +154,6 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         return ArenaType.MONITORED;
     }
 
-    private void setUpWorldGuard() {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (!(plugin instanceof WorldGuardPlugin)) {
-            return; // Maybe you want throw an exception instead
-        }
-
-        this.worldGuard = (WorldGuardPlugin) plugin;
-    }
-
     public void addToHitList(Player player) {
         daveHitList.put(player.getUniqueId(), System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10));
     }
@@ -194,31 +171,31 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     }
 
     public void addSkull(Player player) {
+        RegionManager manager = WorldGuardBridge.getManagerFor(getWorld());
 
-        RegionManager manager = worldGuard.getRegionManager(getWorld());
-        ProtectedRegion r = null;
-        byte b = 0;
+        ProtectedRegion r;
+        BlockFace direction;
+
         switch (ChanceUtil.getRandom(3)) {
             case 1:
                 r = manager.getRegion(getId() + "-deaths-east");
-                b = 12;
+                direction = BlockFace.WEST;
                 break;
             case 2:
                 r = manager.getRegion(getId() + "-deaths-north");
-                b = 8;
+                direction = BlockFace.SOUTH;
                 break;
             case 3:
                 r = manager.getRegion(getId() + "-deaths-west");
-                b = 4;
+                direction = BlockFace.EAST;
                 break;
+            default:
+                return;
         }
 
         if (r != null) {
-            Vector v = LocationUtil.pickLocation(r.getMinimumPoint(), r.getMaximumPoint())
-                    .add(0, r.getMinimumPoint().getY(), 0);
-            BukkitWorld world = new BukkitWorld(getWorld());
-            EditSession skullEditor = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, 1);
-            skullEditor.rawSetBlock(v, new SkullBlock(0x1, b, player.getName()));
+            Location l = LocationUtil.pickLocation(getWorld(), r.getMinimumPoint().getY(), r.getMinimumPoint(), r.getMaximumPoint());
+            SkullPlacer.placePlayerSkullOnGround(l, direction, player);
         }
     }
 
@@ -367,8 +344,8 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             newType = Material.OAK_PLANKS;
         }
 
-        com.sk89q.worldedit.Vector min = floodGate.getMinimumPoint();
-        com.sk89q.worldedit.Vector max = floodGate.getMaximumPoint();
+        BlockVector3 min = floodGate.getMinimumPoint();
+        BlockVector3 max = floodGate.getMaximumPoint();
 
         int minX = min.getBlockX();
         int minZ = min.getBlockZ();
@@ -401,7 +378,6 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     }
 
     private void poison(Player player, int duration) {
-
         if (ChanceUtil.getChance(player.getLocation().getBlockY() / 2)) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * duration, 2));
             ChatUtil.sendWarning(player, "The ore releases a toxic gas poisoning you!");
@@ -489,11 +465,9 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                 if (blockType == Material.DIAMOND_ORE) {
                                     addToHitList(player);
                                     ChatUtil.sendWarning(player, "You ignite fumes in the air!");
-                                    EditSession ess = WorldEdit.getInstance()
-                                            .getEditSessionFactory()
-                                            .getEditSession(new BukkitWorld(player.getWorld()), -1);
+                                    EditSession ess = WorldEditBridge.getSystemEditSessionFor(getWorld());
                                     try {
-                                        ess.fillXZ(BukkitUtil.toVector(player.getLocation()), new BaseBlock(Material.FIRE), 20, 20, true);
+                                        ess.fillXZ(toBlockVec3(player.getLocation()), BlockTypes.FIRE.getDefaultState(), 20, 20, true);
                                     } catch (MaxChangedBlocksException ignored) {
 
                                     }

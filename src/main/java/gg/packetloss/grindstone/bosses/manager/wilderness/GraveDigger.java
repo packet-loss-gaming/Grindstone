@@ -7,8 +7,6 @@
 package gg.packetloss.grindstone.bosses.manager.wilderness;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldguard.bukkit.WGBukkit;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.skelril.OSBL.bukkit.BukkitBossDeclaration;
 import com.skelril.OSBL.bukkit.entity.BukkitBoss;
 import com.skelril.OSBL.bukkit.util.BukkitAttackDamage;
@@ -27,6 +25,7 @@ import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Location;
@@ -223,11 +222,9 @@ public class GraveDigger {
         }
     }
 
-    private WorldGuardPlugin WG = null;
-
     private void setBlock(Location l, Material type) {
-        if (WG == null) WG = WGBukkit.getPlugin();
-        if (WG.getRegionManager(l.getWorld()).getApplicableRegions(l).size() > 0) return;
+        if (WorldGuardBridge.hasRegionsAt(l)) return;
+
         Block blk = l.getBlock();
         if (blk.getType() != Material.AIR) return;
         blk.setType(type, true);

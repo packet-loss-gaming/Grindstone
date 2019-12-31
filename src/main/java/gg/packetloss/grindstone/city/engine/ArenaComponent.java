@@ -14,7 +14,7 @@ import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.sk89q.util.yaml.YAMLFormat;
 import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.GlobalRegionManager;
+import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -38,6 +38,7 @@ import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
@@ -159,13 +160,13 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
 
         public void setupArenas() {
 
-            GlobalRegionManager mgr = getWorldGuard().getGlobalRegionManager();
+            RegionManager mgr = WorldGuardBridge.getManagerFor(world);
             // Add Cursed Mines
             for (String region : config.cursedMines) {
                 try {
                     ProtectedRegion[] PRs = new ProtectedRegion[2];
-                    PRs[0] = mgr.get(world).getRegion(region);
-                    PRs[1] = mgr.get(world).getRegion(region + "-flood-gate");
+                    PRs[0] = mgr.getRegion(region);
+                    PRs[1] = mgr.getRegion(region + "-flood-gate");
                     arenas.add(new CursedMine(world, PRs, adminComponent, prayerComponent, highScoresComponent, blockStateComponent, restorationUtil));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -177,7 +178,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Enchanted Forest
             for (String region : config.enchantedForest) {
                 try {
-                    ProtectedRegion pr = mgr.get(world).getRegion(region);
+                    ProtectedRegion pr = mgr.getRegion(region);
                     arenas.add(new EnchantedForest(world, pr, adminComponent, eggComponent, blockStateComponent));
                     if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -189,7 +190,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Hot springs
             for (String region : config.hotSprings) {
                 try {
-                    ProtectedRegion pr = mgr.get(world).getRegion(region);
+                    ProtectedRegion pr = mgr.getRegion(region);
                     arenas.add(new HotSpringArena(world, pr, adminComponent));
                     if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -201,7 +202,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add Party rooms
             for (String region : config.partyRooms) {
                 try {
-                    ProtectedRegion pr = mgr.get(world).getRegion(region);
+                    ProtectedRegion pr = mgr.getRegion(region);
                     arenas.add(new DropPartyArena(world, pr));
                     if (config.listRegions) log.info("Added region: " + pr.getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -213,13 +214,13 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             for (String region : config.goldRushes) {
                 try {
                     ProtectedRegion[] PRs = new ProtectedRegion[7];
-                    PRs[0] = mgr.get(world).getRegion(region);
-                    PRs[1] = mgr.get(world).getRegion(region + "-lobby");
-                    PRs[2] = mgr.get(world).getRegion(region + "-room-one");
-                    PRs[3] = mgr.get(world).getRegion(region + "-room-two");
-                    PRs[4] = mgr.get(world).getRegion(region + "-room-three");
-                    PRs[5] = mgr.get(world).getRegion(region + "-door-one");
-                    PRs[6] = mgr.get(world).getRegion(region + "-door-two");
+                    PRs[0] = mgr.getRegion(region);
+                    PRs[1] = mgr.getRegion(region + "-lobby");
+                    PRs[2] = mgr.getRegion(region + "-room-one");
+                    PRs[3] = mgr.getRegion(region + "-room-two");
+                    PRs[4] = mgr.getRegion(region + "-room-three");
+                    PRs[5] = mgr.getRegion(region + "-door-one");
+                    PRs[6] = mgr.getRegion(region + "-door-two");
                     arenas.add(new GoldRush(
                             world, PRs, guildComponent, impersonalComponent,
                             highScoresComponent, playerStateComponent
@@ -234,8 +235,8 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             for (String region : config.prisonRaids) {
                 try {
                     ProtectedRegion[] PRs = new ProtectedRegion[2];
-                    PRs[0] = mgr.get(world).getRegion(region);
-                    PRs[1] = mgr.get(world).getRegion(region + "-office");
+                    PRs[0] = mgr.getRegion(region);
+                    PRs[1] = mgr.getRegion(region + "-office");
                     arenas.add(new Prison(world, PRs, adminComponent, guildComponent, playerStateComponent));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
@@ -247,10 +248,10 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             for (String region : config.factories) {
                 try {
                     ProtectedRegion[] PRs = new ProtectedRegion[4];
-                    PRs[0] = mgr.get(world).getRegion(region);
-                    PRs[1] = mgr.get(world).getRegion(region + "-producer");
-                    PRs[2] = mgr.get(world).getRegion(region + "-smelter-1");
-                    PRs[3] = mgr.get(world).getRegion(region + "-smelter-2");
+                    PRs[0] = mgr.getRegion(region);
+                    PRs[1] = mgr.getRegion(region + "-producer");
+                    PRs[2] = mgr.getRegion(region + "-smelter-1");
+                    PRs[3] = mgr.getRegion(region + "-smelter-2");
 
                     YAMLProcessor processor = new YAMLProcessor(
                             new File(inst.getDataFolder() + "/area/" + PRs[0] .getId()+ "/data.yml"),
@@ -260,14 +261,14 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     List<FactoryMech> mechs = new ArrayList<>();
                     ProtectedRegion er;
                     for (String mech : config.factoryVats) {
-                        er = mgr.get(world).getRegion(region + "-" + mech);
+                        er = mgr.getRegion(region + "-" + mech);
                         mechs.add(new FactoryBrewer(world, er, processor));
                     }
-                    ProtectedRegion furnace = mgr.get(world).getRegion(region + "-hopper-1");
-                    ProtectedRegion lava = mgr.get(world).getRegion(region + "-lava-input");
-                    ProtectedRegion lavaZ = mgr.get(world).getRegion(region + "-lava");
+                    ProtectedRegion furnace = mgr.getRegion(region + "-hopper-1");
+                    ProtectedRegion lava = mgr.getRegion(region + "-lava-input");
+                    ProtectedRegion lavaZ = mgr.getRegion(region + "-lava");
                     mechs.add(new FactorySmelter(world, furnace, processor, lava, lavaZ));
-                    arenas.add(new FactoryFloor(world, PRs, mechs, processor, adminComponent));
+                    arenas.add(new FactoryFloor(world, PRs, mechs, processor));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {
                     log.warning("Failed to add arena: " + region + ".");

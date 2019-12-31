@@ -4,16 +4,15 @@ import com.destroystokyo.paper.ParticleBuilder;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.craftbook.ChangedSign;
 import com.sk89q.craftbook.mechanics.ic.*;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
-import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayDeque;
 import java.util.List;
@@ -37,25 +36,9 @@ public class RegionPortal extends AbstractSelfTriggeredIC {
         super(server, block, factory);
     }
 
-    private WorldGuardPlugin getWorldGuard() {
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (!(plugin instanceof WorldGuardPlugin)) {
-            return null; // Maybe you want throw an exception instead
-        }
-
-        return (WorldGuardPlugin) plugin;
-    }
-
     @Override
     public void load() {
-        WorldGuardPlugin WG = getWorldGuard();
-        if (WG == null) {
-            return;
-        }
-
-        RegionManager regionManager = WG.getRegionManager(getLocation().getWorld());
+        RegionManager regionManager = WorldGuardBridge.getManagerFor(getLocation().getWorld());
 
         topRegion = regionManager.getRegion(getSign().getLine(2));
         bottomRegion = regionManager.getRegion(getSign().getLine(3));
@@ -90,8 +73,8 @@ public class RegionPortal extends AbstractSelfTriggeredIC {
     }
 
     private org.bukkit.util.Vector createDirectionalVector(Location loc, ProtectedRegion toRegion) {
-        Vector midpointOffset = toRegion.getMaximumPoint().subtract(toRegion.getMinimumPoint()).divide(2);
-        Vector midpoint = toRegion.getMinimumPoint().add(midpointOffset);
+        BlockVector3 midpointOffset = toRegion.getMaximumPoint().subtract(toRegion.getMinimumPoint()).divide(2);
+        BlockVector3 midpoint = toRegion.getMinimumPoint().add(midpointOffset);
         org.bukkit.util.Vector bukkitMidpoint = new org.bukkit.util.Vector(
                 midpoint.getX() + .5, midpoint.getY(), midpoint.getZ() + .5
         );
@@ -104,8 +87,9 @@ public class RegionPortal extends AbstractSelfTriggeredIC {
     }
 
     private Location translate(ProtectedRegion fromRegion, ProtectedRegion toRegion, Location loc) {
-        Vector relativePoint = fromRegion.getMaximumPoint().setY(0).subtract(loc.getX(), 0, loc.getZ());
-        Vector targetPoint = toRegion.getMaximumPoint().subtract(relativePoint);
+        BlockVector3 min = fromRegion.getMaximumPoint();
+        BlockVector3 relativePoint = BlockVector3.at(min.getX() - loc.getX(), 0, min.getZ() - loc.getZ());
+        BlockVector3 targetPoint = toRegion.getMaximumPoint().subtract(relativePoint);
         return new Location(loc.getWorld(), targetPoint.getX(), targetPoint.getY(), targetPoint.getZ());
     }
 

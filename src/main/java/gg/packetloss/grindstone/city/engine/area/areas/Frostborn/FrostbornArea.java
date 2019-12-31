@@ -1,12 +1,7 @@
 package gg.packetloss.grindstone.city.engine.area.areas.Frostborn;
 
 import com.sk89q.commandbook.util.entity.ProjectileUtil;
-import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
-import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -16,16 +11,17 @@ import gg.packetloss.grindstone.ProtectedDroppedItemsComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.city.engine.area.PersistentArena;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.itemstack.ProtectedSerializedItemStack;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.hackbook.AttributeBook;
@@ -91,25 +87,20 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     @Override
     public void setUp() {
-        try {
-            WorldGuardPlugin WG = APIUtil.getWorldGuard();
-            world = server.getWorlds().get(0);
-            gateOuter = new Location(world, -48.5, 81, 392, 270, 0);
-            gateInner = new Location(world, -50.5, 81, 392, 90, 0);
-            bossSpawnLoc = new Location(getWorld(), -137, 67, 392, 270, 0);
-            RegionManager manager = WG.getRegionManager(world);
-            String base = "glacies-mare-district-frostborn";
-            region = manager.getRegion(base + "-arena");
-            gate_RG = manager.getRegion(base + "-gate");
-            entrance_RG = manager.getRegion(base + "-entrance");
-            tick = 4 * 20;
-            listener = new FrostbornListener(this);
-            config = new FrostbornConfig();
+        world = server.getWorlds().get(0);
+        gateOuter = new Location(world, -48.5, 81, 392, 270, 0);
+        gateInner = new Location(world, -50.5, 81, 392, 90, 0);
+        bossSpawnLoc = new Location(getWorld(), -137, 67, 392, 270, 0);
+        RegionManager manager = WorldGuardBridge.getManagerFor(world);
+        String base = "glacies-mare-district-frostborn";
+        region = manager.getRegion(base + "-arena");
+        gate_RG = manager.getRegion(base + "-gate");
+        entrance_RG = manager.getRegion(base + "-entrance");
+        tick = 4 * 20;
+        listener = new FrostbornListener(this);
+        config = new FrostbornConfig();
 
-            reloadData();
-        } catch (UnknownPluginException e) {
-            log.info("WorldGuard could not be found!");
-        }
+        reloadData();
     }
 
     @Override
@@ -214,8 +205,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     private Collection<Location> getRandomFountainOriginLocations() {
         List<Location> fountainLocations = new ArrayList<>();
 
-        com.sk89q.worldedit.Vector min = region.getMinimumPoint();
-        com.sk89q.worldedit.Vector max = region.getMaximumPoint();
+        BlockVector3 min = region.getMinimumPoint();
+        BlockVector3 max = region.getMaximumPoint();
 
         int minX = min.getBlockX();
         int minZ = min.getBlockZ();
@@ -415,10 +406,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     public boolean isArenaLoaded() {
-        BlockVector min = getRegion().getMinimumPoint();
-        BlockVector max = getRegion().getMaximumPoint();
-        Region region = new CuboidRegion(min, max);
-        return BukkitUtil.toLocation(getWorld(), region.getCenter()).getChunk().isLoaded();
+        return RegionUtil.getCenter(getWorld(), getRegion()).getChunk().isLoaded();
     }
 
     public boolean isBossSpawned() {
@@ -465,28 +453,13 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     private void replaceBlocksInEntrance(Material from, Material to) {
-        com.sk89q.worldedit.Vector min = entrance_RG.getMinimumPoint();
-        com.sk89q.worldedit.Vector max = entrance_RG.getMaximumPoint();
-
-        int minX = min.getBlockX();
-        int minZ = min.getBlockZ();
-        int minY = min.getBlockY();
-        int maxX = max.getBlockX();
-        int maxZ = max.getBlockZ();
-        int maxY = max.getBlockY();
-
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                for (int y = minY; y <= maxY; y++) {
-                    Block block = getWorld().getBlockAt(x, y, z);
-                    if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getType() == from) {
-                        block.setType(to);
-                    }
-                }
+        RegionWalker.walk(entrance_RG, (x, y, z) -> {
+            Block block = getWorld().getBlockAt(x, y, z);
+            if (!block.getChunk().isLoaded()) block.getChunk().load();
+            if (block.getType() == from) {
+                block.setType(to);
             }
-        }
-
+        });
     }
 
     public void thawEntrance() {
@@ -495,13 +468,6 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     public void freezeEntrance() {
         replaceBlocksInEntrance(Material.AIR, Material.ICE);
-    }
-
-    protected boolean accept(BaseBlock baseBlock, Set<BaseBlock> baseBlocks) {
-        for (BaseBlock aBaseBlock : baseBlocks) {
-            if (baseBlock.equalsFuzzy(aBaseBlock)) return true;
-        }
-        return false;
     }
 
     protected void dropLoot() {

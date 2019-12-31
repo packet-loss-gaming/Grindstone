@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.arena.factory;
 
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.city.engine.arena.AbstractRegionedArena;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
@@ -24,9 +25,8 @@ public class LavaSupply extends AbstractRegionedArena {
 
     // Returns remainder
     public int addLava(int amount) {
-
-        com.sk89q.worldedit.Vector min = lava.getMinimumPoint();
-        com.sk89q.worldedit.Vector max = lava.getMaximumPoint();
+        BlockVector3 min = lava.getMinimumPoint();
+        BlockVector3 max = lava.getMaximumPoint();
 
         int minX = min.getBlockX();
         int minZ = min.getBlockZ();
@@ -54,9 +54,8 @@ public class LavaSupply extends AbstractRegionedArena {
 
     // Returns amount removed
     public int removeLava(int amount) {
-
-        com.sk89q.worldedit.Vector min = lava.getMinimumPoint();
-        com.sk89q.worldedit.Vector max = lava.getMaximumPoint();
+        BlockVector3 min = lava.getMinimumPoint();
+        BlockVector3 max = lava.getMaximumPoint();
 
         int minX = min.getBlockX();
         int minZ = min.getBlockZ();

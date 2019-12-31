@@ -21,6 +21,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.*;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
@@ -192,7 +193,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
 
         try {
             final World world = Bukkit.getWorld(config.mainWorld);
-            ProtectedRegion protectedRegion = getWorldGuard().getRegionManager(world).getRegion(config.firstRegion);
+            ProtectedRegion protectedRegion = WorldGuardBridge.getManagerFor(world).getRegion(config.firstRegion);
 
             if (!player.hasPlayedBefore() || LocationUtil.isInRegion(world, protectedRegion, player)) {
 

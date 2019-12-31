@@ -7,7 +7,7 @@
 package gg.packetloss.grindstone.city.engine.area.areas.FreakyFour;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
@@ -242,8 +242,8 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         Entity entity = event.getEntity();
         if (!parent.contains(entity)) return;
         if (entity instanceof Creeper) {
-            BlockVector min = parent.dabomb_RG.getMinimumPoint();
-            BlockVector max = parent.dabomb_RG.getMaximumPoint();
+            BlockVector3 min = parent.dabomb_RG.getMinimumPoint();
+            BlockVector3 max = parent.dabomb_RG.getMaximumPoint();
             int minX = min.getBlockX();
             int minZ = min.getBlockZ();
             int maxX = max.getBlockX();

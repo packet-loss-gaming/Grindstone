@@ -6,18 +6,16 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.SandArena;
 
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
-import gg.packetloss.grindstone.util.APIUtil;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -39,16 +37,11 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
 
     @Override
     public void setUp() {
-        try {
-            WorldGuardPlugin WG = APIUtil.getWorldGuard();
-            world = server.getWorlds().get(0);
-            region = WG.getRegionManager(world).getRegion("oblitus-district-arena-pvp");
-            tick = 5 * 20;
-            listener = new SandArenaListener(this);
-            config = new SandArenaConfig();
-        } catch (UnknownPluginException e) {
-            log.info("WorldGuard could not be found!");
-        }
+        world = server.getWorlds().get(0);
+        region = WorldGuardBridge.getManagerFor(world).getRegion("oblitus-district-arena-pvp");
+        tick = 5 * 20;
+        listener = new SandArenaListener(this);
+        config = new SandArenaConfig();
     }
 
     @Override
@@ -66,8 +59,8 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
     }
 
     public void addBlocks() {
-        com.sk89q.worldedit.Vector min = getRegion().getMinimumPoint();
-        com.sk89q.worldedit.Vector max = getRegion().getMaximumPoint();
+        BlockVector3 min = getRegion().getMinimumPoint();
+        BlockVector3 max = getRegion().getMaximumPoint();
 
         int minX = min.getBlockX();
         int minZ = min.getBlockZ();
@@ -102,8 +95,8 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
     }
 
     public void removeBlocks() {
-        com.sk89q.worldedit.Vector min = region.getMinimumPoint();
-        com.sk89q.worldedit.Vector max = region.getMaximumPoint();
+        BlockVector3 min = region.getMinimumPoint();
+        BlockVector3 max = region.getMaximumPoint();
 
         int minX = min.getBlockX();
         int minY = min.getBlockY();
@@ -141,9 +134,9 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
     }
 
     public Location getRespawnLocation() {
-        Vector v;
-        Vector min = getRegion().getParent().getMinimumPoint();
-        Vector max = getRegion().getParent().getMaximumPoint();
+        BlockVector3 v;
+        BlockVector3 min = getRegion().getParent().getMinimumPoint();
+        BlockVector3 max = getRegion().getParent().getMaximumPoint();
 
         do {
             v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getY(), max.getY(), min.getZ(), max.getZ());
@@ -151,14 +144,14 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
         return new Location(world, v.getX(), v.getY(), v.getZ());
     }
 
-    private boolean isRespawnBlock(Vector v) {
+    private boolean isRespawnBlock(BlockVector3 v) {
         for (Material type : RESPAWN_BLOCKS) {
             if (type == getBlock(v.add(0, -1, 0)).getType()) return true;
         }
         return false;
     }
 
-    private Block getBlock(Vector v) {
+    private Block getBlock(BlockVector3 v) {
         return getWorld().getBlockAt(v.getBlockX(), v.getBlockY(), v.getBlockZ());
     }
 }

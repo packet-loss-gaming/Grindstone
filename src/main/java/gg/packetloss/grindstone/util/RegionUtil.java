@@ -6,8 +6,8 @@
 
 package gg.packetloss.grindstone.util;
 
-import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Polygonal2DRegion;
 import com.sk89q.worldedit.regions.Region;
@@ -18,6 +18,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.region.RegionValueEvaluator;
+import org.bukkit.Location;
 import org.bukkit.World;
 
 import java.util.List;
@@ -28,11 +29,23 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RegionUtil {
+    public static Location getCenterAt(World world, int y, ProtectedRegion region) {
+        Region rg = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint());
+        Vector3 center = rg.getCenter();
+        return new Location(world, center.getX(), y, center.getZ());
+    }
+
+    public static Location getCenter(World world, ProtectedRegion region) {
+        Region rg = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint());
+        Vector3 center = rg.getCenter();
+        return new Location(world, center.getX(), center.getY(), center.getZ());
+    }
+
     public static Optional<Region> convert(ProtectedRegion region) {
         if (region instanceof ProtectedCuboidRegion) {
             ProtectedCuboidRegion cuboid = (ProtectedCuboidRegion)region;
-            Vector pt1 = cuboid.getMinimumPoint();
-            Vector pt2 = cuboid.getMaximumPoint();
+            BlockVector3 pt1 = cuboid.getMinimumPoint();
+            BlockVector3 pt2 = cuboid.getMaximumPoint();
             return Optional.of(new CuboidRegion(pt1, pt2));
         } else if (region instanceof ProtectedPolygonalRegion) {
             ProtectedPolygonalRegion poly2d = (ProtectedPolygonalRegion)region;
@@ -73,8 +86,8 @@ public class RegionUtil {
 
     public static Optional<Integer> countChunks(Region region) {
         if (region instanceof CuboidRegion) {
-            Vector min = region.getMinimumPoint();
-            Vector max = region.getMaximumPoint();
+            BlockVector3 min = region.getMinimumPoint();
+            BlockVector3 max = region.getMaximumPoint();
 
             int minX = min.getBlockX();
             int minZ = min.getBlockZ();
@@ -169,8 +182,8 @@ public class RegionUtil {
             int maxY = oldRegion.getMaximumPoint().getBlockY();
             newRegion = new ProtectedPolygonalRegion(newName, oldRegion.getPoints(), minY, maxY);
         } else if (oldRegion instanceof ProtectedCuboidRegion) {
-            BlockVector min = oldRegion.getMinimumPoint();
-            BlockVector max = oldRegion.getMaximumPoint();
+            BlockVector3 min = oldRegion.getMinimumPoint();
+            BlockVector3 max = oldRegion.getMaximumPoint();
             newRegion = new ProtectedCuboidRegion(newName, min, max);
         } else {
             return false;

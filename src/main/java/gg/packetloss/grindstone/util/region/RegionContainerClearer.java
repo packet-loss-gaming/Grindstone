@@ -1,7 +1,5 @@
 package gg.packetloss.grindstone.util.region;
 
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -19,27 +17,8 @@ public class RegionContainerClearer {
     }
 
     public void walkRegion(Region region, World world) {
-        //noinspection ConstantConditions
-        if (region instanceof CuboidRegion) {
-            Vector min = region.getMinimumPoint();
-            Vector max = region.getMaximumPoint();
-
-            int minX = min.getBlockX();
-            int minY = min.getBlockY();
-            int minZ = min.getBlockZ();
-            int maxX = max.getBlockX();
-            int maxY = max.getBlockY();
-            int maxZ = max.getBlockZ();
-
-            for (int x = minX; x <= maxX; ++x) {
-                for (int y = minY; y <= maxY; ++y) {
-                    for (int z = minZ; z <= maxZ; ++z) {
-                        walkBlock(world, x, y, z);
-                    }
-                }
-            }
-        } else {
-            throw new UnsupportedOperationException("Unsupported region type");
-        }
+        RegionWalker.walk(region, (x, y, z) -> {
+            walkBlock(world, x, y, z);
+        });
     }
 }

@@ -6,21 +6,20 @@
 
 package gg.packetloss.grindstone.city.engine;
 
-
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldguard.bukkit.WorldConfiguration;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.config.WorldConfiguration;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.Server;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.plugin.Plugin;
 
 import java.util.logging.Logger;
 
@@ -36,38 +35,18 @@ public class LavaFlowComponent extends BukkitComponent implements Listener {
 
     @Override
     public void enable() {
-
-        try {
-            setUpWorldGuard();
-        } catch (UnknownPluginException e) {
-            log.warning("Plugin not found: " + e.getMessage() + ".");
-            return;
-        }
-
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
     }
 
-    private void setUpWorldGuard() throws UnknownPluginException {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (!(plugin instanceof WorldGuardPlugin)) {
-            throw new UnknownPluginException("WorldGuard");
-        }
-
-        this.worldGuard = (WorldGuardPlugin) plugin;
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockFromTo(BlockFromToEvent event) {
 
         if (EnvironmentUtil.isLava(event.getBlock())) {
             try {
-                WorldConfiguration wcfg = worldGuard.getGlobalStateManager().get(event.getBlock().getWorld());
+                WorldConfiguration wcfg = WorldGuardBridge.getWorldConfig(event.getBlock().getWorld());
                 if (wcfg.preventWaterDamage.size() > 0) {
-                    if (wcfg.preventWaterDamage.contains(event.getToBlock().getTypeId())) {
+                    if (wcfg.preventWaterDamage.contains(BukkitAdapter.asBlockType(event.getToBlock().getType()).getId())) {
                         event.setCancelled(true);
                     }
                 }

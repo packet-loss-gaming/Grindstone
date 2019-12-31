@@ -14,6 +14,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
@@ -21,6 +22,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 
 @ComponentInformation(friendlyName = "Impersonal", desc = "It's just business.")
@@ -45,9 +48,8 @@ public class ImpersonalComponent extends BukkitComponent implements Listener {
      * @returns true if the block is allowed to be there
      */
     public boolean check(Block block, boolean breakIt) {
-
-        ApplicableRegionSet ars = WG.getGlobalRegionManager().get(block.getWorld())
-                .getApplicableRegions(block.getLocation());
+        ApplicableRegionSet ars = WorldGuardBridge.getManagerFor(block.getWorld())
+                .getApplicableRegions(toBlockVec3(block));
 
         if (ars.size() < 1) return false;
         for (ProtectedRegion ar : ars) {

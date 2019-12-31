@@ -1,8 +1,6 @@
 package gg.packetloss.grindstone.util.region;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
@@ -69,50 +67,31 @@ public class RegionValueEvaluator {
     public CompletableFuture<RegionValueReport> walkRegion(Region region, World world) {
         ReportSourceInfo reportSource = new ReportSourceInfo();
 
-        //noinspection ConstantConditions
-        if (region instanceof CuboidRegion) {
-            Vector min = region.getMinimumPoint();
-            Vector max = region.getMaximumPoint();
+        RegionWalker.walk(region, (x, y, z) -> {
+            walkBlock(reportSource, world, x, y, z);
+        });
 
-            int minX = min.getBlockX();
-            int minY = min.getBlockY();
-            int minZ = min.getBlockZ();
-            int maxX = max.getBlockX();
-            int maxY = max.getBlockY();
-            int maxZ = max.getBlockZ();
+        CompletableFuture<RegionValueReport> future = new CompletableFuture<>();
 
-            for (int x = minX; x <= maxX; ++x) {
-                for (int y = minY; y <= maxY; ++y) {
-                    for (int z = minZ; z <= maxZ; ++z) {
-                        walkBlock(reportSource, world, x, y, z);
-                    }
-                }
+        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            MarketItemLookupInstance nameItemMapping = MarketComponent.getLookupInstance(reportSource.allNames);
+
+            double blockPrice = 0;
+            for (Map.Entry<String, Integer> entry : reportSource.blockCounts.entrySet()) {
+                blockPrice += nameItemMapping.checkSellPrice(entry.getKey()).orElse(0d) * entry.getValue();
             }
 
-            CompletableFuture<RegionValueReport> future = new CompletableFuture<>();
+            double itemPrice = 0;
+            double maximumItemValue = 0;
+            for (ItemStack entry : reportSource.items) {
+                itemPrice += nameItemMapping.checkSellPrice(entry).orElse(0d);
+                maximumItemValue += nameItemMapping.checkMaximumValue(entry).orElse(0d);
+            }
 
-            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
-                MarketItemLookupInstance nameItemMapping = MarketComponent.getLookupInstance(reportSource.allNames);
+            future.complete(new RegionValueReport(blockPrice, itemPrice, maximumItemValue));
+        });
 
-                double blockPrice = 0;
-                for (Map.Entry<String, Integer> entry : reportSource.blockCounts.entrySet()) {
-                    blockPrice += nameItemMapping.checkSellPrice(entry.getKey()).orElse(0d) * entry.getValue();
-                }
-
-                double itemPrice = 0;
-                double maximumItemValue = 0;
-                for (ItemStack entry : reportSource.items) {
-                    itemPrice += nameItemMapping.checkSellPrice(entry).orElse(0d);
-                    maximumItemValue += nameItemMapping.checkMaximumValue(entry).orElse(0d);
-                }
-
-                future.complete(new RegionValueReport(blockPrice, itemPrice, maximumItemValue));
-            });
-
-            return future;
-        } else {
-            throw new UnsupportedOperationException("Unsupported region type");
-        }
+        return future;
     }
 
     private static class ReportSourceInfo {

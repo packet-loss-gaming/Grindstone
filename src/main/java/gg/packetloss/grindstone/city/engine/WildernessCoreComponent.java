@@ -10,7 +10,6 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
-import com.sk89q.worldguard.bukkit.WGBukkit;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -37,6 +36,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.DamageUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -501,7 +501,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
         Location location = player.getLocation();
         Block block = location.getBlock();
-        if (WGBukkit.getPlugin().canBuild(player, block)) {
+        if (WorldGuardBridge.canBuildAt(player, block)) {
             try {
                 graveSupplier:
                 {

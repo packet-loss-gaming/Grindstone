@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.homes;
 
-import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -30,8 +30,8 @@ public class PlotOutliner {
     }
 
     private void edit(World world, ProtectedRegion region, boolean revert) {
-        BlockVector min = region.getMinimumPoint();
-        BlockVector max = region.getMaximumPoint();
+        BlockVector3 min = region.getMinimumPoint();
+        BlockVector3 max = region.getMaximumPoint();
 
         for (int x = min.getBlockX(); x <= max.getBlockX(); ++x) {
             setBlock(world, revert, x, min.getBlockZ());

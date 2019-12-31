@@ -6,26 +6,21 @@
 
 package gg.packetloss.grindstone.homes;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
-import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
-import com.sk89q.worldedit.bukkit.selections.Polygonal2DSelection;
-import com.sk89q.worldedit.bukkit.selections.Selection;
+import com.sk89q.worldedit.command.util.AsyncCommandBuilder;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Polygonal2DRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldguard.LocalPlayer;
+import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.bukkit.BukkitPlayer;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.bukkit.commands.AsyncCommandHelper;
-import com.sk89q.worldguard.domains.DefaultDomain;
-import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.RegionGroupFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -42,6 +37,9 @@ import gg.packetloss.grindstone.District;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
+import gg.packetloss.grindstone.util.bridge.ExtendedWGFlags;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.region.RegionContainerClearer;
 import gg.packetloss.grindstone.util.region.RegionValueEvaluator;
@@ -55,13 +53,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 
 @ComponentInformation(friendlyName = "Home Manager", desc = "Home ECS")
@@ -72,8 +71,6 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private WorldEditPlugin WE;
-    private WorldGuardPlugin WG;
     private Economy econ;
 
     private static Map<Material, Material> blockMapping = new HashMap<>();
@@ -89,36 +86,10 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     public void enable() {
 
         registerCommands(Commands.class);
-        setUpWorldEdit();
-        setUpWorldGuard();
         setUpEconomy();
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
-    }
-
-    private void setUpWorldEdit() {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldEdit");
-
-        // WorldEdit may not be loaded
-        if (!(plugin instanceof WorldEditPlugin)) {
-            return;
-        }
-
-        this.WE = (WorldEditPlugin) plugin;
-    }
-
-    private void setUpWorldGuard() {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (!(plugin instanceof WorldGuardPlugin)) {
-            return;
-        }
-
-        this.WG = (WorldGuardPlugin) plugin;
     }
 
     private void setUpEconomy() {
@@ -131,7 +102,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     }
 
     public static boolean isEntityInPlayersHome(Player player, Entity entity, RegionManager manager) {
-        for (ProtectedRegion aRegion : manager.getApplicableRegions(entity.getLocation())) {
+        for (ProtectedRegion aRegion : manager.getApplicableRegions(toBlockVec3(entity.getLocation()))) {
             if (isPlayerHouse(aRegion, new BukkitPlayer(WorldGuardPlugin.inst(), player))) {
                 return true;
             }
@@ -140,12 +111,11 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     }
 
     public boolean isEntityInPlayersHome(Player player, Entity entity) {
-        RegionManager manager = WG.getRegionManager(entity.getWorld());
-        return isEntityInPlayersHome(player, entity, manager);
+        return isEntityInPlayersHome(player, entity, WorldGuardBridge.getManagerFor(entity.getWorld()));
     }
 
     private boolean isInAnyPlayerHome(Location location, RegionManager manager) {
-        for (ProtectedRegion aRegion : manager.getApplicableRegions(location)) {
+        for (ProtectedRegion aRegion : manager.getApplicableRegions(toBlockVec3(location))) {
             if (isHouse(aRegion)) {
                 return true;
             }
@@ -154,7 +124,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     }
 
     public boolean isInAnyPlayerHome(Location location) {
-        RegionManager manager = WG.getRegionManager(location.getWorld());
+        RegionManager manager = WorldGuardBridge.getManagerFor(location.getWorld());
         return isInAnyPlayerHome(location, manager);
     }
 
@@ -162,10 +132,10 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     public void playerPreProcess(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
         if (event.getMessage().contains("%cur-house%")) {
-            RegionManager manager = WG.getRegionManager(player.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(player.getWorld());
 
-            for (ProtectedRegion region : manager.getApplicableRegions(player.getLocation())) {
-                if (region.getId().endsWith("-s") && region.getFlag(DefaultFlag.PRICE) != null) {
+            for (ProtectedRegion region : manager.getApplicableRegions(toBlockVec3(player.getLocation()))) {
+                if (region.getId().endsWith("-s") && region.getFlag(ExtendedWGFlags.PRICE) != null) {
                     event.setMessage(event.getMessage().replace("%cur-house%", region.getId()));
                     ChatUtil.sendNotice(player, "Injected region: " + region.getId() + " as current house.");
                     return;
@@ -191,7 +161,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         public void infoHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player player = PlayerUtil.checkPlayer(sender);
 
-            RegionManager manager = WG.getRegionManager(player.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(player.getWorld());
             ProtectedRegion home = requireStoodInHome(player, manager);
 
             StringBuilder builtInfo = new StringBuilder();
@@ -201,14 +171,14 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             if (home.getMembers().size() > 0) {
                 builtInfo.append("\n");
 
-                String friends = home.getMembers().toUserFriendlyString(WG.getProfileCache());
+                String friends = home.getMembers().toUserFriendlyString(WorldGuard.getInstance().getProfileCache());
                 builtInfo.append(ChatColor.BLUE + "Friends: ").append(friends);
             }
 
             boolean hasFlags = false;
             final StringBuilder s = new StringBuilder("\n" + ChatColor.BLUE + "Properties: ");
-            for (Flag<?> flag : DefaultFlag.getFlags()) {
-                Object val = home.getFlag(flag);
+            for (Map.Entry<Flag<?>, Object> entry : home.getFlags().entrySet()) {
+                Object val = entry.getValue();
                 Object group = null;
 
                 if (val == null) {
@@ -219,6 +189,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                     s.append(", ");
                 }
 
+                Flag<?> flag = entry.getKey();
                 RegionGroupFlag groupFlag = flag.getRegionGroupFlag();
                 if (groupFlag != null) {
                     group = home.getFlag(groupFlag);
@@ -245,8 +216,8 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         public void statsHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player player = PlayerUtil.checkPlayer(sender);
 
-            RegionManager manager = WG.getRegionManager(player.getWorld());
-            List<ProtectedRegion> houses = RegionUtil.getHouses(new BukkitPlayer(WG, player), manager);
+            RegionManager manager = WorldGuardBridge.getManagerFor(player.getWorld());
+            List<ProtectedRegion> houses = RegionUtil.getHouses(WorldGuardBridge.wrap(player), manager);
 
             Optional<Integer> optOwnedChunks = RegionUtil.sumChunks(houses);
             int ownedChunks = optOwnedChunks.orElseThrow(() -> {
@@ -264,8 +235,8 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         public void buyChunk(CommandContext args, CommandSender sender) throws CommandException {
             Player player = PlayerUtil.checkPlayer(sender);
 
-            RegionManager manager = WG.getRegionManager(player.getWorld());
-            List<ProtectedRegion> houses = RegionUtil.getHouses(new BukkitPlayer(WG, player), manager);
+            RegionManager manager = WorldGuardBridge.getManagerFor(player.getWorld());
+            List<ProtectedRegion> houses = RegionUtil.getHouses(WorldGuardBridge.wrap(player), manager);
 
             Optional<Integer> optOwnedChunks = RegionUtil.sumChunks(houses);
             int ownedChunks = optOwnedChunks.orElseThrow(() -> {
@@ -288,23 +259,23 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         public void addMemberToHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.checkPlayer(sender);
-            RegionManager manager = WG.getRegionManager(player.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(player.getWorld());
             ProtectedRegion region = requireStoodInHome(player, manager);
 
             // Resolve members asynchronously
             DomainInputResolver resolver = new DomainInputResolver(
-                WG.getProfileService(), args.getParsedPaddedSlice(0, 0));
+                WorldGuard.getInstance().getProfileService(), args.getParsedPaddedSlice(0, 0));
             resolver.setLocatorPolicy(args.hasFlag('n') ? UserLocatorPolicy.NAME_ONLY : UserLocatorPolicy.UUID_ONLY);
 
-            // Then add it to the members
-            ListenableFuture<DefaultDomain> future = Futures.transform(
-                WG.getExecutorService().submit(resolver),
-                resolver.createAddAllFunction(region.getMembers()));
 
-            AsyncCommandHelper.wrap(future, WG, sender)
-                .registerWithSupervisor("Adding members to your home")
+            WorldGuard WG = WorldGuard.getInstance();
+
+            AsyncCommandBuilder.wrap(resolver, new com.sk89q.worldedit.bukkit.BukkitPlayer(player))
+                .registerWithSupervisor(WorldGuard.getInstance().getSupervisor(), "Adding members to your home")
                 .sendMessageAfterDelay("(Please wait... querying player names...)")
-                .thenRespondWith("Home updated with new members.", "Failed to add new members");
+                .onSuccess("Home updated with new members", region.getMembers()::addAll)
+                .onFailure("Failed to add new members", WG.getExceptionConverter())
+                .buildAndExec(WG.getExecutorService());
         }
 
         @Command(aliases = {"removeplayer"}, usage = "<players...>", flags = "n", desc = "Remove a player from your home",
@@ -313,23 +284,22 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         public void removeMemberToHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.checkPlayer(sender);
-            RegionManager manager = WG.getRegionManager(player.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(player.getWorld());
             ProtectedRegion region = requireStoodInHome(player, manager);
 
             // Resolve members asynchronously
             DomainInputResolver resolver = new DomainInputResolver(
-                WG.getProfileService(), args.getParsedPaddedSlice(0, 0));
+                WorldGuard.getInstance().getProfileService(), args.getParsedPaddedSlice(0, 0));
             resolver.setLocatorPolicy(args.hasFlag('n') ? UserLocatorPolicy.NAME_ONLY : UserLocatorPolicy.UUID_AND_NAME);
 
-            // Then remove it from the members
-            ListenableFuture<?> future = Futures.transform(
-                WG.getExecutorService().submit(resolver),
-                resolver.createRemoveAllFunction(region.getMembers()));
+            WorldGuard WG = WorldGuard.getInstance();
 
-            AsyncCommandHelper.wrap(future, WG, sender)
-                .registerWithSupervisor("Removing members from your home")
-                .sendMessageAfterDelay("(Please wait... querying player names...)")
-                .thenRespondWith("Home updated with members removed.", "Failed to remove members");
+            AsyncCommandBuilder.wrap(resolver, WorldEditBridge.wrap(player))
+                    .registerWithSupervisor(WorldGuard.getInstance().getSupervisor(), "Adding members to your home")
+                    .sendMessageAfterDelay("(Please wait... querying player names...)")
+                    .onSuccess("Home updated with members removed", region.getMembers()::removeAll)
+                    .onFailure("Failed to remove members", WG.getExceptionConverter())
+                    .buildAndExec(WG.getExecutorService());
         }
 
         @Command(aliases = {"flag"}, usage = "<flag>", desc = "Flag a home",
@@ -338,7 +308,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         public void flagHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.checkPlayer(sender);
-            ProtectedRegion region = requireStoodInHome(player, WG.getRegionManager(player.getWorld()));
+            ProtectedRegion region = requireStoodInHome(player, WorldGuardBridge.getManagerFor(player.getWorld()));
 
             player.performCommand("rg flag " + region.getId() + " " + args.getJoinedStrings(0));
         }
@@ -350,7 +320,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
             District district;
             if (args.argsLength() == 0) {
-                ProtectedRegion region = requireStoodInHome(player, WG.getRegionManager(player.getWorld()));
+                ProtectedRegion region = requireStoodInHome(player, WorldGuardBridge.getManagerFor(player.getWorld()));
                 district = getHomeDistrict(region);
             } else {
                 district = District.fromName(args.getString(0)).orElseThrow(() -> {
@@ -369,10 +339,10 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
             Player player = PlayerUtil.checkPlayer(sender);
 
-            RegionManager manager = WG.getRegionManager(player.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(player.getWorld());
             ProtectedRegion region = null;
 
-            for (ProtectedRegion aRegion : manager.getApplicableRegions(player.getLocation())) {
+            for (ProtectedRegion aRegion : manager.getApplicableRegions(toBlockVec3(player.getLocation()))) {
                 if (aRegion.getId().endsWith("-s")) {
                     region = aRegion;
                     break;
@@ -385,12 +355,12 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             }
 
             // Get the price and send it to the player
-            Double price = region.getFlag(DefaultFlag.PRICE);
+            Double price = region.getFlag(ExtendedWGFlags.PRICE);
             if (price == null) {
                 throw new CommandException("This house cannot currently be bought.");
             }
 
-            Optional<Integer> optOwnedChunks = RegionUtil.sumChunks(RegionUtil.getHouses(new BukkitPlayer(WG, player), manager));
+            Optional<Integer> optOwnedChunks = RegionUtil.sumChunks(RegionUtil.getHouses(WorldGuardBridge.wrap(player), manager));
             int ownedChunks = optOwnedChunks.orElseThrow(() -> {
                 return new CommandException(CURRENT_OWNED_CHUNK_COUNT_FAILED);
             });
@@ -418,8 +388,8 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                     if (RegionUtil.renameRegion(manager, region.getId(), homeName, true)) {
 
                         region = manager.getRegion(homeName);
-                        region.getOwners().addPlayer(new BukkitPlayer(WG, player));
-                        region.setFlag(DefaultFlag.PRICE, null);
+                        region.getOwners().addPlayer(WorldGuardBridge.wrap(player));
+                        region.setFlag(ExtendedWGFlags.PRICE, null);
                         manager.addRegion(region);
                         manager.save();
 
@@ -447,7 +417,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
             Player player = PlayerUtil.checkPlayer(sender);
 
-            RegionManager manager = WG.getRegionManager(player.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(player.getWorld());
             ProtectedRegion region = requireStoodInHome(player, manager);
 
             // Get the price and send it to the player
@@ -463,7 +433,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                     }
 
                     double blockPrice = optBlockPrice.get();
-                    List<ProtectedRegion> houses = RegionUtil.getHouses(new BukkitPlayer(WG, player), manager);
+                    List<ProtectedRegion> houses = RegionUtil.getHouses(WorldGuardBridge.wrap(player), manager);
                     Optional<Integer> optPreviousChunks = RegionUtil.sumChunks(houses);
                     if (optPreviousChunks.isEmpty()) {
                         ChatUtil.sendError(player, CURRENT_OWNED_CHUNK_COUNT_FAILED);
@@ -493,7 +463,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
                                 // Set the price flag's value and then resave the database
                                 ProtectedRegion newRegion = manager.getRegion(newName);
-                                newRegion.setFlag(DefaultFlag.PRICE, blockPrice * 1.1);
+                                newRegion.setFlag(ExtendedWGFlags.PRICE, blockPrice * 1.1);
                                 manager.addRegion(newRegion);
                                 manager.save();
 
@@ -533,7 +503,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             Player admin = PlayerUtil.checkPlayer(sender);
             String player, regionString, district;
 
-            RegionManager manager = WG.getRegionManager(admin.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(admin.getWorld());
 
             if (args.argsLength() == 2) {
                 player = args.getString(0).toLowerCase();
@@ -549,17 +519,17 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
             if (manager.hasRegion(regionString)) throw new CommandException("That player already has a home.");
 
-            Selection sel = WE.getSelection(admin);
+            Region sel = WorldEditBridge.getSelectionFor(admin);
             if (sel == null) throw new CommandException("Select a region with WorldEdit first.");
 
-            if (sel instanceof Polygonal2DSelection) {
-                Polygonal2DSelection polySel = (Polygonal2DSelection) sel;
-                int minY = polySel.getNativeMinimumPoint().getBlockY();
-                int maxY = polySel.getNativeMaximumPoint().getBlockY();
-                region = new ProtectedPolygonalRegion(regionString, polySel.getNativePoints(), minY, maxY);
-            } else if (sel instanceof CuboidSelection) {
-                BlockVector min = sel.getNativeMinimumPoint().toBlockVector();
-                BlockVector max = sel.getNativeMaximumPoint().toBlockVector();
+            if (sel instanceof Polygonal2DRegion) {
+                Polygonal2DRegion polySel = (Polygonal2DRegion) sel;
+                int minY = polySel.getMinimumY();
+                int maxY = polySel.getMaximumY();
+                region = new ProtectedPolygonalRegion(regionString, polySel.getPoints(), minY, maxY);
+            } else if (sel instanceof CuboidRegion) {
+                BlockVector3 min = sel.getMinimumPoint();
+                BlockVector3 max = sel.getMaximumPoint();
                 region = new ProtectedCuboidRegion(regionString, min, max);
             } else {
                 throw new CommandException("The type of region selected in WorldEdit is unsupported.");
@@ -579,7 +549,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                 server.getScheduler().runTask(inst, () -> {
                     if (optBlockPrice.isPresent()) {
                         Validate.isTrue(player == null);
-                        region.setFlag(DefaultFlag.PRICE, optBlockPrice.get());
+                        region.setFlag(ExtendedWGFlags.PRICE, optBlockPrice.get());
                     } else {
                         Validate.notNull(player);
                         region.getOwners().addPlayer(player);
@@ -629,11 +599,11 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
             Player admin = PlayerUtil.checkPlayer(sender);
 
-            RegionManager manager = WG.getRegionManager(admin.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(admin.getWorld());
 
             List<CompletableFuture<Void>> regionsComplete = new ArrayList<>();
 
-            for (ProtectedRegion region : manager.getApplicableRegions(admin.getLocation())) {
+            for (ProtectedRegion region : manager.getApplicableRegions(toBlockVec3(admin.getLocation()))) {
                 if (isForSaleHouse(region)) {
                     CompletableFuture<Optional<Double>> blockPrice = RegionUtil.calcBlockPrice(
                             region,
@@ -646,7 +616,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                                 ChatUtil.sendError(sender, "Couldn't recompute block price for " + region.getId());
                                 return;
                             }
-                            region.setFlag(DefaultFlag.PRICE, optBlockPrice.get());
+                            region.setFlag(ExtendedWGFlags.PRICE, optBlockPrice.get());
                             outliner.outline(admin.getWorld(), region);
                         });
                     }));
@@ -676,16 +646,16 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
             Player sendingPlayer = PlayerUtil.checkPlayer(sender);
 
-            Selection selection = WE.getSelection(sendingPlayer);
+            Region selection = WorldEditBridge.getSelectionFor(sendingPlayer);
 
-            if (selection == null || selection.getRegionSelector().isDefined()) {
+            if (selection == null) {
                 throw new CommandException("Select a complete region with WorldEdit first.");
             }
 
             Player player = args.argsLength() == 0 ? null : InputUtil.PlayerParser.matchPlayerExactly(sender, args.getString(0));
 
-            Region region = selection.getRegionSelector().getIncompleteRegion();
-            Optional<Integer> optChunkCount = RegionUtil.countChunks(region);
+
+            Optional<Integer> optChunkCount = RegionUtil.countChunks(selection);
             if (optChunkCount.isEmpty()) {
                 throw new CommandException("Region type unsupported.");
             }
@@ -698,9 +668,9 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
             ChatUtil.sendNotice(target, "Chunks: " + size);
 
             // Block Price
-            World world = region.getWorld();
+            World world = selection.getWorld();
 
-            CompletableFuture<Optional<Double>> blockPrice = RegionUtil.calcBlockPrice(region, ((BukkitWorld) world).getWorld());
+            CompletableFuture<Optional<Double>> blockPrice = RegionUtil.calcBlockPrice(selection, ((BukkitWorld) world).getWorld());
             blockPrice.thenAccept((optBlockPrice) -> {
                 server.getScheduler().runTask(inst, () -> {
                     double p1 = RegionUtil.calcChunkPrice(size);
@@ -745,8 +715,8 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                 throw new CommandException("No player found by that name.");
             }
 
-            RegionManager manager = WG.getRegionManager(admin.getWorld());
-            RegionUtil.getHouseStream(WG.wrapOfflinePlayer(offlinePlayer), manager).forEach((house) -> {
+            RegionManager manager = WorldGuardBridge.getManagerFor(admin.getWorld());
+            RegionUtil.getHouseStream(WorldGuardBridge.wrap(offlinePlayer), manager).forEach((house) -> {
                 ChatUtil.sendNotice(admin, house.getId());
             });
         }
@@ -756,11 +726,11 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         public void viewValueHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player admin = PlayerUtil.checkPlayer(sender);
 
-            RegionManager manager = WG.getRegionManager(admin.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(admin.getWorld());
 
             RegionValueEvaluator evaluator = new RegionValueEvaluator(true);
 
-            for (ProtectedRegion region : manager.getApplicableRegions(admin.getLocation())) {
+            for (ProtectedRegion region : manager.getApplicableRegions(toBlockVec3(admin.getLocation()))) {
                 if (!isHouse(region)) {
                     continue;
                 }
@@ -789,7 +759,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         public void walkInactiveHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player admin = PlayerUtil.checkPlayer(sender);
 
-            RegionManager manager = WG.getRegionManager(admin.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(admin.getWorld());
 
             for (Map.Entry<String, ProtectedRegion> entry : manager.getRegions().entrySet()) {
                 ProtectedRegion region = entry.getValue();
@@ -824,7 +794,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         public void purgeInactiveHomeCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player admin = PlayerUtil.checkPlayer(sender);
 
-            RegionManager manager = WG.getRegionManager(admin.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(admin.getWorld());
 
             RegionValueEvaluator evaluator = new RegionValueEvaluator(true);
             RegionContainerClearer containerClearer = new RegionContainerClearer();
@@ -875,7 +845,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                             return;
                         }
 
-                        List<ProtectedRegion> houses = RegionUtil.getHouses(WG.wrapOfflinePlayer(owner), manager);
+                        List<ProtectedRegion> houses = RegionUtil.getHouses(WorldGuardBridge.wrap(owner), manager);
                         Optional<Integer> optPreviousChunks = RegionUtil.sumChunks(houses);
                         if (optPreviousChunks.isEmpty()) {
                             return;
@@ -915,7 +885,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
 
                                     // Set the price flag's value and then resave the database
                                     ProtectedRegion newRegion = manager.getRegion(newName);
-                                    newRegion.setFlag(DefaultFlag.PRICE, report.getBlockPrice() * 1.1);
+                                    newRegion.setFlag(ExtendedWGFlags.PRICE, report.getBlockPrice() * 1.1);
                                     manager.addRegion(newRegion);
                                     manager.save();
 
@@ -942,7 +912,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
         public void clearVacantLotsCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player admin = PlayerUtil.checkPlayer(sender);
 
-            RegionManager manager = WG.getRegionManager(admin.getWorld());
+            RegionManager manager = WorldGuardBridge.getManagerFor(admin.getWorld());
 
             RegionContainerClearer containerClearer = new RegionContainerClearer();
 
@@ -984,7 +954,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     }
 
     public static Optional<ProtectedRegion> getStoodInHome(Player player, RegionManager manager) {
-        for (ProtectedRegion aRegion : manager.getApplicableRegions(player.getLocation())) {
+        for (ProtectedRegion aRegion : manager.getApplicableRegions(toBlockVec3(player.getLocation()))) {
             if (isPlayerHouse(aRegion, new BukkitPlayer(WorldGuardPlugin.inst(), player))) {
                 return Optional.of(aRegion);
             }
@@ -1013,7 +983,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
     }
 
     public static boolean isForSaleHouse(ProtectedRegion region) {
-        return region.getId().endsWith("-s") && region.getFlag(DefaultFlag.PRICE) != null;
+        return region.getId().endsWith("-s") && region.getFlag(ExtendedWGFlags.PRICE) != null;
     }
 
     public static boolean isPlayerHouse(ProtectedRegion region, LocalPlayer player) {

@@ -1,19 +1,17 @@
 package gg.packetloss.grindstone.city.engine.area.areas.Spleef;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
-import gg.packetloss.grindstone.util.APIUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -49,16 +47,10 @@ public class SpleefArea extends BukkitComponent implements Runnable {
     private void reloadConfig() {
         World world = server.getWorlds().get(0);
 
-        try {
-            WorldGuardPlugin WG = APIUtil.getWorldGuard();
-
-            configure(config);
-            for (String regionName : config.arenas) {
-                RegionManager manager = WG.getRegionManager(world);
-                spleefInstances.add(new SpleefAreaInstance(this, world, manager, regionName));
-            }
-        } catch (UnknownPluginException ignored) {
-            log.info("WorldGuard could not be found!");
+        configure(config);
+        for (String regionName : config.arenas) {
+            RegionManager manager = WorldGuardBridge.getManagerFor(world);
+            spleefInstances.add(new SpleefAreaInstance(this, world, manager, regionName));
         }
     }
 

@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations.support;
 
-import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import gg.packetloss.grindstone.events.custom.item.BuildToolUseEvent;
 import gg.packetloss.grindstone.items.custom.CustomItem;
@@ -130,17 +130,17 @@ public abstract class RadialExecutor {
         ItemStack item = player.getInventory().getItemInMainHand();
         final int radius = getRadius(item);
 
-        Vector min = new Vector(clicked.getX(), clicked.getY(), clicked.getZ());
-        Vector max = new Vector(clicked.getX(), clicked.getY(), clicked.getZ());
+        BlockVector3 min = BlockVector3.at(clicked.getX(), clicked.getY(), clicked.getZ());
+        BlockVector3 max = BlockVector3.at(clicked.getX(), clicked.getY(), clicked.getZ());
         switch (event.getBlockFace()) {
             case NORTH:
             case SOUTH:
-                min = min.add(new Vector(
+                min = min.add(BlockVector3.at(
                         BlockFace.EAST.getModX(),
                         BlockFace.DOWN.getModY(),
                         BlockFace.EAST.getModZ()
                 ).multiply(radius));
-                max = max.add(new Vector(
+                max = max.add(BlockVector3.at(
                         BlockFace.WEST.getModX(),
                         BlockFace.UP.getModY(),
                         BlockFace.WEST.getModZ()
@@ -148,12 +148,12 @@ public abstract class RadialExecutor {
                 break;
             case EAST:
             case WEST:
-                min = min.add(new Vector(
+                min = min.add(BlockVector3.at(
                         BlockFace.NORTH.getModX(),
                         BlockFace.DOWN.getModY(),
                         BlockFace.NORTH.getModZ()
                 ).multiply(radius));
-                max = max.add(new Vector(
+                max = max.add(BlockVector3.at(
                         BlockFace.SOUTH.getModX(),
                         BlockFace.UP.getModY(),
                         BlockFace.SOUTH.getModZ()
@@ -161,12 +161,12 @@ public abstract class RadialExecutor {
                 break;
             case UP:
             case DOWN:
-                min = min.add(new Vector(
+                min = min.add(BlockVector3.at(
                         BlockFace.NORTH_EAST.getModX(),
                         0,
                         BlockFace.NORTH_EAST.getModZ()
                 ).multiply(radius));
-                max = max.add(new Vector(
+                max = max.add(BlockVector3.at(
                         BlockFace.SOUTH_WEST.getModX(),
                         0,
                         BlockFace.SOUTH_WEST.getModZ()

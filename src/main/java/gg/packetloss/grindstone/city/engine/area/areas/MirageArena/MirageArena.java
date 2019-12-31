@@ -11,15 +11,17 @@ import com.sk89q.commandbook.commands.PaginatedResult;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
-import com.sk89q.worldedit.CuboidClipboard;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.data.DataException;
-import com.sk89q.worldedit.schematic.SchematicFormat;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.*;
+import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
+import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.util.io.Closer;
+import com.sk89q.worldedit.world.block.BlockState;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -27,23 +29,22 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvPScope;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
-import gg.packetloss.grindstone.util.APIUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.RegionUtil;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -69,23 +70,18 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
     protected PvPScope scope;
     protected boolean editing = false;
 
-    protected Set<Vector> manuallyPlacedLocations = new HashSet<>();
+    protected Set<BlockVector3> manuallyPlacedLocations = new HashSet<>();
 
     @Override
     public void setUp() {
-        try {
-            WorldGuardPlugin WG = APIUtil.getWorldGuard();
-            world = server.getWorlds().get(0);
-            region = WG.getRegionManager(world).getRegion("carpe-diem-district-mirage-arena");
-            tick = 5 * 20;
-            listener = new MirageArenaListener(this);
-            config = new MirageArenaConfig();
+        world = server.getWorlds().get(0);
+        region = WorldGuardBridge.getManagerFor(world).getRegion("carpe-diem-district-mirage-arena");
+        tick = 5 * 20;
+        listener = new MirageArenaListener(this);
+        config = new MirageArenaConfig();
 
-            registerScope();
-            registerCommands(Commands.class);
-        } catch (UnknownPluginException e) {
-            log.info("WorldGuard could not be found!");
-        }
+        registerScope();
+        registerCommands(Commands.class);
     }
 
     @Override
@@ -141,7 +137,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                 changeMirage(next);
             } catch (CommandException e) {
                 ChatUtil.sendError(players, "The arena was already changing, the vote has been cancelled!");
-            } catch (IOException | DataException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 ChatUtil.sendError(players, "The arena could not be changed to " + next + "!");
             }
@@ -162,7 +158,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         blockState.popBlocksWhere(BlockStateKind.MIRAGE_ARENA, (blockRecord) -> {
             if (currentTime - blockRecord.getCreationTime() >= TimeUnit.MINUTES.toMillis(4)) {
                 return manuallyPlacedLocations.contains(
-                        new Vector(blockRecord.getX(), blockRecord.getY(), blockRecord.getZ())
+                        BlockVector3.at(blockRecord.getX(), blockRecord.getY(), blockRecord.getZ())
                 );
             }
 
@@ -202,8 +198,11 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         }
     }
 
-    public void callEdit(EditSession editor, CuboidClipboard board,
-                         int cx, int cy, int maxX, int maxY, int maxZ) {
+    public void callEdit(EditSession editor, Clipboard board,
+                         int cx, int cy, BlockVector3 diminsions) {
+        int maxX = diminsions.getX();
+        int maxY = diminsions.getY();
+        int maxZ = diminsions.getZ();
 
         if (cy >= maxY) {
             ChatUtil.sendNotice(getContained(Player.class), "Editing Completed.");
@@ -220,9 +219,9 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         {
             for (int x = cx; x < maxX; ++x) {
                 for (int z = 0; z < maxZ; ++z) {
-                    Vector v = new Vector(x, cy, z);
-                    Vector target = v.add(region.getMinimumPoint());
-                    BaseBlock targetBlock = board.getBlock(v);
+                    BlockVector3 v = BlockVector3.at(x, cy, z);
+                    BlockVector3 target = v.add(region.getMinimumPoint());
+                    BlockState targetBlock = board.getBlock(v);
                     try {
                         editor.setBlock(target, targetBlock);
                     } catch (MaxChangedBlocksException e) {
@@ -243,11 +242,11 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         final int finalCy = cy;
         final int finalCx = cx;
         server.getScheduler().runTaskLater(inst, () -> {
-            callEdit(editor, board, finalCx, finalCy, maxX, maxY, maxZ);
+            callEdit(editor, board, finalCx, finalCy, diminsions);
         }, post / 5);
     }
 
-    public void changeMirage(String newMirage) throws IOException, DataException, CommandException {
+    public void changeMirage(String newMirage) throws IOException, CommandException {
         File file = getFile(newMirage);
         if (!file.exists()) {
             throw new FileNotFoundException();
@@ -258,19 +257,25 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         }
         editing = true;
 
-        EditSession editor = new EditSession(new BukkitWorld(world), -1);
+        EditSession editor = WorldEditBridge.getSystemEditSessionFor(world);
         editor.setFastMode(true);
-        CuboidClipboard clipboard = SchematicFormat.MCEDIT.load(file);
-        int maxX = clipboard.getWidth();
-        int maxY = clipboard.getHeight();
-        int maxZ = clipboard.getLength();
 
-        resetBlockRecordIndex();
-        callEdit(editor, clipboard, 0, 0, maxX, maxY, maxZ);
+        try (Closer closer = Closer.create()) {
+            FileInputStream fis = closer.register(new FileInputStream(file));
+            BufferedInputStream bis = closer.register(new BufferedInputStream(fis));
+
+            ClipboardFormat format = ClipboardFormats.findByFile(file);
+            ClipboardReader reader = closer.register(format.getReader(bis));
+
+            Clipboard clipboard = reader.read();
+            resetBlockRecordIndex();
+
+            callEdit(editor, clipboard, 0, 0, clipboard.getDimensions());
+        }
     }
 
     protected void handleBlockBreak(Block block) {
-        if (manuallyPlacedLocations.remove(new Vector(block.getX(), block.getY(), block.getZ()))) {
+        if (manuallyPlacedLocations.remove(BlockVector3.at(block.getX(), block.getY(), block.getZ()))) {
             return;
         }
 
@@ -365,7 +370,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                 flags = "o", min = 1, max = 1)
         @CommandPermissions("aurora.mirage.save")
         public void areaSave(CommandContext args, CommandSender sender) throws CommandException {
-            Vector min = region.getMinimumPoint();
+            BlockVector3 min = region.getMinimumPoint();
 
             String initFile = args.getString(0);
             File file = getFile(initFile);
@@ -381,18 +386,29 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                 }
             }
 
-            try {
-                EditSession editor = new EditSession(new BukkitWorld(world), -1);
-                Vector size = region.getMaximumPoint().subtract(min).add(1, 1, 1);
+            EditSession editor = WorldEditBridge.getSystemEditSessionFor(world);
 
-                CuboidClipboard clipboard = new CuboidClipboard(size, min);
-                clipboard.copy(editor);
-                SchematicFormat.MCEDIT.save(clipboard, getFile(initFile));
+            try (Closer closer = Closer.create()) {
+                FileOutputStream fis = closer.register(new FileOutputStream(file));
+                BufferedOutputStream bos = closer.register(new BufferedOutputStream(fis));
 
-            } catch (IOException | DataException e) {
+                // FIXME: Migrate to sponge schematic format
+                ClipboardWriter writer = closer.register(BuiltInClipboardFormat.MCEDIT_SCHEMATIC.getWriter(bos));
+
+                Region internalRegion = RegionUtil.convert(region).orElseThrow();
+                BlockArrayClipboard clipboard = new BlockArrayClipboard(internalRegion);
+
+                ForwardExtentCopy copy = new ForwardExtentCopy(editor, internalRegion, clipboard, region.getMinimumPoint());
+                copy.setCopyingEntities(false);
+                copy.setCopyingBiomes(false);
+
+                Operations.completeLegacy(copy);
+
+                writer.write(clipboard);
+            } catch (IOException | MaxChangedBlocksException e) {
                 e.printStackTrace();
-                throw new CommandException("That arena state could not be saved!");
             }
+
             ChatUtil.sendNotice(sender, "Successfully saved.");
         }
 
@@ -412,7 +428,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                 } catch (FileNotFoundException ex) {
                     throw new CommandException("No arena state exist by that name!");
                 }
-            } catch (IOException | DataException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 ChatUtil.sendError(sender, "Error encountered, check console.");
             }

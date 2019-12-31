@@ -6,11 +6,6 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.PatientX;
 
-import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
-import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -18,9 +13,9 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.player.AdminToolkit;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -69,33 +64,28 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     @Override
     public void setUp() {
-        try {
-            WorldGuardPlugin WG = APIUtil.getWorldGuard();
-            world = server.getWorlds().get(0);
-            RegionManager manager = WG.getRegionManager(world);
-            String base = "glacies-mare-district-mad-man";
-            region = manager.getRegion(base);
-            ice = manager.getRegion(base + "-ice");
-            drops = manager.getRegion(base + "-drops");
-            entry = manager.getRegion("carpe-diem-district-theater-patient-x");
-            tick = 8 * 20;
-            listener = new PatientXListener(this);
-            config = new PatientXConfig();
-            adminKit = new AdminToolkit(admin);
+        world = server.getWorlds().get(0);
+        RegionManager manager = WorldGuardBridge.getManagerFor(world);
+        String base = "glacies-mare-district-mad-man";
+        region = manager.getRegion(base);
+        ice = manager.getRegion(base + "-ice");
+        drops = manager.getRegion(base + "-drops");
+        entry = manager.getRegion("carpe-diem-district-theater-patient-x");
+        tick = 8 * 20;
+        listener = new PatientXListener(this);
+        config = new PatientXConfig();
+        adminKit = new AdminToolkit(admin);
 
-            server.getScheduler().runTaskTimer(inst, (Runnable) this::runAttack, 0, 20 * 20);
+        server.getScheduler().runTaskTimer(inst, (Runnable) this::runAttack, 0, 20 * 20);
 
-            destinations.add(new Location(world, -180, 54, 109.5));
-            destinations.add(new Location(world, -173, 54, 120));
-            destinations.add(new Location(world, -203, 58, 135.5));
-            destinations.add(new Location(world, -213, 58, 116));
-            destinations.add(new Location(world, -230.5, 50, 110));
-            destinations.add(new Location(world, -203.5, 47, 109.5));
-            destinations.add(new Location(world, -173, 47, 109.5));
-            destinations.add(getCentralLoc());
-        } catch (UnknownPluginException e) {
-            log.info("WorldGuard could not be found!");
-        }
+        destinations.add(new Location(world, -180, 54, 109.5));
+        destinations.add(new Location(world, -173, 54, 120));
+        destinations.add(new Location(world, -203, 58, 135.5));
+        destinations.add(new Location(world, -213, 58, 116));
+        destinations.add(new Location(world, -230.5, 50, 110));
+        destinations.add(new Location(world, -203.5, 47, 109.5));
+        destinations.add(new Location(world, -173, 47, 109.5));
+        destinations.add(getCentralLoc());
     }
 
     @Override
@@ -360,8 +350,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     public boolean isArenaLoaded() {
-        Region region = new CuboidRegion(this.region.getMinimumPoint(), this.region.getMaximumPoint());
-        return BukkitUtil.toLocation(getWorld(), region.getCenter()).getChunk().isLoaded();
+        return RegionUtil.getCenter(getWorld(), getRegion()).getChunk().isLoaded();
     }
 
     public boolean isBossSpawned() {
@@ -438,11 +427,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     protected Location getCentralLoc() {
-        BlockVector min = region.getMinimumPoint();
-        BlockVector max = region.getMaximumPoint();
-
-        Region region = new CuboidRegion(min, max);
-        return BukkitUtil.toLocation(world, region.getCenter().setY(groundLevel));
+        return RegionUtil.getCenterAt(world, groundLevel, region);
     }
 
     protected Location getRandomDest() {

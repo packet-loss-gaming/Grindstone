@@ -6,11 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.GiantBoss;
 
-import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
-import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -19,13 +15,14 @@ import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
+import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.util.timer.TimerUtil;
@@ -80,32 +77,27 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     @Override
     public void setUp() {
-        try {
-            WorldGuardPlugin WG = APIUtil.getWorldGuard();
-            world = server.getWorlds().get(0);
-            RegionManager manager = WG.getRegionManager(world);
-            region = manager.getRegion("vineam-district-giant-boss-area");
-            eastDoor = manager.getRegion("vineam-district-giant-boss-east-door");
-            westDoor = manager.getRegion("vineam-district-giant-boss-west-door");
-            tick = 4 * 20;
-            listener = new GiantBossListener(this);
-            config = new GiantBossConfig();
+        world = server.getWorlds().get(0);
+        RegionManager manager = WorldGuardBridge.getManagerFor(world);
+        region = manager.getRegion("vineam-district-giant-boss-area");
+        eastDoor = manager.getRegion("vineam-district-giant-boss-east-door");
+        westDoor = manager.getRegion("vineam-district-giant-boss-west-door");
+        tick = 4 * 20;
+        listener = new GiantBossListener(this);
+        config = new GiantBossConfig();
 
-            mobDestroyer = server.getScheduler().runTaskTimer(inst, () -> {
-                Collection<Entity> contained = getContained(1, Zombie.class, ExperienceOrb.class);
-                if (!EnvironmentUtil.hasThunderstorm(getWorld())) removeOutsideZombies(contained);
-                if (isBossSpawned()) {
-                    buffBabies(contained);
-                    removeXP(contained);
-                }
-            }, 0, 20 * 2);
-            // First spawn requirement
-            probeArea();
-            // Set difficulty
-            difficulty = getWorld().getDifficulty().getValue();
-        } catch (UnknownPluginException e) {
-            log.info("WorldGuard could not be found!");
-        }
+        mobDestroyer = server.getScheduler().runTaskTimer(inst, () -> {
+            Collection<Entity> contained = getContained(1, Zombie.class, ExperienceOrb.class);
+            if (!EnvironmentUtil.hasThunderstorm(getWorld())) removeOutsideZombies(contained);
+            if (isBossSpawned()) {
+                buffBabies(contained);
+                removeXP(contained);
+            }
+        }, 0, 20 * 2);
+        // First spawn requirement
+        probeArea();
+        // Set difficulty
+        difficulty = getWorld().getDifficulty().getValue();
     }
 
     @Override
@@ -155,21 +147,17 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     }
 
     public boolean isArenaLoaded() {
-        BlockVector min = getRegion().getMinimumPoint();
-        BlockVector max = getRegion().getMaximumPoint();
-        Region region = new CuboidRegion(min, max);
-        return BukkitUtil.toLocation(getWorld(), region.getCenter()).getChunk().isLoaded();
+        return RegionUtil.getCenter(getWorld(), getRegion()).getChunk().isLoaded();
     }
 
     public void spawnBoss() {
-        BlockVector min = getRegion().getMinimumPoint();
-        BlockVector max = getRegion().getMaximumPoint();
-        Region region = new CuboidRegion(min, max);
-        Location l = BukkitUtil.toLocation(getWorld(), region.getCenter().setY(groundLevel));
-        boss = getWorld().spawn(l, Giant.class);
+        Location spawnLoc = RegionUtil.getCenterAt(getWorld(), groundLevel, getRegion());
+
+        boss = getWorld().spawn(spawnLoc, Giant.class);
         boss.setMaxHealth(510 + (difficulty * 80));
         boss.setHealth(510 + (difficulty * 80));
         boss.setRemoveWhenFarAway(false);
+
         try {
             AttributeBook.setAttribute(boss, AttributeBook.Attribute.KNOCKBACK_RESISTANCE, 1);
             AttributeBook.setAttribute(boss, AttributeBook.Attribute.FOLLOW_RANGE, 40);
@@ -193,30 +181,22 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     public void probeArea() {
         spawnPts.clear();
         chestPts.clear();
-        BlockVector min = getRegion().getParent().getMinimumPoint();
-        BlockVector max = getRegion().getParent().getMaximumPoint();
-        int minX = min.getBlockX();
-        int minZ = min.getBlockZ();
-        int minY = min.getBlockY();
-        int maxX = max.getBlockX();
-        int maxZ = max.getBlockZ();
-        int maxY = max.getBlockY();
-        BlockState block;
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                for (int y = maxY; y >= minY; --y) {
-                    block = getWorld().getBlockAt(x, y, z).getState();
-                    if (!block.getChunk().isLoaded()) block.getChunk().load();
-                    if (block.getType() == Material.GOLD_BLOCK) {
-                        spawnPts.add(block.getLocation().add(0, 2, 0));
-                        continue;
-                    }
-                    if (block.getType() == Material.CHEST) {
-                        chestPts.add(block.getLocation());
-                    }
-                }
+
+        RegionWalker.walk(getRegion().getParent(), (x, y, z) -> {
+            BlockState block = getWorld().getBlockAt(x, y, z).getState();
+            if (!block.getChunk().isLoaded()) {
+                block.getChunk().load();
             }
-        }
+
+            if (block.getType() == Material.GOLD_BLOCK) {
+                spawnPts.add(block.getLocation().add(0, 2, 0));
+                return;
+            }
+
+            if (block.getType() == Material.CHEST) {
+                chestPts.add(block.getLocation());
+            }
+        });
     }
 
     public Runnable spawnXP = () -> {
@@ -518,8 +498,17 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     }
 
     public void setDoor(final ProtectedRegion door, Material type) {
-        Block sideOne = BukkitUtil.toLocation(world, door.getMaximumPoint()).getBlock();
-        Block sideTwo = BukkitUtil.toLocation(world, door.getMinimumPoint().setY(sideOne.getY())).getBlock();
+        final BlockVector3 min = door.getMinimumPoint();
+        final BlockVector3 max = door.getMaximumPoint();
+
+        int minX = min.getBlockX();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxY = max.getBlockY();
+        int maxZ = max.getBlockZ();
+
+        Block sideOne = new Location(world, maxX, maxY, maxZ).getBlock();
+        Block sideTwo = new Location(world, minX, maxY, minZ).getBlock();
 
         doNextDoorBlock(door, sideOne, true, type, 1);
         doNextDoorBlock(door, sideTwo, false, type, 1);

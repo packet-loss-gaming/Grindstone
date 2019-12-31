@@ -7,7 +7,7 @@
 package gg.packetloss.grindstone.city.engine.area.areas.MirageArena;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.math.BlockVector3;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
@@ -19,6 +19,7 @@ import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
@@ -84,7 +85,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         }
 
         // Otherwise allow the block place, and schedule a reset
-        Vector blockLocVec = new Vector(block.getX(), block.getY(), block.getZ());
+        BlockVector3 blockLocVec = WorldEditBridge.toBlockVec3(block);
         parent.manuallyPlacedLocations.add(blockLocVec);
         BlockState replacedState = event.getBlockReplacedState();
 

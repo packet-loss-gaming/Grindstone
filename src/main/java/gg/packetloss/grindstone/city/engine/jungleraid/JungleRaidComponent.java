@@ -8,13 +8,12 @@ package gg.packetloss.grindstone.city.engine.jungleraid;
 
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.*;
-import com.sk89q.worldedit.blocks.BlockType;
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.MaxChangedBlocksException;
+import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitConfiguration;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.DataException;
@@ -22,7 +21,6 @@ import com.sk89q.worldedit.world.snapshot.Snapshot;
 import com.sk89q.worldedit.world.snapshot.SnapshotRestore;
 import com.sk89q.worldedit.world.storage.ChunkStore;
 import com.sk89q.worldedit.world.storage.MissingWorldException;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -47,7 +45,6 @@ import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePrePopEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
@@ -57,6 +54,8 @@ import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -74,7 +73,6 @@ import gg.packetloss.hackbook.ChunkBook;
 import gg.packetloss.hackbook.ModifierBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Location;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -96,7 +94,6 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.material.Door;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -110,6 +107,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Jungle Raid", desc = "Warfare at it's best!")
@@ -490,13 +488,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
     private void setupRegionInfo() {
         world = Bukkit.getWorld(config.worldName);
-        try {
-            RegionManager manager = getWorldGuard().getGlobalRegionManager().get(world);
-            region = manager.getRegion(config.region);
-            lobbyRegion = manager.getRegion(config.region + "-lobby");
-        } catch (UnknownPluginException e) {
-            e.printStackTrace();
-        }
+
+        RegionManager manager = WorldGuardBridge.getManagerFor(world);
+        region = manager.getRegion(config.region);
 
         lobbySpawnLocation = new Location(world, -752, 81, -340, 180, 0);
         lobbyExitLocation = new Location(world, -752, 81, -336);
@@ -719,15 +713,15 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     public Location getRandomLocation() {
-        Vector min = region.getMinimumPoint();
-        Vector max = region.getMaximumPoint();
+        BlockVector3 min = region.getMinimumPoint();
+        BlockVector3 max = region.getMaximumPoint();
 
         while (true) {
-            Location randomDest = new Location(
+            Location randomDest = LocationUtil.pickLocation(
                     world,
-                    ChanceUtil.getRangedRandom(min.getX(), max.getX()),
-                    ChanceUtil.getRangedRandom(16, 80),
-                    ChanceUtil.getRangedRandom(min.getZ(), max.getZ())
+                    min.getX(), max.getX(),
+                    16, 80,
+                    min.getZ(), max.getZ()
             );
 
             Location freePos = LocationUtil.findFreePosition(randomDest);
@@ -777,8 +771,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private Location getRandomOrePointAtLevel(int minY, int maxY) {
-        Vector min = region.getMinimumPoint();
-        Vector max = region.getMaximumPoint();
+        BlockVector3 min = region.getMinimumPoint();
+        BlockVector3 max = region.getMaximumPoint();
 
         while (true) {
             Location randomDest = new Location(
@@ -972,14 +966,12 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             // Distributor
             if (isFlagEnabled(JungleRaidFlag.END_OF_DAYS) || isFlagEnabled(JungleRaidFlag.GRENADES) || isFlagEnabled(JungleRaidFlag.POTION_PLUMMET) || suddenD) {
 
-                BlockVector bvMax = region.getMaximumPoint();
-                BlockVector bvMin = region.getMinimumPoint();
+                BlockVector3 bvMax = region.getMaximumPoint();
+                BlockVector3 bvMin = region.getMinimumPoint();
 
                 for (int i = 0; i < ChanceUtil.getRangedRandom(flagData.amt / 3, flagData.amt); i++) {
 
-                    Vector v = LocationUtil.pickLocation(bvMin.getX(), bvMax.getX(),
-                            bvMin.getZ(), bvMax.getZ()).add(0, bvMax.getY(), 0);
-                    Location testLoc = new Location(world, v.getX(), v.getY(), v.getZ());
+                    Location testLoc = LocationUtil.pickLocation(world, bvMax.getY(), bvMin, bvMax);
 
                     if (testLoc.getBlock().getType() != Material.AIR) continue;
 
@@ -1054,12 +1046,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private void restore() {
         state = JungleRaidState.RESTORING;
 
-        BukkitConfiguration worldEditConfig = null;
-        try {
-            worldEditConfig = getWorldEdit().getLocalConfiguration();
-        } catch (UnknownPluginException e) {
-            e.printStackTrace();
-        }
+        BukkitConfiguration worldEditConfig = WorldEditBridge.getLocalConfiguration();
         if ((worldEditConfig != null ? worldEditConfig.snapshotRepo : null) == null) {
             log.warning("No snapshots configured, restoration cancelled.");
             return;
@@ -1068,7 +1055,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         try {
             // Discover chunks
             world.getEntitiesByClasses(Item.class, TNTPrimed.class, Creature.class).stream()
-                    .filter(entity -> region.contains(BukkitUtil.toVector(entity.getLocation())))
+                    .filter(entity -> region.contains(toBlockVec3(entity.getLocation())))
                     .forEach(Entity::remove);
 
             final Snapshot snap = worldEditConfig.snapshotRepo.getDefaultSnapshot(config.worldName);
@@ -1080,8 +1067,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
             final List<Chunk> chunkList = new ArrayList<>();
 
-            Vector min;
-            Vector max;
+            BlockVector3 min;
+            BlockVector3 max;
 
             try {
                 min = region.getMinimumPoint();
@@ -1132,8 +1119,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                     try {
                         Block minBlock = chunk.getBlock(0, minY, 0);
                         Block maxBlock = chunk.getBlock(15, maxY, 15);
-                        Vector minPt = new Vector(minBlock.getX(), minBlock.getY(), minBlock.getZ());
-                        Vector maxPt = new Vector(maxBlock.getX(), maxBlock.getY(), maxBlock.getZ());
+                        BlockVector3 minPt = BlockVector3.at(minBlock.getX(), minBlock.getY(), minBlock.getZ());
+                        BlockVector3 maxPt = BlockVector3.at(maxBlock.getX(), maxBlock.getY(), maxBlock.getZ());
 
                         Region r = new CuboidRegion(minPt, maxPt);
 
@@ -1542,7 +1529,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                     ChatUtil.sendError(player, "You cannot break blocks by hand this game.");
                     event.setCancelled(true);
                 } else if (isFlagEnabled(JungleRaidFlag.NO_MINING)) {
-                    if (BlockType.isNaturalTerrainBlock(event.getBlock().getType())) {
+                    if (EnvironmentUtil.isNaturalTerrainBlock(event.getBlock())) {
                         ChatUtil.sendError(player, "You cannot mine this game.");
                         event.setCancelled(true);
                     }
@@ -1711,29 +1698,5 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 onJungleRaidSpectatorPop(event);
             }
         }
-    }
-
-    private WorldEditPlugin getWorldEdit() throws UnknownPluginException {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldEdit");
-
-        // WorldEdit may not be loaded
-        if (!(plugin instanceof WorldEditPlugin)) {
-            throw new UnknownPluginException("WorldEdit");
-        }
-
-        return (WorldEditPlugin) plugin;
-    }
-
-    private WorldGuardPlugin getWorldGuard() throws UnknownPluginException {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (!(plugin instanceof WorldGuardPlugin)) {
-            throw new UnknownPluginException("WorldGuard");
-        }
-
-        return (WorldGuardPlugin) plugin;
     }
 }

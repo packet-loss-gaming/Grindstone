@@ -11,9 +11,6 @@ import com.sk89q.commandbook.commands.PaginatedResult;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -26,11 +23,11 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.economic.store.mysql.MySQLItemStoreDatabase;
 import gg.packetloss.grindstone.economic.store.mysql.MySQLMarketTransactionDatabase;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
@@ -39,7 +36,6 @@ import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.*;
@@ -47,6 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.StringUtil.toTitleCase;
+import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 import static gg.packetloss.grindstone.util.item.ItemNameCalculator.*;
 
 @ComponentInformation(friendlyName = "Market", desc = "Buy and sell goods.")
@@ -95,11 +92,7 @@ public class MarketComponent extends BukkitComponent {
 
             // Get the region
             server.getScheduler().runTaskLater(inst, () -> {
-                try {
-                    region = getWorldGuard().getGlobalRegionManager().get(Bukkit.getWorld("City")).getRegion("vineam-district-bank");
-                } catch (UnknownPluginException e) {
-                    e.printStackTrace();
-                }
+                region = WorldGuardBridge.getManagerFor(Bukkit.getWorld("City")).getRegion("vineam-district-bank");
             }, 1);
 
             // Calculate delay
@@ -699,24 +692,10 @@ public class MarketComponent extends BukkitComponent {
     }
 
     public boolean isInArea(Location location) {
-        Vector v = BukkitUtil.toVector(location);
-        return location.getWorld().getName().equals("City") && region != null && region.contains(v);
-    }
-
-    private WorldGuardPlugin getWorldGuard() throws UnknownPluginException {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (!(plugin instanceof WorldGuardPlugin)) {
-            throw new UnknownPluginException("WorldGuard");
-        }
-
-        return (WorldGuardPlugin) plugin;
+        return location.getWorld().getName().equals("City") && region != null && region.contains(toBlockVec3(location));
     }
 
     private boolean setupEconomy() {
-
         RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
                 .vault.economy.Economy.class);
         if (economyProvider != null) {

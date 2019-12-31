@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.city.engine.arena;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
@@ -98,9 +99,8 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
         try {
             if (!isEmpty()) {
-
-                com.sk89q.worldedit.Vector min = getRegion().getMinimumPoint();
-                com.sk89q.worldedit.Vector max = getRegion().getMaximumPoint();
+                BlockVector3 min = getRegion().getMinimumPoint();
+                BlockVector3 max = getRegion().getMaximumPoint();
 
                 int minX = min.getBlockX();
                 int minY = min.getBlockY();

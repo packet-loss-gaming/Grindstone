@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.city.engine.area.areas.PatientX;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.area.areas.DropParty.DropPartyTask;
@@ -399,7 +400,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 CuboidRegion rg = new CuboidRegion(parent.drops.getMinimumPoint(), parent.drops.getMaximumPoint());
                 DropPartyTask task = new DropPartyTask(parent.getWorld(), rg, drops, new RegionChecker(rg) {
                     @Override
-                    public Boolean evaluate(com.sk89q.worldedit.Vector v) {
+                    public Boolean evaluate(BlockVector3 v) {
                         Location l = new Location(parent.getWorld(), v.getX(), v.getY(), v.getZ());
                         return super.evaluate(v) && !l.getBlock().getType().isSolid();
                     }

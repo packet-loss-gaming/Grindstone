@@ -13,12 +13,9 @@ import com.sk89q.commandbook.session.PersistentSession;
 import com.sk89q.commandbook.session.SessionComponent;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
-import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.blocks.BaseBlock;
-import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.patterns.Pattern;
-import com.sk89q.worldedit.patterns.SingleBlockPattern;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.world.block.BlockType;
+import com.sk89q.worldedit.world.block.BlockTypes;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -39,7 +36,6 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePrePopEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
-import gg.packetloss.grindstone.exceptions.UnknownPluginException;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
@@ -48,6 +44,8 @@ import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -81,7 +79,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.material.Door;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BlockIterator;
@@ -134,13 +131,9 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
 
     private void setupRegionInfo() {
         world = Bukkit.getWorld(config.worldName);
-        try {
-            RegionManager manager = getWorldGuard().getGlobalRegionManager().get(world);
-            region = manager.getRegion(config.region);
-            lobbyRegion = manager.getRegion(config.region + "-lobby");
-        } catch (UnknownPluginException e) {
-            e.printStackTrace();
-        }
+        RegionManager manager = WorldGuardBridge.getManagerFor(world);
+        region = manager.getRegion(config.region);
+        lobbyRegion = manager.getRegion(config.region + "-lobby");
 
         lobbySpawnLocation = new Location(world, 464, 81, 109, 180, 0);
         lobbyExitLocation = new Location(world, 464, 81, 112.5);
@@ -345,7 +338,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                     sessions.getSession(SkyWarSession.class, player).stopPushBack();
                 }
 
-                editStartingPad(Material.AIR);
+                editStartingPad(BlockTypes.AIR);
             }
         };
 
@@ -418,7 +411,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         }
 
         if (gameStartLocation.getBlock().getRelative(BlockFace.DOWN).getType().equals(Material.AIR)) {
-            edit(Material.BLACK_STAINED_GLASS, gameStartLocation);
+            editStartingPad(BlockTypes.BLACK_STAINED_GLASS);
         }
 
         state = SkyWarsState.INITIALIZE;
@@ -567,24 +560,21 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         player.teleport(gameStartLocation);
     }
 
-    private void editStartingPad(Material toType) {
-        edit(toType, new Location(Bukkit.getWorld(config.worldName), config.x, config.y, config.z));
-    }
-
-    private void edit(Material toType, Location battleLoc) {
+    private void edit(BlockType toType, Location battleLoc) {
         battleLoc = battleLoc.clone().add(0, -1, 0);
 
-        EditSession editor = WorldEdit.getInstance()
-                .getEditSessionFactory().getEditSession(new BukkitWorld(battleLoc.getWorld()), -1);
-        com.sk89q.worldedit.Vector origin = new com.sk89q.worldedit.Vector(
-                battleLoc.getX(), battleLoc.getY(), battleLoc.getZ()
-        );
-        Pattern pattern = new SingleBlockPattern(new BaseBlock(toType));
+        EditSession editor = WorldEditBridge.getSystemEditSessionFor(world);
+        BlockVector3 origin = WorldEditBridge.toBlockVec3(battleLoc);
+
         try {
-            editor.makeCylinder(origin, pattern, 12, 1, true);
+            editor.makeCylinder(origin, toType.getDefaultState(), 12, 1, true);
         } catch (MaxChangedBlocksException e) {
             e.printStackTrace();
         }
+    }
+
+    private void editStartingPad(BlockType toType) {
+        edit(toType, gameStartLocation);
     }
 
     private ItemStack makeBookOfOmens() {
@@ -1227,18 +1217,6 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             player.setFallDistance(0);
             player.teleport(lobbyExitLocation);
         }
-    }
-
-    private WorldGuardPlugin getWorldGuard() throws UnknownPluginException {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (!(plugin instanceof WorldGuardPlugin)) {
-            throw new UnknownPluginException("WorldGuard");
-        }
-
-        return (WorldGuardPlugin) plugin;
     }
 
     // Sky War Session

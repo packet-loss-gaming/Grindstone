@@ -400,6 +400,18 @@ public class EnvironmentUtil {
         return isDangerous(block.getType());
     }
 
+    private static final Set<Material> NATURAL_TERRAIN_BLOCKS = Set.of(
+            Material.DIRT, Material.PODZOL, Material.GRASS_BLOCK,
+            Material.STONE
+    );
+
+    public static boolean isNaturalTerrainBlock(Material material) {
+        return NATURAL_TERRAIN_BLOCKS.contains(material);
+    }
+
+    public static boolean isNaturalTerrainBlock(Block block) {
+        return isNaturalTerrainBlock(block.getType());
+    }
     private static final Set<Biome> FROZEN_BIOMES = Set.of(
             Biome.DEEP_FROZEN_OCEAN, Biome.FROZEN_OCEAN, Biome.FROZEN_RIVER,
             Biome.SNOWY_BEACH, Biome.SNOWY_MOUNTAINS, Biome.SNOWY_TAIGA,
