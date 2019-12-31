@@ -229,11 +229,11 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                     BlockVector3 containedTarget = relativePoint.add(board.getMinimumPoint());
                     BlockState targetBlock = board.getBlock(containedTarget);
 
-                    try {
-                        editor.setBlock(placementTarget, targetBlock);
-                    } catch (MaxChangedBlocksException e) {
-                        e.printStackTrace();
+                    if (editor.getBlock(placementTarget).equals(targetBlock)) {
+                        continue;
                     }
+
+                    editor.rawSetBlock(placementTarget, targetBlock);
                 }
 
                 editor.flushSession();
