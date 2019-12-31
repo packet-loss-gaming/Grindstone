@@ -1,7 +1,7 @@
 package gg.packetloss.grindstone.guild.listener;
 
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.Pitfall.bukkit.event.PitfallTriggerEvent;
+import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.guild.*;
