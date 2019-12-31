@@ -491,6 +491,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
         region = manager.getRegion(config.region);
+        lobbyRegion = manager.getRegion(config.region + "-lobby");
 
         lobbySpawnLocation = new Location(world, -752, 81, -340, 180, 0);
         lobbyExitLocation = new Location(world, -752, 81, -336);
