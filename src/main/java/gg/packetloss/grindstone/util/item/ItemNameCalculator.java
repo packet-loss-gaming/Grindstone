@@ -36,8 +36,20 @@ public class ItemNameCalculator {
     }
 
     public static Optional<String> matchItem(String itemName) {
-        // FIXME: Implement this
-        return Optional.empty();
+        itemName = itemName.toLowerCase();
+        itemName = itemName.replaceAll(" ", "_");
+
+        int namespaceSeparatorIndex = itemName.indexOf(':');
+        if (namespaceSeparatorIndex != -1) {
+            return Optional.of(itemName);
+        }
+
+        String maybeItemName = CustomItems.computeNamespaceName(itemName);
+        if (hasItemOfName(maybeItemName)) {
+            return Optional.of(maybeItemName);
+        }
+
+        return Optional.of("minecraft:" + itemName);
     }
 
     private static boolean hasItemOfName(String computedName) {
