@@ -219,15 +219,22 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         {
             for (int x = cx; x < maxX; ++x) {
                 for (int z = 0; z < maxZ; ++z) {
-                    BlockVector3 v = BlockVector3.at(x, cy, z);
-                    BlockVector3 target = v.add(region.getMinimumPoint());
-                    BlockState targetBlock = board.getBlock(v);
+                    BlockVector3 relativePoint = BlockVector3.at(x, cy, z);
+
+                    BlockVector3 placementTarget = relativePoint.add(region.getMinimumPoint());
+
+                    BlockVector3 containedTarget = relativePoint.add(board.getMinimumPoint());
+                    BlockState targetBlock = board.getBlock(containedTarget);
+
                     try {
-                        editor.setBlock(target, targetBlock);
+                        editor.setBlock(placementTarget, targetBlock);
                     } catch (MaxChangedBlocksException e) {
                         e.printStackTrace();
                     }
                 }
+
+                editor.flushSession();
+
                 if (System.currentTimeMillis() - start >= 100) {
                     cx = x;
                     break edit;
