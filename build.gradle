@@ -73,7 +73,7 @@ dependencies {
 
     compile group: 'net.milkbowl.vault', name: 'Vault', version: '1.5.6'
     compile group: 'fr.neatmonster', name: 'nocheatplus', version: '3.13.7-RC'
-    compile(group: 'de.diddiz', name: 'logblock', version: 'dev-SNAPSHOT') {
+    compile(group: 'de.diddiz', name: 'logblock', version: '1.13.2-SNAPSHOT') {
         exclude group: 'com.sk89q', module: 'worldedit'
     }
 
