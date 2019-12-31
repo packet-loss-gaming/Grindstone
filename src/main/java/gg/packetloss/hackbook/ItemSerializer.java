@@ -37,11 +37,12 @@ public class ItemSerializer {
         }
 
         compoundTag.set("elements", tag);
+        compoundTag.setInt("DataVersion", DataMigrator.getCurrentVersion());
 
         NBTCompressedStreamTools.a(compoundTag, stream);
     }
 
-    public static List<ItemStack> fromInputStream(InputStream stream) throws IOException {
+    public static List<ItemStack> fromInputStream(InputStream stream, boolean migrate) throws IOException {
         NBTTagCompound compoundTag = NBTCompressedStreamTools.a(stream);
 
         NBTTagList tag = (NBTTagList) compoundTag.get("elements");
@@ -50,9 +51,18 @@ public class ItemSerializer {
 
         for (int i = 0; i < tag.size(); ++i) {
             NBTTagCompound itemTag = tag.getCompound(i);
+
+            if (migrate) {
+                itemTag = DataMigrator.updateItemStack(itemTag);
+            }
+
             stacks.add(CraftItemStack.asCraftMirror(net.minecraft.server.v1_13_R2.ItemStack.a(itemTag)));
         }
 
         return stacks;
+    }
+
+    public static List<ItemStack> fromInputStream(InputStream stream) throws IOException {
+        return fromInputStream(stream, false);
     }
 }
