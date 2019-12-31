@@ -45,6 +45,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -293,8 +296,22 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         }
     }
 
+    // FIXME: Provide a migration path from the old to new format.
     public File getFile(String name) {
-        return new File(getWorkingDir().getPath() + '/' + name + '/' + "arena.schematic");
+        String targetDir = getWorkingDir().getPath() + '/' + name + '/';
+
+        Path legacyPath = Paths.get(
+                targetDir,
+                "arena." + BuiltInClipboardFormat.MCEDIT_SCHEMATIC.getPrimaryFileExtension()
+        );
+        if (Files.exists(legacyPath)) {
+            return legacyPath.toFile();
+        }
+
+        return Paths.get(
+                targetDir,
+                "arena." + BuiltInClipboardFormat.SPONGE_SCHEMATIC.getPrimaryFileExtension()
+        ).toFile();
     }
 
     public class Commands {
@@ -399,8 +416,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                 FileOutputStream fis = closer.register(new FileOutputStream(file));
                 BufferedOutputStream bos = closer.register(new BufferedOutputStream(fis));
 
-                // FIXME: Migrate to sponge schematic format
-                ClipboardWriter writer = closer.register(BuiltInClipboardFormat.MCEDIT_SCHEMATIC.getWriter(bos));
+                ClipboardWriter writer = closer.register(BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(bos));
 
                 Region internalRegion = RegionUtil.convert(region).orElseThrow();
                 BlockArrayClipboard clipboard = new BlockArrayClipboard(internalRegion);
