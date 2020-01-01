@@ -58,6 +58,7 @@ import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -235,7 +236,7 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
         final Player player = event.getPlayer();
         final Location pLoc = player.getLocation().clone();
@@ -247,9 +248,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         switch (event.getCause()) {
             case END_PORTAL:
                 if (fromWorld.equals(city)) {
-                    event.setTo(wilderness.getSpawnLocation());
+                    event.setCancelled(true);
+                    player.teleport(wilderness.getSpawnLocation(), PlayerTeleportEvent.TeleportCause.END_PORTAL);
                 } else if (fromWorld.equals(wilderness)) {
-                    event.setTo(city.getSpawnLocation());
+                    player.teleport(city.getSpawnLocation(), PlayerTeleportEvent.TeleportCause.END_PORTAL);
                 }
 
                 // Prevent players from getting damaged falling into end portals
@@ -261,7 +263,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
             case NETHER_PORTAL: {
                 // Wilderness Code
                 if (fromWorld.equals(wilderness)) {
-
                     pLoc.setWorld(wildernessNether);
                     pLoc.setX(pLoc.getBlockX() / 8);
                     pLoc.setZ(pLoc.getBlockZ() / 8);
@@ -269,7 +270,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                     event.setTo(pLoc);
                     return;
                 } else if (fromWorld.equals(wildernessNether)) {
-
                     pLoc.setWorld(wilderness);
                     pLoc.setX(pLoc.getBlockX() * 8);
                     pLoc.setZ(pLoc.getBlockZ() * 8);
