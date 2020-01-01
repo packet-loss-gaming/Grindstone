@@ -237,7 +237,7 @@ public class MercilessZombie {
                             continue;
                         }
 
-                        if (entity instanceof Player) {
+                        if (entity instanceof Player && ((Player) entity).hasLineOfSight(boss)) {
                             Location pLoc = entity.getLocation();
                             server.getScheduler().runTaskLater(inst, () -> {
                                 pLoc.getWorld().strikeLightningEffect(pLoc);
