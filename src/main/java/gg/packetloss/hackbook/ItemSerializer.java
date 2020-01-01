@@ -3,6 +3,7 @@ package gg.packetloss.hackbook;
 import net.minecraft.server.v1_14_R1.NBTCompressedStreamTools;
 import net.minecraft.server.v1_14_R1.NBTTagCompound;
 import net.minecraft.server.v1_14_R1.NBTTagList;
+import org.apache.commons.lang.Validate;
 import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
@@ -47,13 +48,16 @@ public class ItemSerializer {
 
         NBTTagList tag = (NBTTagList) compoundTag.get("elements");
 
+        Validate.isTrue(compoundTag.hasKey("DataVersion"));
+        int prevVersion = compoundTag.getInt("DataVersion") ;
+
         List<ItemStack> stacks = new ArrayList<>(tag.size());
 
         for (int i = 0; i < tag.size(); ++i) {
             NBTTagCompound itemTag = tag.getCompound(i);
 
             if (migrate) {
-                itemTag = DataMigrator.updateItemStack(itemTag);
+                itemTag = DataMigrator.updateItemStack(prevVersion, itemTag);
             }
 
             stacks.add(CraftItemStack.asCraftMirror(net.minecraft.server.v1_14_R1.ItemStack.a(itemTag)));
