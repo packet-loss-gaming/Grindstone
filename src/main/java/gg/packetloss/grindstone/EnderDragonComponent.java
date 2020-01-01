@@ -17,7 +17,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityCreatePortalEvent;
+import org.bukkit.event.world.PortalCreateEvent;
 
 import java.util.logging.Logger;
 
@@ -36,9 +36,12 @@ public class EnderDragonComponent extends BukkitComponent implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onCreatePortal(EntityCreatePortalEvent event) {
+    public void onCreatePortal(PortalCreateEvent event) {
+        if (event.getEntity() == null) {
+            return;
+        }
 
-        if (event.getEntityType().equals(EntityType.ENDER_DRAGON)
+        if (event.getEntity().getType().equals(EntityType.ENDER_DRAGON)
                 && !event.getEntity().getWorld().getEnvironment().equals(World.Environment.THE_END)) {
             Bukkit.broadcastMessage(ChatColor.GOLD + "Jeffery died, the village is safe once again!");
             if (!event.isCancelled()) event.setCancelled(true);

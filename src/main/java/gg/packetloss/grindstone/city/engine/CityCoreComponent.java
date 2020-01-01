@@ -25,6 +25,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityBreakDoorEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.material.Door;
 
 import java.util.logging.Logger;
@@ -124,6 +125,12 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
                 break;
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPortalForm(PortalCreateEvent event) {
+        if (event.getReason().equals(PortalCreateEvent.CreateReason.FIRE)) return;
+        if (isCityWorld(event.getWorld())) event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)

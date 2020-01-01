@@ -59,7 +59,6 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
@@ -280,13 +279,6 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
                 break;
             }
         }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPortalForm(PortalCreateEvent event) {
-
-        if (event.getReason().equals(PortalCreateEvent.CreateReason.FIRE)) return;
-        if (event.getWorld().getName().startsWith(config.cityWorld)) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
