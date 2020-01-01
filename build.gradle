@@ -54,8 +54,8 @@ dependencies {
     compile files('lib/MobArena.jar')
     compile files('lib/Pitfall.jar')
 
-    compile group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.13.2-R0.1-SNAPSHOT'
-    compile group: 'org.bukkit', name: 'craftbukkit', version: '1.13.2-R0.1-SNAPSHOT'
+    compile group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.14.4-R0.1-SNAPSHOT'
+    compile group: 'org.bukkit', name: 'craftbukkit', version: '1.14.4-R0.1-SNAPSHOT'
 
     compile group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '7.1.0-SNAPSHOT'
     compile group: 'com.sk89q.worldguard', name: 'worldguard-legacy', version: '7.0.0-SNAPSHOT'

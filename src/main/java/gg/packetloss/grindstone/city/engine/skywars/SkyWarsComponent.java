@@ -896,7 +896,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
 
             if (block.getState().getData() instanceof Door) {
                 handleLobbyDoorClick(event);
-            } else if (block.getType() == Material.WALL_SIGN) {
+            } else if (EnvironmentUtil.isSign(block)) {
                 handleLobbySigns(event);
             }
         }

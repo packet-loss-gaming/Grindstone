@@ -29,7 +29,7 @@ import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.InventoryUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import net.milkbowl.vault.permission.Permission;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;

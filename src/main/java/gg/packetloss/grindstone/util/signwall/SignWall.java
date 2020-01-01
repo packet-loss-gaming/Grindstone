@@ -1,7 +1,7 @@
 package gg.packetloss.grindstone.util.signwall;
 
 import com.sk89q.commandbook.CommandBook;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;

@@ -44,7 +44,7 @@ import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.region.RegionContainerClearer;
 import gg.packetloss.grindstone.util.region.RegionValueEvaluator;
 import net.milkbowl.vault.economy.Economy;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;

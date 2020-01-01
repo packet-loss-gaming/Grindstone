@@ -20,7 +20,6 @@ import gg.packetloss.grindstone.util.EnvironmentUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.EntityEffect;
-import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -30,7 +29,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.ArrayList;
@@ -167,7 +165,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
 
         if (!validHeader) {
             event.setCancelled(true);
-            block.breakNaturally(new ItemStack(Material.SIGN));
+            block.breakNaturally();
         }
 
         try {
@@ -176,7 +174,7 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
             ChatUtil.sendError(player, "The third line must be the amount of "
                     + economy.currencyNamePlural() + " to bet.");
             event.setCancelled(true);
-            block.breakNaturally(new ItemStack(Material.SIGN));
+            block.breakNaturally();
         }
     }
 

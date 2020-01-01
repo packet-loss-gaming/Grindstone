@@ -29,7 +29,6 @@ import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -40,7 +39,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.ArrayList;
@@ -219,7 +217,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         if (event.getLine(0).equalsIgnoreCase("[lottery]")) {
             if (!inst.hasPermission(player, "aurora.lottery.ticket.sell.sign")) {
                 event.setCancelled(true);
-                block.breakNaturally(new ItemStack(Material.SIGN, 1));
+                block.breakNaturally();
             }
             event.setLine(0, "[Lottery]");
             try {
@@ -228,7 +226,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
                     ChatUtil.sendError(player, "The third line must be a number below: "
                             + ChatUtil.makeCountString(config.maxSellCount, "."));
                     event.setCancelled(true);
-                    block.breakNaturally(new ItemStack(Material.SIGN, 1));
+                    block.breakNaturally();
                 }
                 event.setLine(2, "for");
                 event.setLine(3, String.valueOf(config.ticketPrice * ticketCount));
@@ -236,7 +234,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
                 ChatUtil.sendError(player, "The third line must be a number below: "
                         + ChatUtil.makeCountString(config.maxSellCount, "."));
                 event.setCancelled(true);
-                block.breakNaturally(new ItemStack(Material.SIGN, 1));
+                block.breakNaturally();
             }
         }
     }

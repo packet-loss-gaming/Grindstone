@@ -18,7 +18,7 @@ import gg.packetloss.grindstone.util.ItemPointTranslator;
 import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import net.milkbowl.vault.economy.Economy;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
@@ -170,7 +170,7 @@ public class ConversionComponent extends BukkitComponent implements Listener {
 
         if (!validHeader) {
             event.setCancelled(true);
-            block.breakNaturally(new ItemStack(Material.SIGN));
+            block.breakNaturally();
         }
 
         try {
@@ -179,7 +179,7 @@ public class ConversionComponent extends BukkitComponent implements Listener {
             ChatUtil.sendError(player, "The third line must be the amount of "
                     + economy.currencyNamePlural() + " to be transferred.");
             event.setCancelled(true);
-            block.breakNaturally(new ItemStack(Material.SIGN));
+            block.breakNaturally();
         }
     }
 

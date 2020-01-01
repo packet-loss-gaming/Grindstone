@@ -11,7 +11,7 @@ import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieChestDatabase;
 import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieNetworkDatabase;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.RefCountedTracker;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Particle;

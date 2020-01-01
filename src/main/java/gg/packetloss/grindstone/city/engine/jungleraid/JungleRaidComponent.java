@@ -69,7 +69,6 @@ import gg.packetloss.grindstone.util.signwall.enumname.EnumNamePainter;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagClickHandler;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagDataBackend;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagPainter;
-import gg.packetloss.hackbook.ChunkBook;
 import gg.packetloss.hackbook.ModifierBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
@@ -1132,14 +1131,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                         try {
                             restore.restore();
                             fakeEditor.flushSession();
-
-                            ChunkBook.relight(chunk);
                         } catch (MaxChangedBlocksException e) {
                             log.warning("Congratulations! You got an error which makes no sense!");
                             e.printStackTrace();
                             return;
-                        } catch (UnsupportedFeatureException e) {
-                            log.warning("Couldn't relight the chunk!");
                         }
 
                         if (restore.hadTotalFailure()) {
@@ -1282,7 +1277,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
             if (block.getState().getData() instanceof Door) {
                 handleLobbyDoorClick(event);
-            } else if (block.getType() == Material.WALL_SIGN) {
+            } else if (EnvironmentUtil.isSign(block)) {
                 handleLobbySigns(event);
             }
         }

@@ -7,19 +7,19 @@
 package gg.packetloss.hackbook;
 
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import net.minecraft.server.v1_13_R2.EntityInsentient;
-import net.minecraft.server.v1_13_R2.GenericAttributes;
-import net.minecraft.server.v1_13_R2.IAttribute;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftLivingEntity;
+import net.minecraft.server.v1_14_R1.EntityInsentient;
+import net.minecraft.server.v1_14_R1.GenericAttributes;
+import net.minecraft.server.v1_14_R1.IAttribute;
+import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 
 public class AttributeBook {
 
     public enum Attribute {
 
-        MAX_HEALTH(GenericAttributes.maxHealth),
+        MAX_HEALTH(GenericAttributes.MAX_HEALTH),
         FOLLOW_RANGE(GenericAttributes.FOLLOW_RANGE),
-        KNOCKBACK_RESISTANCE(GenericAttributes.c),
+        KNOCKBACK_RESISTANCE(GenericAttributes.KNOCKBACK_RESISTANCE),
         MOVEMENT_SPEED(GenericAttributes.MOVEMENT_SPEED),
         ATTACK_DAMAGE(GenericAttributes.ATTACK_DAMAGE);
 

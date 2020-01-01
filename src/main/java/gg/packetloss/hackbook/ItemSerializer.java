@@ -1,9 +1,9 @@
 package gg.packetloss.hackbook;
 
-import net.minecraft.server.v1_13_R2.NBTCompressedStreamTools;
-import net.minecraft.server.v1_13_R2.NBTTagCompound;
-import net.minecraft.server.v1_13_R2.NBTTagList;
-import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
+import net.minecraft.server.v1_14_R1.NBTCompressedStreamTools;
+import net.minecraft.server.v1_14_R1.NBTTagCompound;
+import net.minecraft.server.v1_14_R1.NBTTagList;
+import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.IOException;
@@ -56,7 +56,7 @@ public class ItemSerializer {
                 itemTag = DataMigrator.updateItemStack(itemTag);
             }
 
-            stacks.add(CraftItemStack.asCraftMirror(net.minecraft.server.v1_13_R2.ItemStack.a(itemTag)));
+            stacks.add(CraftItemStack.asCraftMirror(net.minecraft.server.v1_14_R1.ItemStack.a(itemTag)));
         }
 
         return stacks;

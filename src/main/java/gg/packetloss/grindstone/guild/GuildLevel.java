@@ -1,6 +1,6 @@
 package gg.packetloss.grindstone.guild;
 
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 
 import java.util.List;
 import java.util.Optional;

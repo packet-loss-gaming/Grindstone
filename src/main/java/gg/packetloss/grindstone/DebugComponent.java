@@ -17,7 +17,6 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.bosses.DebugCow;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.ChunkBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -130,23 +129,6 @@ public class DebugComponent extends BukkitComponent {
             ChatUtil.sendNotice(player, "Food level: " + player.getFoodLevel());
             ChatUtil.sendNotice(player, "Sat. level: " + player.getSaturation());
             ChatUtil.sendNotice(player, "Exh. level: " + player.getExhaustion());
-        }
-    }
-
-    public class ChunkLighter {
-
-        @Command(aliases = {"relight"}, desc = "Get your location",
-                flags = "", min = 0, max = 0)
-        @CommandPermissions("aurora.debug.relight")
-        public void myLocCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            Player player = PlayerUtil.checkPlayer(sender);
-            try {
-                ChunkBook.relight(player.getLocation().getChunk());
-            } catch (UnsupportedFeatureException e) {
-                throw new CommandException("This feature is not currently supported.");
-            }
-            ChatUtil.sendNotice(player, "The chunk lighting has successfully been recalculated.");
         }
     }
 

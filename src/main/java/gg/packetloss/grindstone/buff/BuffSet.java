@@ -1,6 +1,6 @@
 package gg.packetloss.grindstone.buff;
 
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 
 public class BuffSet {
     private BuffCategory category;

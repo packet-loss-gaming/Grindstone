@@ -14,7 +14,7 @@ import gg.packetloss.grindstone.highscore.mysql.MySQLHighScoresDatabase;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.chat.ChatConstants;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;

@@ -16,7 +16,6 @@ import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -26,7 +25,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -99,7 +97,7 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
 
                 // Get rid of that sign!
                 ExplosionStateFactory.createFakeExplosion(blockLoc);
-                blockLoc.getBlock().breakNaturally(new ItemStack(Material.SIGN, 1));
+                blockLoc.getBlock().breakNaturally();
 
                 // Mess with the player
                 player.setHealth(0);

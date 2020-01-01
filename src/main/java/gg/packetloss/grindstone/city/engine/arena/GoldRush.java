@@ -163,7 +163,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 ((Chest) block).getInventory().clear();
                 block.update(true);
                 chestBlocks.add(block.getLocation());
-            } else if (block.getType() == Material.WALL_SIGN) {
+            } else if (EnvironmentUtil.isSign(block.getType())) {
                 ((Sign) block).setLine(2, "- Locked -");
                 ((Sign) block).setLine(3, "Unlocked");
                 block.update(true);
@@ -610,7 +610,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 ChatUtil.sendWarning(event.getPlayer(), "The current robbery will end within: "
                         + waitingTime + " seconds.");
             }
-        } else if (state.getType() == Material.WALL_SIGN && locks.contains(state.getLocation())) {
+        } else if (EnvironmentUtil.isSign(state.getType()) && locks.contains(state.getLocation())) {
             Sign sign = (Sign) state;
             if (sign.getLine(1).toLowerCase().contains("blue")) {
                 if (event.getPlayer().getInventory().containsAtLeast(keys[0], 1)) {
@@ -633,7 +633,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     event.getPlayer().updateInventory();
                 }
             }
-        } else if (state.getType() == Material.WALL_SIGN) {
+        } else if (EnvironmentUtil.isSign(state.getType())) {
             Sign sign = (Sign) state;
             if (sign.getLine(1).equals("Play Gold Rush")) {
 

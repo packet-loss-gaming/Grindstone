@@ -262,7 +262,19 @@ public class EnvironmentUtil {
     }
 
     private static final Set<Material> signBlocks = Set.of(
-        Material.WALL_SIGN, Material.SIGN
+            Material.ACACIA_SIGN,
+            Material.BIRCH_SIGN,
+            Material.DARK_OAK_SIGN,
+            Material.JUNGLE_SIGN,
+            Material.SPRUCE_SIGN,
+            Material.OAK_SIGN,
+
+            Material.ACACIA_WALL_SIGN,
+            Material.BIRCH_WALL_SIGN,
+            Material.DARK_OAK_WALL_SIGN,
+            Material.JUNGLE_WALL_SIGN,
+            Material.SPRUCE_WALL_SIGN,
+            Material.OAK_WALL_SIGN
     );
 
     public static boolean isSign(Block block) {

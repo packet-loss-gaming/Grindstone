@@ -35,7 +35,10 @@ import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.warps.WarpsComponent;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -148,8 +151,6 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerPortal(PlayerPortalEvent event) {
-        TravelAgent agent = event.getPortalTravelAgent();
-
         final Player player = event.getPlayer();
         final Location pLoc = player.getLocation().clone();
         final Location from = event.getFrom();
@@ -171,23 +172,19 @@ public class LegitCoreComponent extends BukkitComponent implements Listener {
 
         switch (event.getCause()) {
             case NETHER_PORTAL:
-
-                event.useTravelAgent(true);
                 if (from.getWorld().equals(legit)) {
                     pLoc.setWorld(legitNether);
                     pLoc.setX(pLoc.getBlockX() / 8);
                     pLoc.setZ(pLoc.getBlockZ() / 8);
-                    agent.setCanCreatePortal(true);
-                    event.setPortalTravelAgent(agent);
-                    event.setTo(agent.findOrCreate(pLoc));
+
+                    event.setTo(pLoc);
                     return;
                 } else if (from.getWorld().getName().contains(config.legitWorld)) {
                     pLoc.setWorld(legit);
                     pLoc.setX(pLoc.getBlockX() * 8);
                     pLoc.setZ(pLoc.getBlockZ() * 8);
-                    agent.setCanCreatePortal(true);
-                    event.setPortalTravelAgent(agent);
-                    event.setTo(agent.findOrCreate(pLoc));
+
+                    event.setTo(pLoc);
                     return;
                 }
                 break;

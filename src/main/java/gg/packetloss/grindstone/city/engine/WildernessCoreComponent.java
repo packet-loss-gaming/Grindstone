@@ -69,7 +69,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.EnvironmentUtil.isFrozenBiome;
-import static gg.packetloss.grindstone.util.portal.NoOPTravelAgent.overwriteDestination;
 import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 
 
@@ -248,9 +247,9 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         switch (event.getCause()) {
             case END_PORTAL:
                 if (fromWorld.equals(city)) {
-                    overwriteDestination(event, wilderness.getSpawnLocation());
+                    event.setTo(wilderness.getSpawnLocation());
                 } else if (fromWorld.equals(wilderness)) {
-                    overwriteDestination(event, city.getSpawnLocation());
+                    event.setTo(city.getSpawnLocation());
                 }
 
                 // Prevent players from getting damaged falling into end portals
@@ -260,32 +259,22 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
 
                 break;
             case NETHER_PORTAL: {
-                TravelAgent agent = event.getPortalTravelAgent();
-
                 // Wilderness Code
                 if (fromWorld.equals(wilderness)) {
 
                     pLoc.setWorld(wildernessNether);
                     pLoc.setX(pLoc.getBlockX() / 8);
                     pLoc.setZ(pLoc.getBlockZ() / 8);
-                    agent.setCanCreatePortal(true);
 
-                    event.useTravelAgent(true);
-                    event.setPortalTravelAgent(agent);
-
-                    event.setTo(agent.findOrCreate(pLoc));
+                    event.setTo(pLoc);
                     return;
                 } else if (fromWorld.equals(wildernessNether)) {
 
                     pLoc.setWorld(wilderness);
                     pLoc.setX(pLoc.getBlockX() * 8);
                     pLoc.setZ(pLoc.getBlockZ() * 8);
-                    agent.setCanCreatePortal(true);
 
-                    event.useTravelAgent(true);
-                    event.setPortalTravelAgent(agent);
-
-                    event.setTo(agent.findOrCreate(pLoc));
+                    event.setTo(pLoc);
                     return;
                 }
                 break;

@@ -1,7 +1,7 @@
 package gg.packetloss.grindstone.util.signwall.enumname;
 
 import gg.packetloss.grindstone.util.signwall.SignWallDataBackend;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 
 public class EnumNameDataBackend<T extends Enum<T>> implements SignWallDataBackend<T> {
     private final T[] enumValues;

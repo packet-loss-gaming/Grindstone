@@ -100,21 +100,6 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
         return new Location(loc.getWorld(), xTestLoc.getBlockX() + 1, loc.getY(), zTestLoc.getBlockZ() + 1);
     }
 
-    private void updateLocationUsingAgent(PlayerPortalEvent event, TravelAgent agent, Location targetLoc) {
-        event.useTravelAgent(true);
-        event.setPortalTravelAgent(agent);
-
-        for (int i = 0; i < 5; ++i) {
-            Location newLoc = agent.findOrCreate(targetLoc);
-            if (newLoc != null) {
-                event.setTo(newLoc);
-                return;
-            }
-        }
-
-        event.setCancelled(true);
-    }
-
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
         final Player player = event.getPlayer();
@@ -124,22 +109,16 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
 
         switch (event.getCause()) {
             case NETHER_PORTAL: {
-                TravelAgent agent = event.getPortalTravelAgent();
-
                 // City Code
                 if (isCityWorld(fromWorld)) {
-                    agent.setCanCreatePortal(true);
-
                     World world = Bukkit.getWorld("Halzeil");
                     Location targetLoc = new Location(world, from.getX() * 64, from.getY(), from.getZ() * 64);
-                    updateLocationUsingAgent(event, agent, targetLoc);
+                    event.setTo(targetLoc);
                     return;
                 } else if (isRangeWorld(fromWorld)) {
-                    agent.setCanCreatePortal(false);
-
                     World world = Bukkit.getWorld("City");
                     Location targetLoc = new Location(world, from.getX() / 64, from.getY(), from.getZ() / 64);
-                    updateLocationUsingAgent(event, agent, targetLoc);
+                    event.setTo(targetLoc);
                     return;
                 }
                 break;

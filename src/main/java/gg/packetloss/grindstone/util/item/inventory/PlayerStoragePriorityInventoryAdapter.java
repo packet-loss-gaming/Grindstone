@@ -1,7 +1,7 @@
 package gg.packetloss.grindstone.util.item.inventory;
 
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
