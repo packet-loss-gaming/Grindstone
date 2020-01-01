@@ -30,6 +30,7 @@ import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.*;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
@@ -367,8 +368,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                     ((Chest) chestState).getInventory().clear();
                     ((Chest) chestState).getInventory().addItem(itemStacks);
                 } else {
-                    org.bukkit.block.data.type.Sign sign = (org.bukkit.block.data.type.Sign) signState.getBlockData();
-                    BlockFace attachedFace = sign.getRotation();
+                    WallSign sign = (WallSign) signState.getBlockData();
+                    BlockFace attachedFace = sign.getFacing().getOppositeFace();
                     headStone = headStone.getBlock().getRelative(attachedFace, 2).getLocation();
                     headStone.add(0, 2, 0);
                     chestState = headStone.getBlock().getState();
