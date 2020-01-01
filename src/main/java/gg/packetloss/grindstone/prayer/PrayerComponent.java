@@ -7,8 +7,8 @@
 package gg.packetloss.grindstone.prayer;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.session.PersistentSession;
-import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.component.session.PersistentSession;
+import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
@@ -43,7 +43,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
 
 @ComponentInformation(friendlyName = "Prayers", desc = "Let the light (or darkness) be unleashed on thy!")
 @Depend(components = {AdminComponent.class})

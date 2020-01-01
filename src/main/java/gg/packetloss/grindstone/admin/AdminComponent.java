@@ -7,8 +7,8 @@
 package gg.packetloss.grindstone.admin;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.GodComponent;
-import com.sk89q.commandbook.InfoComponent;
+import com.sk89q.commandbook.component.god.GodComponent;
+import com.sk89q.commandbook.component.info.InfoComponent;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
@@ -56,7 +56,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
 
 @ComponentInformation(friendlyName = "Admin", desc = "Player Administration commands.")
 @Depend(plugins = {"WorldEdit, Vault"}, components = {GodComponent.class, PlayerStateComponent.class})
@@ -310,7 +309,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onWhoisLookup(InfoComponent.PlayerWhoisEvent event) {
-
         if (event.getPlayer() instanceof Player) {
             Player player = (Player) event.getPlayer();
             event.addWhoisInformation("Is Admin", isAdmin(player));

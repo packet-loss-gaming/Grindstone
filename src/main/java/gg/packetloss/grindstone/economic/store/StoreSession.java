@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.economic.store;
 
-import com.sk89q.commandbook.session.PersistentSession;
+import com.sk89q.commandbook.component.session.PersistentSession;
 
 import java.util.concurrent.TimeUnit;
 

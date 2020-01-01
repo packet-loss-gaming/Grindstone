@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.MirageArena;
 
-import com.sk89q.commandbook.session.PersistentSession;
+import com.sk89q.commandbook.component.session.PersistentSession;
 
 import java.util.HashSet;
 import java.util.Set;

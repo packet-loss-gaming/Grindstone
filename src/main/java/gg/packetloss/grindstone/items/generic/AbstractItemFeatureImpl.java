@@ -7,7 +7,7 @@
 package gg.packetloss.grindstone.items.generic;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.component.session.SessionComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.guild.GuildComponent;

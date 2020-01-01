@@ -7,7 +7,7 @@
 package gg.packetloss.grindstone.city.engine.combat;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;

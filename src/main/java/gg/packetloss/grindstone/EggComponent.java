@@ -7,8 +7,8 @@
 package gg.packetloss.grindstone;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.session.PersistentSession;
-import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.component.session.PersistentSession;
+import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.world.entity.EntityType;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;

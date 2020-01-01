@@ -7,8 +7,8 @@
 package gg.packetloss.grindstone.apocalypse;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.session.PersistentSession;
-import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.component.session.PersistentSession;
+import com.sk89q.commandbook.component.session.SessionComponent;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;

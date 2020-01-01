@@ -2,7 +2,7 @@ package gg.packetloss.grindstone.guild;
 
 import com.destroystokyo.paper.Title;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.InfoComponent;
+import com.sk89q.commandbook.component.info.InfoComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;

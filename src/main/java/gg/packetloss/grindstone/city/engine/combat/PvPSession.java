@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.combat;
 
-import com.sk89q.commandbook.session.PersistentSession;
+import com.sk89q.commandbook.component.session.PersistentSession;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

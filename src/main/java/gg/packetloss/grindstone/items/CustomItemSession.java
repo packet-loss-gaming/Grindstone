@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.items;
 
-import com.sk89q.commandbook.session.PersistentSession;
+import com.sk89q.commandbook.component.session.PersistentSession;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import org.bukkit.Location;
 

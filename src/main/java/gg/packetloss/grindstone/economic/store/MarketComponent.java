@@ -7,8 +7,8 @@
 package gg.packetloss.grindstone.economic.store;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.commands.PaginatedResult;
-import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.component.session.SessionComponent;
+import com.sk89q.commandbook.util.PaginatedResult;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;

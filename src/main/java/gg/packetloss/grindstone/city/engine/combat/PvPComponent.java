@@ -7,7 +7,7 @@
 package gg.packetloss.grindstone.city.engine.combat;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.session.SessionComponent;
+import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;

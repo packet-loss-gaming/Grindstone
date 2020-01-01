@@ -59,7 +59,7 @@ dependencies {
 
     compile group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '7.1.0-SNAPSHOT'
     compile group: 'com.sk89q.worldguard', name: 'worldguard-legacy', version: '7.0.0-SNAPSHOT'
-    compile(group: 'com.sk89q', name: 'commandbook', version: '2.3.1-SNAPSHOT') {
+    compile(group: 'com.sk89q', name: 'commandbook', version: '2.5-SNAPSHOT') {
         exclude group: 'com.sk89q', module: 'worldedit'
     }
     compile(group: 'com.sk89q.craftbook', name: 'craftbook', version: '3.9-SNAPSHOT') {
