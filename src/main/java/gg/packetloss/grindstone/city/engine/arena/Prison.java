@@ -79,7 +79,6 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
     private void findRewardChest() {
         RegionWalker.testWalk(office, (x, y, z) -> {
             BlockState block = getWorld().getBlockAt(x, y, z).getState();
-            if (!block.getChunk().isLoaded()) block.getChunk().load();
             if (block.getType() == Material.CHEST) {
                 rewardChest = block.getLocation();
                 return true;

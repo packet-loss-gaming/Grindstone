@@ -350,7 +350,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     public boolean isArenaLoaded() {
-        return RegionUtil.getCenter(getWorld(), getRegion()).getChunk().isLoaded();
+        return RegionUtil.isLoaded(getWorld(), getRegion());
     }
 
     public boolean isBossSpawned() {

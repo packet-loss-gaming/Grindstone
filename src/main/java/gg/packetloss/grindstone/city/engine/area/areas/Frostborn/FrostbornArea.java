@@ -115,6 +115,10 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     @Override
     public void run() {
+        if (!isArenaLoaded()) {
+            return;
+        }
+
         if (!isBossSpawned()) {
             if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
                 spawnBoss();
@@ -406,11 +410,10 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     public boolean isArenaLoaded() {
-        return RegionUtil.getCenter(getWorld(), getRegion()).getChunk().isLoaded();
+        return RegionUtil.isLoaded(getWorld(), getRegion());
     }
 
     public boolean isBossSpawned() {
-        if (!isArenaLoaded()) return true;
         boolean found = false;
         boolean second = false;
         for (Snowman e : getContained(Snowman.class)) {
@@ -455,7 +458,6 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     private void replaceBlocksInEntrance(Material from, Material to) {
         RegionWalker.walk(entrance_RG, (x, y, z) -> {
             Block block = getWorld().getBlockAt(x, y, z);
-            if (!block.getChunk().isLoaded()) block.getChunk().load();
             if (block.getType() == from) {
                 block.setType(to);
             }

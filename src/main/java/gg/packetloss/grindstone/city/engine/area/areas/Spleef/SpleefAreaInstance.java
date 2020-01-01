@@ -6,6 +6,7 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.RegionUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -149,17 +150,7 @@ public class SpleefAreaInstance {
 
     // This is a heuristic approach to determine if the region is loaded
     private boolean isLoaded() {
-        BlockVector3 min = containmentRegion.getMinimumPoint();
-        if (!world.isChunkLoaded(min.getBlockX() >> 4, min.getBlockZ() >> 4)) {
-            return false;
-        }
-
-        BlockVector3 max = containmentRegion.getMaximumPoint();
-        if (!world.isChunkLoaded(max.getBlockX() >> 4, max.getBlockZ() >> 4)) {
-            return false;
-        }
-
-        return true;
+        return RegionUtil.isLoaded(world, containmentRegion);
     }
 
     public Collection<Player> run() {

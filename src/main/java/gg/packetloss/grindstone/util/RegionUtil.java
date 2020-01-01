@@ -41,6 +41,20 @@ public class RegionUtil {
         return new Location(world, center.getX(), center.getY(), center.getZ());
     }
 
+    public static boolean isLoaded(World world, ProtectedRegion region) {
+        BlockVector3 min = region.getMinimumPoint();
+        if (!world.isChunkLoaded(min.getBlockX() >> 4, min.getBlockZ() >> 4)) {
+            return false;
+        }
+
+        BlockVector3 max = region.getMaximumPoint();
+        if (!world.isChunkLoaded(max.getBlockX() >> 4, max.getBlockZ() >> 4)) {
+            return false;
+        }
+
+        return true;
+    }
+
     public static Optional<Region> convert(ProtectedRegion region) {
         if (region instanceof ProtectedCuboidRegion) {
             ProtectedCuboidRegion cuboid = (ProtectedCuboidRegion)region;

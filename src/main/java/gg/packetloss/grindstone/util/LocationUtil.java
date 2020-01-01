@@ -76,9 +76,6 @@ public class LocationUtil {
 
         // Let's try going down
         Block block = pos.getBlock().getRelative(0, 1, 0);
-        if (!block.getChunk().isLoaded()) {
-            block.getChunk().load();
-        }
         int free = 0;
 
         // Look for ground
@@ -417,5 +414,9 @@ public class LocationUtil {
             if (predicate.test(searchBlock.getRelative(blockFace).getType())) return true;
         }
         return false;
+    }
+
+    public static boolean isChunkLoadedAt(Location loc) {
+        return loc.getWorld().isChunkLoaded(loc.getBlockX() >> 4, loc.getBlockZ() >> 4);
     }
 }

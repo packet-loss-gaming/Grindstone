@@ -599,7 +599,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     private <T extends LivingEntity> void spawn(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
-        if (!location.getChunk().isLoaded()) return;
+        if (!LocationUtil.isChunkLoadedAt(location)) {
+            return;
+        }
 
         LivingEntity monster = spawnBase(location, clazz, spawnConfig);
         if (spawnConfig.allowMiniBoss) {

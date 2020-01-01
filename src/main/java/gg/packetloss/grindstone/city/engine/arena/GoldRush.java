@@ -145,7 +145,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private void findRewardChest() {
         RegionWalker.testWalk(roomThree, (x, y, z) -> {
             BlockState block = getWorld().getBlockAt(x, y, z).getState();
-            if (!block.getChunk().isLoaded()) block.getChunk().load();
             if (block.getType() == Material.CHEST) {
                 rewardChest = block.getLocation();
                 return true;
@@ -158,7 +157,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private void findChestAndKeys() {
         RegionWalker.walk(roomOne, (x, y, z) -> {
             BlockState block = getWorld().getBlockAt(x, y, z).getState();
-            if (!block.getChunk().isLoaded()) block.getChunk().load();
             if (block.getType() == Material.CHEST) {
                 ((Chest) block).getInventory().clear();
                 block.update(true);
@@ -183,8 +181,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         Chest chestState;
 
         for (Location chest : chestBlocks) {
-
-            if (!chest.getChunk().isLoaded()) chest.getChunk().load();
             if (chest.getBlock().getType() != Material.CHEST) continue;
 
             chestState = (Chest) chest.getBlock().getState();
@@ -210,17 +206,14 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
         for (int i = 0; i < 2; i++) {
             Block block = CollectionUtil.getElement(chestBlocks).getBlock();
-            if (!block.getChunk().isLoaded()) block.getChunk().load();
+
             Chest chest = (Chest) block.getState();
             chest.getInventory().setItem(ChanceUtil.getRandom(chest.getBlockInventory().getSize() - 1), keys[i]);
         }
     }
 
     public boolean checkKeys() {
-
         for (Location lock : locks) {
-
-            if (!lock.getBlock().getChunk().isLoaded()) return false;
             Sign aSign = (Sign) lock.getBlock().getState();
             if (aSign.getLine(2).startsWith("-")) return false;
         }
@@ -228,22 +221,15 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     }
 
     private void resetChestAndKeys() {
-
-        Chest chestState;
         for (Location chest : chestBlocks) {
-
-            if (!chest.getChunk().isLoaded()) chest.getChunk().load();
             if (chest.getBlock().getType() != Material.CHEST) continue;
 
-            chestState = (Chest) chest.getBlock().getState();
+            Chest chestState = (Chest) chest.getBlock().getState();
             chestState.getBlockInventory().clear();
         }
 
-        Sign signState;
         for (Location lock : locks) {
-
-            if (!lock.getChunk().isLoaded()) lock.getChunk().load();
-            signState = (Sign) lock.getBlock().getState();
+            Sign signState = (Sign) lock.getBlock().getState();
             signState.setLine(2, "- Locked -");
             signState.setLine(3, "Unlocked");
             signState.update(true);
@@ -261,12 +247,10 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         int maxZ = max.getBlockZ();
         int maxY = max.getBlockY();
 
-        BlockState block;
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
                 for (int y = maxY; y >= minY; --y) {
-                    block = getWorld().getBlockAt(x, y, z).getState();
-                    if (!block.getChunk().isLoaded()) block.getChunk().load();
+                    BlockState block = getWorld().getBlockAt(x, y, z).getState();
                     if (block.getType() == Material.LEVER) {
                         Lever lever = (Lever) block.getData();
                         lever.setPowered(false);
@@ -289,7 +273,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     private boolean checkLevers() {
         for (Map.Entry<Location, Boolean> lever : leverBlocks.entrySet()) {
-            if (!lever.getKey().getBlock().getChunk().isLoaded()) return false;
             Lever aLever = (Lever) lever.getKey().getBlock().getState().getData();
             if (aLever.isPowered() != lever.getValue()) return false;
         }
@@ -297,12 +280,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     }
 
     private void resetLevers() {
-
-        BlockState state;
         for (Location entry : leverBlocks.keySet()) {
-
-            if (!entry.getBlock().getChunk().isLoaded()) entry.getBlock().getChunk().load();
-            state = entry.getBlock().getState();
+            BlockState state = entry.getBlock().getState();
             Lever lever = (Lever) state.getData();
             lever.setPowered(false);
             state.setData(lever);
@@ -316,7 +295,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private void randomizeLevers() {
         if (System.currentTimeMillis() - lastSwitch >= TimeUnit.SECONDS.toMillis(14)) {
             for (Location entry : leverBlocks.keySet()) {
-                if (!entry.getBlock().getChunk().isLoaded()) entry.getBlock().getChunk().load();
                 BlockState state = entry.getBlock().getState();
                 Lever lever = (Lever) state.getData();
                 lever.setPowered(false);
@@ -331,7 +309,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 Location mutable = entry.getKey().clone();
                 mutable.add(0, -2, 0);
 
-                if (!mutable.getBlock().getChunk().isLoaded()) mutable.getChunk().load();
                 mutable.getBlock().setType(Material.STONE_BRICKS);
             }
             server.getScheduler().runTaskLater(inst, () -> {
@@ -339,7 +316,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     Location mutable = entry.getKey().clone();
                     mutable.add(0, -2, 0);
 
-                    if (!mutable.getBlock().getChunk().isLoaded()) mutable.getChunk().load();
                     Material targetBlock = entry.getValue() ? Material.REDSTONE_BLOCK : Material.STONE_BRICKS;
                     mutable.getBlock().setType(targetBlock);
                 }
@@ -350,7 +326,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 Location mutable = entry.clone();
                 mutable.add(0, -2, 0);
 
-                if (!mutable.getChunk().isLoaded()) mutable.getChunk().load();
                 mutable.getBlock().setType(Material.STONE_BRICKS);
             }
         }
@@ -397,7 +372,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     for (int z = minZ; z <= maxZ; z++) {
                         for (int y = minY; y <= maxY; y++) {
                             Block block = getWorld().getBlockAt(x, y, z);
-                            if (!block.getChunk().isLoaded()) block.getChunk().load();
                             if (block.getType() == Material.AIR) {
                                 block.setType(floodBlockType, false);
                                 break;
@@ -413,7 +387,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private void setDoor(ProtectedRegion door, Material type) {
         RegionWalker.walk(door, (x, y, z) -> {
             Block block = getWorld().getBlockAt(x, y, z);
-            if (!block.getChunk().isLoaded()) block.getChunk().load();
             block.setType(type);
         });
     }
@@ -500,8 +473,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     @Override
     public void run() {
-
         if (!LocationUtil.containsPlayer(getWorld(), getRegion())) return;
+
         equalize();
         if (checkKeys()) {
             if (LocationUtil.containsPlayer(getWorld(), roomOne)) {

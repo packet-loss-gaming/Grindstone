@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -52,10 +53,18 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
 
     @Override
     public void run() {
+        if (!isLoaded()) {
+            return;
+        }
+
         if (!isEmpty()) {
             addBlocks();
         }
         removeBlocks();
+    }
+
+    private boolean isLoaded() {
+        return RegionUtil.isLoaded(getWorld(), getRegion());
     }
 
     public void addBlocks() {
@@ -106,12 +115,8 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
 
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
-                int sizeY = world.getHighestBlockYAt(x, z) - minY;
-
-                for (int y = sizeY; y > 0; y--) {
+                for (int y = world.getHighestBlockYAt(x, z) - minY; y > 0; y--) {
                     Block block = world.getBlockAt(x, y + minY, z);
-
-                    if (!block.getWorld().isChunkLoaded(x >> 4, z >> 4)) break;
 
                     if (!cachedEmpty()) {
                         if (y + minY < world.getMaxHeight()

@@ -1126,7 +1126,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                         Region r = new CuboidRegion(minPt, maxPt);
 
                         // Restore snapshot
-                        if (!chunk.isLoaded()) chunk.load();
                         SnapshotRestore restore = new SnapshotRestore(chunkStore, fakeEditor, r);
 
                         try {

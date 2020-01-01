@@ -263,7 +263,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     protected  <T extends LivingEntity> T spawnAndArm(Location location, Class<T> type, boolean allowItemPickup) {
-        if (!location.getChunk().isLoaded()) return null;
+        if (!LocationUtil.isChunkLoadedAt(location)) {
+            return null;
+        }
+
         T e = spawn(location, type);
         if (e == null) return null;
         arm(e, allowItemPickup);
@@ -435,7 +438,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     private void findPressurePlateLockLevers() {
         RegionWalker.walk(pressurePlateLockArea, (x, y, z) -> {
             BlockState block = getWorld().getBlockAt(x, y, z).getState();
-            if (!block.getChunk().isLoaded()) block.getChunk().load();
             if (block.getType() == Material.LEVER) {
                 Lever lever = (Lever) block.getData();
                 lever.setPowered(false);
@@ -448,7 +450,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
     public boolean checkPressurePlateLock() {
         for (Map.Entry<Location, Boolean> lever : pressurePlateLocks.entrySet()) {
-            if (!lever.getKey().getBlock().getChunk().isLoaded()) return false;
             Lever aLever = (Lever) lever.getKey().getBlock().getState().getData();
             if (aLever.isPowered() != lever.getValue()) return false;
         }
@@ -458,7 +459,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
     protected void resetPressurePlateLock() {
         for (Location entry : pressurePlateLocks.keySet()) {
-            if (!entry.getBlock().getChunk().isLoaded()) entry.getBlock().getChunk().load();
             BlockState state = entry.getBlock().getState();
             Lever lever = (Lever) state.getData();
             lever.setPowered(false);
@@ -471,7 +471,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     private void findRewardChest() {
         RegionWalker.walk(pressurePlateLockArea, (x, y, z) -> {
             BlockState block = getWorld().getBlockAt(x, y, z).getState();
-            if (!block.getChunk().isLoaded()) block.getChunk().load();
             if (block.getType() == Material.CHEST) {
                 rewardChest.add(block.getLocation());
             }
@@ -479,12 +478,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     protected void resetRewardChest() {
-        BlockState block;
-        Chest chest;
         for (Location location : rewardChest) {
-            block = location.getBlock().getState();
-            if (!block.getChunk().isLoaded()) block.getChunk().load();
-            chest = (Chest) block;
+            Chest chest = (Chest) location.getBlock().getState();
 
             Inventory chestInv = chest.getBlockInventory();
             chestInv.clear();

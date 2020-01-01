@@ -70,7 +70,10 @@ public class DropPartyTask {
 
                     // Pick a random Location
                     Location l = LocationUtil.pickLocation(world, rg.getMaximumY(), checker);
-                    if (!world.getChunkAt(l).isLoaded()) world.getChunkAt(l).load(true);
+                    if (!LocationUtil.isChunkLoadedAt(l)) {
+                        break;
+                    }
+
                     world.dropItem(l, it.next());
 
                     // Remove the drop

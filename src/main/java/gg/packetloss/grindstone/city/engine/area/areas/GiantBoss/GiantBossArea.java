@@ -147,7 +147,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     }
 
     public boolean isArenaLoaded() {
-        return RegionUtil.getCenter(getWorld(), getRegion()).getChunk().isLoaded();
+        return RegionUtil.isLoaded(getWorld(), getRegion());
     }
 
     public void spawnBoss() {
@@ -184,10 +184,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
         RegionWalker.walk(getRegion().getParent(), (x, y, z) -> {
             BlockState block = getWorld().getBlockAt(x, y, z).getState();
-            if (!block.getChunk().isLoaded()) {
-                block.getChunk().load();
-            }
-
             if (block.getType() == Material.GOLD_BLOCK) {
                 spawnPts.add(block.getLocation().add(0, 2, 0));
                 return;

@@ -257,7 +257,9 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             for (int i = 3 + (getContained(1, Player.class).size() * 2); i > 0; --i) {
                 // Pick a random Location
                 Location l = LocationUtil.pickLocation(getWorld(), rg.getMaximumY(), checker);
-                if (!getWorld().getChunkAt(l).isLoaded()) getWorld().getChunkAt(l).load(true);
+                if (!LocationUtil.isChunkLoadedAt(l)) {
+                    break;
+                }
 
                 createFireworkExplosion(l);
             }
