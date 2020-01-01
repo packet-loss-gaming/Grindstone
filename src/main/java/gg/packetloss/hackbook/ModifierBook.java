@@ -1,8 +1,8 @@
 package gg.packetloss.hackbook;
 
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import net.minecraft.server.v1_14_R1.*;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
+import net.minecraft.server.v1_15_R1.*;
+import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nullable;
@@ -112,22 +112,22 @@ public class ModifierBook {
 
         Slot slot = modifier.getSlot();
         if (slot != null) {
-            modifierTag.set("Slot", new NBTTagString(slot.getName()));
+            modifierTag.set("Slot", NBTTagString.a(slot.getName()));
         }
 
-        modifierTag.set("AttributeName", new NBTTagString(modifier.getModifierName()));
-        modifierTag.set("Name", new NBTTagString(modifier.getModifierName()));
-        modifierTag.set("Amount", new NBTTagDouble(modifier.getValue()));
-        modifierTag.set("Operation", new NBTTagInt(modifier.getOperation().getOpCode()));
-        modifierTag.set("UUIDLeast", new NBTTagInt((int) modifier.getModifierID().getLeastSignificantBits()));
-        modifierTag.set("UUIDMost", new NBTTagInt((int) modifier.getModifierID().getMostSignificantBits()));
+        modifierTag.set("AttributeName", NBTTagString.a(modifier.getModifierName()));
+        modifierTag.set("Name", NBTTagString.a(modifier.getModifierName()));
+        modifierTag.set("Amount", NBTTagDouble.a(modifier.getValue()));
+        modifierTag.set("Operation", NBTTagInt.a(modifier.getOperation().getOpCode()));
+        modifierTag.set("UUIDLeast", NBTTagInt.a((int) modifier.getModifierID().getLeastSignificantBits()));
+        modifierTag.set("UUIDMost", NBTTagInt.a((int) modifier.getModifierID().getMostSignificantBits()));
 
         return modifierTag;
     }
 
     public static ItemStack cloneWithSpecifiedModifiers(ItemStack stack, List<Modifier> modifierList) throws UnsupportedFeatureException {
         try {
-            net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(stack);
+            net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(stack);
 
             NBTTagCompound compound = nmsStack.getTag();
             if (compound == null) {
