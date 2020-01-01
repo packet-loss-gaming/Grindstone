@@ -111,7 +111,8 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
                 for (int y = sizeY; y > 0; y--) {
                     Block block = world.getBlockAt(x, y + minY, z);
 
-                    if (!block.getChunk().isLoaded()) break;
+                    if (!block.getWorld().isChunkLoaded(x >> 4, z >> 4)) break;
+
                     if (!cachedEmpty()) {
                         if (y + minY < world.getMaxHeight()
                                 && ChanceUtil.getChance(config.decreaseRate - (y * ChanceUtil.getRandom(5)))

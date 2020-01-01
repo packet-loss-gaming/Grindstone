@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.GraveYard;
 
+import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -25,7 +26,6 @@ import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Chunk;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -364,9 +364,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                     ((Chest) chestState).getInventory().clear();
                     ((Chest) chestState).getInventory().addItem(itemStacks);
                 } else {
-                    org.bukkit.material.Sign sign =
-                            new org.bukkit.material.Sign(Material.WALL_SIGN, signState.getRawData());
-                    BlockFace attachedFace = sign.getAttachedFace();
+                    org.bukkit.block.data.type.Sign sign = (org.bukkit.block.data.type.Sign) signState.getBlockData();
+                    BlockFace attachedFace = sign.getRotation();
                     headStone = headStone.getBlock().getRelative(attachedFace, 2).getLocation();
                     headStone.add(0, 2, 0);
                     chestState = headStone.getBlock().getState();
@@ -395,32 +394,32 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
     private void findHeadStones() {
         headStones.clear();
-        final List<Chunk> chunkList = new ArrayList<>();
+        final List<BlockVector2> chunkList = new ArrayList<>();
         BlockVector3 min = getRegion().getMinimumPoint();
         BlockVector3 max = getRegion().getMaximumPoint();
         final int minX = min.getBlockX();
         final int minZ = min.getBlockZ();
-        final int minY = min.getBlockY();
         final int maxX = max.getBlockX();
         final int maxZ = max.getBlockZ();
-        Chunk c;
+
         for (int x = minX; x <= maxX; x += 16) {
             for (int z = minZ; z <= maxZ; z += 16) {
-                c = getWorld().getBlockAt(x, minY, z).getChunk();
-                if (!chunkList.contains(c)) chunkList.add(c);
+                BlockVector2 chunkCoords = BlockVector2.at(x >> 4, z >> 4);
+                if (!chunkList.contains(chunkCoords)) chunkList.add(chunkCoords);
             }
         }
-        for (final Chunk aChunk : chunkList) {
+
+        for (final BlockVector2 chunkCoords : chunkList) {
             try {
                 server.getScheduler().runTaskLater(inst, () -> {
-                    for (BlockState aSign : aChunk.getTileEntities()) {
+                    for (BlockState aSign : world.getChunkAt(chunkCoords.getX(), chunkCoords.getZ()).getTileEntities()) {
                         if (!(aSign instanceof Sign)) continue;
                         checkHeadStone((Sign) aSign);
                     }
-                }, chunkList.indexOf(aChunk) * 20);
+                }, chunkList.indexOf(chunkCoords) * 20);
             } catch (NullPointerException ex) {
                 findHeadStones();
-                log.info("Failed to get head stones for Chunk: " + aChunk.getX() + ", " + aChunk.getZ() + ".");
+                log.info("Failed to get head stones for Chunk: " + chunkCoords.getX() + ", " + chunkCoords.getZ() + ".");
                 return;
             }
         }

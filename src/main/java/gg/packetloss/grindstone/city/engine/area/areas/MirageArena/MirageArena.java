@@ -202,7 +202,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
     }
 
     public void callEdit(EditSession editor, Clipboard board,
-                         int cx, int cy, BlockVector3 diminsions) {
+                         int cx, int cz, int cy, BlockVector3 diminsions) {
         int maxX = diminsions.getX();
         int maxY = diminsions.getY();
         int maxZ = diminsions.getZ();
@@ -216,12 +216,12 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
             ChatUtil.sendNotice(getContained(Player.class), "Editing Layer: " + cy + '/' + maxY);
         }
 
-        long start = System.currentTimeMillis();
+        long start = System.nanoTime();
 
         edit:
         {
             for (int x = cx; x < maxX; ++x) {
-                for (int z = 0; z < maxZ; ++z) {
+                for (int z = cz; z < maxZ; ++z) {
                     BlockVector3 relativePoint = BlockVector3.at(x, cy, z);
 
                     BlockVector3 placementTarget = relativePoint.add(region.getMinimumPoint());
@@ -234,26 +234,29 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                     }
 
                     editor.rawSetBlock(placementTarget, targetBlock);
-                }
 
-                editor.flushSession();
+                    if (z % 30 == 0) {
+                        editor.flushSession();
 
-                if (System.currentTimeMillis() - start >= 100) {
-                    cx = x;
-                    break edit;
+                        if (System.nanoTime() - start >= TimeUnit.MILLISECONDS.toNanos(100)) {
+                            cx = x;
+                            cz = z + 1;
+                            break edit;
+                        }
+                    }
                 }
+                cz = 0;
             }
             cx = 0;
             cy++;
         }
 
-        long post = System.currentTimeMillis() - start;
-
         final int finalCy = cy;
+        final int finalCz = cz;
         final int finalCx = cx;
         server.getScheduler().runTaskLater(inst, () -> {
-            callEdit(editor, board, finalCx, finalCy, diminsions);
-        }, post / 5);
+            callEdit(editor, board, finalCx, finalCz, finalCy, diminsions);
+        }, 10);
     }
 
     public void changeMirage(String newMirage) throws IOException, CommandException {
@@ -268,7 +271,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         editing = true;
 
         EditSession editor = WorldEditBridge.getSystemEditSessionFor(world);
-        editor.setFastMode(true);
 
         try (Closer closer = Closer.create()) {
             FileInputStream fis = closer.register(new FileInputStream(file));
@@ -280,7 +282,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
             Clipboard clipboard = reader.read();
             resetBlockRecordIndex();
 
-            callEdit(editor, clipboard, 0, 0, clipboard.getDimensions());
+            callEdit(editor, clipboard, 0, 0, 0, clipboard.getDimensions());
         }
     }
 

@@ -13,6 +13,7 @@ import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitConfiguration;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
+import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
@@ -1065,7 +1066,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 return;
             }
 
-            final List<Chunk> chunkList = new ArrayList<>();
+            final List<BlockVector2> chunkList = new ArrayList<>();
 
             BlockVector3 min;
             BlockVector3 max;
@@ -1084,11 +1085,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             final int maxZ = max.getBlockZ();
             final int maxY = max.getBlockY();
 
-            Chunk c;
             for (int x = minX; x <= maxX; x += 16) {
                 for (int z = minZ; z <= maxZ; z += 16) {
-                    c = world.getBlockAt(x, minY, z).getChunk();
-                    if (!chunkList.contains(c)) chunkList.add(c);
+                    BlockVector2 chunkCoords = BlockVector2.at(x >> 4, z >> 4);
+                    if (!chunkList.contains(chunkCoords)) chunkList.add(chunkCoords);
                 }
             }
 
@@ -1112,11 +1112,12 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 return;
             }
 
-            for (final Chunk chunk : chunkList) {
+            for (final BlockVector2 chunkCoords : chunkList) {
                 BukkitTask aTask = server.getScheduler().runTaskLater(inst, () -> {
-                    boolean isLastRestore = chunkList.indexOf(chunk) == chunkList.size() - 1;
+                    boolean isLastRestore = chunkList.indexOf(chunkCoords) == chunkList.size() - 1;
 
                     try {
+                        Chunk chunk = world.getChunkAt(chunkCoords.getX(), chunkCoords.getZ());
                         Block minBlock = chunk.getBlock(0, minY, 0);
                         Block maxBlock = chunk.getBlock(15, maxY, 15);
                         BlockVector3 minPt = BlockVector3.at(minBlock.getX(), minBlock.getY(), minBlock.getZ());
@@ -1168,7 +1169,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                             }
                         }
                     }
-                }, 5 * chunkList.indexOf(chunk));
+                }, 5 * chunkList.indexOf(chunkCoords));
                 restorationTask.add(aTask);
             }
 

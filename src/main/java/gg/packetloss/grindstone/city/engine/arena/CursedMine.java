@@ -357,7 +357,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             for (int z = minZ; z <= maxZ; z++) {
                 Block block = getWorld().getBlockAt(x, blockY, z);
 
-                if (!block.getChunk().isLoaded()) continue;
+                if (!block.getWorld().isChunkLoaded(x >> 4, z >> 4)) continue;
 
                 if (REPLACEABLE_TYPES.contains(block.getType())) {
                     block.setType(newType);

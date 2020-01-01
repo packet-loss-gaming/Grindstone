@@ -57,7 +57,6 @@ import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
-import static gg.packetloss.grindstone.util.portal.NoOPTravelAgent.overwriteDestination;
 
 public class GraveYardListener extends AreaListener<GraveYardArea> {
     protected final CommandBook inst = CommandBook.inst();
@@ -524,7 +523,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             Location tg = CollectionUtil.getElement(parent.headStones);
             tg = LocationUtil.findFreePosition(tg);
             if (tg == null) tg = parent.getWorld().getSpawnLocation();
-            overwriteDestination(event, tg);
+            event.setTo(tg);
         }
     }
 
