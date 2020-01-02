@@ -22,6 +22,10 @@ public class WarpManager {
         return warps;
     }
 
+    public List<WarpPoint> getGlobalWarps() {
+        return warpData.getGlobalWarps();
+    }
+
     public Optional<WarpPoint> getExactWarp(WarpQualifiedName qualifiedName) {
         return warpData.getWarp(qualifiedName);
     }
