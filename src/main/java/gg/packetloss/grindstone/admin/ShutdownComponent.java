@@ -7,10 +7,6 @@
 package gg.packetloss.grindstone.admin;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandException;
-import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.ServerShutdownEvent;
@@ -19,7 +15,6 @@ import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -36,31 +31,9 @@ public class ShutdownComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-
-        registerCommands(Commands.class);
-    }
-
-    public class Commands {
-
-        @Command(aliases = {"shutdown"}, usage = "[time] [excepted downtime]",
-                desc = "Used to restart the server", min = 0, max = 3)
-        @CommandPermissions({"aurora.admin.server.shutdown"})
-        public void shutdownCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            int delay = 60;
-            String expectedDowntime = "30 seconds";
-            if (args.argsLength() > 0) {
-                try {
-                    delay = Math.min(120, Math.max(10, Integer.parseInt(args.getString(0))));
-                    if (args.argsLength() > 1) {
-                        expectedDowntime = args.getJoinedStrings(1).trim();
-                    }
-                } catch (NumberFormatException ex) {
-                    throw new CommandException("Invalid time entered!");
-                }
-            }
-            shutdown(sender instanceof Player ? (Player) sender : null, delay, expectedDowntime);
-        }
+        CommandBook.registerComponentCommands((commandManager, registration) -> {
+            registration.register(commandManager, ShutdownCommandsRegistration.builder(), new ShutdownCommands(this));
+        });
     }
 
     private BukkitTask task = null;
