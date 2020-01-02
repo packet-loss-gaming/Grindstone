@@ -86,6 +86,10 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
+tasks.withType(JavaCompile).configureEach {
+    it.options.compilerArgs.add("-Aarg.name.key.prefix=")
+}
+
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 version = '1.0'
