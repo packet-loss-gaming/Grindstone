@@ -154,7 +154,9 @@ public class GuildComponent extends BukkitComponent implements Listener {
         guildStateMap.put(playerID, newGuildState);
 
         // Swap powers
-        new GuildState(player, currentGuild).disablePowers();
+        if (currentGuild != null) {
+            new GuildState(player, currentGuild).disablePowers();
+        }
         new GuildState(player, newGuildState).enablePowers();
 
         return true;
