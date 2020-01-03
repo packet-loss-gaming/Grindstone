@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.util;
 
+import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.CommandException;
 import gg.packetloss.bukkittext.Text;
@@ -82,6 +83,20 @@ public class ChatUtil {
 
     public static void sendNotice(Collection<? extends CommandSender> senders, ChatColor chatColor, String notice) {
         senders.forEach(s -> sendNotice(s, chatColor, notice));
+    }
+
+    public static void sendNoticeStaggered(CommandSender sender, Iterable<String> lines) {
+        int i = 0;
+
+        for (String line : lines) {
+            if (i++ == 0) {
+                ChatUtil.sendNotice(sender, line);
+            } else {
+                CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                    ChatUtil.sendNotice(sender, line);
+                }, i * 20 * 3);
+            }
+        }
     }
 
     public static void sendError(CommandSender sender, String error) {

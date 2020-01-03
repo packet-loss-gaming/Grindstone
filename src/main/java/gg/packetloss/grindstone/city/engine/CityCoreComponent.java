@@ -33,6 +33,9 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "City Core", desc = "Operate the core city functionality.")
 @Depend(components = {AdminComponent.class, HomeManagerComponent.class})
 public class CityCoreComponent extends BukkitComponent implements Listener {
+    private static final String CITY_WORLD = "City";
+    private static final String PRIMARY_RANGE_WORLD = "Halzeil";
+
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
@@ -49,11 +52,15 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
     }
 
     private boolean isCityWorld(World world) {
-        return world.getName().equals("City");
+        return world.getName().equals(CITY_WORLD);
     }
 
     private boolean isRangeWorld(World world) {
-        return world.getName().equals("Halzeil");
+        return world.getName().equals(PRIMARY_RANGE_WORLD);
+    }
+
+    public World getCurrentRangeWorld() {
+        return CommandBook.server().getWorld(PRIMARY_RANGE_WORLD);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -112,12 +119,12 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
             case NETHER_PORTAL: {
                 // City Code
                 if (isCityWorld(fromWorld)) {
-                    World world = Bukkit.getWorld("Halzeil");
+                    World world = Bukkit.getWorld(PRIMARY_RANGE_WORLD);
                     Location targetLoc = new Location(world, from.getX() * 64, from.getY(), from.getZ() * 64);
                     event.setTo(targetLoc);
                     return;
                 } else if (isRangeWorld(fromWorld)) {
-                    World world = Bukkit.getWorld("City");
+                    World world = Bukkit.getWorld(CITY_WORLD);
                     Location targetLoc = new Location(world, from.getX() / 64, from.getY(), from.getZ() / 64);
                     event.setTo(targetLoc);
                     return;

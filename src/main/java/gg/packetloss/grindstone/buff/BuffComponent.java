@@ -58,14 +58,18 @@ public class BuffComponent extends BukkitComponent implements Listener {
         return getBuffSet(buff, player).increase(buff);
     }
 
+    private void notifyOfNewPower(Buff buff, Player player) {
+        int level = getBuffLevel(buff, player).get();
+        ChatUtil.sendMessage(player, ChatColor.YELLOW + "You grow stronger, " + ChatColor.BLUE + buff.getFriendlyName()
+                + ChatColor.DARK_GREEN + " +" + level);
+    }
+
     public void notifyIncrease(Buff buff, Player player) {
         if (!increase(buff, player)) {
             return;
         }
 
-        int level = getBuffLevel(buff, player).get();
-        ChatUtil.sendMessage(player, ChatColor.YELLOW + "You grow stronger, " + ChatColor.BLUE + buff.getFriendlyName()
-                + ChatColor.DARK_GREEN + " +" + level);
+        notifyOfNewPower(buff, player);
     }
 
     public boolean decrease(Buff buff, Player player) {
@@ -79,6 +83,23 @@ public class BuffComponent extends BukkitComponent implements Listener {
         }
 
         return Optional.of(buffSet.getLevel(buff));
+    }
+
+    public boolean fillToLevel(Buff buff, Player player, int targetLevel) {
+        int currentValue = getBuffLevel(buff, player).orElse(0);
+        if (currentValue >= targetLevel) {
+            return false;
+        }
+
+        return getBuffSet(buff, player).adjustLevel(buff, targetLevel - currentValue);
+    }
+
+    public void notifyFillToLevel(Buff buff, Player player, int targetLevel) {
+        if (!fillToLevel(buff, player, targetLevel)) {
+            return;
+        }
+
+        notifyOfNewPower(buff, player);
     }
 
     public class Commands {
