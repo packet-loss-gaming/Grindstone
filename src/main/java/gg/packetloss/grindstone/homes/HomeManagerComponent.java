@@ -556,7 +556,7 @@ public class HomeManagerComponent extends BukkitComponent implements Listener {
                     }
 
                     region.setPriority(10);
-                    ProtectedRegion districtRegion = manager.getRegion(district + "-district");
+                    ProtectedRegion districtRegion = manager.getRegion(district + "-district-home-template");
                     if (districtRegion == null) {
                         ChatUtil.sendError(sender, "Invalid district specified.");
                         return;
