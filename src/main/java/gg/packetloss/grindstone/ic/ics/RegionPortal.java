@@ -4,6 +4,7 @@ import com.destroystokyo.paper.ParticleBuilder;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.craftbook.ChangedSign;
 import com.sk89q.craftbook.mechanics.ic.*;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -12,6 +13,7 @@ import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 
 import java.util.ArrayDeque;
@@ -87,10 +89,16 @@ public class RegionPortal extends AbstractSelfTriggeredIC {
     }
 
     private Location translate(ProtectedRegion fromRegion, ProtectedRegion toRegion, Location loc) {
-        BlockVector3 min = fromRegion.getMaximumPoint();
-        BlockVector3 relativePoint = BlockVector3.at(min.getX() - loc.getX(), 0, min.getZ() - loc.getZ());
-        BlockVector3 targetPoint = toRegion.getMaximumPoint().subtract(relativePoint);
-        return new Location(loc.getWorld(), targetPoint.getX(), targetPoint.getY(), targetPoint.getZ());
+        World world = loc.getWorld();
+
+        Location fromAnchor = BukkitAdapter.adapt(world, fromRegion.getMaximumPoint());
+        Location toAnchor = BukkitAdapter.adapt(world, toRegion.getMaximumPoint());
+
+        return toAnchor.subtract(
+                fromAnchor.getX() - loc.getX(),
+                0,
+                fromAnchor.getZ() - loc.getZ()
+        );
     }
 
     private void teleport(ProtectedRegion fromRegion, ProtectedRegion toRegion, Entity entity) {
