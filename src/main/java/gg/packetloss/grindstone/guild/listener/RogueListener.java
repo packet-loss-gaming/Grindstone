@@ -3,6 +3,8 @@ package gg.packetloss.grindstone.guild.listener;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
+import gg.packetloss.grindstone.click.ClickType;
+import gg.packetloss.grindstone.events.DoubleClickEvent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
@@ -18,7 +20,6 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
-import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.EntityEffect;
 import org.bukkit.GameMode;
 import org.bukkit.block.Block;
@@ -31,7 +32,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.Vector;
@@ -214,8 +214,6 @@ public class RogueListener implements Listener {
 
             if (event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
                 RogueState state = optState.get();
-                state.recordAttack();
-
                 if (state.hasPower(RoguePower.DAMAGE_BUFF)) {
                     event.setDamage(Math.max(event.getDamage(), Math.min((event.getDamage() + 10) * 1.2, 20)));
                 }
@@ -278,8 +276,8 @@ public class RogueListener implements Listener {
     }
 
     @EventHandler
-    public void onRightClick(PlayerInteractEvent event) {
-        final Player player = event.getPlayer();
+    public void onDoubleClick(DoubleClickEvent event) {
+        Player player = event.getPlayer();
         ItemStack stack = player.getItemInHand();
 
         Optional<RogueState> optState = getState(player);
@@ -288,36 +286,30 @@ public class RogueListener implements Listener {
         }
 
         RogueState state = optState.get();
-        if (stack != null && ItemUtil.isSword(stack)) {
-            switch (event.getAction()) {
-                case LEFT_CLICK_AIR:
-                    if (state.isDoubleLeftClick()) {
-                        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                            if (state.canBlip()) {
-                                blip(player, state, 2, false);
-                            }
-                        }, 1);
-                    }
-                    break;
-                case RIGHT_CLICK_AIR:
-                    if (state.isDoubleRightClick() && state.canGrenade()) {
-                        grenade(player, state);
-                    }
-                    break;
-                case RIGHT_CLICK_BLOCK:
-                    if (state.isDoubleRightClick() && state.canGrenade()) {
-                        Block clicked = event.getClickedBlock();
-                        BlockFace face = event.getBlockFace();
+        if (event.getClickType() == ClickType.LEFT) {
+            if (event.getAssociatedBlock() != null) {
+                return;
+            }
 
-                        // Never throw grenades if the clicked block was interactive, or could've been a misclick
-                        // of a nearby interactive block.
-                        if (EnvironmentUtil.isMaybeInteractiveBlock(clicked, face)) {
-                            break;
-                        }
+            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                if (state.canBlip()) {
+                    blip(player, state, 2, false);
+                }
+            }, 1);
+        } else if (event.getClickType() == ClickType.RIGHT) {
+            if (state.canGrenade()) {
+                Block clicked = event.getAssociatedBlock();
+                if (clicked != null) {
+                    BlockFace face = event.getAssociatedBlockFace();
 
-                        grenade(player, state);
+                    // Never throw grenades if the clicked block was interactive, or could've been a misclick
+                    // of a nearby interactive block.
+                    if (EnvironmentUtil.isMaybeInteractiveBlock(clicked, face)) {
+                        return;
                     }
-                    break;
+                }
+
+                grenade(player, state);
             }
         }
     }
