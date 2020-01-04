@@ -21,6 +21,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 
 import java.util.logging.Logger;
 
@@ -86,5 +87,26 @@ public class AntiJumpComponent extends BukkitComponent implements Listener {
                 }, 4);
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
+        // We're only interested in cancelled events for the purposes of fixing the client
+        // side prediction.
+        if (!event.isCancelled()) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        Location startingLocation = player.getLocation();
+
+        // We don't care about flight disabling, only enabling.
+        if (!event.isFlying()) {
+            return;
+        }
+
+        server.getScheduler().runTaskLater(inst, () -> {
+            player.teleport(LocationUtil.findFreePosition(startingLocation, false), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        }, 20);
     }
 }
