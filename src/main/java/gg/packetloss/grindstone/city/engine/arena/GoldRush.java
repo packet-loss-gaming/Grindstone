@@ -25,6 +25,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
@@ -45,7 +46,6 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Lever;
@@ -114,6 +114,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         this.impersonalComponent = impersonalComponent;
         this.highScoresComponent = highScoresComponent;
         this.playerStateComponent = playerStateComponent;
+
+        CommandBook.registerEvents(new FlightBlockingListener(this::contains));
 
         findChestAndKeys();         // Setup room one
         findLeversAndFloodBlocks(); // Setup room two
@@ -524,15 +526,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
             event.setCancelled(true);
             ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport to that location.");
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
-        Player player = event.getPlayer();
-        if (event.isFlying() && players.contains(player.getName())) {
-            event.setCancelled(true);
-            ChatUtil.sendNotice(player, "You cannot fly here!");
         }
     }
 

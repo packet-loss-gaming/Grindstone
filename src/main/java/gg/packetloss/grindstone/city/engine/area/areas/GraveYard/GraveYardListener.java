@@ -43,7 +43,10 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -224,15 +227,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
 
         event.setCancelled(true);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
-        Player player = event.getPlayer();
-        if (event.isFlying() && parent.contains(player) && !parent.admin.isAdmin(player)) {
-            event.setCancelled(true);
-            ChatUtil.sendNotice(player, "You cannot fly here!");
-        }
     }
 
     @EventHandler(ignoreCancelled = true)

@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.GraveYard;
 
+import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -24,6 +25,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Effect;
@@ -113,6 +115,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         tick = 4 * 20;
         listener = new GraveYardListener(this);
         config = new GraveYardConfig();
+
+        CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
 
         findHeadStones();
         findPressurePlateLockLevers();

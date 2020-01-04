@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.FreakyFour;
 
+import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -19,6 +20,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.checker.Expression;
+import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
@@ -73,6 +75,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         tick = 4 * 20;
         listener = new FreakyFourListener(this);
         config = new FreakyFourConfig();
+
+        CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
     }
 
     @Override

@@ -53,7 +53,6 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -95,15 +94,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 if (potionEffectType == null) continue;
                 if (player.hasPotionEffect(potionEffectType)) player.removePotionEffect(potionEffectType);
             }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
-        Player player = event.getPlayer();
-        if (event.isFlying() && parent.contains(player) && !parent.admin.isAdmin(player)) {
-            event.setCancelled(true);
-            ChatUtil.sendNotice(player, "You cannot fly here!");
         }
     }
 

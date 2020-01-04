@@ -19,6 +19,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -32,7 +33,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.IOException;
@@ -74,6 +74,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+        CommandBook.registerEvents(new FlightBlockingListener(adminComponent, this::contains));
     }
 
     private void findRewardChest() {
@@ -177,15 +178,6 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         } else if (contains(to)) {
             event.setTo(entranceLoc);
             ChatUtil.sendWarning(event.getPlayer(), "The warden catches you and throws you outside!");
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
-        Player player = event.getPlayer();
-        if (event.isFlying() && contains(player) && !adminComponent.isAdmin(player)) {
-            event.setCancelled(true);
-            ChatUtil.sendNotice(player, "You cannot fly here!");
         }
     }
 

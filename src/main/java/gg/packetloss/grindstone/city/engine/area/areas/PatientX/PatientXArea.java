@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.PatientX;
 
+import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -16,6 +17,7 @@ import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
+import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.player.AdminToolkit;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -75,6 +77,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         listener = new PatientXListener(this);
         config = new PatientXConfig();
         adminKit = new AdminToolkit(admin);
+
+        CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
 
         server.getScheduler().runTaskTimer(inst, (Runnable) this::runAttack, 0, 20 * 20);
 
