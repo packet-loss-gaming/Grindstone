@@ -23,6 +23,7 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.parser.HelpTextParser;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -38,9 +39,11 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 
 @ComponentInformation(friendlyName = "First Login", desc = "Get stuff the first time you come.")
@@ -174,13 +177,21 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         }
     }
 
+    private HelpTextParser WELCOME_MESSAGES_PARSER = new HelpTextParser(ChatColor.YELLOW);
+
+    private void sendStaggered(CommandSender sender, Collection<String> lines) {
+        ChatUtil.sendStaggered(sender, lines.stream()
+                .map(WELCOME_MESSAGES_PARSER::parse)
+                .collect(Collectors.toList()));
+    }
+
     private void welcome(Player player) {
         List<String> combinedText = new ArrayList<>();
 
         combinedText.add(config.welcomeLine);
         combinedText.addAll(config.introText);
 
-        ChatUtil.sendNoticeStaggered(player, combinedText);
+        sendStaggered(player, combinedText);
 
         // Tell others to great him/her
         for (Player otherPlayer : server.getOnlinePlayers()) {
@@ -192,7 +203,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
     }
 
     protected void sendIntroText(CommandSender sender) {
-        ChatUtil.sendNoticeStaggered(sender, config.introText);
+        sendStaggered(sender, config.introText);
     }
 
     private void runIntroLogic(Player player) {

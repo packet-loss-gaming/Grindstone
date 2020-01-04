@@ -7,6 +7,8 @@
 package gg.packetloss.grindstone.helper;
 
 import gg.packetloss.bukkittext.Text;
+import gg.packetloss.grindstone.util.parser.HelpTextParser;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
@@ -38,12 +40,14 @@ public class YAMLResponse implements Response {
             return false;
         }
 
+        HelpTextParser parser = new HelpTextParser(ChatColor.WHITE);
+
         recipients.forEach((recipient) -> {
             recipient.sendMessage(Text.of(getNamePlate(), "Hey, ", player.getName(), "!").build());
             response.forEach(msg -> {
-                String finalMessage = msg
+                Text finalMessage = parser.parse(msg
                         .replaceAll("%player%", player.getName())
-                        .replaceAll("%world%", player.getWorld().getName());
+                        .replaceAll("%world%", player.getWorld().getName()));
                 recipient.sendMessage(Text.of(getNamePlate(), finalMessage).build());
             });
         });

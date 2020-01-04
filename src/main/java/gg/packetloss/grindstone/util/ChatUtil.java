@@ -85,17 +85,19 @@ public class ChatUtil {
         senders.forEach(s -> sendNotice(s, chatColor, notice));
     }
 
-    public static void sendNoticeStaggered(CommandSender sender, Iterable<String> lines) {
+    public static void sendStaggered(CommandSender sender, Iterable<Text> lines) {
         int i = 0;
 
-        for (String line : lines) {
-            if (i++ == 0) {
-                ChatUtil.sendNotice(sender, line);
+        for (Text line : lines) {
+            if (i == 0) {
+                sender.sendMessage(line.build());
             } else {
                 CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                    ChatUtil.sendNotice(sender, line);
+                    sender.sendMessage(line.build());
                 }, i * 20 * 3);
             }
+
+            ++i;
         }
     }
 
