@@ -1,8 +1,8 @@
 package gg.packetloss.grindstone.pixieitems.db.mysql;
 
+import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDatabase;
 import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
-import gg.packetloss.grindstone.data.MySQLHandle;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -66,7 +66,7 @@ public class MySQLPixieNetworkDatabase implements PixieNetworkDatabase {
                         return Optional.of(new PixieNetworkDetail(
                                 networkID,
                                 UUID.fromString(results.getString(1)),
-                                results.getString(1)
+                                results.getString(2)
                         ));
                     }
                 }

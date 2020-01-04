@@ -7,11 +7,11 @@ import org.bukkit.World;
 import java.util.Set;
 
 public class PixieChestDefinition {
-    private String worldName;
-    private int x;
-    private int y;
-    private int z;
-    private Set<String> itemNames;
+    private final String worldName;
+    private final int x;
+    private final int y;
+    private final int z;
+    private final Set<String> itemNames;
 
     public PixieChestDefinition(String worldName, int x, int y, int z, Set<String> itemNames) {
         this.worldName = worldName;
