@@ -4,6 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.util.ChatUtil;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -80,6 +81,19 @@ public class WarpManager {
         } else {
             ChatUtil.sendNotice(player, "Your bed location has been set.");
         }
+    }
+
+    private WarpQualifiedName getLastPortalLocationNameFor(Player player, World world) {
+        return new WarpQualifiedName(player.getUniqueId(), world.getName() + "-last-portal");
+    }
+
+    public Optional<WarpPoint> getLastPortalLocationFor(Player player, World world) {
+        return warpData.getWarp(getLastPortalLocationNameFor(player, world));
+    }
+
+    public void setLastPortalLocation(Player player, Location location) {
+        warpData.setWarp(getLastPortalLocationNameFor(player, location.getWorld()), location);
+        warpData.save();
     }
 
     public boolean destroyWarp(WarpQualifiedName qualifiedName) {

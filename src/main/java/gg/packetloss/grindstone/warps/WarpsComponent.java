@@ -8,6 +8,7 @@ import gg.packetloss.grindstone.events.HomeTeleportEvent;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,6 +18,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.io.File;
 import java.util.Optional;
@@ -69,6 +71,10 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         return warpManager.getHomeFor(player).map(WarpPoint::getSafeLocation);
     }
 
+    public Optional<Location> getLastPortalLocation(Player player, World world) {
+        return warpManager.getLastPortalLocationFor(player, world).map(WarpPoint::getSafeLocation);
+    }
+
     public Location getRespawnLocation(Player player) {
         Location spawnLoc = player.getWorld().getSpawnLocation();
         return getBedLocation(player).orElse(spawnLoc);
@@ -80,6 +86,44 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         HomeTeleportEvent HTE = new HomeTeleportEvent(event.getPlayer(), getRespawnLocation(event.getPlayer()));
         server.getPluginManager().callEvent(HTE);
         if (!HTE.isCancelled()) event.setRespawnLocation(HTE.getDestination());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerPortal(PlayerTeleportEvent event) {
+        // Use this over the nether portal check, because we need to pay attention to redirects.
+        if (event.getCause() != PlayerTeleportEvent.TeleportCause.NETHER_PORTAL) {
+            return;
+        }
+
+        Location from = event.getFrom();
+        Location to = event.getTo();
+
+        World fromWorld = from.getWorld();
+        World toWorld = to.getWorld();
+
+        // If the world hasn't changed, this is a redirect we don't care about/don't want to store.
+        // Consider the grave yard nether portal, this is a nether portal redirect, however, we don't
+        // actually want to record it, as we don't want /warp city-last-portal to go to the grave yard rewards
+        // room (it would be blocked, but it would still be wrong).
+        if (fromWorld == toWorld) {
+            return;
+        }
+
+        World.Environment fromEnvironment = fromWorld.getEnvironment();
+        World.Environment toEnvironment = toWorld.getEnvironment();
+
+        // Do not record world changes that involve a nether. This may be reconsidered in the future.
+        if (fromEnvironment == World.Environment.NETHER || toEnvironment == World.Environment.NETHER) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        // Invert the view location to make walking through portals feel more natural.
+        Location invertedViewLocation = from.clone();
+        invertedViewLocation.setDirection(from.getDirection().multiply(-1).setY(0));
+
+        warpManager.setLastPortalLocation(player, invertedViewLocation);
     }
 
     private boolean canSetPlayerBed(Location loc) {

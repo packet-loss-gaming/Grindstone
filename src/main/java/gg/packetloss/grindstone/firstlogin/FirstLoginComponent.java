@@ -24,7 +24,6 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -117,9 +116,6 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         }
     }
 
-    public Location getNewStartingLocation() {
-        return cityCore.getCurrentRangeWorld().getSpawnLocation();
-    }
 
     private boolean isNewerPlayer(Player player) {
         long timeSinceFirstLogin = System.currentTimeMillis() - player.getFirstPlayed();
@@ -145,7 +141,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
 
         if (!player.hasPlayedBefore()) {
-            player.teleport(getNewStartingLocation());
+            player.teleport(cityCore.getNewPlayerStartingLocation(player));
         }
 
         maybeApplyNewPlayerBuffs(player);

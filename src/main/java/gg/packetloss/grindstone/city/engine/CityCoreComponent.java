@@ -15,7 +15,11 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.custom.item.BuildToolUseEvent;
 import gg.packetloss.grindstone.homes.HomeManagerComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
-import org.bukkit.*;
+import gg.packetloss.grindstone.warps.WarpsComponent;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -25,13 +29,14 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityBreakDoorEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.material.Door;
 
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "City Core", desc = "Operate the core city functionality.")
-@Depend(components = {AdminComponent.class, HomeManagerComponent.class})
+@Depend(components = {AdminComponent.class, HomeManagerComponent.class, WarpsComponent.class})
 public class CityCoreComponent extends BukkitComponent implements Listener {
     private static final String CITY_WORLD = "City";
     private static final String PRIMARY_RANGE_WORLD = "Halzeil";
@@ -44,6 +49,8 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
     private AdminComponent admin;
     @InjectComponent
     private HomeManagerComponent homeManager;
+    @InjectComponent
+    private WarpsComponent warps;
 
     @Override
     public void enable() {
@@ -57,6 +64,10 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
 
     private boolean isRangeWorld(World world) {
         return world.getName().equals(PRIMARY_RANGE_WORLD);
+    }
+
+    public World getCityWorld() {
+        return CommandBook.server().getWorld(CITY_WORLD);
     }
 
     public World getCurrentRangeWorld() {
@@ -108,6 +119,10 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
         return new Location(loc.getWorld(), xTestLoc.getBlockX() + 1, loc.getY(), zTestLoc.getBlockZ() + 1);
     }
 
+    public Location getNewPlayerStartingLocation(Player player) {
+        return getCurrentRangeWorld().getSpawnLocation();
+    }
+
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
         final Player player = event.getPlayer();
@@ -119,14 +134,20 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
             case NETHER_PORTAL: {
                 // City Code
                 if (isCityWorld(fromWorld)) {
-                    World world = Bukkit.getWorld(PRIMARY_RANGE_WORLD);
-                    Location targetLoc = new Location(world, from.getX() * 64, from.getY(), from.getZ() * 64);
-                    event.setTo(targetLoc);
+                    Location location = warps
+                            .getLastPortalLocation(player, getCurrentRangeWorld())
+                            .orElseGet(() -> getNewPlayerStartingLocation(player));
+
+                    event.setCancelled(true);
+                    player.teleport(location, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
                     return;
                 } else if (isRangeWorld(fromWorld)) {
-                    World world = Bukkit.getWorld(CITY_WORLD);
-                    Location targetLoc = new Location(world, from.getX() / 64, from.getY(), from.getZ() / 64);
-                    event.setTo(targetLoc);
+                    Location location = warps
+                            .getLastPortalLocation(player, getCityWorld())
+                            .orElseGet(() -> getCityWorld().getSpawnLocation());
+
+                    event.setCancelled(true);
+                    player.teleport(location, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
                     return;
                 }
                 break;
