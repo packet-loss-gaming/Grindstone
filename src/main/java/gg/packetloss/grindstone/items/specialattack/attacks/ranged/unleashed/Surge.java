@@ -4,6 +4,7 @@ import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import gg.packetloss.grindstone.util.DamageUtil;
 import gg.packetloss.grindstone.util.SimpleRayTrace;
+import gg.packetloss.grindstone.util.VectorUtil;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
@@ -77,7 +78,7 @@ public class Surge extends EntityAttack implements RangedSpecial {
     public void activate() {
         int maxBlocks = (int) owner.getLocation().distance(target.getLocation()) + 15;
 
-        Vector vel = target.getLocation().toVector().subtract(owner.getLocation().toVector());
+        Vector vel = VectorUtil.createDirectionalVector(owner.getLocation(), target.getLocation());
 
         SimpleRayTrace it = new SimpleRayTrace(
                 owner.getLocation(),

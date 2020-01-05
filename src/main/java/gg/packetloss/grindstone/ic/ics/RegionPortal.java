@@ -9,6 +9,7 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.VectorUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -81,8 +82,7 @@ public class RegionPortal extends AbstractSelfTriggeredIC {
                 midpoint.getX() + .5, midpoint.getY(), midpoint.getZ() + .5
         );
 
-        org.bukkit.util.Vector diff = loc.toVector().subtract(bukkitMidpoint);
-        diff.normalize();
+        org.bukkit.util.Vector diff = VectorUtil.createDirectionalVector(bukkitMidpoint, loc.toVector());
         diff.setY(0);
 
         return diff;

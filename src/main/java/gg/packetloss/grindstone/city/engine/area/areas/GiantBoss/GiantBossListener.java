@@ -326,11 +326,10 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             if (meleeReasons.contains(event.getCause()) && attacker instanceof Player) {
                 server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) attacker));
 
-                Vector playerLocVec = attacker.getLocation().toVector();
-                Vector bossLocVec = parent.boss.getLocation().toVector();
-                Vector newVelocityVec = playerLocVec.subtract(bossLocVec);
+                Vector newVelocityVec = VectorUtil.createDirectionalVector(
+                        parent.boss.getLocation(), attacker.getLocation()
+                );
 
-                newVelocityVec.normalize();
                 newVelocityVec.multiply(config.playerThrowForceAmplifier);
                 newVelocityVec.setY(ChanceUtil.getRangedRandom(
                         config.playerThrowMinYForce,

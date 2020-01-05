@@ -259,7 +259,7 @@ public class NinjaListener implements Listener {
         }
 
         Location targetLoc = targetEntity.getLocation();
-        targetLoc.setDirection(targetLoc.toVector().subtract(player.getLocation().toVector()));
+        targetLoc.setDirection(VectorUtil.createDirectionalVector(player.getLocation(), targetLoc));
         return Optional.of(targetLoc);
     }
 
