@@ -228,24 +228,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         acceptedReasons.add(EntityDamageEvent.DamageCause.THORNS);
     }
 
-    private void applyBabyPots() {
-        GiantBossConfig config = parent.getConfig();
-
-        Collection<Zombie> containedBabies = parent.getContained(Zombie.class);
-        double invertedPercentage = containedBabies.size() / (double) config.maxBabies;
-        int potLevel = (int) (invertedPercentage * config.babyMaxPotLevel);
-
-        PotionEffectType[] effectTypes = new PotionEffectType[] {
-                PotionEffectType.INCREASE_DAMAGE, PotionEffectType.DAMAGE_RESISTANCE
-        };
-
-        for (Zombie baby : containedBabies) {
-            for (PotionEffectType effectType : effectTypes) {
-                baby.addPotionEffect(new PotionEffect(effectType, 20 * config.babyPotTime, potLevel), true);
-            }
-        }
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEvent(EntityDamageEvent event) {
         Entity defender = event.getEntity();
@@ -347,13 +329,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             }
 
             if (acceptedReasons.contains(event.getCause())) {
-                final ItemStack weapon = new ItemStack(Material.BONE);
-                ItemMeta weaponMeta = weapon.getItemMeta();
-                weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
-                weapon.setItemMeta(weaponMeta);
-
                 final double oldHP = boss.getHealth();
-                final Entity finalAttacker = attacker;
 
                 int maxBabySpawns = (int) (Math.pow(event.getDamage() / 30, 3) + 1);
                 int babySpawns = ChanceUtil.getRandom(maxBabySpawns);
@@ -362,43 +338,8 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 server.getScheduler().runTaskLater(inst, () -> {
                     if (boss.getHealth() > oldHP) return;
 
-                    List<Location> spawnPts = parent.spawnPts;
-
-                    List<Player> participants = Lists.newArrayList(parent.getContainedParticipants());
-                    Collections.shuffle(participants);
-
-                    int numZombies = parent.getContained(Zombie.class).size();
-
-                    for (int i = 0; i < spawnPts.size(); ++i) {
-                        if (numZombies++ > parent.getConfig().maxBabies) {
-                            break;
-                        }
-
-                        Location spawnPt = spawnPts.get(i);
-
-                        if (ChanceUtil.getChance(chancePerSpawnPoint)) {
-                            Zombie z = parent.getWorld().spawn(spawnPt, Zombie.class,(e) -> e.getEquipment().clear());
-
-                            // Create the baby with no item pickup
-                            z.setBaby(true);
-                            z.setCanPickupItems(false);
-
-                            // Add equipment
-                            EntityEquipment equipment = z.getEquipment();
-                            equipment.setItemInHand(weapon.clone());
-                            equipment.setItemInHandDropChance(0F);
-                            if (finalAttacker instanceof LivingEntity) {
-                                z.setTarget((LivingEntity) finalAttacker);
-                            }
-
-                            // Set target to (effectively) random player
-                            if (participants.size() > 0) {
-                                z.setTarget(participants.get(i % participants.size()));
-                            }
-                        }
-                    }
-
-                    applyBabyPots();
+                    parent.spawnBabies(chancePerSpawnPoint);
+                    parent.applyBabyPots();
                 }, 1);
             }
 
@@ -567,20 +508,9 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        if (parent.contains(player, 1) && !parent.admin.isAdmin(player)) {
-            if (parent.contains(player) && parent.isBossSpawned()) {
-                server.getScheduler().runTask(inst, () -> {
-                    if (!parent.boss.isValid()) {
-                        return;
-                    }
-
-                    if (parent.getContainedParticipants().isEmpty()) {
-                        parent.boss.setHealth(parent.boss.getMaxHealth());
-                        parent.removeMobs();
-                    } else {
-                        EntityUtil.heal(parent.boss, parent.boss.getMaxHealth() / 3);
-                    }
-                });
+        if (parent.contains(player, 1)) {
+            if (parent.isBossSpawned() && parent.isParticipant(player)) {
+                parent.handlePlayerSurrender();
             }
 
             try {
@@ -625,6 +555,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     deathMessage = " died while attempting to slay the boss";
                     break;
             }
+
             event.setDeathMessage(player.getName() + deathMessage);
         }
     }

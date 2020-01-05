@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.GiantBoss;
 
+import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -37,16 +38,17 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @ComponentInformation(friendlyName = "Giant Boss", desc = "Giant, and a true boss")
 @Depend(components = {AdminComponent.class, PrayerComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
@@ -119,6 +121,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             }
         } else if (!isEmpty()) {
             equalize();
+            spawnPassiveBabies();
             runAttack(ChanceUtil.getRandom(OPTION_COUNT));
         }
     }
@@ -279,6 +282,87 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         }
 
         return false;
+    }
+
+    private void spawnBabies(int chancePerSpawn, int numBabies) {
+        final ItemStack weapon = new ItemStack(Material.BONE);
+        ItemMeta weaponMeta = weapon.getItemMeta();
+        weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
+        weapon.setItemMeta(weaponMeta);
+
+        List<Player> participants = Lists.newArrayList(getContainedParticipants());
+        Collections.shuffle(participants);
+
+        for (int i = 0; i < spawnPts.size(); ++i) {
+            if (numBabies++ > config.maxBabies) {
+                break;
+            }
+
+            Location spawnPt = spawnPts.get(i);
+            if (ChanceUtil.getChance(chancePerSpawn)) {
+                Zombie z = world.spawn(spawnPt, Zombie.class,(e) -> e.getEquipment().clear());
+
+                // Create the baby with no item pickup
+                z.setBaby(true);
+                z.setCanPickupItems(false);
+
+                // Add equipment
+                EntityEquipment equipment = z.getEquipment();
+                equipment.setItemInHand(weapon.clone());
+                equipment.setItemInHandDropChance(0F);
+
+                // Set target to (effectively) random player
+                if (participants.size() > 0) {
+                    z.setTarget(participants.get(i % participants.size()));
+                }
+            }
+        }
+
+    }
+
+    public void spawnBabies(int chancePerSpawn) {
+        int numBabies = getContained(Zombie.class).size();
+        spawnBabies(chancePerSpawn, numBabies);
+    }
+
+    public void spawnPassiveBabies() {
+        int numBabies = getContained(Zombie.class).size();
+        if (numBabies >= config.minBabies) {
+            return;
+        }
+
+        spawnBabies(config.babyPassiveSpawnChance, numBabies);
+    }
+
+    public void applyBabyPots() {
+        Collection<Zombie> containedBabies = getContained(Zombie.class);
+        double invertedPercentage = containedBabies.size() / (double) config.maxBabies;
+        int potLevel = (int) (invertedPercentage * config.babyMaxPotLevel);
+
+        PotionEffectType[] effectTypes = new PotionEffectType[] {
+                PotionEffectType.INCREASE_DAMAGE, PotionEffectType.DAMAGE_RESISTANCE
+        };
+
+        for (Zombie baby : containedBabies) {
+            for (PotionEffectType effectType : effectTypes) {
+                baby.addPotionEffect(new PotionEffect(effectType, 20 * config.babyPotTime, potLevel), true);
+            }
+        }
+    }
+
+    public void handlePlayerSurrender() {
+        server.getScheduler().runTask(inst, () -> {
+            if (!isBossSpawned()) {
+                return;
+            }
+
+            if (getContainedParticipants().isEmpty()) {
+                boss.setHealth(boss.getMaxHealth());
+                removeMobs();
+            } else {
+                EntityUtil.heal(boss, boss.getMaxHealth() / 3);
+            }
+        });
     }
 
     public final int OPTION_COUNT = 9;

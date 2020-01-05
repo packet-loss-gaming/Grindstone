@@ -18,6 +18,10 @@ public class GiantBossConfig extends ConfigurationBase {
     public int maxHealthThunderstorm = 1000;
     @Setting("babies.max-count")
     public int maxBabies = 200;
+    @Setting("babies.min-count")
+    public int minBabies = 10;
+    @Setting("babies.passive-spawn-chance")
+    public int babyPassiveSpawnChance = 100;
     @Setting("babies.max-pot-level")
     public int babyMaxPotLevel = 10;
     @Setting("babies.pot-time")
