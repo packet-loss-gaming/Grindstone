@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Giant Boss", desc = "Giant, and a true boss")
 @Depend(components = {AdminComponent.class, PrayerComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
@@ -73,8 +72,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected BukkitTask mobDestroyer;
     protected Random random = new Random();
 
-    protected boolean flaggedForColumnAttack = false;
-
     protected double toHeal = 0;
     protected List<Location> spawnPts = new ArrayList<>();
     protected List<Location> chestPts = new ArrayList<>();
@@ -94,7 +91,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             Collection<Entity> contained = getContained(1, Zombie.class, ExperienceOrb.class);
             if (!EnvironmentUtil.hasThunderstorm(getWorld())) removeOutsideZombies(contained);
             if (isBossSpawned()) {
-                buffBabies(contained);
                 removeXP(contained);
             }
         }, 0, 20 * 2);
@@ -216,20 +212,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         }
     };
 
-    public void buffBabies(Collection<? extends Entity> contained) {
-        List<Zombie> que = contained.stream()
-                .filter(entity -> entity.isValid() && entity instanceof Zombie && ((Zombie) entity).isBaby())
-                .map(entity -> (Zombie) entity)
-                .collect(Collectors.toList());
-
-        if (que.size() < 45) {
-            flaggedForColumnAttack = false;
-            return;
-        }
-
-        flaggedForColumnAttack = true;
-    }
-
     public void removeXP(Collection<? extends Entity> contained) {
         removeXP(contained, false);
     }
@@ -310,7 +292,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
 
         // AI system
-        if ((attackCase == 5 || attackCase == 9) && boss.getHealth() > boss.getMaxHealth() * .9) {
+        if ((attackCase == 5 || attackCase == 9) && boss.getHealth() > boss.getMaxHealth() * .7) {
             attackCase = ChanceUtil.getChance(2) ? 8 : 2;
         }
 
@@ -321,17 +303,9 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             }
         }
 
-        if (boss.getHealth() < boss.getMaxHealth() * .3 && ChanceUtil.getChance(2)) {
-            attackCase = 9;
-        }
-
-        if (((attackCase == 3 || attackCase == 6) && boss.getHealth() < boss.getMaxHealth() * .3) || (attackCase == 7 && contained.size() < 2)) {
+        if (((attackCase == 3 || attackCase == 6) && boss.getHealth() < boss.getMaxHealth() * .3)) {
             runAttack(ChanceUtil.getRandom(OPTION_COUNT));
             return;
-        }
-
-        if (flaggedForColumnAttack && ChanceUtil.getChance(2)) {
-            attackCase = ChanceUtil.getChance(2) ? 4 : 7;
         }
 
         switch (attackCase) {
