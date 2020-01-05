@@ -1,9 +1,16 @@
-apply plugin: 'java'
+buildscript {
+    repositories {
+        jcenter()
+    }
 
-configurations {
-    shade
-    compile.extendsFrom shade
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
+    }
 }
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 repositories {
     mavenCentral()
@@ -49,10 +56,9 @@ repositories {
 }
 
 dependencies {
-    // FIXME: These should be moved into a maven repository
-    shade files('lib/OSBL.jar')
-    compile files('lib/MobArena.jar')
-    compile files('lib/Pitfall.jar')
+    compile group: 'gg.packetloss', name: 'OSBL', version: '1.1-SNAPSHOT'
+    compile group: 'com.garbagemule', name: 'mobarena', version: '0.104.3-SNAPSHOT'
+    compile group: 'gg.packetloss', name: 'Pitfall', version: '2.1.2'
 
     compile group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.15.1-R0.1-SNAPSHOT'
     compile group: 'org.spigotmc', name: 'spigot', version: '1.15.1-R0.1-SNAPSHOT'
@@ -68,16 +74,15 @@ dependencies {
         exclude group: 'org.spigotmc', module: 'spigot'
     }
 
-    shade group: 'de.themoep.idconverter', name: 'mappings', version: '1.2-SNAPSHOT'
     compile group: "com.comphenix.protocol", name: "ProtocolLib", version: "4.5.0"
 
     compile group: 'net.milkbowl.vault', name: 'Vault', version: '1.5.6'
     compile group: 'fr.neatmonster', name: 'nocheatplus', version: '3.13.7-RC'
-    compile(group: 'de.diddiz', name: 'logblock', version: '1.13.2-SNAPSHOT') {
+    compile(group: 'de.diddiz', name: 'logblock', version: '1.15.1.1-SNAPSHOT') {
         exclude group: 'com.sk89q', module: 'worldedit'
     }
 
-    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.2.0'
+    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.4.1'
 
     compileOnly 'com.sk89q.worldedit.worldedit-libs:ap:7.1.0-SNAPSHOT'
     annotationProcessor 'com.sk89q.worldedit.worldedit-libs:ap:7.1.0-SNAPSHOT'
@@ -94,10 +99,15 @@ sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 version = '1.0'
 
-jar {
-    configurations.shade.each { dep ->
-        from(project.zipTree(dep)){
-            exclude 'META-INF', 'META-INF/**'
+artifacts {
+    archives shadowJar
+}
+
+shadowJar {
+    dependencies {
+        include(dependency("gg.packetloss:OSBL"))
+        relocate ("com.zaxxer.hikari", "gg.packetloss.hikari") {
+            include(dependency("com.zaxxer:HikariCP"))
         }
     }
 }
