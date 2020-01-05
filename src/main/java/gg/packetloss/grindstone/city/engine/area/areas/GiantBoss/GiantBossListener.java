@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.GiantBoss;
 
-import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
@@ -44,7 +43,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -53,11 +51,8 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitTask;
@@ -88,12 +83,17 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
     @EventHandler(ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent event) {
+        Player player = event.getPlayer();
+
         if (parent.contains(event.getTo(), 1) && causes.contains(event.getCause())) {
-            Player player = event.getPlayer();
             for (PotionEffectType potionEffectType : PotionEffectType.values()) {
                 if (potionEffectType == null) continue;
                 if (player.hasPotionEffect(potionEffectType)) player.removePotionEffect(potionEffectType);
             }
+        }
+
+        if (parent.contains(event.getFrom()) && !parent.contains(event.getTo()) && parent.isParticipant(player)) {
+            parent.handlePlayerSurrender();
         }
     }
 
