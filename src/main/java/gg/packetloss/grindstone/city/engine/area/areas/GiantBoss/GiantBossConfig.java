@@ -9,6 +9,8 @@ package gg.packetloss.grindstone.city.engine.area.areas.GiantBoss;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 
+import java.util.List;
+
 public class GiantBossConfig extends ConfigurationBase {
     @Setting("max-health.normal")
     public int maxHealthNormal = 750;
@@ -22,4 +24,15 @@ public class GiantBossConfig extends ConfigurationBase {
     public int babyPotTime = 10;
     @Setting("babies.boss-protect-count")
     public int bossProtectBabyCount = 150;
+    @Setting("player-throw.min-y-force")
+    public double playerThrowMinYForce = .3;
+    @Setting("player-throw.max-y-force")
+    public double playerThrowMaxYForce = .7;
+    @Setting("player-throw.force-amplifier")
+    public double playerThrowForceAmplifier = 2;
+    @Setting("player-throw.taunts")
+    public List<String> playerThrowTaunts = List.of(
+            "Weeeeee!", "Poke!", "Boink!", "Hehehehee!",
+            "Ha, ha, puny human! This is fun!"
+    );
 }

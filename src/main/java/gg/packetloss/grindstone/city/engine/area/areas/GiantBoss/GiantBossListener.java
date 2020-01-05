@@ -211,10 +211,18 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         }
     }
 
+    private static Set<EntityDamageEvent.DamageCause> meleeReasons = new HashSet<>();
+
+    static {
+        meleeReasons.add(EntityDamageEvent.DamageCause.ENTITY_ATTACK);
+        meleeReasons.add(EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK);
+    }
+
     private static Set<EntityDamageByEntityEvent.DamageCause> acceptedReasons = new HashSet<>();
 
     static {
-        acceptedReasons.add(EntityDamageEvent.DamageCause.ENTITY_ATTACK);
+        acceptedReasons.addAll(meleeReasons);
+
         acceptedReasons.add(EntityDamageEvent.DamageCause.PROJECTILE);
         acceptedReasons.add(EntityDamageEvent.DamageCause.MAGIC);
         acceptedReasons.add(EntityDamageEvent.DamageCause.THORNS);
@@ -315,39 +323,31 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 event.setDamage(event.getDamage() * percentageDamageRemaining);
             }
 
+            if (meleeReasons.contains(event.getCause()) && attacker instanceof Player) {
+                server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) attacker));
+
+                Vector playerLocVec = attacker.getLocation().toVector();
+                Vector bossLocVec = parent.boss.getLocation().toVector();
+                Vector newVelocityVec = playerLocVec.subtract(bossLocVec);
+
+                newVelocityVec.normalize();
+                newVelocityVec.multiply(config.playerThrowForceAmplifier);
+                newVelocityVec.setY(ChanceUtil.getRangedRandom(
+                        config.playerThrowMinYForce,
+                        config.playerThrowMaxYForce
+                ));
+
+                attacker.setVelocity(newVelocityVec);
+
+                if (ChanceUtil.getChance(3) && boss.getHealth() > boss.getMaxHealth() * .5) {
+                    ChatUtil.sendNotice(
+                            parent.getAudiblePlayers(),
+                            CollectionUtil.getElement(config.playerThrowTaunts)
+                    );
+                }
+            }
+
             if (acceptedReasons.contains(event.getCause())) {
-                int affected = 0;
-                for (Entity e : boss.getNearbyEntities(8, 8, 8)) {
-                    if (e.isValid() && e instanceof Player && parent.contains(e)) {
-                        server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
-
-                        double newY = ChanceUtil.getRangedRandom(.3, .7);
-                        e.setVelocity(((Player) e).getEyeLocation().getDirection().multiply(-2).setY(newY));
-
-                        affected++;
-                    }
-                }
-
-                if (affected > 0 && ChanceUtil.getChance(3) && boss.getHealth() > boss.getMaxHealth() * .5) {
-                    switch (ChanceUtil.getRandom(5)) {
-                        case 1:
-                            ChatUtil.sendNotice(parent.getAudiblePlayers(), "Weeeeee!");
-                            break;
-                        case 2:
-                            ChatUtil.sendNotice(parent.getAudiblePlayers(), "Poke!");
-                            break;
-                        case 3:
-                            ChatUtil.sendNotice(parent.getAudiblePlayers(), "Boink!");
-                            break;
-                        case 4:
-                            ChatUtil.sendNotice(parent.getAudiblePlayers(), "Hehehehee!");
-                            break;
-                        default:
-                            ChatUtil.sendNotice(parent.getAudiblePlayers(), "Ha, ha, puny human! This is fun!");
-                            break;
-                    }
-                }
-
                 final ItemStack weapon = new ItemStack(Material.BONE);
                 ItemMeta weaponMeta = weapon.getItemMeta();
                 weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
