@@ -102,6 +102,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private StickyZombie stickyBossManager;
     private ChuckerZombie chuckerBossManager;
 
+    private boolean highLoad = false;
+
     @Override
     public void enable() {
         config = configure(new LocalConfiguration());
@@ -127,8 +129,10 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public int thorBossChance = 100;
         @Setting("boss-chance.zapper")
         public int zapperBossChance = 60;
-        @Setting("boss-chance.merciless")
-        public int mercilessBossChance = 1000;
+        @Setting("boss-chance.merciless.normal")
+        public int mercilessBossChanceNormal = 1000;
+        @Setting("boss-chance.merciless.high-load")
+        public int mercilessBossChanceHighLoad = 100;
         @Setting("boss-chance.sticky")
         public int stickyBossChance = 60;
         @Setting("boss-chance.chucker")
@@ -147,8 +151,10 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public int localMultiplier = 1;
         @Setting("local-spawn-chance")
         public int localSpawnChance = 3;
-        @Setting("max-mobs")
-        public int maxMobs = 1000;
+        @Setting("max-mobs.entry")
+        public int maxMobsEntry = 600;
+        @Setting("max-mobs.hard-cap")
+        public int maxMobsHardCap = 1000;
         @Setting("enable-safe-respawn-location")
         public boolean enableSafeRespawn = true;
         @Setting("safe-respawn-radius")
@@ -417,11 +423,13 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         LightningStrike lightning = event.getLightning();
         World world = lightning.getWorld();
         final int mobCount;
-        final int mobCountMax = config.maxMobs;
+        final int mobCountMax = config.maxMobsHardCap;
         Location lightningStrikeLoc = lightning.getLocation();
 
         // Get the mob count
         mobCount = world.getEntitiesByClasses(attackMob).size();
+
+        highLoad = mobCount >= config.maxMobsEntry;
 
         // Lets not flood the world farther
         if (mobCount >= mobCountMax || world.getEntities().size() > (mobCountMax * 2)) return;
@@ -584,13 +592,32 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         return entity;
     }
 
+    private boolean makeMercilessMiniboss(LivingEntity entity) {
+        if (highLoad) {
+            if (ChanceUtil.getChance(config.mercilessBossChanceHighLoad)) {
+                mercilessBossManager.bind(entity);
+                return true;
+            }
+        } else {
+            if (ChanceUtil.getChance(config.mercilessBossChanceNormal)) {
+                mercilessBossManager.bind(entity);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void maybeMakeMiniboss(LivingEntity entity) {
+        // Special, as this one also helps to lower server load.
+        if (makeMercilessMiniboss(entity)) {
+            return;
+        }
+
         if (ChanceUtil.getChance(config.thorBossChance)) {
             thorBossManager.bind(entity);
         } else if (ChanceUtil.getChance(config.zapperBossChance)) {
             zapperBossManager.bind(entity);
-        } else if (ChanceUtil.getChance(config.mercilessBossChance)) {
-            mercilessBossManager.bind(entity);
         } else if (ChanceUtil.getChance(config.stickyBossChance)) {
             stickyBossManager.bind(entity);
         } else if (ChanceUtil.getChance(config.chuckerBossChance)) {
