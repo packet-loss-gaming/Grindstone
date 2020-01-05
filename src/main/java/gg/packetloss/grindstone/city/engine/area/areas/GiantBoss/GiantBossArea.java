@@ -18,6 +18,7 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
@@ -51,7 +52,7 @@ import org.bukkit.util.Vector;
 import java.util.*;
 
 @ComponentInformation(friendlyName = "Giant Boss", desc = "Giant, and a true boss")
-@Depend(components = {AdminComponent.class, PrayerComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
+@Depend(components = {AdminComponent.class, PrayerComponent.class, PlayerStateComponent.class, HighScoresComponent.class}, plugins = {"WorldGuard"})
 public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     @InjectComponent
@@ -60,6 +61,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected PrayerComponent prayer;
     @InjectComponent
     protected PlayerStateComponent playerState;
+    @InjectComponent
+    protected HighScoresComponent highScores;
 
     protected static final int groundLevel = 82;
     protected static final double scalOffst = 3;

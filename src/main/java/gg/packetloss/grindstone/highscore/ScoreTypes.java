@@ -20,4 +20,6 @@ public class ScoreTypes {
     public static final ScoreType CURSED_MINE_DEATHS = new ScoreType(10, true, ScoreType.Order.DESC);
     public static final ScoreType MIRAGE_ARENA_KILLS = new ScoreType(11, true, ScoreType.Order.DESC);
     public static final ScoreType SKY_WARS_WINS = new ScoreType(12, true, ScoreType.Order.DESC);
+    public static final ScoreType SHNUGGLES_PRIME_SOLO_KILLS = new ScoreType(13, true, ScoreType.Order.DESC);
+    public static final ScoreType SHNUGGLES_PRIME_TEAM_KILLS = new ScoreType(14, true, ScoreType.Order.DESC);
 }

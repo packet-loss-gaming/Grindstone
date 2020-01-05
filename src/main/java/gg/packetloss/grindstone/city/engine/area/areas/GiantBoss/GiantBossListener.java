@@ -16,6 +16,8 @@ import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.highscore.ScoreType;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
@@ -398,9 +400,19 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         if (parent.contains(e)) {
             if (parent.boss != null && e instanceof Giant) {
                 Collection<Player> players = parent.getContainedParticipants();
-                Player player = null;
                 int amt = players.size();
+
+                // Update high scores
+                ScoreType scoreType = amt == 1
+                        ? ScoreTypes.SHNUGGLES_PRIME_SOLO_KILLS
+                        : ScoreTypes.SHNUGGLES_PRIME_TEAM_KILLS;
+                for (Player aPlayer : players) {
+                    parent.highScores.update(aPlayer, scoreType, 1);
+                }
+
+                Player player = null;
                 int required = ChanceUtil.getRandom(13) + 3;
+
                 // Figure out if someone has Barbarian Bones
                 if (amt != 0) {
                     for (Player aPlayer : players) {
@@ -411,16 +423,19 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                         }
                     }
                 }
+
                 // Sacrificial drops
                 int m = EnvironmentUtil.hasThunderstorm(parent.getWorld()) ? 3 : 1;
                 m *= player != null ? 3 : 1;
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m, 400000));
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 15000));
                 event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 4000));
+
                 // Gold drops
                 for (int i = 0; i < Math.sqrt(amt + m) + GiantBossArea.scalOffst; i++) {
                     event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRangedRandom(32, 64)));
                 }
+
                 // Unique drops
                 if (ChanceUtil.getChance(25) || m > 1 && ChanceUtil.getChance(27 / m)) {
                     event.getDrops().add(BookUtil.Lore.Monsters.skelril());
@@ -438,12 +453,15 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 if (ChanceUtil.getChance(200) || m > 1 && ChanceUtil.getChance(108 / m)) {
                     event.getDrops().add(CustomItemCenter.build(CustomItems.MAGIC_BUCKET));
                 }
+
                 // Uber rare drops
                 if (ChanceUtil.getChance(15000 / m)) {
                     event.getDrops().add(CustomItemCenter.build(CustomItems.ANCIENT_CROWN));
                 }
+
                 // Add a few Barbarian Bones to the drop list
                 event.getDrops().add(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(Math.max(1, amt * 2))));
+
                 // Remove the Barbarian Bones
                 if (player != null) {
                     int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), BARBARIAN_BONES) - required;
@@ -458,15 +476,18 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     //noinspection deprecation
                     player.updateInventory();
                 }
+
                 LocalDate date = LocalDate.now().with(Month.APRIL).withDayOfMonth(6);
                 if (date.equals(LocalDate.now())) {
                     ChatUtil.sendNotice(parent.getAudiblePlayers(), ChatColor.GOLD, "DROPS DOUBLED!");
                     event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
                 }
+
                 // Reset respawn mechanics
                 parent.lastDeath = System.currentTimeMillis();
                 parent.boss = null;
                 Collection<Entity> containedEntities = parent.getContained(Zombie.class, ExperienceOrb.class);
+
                 // Remove remaining XP and que new xp
                 parent.removeXP(containedEntities, true);
                 for (int i = 0; i < 7; i++) {
