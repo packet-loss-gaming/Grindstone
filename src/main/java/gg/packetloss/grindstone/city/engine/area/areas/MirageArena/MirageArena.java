@@ -134,7 +134,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
             voting = false;
             ticks = 0;
 
-            Collection<Player> players = getContained(Player.class);
+            Collection<Player> players = getAudiblePlayers();
             try {
                 ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, "Attempting to change the current mirage to " + next + "...");
                 changeMirage(next);
@@ -150,7 +150,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                 return;
             }
 
-            Collection<Player> players = getContained(Player.class);
+            Collection<Player> players = getAudiblePlayers();
             ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, "The currently winning mirage is " + next + '.');
             ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, ((60 - ticks) * 5) + " seconds til arena change.");
         }
@@ -171,7 +171,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
     public String getNextMirage(boolean clearOldVotes) {
         Map<String, ArenaVote> votes = new HashMap<>();
-        getContained(Player.class).forEach(p -> {
+        getAudiblePlayers().forEach(p -> {
             MirageSession session = sessions.getSession(MirageSession.class, p);
             String vote = session.getVote();
             if (vote != null) {
@@ -196,7 +196,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
     }
 
     public void freePlayers() {
-        for (Player player : getContained(Player.class)) {
+        for (Player player : getContainedParticipants()) {
             LocationUtil.toGround(player);
         }
     }
@@ -208,12 +208,12 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         int maxZ = diminsions.getZ();
 
         if (cy >= maxY) {
-            ChatUtil.sendNotice(getContained(Player.class), "Editing Completed.");
+            ChatUtil.sendNotice(getAudiblePlayers(), "Editing Completed.");
             editing = false;
             freePlayers();
             return;
         } else if (cx == 0 && cy % 10 == 0) {
-            ChatUtil.sendNotice(getContained(Player.class), "Editing Layer: " + cy + '/' + maxY);
+            ChatUtil.sendNotice(getAudiblePlayers(), "Editing Layer: " + cy + '/' + maxY);
         }
 
         long start = System.nanoTime();

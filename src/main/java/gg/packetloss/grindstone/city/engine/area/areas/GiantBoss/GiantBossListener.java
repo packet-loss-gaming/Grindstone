@@ -220,6 +220,24 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         acceptedReasons.add(EntityDamageEvent.DamageCause.THORNS);
     }
 
+    private void applyBabyPots() {
+        GiantBossConfig config = parent.getConfig();
+
+        Collection<Zombie> containedBabies = parent.getContained(Zombie.class);
+        double invertedPercentage = containedBabies.size() / (double) config.maxBabies;
+        int potLevel = (int) (invertedPercentage * config.babyMaxPotLevel);
+
+        PotionEffectType[] effectTypes = new PotionEffectType[] {
+                PotionEffectType.INCREASE_DAMAGE, PotionEffectType.DAMAGE_RESISTANCE
+        };
+
+        for (Zombie baby : containedBabies) {
+            for (PotionEffectType effectType : effectTypes) {
+                baby.addPotionEffect(new PotionEffect(effectType, 20 * config.babyPotTime, potLevel), true);
+            }
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageEvent(EntityDamageEvent event) {
         Entity defender = event.getEntity();
@@ -246,7 +264,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 // Evil code of doom
                 ChatUtil.sendNotice(attacker, "Come closer...");
                 attacker.teleport(parent.boss.getLocation());
-                ((Player) attacker).damage(parent.difficulty * 32, parent.boss);
+                ((Player) attacker).damage(100, parent.boss);
                 server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) attacker));
                 attacker.setVelocity(new Vector(
                         parent.random.nextDouble() * 3 - 1.5,
@@ -258,10 +276,10 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 Player player = (Player) attacker;
                 if (defender instanceof LivingEntity) {
                     if (ItemUtil.isHoldingMasterSword(player)) {
-                        if (ChanceUtil.getChance(parent.difficulty * 3 + 1)) {
+                        if (ChanceUtil.getChance(10)) {
                             EffectUtil.Master.healingLight(player, (LivingEntity) defender);
                         }
-                        if (ChanceUtil.getChance(parent.difficulty * 3)) {
+                        if (ChanceUtil.getChance(9)) {
                             List<LivingEntity> entities = player.getNearbyEntities(6, 4, 6).stream().filter(EnvironmentUtil::isHostileEntity).map(e -> (LivingEntity) e).collect(Collectors.toList());
                             EffectUtil.Master.doomBlade(player, entities);
                         }
@@ -279,33 +297,57 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 parent.printBossHealth();
             }, 1);
 
+            GiantBossConfig config = parent.getConfig();
+            int babyCount = parent.getContained(Zombie.class).size();
+
+            double percentageBlocked = (double) babyCount / config.bossProtectBabyCount;
             if (parent.damageHeals) {
-                boss.setHealth(Math.min(boss.getMaxHealth(), (event.getDamage() * parent.difficulty) + boss.getHealth()));
-                if (ChanceUtil.getChance(4) && acceptedReasons.contains(event.getCause())) {
-                    int affected = 0;
-                    for (Entity e : boss.getNearbyEntities(8, 8, 8)) {
-                        if (e.isValid() && e instanceof Player && parent.contains(e)) {
-                            server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
-                            e.setVelocity(new Vector(
-                                    Math.random() * 3 - 1.5,
-                                    Math.random() * 4,
-                                    Math.random() * 3 - 1.5
-                            ));
-                            e.setFireTicks(ChanceUtil.getRandom(20 * 60));
-                            affected++;
-                        }
-                    }
-                    if (affected > 0) {
-                        ChatUtil.sendNotice(parent.getContained(1, Player.class), "Feel my power!");
-                    }
+                percentageBlocked = 3;
+            }
+
+            if (percentageBlocked > .75) {
+                EntityUtil.heal(boss, event.getDamage() * percentageBlocked);
+                if (acceptedReasons.contains(event.getCause())) {
+                    ChatUtil.sendNotice(parent.getAudiblePlayers(), "Yes, yes, that's the spot!");
                 }
             } else {
-                double zombieBlockingNumber = Math.min(parent.getContained(Zombie.class).size() / 2, 100);
-                double percentageDamageRemaining = (100 - zombieBlockingNumber) / 100;
+                double percentageDamageRemaining = 1 - percentageBlocked;
                 event.setDamage(event.getDamage() * percentageDamageRemaining);
             }
 
             if (acceptedReasons.contains(event.getCause())) {
+                int affected = 0;
+                for (Entity e : boss.getNearbyEntities(8, 8, 8)) {
+                    if (e.isValid() && e instanceof Player && parent.contains(e)) {
+                        server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
+
+                        double newY = ChanceUtil.getRangedRandom(.3, .7);
+                        e.setVelocity(((Player) e).getEyeLocation().getDirection().multiply(-2).setY(newY));
+
+                        affected++;
+                    }
+                }
+
+                if (affected > 0 && ChanceUtil.getChance(3) && boss.getHealth() > boss.getMaxHealth() * .5) {
+                    switch (ChanceUtil.getRandom(5)) {
+                        case 1:
+                            ChatUtil.sendNotice(parent.getAudiblePlayers(), "Weeeeee!");
+                            break;
+                        case 2:
+                            ChatUtil.sendNotice(parent.getAudiblePlayers(), "Poke!");
+                            break;
+                        case 3:
+                            ChatUtil.sendNotice(parent.getAudiblePlayers(), "Boink!");
+                            break;
+                        case 4:
+                            ChatUtil.sendNotice(parent.getAudiblePlayers(), "Hehehehee!");
+                            break;
+                        default:
+                            ChatUtil.sendNotice(parent.getAudiblePlayers(), "Ha, ha, puny human! This is fun!");
+                            break;
+                    }
+                }
+
                 final ItemStack weapon = new ItemStack(Material.BONE);
                 ItemMeta weaponMeta = weapon.getItemMeta();
                 weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
@@ -314,25 +356,50 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 final double oldHP = boss.getHealth();
                 final Entity finalAttacker = attacker;
 
-                int maxBabySpawns = (int) (event.getDamage() / 30) + 1;
+                int maxBabySpawns = (int) (Math.pow(event.getDamage() / 30, 3) + 1);
                 int babySpawns = ChanceUtil.getRandom(maxBabySpawns);
                 final int chancePerSpawnPoint = Math.max(11 / babySpawns, 1);
 
                 server.getScheduler().runTaskLater(inst, () -> {
-                    if (oldHP < boss.getHealth()) return;
-                    for (Location spawnPt : parent.spawnPts) {
+                    if (boss.getHealth() > oldHP) return;
+
+                    List<Location> spawnPts = parent.spawnPts;
+
+                    List<Player> participants = Lists.newArrayList(parent.getContainedParticipants());
+                    Collections.shuffle(participants);
+
+                    int numZombies = parent.getContained(Zombie.class).size();
+
+                    for (int i = 0; i < spawnPts.size(); ++i) {
+                        if (numZombies++ > parent.getConfig().maxBabies) {
+                            break;
+                        }
+
+                        Location spawnPt = spawnPts.get(i);
+
                         if (ChanceUtil.getChance(chancePerSpawnPoint)) {
                             Zombie z = parent.getWorld().spawn(spawnPt, Zombie.class,(e) -> e.getEquipment().clear());
+
+                            // Create the baby with no item pickup
                             z.setBaby(true);
                             z.setCanPickupItems(false);
+
+                            // Add equipment
                             EntityEquipment equipment = z.getEquipment();
                             equipment.setItemInHand(weapon.clone());
                             equipment.setItemInHandDropChance(0F);
                             if (finalAttacker instanceof LivingEntity) {
                                 z.setTarget((LivingEntity) finalAttacker);
                             }
+
+                            // Set target to (effectively) random player
+                            if (participants.size() > 0) {
+                                z.setTarget(participants.get(i % participants.size()));
+                            }
                         }
                     }
+
+                    applyBabyPots();
                 }, 1);
             }
 
@@ -347,26 +414,26 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             }
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
-            if (ItemUtil.hasAncientArmour(player) && parent.difficulty >= Difficulty.HARD.getValue()) {
+            if (ItemUtil.hasAncientArmour(player)) {
                 if (attacker != null) {
                     if (attacker instanceof Zombie) {
                         Zombie zombie = (Zombie) attacker;
-                        if (zombie.isBaby() && ChanceUtil.getChance(parent.difficulty * 4)) {
+                        if (zombie.isBaby() && ChanceUtil.getChance(12)) {
                             ChatUtil.sendNotice(player, "Your armour weakens the zombies.");
                             player.getNearbyEntities(8, 8, 8).stream().filter(e -> e.isValid() && e instanceof Zombie && ((Zombie) e).isBaby()).forEach(e -> ((Zombie) e).damage(18));
                         }
                     }
                     double diff = player.getMaxHealth() - player.getHealth();
-                    if (ChanceUtil.getChance((int) Math.max(parent.difficulty, Math.round(player.getMaxHealth() - diff)))) {
+                    if (ChanceUtil.getChance((int) Math.max(3, Math.round(player.getMaxHealth() - diff)))) {
                         EffectUtil.Ancient.powerBurst(player, event.getDamage());
                     }
                 }
-                if (ChanceUtil.getChance(parent.difficulty * 9) && defender.getFireTicks() > 0) {
+                if (ChanceUtil.getChance(27) && defender.getFireTicks() > 0) {
                     ChatUtil.sendNotice(defender, "Your armour extinguishes the fire.");
                     defender.setFireTicks(0);
                 }
-                if (parent.damageHeals && ChanceUtil.getChance(parent.difficulty * 3 + 1)) {
-                    ChatUtil.sendNotice(parent.getContained(Player.class), ChatColor.AQUA, player.getDisplayName() + " has broken the giant's spell.");
+                if (parent.damageHeals && ChanceUtil.getChance(10)) {
+                    ChatUtil.sendNotice(parent.getAudiblePlayers(), ChatColor.AQUA, player.getDisplayName() + " has broken the giant's spell.");
                     parent.damageHeals = false;
                 }
             }
@@ -383,10 +450,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         event.getEntities().removeIf(next -> next instanceof Giant);
     }
 
-    private static PotionEffect[] effects = new PotionEffect[]{
-            new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 60 * 3, 1),
-            new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 60 * 3, 1)
-    };
     private static String BARBARIAN_BONES = ChatColor.DARK_RED + "Barbarian Bone";
 
     @EventHandler
@@ -394,7 +457,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         Entity e = event.getEntity();
         if (parent.contains(e)) {
             if (parent.boss != null && e instanceof Giant) {
-                Collection<Player> players = parent.getContained(Player.class);
+                Collection<Player> players = parent.getContainedParticipants();
                 Player player = null;
                 int amt = players.size();
                 int required = ChanceUtil.getRandom(13) + 3;
@@ -457,7 +520,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 }
                 LocalDate date = LocalDate.now().with(Month.APRIL).withDayOfMonth(6);
                 if (date.equals(LocalDate.now())) {
-                    ChatUtil.sendNotice(parent.getContained(1, Player.class), ChatColor.GOLD, "DROPS DOUBLED!");
+                    ChatUtil.sendNotice(parent.getAudiblePlayers(), ChatColor.GOLD, "DROPS DOUBLED!");
                     event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
                 }
                 // Reset respawn mechanics
@@ -471,21 +534,17 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 }
                 parent.setDoor(parent.eastDoor, Material.AIR);
                 parent.setDoor(parent.westDoor, Material.AIR);
-                // Buff babies
-                containedEntities.stream()
-                        .filter(entity -> entity instanceof Zombie)
-                        .forEach(entity -> ((Zombie) entity).addPotionEffects(Lists.newArrayList(effects)));
                 IntegratedRunnable normal = new IntegratedRunnable() {
                     @Override
                     public boolean run(int times) {
                         if (TimerUtil.matchesFilter(times, 10, 5)) {
-                            ChatUtil.sendWarning(parent.getContained(1, Player.class), "Clearing chest contents in: " + times + " seconds.");
+                            ChatUtil.sendWarning(parent.getAudiblePlayers(), "Clearing chest contents in: " + times + " seconds.");
                         }
                         return true;
                     }
                     @Override
                     public void end() {
-                        ChatUtil.sendWarning(parent.getContained(1, Player.class), "Clearing chest contents!");
+                        ChatUtil.sendWarning(parent.getAudiblePlayers(), "Clearing chest contents!");
                         for (Location location : parent.chestPts) {
                             BlockState state = location.getBlock().getState();
                             if (state instanceof Chest) {
@@ -511,7 +570,18 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         Player player = event.getEntity();
         if (parent.contains(player, 1) && !parent.admin.isAdmin(player)) {
             if (parent.contains(player) && parent.isBossSpawned()) {
-                EntityUtil.heal(parent.boss, parent.boss.getMaxHealth() / 3);
+                server.getScheduler().runTask(inst, () -> {
+                    if (!parent.boss.isValid()) {
+                        return;
+                    }
+
+                    if (parent.getContainedParticipants().isEmpty()) {
+                        parent.boss.setHealth(parent.boss.getMaxHealth());
+                        parent.removeMobs();
+                    } else {
+                        EntityUtil.heal(parent.boss, parent.boss.getMaxHealth() / 3);
+                    }
+                });
             }
 
             try {

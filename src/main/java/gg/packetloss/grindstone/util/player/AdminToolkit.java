@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class AdminToolkit {
 
     private AdminComponent admin;

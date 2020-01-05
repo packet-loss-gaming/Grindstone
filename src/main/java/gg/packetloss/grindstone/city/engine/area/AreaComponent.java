@@ -11,7 +11,9 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.TemplateComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
+import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -21,6 +23,7 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -67,6 +70,25 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
 
     public Config getConfig() {
         return config;
+    }
+
+    public Collection<Player> getContainedParticipants() {
+        return getContained(Player.class).stream()
+                .filter(p -> p.getGameMode() == GameMode.SURVIVAL)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<Player> getRandomParticipant() {
+        Collection<Player> players = getContainedParticipants();
+        if (players.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(CollectionUtil.getElement(players));
+    }
+
+    public Collection<Player> getAudiblePlayers() {
+        return getContained(Player.class);
     }
 
     public <T extends Entity> Collection<T> getContained(Class<T> clazz) {

@@ -314,12 +314,12 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     return;
                 }
 
-                Collection<Player> spectator = parent.getContained(Player.class);
-                Collection<Player> contained = parent.adminKit.removeAdmin(spectator);
-                ChatUtil.sendWarning(spectator, "So you think you've won? Ha!");
-                ChatUtil.sendWarning(spectator, "I'll get you next time...");
+                Collection<Player> audible = parent.getAudiblePlayers();
+                Collection<Player> contained = parent.adminKit.removeAdmin(audible);
+                ChatUtil.sendWarning(audible, "So you think you've won? Ha!");
+                ChatUtil.sendWarning(audible, "I'll get you next time...");
 
-                int playerCount = spectator.isEmpty() ? 1 : contained.size();
+                int playerCount = audible.isEmpty() ? 1 : contained.size();
                 int dropVal = parent.getConfig().playerVal * playerCount;
                 List<ItemStack> drops = SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), -1, dropVal);
 
@@ -368,7 +368,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
                 LocalDate date = LocalDate.now().with(Month.APRIL).withDayOfMonth(6);
                 if (date.equals(LocalDate.now())) {
-                    ChatUtil.sendNotice(parent.getContained(Player.class), ChatColor.GOLD, "DROPS DOUBLED!");
+                    ChatUtil.sendNotice(parent.getAudiblePlayers(), ChatColor.GOLD, "DROPS DOUBLED!");
                     event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
                 }
 
@@ -417,7 +417,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             if (parent.contains(player) && parent.isBossSpawned()) {
                 EntityUtil.heal(boss, boss.getMaxHealth() / 4);
                 parent.resetDifficulty();
-                ChatUtil.sendWarning(parent.getContained(Player.class), "Haha, bow down "
+                ChatUtil.sendWarning(parent.getAudiblePlayers(), "Haha, bow down "
                         + player.getName() + ", show's over for you.");
             }
 

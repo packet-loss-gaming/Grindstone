@@ -15,7 +15,10 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
-import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.itemstack.ProtectedSerializedItemStack;
@@ -194,7 +197,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     public void feedPlayers() {
-        for (Player player : getContained(Player.class)) {
+        for (Player player : getContainedParticipants()) {
             player.setFoodLevel(20);
             player.setSaturation(5);
             player.setExhaustion(0);
@@ -331,12 +334,12 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             case 4:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "RELEASE THE BATS!");
 
-                Collection<Player> players = getContained(Player.class);
+                Collection<Player> players = getContainedParticipants();
 
                 int totalBats = ChanceUtil.getRandomNTimes(60, 9) + 30;
                 int batsPerPlayer = totalBats / players.size();
 
-                for (Player player : getContained(Player.class)) {
+                for (Player player : players) {
                     for (int i = batsPerPlayer; i > 0; --i) {
                         Bat b = (Bat) getWorld().spawnEntity(player.getLocation().add(0, 6, 0), EntityType.BAT);
                         b.setMaxHealth(1);
@@ -397,7 +400,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
 
     public void runAttack() {
-        boss.setTarget(CollectionUtil.getElement(getContained(Player.class)));
+        getRandomParticipant().ifPresent((player) -> boss.setTarget(player));
 
         runSnowbats();
 
@@ -450,7 +453,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     }
 
     public void sendPlayersToGate() {
-        for (Player player : getContained(Player.class)) {
+        for (Player player : getContainedParticipants()) {
             player.teleport(gateOuter, TeleportCause.UNKNOWN);
         }
     }
@@ -476,7 +479,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         blockState.popAllBlocks(BlockStateKind.FROSTBORN);
 
         // Gather the players in the arena
-        Collection<Player> players = getContained(Player.class);
+        Collection<Player> players = getContainedParticipants();
         Collection<UUID> playerIds = players.stream().map(Entity::getUniqueId).collect(Collectors.toList());
 
         // Clear the players inventories

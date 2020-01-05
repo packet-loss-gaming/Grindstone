@@ -7,6 +7,8 @@
 package gg.packetloss.grindstone.prayer.PrayerFX;
 
 import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -37,6 +39,8 @@ public class SlapFX extends AbstractEffect {
                     random.nextDouble() * 4,
                     random.nextDouble() * 5.0 - 2.5));
         }
+
+        EntityUtil.forceDamage(player, ChanceUtil.getRandom(3));
     }
 
     @Override

@@ -115,7 +115,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     private void equalize() {
-        for (Player player : getContained(Player.class)) {
+        for (Player player : getContainedParticipants()) {
             try {
                 if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
                     ChatUtil.sendWarning(player, "Your defensive potion enrages me!");
@@ -137,7 +137,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     private void spawnCreatures() {
         Collection<LivingEntity> entities = adminKit.removeAdmin(getContained(LivingEntity.class));
         if (entities.size() > 500) {
-            ChatUtil.sendWarning(getContained(Player.class), "Ring-a-round the rosie, a pocket full of posies...");
+            ChatUtil.sendWarning(getAudiblePlayers(), "Ring-a-round the rosie, a pocket full of posies...");
             boss.setHealth(boss.getMaxHealth());
             for (Entity entity : entities) {
                 if (entity instanceof Player) {
@@ -149,7 +149,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             return;
         }
 
-        double amt = adminKit.removeAdmin(getContained(Player.class)).size() * difficulty;
+        double amt = adminKit.removeAdmin(getContainedParticipants()).size() * difficulty;
         Location l = getCentralLoc();
         for (int i = 0; i < amt; i++) {
             Zombie zombie = getWorld().spawn(l, Zombie.class);
@@ -167,7 +167,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         double maxDiff = config.maxDifficulty - config.minDifficulty;
         double curDiff = difficulty - config.minDifficulty;
         message += " Enragement: " + (int) Math.round((curDiff / maxDiff) * 100) + "%";
-        ChatUtil.sendNotice(getContained(Player.class), ChatColor.DARK_AQUA, message);
+        ChatUtil.sendNotice(getAudiblePlayers(), ChatColor.DARK_AQUA, message);
     }
 
     private void runAttack() {
@@ -178,15 +178,15 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
         if (!isBossSpawned()) return;
 
-        Collection<Player> spectator = getContained(Player.class);
-        Collection<Player> contained = adminKit.removeAdmin(spectator);
+        Collection<Player> audible = getAudiblePlayers();
+        Collection<Player> contained = adminKit.removeAdmin(audible);
         if (contained.isEmpty()) return;
 
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
 
         switch (attackCase) {
             case 1:
-                ChatUtil.sendWarning(spectator, "Let's play musical chairs!");
+                ChatUtil.sendWarning(audible, "Let's play musical chairs!");
                 for (Player player : contained) {
                     do {
                         player.teleport(getRandomDest());
@@ -209,7 +209,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     }, 20 * 2);
                 }
                 attackDur = System.currentTimeMillis() + 3000;
-                ChatUtil.sendWarning(spectator, "This special attack will be a \"smashing hit\"!");
+                ChatUtil.sendWarning(audible, "This special attack will be a \"smashing hit\"!");
                 break;
             case 3:
                 double tntQuantity = Math.max(2, difficulty / 2.4);
@@ -224,14 +224,14 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     }
                 }
                 attackDur = System.currentTimeMillis() + 5000;
-                ChatUtil.sendWarning(spectator, "Your performance is really going to \"bomb\"!");
+                ChatUtil.sendWarning(audible, "Your performance is really going to \"bomb\"!");
                 break;
             case 4:
                 for (Player player : contained) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 15, 1));
                 }
                 attackDur = System.currentTimeMillis() + 15750;
-                ChatUtil.sendWarning(spectator, "Like a candle I hope you don't \"whither\" and die!");
+                ChatUtil.sendWarning(audible, "Like a candle I hope you don't \"whither\" and die!");
                 break;
             case 5:
                 for (Player player : contained) {
@@ -240,14 +240,14 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     }
                 }
                 attackDur = System.currentTimeMillis() + 2000;
-                ChatUtil.sendWarning(spectator, "Splash to it!");
+                ChatUtil.sendWarning(audible, "Splash to it!");
                 break;
             case 6:
                 for (Player player : contained) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 60, 2));
                 }
                 attackDur = System.currentTimeMillis() + 20000;
-                ChatUtil.sendWarning(spectator, "What's the matter, got cold feet?");
+                ChatUtil.sendWarning(audible, "What's the matter, got cold feet?");
                 break;
             case 7:
                 for (Player player : contained) {
@@ -256,15 +256,15 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     b.setPassenger(player);
                 }
                 attackDur = System.currentTimeMillis() + 20000;
-                ChatUtil.sendWarning(spectator, "Awe, I love you too!");
-                ChatUtil.sendWarning(spectator, "But only cause I'm a little batty...");
+                ChatUtil.sendWarning(audible, "Awe, I love you too!");
+                ChatUtil.sendWarning(audible, "But only cause I'm a little batty...");
                 break;
             case 8:
                 server.getScheduler().runTaskLater(inst, () -> {
                     for (int i = config.radiationTimes; i > 0; i--) {
                         server.getScheduler().runTaskLater(inst, () -> {
                             if (boss != null) {
-                                for (Player player : adminKit.removeAdmin(getContained(Player.class))) {
+                                for (Player player : adminKit.removeAdmin(getContainedParticipants())) {
                                     for (int e = 0; e < 3; ++e) {
                                         Location t = LocationUtil.findRandomLoc(player.getLocation(), 5, true);
                                         for (int k = 0; k < 10; ++k) {
@@ -280,7 +280,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     }
                 }, 3 * 20);
                 attackDur = System.currentTimeMillis() + (config.radiationTimes * 500);
-                ChatUtil.sendWarning(spectator, "Ahhh not the radiation treatment!");
+                ChatUtil.sendWarning(audible, "Ahhh not the radiation treatment!");
                 break;
             case 9:
                 final int burst = ChanceUtil.getRangedRandom(10, 20);
@@ -292,7 +292,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     }
                 }, 7 * 20);
                 attackDur = System.currentTimeMillis() + 7000 + (500 * burst);
-                ChatUtil.sendWarning(spectator, "Let's have a snow ball fight!");
+                ChatUtil.sendWarning(audible, "Let's have a snow ball fight!");
                 break;
         }
         lastAttack = attackCase;
@@ -427,7 +427,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             ex.printStackTrace();
         }
 
-        ChatUtil.sendWarning(getContained(Player.class), "Ice to meet you again!");
+        ChatUtil.sendWarning(getAudiblePlayers(), "Ice to meet you again!");
     }
 
     protected Location getCentralLoc() {
@@ -452,7 +452,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
         boss.teleport(getRandomDest());
 
-        List<Player> players = getContained(Player.class).stream().sorted((p1, p2) -> {
+        List<Player> players = getContainedParticipants().stream().sorted((p1, p2) -> {
             double p1Distance = p1.getLocation().distanceSquared(boss.getLocation());
             double p2Distance = p2.getLocation().distanceSquared(boss.getLocation());
             return Double.compare(p1Distance, p2Distance);

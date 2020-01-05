@@ -30,7 +30,10 @@ import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.util.timer.TimerUtil;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -73,7 +76,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected boolean flaggedForColumnAttack = false;
 
     protected double toHeal = 0;
-    protected int difficulty = Difficulty.HARD.getValue();
     protected List<Location> spawnPts = new ArrayList<>();
     protected List<Location> chestPts = new ArrayList<>();
 
@@ -98,8 +100,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         }, 0, 20 * 2);
         // First spawn requirement
         probeArea();
-        // Set difficulty
-        difficulty = getWorld().getDifficulty().getValue();
 
         CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
     }
@@ -125,6 +125,11 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             equalize();
             runAttack(ChanceUtil.getRandom(OPTION_COUNT));
         }
+    }
+
+    @Override
+    public Collection<Player> getAudiblePlayers() {
+        return getContained(1, Player.class);
     }
 
     public boolean isBossSpawned() {
@@ -158,8 +163,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         Location spawnLoc = RegionUtil.getCenterAt(getWorld(), groundLevel, getRegion());
 
         boss = getWorld().spawn(spawnLoc, Giant.class);
-        boss.setMaxHealth(510 + (difficulty * 80));
-        boss.setHealth(510 + (difficulty * 80));
+        boss.setMaxHealth(config.maxHealthNormal);
+        boss.setHealth(config.maxHealthNormal);
         boss.setRemoveWhenFarAway(false);
 
         try {
@@ -172,14 +177,14 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         setDoor(eastDoor, Material.CHISELED_SANDSTONE);
         setDoor(westDoor, Material.CHISELED_SANDSTONE);
 
-        for (Player player : getContained(1, Player.class)) ChatUtil.sendWarning(player, "I live again!");
+        for (Player player : getAudiblePlayers()) ChatUtil.sendWarning(player, "I live again!");
     }
 
     public void printBossHealth() {
         int current = (int) Math.ceil(boss.getHealth());
         int max = (int) Math.ceil(boss.getMaxHealth());
         String message = "Boss Health: " + current + " / " + max;
-        ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_AQUA, message);
+        ChatUtil.sendNotice(getAudiblePlayers(), ChatColor.DARK_AQUA, message);
     }
 
     public void probeArea() {
@@ -254,14 +259,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     public void equalize() {
         // Equalize Boss
-        int diff = getWorld().getDifficulty().getValue();
-        if (EnvironmentUtil.hasThunderstorm(getWorld())) {
-            difficulty = diff + diff;
-        } else {
-            difficulty = diff;
-        }
         double oldMaxHealth = boss.getMaxHealth();
-        double newMaxHealth = 510 + (difficulty * 80);
+        double newMaxHealth = EnvironmentUtil.hasThunderstorm(world)
+                ? config.maxHealthThunderstorm : config.maxHealthNormal;
+
         if (newMaxHealth > oldMaxHealth) {
             boss.setMaxHealth(newMaxHealth);
             boss.setHealth(Math.min(boss.getHealth() + (newMaxHealth - oldMaxHealth), newMaxHealth));
@@ -269,16 +270,19 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             boss.setHealth(Math.min(boss.getHealth() + (oldMaxHealth - newMaxHealth), newMaxHealth));
             boss.setMaxHealth(newMaxHealth);
         }
+
         // Equalize Players
-        for (Player player : getContained(Player.class)) {
+        for (Player player : getContainedParticipants()) {
             try {
                 if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
                     player.damage(32, boss);
                 }
+
                 if (player.getVehicle() != null) {
                     player.getVehicle().eject();
                     ChatUtil.sendWarning(player, "The boss throws you off!");
                 }
+
                 if (Math.abs(groundLevel - player.getLocation().getY()) > 10) runAttack(4);
             } catch (Exception e) {
                 log.warning("The player: " + player.getName() + " may have an unfair advantage.");
@@ -300,8 +304,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     public void runAttack(int attackCase) {
         int delay = ChanceUtil.getRangedRandom(13000, 17000);
         if (lastAttack != 0 && System.currentTimeMillis() - lastAttack <= delay) return;
-        Collection<Player> containedP = getContained(1, Player.class);
-        Collection<Player> contained = getContained(Player.class);
+        Collection<Player> audiblePlayers = getAudiblePlayers();
+        Collection<Player> contained = getContainedParticipants();
         if (contained == null || contained.size() <= 0) return;
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
 
@@ -332,7 +336,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
         switch (attackCase) {
             case 1:
-                ChatUtil.sendWarning(containedP, "Taste my wrath!");
+                ChatUtil.sendWarning(audiblePlayers, "Taste my wrath!");
                 for (Player player : contained) {
                     // Call this event to notify AntiCheat
                     server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
@@ -341,26 +345,27 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                             random.nextDouble() * 1 + 1.3,
                             random.nextDouble() * 3 - 1.5
                     ));
-                    player.setFireTicks(difficulty * 18);
+                    player.setFireTicks(20 * 3);
                 }
                 break;
             case 2:
-                ChatUtil.sendWarning(containedP, "Embrace my corruption!");
+                ChatUtil.sendWarning(audiblePlayers, "Embrace my corruption!");
                 for (Player player : contained) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 12, difficulty > 2 ? 1 : 0));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 20 * 12, 1));
                 }
                 break;
             case 3:
-                ChatUtil.sendWarning(containedP, "Are you BLIND? Mwhahahaha!");
+                ChatUtil.sendWarning(audiblePlayers, "Are you BLIND? Mwhahahaha!");
                 for (Player player : contained) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0));
                 }
                 break;
             case 4:
-                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Tango time!");
+                ChatUtil.sendWarning(audiblePlayers, ChatColor.DARK_RED + "Tango time!");
                 server.getScheduler().runTaskLater(inst, () -> {
                     if (!isBossSpawned()) return;
-                    for (Player player : getContained(Player.class)) {
+
+                    for (Player player : getContainedParticipants()) {
                         if (tryDivineWind(player)) {
                             continue;
                         }
@@ -368,7 +373,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                         if (boss.hasLineOfSight(player)) {
                             ChatUtil.sendNotice(player, "Come closer...");
                             player.teleport(boss.getLocation());
-                            player.damage(difficulty * 32, boss);
+                            player.damage(100, boss);
                             // Call this event to notify AntiCheat
                             server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
                             player.setVelocity(new Vector(
@@ -380,36 +385,37 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                             ChatUtil.sendNotice(player, "Fine... No tango this time...");
                         }
                     }
-                    ChatUtil.sendNotice(getContained(1, Player.class), "Now wasn't that fun?");
-                }, 20 * (difficulty == 1 ? 14 : 7));
+
+                    ChatUtil.sendNotice(getAudiblePlayers(), "Now wasn't that fun?");
+                }, 20 * 7);
                 break;
             case 5:
                 if (!damageHeals) {
-                    ChatUtil.sendWarning(containedP, "I am everlasting!");
+                    ChatUtil.sendWarning(audiblePlayers, "I am everlasting!");
                     damageHeals = true;
                     server.getScheduler().runTaskLater(inst, () -> {
                         if (damageHeals) {
                             damageHeals = false;
                             if (!isBossSpawned()) return;
-                            ChatUtil.sendNotice(getContained(1, Player.class), "Thank you for your assistance.");
+                            ChatUtil.sendNotice(getAudiblePlayers(), "Thank you for your assistance.");
                         }
-                    }, 20 * (difficulty * 5));
+                    }, 20 * 15);
                     break;
                 }
                 runAttack(ChanceUtil.getRandom(OPTION_COUNT));
                 return;
             case 6:
-                ChatUtil.sendWarning(containedP, "Fire is your friend...");
+                ChatUtil.sendWarning(audiblePlayers, "Fire is your friend...");
                 for (Player player : contained) {
-                    player.setFireTicks(20 * (difficulty * 15));
+                    player.setFireTicks(20 * 45);
                 }
                 break;
             case 7:
-                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Bask in my glory!");
+                ChatUtil.sendWarning(audiblePlayers, ChatColor.DARK_RED + "Bask in my glory!");
                 server.getScheduler().runTaskLater(inst, () -> {
                     if (!isBossSpawned()) return;
                     // Set defaults
-                    boolean baskInGlory = getContained(Player.class).size() == 0;
+                    boolean baskInGlory = false;
 
                     damageHeals = true;
 
@@ -417,7 +423,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                     server.getScheduler().runTaskLater(inst, () -> damageHeals = false, 10);
 
                     // Check Players
-                    for (Player player : getContained(Player.class)) {
+                    for (Player player : getContainedParticipants()) {
                         if (tryDivineWind(player)) {
                             continue;
                         }
@@ -430,35 +436,34 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
                     // Attack
                     if (baskInGlory) {
-                        int dmgFact = difficulty * 3 + 1;
                         spawnPts.stream().filter(pt -> ChanceUtil.getChance(12)).forEach(pt -> {
-                            ExplosionStateFactory.createExplosion(pt, dmgFact, false, false);
+                            ExplosionStateFactory.createExplosion(pt, 10, false, false);
                         });
                         return;
                     }
 
                     // Notify if avoided
-                    ChatUtil.sendNotice(getContained(1, Player.class), "Gah... Afraid are you friends?");
-                }, 20 * (difficulty == 1 ? 14 : 7));
+                    ChatUtil.sendNotice(getAudiblePlayers(), "Gah... Afraid are you friends?");
+                }, 20 * 7);
                 break;
             case 8:
-                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "I ask thy lord for aid in this all mighty battle...");
-                ChatUtil.sendWarning(containedP, ChatColor.DARK_RED + "Heed thy warning, or perish!");
+                ChatUtil.sendWarning(audiblePlayers, ChatColor.DARK_RED + "I ask thy lord for aid in this all mighty battle...");
+                ChatUtil.sendWarning(audiblePlayers, ChatColor.DARK_RED + "Heed thy warning, or perish!");
                 server.getScheduler().runTaskLater(inst, () -> {
                     if (!isBossSpawned()) return;
-                    ChatUtil.sendWarning(getContained(1, Player.class), "May those who appose me die a death like no other...");
-                    getContained(Player.class).stream().filter(boss::hasLineOfSight).forEach(player -> {
-                        ChatUtil.sendWarning(getContained(1, Player.class), "Perish " + player.getName() + "!");
+                    ChatUtil.sendWarning(getAudiblePlayers(), "May those who appose me die a death like no other...");
+                    getContainedParticipants().stream().filter(boss::hasLineOfSight).forEach(player -> {
+                        ChatUtil.sendWarning(getAudiblePlayers(), "Perish " + player.getName() + "!");
                         try {
                             prayer.influencePlayer(player, PrayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
                         } catch (UnsupportedPrayerException e) {
                             e.printStackTrace();
                         }
                     });
-                }, 20 * (difficulty == 1 ? 14 : 7));
+                }, 20 * 7);
                 break;
             case 9:
-                ChatUtil.sendNotice(containedP, ChatColor.DARK_RED, "My minions our time is now!");
+                ChatUtil.sendNotice(audiblePlayers, ChatColor.DARK_RED, "My minions our time is now!");
                 IntegratedRunnable minionEater = new IntegratedRunnable() {
                     @Override
                     public boolean run(int times) {
@@ -471,10 +476,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                             } else if (boss.hasLineOfSight(entity)) {
                                 entity.damage(realDamage, boss);
                             }
-                            toHeal += realDamage * difficulty * .09;
+                            toHeal += realDamage * .27;
                         }
                         if (TimerUtil.matchesFilter(times + 1, -1, 2)) {
-                            ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_AQUA, "The boss has drawn in: " + (int) toHeal + " health.");
+                            ChatUtil.sendNotice(getAudiblePlayers(), ChatColor.DARK_AQUA, "The boss has drawn in: " + (int) toHeal + " health.");
                         }
                         return true;
                     }
@@ -484,7 +489,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                         if (!isBossSpawned()) return;
                         boss.setHealth(Math.min(toHeal + boss.getHealth(), boss.getMaxHealth()));
                         toHeal = 0;
-                        ChatUtil.sendNotice(getContained(1, Player.class), "Thank you my minions!");
+                        ChatUtil.sendNotice(getAudiblePlayers(), "Thank you my minions!");
                         printBossHealth();
                     }
                 };

@@ -7,6 +7,19 @@
 package gg.packetloss.grindstone.city.engine.area.areas.GiantBoss;
 
 import com.zachsthings.libcomponents.config.ConfigurationBase;
+import com.zachsthings.libcomponents.config.Setting;
 
 public class GiantBossConfig extends ConfigurationBase {
+    @Setting("max-health.normal")
+    public int maxHealthNormal = 750;
+    @Setting("max-health.thunderstorm")
+    public int maxHealthThunderstorm = 1000;
+    @Setting("babies.max-count")
+    public int maxBabies = 200;
+    @Setting("babies.max-pot-level")
+    public int babyMaxPotLevel = 10;
+    @Setting("babies.pot-time")
+    public int babyPotTime = 10;
+    @Setting("babies.boss-protect-count")
+    public int bossProtectBabyCount = 150;
 }
