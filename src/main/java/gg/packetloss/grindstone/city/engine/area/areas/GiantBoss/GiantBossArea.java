@@ -31,6 +31,7 @@ import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.util.timer.TimerUtil;
 import gg.packetloss.hackbook.AttributeBook;
+import gg.packetloss.hackbook.entity.HBGiant;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
@@ -139,7 +140,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         boolean found = false;
         boolean second = false;
         for (Giant e : getContained(Giant.class)) {
-            if (e.isValid()) {
+            if (e.isValid() && HBGiant.is(e)) {
                 if (!found) {
                     boss = e;
                     found = true;
@@ -164,10 +165,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     public void spawnBoss() {
         Location spawnLoc = RegionUtil.getCenterAt(getWorld(), groundLevel, getRegion());
 
-        boss = getWorld().spawn(spawnLoc, Giant.class);
+        boss = HBGiant.spawn(spawnLoc);
         boss.setMaxHealth(config.maxHealthNormal);
         boss.setHealth(config.maxHealthNormal);
-        boss.setRemoveWhenFarAway(false);
+        boss.setRemoveWhenFarAway(true);
 
         try {
             AttributeBook.setAttribute(boss, AttributeBook.Attribute.KNOCKBACK_RESISTANCE, 1);

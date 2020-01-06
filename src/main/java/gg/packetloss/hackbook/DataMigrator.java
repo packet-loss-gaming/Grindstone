@@ -4,13 +4,10 @@ import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.Dynamic;
 import net.minecraft.server.v1_15_R1.*;
-import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_15_R1.CraftServer;
 
-class DataMigrator {
+public class DataMigrator {
     private static NBTTagCompound runFixer(int prevVersion, DSL.TypeReference typeReference, NBTTagCompound tag) {
-        MinecraftServer server = ((CraftServer) Bukkit.getServer()).getServer();
-        DataFixer fixer = server.dataConverterManager;
+        DataFixer fixer = DataConverterRegistry.a();
 
         return (NBTTagCompound) fixer.update(
                 typeReference,
@@ -20,7 +17,7 @@ class DataMigrator {
         ).getValue();
     }
 
-    public static NBTTagCompound updateItemStack(int prevVersion, NBTTagCompound tag) {
+    protected static NBTTagCompound updateItemStack(int prevVersion, NBTTagCompound tag) {
         return runFixer(prevVersion, DataConverterTypes.ITEM_STACK, tag);
     }
 
