@@ -31,7 +31,7 @@ public class HBGiant extends EntityGiantZombie {
     protected void initAttributes() {
         super.initAttributes();
         this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.23D);
-        this.getAttributeInstance(GenericAttributes.ATTACK_DAMAGE).setValue(50.0D);
+        this.getAttributeInstance(GenericAttributes.ATTACK_DAMAGE).setValue(12.0D);
     }
 
     @Override

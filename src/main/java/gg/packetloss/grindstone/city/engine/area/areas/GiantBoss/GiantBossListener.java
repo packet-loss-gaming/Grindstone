@@ -307,29 +307,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 event.setDamage(event.getDamage() * percentageDamageRemaining);
             }
 
-            if (meleeReasons.contains(event.getCause()) && attacker instanceof Player) {
-                server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) attacker));
-
-                Vector newVelocityVec = VectorUtil.createDirectionalVector(
-                        parent.boss.getLocation(), attacker.getLocation()
-                );
-
-                newVelocityVec.multiply(config.playerThrowForceAmplifier);
-                newVelocityVec.setY(ChanceUtil.getRangedRandom(
-                        config.playerThrowMinYForce,
-                        config.playerThrowMaxYForce
-                ));
-
-                attacker.setVelocity(newVelocityVec);
-
-                if (ChanceUtil.getChance(3) && boss.getHealth() > boss.getMaxHealth() * .5) {
-                    ChatUtil.sendNotice(
-                            parent.getAudiblePlayers(),
-                            CollectionUtil.getElement(config.playerThrowTaunts)
-                    );
-                }
-            }
-
             if (acceptedReasons.contains(event.getCause())) {
                 final double oldHP = boss.getHealth();
 
@@ -377,6 +354,30 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 if (parent.damageHeals && ChanceUtil.getChance(10)) {
                     ChatUtil.sendNotice(parent.getAudiblePlayers(), ChatColor.AQUA, player.getDisplayName() + " has broken the giant's spell.");
                     parent.damageHeals = false;
+                }
+            }
+
+            if (attacker instanceof Giant) {
+                server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) defender));
+
+                Vector newVelocityVec = VectorUtil.createDirectionalVector(
+                        parent.boss.getLocation(), defender.getLocation()
+                );
+
+                GiantBossConfig config = parent.getConfig();
+                newVelocityVec.multiply(config.playerThrowForceAmplifier);
+                newVelocityVec.setY(ChanceUtil.getRangedRandom(
+                        config.playerThrowMinYForce,
+                        config.playerThrowMaxYForce
+                ));
+
+                defender.setVelocity(newVelocityVec);
+
+                if (parent.boss.getHealth() > parent.boss.getMaxHealth() * .5) {
+                    ChatUtil.sendWarning(
+                            parent.getAudiblePlayers(),
+                            CollectionUtil.getElement(config.playerThrowTaunts)
+                    );
                 }
             }
         }
