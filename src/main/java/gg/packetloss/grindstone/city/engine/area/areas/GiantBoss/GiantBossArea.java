@@ -205,6 +205,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                 chestPts.add(block.getLocation());
             }
         });
+
+        Collections.shuffle(spawnPts);
     }
 
     public Runnable spawnXP = () -> {
