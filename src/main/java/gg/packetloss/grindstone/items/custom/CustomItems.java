@@ -72,9 +72,9 @@ public enum CustomItems {
     GOD_BOOTS(ChatColor.BLUE, "God Boots"),
 
     // Combat Potions
-    DIVINE_COMBAT_POTION(ChatColor.WHITE, "Divine Combat Potion"),
-    HOLY_COMBAT_POTION(ChatColor.WHITE, "Holy Combat Potion"),
-    EXTREME_COMBAT_POTION(ChatColor.WHITE, "Extreme Combat Potion"),
+    DIVINE_COMBAT_POTION(ChatColor.RED, "Divine Combat Potion"),
+    HOLY_COMBAT_POTION(ChatColor.RED, "Holy Combat Potion"),
+    EXTREME_COMBAT_POTION(ChatColor.RED, "Extreme Combat Potion"),
 
     // Grave Yard Gems
     GEM_OF_LIFE(ChatColor.DARK_AQUA, "Gem of Life"),
