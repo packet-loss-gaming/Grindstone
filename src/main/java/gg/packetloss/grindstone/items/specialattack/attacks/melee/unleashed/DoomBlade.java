@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.util.DamageUtil;
 import org.bukkit.Effect;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -33,11 +34,16 @@ public class DoomBlade extends EntityAttack implements MeleeSpecial {
             server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
         }
 
+        Class<? extends Entity> filterType = target.getClass();
+        if (Monster.class.isAssignableFrom(filterType)) {
+            filterType = Monster.class;
+        }
+
         double dmgTotal = 0;
         List<Entity> entityList = target.getNearbyEntities(6, 4, 6);
         entityList.add(target);
         for (Entity e : entityList) {
-            if (e.isValid() && e instanceof LivingEntity) {
+            if (e.isValid() && filterType.isInstance(e)) {
                 if (e.equals(owner)) continue;
                 double maxHit = ChanceUtil.getRangedRandom(150, 350);
                 if (e instanceof Player) {

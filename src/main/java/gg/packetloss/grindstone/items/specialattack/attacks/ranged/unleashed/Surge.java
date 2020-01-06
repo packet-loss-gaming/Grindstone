@@ -7,7 +7,9 @@ import gg.packetloss.grindstone.util.SimpleRayTrace;
 import gg.packetloss.grindstone.util.VectorUtil;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -53,8 +55,13 @@ public class Surge extends EntityAttack implements RangedSpecial {
             int newDistance = distance + 1;
             double newTotal = totalDamage;
 
+            Class<? extends Entity> filterType = target.getClass();
+            if (Monster.class.isAssignableFrom(filterType)) {
+                filterType = Monster.class;
+            }
+
             for (LivingEntity e : entityList) {
-                if (e.isValid()) {
+                if (e.isValid() && filterType.isInstance(e)) {
                     if (e.equals(owner)) continue;
 
                     e.setNoDamageTicks(0);
