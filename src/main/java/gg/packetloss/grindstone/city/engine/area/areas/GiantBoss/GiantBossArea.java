@@ -29,7 +29,6 @@ import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
-import gg.packetloss.grindstone.util.timer.TimerUtil;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.entity.HBGiant;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -527,35 +526,41 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                 }, 20 * 7);
                 break;
             case 9:
-                ChatUtil.sendNotice(audiblePlayers, ChatColor.DARK_RED, "My minions our time is now!");
+                ChatUtil.sendNotice(audiblePlayers, ChatColor.DARK_RED, "Sink into the darkness!");
+                List<Location> darkSmokePoints = new ArrayList<>();
                 IntegratedRunnable minionEater = new IntegratedRunnable() {
                     @Override
                     public boolean run(int times) {
                         if (!isBossSpawned()) return true;
-                        for (LivingEntity entity : getContained(LivingEntity.class)) {
-                            if (entity instanceof Giant || !ChanceUtil.getChance(3)) continue;
-                            double realDamage = entity.getHealth() / 2;
-                            if (entity instanceof Zombie && ((Zombie) entity).isBaby()) {
-                                entity.damage(realDamage);
-                            } else if (boss.hasLineOfSight(entity)) {
-                                entity.damage(realDamage, boss);
+
+                        if (times % 3 == 0) {
+                            for (Location point : darkSmokePoints) {
+                                for (Player player : point.getNearbyEntitiesByType(Player.class, 2)) {
+                                    if (!contains(player)) {
+                                        continue;
+                                    }
+
+                                    player.damage(50, boss);
+                                }
                             }
-                            toHeal += realDamage * .27;
+                        } else {
+                            for (LivingEntity entity : getContained(Zombie.class)) {
+                                if (ChanceUtil.getChance(20)) {
+                                    entity.setHealth(0);
+                                    darkSmokePoints.add(entity.getLocation());
+                                }
+                            }
                         }
-                        if (TimerUtil.matchesFilter(times + 1, -1, 2)) {
-                            ChatUtil.sendNotice(getAudiblePlayers(), ChatColor.DARK_AQUA, "The boss has drawn in: " + (int) toHeal + " health.");
+
+                        for (Location point : darkSmokePoints) {
+                            EnvironmentUtil.generateRadialEffect(point, Effect.SMOKE);
                         }
+
                         return true;
                     }
 
                     @Override
-                    public void end() {
-                        if (!isBossSpawned()) return;
-                        boss.setHealth(Math.min(toHeal + boss.getHealth(), boss.getMaxHealth()));
-                        toHeal = 0;
-                        ChatUtil.sendNotice(getAudiblePlayers(), "Thank you my minions!");
-                        printBossHealth();
-                    }
+                    public void end() { }
                 };
                 TimedRunnable minonEatingTask = new TimedRunnable(minionEater, 20);
                 BukkitTask minionEatingTaskExecutor = server.getScheduler().runTaskTimer(inst, minonEatingTask, 0, 10);
