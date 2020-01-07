@@ -22,6 +22,7 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.ConfigurationNode;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.events.PlayerCleanseItemEvent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
@@ -39,6 +40,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
@@ -56,6 +58,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -108,6 +111,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
     private static class LocalConfiguration extends ConfigurationBase {
         private Material sacrificialBlockMaterial = null;
+        private Material cleansingBlockMaterial = null;
 
         @Override
         public void load(ConfigurationNode node) {
@@ -118,12 +122,23 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         @Setting("sacrificial-block")
         private String sacrificialBlockString = Material.CHISELED_STONE_BRICKS.getKey().toString();
 
+        @Setting("cleansing-block")
+        private String cleansingBlockString = Material.LAPIS_BLOCK.getKey().toString();
+
         public Material getSacrificialBlock() {
             if (sacrificialBlockMaterial == null) {
                 sacrificialBlockMaterial = Material.matchMaterial(sacrificialBlockString);
             }
 
             return sacrificialBlockMaterial;
+        }
+
+        public Material getCleansingBlock() {
+            if (cleansingBlockMaterial == null) {
+                cleansingBlockMaterial = Material.matchMaterial(cleansingBlockString);
+            }
+
+            return cleansingBlockMaterial;
         }
     }
 
@@ -267,6 +282,10 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         return block.getType() == config.getSacrificialBlock();
     }
 
+    public boolean isCleansingBlock(Block block) {
+        return block.getType() == config.getCleansingBlock();
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
@@ -302,7 +321,13 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     public void createFire(Block origin) {
-        if (!isSacrificeBlock(origin)) return;
+        if (!isSacrificeBlock(origin)) {
+            return;
+        }
+
+        while (isSacrificeBlock(origin.getRelative(BlockFace.UP))) {
+            origin = origin.getRelative(BlockFace.UP);
+        }
 
         final Block above = origin.getRelative(BlockFace.UP);
         if (above.getType() == Material.AIR) {
@@ -326,31 +351,35 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             int id = getEntityTaskId(item);
 
             if (item.isDead() || item.getTicksLived() > 40) {
-
                 if (id != -1) {
                     removeEntity(item);
                     server.getScheduler().cancelTask(id);
                 }
             } else {
-                final Block searchBlock = item.getLocation().getBlock().getRelative(BlockFace.DOWN);
+                Block searchBlock = item.getLocation().getBlock();
+
+                while (isSacrificeBlock(searchBlock.getRelative(BlockFace.DOWN))) {
+                    searchBlock = searchBlock.getRelative(BlockFace.DOWN);
+                }
 
                 if (isSacrificeBlock(searchBlock)) {
-                    try {
-                        // Create the event here
+                    if (isCleansingBlock(searchBlock.getRelative(BlockFace.DOWN))) {
+                        PlayerCleanseItemEvent cleanseItemEvent = new PlayerCleanseItemEvent(player, searchBlock, item.getItemStack());
+                        server.getPluginManager().callEvent(cleanseItemEvent);
+                        if (cleanseItemEvent.isCancelled()) return;
+                        cleanse(player, cleanseItemEvent.getItemStack());
+                    } else {
                         PlayerSacrificeItemEvent sacrificeItemEvent = new PlayerSacrificeItemEvent(player, searchBlock, item.getItemStack());
                         server.getPluginManager().callEvent(sacrificeItemEvent);
                         if (sacrificeItemEvent.isCancelled()) return;
-                        createFire(searchBlock);
                         sacrifice(player, sacrificeItemEvent.getItemStack());
-                        removeEntity(item);
-                        item.remove();
-                        server.getScheduler().cancelTask(id);
-                        player.sendMessage(ChatColor.GOLD + "An ancient fire ignites.");
-                    } catch (Exception e) {
-                        log.warning("The: "
-                                + SacrificeComponent.this.getInformation().friendlyName()
-                                + " component could not contact Pitfall.");
                     }
+
+                    createFire(searchBlock);
+                    removeEntity(item);
+                    item.remove();
+                    server.getScheduler().cancelTask(id);
+                    player.sendMessage(ChatColor.GOLD + "An ancient fire ignites.");
                 }
             }
         }, 0, 1); // Start at 0 ticks and repeat every 1 ticks
@@ -388,6 +417,20 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                 }
             }
         }
+    }
+
+    private void cleanse(Player player, ItemStack item) {
+        if (item.getType() == Material.AIR) return;
+
+        ItemMeta itemMeta = item.getItemMeta();
+        if (itemMeta.hasEnchants()) {
+            for (Enchantment enchantment : itemMeta.getEnchants().keySet()) {
+                itemMeta.removeEnchant(enchantment);
+            }
+        }
+        item.setItemMeta(itemMeta);
+
+        player.getInventory().addItem(item);
     }
 
     private void sacrifice(Player player, ItemStack item) {
