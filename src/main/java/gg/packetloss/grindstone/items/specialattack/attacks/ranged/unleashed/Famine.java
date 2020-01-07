@@ -10,11 +10,12 @@ import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class Famine extends EntityAttack implements MeleeSpecial {
 
-    public Famine(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public Famine(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

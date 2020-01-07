@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.util.item;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
-import gg.packetloss.grindstone.prayer.PrayerFX.HulkFX;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
@@ -18,64 +17,16 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
 public class EffectUtil {
-
     private static final CommandBook inst = CommandBook.inst();
     private static final Logger log = inst.getLogger();
     private static final Server server = CommandBook.server();
-
-    public static class Master {
-
-        public static void blind(Player owner, LivingEntity target) {
-
-            if (target instanceof Player) {
-                target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 0), true);
-                ChatUtil.sendNotice(owner, "Your weapon blinds your victim.");
-            } else {
-                healingLight(owner, target);
-            }
-        }
-
-        public static void healingLight(Player owner, LivingEntity target) {
-
-            owner.setHealth(Math.min(owner.getMaxHealth(), owner.getHealth() + 5));
-            for (int i = 0; i < 4; i++) {
-                target.getWorld().playEffect(target.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
-            }
-
-            target.damage(20);
-            ChatUtil.sendNotice(owner, "Your weapon glows dimly.");
-        }
-
-        public static void ultimateStrength(Player owner) {
-
-            new HulkFX().add(owner);
-            ChatUtil.sendNotice(owner, "You gain a new sense of true power.");
-        }
-
-        public static void doomBlade(Player owner, Collection<LivingEntity> entities) {
-
-            ChatUtil.sendNotice(owner, "The Master Sword releases a huge burst of energy.");
-
-            int dmgTotal = 0;
-            for (LivingEntity e : entities) {
-                int maxHit = ChanceUtil.getRangedRandom(150, 250);
-                for (int i = 0; i < 20; i++) e.getWorld().playEffect(e.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
-                e.damage(maxHit);
-                dmgTotal += maxHit;
-            }
-            ChatUtil.sendNotice(owner, "Your sword dishes out an incredible " + dmgTotal + " damage!");
-        }
-    }
 
     public static class Ancient {
 

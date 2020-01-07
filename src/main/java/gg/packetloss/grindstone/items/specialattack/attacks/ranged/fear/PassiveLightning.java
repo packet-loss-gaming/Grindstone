@@ -5,12 +5,13 @@ import gg.packetloss.grindstone.items.specialattack.LocationAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import gg.packetloss.grindstone.util.DamageUtil;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.ItemStack;
 
 public class PassiveLightning extends LocationAttack implements RangedSpecial {
     private final Projectile projectile;
 
-    public PassiveLightning(Projectile projectile) {
-        super((LivingEntity) projectile.getShooter(), projectile.getLocation());
+    public PassiveLightning(Projectile projectile, ItemStack usedItem) {
+        super((LivingEntity) projectile.getShooter(), usedItem, projectile.getLocation());
         this.projectile = projectile;
     }
 

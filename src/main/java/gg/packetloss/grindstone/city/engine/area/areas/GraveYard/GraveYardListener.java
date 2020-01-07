@@ -16,6 +16,7 @@ import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowerUseEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
@@ -56,7 +57,6 @@ import org.bukkit.potion.PotionEffectType;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
@@ -78,6 +78,18 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(ignoreCancelled = true)
     public void onPrayerApplication(PrayerApplicationEvent event) {
         if (parent.isHostileTempleArea(event.getPlayer().getLocation())) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void onSpecialAttack(SpecialAttackEvent event) {
+        Player player = event.getPlayer();
+        if (!parent.isHostileTempleArea(player.getLocation())) {
+            return;
+        }
+
+        if (ItemUtil.isInItemFamily(event.getSpec().getUsedItem(), ItemFamily.MASTER)) {
+            event.setContextCooldown(event.getContext().getDelay() / 2);
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -201,16 +213,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (attacker instanceof Player) {
                 Player player = (Player) attacker;
                 player.getActivePotionEffects().stream().filter(effect -> !excludedTypes.contains(effect.getType())).forEach(defender::addPotionEffect);
-                if (hasThunderstorm(parent.getWorld())) return;
-                if (ItemUtil.isHoldingMasterSword(player)) {
-                    if (ChanceUtil.getChance(10)) {
-                        EffectUtil.Master.healingLight(player, defender);
-                    }
-                    if (ChanceUtil.getChance(18)) {
-                        List<LivingEntity> entities = player.getNearbyEntities(6, 4, 6).stream().filter(EnvironmentUtil::isHostileEntity).map(e -> (LivingEntity) e).collect(Collectors.toList());
-                        EffectUtil.Master.doomBlade(player, entities);
-                    }
-                }
             } else if (defender instanceof Player && parent.contains(parent.rewards, defender)) {
                 event.setDamage(event.getDamage() + (parent.rewardsRoomOccupiedTicks / 3.0));
 

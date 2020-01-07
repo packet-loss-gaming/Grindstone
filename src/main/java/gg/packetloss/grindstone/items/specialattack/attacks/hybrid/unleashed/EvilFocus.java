@@ -15,14 +15,15 @@ import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 
 public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpecial {
 
-    public EvilFocus(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public EvilFocus(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     private int getNumRuns() {

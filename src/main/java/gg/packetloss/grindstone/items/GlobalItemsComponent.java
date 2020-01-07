@@ -182,9 +182,12 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         server.getScheduler().runTaskLater(inst, () -> {
             WeaponSysImpl wepSys = handle(new WeaponSysImpl(packetInterceptor));
 
+            wepSys.add(WeaponType.RANGED, CustomItems.MASTER_BOW, handle(new MasterBowImpl()));
             wepSys.add(WeaponType.RANGED, CustomItems.FEAR_BOW, handle(new FearBowImpl()));
             wepSys.add(WeaponType.RANGED, CustomItems.UNLEASHED_BOW, handle(new UnleashedBowImpl()));
 
+            wepSys.add(WeaponType.MELEE, CustomItems.MASTER_SWORD, handle(new MasterSwordImpl()));
+            wepSys.add(WeaponType.MELEE, CustomItems.MASTER_SHORT_SWORD, handle(new MasterSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SWORD, handle(new FearSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SHORT_SWORD, handle(new FearSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));

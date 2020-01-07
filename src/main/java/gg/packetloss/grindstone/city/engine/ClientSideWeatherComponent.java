@@ -14,10 +14,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
-import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.item.ItemUtil;
-import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.WeatherType;
 import org.bukkit.command.CommandSender;
@@ -73,26 +70,17 @@ public class ClientSideWeatherComponent extends BukkitComponent implements Liste
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onThunderChange(BetterWeatherChangeEvent event) {
-        boolean ending;
         String state;
 
         if (event.getOldWeatherType() == THUNDERSTORM) {
-            ending = true;
             state = "ending";
         } else if (event.getNewWeatherType() == THUNDERSTORM) {
-            ending = false;
             state = "starting";
         } else {
             return;
         }
 
         enabledFor.stream().filter(player -> player.getWorld().equals(event.getWorld())).forEach(player -> {
-            if (ending) {
-                if (ItemUtil.hasAncientArmour(player) || ItemUtil.isHoldingItemInFamily(player, ItemFamily.MASTER)) {
-                    ChatUtil.sendWarning(player, ChatColor.DARK_RED + "===============[WARNING]===============");
-                }
-            }
-
             ChatUtil.sendWarning(player, "A thunder storm is " + state + " on your world.");
         });
     }

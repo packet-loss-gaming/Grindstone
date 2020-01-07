@@ -189,15 +189,15 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         switch (specType) {
             case MELEE:
                 if (ChanceUtil.getChance(2)) {
-                    return new FearSwordImpl().getSpecial(player, target);
+                    return new FearSwordImpl().getSpecial(player, null, target);
                 } else {
-                    return new UnleashedSwordImpl().getSpecial(player, target);
+                    return new UnleashedSwordImpl().getSpecial(player, null, target);
                 }
             case RANGED:
                 if (ChanceUtil.getChance(2)) {
-                    return new FearBowImpl().getSpecial(player, target);
+                    return new FearBowImpl().getSpecial(player, null, target);
                 } else {
-                    return new UnleashedBowImpl().getSpecial(player, target);
+                    return new UnleashedBowImpl().getSpecial(player, null, target);
                 }
         }
 

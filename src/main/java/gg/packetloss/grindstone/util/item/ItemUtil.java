@@ -290,12 +290,6 @@ public class ItemUtil {
     }
 
     // FIXME: This sucks
-    @Deprecated
-    public static boolean isHoldingMasterSword(Player player) {
-        return isHoldingItem(player, CustomItems.MASTER_SWORD) || isHoldingItem(player, CustomItems.MASTER_SHORT_SWORD);
-    }
-
-    // FIXME: This also sucks
     public static boolean isHoldingWeapon(Player player) {
         if (!player.isValid()) {
             return false;

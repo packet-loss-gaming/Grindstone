@@ -90,8 +90,9 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
         if (target != null && owner != target) {
             WeaponType weaponType = attackInfo.wasRangedAttack() ? WeaponType.RANGED : WeaponType.MELEE;
 
-            SpecWeaponImpl specImpl = getSpecialImplForItem(attackInfo.getUsedItem(), weaponType);
-            SpecialAttack spec = specImpl == null ? null : specImpl.getSpecial(owner, target);
+            ItemStack usedItem = attackInfo.getUsedItem();
+            SpecWeaponImpl specImpl = getSpecialImplForItem(usedItem, weaponType);
+            SpecialAttack spec = specImpl == null ? null : specImpl.getSpecial(owner, usedItem, target);
 
             if (spec != null) {
                 new SpecialAttackFactory(sessions).process(owner, spec, weaponType.getDefaultSpecType());

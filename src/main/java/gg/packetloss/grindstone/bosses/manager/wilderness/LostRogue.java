@@ -150,7 +150,7 @@ public class LostRogue {
                 toHit.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 15, 2), true);
 
                 if (boss instanceof LivingEntity && ChanceUtil.getChance(5)) {
-                    new Nightmare((LivingEntity) boss, toHit).activate();
+                    new Nightmare((LivingEntity) boss, null, toHit).activate();
                 }
                 return null;
             }

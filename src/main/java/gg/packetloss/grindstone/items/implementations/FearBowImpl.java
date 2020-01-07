@@ -28,21 +28,21 @@ import org.bukkit.projectiles.ProjectileSource;
 
 public class FearBowImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
     @Override
-    public SpecialAttack getSpecial(LivingEntity owner, LivingEntity target) {
+    public SpecialAttack getSpecial(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
         switch (ChanceUtil.getRandom(5)) {
             case 1:
-                Disarm disarmSpec = new Disarm(owner, target);
+                Disarm disarmSpec = new Disarm(owner, usedItem, target);
                 if (disarmSpec.getItemStack() != null) {
                     return disarmSpec;
                 }
             case 2:
-                return new Curse(owner, target);
+                return new Curse(owner, usedItem, target);
             case 3:
-                return new MagicChain(owner, target);
+                return new MagicChain(owner, usedItem, target);
             case 4:
-                return new FearStrike(owner, target);
+                return new FearStrike(owner, usedItem, target);
             case 5:
-                return new FearBomb(owner, target);
+                return new FearBomb(owner, usedItem, target);
         }
         return null;
     }
@@ -73,7 +73,7 @@ public class FearBowImpl extends AbstractItemFeatureImpl implements SpecWeaponIm
             if (!session.canSpec(SpecType.RANGED)) {
 
                 if (ItemUtil.isItem(launcher, CustomItems.FEAR_BOW)) {
-                    SpecialAttackEvent specEvent = callSpec(owner, SpecType.PASSIVE, new PassiveLightning(projectile));
+                    SpecialAttackEvent specEvent = callSpec(owner, SpecType.PASSIVE, new PassiveLightning(projectile, launcher));
                     if (!specEvent.isCancelled()) {
                         session.updateSpec(specEvent.getContext(), specEvent.getContextCoolDown());
                         specEvent.getSpec().activate();

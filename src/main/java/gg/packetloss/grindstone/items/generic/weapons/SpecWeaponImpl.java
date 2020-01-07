@@ -8,7 +8,8 @@ package gg.packetloss.grindstone.items.generic.weapons;
 
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
 
 public interface SpecWeaponImpl {
-    SpecialAttack getSpecial(LivingEntity owner, LivingEntity target);
+    SpecialAttack getSpecial(LivingEntity owner, ItemStack usedItem, LivingEntity target);
 }

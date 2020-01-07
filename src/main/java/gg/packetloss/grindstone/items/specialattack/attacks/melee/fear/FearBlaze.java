@@ -17,11 +17,12 @@ import gg.packetloss.grindstone.util.DamageUtil;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class FearBlaze extends EntityAttack implements MeleeSpecial {
 
-    public FearBlaze(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public FearBlaze(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     private void ignite(LivingEntity target, int maxRuns, double power) {

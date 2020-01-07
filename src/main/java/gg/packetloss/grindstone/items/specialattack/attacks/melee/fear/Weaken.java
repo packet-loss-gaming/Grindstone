@@ -9,13 +9,14 @@ package gg.packetloss.grindstone.items.specialattack.attacks.melee.fear;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class Weaken extends EntityAttack implements MeleeSpecial {
 
-    public Weaken(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public Weaken(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

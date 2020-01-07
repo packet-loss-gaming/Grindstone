@@ -185,7 +185,7 @@ public class FearKnight {
                 }
                 Entity eToHit = BukkitUtil.getBukkitEntity(entity);
                 if (!(eToHit instanceof LivingEntity)) return null;
-                sword.getSpecial(boss, (LivingEntity) eToHit).activate();
+                sword.getSpecial(boss, null, (LivingEntity) eToHit).activate();
                 return null;
             }
         });

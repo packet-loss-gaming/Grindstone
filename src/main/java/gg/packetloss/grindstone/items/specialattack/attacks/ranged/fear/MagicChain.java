@@ -9,13 +9,14 @@ package gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class MagicChain extends EntityAttack implements RangedSpecial {
 
-    public MagicChain(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public MagicChain(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

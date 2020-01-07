@@ -20,6 +20,7 @@ import gg.packetloss.grindstone.highscore.ScoreType;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.unleashed.LifeLeech;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.Decimate;
@@ -149,8 +150,10 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
     public void onSpecialAttack(SpecialAttackEvent event) {
         SpecialAttack attack = event.getSpec();
         if (!parent.contains(attack.getLocation())) return;
-        Class specClass = attack.getClass();
+
+        Class<?> specClass = attack.getClass();
         LivingEntity target = attack.getTarget();
+
         if (target instanceof Giant) {
             if (bossBlacklistedSpecs.contains(specClass)) {
                 event.setCancelled(true);
@@ -167,8 +170,14 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 }
             }
         }
+
         if (generalBlacklistedSpecs.contains(specClass)) {
             event.setCancelled(true);
+            return;
+        }
+
+        if (ItemUtil.isInItemFamily(attack.getUsedItem(), ItemFamily.MASTER)) {
+            event.setContextCooldown(event.getContext().getDelay() / 2);
         }
     }
 
@@ -263,20 +272,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                         parent.random.nextDouble() * 2,
                         parent.random.nextDouble() * 3 - 1.5
                 ));
-            }
-            if (attacker instanceof Player) {
-                Player player = (Player) attacker;
-                if (defender instanceof LivingEntity) {
-                    if (ItemUtil.isHoldingMasterSword(player)) {
-                        if (ChanceUtil.getChance(10)) {
-                            EffectUtil.Master.healingLight(player, (LivingEntity) defender);
-                        }
-                        if (ChanceUtil.getChance(9)) {
-                            List<LivingEntity> entities = player.getNearbyEntities(6, 4, 6).stream().filter(EnvironmentUtil::isHostileEntity).map(e -> (LivingEntity) e).collect(Collectors.toList());
-                            EffectUtil.Master.doomBlade(player, entities);
-                        }
-                    }
-                }
             }
         }
         if (attacker != null && !parent.contains(attacker, 1) || !parent.contains(defender, 1)) return;

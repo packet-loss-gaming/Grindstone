@@ -16,13 +16,14 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
 public class DoomBlade extends EntityAttack implements MeleeSpecial {
 
-    public DoomBlade(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public DoomBlade(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

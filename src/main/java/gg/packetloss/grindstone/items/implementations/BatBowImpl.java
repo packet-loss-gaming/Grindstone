@@ -55,7 +55,7 @@ public class BatBowImpl extends AbstractItemFeatureImpl {
                 }
 
                 if (type != null) {
-                    SpecialAttackEvent specEvent = callSpec(owner, SpecType.ANIMAL_BOW, new MobAttack(owner, targetLoc, type));
+                    SpecialAttackEvent specEvent = callSpec(owner, SpecType.ANIMAL_BOW, new MobAttack(owner, launcher, targetLoc, type));
                     if (!specEvent.isCancelled()) {
                         session.updateSpec(specEvent.getContext(), specEvent.getContextCoolDown());
                         specEvent.getSpec().activate();

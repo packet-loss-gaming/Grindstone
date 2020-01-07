@@ -18,8 +18,8 @@ import org.bukkit.inventory.PlayerInventory;
 
 public class Disarm extends EntityAttack implements RangedSpecial {
 
-    public Disarm(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public Disarm(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

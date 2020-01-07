@@ -12,13 +12,14 @@ import gg.packetloss.grindstone.util.item.EffectUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
 
 public class MobAttack extends LocationAttack implements RangedSpecial {
 
     private Class<? extends LivingEntity> type;
 
-    public <T extends LivingEntity> MobAttack(LivingEntity owner, Location target, Class<T> type) {
-        super(owner, target);
+    public <T extends LivingEntity> MobAttack(LivingEntity owner, ItemStack usedItem, Location target, Class<T> type) {
+        super(owner, usedItem, target);
         this.type = type;
     }
 

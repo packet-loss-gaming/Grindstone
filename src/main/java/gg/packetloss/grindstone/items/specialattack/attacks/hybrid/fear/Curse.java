@@ -10,13 +10,14 @@ import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class Curse extends EntityAttack implements MeleeSpecial, RangedSpecial {
 
-    public Curse(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public Curse(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

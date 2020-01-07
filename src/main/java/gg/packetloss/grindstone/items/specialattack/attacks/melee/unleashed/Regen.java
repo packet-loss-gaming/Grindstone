@@ -9,13 +9,14 @@ package gg.packetloss.grindstone.items.specialattack.attacks.melee.unleashed;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class Regen extends EntityAttack implements MeleeSpecial {
 
-    public Regen(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public Regen(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

@@ -13,11 +13,12 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.DamageUtil;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class Decimate extends EntityAttack implements MeleeSpecial {
 
-    public Decimate(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public Decimate(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

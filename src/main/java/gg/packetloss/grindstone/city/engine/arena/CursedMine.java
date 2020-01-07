@@ -15,12 +15,14 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -32,10 +34,7 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
-import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
-import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.BookUtil;
-import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.bukkit.*;
@@ -50,7 +49,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -773,24 +771,15 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
         }
     }
 
-    private static EDBEExtractor<LivingEntity, Player, Arrow> extractor = new EDBEExtractor<>(
-            LivingEntity.class,
-            Player.class,
-            Arrow.class
-    );
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void onSpecialAttack(SpecialAttackEvent event) {
+        Player player = event.getPlayer();
+        if (!contains(player)) {
+            return;
+        }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerDamage(EntityDamageByEntityEvent event) {
-
-        CombatantPair<LivingEntity, Player, Arrow> result = extractor.extractFrom(event);
-
-        if (result == null) return;
-
-        Player player = result.getDefender();
-
-        if (!contains(player)) return;
-        if (ChanceUtil.getChance(5) && ItemUtil.isHoldingMasterSword(player) && ItemUtil.hasAncientArmour(player)) {
-            EffectUtil.Master.ultimateStrength(player);
+        if (ItemUtil.isInItemFamily(event.getSpec().getUsedItem(), ItemFamily.MASTER)) {
+            event.setContextCooldown(event.getContext().getDelay() / 2);
         }
     }
 
@@ -803,7 +792,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
 
-        Player player = event.getEntity().getPlayer();
+        Player player = event.getEntity();
         revertPlayer(player);
 
         if (isOnHitList(player) || contains(player)) {

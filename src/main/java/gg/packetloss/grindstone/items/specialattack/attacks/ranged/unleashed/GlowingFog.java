@@ -19,11 +19,12 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class GlowingFog extends EntityAttack implements RangedSpecial {
 
-    public GlowingFog(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public GlowingFog(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

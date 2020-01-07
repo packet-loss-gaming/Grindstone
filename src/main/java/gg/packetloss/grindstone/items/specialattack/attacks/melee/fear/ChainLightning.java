@@ -15,14 +15,15 @@ import gg.packetloss.grindstone.util.DamageUtil;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ChainLightning extends EntityAttack implements MeleeSpecial {
 
-    public ChainLightning(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public ChainLightning(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     private void chainOn(LivingEntity target, int depth, int delayModifier) {

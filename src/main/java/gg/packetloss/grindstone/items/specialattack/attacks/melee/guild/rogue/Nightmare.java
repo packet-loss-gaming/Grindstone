@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Snowball;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 
 import java.util.HashSet;
@@ -24,8 +25,8 @@ public class Nightmare extends EntityAttack implements MeleeSpecial {
 
     private Random r;
 
-    public Nightmare(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public Nightmare(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
         r = new Random(System.currentTimeMillis());
     }
 

@@ -8,13 +8,14 @@ package gg.packetloss.grindstone.items.specialattack;
 
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
 
 public abstract class EntityAttack extends SpecialAttack {
 
     protected LivingEntity target;
 
-    public EntityAttack(LivingEntity owner, LivingEntity target) {
-        super(owner);
+    public EntityAttack(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem);
         this.target = target;
     }
 

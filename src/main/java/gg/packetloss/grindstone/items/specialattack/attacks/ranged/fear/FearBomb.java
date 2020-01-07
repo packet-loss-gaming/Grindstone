@@ -23,6 +23,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
@@ -32,8 +33,8 @@ import java.util.Set;
 
 public class FearBomb extends EntityAttack implements RangedSpecial {
 
-    public FearBomb(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public FearBomb(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

@@ -10,11 +10,12 @@ import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
 
 public class LifeLeech extends EntityAttack implements MeleeSpecial, RangedSpecial {
 
-    public LifeLeech(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public LifeLeech(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

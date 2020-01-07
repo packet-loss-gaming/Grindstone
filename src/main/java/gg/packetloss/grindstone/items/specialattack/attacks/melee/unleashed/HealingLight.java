@@ -13,11 +13,12 @@ import gg.packetloss.grindstone.util.DamageUtil;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class HealingLight extends EntityAttack implements MeleeSpecial {
 
-    public HealingLight(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public HealingLight(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     @Override

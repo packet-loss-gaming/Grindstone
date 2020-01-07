@@ -13,11 +13,12 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class SoulSmite extends EntityAttack implements MeleeSpecial {
 
-    public SoulSmite(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public SoulSmite(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     private void attackPlayer() {
@@ -39,11 +40,11 @@ public class SoulSmite extends EntityAttack implements MeleeSpecial {
     private SpecialAttack getSubSpec() {
         switch (ChanceUtil.getRandom(3)) {
             case 1:
-                return new ChainLightning(owner, target);
+                return new ChainLightning(owner, usedItem, target);
             case 2:
-                return new Decimate(owner, target);
+                return new Decimate(owner, usedItem, target);
             default:
-                return new FearBlaze(owner, target);
+                return new FearBlaze(owner, usedItem, target);
         }
     }
 

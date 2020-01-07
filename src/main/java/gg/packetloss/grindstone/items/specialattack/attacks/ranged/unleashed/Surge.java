@@ -11,6 +11,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -21,8 +22,8 @@ public class Surge extends EntityAttack implements RangedSpecial {
     private static final int RADIUS = 4;
     private static final int RADIUS_SQ = RADIUS * RADIUS;
 
-    public Surge(LivingEntity owner, LivingEntity target) {
-        super(owner, target);
+    public Surge(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
+        super(owner, usedItem, target);
     }
 
     private void runSurge(SimpleRayTrace it, int distance, double totalDamage) {
