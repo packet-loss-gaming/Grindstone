@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.buff.Buff;
 import gg.packetloss.grindstone.buff.BuffComponent;
 import gg.packetloss.grindstone.city.engine.CityCoreComponent;
+import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -34,13 +35,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -59,6 +60,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
     private CityCoreComponent cityCore;
 
     private LocalConfiguration config;
+    private Map<UUID, Long> playerPlayTime = new HashMap<>();
 
     @Override
     public void enable() {
@@ -93,8 +95,13 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
                 "You can also access a clickable list of warps via /warps list.",
                 "To see this message again, use /welcome"
         );
-        @Setting("welcome-protection-days")
-        public int welcomeProtectionDays = 14;
+        @Setting("welcome-protection-hours")
+        public int welcomeProtectionHours = 24;
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        playerPlayTime.remove(event.getPlayer().getUniqueId());
     }
 
     private void giveStarterKit(Player player) {
@@ -119,10 +126,9 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         }
     }
 
-
     private boolean isNewerPlayer(Player player) {
-        long timeSinceFirstLogin = System.currentTimeMillis() - player.getFirstPlayed();
-        return timeSinceFirstLogin < TimeUnit.DAYS.toMillis(config.welcomeProtectionDays);
+        long timePlayed = playerPlayTime.getOrDefault(player.getUniqueId(), 0L);
+        return timePlayed < TimeUnit.HOURS.toSeconds(config.welcomeProtectionHours);
     }
 
     private void applyNewPlayerBuffs(Player player) {
@@ -147,7 +153,19 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
             player.teleport(cityCore.getNewPlayerStartingLocation(player));
         }
 
-        maybeApplyNewPlayerBuffs(player);
+        server.getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            UUID playerID = player.getUniqueId();
+            try {
+                MySQLHandle.getOnlineTime(playerID).ifPresent((time) -> {
+                    server.getScheduler().runTask(CommandBook.inst(), () -> {
+                        playerPlayTime.put(playerID, time);
+                        maybeApplyNewPlayerBuffs(player);
+                    });
+                });
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @EventHandler(ignoreCancelled = true)

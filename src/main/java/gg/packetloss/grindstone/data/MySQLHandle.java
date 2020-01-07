@@ -105,4 +105,16 @@ public class MySQLHandle {
         }
         return Optional.empty();
     }
+
+    public static Optional<Long> getOnlineTime(UUID playerID) throws SQLException {
+        try (Connection connection = getConnection()) {
+            String sql = "SELECT onlinetime FROM `lb-players` WHERE UUID = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, playerID.toString());
+                ResultSet results = statement.executeQuery();
+                if (results.next()) return Optional.of(results.getLong(1));
+            }
+        }
+        return Optional.empty();
+    }
 }
