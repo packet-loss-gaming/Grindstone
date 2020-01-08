@@ -20,6 +20,7 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.EntityEffect;
 import org.bukkit.GameMode;
 import org.bukkit.block.Block;
@@ -278,7 +279,11 @@ public class RogueListener implements Listener {
     @EventHandler
     public void onDoubleClick(DoubleClickEvent event) {
         Player player = event.getPlayer();
+
         ItemStack stack = player.getItemInHand();
+        if (!ItemUtil.isSword(stack)) {
+            return;
+        }
 
         Optional<RogueState> optState = getState(player);
         if (optState.isEmpty()) {
