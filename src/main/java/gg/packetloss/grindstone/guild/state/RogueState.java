@@ -12,6 +12,8 @@ public class RogueState extends InternalGuildState {
     private long nextBlip = 0;
     private long nextGrenade = 0;
 
+    private RogueStateSettings settings = new RogueStateSettings();
+
     public RogueState(long experience) {
         super(experience);
     }
@@ -47,5 +49,10 @@ public class RogueState extends InternalGuildState {
     @Override
     public GuildType getType() {
         return GuildType.ROGUE;
+    }
+
+    @Override
+    public RogueStateSettings getSettings() {
+        return settings;
     }
 }

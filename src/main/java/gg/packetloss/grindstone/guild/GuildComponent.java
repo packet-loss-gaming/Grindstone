@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.guild.db.mysql.MySQLPlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.listener.NinjaListener;
 import gg.packetloss.grindstone.guild.listener.RogueListener;
 import gg.packetloss.grindstone.guild.passive.PotionMetabolizer;
+import gg.packetloss.grindstone.guild.setting.GuildSettingConverter;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.NinjaState;
@@ -77,6 +78,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
         );
 
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
+        GuildSettingConverter.register(registrar);
         registrar.registerTopLevelCommands((commandManager, registration) -> {
             registrar.registerAsSubCommand("guild", "Guild commands", commandManager, (innerCommandManager, innerRegistration) -> {
                 innerRegistration.register(innerCommandManager, GuildCommandsRegistration.builder(), new GuildCommands(this));

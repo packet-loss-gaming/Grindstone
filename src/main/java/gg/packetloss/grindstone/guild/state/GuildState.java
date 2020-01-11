@@ -8,6 +8,8 @@ import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.guild.GuildLevel;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.powers.GuildPower;
+import gg.packetloss.grindstone.guild.setting.GuildSetting;
+import gg.packetloss.grindstone.guild.setting.GuildSettingUpdate;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
@@ -73,6 +75,33 @@ public class GuildState {
 
         state.setEnabled(false);
         return true;
+    }
+
+    public void sendSettings(Player player) {
+        List<GuildSetting> settings = state.getSettings().getAll();
+        for (GuildSetting setting : settings) {
+            Text text = Text.of(
+                    ChatColor.YELLOW,
+                    setting.getName(),
+                    ": ",
+                    setting.getValueAsText()
+            );
+
+            String defaultUpdateString = setting.getDefaultUpdateString();
+            if (!defaultUpdateString.isEmpty()) {
+                text = Text.of(
+                        text,
+                        TextAction.Hover.showText(Text.of("Update")),
+                        TextAction.Click.runCommand("/guild settings " + defaultUpdateString)
+                );
+            }
+
+            player.sendMessage(text.build());
+        }
+    }
+
+    public boolean updateSetting(GuildSettingUpdate setting) {
+        return state.getSettings().updateSetting(setting);
     }
 
     public void sendLevelChart(Player player, int page) {

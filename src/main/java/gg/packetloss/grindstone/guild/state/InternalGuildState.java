@@ -32,4 +32,6 @@ public abstract class InternalGuildState {
     }
 
     public abstract GuildType getType();
+
+    public abstract StateSettings getSettings();
 }

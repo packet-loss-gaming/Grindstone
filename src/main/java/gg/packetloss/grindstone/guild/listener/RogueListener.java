@@ -296,6 +296,10 @@ public class RogueListener implements Listener {
                 return;
             }
 
+            if (player.isSneaking() && !state.getSettings().shouldBlipWhileSneaking()) {
+                return;
+            }
+
             CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 if (state.canBlip()) {
                     blip(player, state, 2, false);

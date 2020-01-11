@@ -18,6 +18,8 @@ public class NinjaState extends InternalGuildState {
     private long nextSmokeBomb = 0;
     private long nextArrowBomb = 0;
 
+    private NinjaStateSettings settings = new NinjaStateSettings();
+
     public NinjaState(long experience) {
         super(experience);
     }
@@ -78,5 +80,10 @@ public class NinjaState extends InternalGuildState {
     @Override
     public GuildType getType() {
         return GuildType.NINJA;
+    }
+
+    @Override
+    public NinjaStateSettings getSettings() {
+        return settings;
     }
 }
