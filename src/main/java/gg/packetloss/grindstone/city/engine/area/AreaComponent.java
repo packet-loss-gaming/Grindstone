@@ -23,6 +23,7 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -76,7 +77,7 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
         return contains(player) && player.getGameMode() == GameMode.SURVIVAL;
     }
 
-    public Collection<Player> getContainedParticipants() {
+    public List<Player> getContainedParticipants() {
         return world.getPlayers().stream()
                 .filter(this::isParticipant)
                 .collect(Collectors.toList());

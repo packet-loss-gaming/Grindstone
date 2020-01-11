@@ -395,7 +395,8 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         Entity e = event.getEntity();
         if (parent.contains(e)) {
             if (parent.boss != null && e instanceof Giant) {
-                Collection<Player> players = parent.getContainedParticipants();
+                List<Player> players = parent.getContainedParticipants();
+                Collections.shuffle(players);
                 int amt = players.size();
 
                 // Update high scores
