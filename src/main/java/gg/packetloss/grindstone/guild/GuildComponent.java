@@ -2,11 +2,8 @@ package gg.packetloss.grindstone.guild;
 
 import com.destroystokyo.paper.Title;
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.info.InfoComponent;
-import com.sk89q.commandbook.util.entity.player.PlayerUtil;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -27,7 +24,6 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -80,7 +76,12 @@ public class GuildComponent extends BukkitComponent implements Listener {
                 11
         );
 
-        registerCommands(Commands.class);
+        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
+        registrar.registerTopLevelCommands((commandManager, registration) -> {
+            registrar.registerAsSubCommand("guild", "Guild commands", commandManager, (innerCommandManager, innerRegistration) -> {
+                innerRegistration.register(innerCommandManager, GuildCommandsRegistration.builder(), new GuildCommands(this));
+            });
+        });
     }
 
     @Override
@@ -256,66 +257,6 @@ public class GuildComponent extends BukkitComponent implements Listener {
                event.addWhoisInformation("Guild", guild.getType().name());
                event.addWhoisInformation("Guild Powers Enabled", guild.isEnabled());
             });
-        }
-    }
-
-    public class Commands {
-        @Command(aliases = {"guild"}, desc = "Apply guild powers",
-                flags = "", min = 0, max = 0)
-        public void guildCmd(CommandContext args, CommandSender sender) throws CommandException {
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            Optional<GuildState> optState = getState(player);
-            if (optState.isEmpty()) {
-                throw new CommandException("You are not in a guild!");
-            }
-
-            GuildState state = optState.get();
-            if (state.isEnabled()) {
-                throw new CommandException("You already have your powers!");
-            }
-
-            state.enablePowers();
-
-            if (state.isDisabled()) {
-                throw new CommandException("Your powers failed to apply!");
-            }
-        }
-
-        @Command(aliases = {"level"}, desc = "View level information",
-                flags = "p:", min = 0, max = 0)
-        public void guildLevelCmd(CommandContext args, CommandSender sender) throws CommandException {
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            Optional<GuildState> optState = getState(player);
-            if (optState.isEmpty()) {
-                throw new CommandException("You are not in a guild!");
-            }
-
-            GuildState state = optState.get();
-            state.sendLevelChart(player, args.getFlagInteger('p', 1));
-        }
-
-        @Command(aliases = {"deguild", "unguild"}, desc = "Strip guild powers",
-                flags = "", min = 0, max = 0)
-        public void deguild(CommandContext args, CommandSender sender) throws CommandException {
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            Optional<GuildState> optState = getState(player);
-            if (optState.isEmpty()) {
-                throw new CommandException("You are not in a guild!");
-            }
-
-            GuildState state = optState.get();
-            if (state.isDisabled()) {
-                throw new CommandException("Your powers have already faded!");
-            }
-
-            state.disablePowers();
-
-            if (state.isEnabled()) {
-                throw new CommandException("Your powers refuse to leave!");
-            }
         }
     }
 }
