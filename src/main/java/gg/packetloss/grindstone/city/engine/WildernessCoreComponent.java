@@ -29,6 +29,9 @@ import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
+import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
+import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
@@ -57,8 +60,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.player.PlayerPortalEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
@@ -73,8 +74,10 @@ import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 
 
 @ComponentInformation(friendlyName = "Wilderness Core", desc = "Operate the wilderness.")
-@Depend(components = {AdminComponent.class, SessionComponent.class})
+@Depend(components = {AdminComponent.class, SessionComponent.class,
+        HighScoresComponent.class, ManagedWorldComponent.class})
 public class WildernessCoreComponent extends BukkitComponent implements Listener, Runnable {
+    private static WildernessCoreComponent componentInst;
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -86,11 +89,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private SessionComponent sessions;
     @InjectComponent
     private HighScoresComponent highScoresComponent;
-
-    private World city;
-    private World wilderness;
-    private World wildernessNether;
-    private static Set<World> wildernessWorlds = new HashSet<>();
+    @InjectComponent
+    private ManagedWorldComponent managedWorld;
 
     private long nextDropTime = 0;
     private LocalConfiguration config;
@@ -102,6 +102,10 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
     private StormBringer stormBringer = new StormBringer();
     private GraveDigger graveDigger = new GraveDigger();
 
+    public WildernessCoreComponent() {
+        componentInst = this;
+    }
+
     @Override
     public void enable() {
 
@@ -109,110 +113,40 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
 
-        // Make sure all worlds are loaded
-        server.getScheduler().runTaskLater(inst, this::grabWorlds, 1);
-        // Start TP/Sync task with 2 tick delay
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 2, 20 * 2);
+        // Start tree growth task
+        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 20 * 2);
 
         registerCommands(Commands.class);
     }
 
     @Override
     public void reload() {
-
         super.reload();
         configure(config);
-        grabWorlds();
     }
 
     @Override
     public void run() {
+        World wildernessWorld = managedWorld.get(ManagedWorldGetQuery.WILDERNESS);
+        if (wildernessWorld.getTime() % 7 == 0) {
+            for (Entity item : wildernessWorld.getEntitiesByClasses(Item.class)) {
+                ItemStack stack = ((Item) item).getItemStack();
 
-        sync:
-        {
-            if (!config.enableSync) break sync;
+                if (stack.getAmount() > 1) continue;
 
-            // Time
-            if (wilderness.getTime() != city.getTime()) {
-                wilderness.setTime(city.getTime());
-            }
-
-            if (wilderness.getTime() % 7 == 0) {
-                for (Entity item : wilderness.getEntitiesByClasses(Item.class)) {
-
-                    ItemStack stack = ((Item) item).getItemStack();
-
-                    if (stack.getAmount() > 1) continue;
-
-                    if (item.getTicksLived() > 20 * 60 && EnvironmentUtil.isSapling(stack.getType())) {
-                        item.getLocation().getBlock().setType(stack.getType(), true);
-                        item.remove();
-                    }
+                if (item.getTicksLived() > 20 * 60 && EnvironmentUtil.isSapling(stack.getType())) {
+                    item.getLocation().getBlock().setType(stack.getType(), true);
+                    item.remove();
                 }
             }
-
-            // Storm - General
-            if (wilderness.hasStorm() != city.hasStorm()) {
-                wilderness.setStorm(city.hasStorm());
-            }
-
-            if (wilderness.getWeatherDuration() != city.getWeatherDuration()) {
-                wilderness.setWeatherDuration(city.getWeatherDuration());
-            }
-
-            // Storm - Thunder
-            if (wilderness.isThundering() != city.isThundering()) {
-                wilderness.setThundering(city.isThundering());
-            }
-
-            if (wilderness.getThunderDuration() != city.getThunderDuration()) {
-                wilderness.setThunderDuration(city.getThunderDuration());
-            }
         }
-
-        city.getEntitiesByClasses(Horse.class).forEach(this::tryTeleport);
-        wilderness.getEntitiesByClasses(Horse.class).forEach(this::tryTeleport);
-    }
-
-    private void grabWorlds() {
-        city = Bukkit.getWorld(config.cityWorld);
-
-        // Update Wilderness Worlds
-        wildernessWorlds.clear();
-        wildernessWorlds.add(wilderness = Bukkit.getWorld(config.wildernessWorld));
-        wildernessWorlds.add(wildernessNether = Bukkit.getWorld(config.wildernessWorld + "_nether"));
     }
 
     public static boolean isWildernessWorld(World world) {
-        return wildernessWorlds.contains(world);
-    }
-
-    private void tryTeleport(final Entity vehicle) {
-
-        final Entity passenger = vehicle == null ? null : vehicle.getPassenger();
-
-        if (passenger != null && vehicle.getLocation().getBlock().getType() == Material.END_PORTAL) {
-            vehicle.eject();
-            server.getScheduler().runTaskLater(inst, () -> {
-                if (!vehicle.isValid() || !passenger.isValid()) return;
-                vehicle.teleport(passenger);
-                vehicle.setPassenger(passenger);
-
-                if (passenger instanceof Player) {
-                    ((Player) passenger).kickPlayer("Please Reconnect");
-                }
-            }, 20);
-        }
+        return componentInst.managedWorld.is(ManagedWorldIsQuery.ANY_WILDERNESS, world);
     }
 
     private static class LocalConfiguration extends ConfigurationBase {
-
-        @Setting("city-world")
-        public String cityWorld = "City";
-        @Setting("wilderness-world")
-        public String wildernessWorld = "Wilderness";
-        @Setting("enable-sync")
-        public boolean enableSync = true;
         @Setting("entity.drop-count-max-level")
         public double dropCountMaxLevel = 20;
         @Setting("entity.drop-value-modifier")
@@ -229,61 +163,8 @@ public class WildernessCoreComponent extends BukkitComponent implements Listener
         public int graveDiggerChance = 100;
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onEntityPortal(EntityPortalEvent event) {
-
-        event.setCancelled(true);
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onPlayerPortal(PlayerPortalEvent event) {
-        final Player player = event.getPlayer();
-        final Location pLoc = player.getLocation().clone();
-        final Location from = event.getFrom();
-        final Location to = event.getTo();
-
-        World fromWorld = from.getWorld();
-
-        switch (event.getCause()) {
-            case END_PORTAL:
-                if (fromWorld.equals(city)) {
-                    event.setCancelled(true);
-                    player.teleport(wilderness.getSpawnLocation(), PlayerTeleportEvent.TeleportCause.END_PORTAL);
-                } else if (fromWorld.equals(wilderness)) {
-                    player.teleport(city.getSpawnLocation(), PlayerTeleportEvent.TeleportCause.END_PORTAL);
-                }
-
-                // Prevent players from getting damaged falling into end portals
-                // this appears to normally be handled by the travel agent, but since
-                // we don't want to use it here, we must do it ourselves.
-                player.setFallDistance(0);
-
-                break;
-            case NETHER_PORTAL: {
-                // Wilderness Code
-                if (fromWorld.equals(wilderness)) {
-                    pLoc.setWorld(wildernessNether);
-                    pLoc.setX(pLoc.getBlockX() / 8);
-                    pLoc.setZ(pLoc.getBlockZ() / 8);
-
-                    event.setTo(pLoc);
-                    return;
-                } else if (fromWorld.equals(wildernessNether)) {
-                    pLoc.setWorld(wilderness);
-                    pLoc.setX(pLoc.getBlockX() * 8);
-                    pLoc.setZ(pLoc.getBlockZ() * 8);
-
-                    event.setTo(pLoc);
-                    return;
-                }
-                break;
-            }
-        }
-    }
-
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onMobSpawn(CreatureSpawnEvent event) {
-
         LivingEntity entity = event.getEntity();
 
         if (!(entity instanceof Monster)) return;

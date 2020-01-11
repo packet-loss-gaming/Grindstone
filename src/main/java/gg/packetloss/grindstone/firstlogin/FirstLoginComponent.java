@@ -16,16 +16,18 @@ import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.buff.Buff;
 import gg.packetloss.grindstone.buff.BuffComponent;
-import gg.packetloss.grindstone.city.engine.CityCoreComponent;
-import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
+import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
+import gg.packetloss.grindstone.playerhistory.PlayerHistoryComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.parser.HelpTextParser;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -35,20 +37,21 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
 @ComponentInformation(friendlyName = "First Login", desc = "Get stuff the first time you come.")
-@Depend(components = {CityCoreComponent.class, BuffComponent.class})
+@Depend(components = {ManagedWorldComponent.class, BuffComponent.class, PlayerHistoryComponent.class})
 public class FirstLoginComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -57,10 +60,11 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private BuffComponent buffs;
     @InjectComponent
-    private CityCoreComponent cityCore;
+    private ManagedWorldComponent managedWorld;
+    @InjectComponent
+    private PlayerHistoryComponent playerHistory;
 
     private LocalConfiguration config;
-    private Map<UUID, Long> playerPlayTime = new HashMap<>();
 
     @Override
     public void enable() {
@@ -99,9 +103,8 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         public int welcomeProtectionHours = 24;
     }
 
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        playerPlayTime.remove(event.getPlayer().getUniqueId());
+    public Location getNewPlayerStartingLocation(Player player) {
+        return managedWorld.get(ManagedWorldGetQuery.LATEST_BUILD).getSpawnLocation();
     }
 
     private void giveStarterKit(Player player) {
@@ -127,8 +130,13 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
     }
 
     private boolean isNewerPlayer(Player player) {
-        long timePlayed = playerPlayTime.getOrDefault(player.getUniqueId(), 0L);
-        return timePlayed < TimeUnit.HOURS.toSeconds(config.welcomeProtectionHours);
+        try {
+            long timePlayed = playerHistory.getTimePlayed(player).get();
+            return timePlayed < TimeUnit.HOURS.toSeconds(config.welcomeProtectionHours);
+        }  catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private void applyNewPlayerBuffs(Player player) {
@@ -150,22 +158,10 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
 
         if (!player.hasPlayedBefore()) {
-            player.teleport(cityCore.getNewPlayerStartingLocation(player));
+            player.teleport(getNewPlayerStartingLocation(player));
         }
 
-        server.getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
-            UUID playerID = player.getUniqueId();
-            try {
-                MySQLHandle.getOnlineTime(playerID).ifPresent((time) -> {
-                    server.getScheduler().runTask(CommandBook.inst(), () -> {
-                        playerPlayTime.put(playerID, time);
-                        maybeApplyNewPlayerBuffs(player);
-                    });
-                });
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
+        maybeApplyNewPlayerBuffs(player);
     }
 
     @EventHandler(ignoreCancelled = true)

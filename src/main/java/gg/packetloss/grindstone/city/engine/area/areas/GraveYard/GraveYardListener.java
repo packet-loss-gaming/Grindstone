@@ -521,7 +521,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (tg == null) tg = parent.getWorld().getSpawnLocation();
 
             event.setCancelled(true);
-            event.getPlayer().teleport(tg, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
+            event.getPlayer().teleport(tg, PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
     }
 

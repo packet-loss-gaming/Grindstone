@@ -101,14 +101,6 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         World fromWorld = from.getWorld();
         World toWorld = to.getWorld();
 
-        // If the world hasn't changed, this is a redirect we don't care about/don't want to store.
-        // Consider the grave yard nether portal, this is a nether portal redirect, however, we don't
-        // actually want to record it, as we don't want /warp city-last-portal to go to the grave yard rewards
-        // room (it would be blocked, but it would still be wrong).
-        if (fromWorld == toWorld) {
-            return;
-        }
-
         World.Environment fromEnvironment = fromWorld.getEnvironment();
         World.Environment toEnvironment = toWorld.getEnvironment();
 
