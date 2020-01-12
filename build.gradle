@@ -68,7 +68,7 @@ dependencies {
     compile(group: 'com.sk89q', name: 'commandbook', version: '3.0-SNAPSHOT') {
         exclude group: 'com.sk89q', module: 'worldedit'
     }
-    compile(group: 'com.sk89q.craftbook', name: 'craftbook', version: '3.9-SNAPSHOT') {
+    compile(group: 'com.sk89q', name: 'craftbook', version: '3.10.2-SNAPSHOT') {
         exclude group: 'com.sk89q', module: 'worldguard'
         exclude group: 'org.spigotmc', module: 'spigot-api'
         exclude group: 'org.spigotmc', module: 'spigot'
