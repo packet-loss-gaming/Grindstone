@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.util.bridge;
 
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.WorldGuard;
@@ -7,7 +8,6 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.config.WorldConfiguration;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.Flags;
-import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -29,8 +29,20 @@ public class WorldGuardBridge {
     }
 
     public static boolean canBuildAt(Player player, Block block) {
-        ApplicableRegionSet regionSet = getManagerFor(block.getWorld()).getApplicableRegions(toBlockVec3(block));
-        return regionSet.queryState(wrap(player), Flags.BUILD) == StateFlag.State.ALLOW;
+        RegionManager regionManager = getManagerFor(block.getWorld());
+        ApplicableRegionSet regionSet = regionManager.getApplicableRegions(toBlockVec3(block));
+        if (regionSet.size() == 0) {
+            return true;
+        }
+
+        LocalPlayer wrappedPlayer = wrap(player);
+        com.sk89q.worldedit.world.World world = BukkitAdapter.adapt(player.getWorld());
+        boolean canBypass = WorldGuard.getInstance().getPlatform().getSessionManager().hasBypass(wrappedPlayer, world);
+        if (canBypass) {
+            return true;
+        }
+
+        return regionSet.testState(wrappedPlayer, Flags.BUILD);
     }
 
     public static LocalPlayer wrap(Player player) {
