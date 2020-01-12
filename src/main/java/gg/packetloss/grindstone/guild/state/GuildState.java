@@ -112,7 +112,7 @@ public class GuildState {
         new TextComponentChatPaginator<GuildLevel>(ChatColor.GOLD, "Levels") {
             @Override
             public Optional<String> getPagerCommand(int page) {
-                return Optional.of("/level -p " + page);
+                return Optional.of("/guild level -p " + page);
             }
 
             @Override
