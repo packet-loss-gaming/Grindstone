@@ -28,9 +28,9 @@ public class WorldGuardBridge {
         return WorldGuard.getInstance().getPlatform().getRegionContainer().get(new BukkitWorld(world));
     }
 
-    public static boolean canBuildAt(Player player, Block block) {
-        RegionManager regionManager = getManagerFor(block.getWorld());
-        ApplicableRegionSet regionSet = regionManager.getApplicableRegions(toBlockVec3(block));
+    public static boolean canBuildAt(Player player, Location location) {
+        RegionManager regionManager = getManagerFor(location.getWorld());
+        ApplicableRegionSet regionSet = regionManager.getApplicableRegions(toBlockVec3(location));
         if (regionSet.size() == 0) {
             return true;
         }
@@ -43,6 +43,10 @@ public class WorldGuardBridge {
         }
 
         return regionSet.testState(wrappedPlayer, Flags.BUILD);
+    }
+
+    public static boolean canBuildAt(Player player, Block block) {
+        return canBuildAt(player, block.getLocation());
     }
 
     public static LocalPlayer wrap(Player player) {

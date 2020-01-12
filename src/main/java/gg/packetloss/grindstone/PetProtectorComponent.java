@@ -8,11 +8,9 @@ package gg.packetloss.grindstone;
 
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
-import com.zachsthings.libcomponents.Depend;
-import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.homes.HomeManagerComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -32,14 +30,10 @@ import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Pet Protector", desc = "Protectin dem petz.")
-@Depend(components = {HomeManagerComponent.class})
 public class PetProtectorComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
-
-    @InjectComponent
-    private HomeManagerComponent homes;
 
     @Override
     public void enable() {
@@ -141,13 +135,13 @@ public class PetProtectorComponent extends BukkitComponent implements Listener {
         }
 
         if (isSafe(entity)) {
+            String entityName = entity.getType().toString().toLowerCase();
             if ((tameable.getOwner() == null || !tameable.getOwner().getUniqueId().equals(player.getUniqueId()))) {
                 event.setCancelled(true);
-                String entityName = entity.getType().toString().toLowerCase();
                 ChatUtil.sendError(player, "You cannot interact with a " + entityName + " that you don't own.");
-            } else if (entity instanceof Wolf && !((Wolf) tameable).isSitting() && !homes.isEntityInPlayersHome(player, entity)) {
+            } else if (entity instanceof Sittable && !((Sittable) tameable).isSitting() && !WorldGuardBridge.canBuildAt(player, entity.getLocation())) {
                 event.setCancelled(true);
-                ChatUtil.sendError(player, "You cannot make a wolf sit outside of your home!");
+                ChatUtil.sendError(player, "You cannot make your " + entityName + " sit here!");
             }
         }
     }
