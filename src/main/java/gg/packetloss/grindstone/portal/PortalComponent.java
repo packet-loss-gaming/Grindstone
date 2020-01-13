@@ -5,11 +5,11 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.city.engine.SkyWorldCoreComponent;
 import gg.packetloss.grindstone.firstlogin.FirstLoginComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
 import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
-import gg.packetloss.grindstone.playerhistory.PlayerHistoryComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.warps.WarpsComponent;
@@ -32,14 +32,14 @@ import java.util.Map;
 import java.util.Optional;
 
 @ComponentInformation(friendlyName = "Portal", desc = "Portal support.")
-@Depend(components = {FirstLoginComponent.class, ManagedWorldComponent.class, PlayerHistoryComponent.class, WarpsComponent.class})
+@Depend(components = {FirstLoginComponent.class, ManagedWorldComponent.class, SkyWorldCoreComponent.class, WarpsComponent.class})
 public class PortalComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private FirstLoginComponent firstLogin;
     @InjectComponent
     private ManagedWorldComponent managedWorld;
     @InjectComponent
-    private PlayerHistoryComponent playerHistory;
+    private SkyWorldCoreComponent skyWorldCore;
     @InjectComponent
     private WarpsComponent warps;
 
@@ -49,7 +49,7 @@ public class PortalComponent extends BukkitComponent implements Listener {
     private void initWorldLookup() {
         worldTypeLookup.put(PortalDestinationType.CITY, new SimpleWorldResolver(managedWorld, ManagedWorldGetQuery.CITY, warps));
         worldTypeLookup.put(PortalDestinationType.BUILD, new BuildWorldResolver(managedWorld, ManagedWorldGetQuery.LATEST_BUILD, warps, firstLogin));
-        worldTypeLookup.put(PortalDestinationType.SKY, new SkyWorldResolver(managedWorld, ManagedWorldGetQuery.SKY, warps, playerHistory));
+        worldTypeLookup.put(PortalDestinationType.SKY, new SkyWorldResolver(managedWorld, ManagedWorldGetQuery.SKY, warps, skyWorldCore));
         worldTypeLookup.put(PortalDestinationType.WILDERNESS, new SimpleWorldResolver(managedWorld, ManagedWorldGetQuery.WILDERNESS, warps));
     }
 

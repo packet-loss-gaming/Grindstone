@@ -1,47 +1,32 @@
 package gg.packetloss.grindstone.portal;
 
+import gg.packetloss.grindstone.city.engine.SkyWorldCoreComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
-import gg.packetloss.grindstone.playerhistory.PlayerHistoryComponent;
 import gg.packetloss.grindstone.warps.WarpsComponent;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public class SkyWorldResolver implements WorldResolver {
     private final ManagedWorldComponent managedWorld;
     private final ManagedWorldGetQuery query;
     private final WarpsComponent warps;
-    private final PlayerHistoryComponent playerHistory;
+    private final SkyWorldCoreComponent skyWorldCore;
 
     public SkyWorldResolver(ManagedWorldComponent managedWorld, ManagedWorldGetQuery query,
-                            WarpsComponent warps, PlayerHistoryComponent playerHistory) {
+                            WarpsComponent warps, SkyWorldCoreComponent skyWorldCore) {
         this.managedWorld = managedWorld;
         this.query = query;
         this.warps = warps;
-        this.playerHistory = playerHistory;
+        this.skyWorldCore = skyWorldCore;
     }
 
     @Override
     public boolean accepts(Player player) {
-        if (player.hasPermission("aurora.severe-offense")) {
-            return false;
-        }
-
-        if (player.hasPermission("aurora.skyworld.override")) {
-            return true;
-        }
-
-        try {
-            return playerHistory.getTimePlayed(player).get() >= TimeUnit.DAYS.toSeconds(30);
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            return false;
-        }
+        return skyWorldCore.hasAccess(player);
     }
 
     private World getWorld() {
