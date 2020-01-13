@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.firstlogin;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -17,14 +18,17 @@ import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.buff.Buff;
 import gg.packetloss.grindstone.buff.BuffComponent;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
+import gg.packetloss.grindstone.events.PortalRecordEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
+import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.playerhistory.PlayerHistoryComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.parser.HelpTextParser;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -37,7 +41,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -49,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 @ComponentInformation(friendlyName = "First Login", desc = "Get stuff the first time you come.")
 @Depend(components = {ManagedWorldComponent.class, BuffComponent.class, PlayerHistoryComponent.class})
@@ -107,6 +111,22 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         return managedWorld.get(ManagedWorldGetQuery.LATEST_BUILD).getSpawnLocation();
     }
 
+    public Location getSafeRoomLocation() {
+        return new Location(managedWorld.get(ManagedWorldGetQuery.CITY), 8, 25, 8);
+    }
+
+    private ProtectedRegion getSafeRoomRegion() {
+        return WorldGuardBridge.getManagerFor(managedWorld.get(ManagedWorldGetQuery.CITY)).getRegion("city-dung");
+    }
+
+    private boolean isInSafeRoom(Location location) {
+        if (!managedWorld.is(ManagedWorldIsQuery.CITY, location.getWorld())) {
+            return false;
+        }
+
+        return getSafeRoomRegion().contains(toBlockVec3(location));
+    }
+
     private void giveStarterKit(Player player) {
         // Declare Item Stacks
         ItemStack[] startKit = new ItemStack[]{
@@ -139,6 +159,15 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onApocalypseSpawn(ApocalypsePersonalSpawnEvent event) {
+        Player player = event.getPlayer();
+
+        if (isNewerPlayer(player)) {
+            event.setCancelled(true);
+        }
+    }
+
     private void applyNewPlayerBuffs(Player player) {
         buffs.notifyFillToLevel(Buff.APOCALYPSE_DAMAGE_BOOST, player, 20);
         buffs.notifyFillToLevel(Buff.APOCALYPSE_MAGIC_SHIELD, player, 20);
@@ -150,26 +179,6 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
     private void maybeApplyNewPlayerBuffs(Player player) {
         if (isNewerPlayer(player) && player.getWorld().isThundering()) {
             applyNewPlayerBuffs(player);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-
-        if (!player.hasPlayedBefore()) {
-            player.teleport(getNewPlayerStartingLocation(player));
-        }
-
-        maybeApplyNewPlayerBuffs(player);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onApocalypseSpawn(ApocalypsePersonalSpawnEvent event) {
-        Player player = event.getPlayer();
-
-        if (isNewerPlayer(player)) {
-            event.setCancelled(true);
         }
     }
 
@@ -220,28 +229,26 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         sendStaggered(sender, config.introText);
     }
 
-    private void runIntroLogic(Player player) {
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+
         if (!player.hasPlayedBefore()) {
-            server.getScheduler().runTaskLater(inst, () -> {
-                welcome(player);
-                giveStarterKit(player);
-            }, 20 * 2);
+            player.teleport(getSafeRoomLocation());
+            giveStarterKit(player);
         }
+
+        if (isInSafeRoom(player.getLocation())) {
+            welcome(player);
+        }
+
+        maybeApplyNewPlayerBuffs(player);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onResourcePackEvent(PlayerResourcePackStatusEvent event) {
-        if (event.getStatus() == PlayerResourcePackStatusEvent.Status.ACCEPTED) {
-            return;
-        }
-
-        Player player = event.getPlayer();
-        switch (event.getStatus()) {
-            case SUCCESSFULLY_LOADED:
-            case FAILED_DOWNLOAD:
-            case DECLINED:
-                runIntroLogic(player);
-                break;
+    @EventHandler(ignoreCancelled = true)
+    public void onPortalRecord(PortalRecordEvent event) {
+        if (isInSafeRoom(event.getPortalLocation())) {
+            event.setCancelled(true);
         }
     }
 }

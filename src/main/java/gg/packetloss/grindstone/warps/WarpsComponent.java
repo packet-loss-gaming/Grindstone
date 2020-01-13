@@ -5,6 +5,7 @@ import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.HomeTeleportEvent;
+import gg.packetloss.grindstone.events.PortalRecordEvent;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -88,6 +89,17 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         if (!HTE.isCancelled()) event.setRespawnLocation(HTE.getDestination());
     }
 
+    private void recordPortal(Player player, Location location) {
+        PortalRecordEvent event = new PortalRecordEvent(player, location);
+
+        CommandBook.callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+
+        warpManager.setLastPortalLocation(player, location);
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerPortal(PlayerTeleportEvent event) {
         // Use this over the nether portal check, because we need to pay attention to redirects.
@@ -115,7 +127,7 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         Location invertedViewLocation = from.clone();
         invertedViewLocation.setDirection(from.getDirection().multiply(-1).setY(0));
 
-        warpManager.setLastPortalLocation(player, invertedViewLocation);
+        recordPortal(player, invertedViewLocation);
     }
 
     private boolean canSetPlayerBed(Location loc) {
