@@ -48,15 +48,13 @@ public class PortalComponent extends BukkitComponent implements Listener {
 
     private void initWorldLookup() {
         worldTypeLookup.put(PortalDestinationType.CITY, new SimpleWorldResolver(managedWorld, ManagedWorldGetQuery.CITY, warps));
-        worldTypeLookup.put(PortalDestinationType.BUILD, new BuildWorldResolver(managedWorld, ManagedWorldGetQuery.LATEST_BUILD, warps, firstLogin));
+        worldTypeLookup.put(PortalDestinationType.RANGE, new RangeWorldResolver(managedWorld, ManagedWorldGetQuery.LATEST_RANGE, warps, firstLogin));
         worldTypeLookup.put(PortalDestinationType.SKY, new SkyWorldResolver(managedWorld, ManagedWorldGetQuery.SKY, warps, skyWorldCore));
-        worldTypeLookup.put(PortalDestinationType.WILDERNESS, new SimpleWorldResolver(managedWorld, ManagedWorldGetQuery.WILDERNESS, warps));
     }
 
     private void initTypeMapping() {
-        portalToType.put(Material.COBBLESTONE, PortalDestinationType.BUILD);
-        portalToType.put(Material.IRON_BLOCK, PortalDestinationType.WILDERNESS);
-        portalToType.put(Material.GOLD_BLOCK, PortalDestinationType.CITY);
+        portalToType.put(Material.COBBLESTONE, PortalDestinationType.RANGE);
+        portalToType.put(Material.STONE_BRICKS, PortalDestinationType.CITY);
         portalToType.put(Material.EMERALD_BLOCK, PortalDestinationType.SKY);
     }
 
@@ -138,10 +136,10 @@ public class PortalComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        // Wilderness Code
-        if (managedWorld.is(ManagedWorldIsQuery.WILDERNESS, fromWorld)) {
+        // Range Code
+        if (managedWorld.is(ManagedWorldIsQuery.LATEST_RANGE, fromWorld)) {
             redirectPortalWithAgent(event, new Location(
-                    managedWorld.get(ManagedWorldGetQuery.WILDERNESS_NETHER),
+                    managedWorld.get(ManagedWorldGetQuery.LATEST_RANGE_NETHER),
                     from.getX() / 8,
                     from.getBlockY(),
                     from.getZ() / 8
@@ -149,24 +147,19 @@ public class PortalComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        if (managedWorld.is(ManagedWorldIsQuery.WILDERNESS_NETHER, fromWorld)) {
+        if (managedWorld.is(ManagedWorldIsQuery.LATEST_RANGE_NETHER, fromWorld)) {
             redirectPortalWithAgent(event, new Location(
-                    managedWorld.get(ManagedWorldGetQuery.WILDERNESS),
-                    from.getX() / 8,
+                    managedWorld.get(ManagedWorldGetQuery.LATEST_RANGE),
+                    from.getX() * 8,
                     from.getBlockY(),
-                    from.getZ() / 8
+                    from.getZ() * 8
             ));
             return;
         }
 
         // City fallback Code
-        if (managedWorld.is(ManagedWorldIsQuery.ANY_BUILD, fromWorld)) {
-            redirectPortalNoAgent(event, worldTypeLookup.get(PortalDestinationType.CITY).getDestinationFor(player));
-            return;
-        }
-
         if (managedWorld.is(ManagedWorldIsQuery.CITY, fromWorld)) {
-            redirectPortalNoAgent(event, worldTypeLookup.get(PortalDestinationType.BUILD).getDestinationFor(player));
+            redirectPortalNoAgent(event, worldTypeLookup.get(PortalDestinationType.RANGE).getDestinationFor(player));
             return;
         }
     }
@@ -176,7 +169,6 @@ public class PortalComponent extends BukkitComponent implements Listener {
     public void onEntityPortal(EntityPortalEvent event) {
         event.setCancelled(true);
     }
-
 
     private void tryCreatePortal(Player player, Block block) {
         Material blockType = block.getRelative(BlockFace.DOWN).getType();

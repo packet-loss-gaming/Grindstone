@@ -5,7 +5,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.city.engine.CityCoreComponent;
-import gg.packetloss.grindstone.city.engine.WildernessCoreComponent;
+import gg.packetloss.grindstone.city.engine.RangeCoreComponent;
 import gg.packetloss.grindstone.data.MySQLHandle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ComponentInformation(friendlyName = "Player History", desc = "Player history data.")
-@Depend(components = {CityCoreComponent.class, WildernessCoreComponent.class})
+@Depend(components = {CityCoreComponent.class, RangeCoreComponent.class})
 public class PlayerHistoryComponent extends BukkitComponent implements Listener {
     private Map<UUID, PlayerHistory> playerHistory = new ConcurrentHashMap<>();
 

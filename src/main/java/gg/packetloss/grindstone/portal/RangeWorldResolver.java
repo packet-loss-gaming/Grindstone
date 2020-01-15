@@ -10,13 +10,13 @@ import org.bukkit.entity.Player;
 
 import java.util.Optional;
 
-public class BuildWorldResolver implements WorldResolver {
+public class RangeWorldResolver implements WorldResolver {
     private final ManagedWorldComponent managedWorld;
     private final ManagedWorldGetQuery query;
     private final WarpsComponent warps;
     private final FirstLoginComponent firstLogin;
 
-    public BuildWorldResolver(ManagedWorldComponent managedWorld, ManagedWorldGetQuery query,
+    public RangeWorldResolver(ManagedWorldComponent managedWorld, ManagedWorldGetQuery query,
                               WarpsComponent warps, FirstLoginComponent firstLogin) {
         this.managedWorld = managedWorld;
         this.query = query;

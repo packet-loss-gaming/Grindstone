@@ -13,7 +13,6 @@ import com.skelril.OSBL.instruction.DamagedInstruction;
 import com.skelril.OSBL.instruction.InstructionResult;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.OSBL.util.DamageSource;
-import gg.packetloss.grindstone.city.engine.WildernessCoreComponent;
 import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -26,8 +25,6 @@ public class HealthPrint<T extends EntityDetail> extends DamagedInstruction<T> {
         Entity boss = BukkitUtil.getBukkitEntity(controllable);
         Entity attacker = BukkitUtil.getBukkitEntity(damageSource.getDamagingEntity());
         if (boss instanceof LivingEntity && attacker instanceof Player) {
-            // World is already handled
-            if (WildernessCoreComponent.isWildernessWorld(boss.getWorld())) return null;
             PvMComponent.printHealth((Player) attacker, (LivingEntity) boss);
         }
         return null;

@@ -41,6 +41,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -108,7 +110,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
     }
 
     public Location getNewPlayerStartingLocation(Player player) {
-        return managedWorld.get(ManagedWorldGetQuery.LATEST_BUILD).getSpawnLocation();
+        return managedWorld.get(ManagedWorldGetQuery.LATEST_RANGE).getSpawnLocation();
     }
 
     public Location getSafeRoomLocation() {
@@ -243,6 +245,17 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         }
 
         maybeApplyNewPlayerBuffs(player);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerPortal(PlayerPortalEvent event) {
+        if (isInSafeRoom(event.getFrom())) {
+            event.setCancelled(true);
+            event.getPlayer().teleport(
+                    getNewPlayerStartingLocation(event.getPlayer()),
+                    PlayerTeleportEvent.TeleportCause.NETHER_PORTAL
+            );
+        }
     }
 
     @EventHandler(ignoreCancelled = true)

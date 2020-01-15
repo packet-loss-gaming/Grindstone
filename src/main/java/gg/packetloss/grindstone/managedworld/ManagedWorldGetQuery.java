@@ -2,8 +2,7 @@ package gg.packetloss.grindstone.managedworld;
 
 public enum ManagedWorldGetQuery {
     CITY,
-    LATEST_BUILD,
-    SKY,
-    WILDERNESS,
-    WILDERNESS_NETHER
+    LATEST_RANGE,
+    LATEST_RANGE_NETHER,
+    SKY
 }

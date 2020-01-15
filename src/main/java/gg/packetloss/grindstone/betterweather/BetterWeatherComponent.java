@@ -95,7 +95,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
         @Setting("thunder-warning-duration.longest")
         public int longestThunderWarning = 5;
         @Setting("affected-worlds")
-        public List<String> affectedWorlds = List.of("City", "Wilderness", "Legit");
+        public List<String> affectedWorlds = List.of("City", "Legit");
         @Setting("storm-type-weights.clear")
         public int clearStormTypeWeight = 4;
         @Setting("storm-type-weights.rain")
