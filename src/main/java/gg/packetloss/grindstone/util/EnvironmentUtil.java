@@ -412,6 +412,18 @@ public class EnvironmentUtil {
         return isDangerous(block.getType());
     }
 
+    private static final Set<Material> TREE_GROWING_BLOCKS = Set.of(
+            Material.DIRT, Material.GRASS_BLOCK
+    );
+
+    public static boolean canTreeGrownOn(Material material) {
+        return TREE_GROWING_BLOCKS.contains(material);
+    }
+
+    public static boolean canTreeGrownOn(Block block) {
+        return canTreeGrownOn(block.getType());
+    }
+
     private static final Set<Material> NATURAL_TERRAIN_BLOCKS = Set.of(
             Material.DIRT, Material.PODZOL, Material.GRASS_BLOCK,
             Material.STONE
@@ -424,6 +436,7 @@ public class EnvironmentUtil {
     public static boolean isNaturalTerrainBlock(Block block) {
         return isNaturalTerrainBlock(block.getType());
     }
+
     private static final Set<Biome> FROZEN_BIOMES = Set.of(
             Biome.DEEP_FROZEN_OCEAN, Biome.FROZEN_OCEAN, Biome.FROZEN_RIVER,
             Biome.SNOWY_BEACH, Biome.SNOWY_MOUNTAINS, Biome.SNOWY_TAIGA,

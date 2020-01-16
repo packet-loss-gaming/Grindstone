@@ -71,11 +71,18 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
         for (Entity item : world.getEntitiesByClasses(Item.class)) {
             ItemStack stack = ((Item) item).getItemStack();
 
-            if (stack.getAmount() > 1) continue;
-
             if (item.getTicksLived() > 20 * 60 && EnvironmentUtil.isSapling(stack.getType())) {
-                item.getLocation().getBlock().setType(stack.getType(), true);
-                item.remove();
+                Block block = item.getLocation().getBlock();
+                if (EnvironmentUtil.canTreeGrownOn(block.getRelative(BlockFace.DOWN))) {
+                    if (stack.getAmount() > 1) {
+                        ItemStack newStack = stack.clone();
+                        newStack.setAmount(stack.getAmount() - 1);
+                        item.getWorld().dropItem(item.getLocation(), newStack);
+                    }
+
+                    block.setType(stack.getType(), true);
+                    item.remove();
+                }
             }
         }
     }
