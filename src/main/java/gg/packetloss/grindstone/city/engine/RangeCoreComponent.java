@@ -32,6 +32,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -159,5 +161,27 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
             }
         }
         event.getDrops().addAll(grave);
+    }
+
+    private boolean shouldBlockExplosionAt(Block block) {
+        if (!isRangeWorld(block.getWorld())) {
+            return false;
+        }
+
+        return block.getRelative(BlockFace.UP).getLightFromSky() > 0 && block.getY() > 60;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityExplosion(EntityExplodeEvent event) {
+        if (shouldBlockExplosionAt(event.getLocation().getBlock())) {
+            event.blockList().clear();
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockExplode(BlockExplodeEvent event) {
+        if (shouldBlockExplosionAt(event.getBlock())) {
+            event.blockList().clear();
+        }
     }
 }
