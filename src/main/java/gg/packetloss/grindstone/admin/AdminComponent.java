@@ -135,7 +135,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
             if (!event.isCancelled()) {
                 try {
                     stateComponent.pushState(PlayerStateKind.ADMIN, player);
-                    permission.playerAddGroup((World) null, player.getName(), "Admin");
+                    permission.playerAddGroup(null, player, "Admin");
+                    player.updateCommands();
                 } catch (IOException | ConflictingPlayerStateException ex) {
                     ex.printStackTrace();
                 }
@@ -156,7 +157,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
                     stateComponent.popState(PlayerStateKind.ADMIN, player);
 
                     // Change Permissions
-                    permission.playerRemoveGroup((World) null, player.getName(), "Admin");
+                    permission.playerRemoveGroup(null, player, "Admin");
+                    player.updateCommands();
                     Validate.isTrue(!isAdmin(player));
                 } catch (IOException e) {
                     e.printStackTrace();
