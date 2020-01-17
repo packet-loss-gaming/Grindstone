@@ -13,7 +13,6 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.custom.item.BuildToolUseEvent;
-import gg.packetloss.grindstone.homes.HomeManagerComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -34,7 +33,7 @@ import org.bukkit.material.Door;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "City Core", desc = "Operate the core city functionality.")
-@Depend(components = {AdminComponent.class, HomeManagerComponent.class, ManagedWorldComponent.class})
+@Depend(components = {AdminComponent.class, ManagedWorldComponent.class})
 public class CityCoreComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -42,8 +41,6 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
 
     @InjectComponent
     private AdminComponent admin;
-    @InjectComponent
-    private HomeManagerComponent homeManager;
     @InjectComponent
     private ManagedWorldComponent managedWorld;
 
@@ -92,10 +89,6 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
         Location startingPoint = event.getStartingPoint();
 
         if (!isCityWorld(startingPoint.getWorld())) {
-            return;
-        }
-
-        if (homeManager.isInAnyPlayerHome(startingPoint)) {
             return;
         }
 

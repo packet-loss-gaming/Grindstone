@@ -17,14 +17,12 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackPreDamageEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
-import gg.packetloss.grindstone.homes.HomeManagerComponent;
 import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
@@ -253,12 +251,8 @@ public class PvPComponent extends BukkitComponent implements Listener {
     }
 
     private static boolean checkSafeZone(ApplicableRegionSet regions, Player attacker, Player defender) {
-        for (ProtectedRegion region : regions) {
-            if (HomeManagerComponent.isPlayerHouse(region, attacker) || HomeManagerComponent.isPlayerHouse(region, defender)) {
-                return false;
-            }
-        }
-        return true;
+        // TODO: Integrate with new home system when ready
+        return false;
     }
 
     public static boolean allowsPvP(Player attacker, Player defender, boolean checkRegions) {
