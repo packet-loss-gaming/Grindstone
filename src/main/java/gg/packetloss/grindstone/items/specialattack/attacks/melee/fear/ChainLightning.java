@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.DamageUtil;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -26,7 +27,7 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
         super(owner, usedItem, target);
     }
 
-    private void chainOn(LivingEntity target, int depth, int delayModifier) {
+    private void chainOn(LivingEntity target, Class<? extends LivingEntity> filterType, int depth, int delayModifier) {
         CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (owner.isDead()) {
                 return;
@@ -41,7 +42,7 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
             }
 
             List<Entity> targets = target.getNearbyEntities(5, 5, 5).stream().filter(e -> {
-                if (!(e instanceof LivingEntity)) {
+                if (!filterType.isInstance(e)) {
                     return false;
                 }
 
@@ -69,7 +70,7 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
                 int newDepth = depth + 1;
 
                 if (ChanceUtil.getChance(3 * newDepth)) {
-                    chainOn((LivingEntity) entity, newDepth, ++localDelayModifier);
+                    chainOn((LivingEntity) entity, filterType, newDepth, ++localDelayModifier);
                 }
             }
         }, 4 * delayModifier);
@@ -77,7 +78,12 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
 
     @Override
     public void activate() {
-        chainOn(target, 1, 1);
+        Class<? extends LivingEntity> filterType = target.getClass();
+        if (Monster.class.isAssignableFrom(filterType)) {
+            filterType = Monster.class;
+        }
+
+        chainOn(target, filterType, 1, 1);
 
         inform("Your sword unleashes a chain lightning attack.");
     }
