@@ -175,8 +175,7 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
             return false;
         }
 
-        int totalSkyLight = block.getLightFromSky() + block.getRelative(BlockFace.UP).getLightFromSky();
-        return totalSkyLight > 0 && block.getY() > 60;
+        return block.getY() > block.getWorld().getSeaLevel() - 5;
     }
 
     @EventHandler(ignoreCancelled = true)
