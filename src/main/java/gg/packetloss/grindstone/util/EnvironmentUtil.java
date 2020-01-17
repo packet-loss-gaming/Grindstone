@@ -62,8 +62,8 @@ public class EnvironmentUtil {
     }
 
     private static final Set<Material> shrubBlocks = Set.of(
-            Material.DEAD_BUSH, Material.TALL_GRASS, Material.ROSE_BUSH, Material.DANDELION,
-            Material.RED_MUSHROOM, Material.BROWN_MUSHROOM
+            Material.DEAD_BUSH, Material.GRASS, Material.TALL_GRASS, Material.ROSE_BUSH, Material.DANDELION,
+            Material.RED_MUSHROOM, Material.BROWN_MUSHROOM, Material.POPPY
     );
 
     public static boolean isShrubBlock(Block block) {
@@ -98,12 +98,12 @@ public class EnvironmentUtil {
     }
 
     private static final Set<Material> LOGS = Set.of(
-            Material.ACACIA_SAPLING,
-            Material.BIRCH_SAPLING,
-            Material.DARK_OAK_SAPLING,
-            Material.JUNGLE_SAPLING,
-            Material.SPRUCE_SAPLING,
-            Material.OAK_SAPLING
+            Material.ACACIA_LOG,
+            Material.BIRCH_LOG,
+            Material.DARK_OAK_LOG,
+            Material.JUNGLE_LOG,
+            Material.SPRUCE_LOG,
+            Material.OAK_LOG
     );
 
     public static boolean isLog(Block block) {
