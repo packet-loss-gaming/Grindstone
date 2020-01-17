@@ -85,13 +85,21 @@ public class ShutdownComponent extends BukkitComponent {
 
             @Override
             public void performStep(int seconds) {
-                Bukkit.broadcastMessage(ChatColor.RED + "Shutting down in " + seconds + " seconds - for "
-                        + expectedDowntime + " of downtime!");
+                String message = "Shutting down in " + seconds + " seconds - for " + expectedDowntime + " of downtime!";
+
+                Bukkit.getOnlinePlayers().forEach((player) -> {
+                    player.sendActionBar(ChatColor.RED + message);
+                });
+
+                log.info(message);
             }
 
             @Override
             public void performFinal() {
-                Bukkit.broadcastMessage(ChatColor.RED + "Shutting down!");
+                Bukkit.getOnlinePlayers().forEach((player) -> {
+                    player.sendActionBar(ChatColor.RED + "Shutting down!");
+                });
+
                 server.shutdown();
             }
 
