@@ -16,19 +16,15 @@ import gg.packetloss.grindstone.events.custom.item.BuildToolUseEvent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.listener.DoorRestorationListener;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityBreakDoorEvent;
 import org.bukkit.event.world.PortalCreateEvent;
-import org.bukkit.material.Door;
 
 import java.util.logging.Logger;
 
@@ -48,31 +44,14 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
     public void enable() {
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+
+        CommandBook.registerEvents(new DoorRestorationListener(this::isCityWorld));
     }
 
     private boolean isCityWorld(World world) {
         return managedWorld.is(ManagedWorldIsQuery.CITY, world);
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onDoorBreak(EntityBreakDoorEvent event) {
-        Block block = event.getBlock();
-
-        if (!isCityWorld(block.getWorld())) {
-            return;
-        }
-
-        // Open the door.
-        server.getScheduler().runTaskLater(inst, () -> {
-            BlockState state = block.getRelative(BlockFace.DOWN).getState();
-            Door doorData = (Door) state.getData();
-            doorData.setOpen(true);
-            state.update(true);
-        }, 1);
-
-        // Prevent the door from being destroyed.
-        event.setCancelled(true);
-    }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPortalForm(PortalCreateEvent event) {

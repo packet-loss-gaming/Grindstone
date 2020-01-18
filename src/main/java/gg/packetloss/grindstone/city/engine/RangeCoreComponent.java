@@ -19,6 +19,7 @@ import gg.packetloss.grindstone.managedworld.ManagedWorldMassQuery;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
+import gg.packetloss.grindstone.util.listener.DoorRestorationListener;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -56,8 +57,8 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
 
     @Override
     public void enable() {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
+        CommandBook.registerEvents(new DoorRestorationListener(this::isRangeWorld));
 
         // Start tree growth task
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 20 * 2);
