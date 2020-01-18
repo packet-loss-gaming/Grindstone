@@ -99,14 +99,33 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         int maxAutoStock = getMaxAutoStock(baseValue);
         int restockAmount = ChanceUtil.getRangedRandom(0, maxAutoStock / 10);
         int restockedStock = Math.min(maxAutoStock, existingStock + restockAmount);
+
         return Math.max(existingStock, restockedStock);
+    }
+
+    private int applyStockNoise(double baseValue, int newStock, boolean massSimulation) {
+        int maxAutoStock = getMaxAutoStock(baseValue);
+
+        // Occasionally inject 10% noise when 70% full, or 30% noise, if we're overfull from performing
+        // a mass simulation
+        boolean chanceNoise = newStock > (maxAutoStock * .7) && ChanceUtil.getChance(3);
+        boolean overfull = newStock >= maxAutoStock;
+
+        if (massSimulation && overfull) {
+            newStock = (int) (newStock * ChanceUtil.getRangedRandom(.7, 1d));
+        } else if (chanceNoise) {
+            newStock = (int) (newStock * ChanceUtil.getRangedRandom(.9, 1d));
+        }
+
+        return newStock;
     }
 
     private int getNewStock(double baseValue, int existingStock, int restockingRounds) {
         for (int i = 0; i < restockingRounds; ++i) {
             existingStock = getNewStock(baseValue, existingStock);
         }
-        return existingStock;
+
+        return applyStockNoise(baseValue, existingStock, restockingRounds > 1);
     }
 
     private double getNewValue(double baseValue, int newStock) {
