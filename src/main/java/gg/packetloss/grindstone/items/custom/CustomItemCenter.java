@@ -464,6 +464,12 @@ public class CustomItemCenter {
         phantomHymn.addUse("At the cost of the item, teleports the player into Patient X's room.");
         addItem(phantomHymn);
 
+        CustomPotion phantomPotion = new CustomPotion(PHANTOM_POTION, PotionType.INVISIBILITY);
+        phantomPotion.addEffect(PotionEffectType.INVISIBILITY, 20 * 30, 0);
+        phantomPotion.addSource(ItemSource.MARKET);
+        phantomPotion.addUse("Returns you to your lost items if a teleport can reach the location.");
+        addItem(phantomPotion);
+
         // Linear Tools
         CustomItem linearAxe = new CustomItem(LINEAR_AXE, Material.DIAMOND_AXE);
         linearAxe.addTag(ChatColor.RED, "Distance", "3");

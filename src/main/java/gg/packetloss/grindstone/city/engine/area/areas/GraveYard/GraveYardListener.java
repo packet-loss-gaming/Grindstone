@@ -11,6 +11,7 @@ import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
+import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
@@ -595,42 +596,43 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
     }
 
-    private static final String GEM_OF_LIFE = ChatColor.DARK_AQUA + "Gem of Life";
-
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        boolean contained = parent.contains(player);
-        if (contained || hasThunderstorm(player.getWorld())) {
-            List<ItemStack> drops = event.getDrops();
+        List<ItemStack> drops = event.getDrops();
 
-            ItemStack[] dropArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
-            drops.clear();
+        // Handle occasional double deaths better
+        if (drops.isEmpty()) {
+            return;
+        }
 
-            if (ItemUtil.findItemOfName(dropArray, GEM_OF_LIFE)) {
-                GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
-                server.getPluginManager().callEvent(aEvent);
-                if (!aEvent.isCancelled()) {
-                    try {
-                        parent.playerState.pushState(PlayerStateKind.GRAVE_YARD, player);
-                        event.setDroppedExp(0);
-                        return;
-                    } catch (IOException | ConflictingPlayerStateException e) {
-                        e.printStackTrace();
-                    }
+        try {
+            // Leave admin mode deaths out of this
+            if (parent.admin.isAdmin(player) || parent.playerState.hasTempKind(player)) return;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        ItemStack[] dropArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
+        drops.clear();
+
+        if (ItemUtil.findItemOfName(dropArray, CustomItems.GEM_OF_LIFE.toString())) {
+            GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
+            server.getPluginManager().callEvent(aEvent);
+            if (!aEvent.isCancelled()) {
+                try {
+                    parent.playerState.pushState(PlayerStateKind.GRAVE_YARD, player);
+                    event.setDroppedExp(0);
+                    return;
+                } catch (IOException | ConflictingPlayerStateException e) {
+                    e.printStackTrace();
                 }
             }
-
-            // Leave admin mode deaths out of this
-            try {
-                if (parent.admin.isAdmin(player) || parent.playerState.hasTempKind(player)) return;
-
-                parent.makeGrave(player.getName(), dropArray);
-                event.setDeathMessage(ChatColor.DARK_RED + "RIP ~ " + player.getDisplayName());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
+
+        Location graveLocation = parent.makeGrave(player.getName(), dropArray);
+        CommandBook.callEvent(new PlayerDeathDropRedirectEvent(player, graveLocation));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -643,8 +645,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         PlayerInventory pInv = player.getInventory();
 
         // Count then remove the Gems of Life
-        int c = ItemUtil.countItemsOfName(pInv.getContents(), GEM_OF_LIFE) - 1;
-        ItemStack[] newInv = ItemUtil.removeItemOfName(pInv.getContents(), GEM_OF_LIFE);
+        int c = ItemUtil.countItemsOfName(pInv.getContents(), CustomItems.GEM_OF_LIFE.toString()) - 1;
+        ItemStack[] newInv = ItemUtil.removeItemOfName(pInv.getContents(), CustomItems.GEM_OF_LIFE.toString());
         pInv.setContents(newInv);
 
         // Add back the gems of life as needed

@@ -243,6 +243,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         handle(new MasterBowImpl());
         handle(new NecrosArmorImpl());
         handle(new NectricArmorImpl());
+        handle(new PhantomPotionImpl());
         handle(new PixieDustImpl());
         handle(new PotionOfRestitutionImpl());
         handle(new RedFeatherImpl());

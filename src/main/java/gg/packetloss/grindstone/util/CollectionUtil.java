@@ -11,6 +11,7 @@ import gg.packetloss.grindstone.util.checker.Checker;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class CollectionUtil {
@@ -40,5 +41,24 @@ public class CollectionUtil {
      */
     public static <T> List<T> removalAll(List<T> collection, Checker<?, T> checker) {
         return collection.stream().filter(element -> !checker.evaluate(element)).collect(Collectors.toList());
+    }
+
+    /**
+     * Iterates over the given items from a random starting position, attempting to find a value
+     *
+     * @param items
+     * @param predicate
+     * @param <T>
+     */
+    public static <T> T randomIterateFor(List<T> items, Predicate<T> predicate) {
+        int offset = ChanceUtil.getRandom(items.size());
+        for (int i = 0; i < items.size(); ++i) {
+            T item = items.get((i + offset) % items.size());
+            if (predicate.test(item)) {
+                return item;
+            }
+        }
+
+        return null;
     }
 }

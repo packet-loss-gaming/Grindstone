@@ -11,36 +11,23 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.economic.store.MarketComponent;
-import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.managedworld.ManagedWorldMassQuery;
-import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.listener.DoorRestorationListener;
-import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Chest;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -98,77 +85,6 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
 
     private boolean isRangeWorld(World world) {
         return managedWorld.is(ManagedWorldIsQuery.ANY_RANGE, world);
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerDeath(PlayerDeathEvent event) {
-        Player player = event.getEntity();
-        if (!isRangeWorld(player.getWorld())) {
-            return;
-        }
-
-        List<ItemStack> drops = event.getDrops();
-        if (drops.isEmpty()) {
-            return;
-        }
-
-        MarketItemLookupInstance lookupInstance = MarketComponent.getLookupInstanceFromStacksImmediately(drops);
-        drops.sort((o1, o2) -> {
-            double o1SellPrice = lookupInstance.checkMaximumValue(o1).orElse(0d);
-            double o2SellPrice = lookupInstance.checkMaximumValue(o2).orElse(0d);
-            return (int) (o2SellPrice - o1SellPrice);
-        });
-
-        Iterator<ItemStack> it = drops.iterator();
-        List<ItemStack> grave = new ArrayList<>();
-        for (int kept = 9; kept > 0 && it.hasNext(); --kept) {
-            ItemStack next = it.next();
-            grave.add(next);
-            it.remove();
-
-            kept--;
-        }
-
-        Location location = player.getLocation();
-        Block block = location.getBlock();
-        if (WorldGuardBridge.canBuildAt(player, block)) {
-            try {
-                graveSupplier:
-                {
-                    checkGrave:
-                    {
-                        for (BlockFace face : BlockFace.values()) {
-                            if (face.getModY() != 0) continue;
-                            Block aBlock = block.getRelative(face);
-                            if (aBlock.getType() == Material.CHEST) {
-                                block = aBlock;
-                                break checkGrave;
-                            }
-                        }
-                        block.setType(Material.CHEST, true);
-                    }
-                    Chest chest = (Chest) block.getState();
-                    it = grave.iterator();
-                    Inventory blockInv = chest.getInventory();
-                    for (int i = 0; it.hasNext(); ++i) {
-                        while (blockInv.getItem(i) != null) {
-                            ++i;
-                            if (i >= blockInv.getSize()) {
-                                ChatUtil.sendError(player, "Some items could not be added to your grave!");
-                                break graveSupplier;
-                            }
-                        }
-                        blockInv.setItem(i, it.next());
-                        it.remove();
-                    }
-                    ChatUtil.sendNotice(player, "A grave has been created where you died.");
-                }
-            } catch (Exception ex) {
-                log.warning("Location could not be found to create a grave for: " + player.getName());
-                ex.printStackTrace();
-            }
-        }
-        event.getDrops().addAll(grave);
     }
 
     private boolean shouldBlockExplosionAt(Block block) {

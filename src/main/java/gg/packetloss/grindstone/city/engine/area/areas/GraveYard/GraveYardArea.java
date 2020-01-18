@@ -24,6 +24,7 @@ import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
+import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
@@ -332,72 +333,146 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         equipment.setBootsDropChance(0.005F);
     }
 
-    public void makeGrave(String name, ItemStack[] itemStacks) {
-        makeGraveRec(name, itemStacks, headStones.size());
+    private void labelGrave(Sign signState, String playerName) {
+        Calendar calendar = Calendar.getInstance();
+        // Why the month is zero based I'll never know
+        int month = calendar.get(Calendar.MONTH) + 1;
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        int year = calendar.get(Calendar.YEAR);
+        signState.setLine(0, month + "/" + day + "/" + year);
+        signState.setLine(1, "RIP");
+        signState.setLine(2, playerName);
+        signState.update();
     }
 
-    private void makeGraveRec(String name, ItemStack[] itemStacks, int tries) {
-        if (tries <= 0) {
-            log.warning("Failed to make a grave for: " + name + "!");
-            for (ItemStack stack : itemStacks) {
-                getWorld().dropItem(getWorld().getSpawnLocation(), stack);
-            }
-            return;
+    private Chest findChestForHeadstone(Sign signState) {
+        Location chestTrialLoc = signState.getLocation();
+
+        // Try the block 2 blocks down
+        chestTrialLoc.add(0, -2, 0);
+        BlockState chestState = chestTrialLoc.getBlock().getState();
+        if (chestState instanceof Chest) {
+            return (Chest) chestState;
         }
-        tries--;
-        Location headStone = CollectionUtil.getElement(headStones).clone();
-        BlockState signState = headStone.getBlock().getState();
-        if (signState instanceof Sign) {
-            Calendar calendar = Calendar.getInstance();
-            // Why the month is zero based I'll never know
-            int month = calendar.get(Calendar.MONTH) + 1;
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-            int year = calendar.get(Calendar.YEAR);
-            ((Sign) signState).setLine(0, month + "/" + day + "/" + year);
-            ((Sign) signState).setLine(1, "RIP");
-            ((Sign) signState).setLine(2, name);
-            if (itemStacks == null) {
-                signState.update();
+
+        // Try the block 3 blocks down
+        chestTrialLoc.add(0, -1, 0);
+        chestState = chestTrialLoc.getBlock().getState();
+        if (chestState instanceof Chest) {
+            return (Chest) chestState;
+        }
+
+        // Try again, but try using the wall sign information
+        if (signState instanceof WallSign) {
+            WallSign sign = (WallSign) signState.getBlockData();
+            BlockFace attachedFace = sign.getFacing().getOppositeFace();
+
+            // Try the block 2 blocks back
+            chestTrialLoc = signState.getLocation();
+            chestTrialLoc.add(attachedFace.getDirection().multiply(2));
+            chestState = chestTrialLoc.getBlock().getState();
+            if (chestState instanceof Chest) {
+                return (Chest) chestState;
+            }
+
+            // Try the block 2 blocks back, 1 block down
+            chestTrialLoc.add(0, -1, 0);
+            chestState = chestTrialLoc.getBlock().getState();
+            if (chestState instanceof Chest) {
+                return (Chest) chestState;
+            }
+        }
+
+        return null;
+    }
+
+    private void fillGrave(Inventory inventory, ArrayDeque<ItemStack> itemStacks, boolean forceFill) {
+        if (forceFill) {
+            inventory.clear();
+        }
+
+        while (!itemStacks.isEmpty()) {
+            ItemStack remainder = inventory.addItem(itemStacks.poll()).get(0);
+            if (remainder != null) {
+                itemStacks.add(remainder);
                 return;
             }
-            headStone.add(0, -2, 0);
-            BlockState chestState = headStone.getBlock().getState();
-            if (chestState instanceof Chest) {
-                ((Chest) chestState).getInventory().clear();
-                ((Chest) chestState).getInventory().addItem(itemStacks);
-            } else {
-                headStone.add(0, -1, 0);
-                chestState = headStone.getBlock().getState();
-                if (chestState instanceof Chest) {
-                    ((Chest) chestState).getInventory().clear();
-                    ((Chest) chestState).getInventory().addItem(itemStacks);
-                } else {
-                    WallSign sign = (WallSign) signState.getBlockData();
-                    BlockFace attachedFace = sign.getFacing().getOppositeFace();
-                    headStone = headStone.getBlock().getRelative(attachedFace, 2).getLocation();
-                    headStone.add(0, 2, 0);
-                    chestState = headStone.getBlock().getState();
-                    if (chestState instanceof Chest) {
-                        ((Chest) chestState).getInventory().clear();
-                        ((Chest) chestState).getInventory().addItem(itemStacks);
-                    } else {
-                        headStone.add(0, -1, 0);
-                        chestState = headStone.getBlock().getState();
-                        if (chestState instanceof Chest) {
-                            ((Chest) chestState).getInventory().clear();
-                            ((Chest) chestState).getInventory().addItem(itemStacks);
-                        } else {
-                            makeGraveRec(name, itemStacks, tries);
-                            return;
-                        }
-                    }
-                }
-            }
-            signState.update();
-            log.info("Made a Grave for: " + name + " at: " + headStone.getBlockX() + ", " + headStone.getBlockY() + ", " + headStone.getBlockZ());
-        } else {
-            makeGraveRec(name, itemStacks, tries);
         }
+    }
+
+    private static final BlockFace[] CHECK_ORDER = new BlockFace[] {
+            BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST
+    };
+
+    private void fillGrave(Chest chest, ArrayDeque<ItemStack> itemStacks, boolean forceFill) {
+        // Appears the double chest abstraction is broken, work around
+        fillGrave(chest.getInventory(), itemStacks, forceFill);
+        for (BlockFace face : CHECK_ORDER) {
+            if (itemStacks.isEmpty()) {
+                break;
+            }
+
+            BlockState nearbyState = chest.getBlock().getRelative(face).getState();
+            if (nearbyState instanceof Chest) {
+                fillGrave(((Chest) nearbyState).getInventory(), itemStacks, forceFill);
+            }
+        }
+    }
+
+    private boolean makeGrave(String playerName, ArrayDeque<ItemStack> itemStacks,
+                              Location location, boolean forceFill) {
+        BlockState blockState = location.getBlock().getState();
+
+        // Check sign validity
+        if (!(blockState instanceof Sign)) {
+            log.warning("Valid sign not found at: " + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ());
+            return false;
+        }
+
+        // Find a chest to put items into
+        Sign signState = (Sign) blockState;
+        Chest chest = findChestForHeadstone(signState);
+        if (chest == null) {
+            log.warning("Valid grave not found for sign: " + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ());
+            return false;
+        }
+
+        // Mark and fill the gravestone
+        labelGrave(signState, playerName);
+        fillGrave(chest, itemStacks, forceFill);
+
+        log.info("Made a Grave for: " + playerName + " at: "
+                + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ()
+                + " forced fill: (" + forceFill + ")");
+
+        return true;
+    }
+
+    private Location makeGrave(String playerName, ArrayDeque<ItemStack> itemStacks) {
+        return CollectionUtil.randomIterateFor(headStones, (headStone) -> {
+            return makeGrave(playerName, itemStacks, headStone, false);
+        });
+    }
+
+    public Location makeGrave(String playerName, ItemStack[] itemStacks) {
+        ArrayDeque<ItemStack> itemQueue = new ArrayDeque<>(Arrays.asList(itemStacks));
+        Location graveLocation = makeGrave(playerName, itemQueue);
+
+        // If we still have items reinit and retry with the chest cleared.
+        if (!itemQueue.isEmpty()) {
+            itemQueue = new ArrayDeque<>(Arrays.asList(itemStacks));
+            makeGrave(playerName, itemQueue, graveLocation, true);
+        }
+
+        for (ItemStack stack : itemQueue) {
+            String itemName = ItemNameCalculator.computeItemName(stack).orElse("UNKNOWN ITEM");
+            String itemDescription = " (" + itemName + " x" + stack.getAmount() + ')';
+            log.warning("Failed to create complete grave for " + playerName + itemDescription + '.');
+
+            graveLocation.getWorld().dropItem(graveLocation, stack);
+        }
+
+        return graveLocation;
     }
 
     private void findHeadStones() {

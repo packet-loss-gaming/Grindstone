@@ -20,31 +20,45 @@ public class CustomItemSession extends PersistentSession {
 
     private HashMap<SpecType, Long> specMap = new HashMap<>();
     private LinkedList<Location> recentDeathLocations = new LinkedList<>();
+    private LinkedList<Location> recentDropLocations = new LinkedList<>();
 
     protected CustomItemSession() {
         super(MAX_AGE);
     }
 
     public void updateSpec(SpecType type, long delay) {
-
         specMap.put(type, System.currentTimeMillis() + delay);
     }
 
     public boolean canSpec(SpecType type) {
-
         return !specMap.containsKey(type) || System.currentTimeMillis() - specMap.get(type) >= 0;
     }
 
-    public void addDeathPoint(Location deathPoint) {
+    private void saveLocation(LinkedList<Location> locations, Location newLoc) {
+        Location prevLoc = locations.peek();
+        if (prevLoc != null && prevLoc.distanceSquared(newLoc) < Math.pow(5, 2)) {
+            return;
+        }
 
-        recentDeathLocations.add(0, deathPoint.clone());
-        while (recentDeathLocations.size() > 5) {
-            recentDeathLocations.pollLast();
+        locations.add(0, newLoc.clone());
+        while (locations.size() > 5) {
+            locations.pollLast();
         }
     }
 
-    public Location getRecentDeathPoint() {
+    public void addDeathPoint(Location deathPoint) {
+        saveLocation(recentDeathLocations, deathPoint);
+    }
 
+    public Location getRecentDeathPoint() {
         return recentDeathLocations.poll();
+    }
+
+    public void addDeathDropLocation(Location dropPoint) {
+        saveLocation(recentDropLocations, dropPoint);
+    }
+
+    public Location getRecentDeathDropPoint() {
+        return recentDropLocations.poll();
     }
 }
