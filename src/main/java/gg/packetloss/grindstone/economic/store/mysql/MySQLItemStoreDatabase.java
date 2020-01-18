@@ -69,35 +69,37 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         return true;
     }
 
-    private double getNewValue(double baseValue) {
-        double divisor = 5 + ChanceUtil.getRandom(5);
-        if (baseValue >= LOWER_MARKET_LOSS_THRESHOLD) {
-            divisor += 7;
+    private int getOrderOfMagnitude(int units) {
+        return (int) Math.pow(10, units);
+    }
+
+    private int getMaxAutoStock(double baseValue) {
+        int digits = 0;
+
+        baseValue = Math.ceil(baseValue);
+        while (baseValue >= 1) {
+            baseValue /= 10;
+            ++digits;
         }
 
-        double multiplier = 1D / divisor;
-        double change = baseValue  * multiplier;
+        // worth >= 1000 max auto stock 10    - max restock pace 1
+        // worth >=  100 max auto stock 100   - max restock pace 10
+        // worth >=   10 max auto stock 1000  - max restock pace 100
+        // worth >=    0 max auto stock 10000 - max restock pace 1000
 
-        if (ChanceUtil.getChance(2)) {
-            change = -change;
-        }
-
-        return baseValue + change;
+        return getOrderOfMagnitude(Math.max(0, 4 - digits) + 1);
     }
 
     private int getNewStock(double baseValue, int existingStock) {
-        final int TARGET_MAXIMUM = 1000000;
-        final int OFFSET = 100;
-
-        int adjustedChange = (int) ChanceUtil.getRandom(Math.max(1, TARGET_MAXIMUM / (baseValue + OFFSET)));
-
-        if (ChanceUtil.getChance(2)) {
-            existingStock += adjustedChange;
-        } else {
-            existingStock -= adjustedChange * ChanceUtil.getRandomNTimes(15, 4);
+        // If we have something in the lower market loss threshold, it's self managed.
+        if (baseValue >= LOWER_MARKET_LOSS_THRESHOLD) {
+            return existingStock;
         }
 
-        return Math.max(0, existingStock);
+        int maxAutoStock = getMaxAutoStock(baseValue);
+        int restockAmount = ChanceUtil.getRangedRandom(0, maxAutoStock / 10);
+        int restockedStock = Math.min(maxAutoStock, existingStock + restockAmount);
+        return Math.max(existingStock, restockedStock);
     }
 
     private int getNewStock(double baseValue, int existingStock, int restockingRounds) {
@@ -105,6 +107,26 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
             existingStock = getNewStock(baseValue, existingStock);
         }
         return existingStock;
+    }
+
+    private double getNewValue(double baseValue, int newStock) {
+        int maxAuto = getMaxAutoStock(baseValue);
+        double percentOutOfStock = Math.max(0d, maxAuto - newStock) / maxAuto;
+
+        // Use multipliers that result in a net 0, from min - max fluctuation
+        double multiplier = .1;
+        if (baseValue >= LOWER_MARKET_LOSS_THRESHOLD) {
+            multiplier = .04;
+        }
+
+        // Inject 30% noise
+        multiplier *= ChanceUtil.getRangedRandom(.7d, 1d);
+
+        double change = baseValue * multiplier;
+
+        double minPrice = baseValue - change;
+        double maxOverMin = 2 * change;
+        return minPrice + (percentOutOfStock * maxOverMin);
     }
 
     @Override
@@ -121,8 +143,9 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
                             double price = results.getDouble(2);
                             int stock = results.getInt(3);
 
-                            updateStatement.setDouble(1, getNewValue(price));
-                            updateStatement.setInt(2, getNewStock(price, stock, restockingRounds));
+                            int newStock = getNewStock(price, stock, restockingRounds);
+                            updateStatement.setDouble(1, getNewValue(price, newStock));
+                            updateStatement.setInt(2, newStock);
                             updateStatement.setInt(3, id);
 
                             updateStatement.addBatch();
