@@ -328,14 +328,25 @@ public class MarketComponent extends BukkitComponent {
         private Text formatPriceForList(double price) {
             String result = "";
             result += ChatColor.WHITE;
+
+            boolean fullPriceShown = false;
             if (price >= 10000) {
                 result += "~" + ChatUtil.WHOLE_NUMBER_FORMATTER.format(price / 1000) + "k";
             } else if (price >= 1000) {
                 result += "~" + ChatUtil.ONE_DECIMAL_FORMATTER.format(price / 1000) + "k";
             } else {
+                fullPriceShown = true;
                 result += ChatUtil.TWO_DECIMAL_FORMATTER.format(price);
             }
-            return Text.of(result);
+
+            if (fullPriceShown) {
+                return Text.of(result);
+            }
+
+            return Text.of(
+                    result,
+                    TextAction.Hover.showText(Text.of(ChatUtil.TWO_DECIMAL_FORMATTER.format(price)))
+            );
         }
 
         @Command(aliases = {"list", "l", "search", "s"},
@@ -376,9 +387,15 @@ public class MarketComponent extends BukkitComponent {
                             TextAction.Hover.showText(Text.of("Show details for " + titleCaseName))
                     );
 
-                    return Text.of(itemName,
+                    return Text.of(
+                            itemName,
                             ChatColor.GRAY, " x", ChatUtil.WHOLE_NUMBER_FORMATTER.format(info.getStock()),
-                            ChatColor.YELLOW, " (Quick Price: ", buy, " - ", sell, ")");
+                            ChatColor.YELLOW, " (",
+                            ChatColor.DARK_GREEN, "B: ", buy,
+                            ChatColor.YELLOW, ", ",
+                            ChatColor.DARK_GREEN, "S: ", sell,
+                            ChatColor.YELLOW, ")"
+                    );
                 }
             }.display(sender, marketItemInfoCollection, args.getFlagInteger('p', 1));
         }
