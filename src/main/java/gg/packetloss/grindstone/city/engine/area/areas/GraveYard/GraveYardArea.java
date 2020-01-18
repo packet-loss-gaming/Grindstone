@@ -16,6 +16,8 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
+import gg.packetloss.grindstone.economic.store.MarketComponent;
+import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -45,10 +47,16 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import static org.bukkit.block.data.type.Chest.Type;
 
 @ComponentInformation(friendlyName = "Grave Yard", desc = "The home of the undead")
 @Depend(components = {AdminComponent.class, PlayerStateComponent.class, BlockStateComponent.class},
@@ -333,16 +341,22 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         equipment.setBootsDropChance(0.005F);
     }
 
+    private static final DateFormat GRAVE_DATE_FORMAT = new SimpleDateFormat("M/d/yyyy");
+
     private void labelGrave(Sign signState, String playerName) {
-        Calendar calendar = Calendar.getInstance();
-        // Why the month is zero based I'll never know
-        int month = calendar.get(Calendar.MONTH) + 1;
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
-        int year = calendar.get(Calendar.YEAR);
-        signState.setLine(0, month + "/" + day + "/" + year);
+        signState.setLine(0, GRAVE_DATE_FORMAT.format(new Date()));
         signState.setLine(1, "RIP");
         signState.setLine(2, playerName);
         signState.update();
+    }
+
+    private boolean isGraveTooNew(Sign signState) {
+        try {
+            Date date = GRAVE_DATE_FORMAT.parse(signState.getLine(0));
+            return System.currentTimeMillis() - date.getTime() < TimeUnit.DAYS.toMillis(3);
+        } catch (ParseException ignored) {
+            return false;
+        }
     }
 
     private Chest findChestForHeadstone(Sign signState) {
@@ -386,91 +400,177 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         return null;
     }
 
-    private void fillGrave(Inventory inventory, ArrayDeque<ItemStack> itemStacks, boolean forceFill) {
-        if (forceFill) {
-            inventory.clear();
-        }
-
-        while (!itemStacks.isEmpty()) {
-            ItemStack remainder = inventory.addItem(itemStacks.poll()).get(0);
-            if (remainder != null) {
-                itemStacks.add(remainder);
-                return;
-            }
-        }
-    }
-
     private static final BlockFace[] CHECK_ORDER = new BlockFace[] {
             BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST
     };
 
-    private void fillGrave(Chest chest, ArrayDeque<ItemStack> itemStacks, boolean forceFill) {
-        // Appears the double chest abstraction is broken, work around
-        fillGrave(chest.getInventory(), itemStacks, forceFill);
-        for (BlockFace face : CHECK_ORDER) {
-            if (itemStacks.isEmpty()) {
-                break;
-            }
 
+    private void forGraveInventory(Chest chest, Consumer<Inventory> inventoryConsumer) {
+        boolean isFoundLeft = ((org.bukkit.block.data.type.Chest) chest.getBlockData()).getType() == Type.LEFT;
+
+        Chest left = isFoundLeft ? chest : null;
+        Chest right = isFoundLeft ? null : chest;
+
+        for (BlockFace face : CHECK_ORDER) {
             BlockState nearbyState = chest.getBlock().getRelative(face).getState();
             if (nearbyState instanceof Chest) {
-                fillGrave(((Chest) nearbyState).getInventory(), itemStacks, forceFill);
+                if (isFoundLeft) {
+                    right = (Chest) nearbyState;
+                } else {
+                    left = (Chest) nearbyState;
+                }
+
+                break;
             }
+        }
+
+        // This order ensures that items are added "top" to "bottom" in the chest
+        if (right != null) {
+            inventoryConsumer.accept(right.getInventory());
+        }
+        if (left != null) {
+            inventoryConsumer.accept(left.getInventory());
         }
     }
 
+    private void compactAndClearGrave(Chest chest, ArrayDeque<ItemStack> itemStacks) {
+        forGraveInventory(chest, (inv) -> {
+            List<ItemStack> remainders = new ArrayList<>();
+
+            // Try and compact everything, by adding the current items to the existing
+            // items.
+            while (!itemStacks.isEmpty()) {
+                ItemStack remainder = inv.addItem(itemStacks.poll()).get(0);
+                if (remainder == null) {
+                    continue;
+                }
+
+                remainders.add(remainder);
+            }
+
+            // Add any remainders back into the ItemStack queue
+            itemStacks.addAll(remainders);
+
+            // Add all the ItemStacks back into the ItemStack queue
+            inv.forEach((item) -> {
+                if (item == null) {
+                    return;
+                }
+
+                itemStacks.add(item);
+            });
+
+            // Clear the chest
+            inv.clear();
+        });
+    }
+
+    private void prioritizeGraveLoot(ArrayDeque<ItemStack> itemStacks) {
+        List<ItemStack> sortedItems = new ArrayList<>(itemStacks);
+
+        MarketItemLookupInstance lookupInstance = MarketComponent.getLookupInstanceFromStacksImmediately(sortedItems);
+        sortedItems.sort((o1, o2) -> {
+            double o1SellPrice = lookupInstance.checkMaximumValue(o1).orElse(0d);
+            double o2SellPrice = lookupInstance.checkMaximumValue(o2).orElse(0d);
+            return (int) (o2SellPrice - o1SellPrice);
+        });
+
+        itemStacks.clear();
+        itemStacks.addAll(sortedItems);
+    }
+
+    private void fillGrave(Chest chest, ArrayDeque<ItemStack> itemStacks) {
+        forGraveInventory(chest, (inv) -> {
+            while (!itemStacks.isEmpty()) {
+                ItemStack remainder = inv.addItem(itemStacks.poll()).get(0);
+                if (remainder != null) {
+                    itemStacks.addFirst(remainder);
+                    break;
+                }
+            }
+        });
+    }
+
+    private void updateGrave(Chest chest, ArrayDeque<ItemStack> itemStacks) {
+        compactAndClearGrave(chest, itemStacks);
+        prioritizeGraveLoot(itemStacks);
+        fillGrave(chest, itemStacks);
+    }
+
     private boolean makeGrave(String playerName, ArrayDeque<ItemStack> itemStacks,
-                              Location location, boolean forceFill) {
+                              Location location, boolean dateChecking) {
         BlockState blockState = location.getBlock().getState();
 
         // Check sign validity
         if (!(blockState instanceof Sign)) {
-            log.warning("Valid sign not found at: " + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ());
+            log.warning("Valid sign not found at: "
+                    + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ());
+            return false;
+        }
+
+        // Check to see if this grave was made too recently
+        Sign signState = (Sign) blockState;
+        if (dateChecking && isGraveTooNew(signState)) {
             return false;
         }
 
         // Find a chest to put items into
-        Sign signState = (Sign) blockState;
         Chest chest = findChestForHeadstone(signState);
         if (chest == null) {
-            log.warning("Valid grave not found for sign: " + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ());
+            log.warning("Valid grave not found for sign: "
+                    + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ());
             return false;
         }
 
         // Mark and fill the gravestone
         labelGrave(signState, playerName);
-        fillGrave(chest, itemStacks, forceFill);
+        updateGrave(chest, itemStacks);
 
         log.info("Made a Grave for: " + playerName + " at: "
-                + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ()
-                + " forced fill: (" + forceFill + ")");
+                + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ());
 
         return true;
     }
 
-    private Location makeGrave(String playerName, ArrayDeque<ItemStack> itemStacks) {
+    private Location makeGrave(String playerName, ArrayDeque<ItemStack> itemStacks, boolean dateChecking) {
         return CollectionUtil.randomIterateFor(headStones, (headStone) -> {
-            return makeGrave(playerName, itemStacks, headStone, false);
+            return makeGrave(playerName, itemStacks, headStone, dateChecking);
         });
+    }
+
+    private void dropOverflow(String playerName, Location location, ArrayDeque<ItemStack> itemStacks) {
+        MarketItemLookupInstance lookupInstance = MarketComponent.getLookupInstanceFromStacksImmediately(itemStacks);
+
+        for (ItemStack stack : itemStacks) {
+            double itemValue = lookupInstance.checkMaximumValue(stack).orElse(100d);
+            boolean destroy = itemValue < 100;
+
+            String itemName = ItemNameCalculator.computeItemName(stack).orElse("UNKNOWN ITEM");
+            String itemDescription = " (" + itemName + " x" + stack.getAmount() + (destroy ? " -- destroyed" : "") + ')';
+
+            log.warning("Failed to create complete grave for " + playerName + itemDescription + '.');
+
+            if (destroy) {
+                continue;
+            }
+
+            location.getWorld().dropItem(location, stack);
+        }
+
     }
 
     public Location makeGrave(String playerName, ItemStack[] itemStacks) {
         ArrayDeque<ItemStack> itemQueue = new ArrayDeque<>(Arrays.asList(itemStacks));
-        Location graveLocation = makeGrave(playerName, itemQueue);
 
-        // If we still have items reinit and retry with the chest cleared.
-        if (!itemQueue.isEmpty()) {
-            itemQueue = new ArrayDeque<>(Arrays.asList(itemStacks));
-            makeGrave(playerName, itemQueue, graveLocation, true);
+        // Prioritize finding an old grave
+        Location graveLocation = makeGrave(playerName, itemQueue, true);
+        if (graveLocation == null) {
+            // No old grave existed, use a recent one
+            graveLocation = makeGrave(playerName, itemQueue, false);
         }
 
-        for (ItemStack stack : itemQueue) {
-            String itemName = ItemNameCalculator.computeItemName(stack).orElse("UNKNOWN ITEM");
-            String itemDescription = " (" + itemName + " x" + stack.getAmount() + ')';
-            log.warning("Failed to create complete grave for " + playerName + itemDescription + '.');
-
-            graveLocation.getWorld().dropItem(graveLocation, stack);
-        }
+        // Drop items that couldn't be placed into a grave
+        dropOverflow(playerName, graveLocation, itemQueue);
 
         return graveLocation;
     }
