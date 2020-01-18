@@ -23,6 +23,7 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.economic.store.mysql.MySQLItemStoreDatabase;
 import gg.packetloss.grindstone.economic.store.mysql.MySQLMarketTransactionDatabase;
+import gg.packetloss.grindstone.invgui.InventoryGUIComponent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -31,16 +32,19 @@ import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.InventoryUtil.InventoryView;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.StringUtil.toTitleCase;
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
@@ -59,6 +63,8 @@ public class MarketComponent extends BukkitComponent {
     private AdminComponent adminComponent;
     @InjectComponent
     private SessionComponent sessions;
+    @InjectComponent
+    private InventoryGUIComponent invGUI;
 
     private static ItemStoreDatabase itemDatabase;
     private static MarketTransactionDatabase transactionDatabase;
@@ -325,6 +331,114 @@ public class MarketComponent extends BukkitComponent {
             });
         }
 
+        @Command(aliases = {"sellgui"},
+                usage = "", desc = "Sell an item",
+                flags = "", min = 0, max = -1)
+        public void sellGuiCmd(CommandContext args, CommandSender sender) throws CommandException {
+            final Player player = checkPlayer(sender);
+
+            Inventory sellInv = invGUI.openClosableChest(player, "Sell Items", (inv) -> {
+                List<ItemStack> items = new ArrayList<>();
+
+                inv.forEach((item) -> {
+                    if (item != null) {
+                        items.add(item);
+                    }
+                });
+
+                server.getScheduler().runTaskAsynchronously(inst, () -> {
+                    MarketItemLookupInstance lookupInstance = getLookupInstanceFromStacksImmediately(items);
+                    server.getScheduler().runTask(inst, () -> {
+                        double payment = 0;
+                        HashMap<String, Integer> transactions = new HashMap<>();
+
+                        // Calculate the payment and transactions for these items
+                        Iterator<ItemStack> it = items.iterator();
+                        while (it.hasNext()) {
+                            ItemStack item = it.next();
+
+                            Optional<MarketItem> optMarketItem = lookupInstance.getItemDetails(item);
+                            if (optMarketItem.isEmpty()) {
+                                continue;
+                            }
+
+                            Optional<Double> optSellPrice = optMarketItem.get().getSellPriceForStack(item);
+                            if (optSellPrice.isEmpty()) {
+                                continue;
+                            }
+
+                            payment += optSellPrice.get();
+
+                            int amt = item.getAmount();
+                            transactions.merge(optMarketItem.get().getName(), amt, Integer::sum);
+
+                            it.remove();
+                        }
+
+                        if (transactions.isEmpty()) {
+                            ChatUtil.sendError(player, "No sellable items found!");
+                            return;
+                        }
+
+                        server.getScheduler().runTaskAsynchronously(inst, () -> {
+                            // Update market stocks.
+                            itemDatabase.adjustStocks(transactions);
+
+                            for (Map.Entry<String, Integer> entry : transactions.entrySet()) {
+                                // Invert quantity this is a sale, and the transactions are from a player perspective.
+                                transactionDatabase.logTransaction(player, entry.getKey(), -entry.getValue());
+                            }
+                            transactionDatabase.save();
+                        });
+
+                        econ.depositPlayer(player, payment);
+
+                        // Add anything that couldn't be sold back to the inventory, or drop it on the ground
+                        Inventory playerInv = player.getInventory();
+                        items.forEach((item) -> {
+                            ItemStack remainder = playerInv.addItem(item).get(0);
+                            if (remainder != null) {
+                                player.getWorld().dropItem(player.getLocation(), remainder);
+                            }
+                        });
+
+                        String paymentString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(payment), "");
+                        ChatUtil.sendNotice(player, "Item(s) sold for: " + paymentString + "!");
+                    });
+                });
+            });
+
+            if (args.argsLength() != 0) {
+                String nameWithMacros = args.getJoinedStrings(0);
+
+                Set<String> expandedNames = expandNameMacros(nameWithMacros).stream()
+                        .map((i) -> matchItem(i).orElse(null))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+
+                Inventory playerInv = player.getInventory();
+
+                ItemStack[] contents = playerInv.getStorageContents();
+                for (int i = 0; i < contents.length; ++i) {
+                    ItemStack item = contents[i];
+                    Optional<String> itemName = ItemNameCalculator.computeItemName(item);
+                    if (itemName.isEmpty()) {
+                        continue;
+                    }
+
+                    if (expandedNames.contains(itemName.get())) {
+                        contents[i] = null;
+                        ItemStack remainder = sellInv.addItem(item).get(0);
+                        if (remainder != null) {
+                            contents[i] = remainder;
+                            break;
+                        }
+                    }
+                }
+                playerInv.setStorageContents(contents);
+            }
+        }
+
         private Text formatPriceForList(double price) {
             String result = "";
             result += ChatColor.WHITE;
@@ -481,33 +595,65 @@ public class MarketComponent extends BukkitComponent {
                 ChatUtil.sendNotice(sender, " - " + basePrice + " each.");
             }
 
-            if (marketItemInfo.isBuyable() && marketItemInfo.getStock() != 0) {
-                TextBuilder builder = Text.builder();
+            if (sender instanceof Player) {
+                Player player = (Player) sender;
 
-                builder.append(ChatColor.YELLOW, "Quick buy: ");
+                if (marketItemInfo.isBuyable() && marketItemInfo.getStock() != 0) {
+                    TextBuilder builder = Text.builder();
 
-                for (int i : List.of(1, 16, 32, 64, 128, 256)) {
-                    if (i > marketItemInfo.getStock()) {
-                        break;
+                    builder.append(ChatColor.YELLOW, "Quick buy: ");
+
+                    for (int i : List.of(1, 16, 32, 64, 128, 256)) {
+                        if (i > marketItemInfo.getStock()) {
+                            break;
+                        }
+
+                        if (i != 1) {
+                            builder.append(", ");
+                        }
+
+                        double intervalPrice = marketItemInfo.getPrice() * i;
+
+                        builder.append(Text.of(
+                                ChatColor.BLUE,
+                                TextAction.Click.runCommand("/market buy -a " + i + " " + marketItemInfo.getName()),
+                                TextAction.Hover.showText(Text.of(
+                                        "Buy ", i, " for ", ChatUtil.TWO_DECIMAL_FORMATTER.format(intervalPrice)
+                                )),
+                                i
+                        ));
                     }
 
-                    if (i != 1) {
-                        builder.append(", ");
-                    }
+                    sender.sendMessage(builder.build());
+                }
 
-                    double intervalPrice = marketItemInfo.getPrice() * i;
+                ItemStack[] contents = player.getInventory().getStorageContents();
+                int itemCount = ItemUtil.countItemsOfComputedName(contents, marketItemInfo.getName());
+                if (marketItemInfo.isSellable() && itemCount > 0) {
+                    TextBuilder builder = Text.builder();
+
+                    builder.append(ChatColor.YELLOW, "Quick sell: ");
 
                     builder.append(Text.of(
                             ChatColor.BLUE,
-                            TextAction.Click.runCommand("/market buy -a " + i + " " + marketItemInfo.getLookupName()),
+                            TextAction.Click.runCommand("/market sellgui"),
                             TextAction.Hover.showText(Text.of(
-                                    "Buy ", i, " for ", ChatUtil.TWO_DECIMAL_FORMATTER.format(intervalPrice)
+                                    "Sell " + marketItemInfo.getDisplayName() + " using a GUI"
                             )),
-                            i
+                            "PICK"
                     ));
-                }
+                    builder.append(" -- ");
+                    builder.append(Text.of(
+                            ChatColor.BLUE,
+                            TextAction.Click.runCommand("/market sellgui " + marketItemInfo.getName()),
+                            TextAction.Hover.showText(Text.of(
+                                    "Sell all " + marketItemInfo.getDisplayName() + " using a GUI"
+                            )),
+                            "ALL"
+                    ));
 
-                sender.sendMessage(builder.build());
+                    sender.sendMessage(builder.build());
+                }
             }
         }
 

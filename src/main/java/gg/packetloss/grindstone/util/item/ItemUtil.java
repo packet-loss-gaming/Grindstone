@@ -25,6 +25,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class ItemUtil {
@@ -202,6 +203,23 @@ public class ItemUtil {
                 }
             }
         }
+        return count;
+    }
+
+    public static int countItemsOfComputedName(ItemStack[] itemStacks, String computedName) {
+        int count = 0;
+
+        for (ItemStack itemStack : itemStacks) {
+            Optional<String> optItemName = ItemNameCalculator.computeItemName(itemStack);
+            if (optItemName.isEmpty()) {
+                continue;
+            }
+
+            if (optItemName.get().equals(computedName)) {
+                ++count;
+            }
+        }
+
         return count;
     }
 
