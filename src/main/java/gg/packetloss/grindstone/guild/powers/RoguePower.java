@@ -6,6 +6,7 @@ public enum RoguePower implements GuildPower {
     FALL_DAMAGE_REDIRECTION(6),
     POTION_METABOLIZATION(7),
     NIGHTMARE_SPECIAL(12),
+    SNIPER_SNOWBALLS(17),
     SPEEDY_SPECIALS(25),
     SUPER_SPEED(30);
 

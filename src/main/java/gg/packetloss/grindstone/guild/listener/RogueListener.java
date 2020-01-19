@@ -145,9 +145,20 @@ public class RogueListener implements Listener {
 
         boolean rocketJump = GeneralPlayerUtil.isLookingDown(player) && GeneralPlayerUtil.isStandingOnSolidGround(player);
 
+        boolean hasSniperSnowballs = state.hasPower(RoguePower.SNIPER_SNOWBALLS);
+
         for (int i = event.getGrenadeCount(); i > 0; --i) {
             Snowball snowball = player.launchProjectile(Snowball.class);
-            Vector vector = new Vector(ChanceUtil.getRandom(2.0), 1, ChanceUtil.getRandom(2.0));
+
+            double xAdjustment = ChanceUtil.getRandom(2.0);
+            double zAdjustment = ChanceUtil.getRandom(2.0);
+
+            if (hasSniperSnowballs) {
+                xAdjustment = (xAdjustment / 3) + 1;
+                zAdjustment = (zAdjustment / 3) + 1;
+            }
+
+            Vector vector = new Vector(xAdjustment, 1, zAdjustment);
             snowball.setVelocity(snowball.getVelocity().multiply(vector));
             snowball.setMetadata("rogue-snowball", new FixedMetadataValue(CommandBook.inst(), true));
             if (rocketJump) {
