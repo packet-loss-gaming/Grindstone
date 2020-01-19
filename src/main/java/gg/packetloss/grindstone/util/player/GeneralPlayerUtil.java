@@ -130,4 +130,28 @@ public class GeneralPlayerUtil {
           .map(Player::getUniqueId)
           .collect(Collectors.toSet());
     }
+
+    public static boolean isLookingDown(Player player) {
+        return player.getEyeLocation().getPitch() > 60;
+    }
+
+    private static boolean isSolidBlockAt(Location location) {
+        return location.getBlock().getType().isSolid();
+    }
+
+    public static boolean isStandingOnSolidGround(Player player) {
+        Location loc = player.getLocation();
+
+        // Check 1 block down
+        if (isSolidBlockAt(loc.add(0, -1, 0))) {
+            return true;
+        }
+
+        // Check 2 blocks down (maybe they "jumped")
+        if (isSolidBlockAt(loc.add(0, -1, 0))) {
+            return true;
+        }
+
+        return false;
+    }
 }

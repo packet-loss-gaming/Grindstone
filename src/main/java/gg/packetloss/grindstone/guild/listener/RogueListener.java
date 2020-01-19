@@ -24,6 +24,7 @@ import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.EntityEffect;
 import org.bukkit.GameMode;
 import org.bukkit.entity.*;
@@ -142,11 +143,23 @@ public class RogueListener implements Listener {
 
         state.grenade();
 
+        boolean rocketJump = GeneralPlayerUtil.isLookingDown(player) && GeneralPlayerUtil.isStandingOnSolidGround(player);
+
         for (int i = event.getGrenadeCount(); i > 0; --i) {
             Snowball snowball = player.launchProjectile(Snowball.class);
             Vector vector = new Vector(ChanceUtil.getRandom(2.0), 1, ChanceUtil.getRandom(2.0));
             snowball.setVelocity(snowball.getVelocity().multiply(vector));
             snowball.setMetadata("rogue-snowball", new FixedMetadataValue(CommandBook.inst(), true));
+            if (rocketJump) {
+                snowball.setMetadata("rocket-jump", new FixedMetadataValue(CommandBook.inst(), true));
+            }
+        }
+
+        if (rocketJump) {
+            Vector newVelocity = player.getVelocity().add(new Vector(0, 6, 0));
+            player.setVelocity(newVelocity);
+
+            EntityUtil.forceDamage(player, 4);
         }
     }
 
@@ -258,13 +271,18 @@ public class RogueListener implements Listener {
                 }
             } else {
                 if (shooter instanceof Player) {
-                    ExplosionStateFactory.createPvPExplosion(
-                            (Player) shooter,
-                            p.getLocation(),
-                            1.75F,
-                            false,
-                            true
-                    );
+                    double distanceSq = p.getLocation().distanceSquared(shooter.getLocation());
+                    if (p.hasMetadata("rocket-jump") && distanceSq < Math.pow(3, 2)) {
+                        p.getWorld().createExplosion(p.getLocation(), 0, false, false);
+                    } else {
+                        ExplosionStateFactory.createPvPExplosion(
+                                (Player) shooter,
+                                p.getLocation(),
+                                1.75F,
+                                false,
+                                true
+                        );
+                    }
                 } else {
                     ExplosionStateFactory.createExplosion(
                             p.getLocation(),
