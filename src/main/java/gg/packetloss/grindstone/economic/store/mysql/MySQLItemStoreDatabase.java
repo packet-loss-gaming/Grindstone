@@ -106,14 +106,16 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     private int applyStockNoise(double baseValue, int newStock, boolean massSimulation) {
         int maxAutoStock = getMaxAutoStock(baseValue);
 
-        // Occasionally inject 10% noise when 70% full, or 30% noise, if we're overfull from performing
-        // a mass simulation
+        // Inject:
+        //  - 30% noise, if we're overfull and performing a mass simulation
+        //  - 10% noise when more than 70% full and probability selects it
+        //  - 10% noise when 100% full
         boolean chanceNoise = newStock > (maxAutoStock * .7) && ChanceUtil.getChance(3);
         boolean overfull = newStock >= maxAutoStock;
 
         if (massSimulation && overfull) {
             newStock = (int) (newStock * ChanceUtil.getRangedRandom(.7, 1d));
-        } else if (chanceNoise) {
+        } else if (chanceNoise || overfull) {
             newStock = (int) (newStock * ChanceUtil.getRangedRandom(.9, 1d));
         }
 
