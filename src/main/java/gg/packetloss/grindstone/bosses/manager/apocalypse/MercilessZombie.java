@@ -115,9 +115,11 @@ public class MercilessZombie {
 
             if (toHit.getLocation().distanceSquared(boss.getLocation()) > Math.pow(4, 2)) {
                 ChatUtil.sendNotice(toHit, "Come back...");
-                toHit.damage(1, boss);
+                if (toHit.isValid()) {
+                    toHit.damage(1, boss);
 
-                distanceTrap(boss, toHit);
+                    distanceTrap(boss, toHit);
+                }
             }
         }, 10);
 
@@ -242,7 +244,9 @@ public class MercilessZombie {
                             server.getScheduler().runTaskLater(inst, () -> {
                                 pLoc.getWorld().strikeLightningEffect(pLoc);
                                 for (Player player : pLoc.getNearbyEntitiesByType(Player.class, 2)) {
-                                    player.damage(1, boss);
+                                    if (player.isValid()) {
+                                        player.damage(1, boss);
+                                    }
                                 }
                             }, 30);
                         }
