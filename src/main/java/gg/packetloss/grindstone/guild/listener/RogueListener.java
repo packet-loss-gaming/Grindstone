@@ -16,15 +16,16 @@ import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
-import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EntityDistanceComparator;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.EntityEffect;
 import org.bukkit.GameMode;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -307,17 +308,6 @@ public class RogueListener implements Listener {
             }, 1);
         } else if (event.getClickType() == ClickType.RIGHT) {
             if (state.canGrenade()) {
-                Block clicked = event.getAssociatedBlock();
-                if (clicked != null) {
-                    BlockFace face = event.getAssociatedBlockFace();
-
-                    // Never throw grenades if the clicked block was interactive, or could've been a misclick
-                    // of a nearby interactive block.
-                    if (EnvironmentUtil.isMaybeInteractiveBlock(clicked, face)) {
-                        return;
-                    }
-                }
-
                 grenade(player, state);
             }
         }

@@ -3,6 +3,7 @@ package gg.packetloss.grindstone.click;
 public class ClickRecord {
     private long[] lastClickOfType = new long[ClickType.values().length];
     private long lastAttack = 0;
+    private long lastInteraction = 0;
 
     private boolean isDoubleClick(long currentClickTime, ClickType clickType) {
         boolean isDoubleClick = currentClickTime - lastClickOfType[clickType.ordinal()] < 500;
@@ -22,10 +23,21 @@ public class ClickRecord {
     }
 
     public boolean isDoubleRightClick() {
-        return isDoubleClick(System.currentTimeMillis(), ClickType.RIGHT);
+        long currentRightClick = System.currentTimeMillis();
+
+        // Abort if recently punched something
+        if (currentRightClick - lastInteraction < 1250) {
+            return false;
+        }
+
+        return isDoubleClick(currentRightClick, ClickType.RIGHT);
     }
 
     public void recordAttack() {
         lastAttack = System.currentTimeMillis();
+    }
+
+    public void recordInteraction() {
+        lastInteraction = System.currentTimeMillis();
     }
 }
