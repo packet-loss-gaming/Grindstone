@@ -7,7 +7,7 @@ import java.util.UUID;
 public class BlockStateRecord {
     private final UUID owner;
 
-    private final String blockType;
+    private final String blockData;
 
     private final String worldName;
     private final int x;
@@ -16,10 +16,10 @@ public class BlockStateRecord {
 
     private final long creationTime = System.currentTimeMillis();
 
-    protected BlockStateRecord(@Nullable UUID owner, String blockType, String worldName, int x, int y, int z) {
+    protected BlockStateRecord(@Nullable UUID owner, String blockData, String worldName, int x, int y, int z) {
         this.owner = owner;
 
-        this.blockType = blockType;
+        this.blockData = blockData;
 
         this.worldName = worldName;
         this.x = x;
@@ -31,8 +31,8 @@ public class BlockStateRecord {
         return Optional.ofNullable(owner);
     }
 
-    public String getBlockType() {
-        return blockType;
+    public String getBlockData() {
+        return blockData;
     }
 
     public String getWorldName() {
