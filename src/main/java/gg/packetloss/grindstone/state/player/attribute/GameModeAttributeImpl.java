@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 public class GameModeAttributeImpl implements PlayerStateAttributeImpl {
     @Override
     public boolean isValidFor(PlayerStateKind kind, PlayerStateRecord record) {
-        return record.getGuilds().get(kind) != null;
+        return record.getGameModes().get(kind) != null;
     }
 
     @Override

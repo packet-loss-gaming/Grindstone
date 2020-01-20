@@ -18,9 +18,15 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     PUZZLE_PRISON(new WalkInNoGuildPlayerStateTypeConfigImpl()),
     GOLD_RUSH(new WalkInNoGuildPlayerStateTypeConfigImpl()),
     JUNGLE_RAID(new TempPlayerStateTypeConfigImpl()),
-    JUNGLE_RAID_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     SKY_WARS(new TempPlayerStateTypeConfigImpl()),
-    SPLEEF(new TempPlayerStateTypeConfigImpl());
+    SPLEEF(new TempPlayerStateTypeConfigImpl()),
+
+    FREAKY_FOUR_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
+    SHNUGGLES_PRIME_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
+    GRAVE_YARD_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
+    PATIENT_X_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
+    JUNGLE_RAID_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
+    SKY_WARS_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl());
 
     private final PlayerStateTypeConfigImpl config;
 

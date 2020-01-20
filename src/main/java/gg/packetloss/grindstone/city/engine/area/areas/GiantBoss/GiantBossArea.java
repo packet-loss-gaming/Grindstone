@@ -21,7 +21,9 @@ import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
@@ -52,7 +54,10 @@ import org.bukkit.util.Vector;
 import java.util.*;
 
 @ComponentInformation(friendlyName = "Giant Boss", desc = "Giant, and a true boss")
-@Depend(components = {AdminComponent.class, PrayerComponent.class, PlayerStateComponent.class, HighScoresComponent.class}, plugins = {"WorldGuard"})
+@Depend(components = {
+        AdminComponent.class, PrayerComponent.class, PlayerStateComponent.class,
+        SpectatorComponent.class, HighScoresComponent.class},
+        plugins = {"WorldGuard"})
 public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     @InjectComponent
@@ -61,6 +66,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected PrayerComponent prayer;
     @InjectComponent
     protected PlayerStateComponent playerState;
+    @InjectComponent
+    protected SpectatorComponent spectator;
     @InjectComponent
     protected HighScoresComponent highScores;
 
@@ -103,10 +110,18 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         probeArea();
 
         CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
+
+        spectator.registerSpectatedRegion(PlayerStateKind.SHNUGGLES_PRIME_SPECTATOR, region);
+        spectator.registerSpectatorSkull(
+                PlayerStateKind.SHNUGGLES_PRIME_SPECTATOR,
+                new Location(world, 201, 87, 60),
+                () -> !isEmpty()
+        );
     }
 
     @Override
     public void enable() {
+        spectator.registerSpectatorKind(PlayerStateKind.SHNUGGLES_PRIME_SPECTATOR);
         server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
@@ -161,10 +176,12 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         return RegionUtil.isLoaded(getWorld(), getRegion());
     }
 
-    public void spawnBoss() {
-        Location spawnLoc = RegionUtil.getCenterAt(getWorld(), groundLevel, getRegion());
+    public Location getBossSpawnLocation() {
+        return RegionUtil.getCenterAt(getWorld(), groundLevel, getRegion());
+    }
 
-        boss = HBGiant.spawn(spawnLoc);
+    public void spawnBoss() {
+        boss = HBGiant.spawn(getBossSpawnLocation());
         boss.setMaxHealth(config.maxHealthNormal);
         boss.setHealth(config.maxHealthNormal);
         boss.setRemoveWhenFarAway(true);
@@ -196,7 +213,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         RegionWalker.walk(getRegion().getParent(), (x, y, z) -> {
             BlockState block = getWorld().getBlockAt(x, y, z).getState();
             if (block.getType() == Material.GOLD_BLOCK) {
-                spawnPts.add(block.getLocation().add(0, 2, 0));
+                spawnPts.add(block.getLocation().add(.5, 2, .5));
                 return;
             }
 

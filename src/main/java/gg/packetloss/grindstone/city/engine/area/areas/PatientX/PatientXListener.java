@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -113,7 +114,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
         if (parent.contains(to) && !parent.contains(from)) {
             Player player = event.getPlayer();
-            if (parent.admin.isAdmin(player)) return;
+            if (player.getGameMode() != GameMode.SURVIVAL) return;
             if (!ItemUtil.removeItemOfName(player, CustomItemCenter.build(CustomItems.PHANTOM_HYMN), 1, false)) {
                 ChatUtil.sendError(player, "You need a Phantom Hymn to sacrifice to enter that area.");
                 event.setCancelled(true);
@@ -465,5 +466,15 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
             event.setDeathMessage(player.getName() + deathMessage);
         }
+    }
+
+    @EventHandler
+    public void onPlayerStatePush(PlayerStatePushEvent event) {
+        if (event.getKind() != PlayerStateKind.PATIENT_X_SPECTATOR) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        player.teleport(parent.getRandomDest(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 }

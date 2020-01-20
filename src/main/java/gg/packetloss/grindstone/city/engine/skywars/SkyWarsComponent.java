@@ -35,12 +35,14 @@ import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawn
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePrePopEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
+import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
@@ -71,10 +73,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -125,6 +124,8 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     @InjectComponent
     private PlayerStateComponent playerStateComponent;
     @InjectComponent
+    SpectatorComponent spectatorComponent;
+    @InjectComponent
     private EconomyComponent economy;
     @InjectComponent
     private HighScoresComponent highScores;
@@ -148,12 +149,20 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                 flagState
         );
         flagWall.init();
+
+        spectatorComponent.registerSpectatedRegion(PlayerStateKind.SKY_WARS_SPECTATOR, region);
+        spectatorComponent.registerSpectatorSkull(
+                PlayerStateKind.SKY_WARS_SPECTATOR,
+                new Location(world, 467, 82, 115),
+                () -> gameState.hasParticipants()
+        );
     }
 
     @Override
     public void enable() {
         config = configure(new LocalConfiguration());
 
+        spectatorComponent.registerSpectatorKind(PlayerStateKind.SKY_WARS_SPECTATOR);
         server.getScheduler().runTaskLater(inst, this::setupRegionInfo, 1);
 
         //noinspection AccessStaticViaInstance
@@ -1202,6 +1211,16 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             if (gameState.containsPlayer(player)) {
                 event.setCancelled(true);
             }
+        }
+
+        @EventHandler
+        public void onPlayerStatePush(PlayerStatePushEvent event) {
+            if (event.getKind() != PlayerStateKind.SKY_WARS_SPECTATOR) {
+                return;
+            }
+
+            Player player = event.getPlayer();
+            player.teleport(gameStartLocation, PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
 
         @EventHandler

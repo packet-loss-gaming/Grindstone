@@ -566,6 +566,11 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         classModeSignPopulate();
 
         spectatorComponent.registerSpectatedRegion(PlayerStateKind.JUNGLE_RAID_SPECTATOR, region);
+        spectatorComponent.registerSpectatorSkull(
+                PlayerStateKind.JUNGLE_RAID_SPECTATOR,
+                new Location(world, -750, 82, -337),
+                () -> gameState.hasParticipants()
+        );
     }
 
     private void classModeSignPopulate() {
@@ -1228,12 +1233,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 if (state == JungleRaidState.RESTORING) {
                     ChatUtil.sendError(player, "The jungle raid arena is restoring, please wait.");
                 } else {
-                    try {
-                        playerStateComponent.pushState(PlayerStateKind.JUNGLE_RAID_SPECTATOR, player);
-                        return true;
-                    } catch (ConflictingPlayerStateException | IOException e) {
-                        e.printStackTrace();
-                    }
+                    ChatUtil.sendError(player, "A jungle raid is in progress, please wait.");
                 }
 
                 return true;
@@ -1674,27 +1674,18 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             player.teleport(getRandomLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
 
-        private void onJungleRaidPop(PlayerStatePrePopEvent event) {
+        @EventHandler
+        public void onPlayerStatePrePop(PlayerStatePrePopEvent event) {
+            if (event.getKind() != PlayerStateKind.JUNGLE_RAID) {
+                return;
+            }
+
             Player player = event.getPlayer();
 
             gameState.removePlayer(player);
             prayerComponent.uninfluencePlayer(player);
 
             player.teleport(lobbyExitLocation);
-        }
-
-        private void onJungleRaidSpectatorPop(PlayerStatePrePopEvent event) {
-            Player player = event.getPlayer();
-            player.teleport(lobbyExitLocation);
-        }
-
-        @EventHandler
-        public void onPlayerStatePrePop(PlayerStatePrePopEvent event) {
-            if (event.getKind() == PlayerStateKind.JUNGLE_RAID) {
-                onJungleRaidPop(event);
-            } else if (event.getKind() == PlayerStateKind.JUNGLE_RAID_SPECTATOR) {
-                onJungleRaidSpectatorPop(event);
-            }
         }
     }
 }

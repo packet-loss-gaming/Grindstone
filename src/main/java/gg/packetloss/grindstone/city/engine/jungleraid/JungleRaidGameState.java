@@ -10,7 +10,7 @@ public class JungleRaidGameState {
     private Map<Player, JungleRaidProfile> playerProfiles = new HashMap<>();
 
     public boolean hasParticipants() {
-        return getPlayers().isEmpty();
+        return !getPlayers().isEmpty();
     }
 
     public JungleRaidProfile get(Player player) {

@@ -16,7 +16,9 @@ import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
+import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.checker.Expression;
@@ -36,6 +38,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @ComponentInformation(friendlyName = "Freaky Four", desc = "The craziest bosses ever")
 @Depend(components = {AdminComponent.class, PlayerStateComponent.class, EconomyComponent.class},
@@ -48,6 +51,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     protected AdminComponent admin;
     @InjectComponent
     protected PlayerStateComponent playerState;
+    @InjectComponent
+    protected SpectatorComponent spectator;
     @InjectComponent
     protected EconomyComponent economy;
 
@@ -77,10 +82,18 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         config = new FreakyFourConfig();
 
         CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
+
+        spectator.registerSpectatedRegion(PlayerStateKind.FREAKY_FOUR_SPECTATOR, region);
+        spectator.registerSpectatorSkull(
+                PlayerStateKind.FREAKY_FOUR_SPECTATOR,
+                new Location(world, 400, 79, -307),
+                () -> getFirstFullRoom().isPresent()
+        );
     }
 
     @Override
     public void enable() {
+        spectator.registerSpectatorKind(PlayerStateKind.FREAKY_FOUR_SPECTATOR);
         server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
@@ -94,6 +107,22 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                 runFrimus();
             }
         }
+    }
+
+    public Location getCharlotteEntrance() {
+        return new Location(world, 398.5, 79, -304, 90, 0);
+    }
+
+    public Location getFrimusEntrance() {
+        return new Location(world, 374.5, 79, -304, 90, 0);
+    }
+
+    public Location getDaBombEntrance() {
+        return new Location(world, 350.5, 79, -304, 90, 0);
+    }
+
+    public Location getSnipeeEntrance() {
+        return new Location(world, 326.5, 79, -304, 90, 0);
     }
 
     public void addSkull(Player player) {
@@ -352,6 +381,23 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         for (Skeleton skeleton : getContained(snipee_RG, Skeleton.class)) {
             skeleton.remove();
         }
+    }
+
+    public Optional<Location> getFirstFullRoom() {
+        if (!checkCharlotte()) {
+            return Optional.of(getCharlotteEntrance());
+        }
+        if (!checkFrimus()) {
+            return Optional.of(getFrimusEntrance());
+        }
+        if (!checkDaBomb()) {
+            return Optional.of(getDaBombEntrance());
+        }
+        if (!checkSnipee()) {
+            return Optional.of(getSnipeeEntrance());
+        }
+
+        return Optional.empty();
     }
 
     // Cleans up empty arenas

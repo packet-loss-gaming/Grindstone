@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.entity.HallowCreeperEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -92,21 +93,21 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 if (parent.charlotte == null && parent.checkFrimus()) {
                     parent.cleanupFrimus();
                     parent.spawnFrimus();
-                    player.teleport(new Location(parent.getWorld(), 374.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
+                    player.teleport(parent.getFrimusEntrance(), TeleportCause.UNKNOWN);
                 }
             } else if (parent.contains(parent.frimus_RG, player)) {
                 // Teleport to Da Bomb
                 if (parent.frimus == null && parent.checkDaBomb()) {
                     parent.cleanupDaBomb();
                     parent.spawnDaBomb();
-                    player.teleport(new Location(parent.getWorld(), 350.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
+                    player.teleport(parent.getDaBombEntrance(), TeleportCause.UNKNOWN);
                 }
             } else if (parent.contains(parent.dabomb_RG, player)) {
                 // Teleport to Snipee
                 if (parent.daBomb == null && parent.checkSnipee()) {
                     parent.cleanupSnipee();
                     parent.spawnSnipee();
-                    player.teleport(new Location(parent.getWorld(), 326.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
+                    player.teleport(parent.getSnipeeEntrance(), TeleportCause.UNKNOWN);
                 }
             } else if (parent.contains(parent.snipee_RG, player)) {
                 // Teleport to Spawn
@@ -117,7 +118,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 // Teleport to Charlotte
                 parent.cleanupCharlotte();
                 parent.spawnCharlotte();
-                player.teleport(new Location(parent.getWorld(), 398.5, 79, -304, 90, 0), TeleportCause.UNKNOWN);
+                player.teleport(parent.getCharlotteEntrance(), TeleportCause.UNKNOWN);
             }
         }
     }
@@ -298,5 +299,15 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
 
             parent.addSkull(player);
         }
+    }
+
+    @EventHandler
+    public void onPlayerStatePush(PlayerStatePushEvent event) {
+        if (event.getKind() != PlayerStateKind.FREAKY_FOUR_SPECTATOR) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        player.teleport(parent.getFirstFullRoom().orElse(parent.getCharlotteEntrance()), TeleportCause.UNKNOWN);
     }
 }

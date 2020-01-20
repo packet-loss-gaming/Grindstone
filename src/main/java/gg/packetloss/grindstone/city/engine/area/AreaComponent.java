@@ -138,7 +138,7 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
 
     public boolean isEmpty(int parentsUp) {
         for (Player player : server.getOnlinePlayers()) {
-            if (contains(player, parentsUp)) {
+            if (contains(player, parentsUp) && isParticipant(player)) {
                 empty = false;
                 return false;
             }

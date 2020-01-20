@@ -10,7 +10,7 @@ public class SkyWarsGameState {
     private Map<Player, SkyWarsProfile> playerProfiles = new HashMap<>();
 
     public boolean hasParticipants() {
-        return getPlayers().isEmpty();
+        return !getPlayers().isEmpty();
     }
 
     public SkyWarsProfile get(Player player) {

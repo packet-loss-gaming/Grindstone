@@ -38,6 +38,7 @@ import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
@@ -550,6 +551,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         Location clickedLoc = block.getLocation();
         ItemStack stack = player.getItemInHand();
         Action action = event.getAction();
+
+        Material blockType = block.getType();
         if (parent.isHostileTempleArea(clickedLoc)) {
             switch (block.getType()) {
                 case LEVER:
@@ -564,6 +567,12 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     break;
             }
         }
+
+        boolean isSpectator = player.getGameMode() == GameMode.SPECTATOR;
+        if (parent.contains(clickedLoc) && isSpectator && EnvironmentUtil.isContainer(blockType)) {
+            event.setUseInteractedBlock(Event.Result.DENY);
+        }
+
         switch (action) {
             case RIGHT_CLICK_BLOCK:
                 if (ItemUtil.isItem(stack, CustomItems.PHANTOM_CLOCK)) {

@@ -14,7 +14,9 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
+import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
@@ -39,13 +41,16 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Patient X Arena", desc = "The mad boss of Ice")
-@Depend(components = {AdminComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
+@Depend(components = {AdminComponent.class, PlayerStateComponent.class, SpectatorComponent.class},
+        plugins = {"WorldGuard"})
 public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     @InjectComponent
     protected AdminComponent admin;
     @InjectComponent
     protected PlayerStateComponent playerState;
+    @InjectComponent
+    protected SpectatorComponent spectator;
 
     protected static final Random random = new Random();
     protected static final int groundLevel = 54;
@@ -90,11 +95,19 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         destinations.add(new Location(world, -203.5, 47, 109.5));
         destinations.add(new Location(world, -173, 47, 109.5));
         destinations.add(getCentralLoc());
+
+        spectator.registerSpectatedRegion(PlayerStateKind.PATIENT_X_SPECTATOR, region);
+        spectator.registerSpectatorSkull(
+                PlayerStateKind.PATIENT_X_SPECTATOR,
+                new Location(world, -421, 82, -109),
+                () -> !isEmpty()
+        );
     }
 
     @Override
     public void enable() {
         // WorldGuard loads late for some reason
+        spectator.registerSpectatorKind(PlayerStateKind.PATIENT_X_SPECTATOR);
         server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 

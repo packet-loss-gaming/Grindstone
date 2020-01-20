@@ -21,9 +21,11 @@ import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
@@ -59,7 +61,9 @@ import java.util.stream.Collectors;
 import static org.bukkit.block.data.type.Chest.Type;
 
 @ComponentInformation(friendlyName = "Grave Yard", desc = "The home of the undead")
-@Depend(components = {AdminComponent.class, PlayerStateComponent.class, BlockStateComponent.class},
+@Depend(components = {
+        AdminComponent.class, PlayerStateComponent.class,
+        SpectatorComponent.class, BlockStateComponent.class},
         plugins = {"WorldGuard"})
 public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
@@ -67,6 +71,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     protected AdminComponent admin;
     @InjectComponent
     protected PlayerStateComponent playerState;
+    @InjectComponent
+    protected SpectatorComponent spectator;
     @InjectComponent
     protected BlockStateComponent blockState;
 
@@ -134,10 +140,18 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         setupEconomy();
 
         spawnBlockBreakerTask();
+
+        spectator.registerSpectatedRegion(PlayerStateKind.GRAVE_YARD_SPECTATOR, region);
+        spectator.registerSpectatorSkull(
+                PlayerStateKind.GRAVE_YARD_SPECTATOR,
+                new Location(world, -169, 94, -686),
+                () -> getTempleContained(Player.class).stream().anyMatch(this::isParticipant)
+        );
     }
 
     @Override
     public void enable() {
+        spectator.registerSpectatorKind(PlayerStateKind.GRAVE_YARD_SPECTATOR);
         server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
@@ -167,19 +181,21 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         for (LivingEntity entity : getContained(LivingEntity.class)) {
             if (!entity.isValid()) continue;
+
             // Cave Spider killer
             if (entity instanceof CaveSpider && entity.getLocation().getBlock().getLightFromSky() >= 10) {
                 for (int i = 0; i < 20; ++i) getWorld().playEffect(entity.getLocation(), Effect.MOBSPAWNER_FLAMES, 0);
                 entity.remove();
                 continue;
             }
-            // People Code
-            if (entity instanceof Player && isEvilMode(entity.getEyeLocation().getBlock())) {
-                if (admin.isAdmin((Player) entity)) continue;
-                fogPlayer((Player) entity);
-                localSpawn((Player) entity);
+        }
 
-                if (!playerInRewardsRoom && contains(rewards, entity)) {
+        for (Player player : getContainedParticipants()) {
+            if (isEvilMode(player.getEyeLocation().getBlock())) {
+                fogPlayer(player);
+                localSpawn(player);
+
+                if (!playerInRewardsRoom && contains(rewards, player)) {
                     playerInRewardsRoom = true;
                 }
             }
@@ -198,7 +214,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             for (LivingEntity e : getContained(LivingEntity.class)) {
                 // Auto break stuff
                 Location belowLoc = e.getLocation();
-                if (!(e instanceof Player) || isInEvilRegion(belowLoc)) {
+                if (!(e instanceof Player) || (isInEvilRegion(belowLoc) && isParticipant((Player) e))) {
                     breakBlock(e, belowLoc.add(0, -1, 0));
                     breakBlock(e, belowLoc.add(0, -1, 0));
                     breakBlock(e, belowLoc.add(0, -1, 0));

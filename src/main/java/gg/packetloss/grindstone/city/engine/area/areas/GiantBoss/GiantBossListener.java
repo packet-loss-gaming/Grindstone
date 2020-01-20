@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.highscore.ScoreType;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
@@ -576,5 +577,21 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
             event.setDeathMessage(player.getName() + deathMessage);
         }
+    }
+
+    @EventHandler
+    public void onPlayerStatePush(PlayerStatePushEvent event) {
+        if (event.getKind() != PlayerStateKind.SHNUGGLES_PRIME_SPECTATOR) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        // Create a spawn point looking at something interesting.
+        Location spawnPoint = CollectionUtil.getElement(parent.spawnPts).clone();
+        Location pointOfInterest = parent.isBossSpawned() ? parent.boss.getLocation() : parent.getBossSpawnLocation();
+        spawnPoint.setDirection(VectorUtil.createDirectionalVector(spawnPoint, pointOfInterest));
+
+        player.teleport(spawnPoint, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 }
