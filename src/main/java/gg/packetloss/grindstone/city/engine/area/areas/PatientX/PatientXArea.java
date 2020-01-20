@@ -22,12 +22,15 @@ import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import org.bukkit.ChatColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.*;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -66,6 +69,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     protected List<Location> destinations = new ArrayList<>();
 
+    protected BossBar healthBar = Bukkit.createBossBar("Patient X", BarColor.WHITE, BarStyle.SEGMENTED_6);
+    protected BossBar rageBar = Bukkit.createBossBar("Rage", BarColor.RED, BarStyle.SEGMENTED_6);
+
     @Override
     public void setUp() {
         world = server.getWorlds().get(0);
@@ -82,6 +88,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
 
         server.getScheduler().runTaskTimer(inst, (Runnable) this::runAttack, 0, 20 * 20);
+        server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
 
         destinations.add(new Location(world, -180, 54, 109.5));
         destinations.add(new Location(world, -173, 54, 120));
@@ -109,6 +116,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     @Override
     public void run() {
+        updateBossBar();
+
         if (!isBossSpawned()) {
             if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
                 spawnBoss();
@@ -119,7 +128,30 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             freezeEntities();
             freezeBlocks(ChanceUtil.getChance((int) Math.ceil(config.iceChangeChance - difficulty)));
             spawnCreatures();
-            printBossHealth();
+        }
+    }
+
+    private void updateBossBar() {
+        if (isBossSpawnedFast()) {
+            Collection<Player> players = getAudiblePlayers();
+
+            BossBarUtil.syncWithPlayers(healthBar, players);
+            BossBarUtil.syncWithPlayers(rageBar, players);
+        } else {
+            healthBar.removeAll();
+            rageBar.removeAll();
+        }
+    }
+
+    private void updateBossBarProgress() {
+        if (isBossSpawnedFast()) {
+            // Update health
+            healthBar.setProgress(boss.getHealth() / boss.getMaxHealth());
+
+            // Update rage
+            double maxDiff = config.maxDifficulty - config.minDifficulty;
+            double curDiff = Math.max(difficulty, config.minDifficulty) - config.minDifficulty;
+            rageBar.setProgress(curDiff / maxDiff);
         }
     }
 
@@ -165,18 +197,6 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             zombie.setCanPickupItems(false);
             zombie.setBaby(true);
         }
-    }
-
-    public void printBossHealth() {
-
-        int current = (int) Math.ceil(boss.getHealth());
-        int max = (int) Math.ceil(boss.getMaxHealth());
-
-        String message = "Boss Health: " + current + " / " + max;
-        double maxDiff = config.maxDifficulty - config.minDifficulty;
-        double curDiff = difficulty - config.minDifficulty;
-        message += " Enragement: " + (int) Math.round((curDiff / maxDiff) * 100) + "%";
-        ChatUtil.sendNotice(getAudiblePlayers(), ChatColor.DARK_AQUA, message);
     }
 
     private void runAttack() {
@@ -366,6 +386,10 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         return RegionUtil.isLoaded(getWorld(), getRegion());
     }
 
+    public boolean isBossSpawnedFast() {
+        return isArenaLoaded() && boss != null && boss.isValid();
+    }
+
     public boolean isBossSpawned() {
         if (!isArenaLoaded()) return true;
 
@@ -408,7 +432,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 }
             }
         }
-        return boss != null && boss.isValid();
+        return isBossSpawnedFast();
     }
 
     public void spawnBoss() {

@@ -15,10 +15,7 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.util.RegionUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.item.itemstack.ProtectedSerializedItemStack;
@@ -30,10 +27,14 @@ import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
@@ -88,6 +89,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     protected int rageModifier = BASE_RAGE;
     protected long lastDeath = 0;
 
+    protected BossBar healthBar = Bukkit.createBossBar("Frost Born", BarColor.WHITE, BarStyle.SEGMENTED_6);
+
     @Override
     public void setUp() {
         world = server.getWorlds().get(0);
@@ -102,6 +105,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         tick = 4 * 20;
         listener = new FrostbornListener(this);
         config = new FrostbornConfig();
+
+        server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
 
         reloadData();
     }
@@ -118,6 +123,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     @Override
     public void run() {
+        updateBossBar();
+
         if (!isArenaLoaded()) {
             return;
         }
@@ -148,6 +155,21 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         movePlayers();
 
         writeData(true);
+    }
+
+    private void updateBossBar() {
+        if (isBossSpawnedFast()) {
+            BossBarUtil.syncWithPlayers(healthBar, getAudiblePlayers());
+        } else {
+            healthBar.removeAll();
+        }
+    }
+
+    private void updateBossBarProgress() {
+        if (isArenaLoaded() && isBossSpawnedFast()) {
+            // Update health
+            healthBar.setProgress(boss.getHealth() / boss.getMaxHealth());
+        }
     }
 
     public void restoreBlocks() {
@@ -416,6 +438,10 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         return RegionUtil.isLoaded(getWorld(), getRegion());
     }
 
+    public boolean isBossSpawnedFast() {
+        return isArenaLoaded() && boss != null && boss.isValid();
+    }
+
     public boolean isBossSpawned() {
         boolean found = false;
         boolean second = false;
@@ -435,7 +461,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         if (second) {
             getContained(Snowman.class).stream().filter(e -> e.isValid() && !e.equals(boss)).forEach(Entity::remove);
         }
-        return boss != null && boss.isValid();
+        return isBossSpawnedFast();
     }
 
     public void spawnBoss() {

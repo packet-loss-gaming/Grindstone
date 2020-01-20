@@ -279,11 +279,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
         if (defender instanceof Giant) {
             final Giant boss = (Giant) defender;
-            // Schedule a task to change the display name to show HP
-            server.getScheduler().runTaskLater(inst, () -> {
-                if (!boss.isValid()) return;
-                parent.printBossHealth();
-            }, 1);
 
             GiantBossConfig config = parent.getConfig();
             int babyCount = parent.getContained(Zombie.class).size();

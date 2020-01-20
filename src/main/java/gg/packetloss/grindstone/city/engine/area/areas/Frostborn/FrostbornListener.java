@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.city.engine.area.areas.Frostborn;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
-import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
@@ -139,11 +138,6 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             // Slow the boss on damage
             PotionEffect potionEffect = new PotionEffect(PotionEffectType.SLOW, 20 * 3, 3, true, false);
             ((Snowman) entity).addPotionEffect(potionEffect, true);
-
-            // Notify players of the new health
-            for (Player player : parent.getContained(1, Player.class)) {
-                PvMComponent.printHealth(player, (LivingEntity) entity);
-            }
 
             // If punched return fire with a special attack
             if (event instanceof EntityDamageByEntityEvent) {

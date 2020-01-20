@@ -34,13 +34,13 @@ import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.entity.HBGiant;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
@@ -88,6 +88,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected List<Location> spawnPts = new ArrayList<>();
     protected List<Location> chestPts = new ArrayList<>();
 
+    protected BossBar healthBar = Bukkit.createBossBar("Shnuggles Prime", BarColor.PURPLE, BarStyle.SEGMENTED_6);
+
     @Override
     public void setUp() {
         world = server.getWorlds().get(0);
@@ -106,6 +108,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                 removeXP(contained);
             }
         }, 0, 20 * 2);
+        server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
+
         // First spawn requirement
         probeArea();
 
@@ -132,6 +136,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     @Override
     public void run() {
+        updateBossBar();
+
         if (!isBossSpawned()) {
             if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
                 removeMobs();
@@ -144,9 +150,27 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         }
     }
 
+    private void updateBossBar() {
+        if (isBossSpawnedFast()) {
+            BossBarUtil.syncWithPlayers(healthBar, getAudiblePlayers());
+        } else {
+            healthBar.removeAll();
+        }
+    }
+
+    private void updateBossBarProgress() {
+        if (isBossSpawnedFast()) {
+            healthBar.setProgress(boss.getHealth() / boss.getMaxHealth());
+        }
+    }
+
     @Override
     public Collection<Player> getAudiblePlayers() {
         return getContained(1, Player.class);
+    }
+
+    public boolean isBossSpawnedFast() {
+        return isArenaLoaded() && boss != null && boss.isValid();
     }
 
     public boolean isBossSpawned() {
@@ -169,7 +193,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         if (second) {
             getContained(Giant.class).stream().filter(e -> e.isValid() && !e.equals(boss)).forEach(Entity::remove);
         }
-        return boss != null && boss.isValid();
+
+        return isBossSpawnedFast();
     }
 
     public boolean isArenaLoaded() {
@@ -197,13 +222,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         setDoor(westDoor, Material.CHISELED_SANDSTONE);
 
         for (Player player : getAudiblePlayers()) ChatUtil.sendWarning(player, "I live again!");
-    }
-
-    public void printBossHealth() {
-        int current = (int) Math.ceil(boss.getHealth());
-        int max = (int) Math.ceil(boss.getMaxHealth());
-        String message = "Boss Health: " + current + " / " + max;
-        ChatUtil.sendNotice(getAudiblePlayers(), ChatColor.DARK_AQUA, message);
     }
 
     public void probeArea() {
