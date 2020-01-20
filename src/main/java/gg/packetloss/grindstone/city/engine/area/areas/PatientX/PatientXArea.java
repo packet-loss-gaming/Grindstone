@@ -20,7 +20,6 @@ import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
-import gg.packetloss.grindstone.util.player.AdminToolkit;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.ChatColor;
@@ -56,8 +55,6 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     protected static final int groundLevel = 54;
     protected static final int OPTION_COUNT = 9;
 
-    protected AdminToolkit adminKit;
-
     protected ProtectedRegion ice, drops, entry;
 
     protected Zombie boss = null;
@@ -81,7 +78,6 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         tick = 8 * 20;
         listener = new PatientXListener(this);
         config = new PatientXConfig();
-        adminKit = new AdminToolkit(admin);
 
         CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
 
@@ -148,7 +144,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     private void spawnCreatures() {
-        Collection<LivingEntity> entities = adminKit.removeAdmin(getContained(LivingEntity.class));
+        Collection<Monster> entities = getContained(Monster.class);
         if (entities.size() > 500) {
             ChatUtil.sendWarning(getAudiblePlayers(), "Ring-a-round the rosie, a pocket full of posies...");
             boss.setHealth(boss.getMaxHealth());
@@ -162,7 +158,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             return;
         }
 
-        double amt = adminKit.removeAdmin(getContainedParticipants()).size() * difficulty;
+        double amt = getContainedParticipants().size() * difficulty;
         Location l = getCentralLoc();
         for (int i = 0; i < amt; i++) {
             Zombie zombie = getWorld().spawn(l, Zombie.class);
@@ -192,7 +188,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         if (!isBossSpawned()) return;
 
         Collection<Player> audible = getAudiblePlayers();
-        Collection<Player> contained = adminKit.removeAdmin(audible);
+        Collection<Player> contained = getContainedParticipants();
         if (contained.isEmpty()) return;
 
         if (attackCase < 1 || attackCase > OPTION_COUNT) attackCase = ChanceUtil.getRandom(OPTION_COUNT);
@@ -277,7 +273,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     for (int i = config.radiationTimes; i > 0; i--) {
                         server.getScheduler().runTaskLater(inst, () -> {
                             if (boss != null) {
-                                for (Player player : adminKit.removeAdmin(getContainedParticipants())) {
+                                for (Player player : getContainedParticipants()) {
                                     for (int e = 0; e < 3; ++e) {
                                         Location t = LocationUtil.findRandomLoc(player.getLocation(), 5, true);
                                         for (int k = 0; k < 10; ++k) {
@@ -313,7 +309,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     private void freezeEntities() {
         double total = 0;
-        for (LivingEntity entity : adminKit.removeAdmin(getContained(LivingEntity.class))) {
+        for (LivingEntity entity : getContained(LivingEntity.class)) {
             if (entity.equals(boss)) continue;
             if (!EnvironmentUtil.isWater(entity.getLocation().getBlock())) {
                 continue;
@@ -322,7 +318,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 entity.setHealth(0);
                 EntityUtil.heal(boss, 1);
                 total += .02;
-            } else if (!ChanceUtil.getChance(5)) {
+            } else if (entity instanceof Player && isParticipant((Player) entity) && !ChanceUtil.getChance(5)) {
                 entity.damage(ChanceUtil.getRandom(25));
             }
         }

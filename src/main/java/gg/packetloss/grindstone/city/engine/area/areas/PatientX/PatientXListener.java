@@ -316,7 +316,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 }
 
                 Collection<Player> audible = parent.getAudiblePlayers();
-                Collection<Player> contained = parent.adminKit.removeAdmin(audible);
+                Collection<Player> contained = parent.getContainedParticipants();
                 ChatUtil.sendWarning(audible, "So you think you've won? Ha!");
                 ChatUtil.sendWarning(audible, "I'll get you next time...");
 
