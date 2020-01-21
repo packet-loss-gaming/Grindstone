@@ -99,14 +99,6 @@ public class SpectatorComponent extends BukkitComponent implements Listener {
             try {
                 playerState.popState(kind, player);
                 it.remove();
-
-                // Fallback code in case for some reason we failed to move the player
-                if (!LocationUtil.isInRegion(region, player)) {
-                    continue;
-                }
-
-                player.teleport(player.getWorld().getSpawnLocation());
-                log.warning("Player spectator state failed to restore, " + player.getName() + " " + kind.name());
             } catch (IOException e) {
                 e.printStackTrace();
             }
