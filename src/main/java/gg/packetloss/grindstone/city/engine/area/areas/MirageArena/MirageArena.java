@@ -160,7 +160,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         long currentTime = System.currentTimeMillis();
         blockState.popBlocksWhere(BlockStateKind.MIRAGE_ARENA, (blockRecord) -> {
             if (currentTime - blockRecord.getCreationTime() >= TimeUnit.MINUTES.toMillis(4)) {
-                return manuallyPlacedLocations.contains(
+                return !manuallyPlacedLocations.contains(
                         BlockVector3.at(blockRecord.getX(), blockRecord.getY(), blockRecord.getZ())
                 );
             }
