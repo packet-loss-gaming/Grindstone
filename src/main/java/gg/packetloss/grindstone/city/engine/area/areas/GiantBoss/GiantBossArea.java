@@ -428,8 +428,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             }
         }
 
-        attackCase = 6;
-
         switch (attackCase) {
             case 1:
                 ChatUtil.sendWarning(audiblePlayers, "Taste my wrath!");
