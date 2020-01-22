@@ -27,6 +27,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
@@ -427,10 +428,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             }
         }
 
-        if (((attackCase == 3 || attackCase == 6) && boss.getHealth() < boss.getMaxHealth() * .3)) {
-            runAttack(ChanceUtil.getRandom(OPTION_COUNT));
-            return;
-        }
+        attackCase = 6;
 
         switch (attackCase) {
             case 1:
@@ -502,12 +500,67 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                 }
                 runAttack(ChanceUtil.getRandom(OPTION_COUNT));
                 return;
-            case 6:
-                ChatUtil.sendWarning(audiblePlayers, "Fire is your friend...");
-                for (Player player : contained) {
-                    player.setFireTicks(20 * 45);
-                }
+            case 6: {
+                ChatUtil.sendWarning(audiblePlayers, "I think I need to turn up the heat...");
+
+                IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
+                    @Override
+                    public boolean run(int times) {
+                        if (!isBossSpawned()) return true;
+
+                        for (Player player : getContainedParticipants()) {
+                            Block block = player.getLocation().getBlock();
+                            if (block.getType() != Material.FIRE) {
+                                continue;
+                            }
+
+                            if (ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(3)) {
+                                ChatUtil.sendNotice(player, "Your armor shields you from the fire!");
+                                continue;
+                            }
+
+                            EntityUtil.forceDamage(player, 3);
+                        }
+
+                        List<Block> blocks = new ArrayList<>();
+                        for (Player player : getContainedParticipants()) {
+                            Block block = player.getLocation().getBlock();
+                            if (block.getType() != Material.AIR) {
+                                continue;
+                            }
+
+                            // Move down so if they jump the floor still ignites
+                            while (block.getRelative(BlockFace.DOWN).getType() == Material.AIR) {
+                                block = block.getRelative(BlockFace.DOWN);
+                            }
+
+                            blocks.add(block);
+                        }
+
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            blocks.forEach(b -> b.setType(Material.FIRE));
+                        }, 10);
+
+                        return true;
+                    }
+
+                    @Override
+                    public void end() {
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            RegionWalker.walk(region, (x, y, z) -> {
+                                Block block = world.getBlockAt(x, y, z);
+                                if (block.getType() == Material.FIRE) {
+                                    block.setType(Material.AIR);
+                                }
+                            });
+                        }, 10);
+                    }
+                };
+                TimedRunnable runnable = new TimedRunnable(integratedRunnable, 50);
+                BukkitTask task = server.getScheduler().runTaskTimer(inst, runnable, 0, 4);
+                runnable.setTask(task);
                 break;
+            }
             case 7:
                 ChatUtil.sendWarning(audiblePlayers, ChatColor.DARK_RED + "Bask in my glory!");
                 server.getScheduler().runTaskLater(inst, () -> {
@@ -560,10 +613,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                     });
                 }, 20 * 7);
                 break;
-            case 9:
+            case 9: {
                 ChatUtil.sendNotice(audiblePlayers, ChatColor.DARK_RED, "Sink into the darkness!");
                 List<Location> darkSmokePoints = new ArrayList<>();
-                IntegratedRunnable minionEater = new IntegratedRunnable() {
+                IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
                     @Override
                     public boolean run(int times) {
                         if (!isBossSpawned()) return true;
@@ -595,12 +648,14 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                     }
 
                     @Override
-                    public void end() { }
+                    public void end() {
+                    }
                 };
-                TimedRunnable minonEatingTask = new TimedRunnable(minionEater, 20);
-                BukkitTask minionEatingTaskExecutor = server.getScheduler().runTaskTimer(inst, minonEatingTask, 0, 10);
-                minonEatingTask.setTask(minionEatingTaskExecutor);
+                TimedRunnable runnable = new TimedRunnable(integratedRunnable, 20);
+                BukkitTask task = server.getScheduler().runTaskTimer(inst, runnable, 0, 10);
+                runnable.setTask(task);
                 break;
+            }
         }
         lastAttack = System.currentTimeMillis();
         lastAttackNumber = attackCase;

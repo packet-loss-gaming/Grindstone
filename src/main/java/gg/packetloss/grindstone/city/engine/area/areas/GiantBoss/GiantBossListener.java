@@ -338,10 +338,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                         EffectUtil.Ancient.powerBurst(player, event.getDamage());
                     }
                 }
-                if (ChanceUtil.getChance(27) && defender.getFireTicks() > 0) {
-                    ChatUtil.sendNotice(defender, "Your armour extinguishes the fire.");
-                    defender.setFireTicks(0);
-                }
                 if (parent.damageHeals && ChanceUtil.getChance(10)) {
                     ChatUtil.sendNotice(parent.getAudiblePlayers(), ChatColor.AQUA, player.getDisplayName() + " has broken the giant's spell.");
                     parent.damageHeals = false;

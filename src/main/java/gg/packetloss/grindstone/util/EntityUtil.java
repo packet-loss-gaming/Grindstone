@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.util;
 
+import org.bukkit.EntityEffect;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
@@ -39,5 +40,6 @@ public class EntityUtil {
         double cur = ((LivingEntity) entity).getHealth();
 
         ((LivingEntity) entity).setHealth(Math.max(cur - amt, 0));
+        entity.playEffect(EntityEffect.HURT);
     }
 }
