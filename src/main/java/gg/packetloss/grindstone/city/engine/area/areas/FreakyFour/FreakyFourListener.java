@@ -23,7 +23,6 @@ import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
-import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.*;
@@ -208,7 +207,6 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                         ChatUtil.sendNotice((Player) entity, "A divine force deflects the arrow.");
                     } else {
                         EntityUtil.forceDamage(entity, ((Player) entity).getMaxHealth() * parent.getConfig().snipeeDamage);
-                        entity.playEffect(EntityEffect.HURT);
                     }
                     event.setCancelled(true);
                 } else if (damager instanceof CaveSpider) {

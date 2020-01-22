@@ -25,7 +25,6 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
-import org.bukkit.EntityEffect;
 import org.bukkit.GameMode;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -278,7 +277,6 @@ public class RogueListener implements Listener {
 
                     EntityUtil.heal(shooter, 1);
                     EntityUtil.forceDamage(entity, 1);
-                    entity.playEffect(EntityEffect.HURT);
                 }
             } else {
                 if (shooter instanceof Player) {
