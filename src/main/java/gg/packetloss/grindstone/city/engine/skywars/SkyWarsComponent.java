@@ -577,6 +577,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
 
         try {
             editor.makeCylinder(origin, toType.getDefaultState(), 12, 1, true);
+            editor.flushSession();
         } catch (MaxChangedBlocksException e) {
             e.printStackTrace();
         }
