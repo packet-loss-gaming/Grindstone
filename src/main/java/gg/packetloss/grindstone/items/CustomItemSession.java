@@ -36,7 +36,9 @@ public class CustomItemSession extends PersistentSession {
 
     private void saveLocation(LinkedList<Location> locations, Location newLoc) {
         Location prevLoc = locations.peek();
-        if (prevLoc != null && prevLoc.distanceSquared(newLoc) < Math.pow(5, 2)) {
+        if (prevLoc != null &&
+                prevLoc.getWorld().equals(newLoc.getWorld()) &&
+                prevLoc.distanceSquared(newLoc) < Math.pow(5, 2)) {
             return;
         }
 
