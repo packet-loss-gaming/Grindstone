@@ -665,7 +665,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     private void findRewardChest() {
-        RegionWalker.walk(pressurePlateLockArea, (x, y, z) -> {
+        RegionWalker.walk(rewards, (x, y, z) -> {
             BlockState block = getWorld().getBlockAt(x, y, z).getState();
             if (block.getType() == Material.CHEST) {
                 rewardChest.add(block.getLocation());
