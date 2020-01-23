@@ -22,6 +22,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     SPLEEF(new TempPlayerStateTypeConfigImpl()),
 
     FREAKY_FOUR_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
+    FROSTBORN_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     SHNUGGLES_PRIME_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     GRAVE_YARD_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     PATIENT_X_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),

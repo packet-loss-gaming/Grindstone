@@ -13,8 +13,10 @@ import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.city.engine.area.PersistentArena;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.database.IOUtil;
@@ -51,7 +53,9 @@ import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemN
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
-@Depend(components = {AdminComponent.class, ProtectedDroppedItemsComponent.class, BlockStateComponent.class},
+@Depend(components = {
+        AdminComponent.class, ProtectedDroppedItemsComponent.class, BlockStateComponent.class,
+        SpectatorComponent.class},
         plugins = {"WorldGuard"})
 public class FrostbornArea extends AreaComponent<FrostbornConfig> implements PersistentArena {
     protected static final int BASE_RAGE = -10;
@@ -63,6 +67,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     protected ProtectedDroppedItemsComponent dropProtector;
     @InjectComponent
     protected BlockStateComponent blockState;
+    @InjectComponent
+    protected SpectatorComponent spectator;
 
     protected Economy economy;
 
@@ -109,10 +115,18 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
 
         reloadData();
+
+        spectator.registerSpectatedRegion(PlayerStateKind.FROSTBORN_SPECTATOR, region);
+        spectator.registerSpectatorSkull(
+                PlayerStateKind.FROSTBORN_SPECTATOR,
+                new Location(world, -76, 81, 387),
+                () -> !isEmpty()
+        );
     }
 
     @Override
     public void enable() {
+        spectator.registerSpectatorKind(PlayerStateKind.FROSTBORN_SPECTATOR);
         server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
@@ -176,6 +190,17 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         blockState.popBlocksOlderThan(BlockStateKind.FROSTBORN, TimeUnit.SECONDS.toMillis(config.timeToRestore));
     }
 
+    public Location getPlayerEntryPoint() {
+        Location location = new Location(getWorld(), -102, 67, 392, 90, 0);
+        location.add(
+                ChanceUtil.getRangedRandom(-5, 5),
+                0,
+                ChanceUtil.getRangedRandom(-5, 5)
+        );
+
+        return location;
+    }
+
     public void movePlayer(Player player) {
         // Add the players inventory to loot list
         List<ItemStack> stacks = new ArrayList<>();
@@ -199,8 +224,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         player.setFallDistance(0);
 
         // Move them into the arena
-        Location loc = new Location(getWorld(), -102, 67, 392, 90, 0);
-        loc.add(ChanceUtil.getRangedRandom(-5, 5), 0, ChanceUtil.getRangedRandom(-5, 5));
+        Location loc = getPlayerEntryPoint();
         player.teleport(loc, TeleportCause.UNKNOWN);
     }
 

@@ -10,11 +10,14 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.VectorUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Location;
@@ -315,5 +318,21 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
         if (parent.contains(event.getPlayer())) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onPlayerStatePush(PlayerStatePushEvent event) {
+        if (event.getKind() != PlayerStateKind.FROSTBORN_SPECTATOR) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        // Create a spawn point looking at something interesting.
+        Location spawnPoint = parent.getPlayerEntryPoint();
+        Location pointOfInterest = parent.isBossSpawned() ? parent.boss.getLocation() : parent.bossSpawnLoc;
+        spawnPoint.setDirection(VectorUtil.createDirectionalVector(spawnPoint, pointOfInterest));
+
+        player.teleport(spawnPoint, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 }
