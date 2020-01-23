@@ -467,6 +467,7 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
                                     EditSession ess = WorldEditBridge.getSystemEditSessionFor(getWorld());
                                     try {
                                         ess.fillXZ(toBlockVec3(player.getLocation()), BlockTypes.FIRE.getDefaultState(), 20, 20, true);
+                                        ess.flushSession();
                                     } catch (MaxChangedBlocksException ignored) {
 
                                     }
