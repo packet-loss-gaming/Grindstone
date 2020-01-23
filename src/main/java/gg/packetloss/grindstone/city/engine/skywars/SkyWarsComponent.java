@@ -292,7 +292,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
 
     public Optional<Win> getWinner() {
         // Do a quick check to see if everyone is dead.
-        if (gameState.hasParticipants()) {
+        if (!gameState.hasParticipants()) {
             return Optional.of(new Win(null, WinType.DRAW));
         }
 
