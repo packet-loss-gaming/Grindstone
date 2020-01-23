@@ -14,6 +14,7 @@ import com.sk89q.worldedit.world.block.BlockTypes;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.events.PlayerGraveProtectItemsEvent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
@@ -787,6 +788,29 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
     public void onPlayerRespawn(PlayerRespawnEvent event) {
 
         revertPlayer(event.getPlayer());
+    }
+
+    private void drainAllFromArray(ItemStack[] itemStacks) {
+        for (Material type : AFFECTED_ITEMS) {
+            ItemUtil.removeItemOfType(itemStacks, type);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGraveProtectItemsEvent(PlayerGraveProtectItemsEvent event) {
+        if (!contains(event.getDeathLocation())) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        if (event.isUsingGemOfLife()) {
+            ItemStack[] itemStacks = player.getInventory().getContents();
+            drainAllFromArray(itemStacks);
+            player.getInventory().setContents(itemStacks);
+        } else {
+            drainAllFromArray(event.getDrops());
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

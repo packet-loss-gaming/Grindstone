@@ -10,10 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
-import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
-import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
-import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
-import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.*;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
@@ -623,10 +620,24 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             return;
         }
 
-        ItemStack[] dropArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
+        ItemStack[] dropsArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
+        boolean useGemOfLife = ItemUtil.findItemOfName(dropsArray, CustomItems.GEM_OF_LIFE.toString());
+
+        PlayerGraveProtectItemsEvent protectItemsEvent = new PlayerGraveProtectItemsEvent(
+                player,
+                useGemOfLife,
+                dropsArray
+        );
+
+        CommandBook.callEvent(protectItemsEvent);
+        if (protectItemsEvent.isCancelled()) {
+            return;
+        }
+
+        // Remove drops from ground
         drops.clear();
 
-        if (ItemUtil.findItemOfName(dropArray, CustomItems.GEM_OF_LIFE.toString())) {
+        if (protectItemsEvent.isUsingGemOfLife()) {
             GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
             server.getPluginManager().callEvent(aEvent);
             if (!aEvent.isCancelled()) {
@@ -640,7 +651,13 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             }
         }
 
-        Location graveLocation = parent.makeGrave(player.getName(), dropArray);
+        // Create final drops array
+        ItemStack[] finalDrops = Arrays.stream(protectItemsEvent.getDrops())
+                .filter(Objects::nonNull)
+                .map(ItemStack::clone)
+                .toArray(ItemStack[]::new);
+
+        Location graveLocation = parent.makeGrave(player.getName(), finalDrops);
         CommandBook.callEvent(new PlayerDeathDropRedirectEvent(player, graveLocation));
     }
 
