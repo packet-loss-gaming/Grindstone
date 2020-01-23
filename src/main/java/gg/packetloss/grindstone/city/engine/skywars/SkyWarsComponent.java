@@ -590,7 +590,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         ItemStack powerup = new ItemStack(Material.BOOK);
 
         ItemMeta powerMeta = powerup.getItemMeta();
-        powerMeta.setDisplayName(ChatColor.WHITE + "Book o' Omens");
+        powerMeta.setDisplayName(ChatColor.DARK_RED + "Book o' Omens");
         powerup.setItemMeta(powerMeta);
 
         return powerup;
@@ -1041,7 +1041,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                         decrementUses(player, stack, uses);
                         break;
                 }
-            } else if (ItemUtil.matchesFilter(stack, ChatColor.WHITE + "Book o' Omens")) {
+            } else if (ItemUtil.matchesFilter(stack, ChatColor.DARK_RED + "Book o' Omens")) {
 
                 if (!session.canUseOmen()) return;
 
