@@ -421,13 +421,17 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onLightningStrikeEvent(LightningStrikeEvent event) {
         LightningStrike lightning = event.getLightning();
+
+        // Effect lightning is ignored
+        if (lightning.isEffect()) {
+            return;
+        }
+
         World world = lightning.getWorld();
-        final int mobCount;
-        final int mobCountMax = config.maxMobsHardCap;
-        Location lightningStrikeLoc = lightning.getLocation();
 
         // Get the mob count
-        mobCount = world.getEntitiesByClasses(attackMob).size();
+        final int mobCount = world.getEntitiesByClasses(attackMob).size();
+        final int mobCountMax = config.maxMobsHardCap;
 
         highLoad = mobCount >= config.maxMobsEntry;
 
@@ -435,7 +439,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (mobCount >= mobCountMax || world.getEntities().size() > (mobCountMax * 2)) return;
 
         // Do we care?
-        if (hasThunderstorm(world) && !lightning.isEffect()) {
+        if (hasThunderstorm(world)) {
+            Location lightningStrikeLoc = lightning.getLocation();
             lightning(lightningStrikeLoc);
         }
     }
