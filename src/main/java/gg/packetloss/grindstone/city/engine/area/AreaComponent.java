@@ -83,6 +83,13 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
                 .collect(Collectors.toList());
     }
 
+    public List<Player> getContainedParticipantsIn(ProtectedRegion region) {
+        return world.getPlayers().stream()
+                .filter(this::isParticipant)
+                .filter((p) -> contains(region, p))
+                .collect(Collectors.toList());
+    }
+
     public Optional<Player> getRandomParticipant() {
         Collection<Player> players = getContainedParticipants();
         if (players.isEmpty()) {

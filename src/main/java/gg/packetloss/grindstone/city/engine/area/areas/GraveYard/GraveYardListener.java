@@ -573,7 +573,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         switch (action) {
             case RIGHT_CLICK_BLOCK:
                 if (ItemUtil.isItem(stack, CustomItems.PHANTOM_CLOCK)) {
-                    if (parent.getContained(parent.rewards, Player.class).isEmpty()) {
+                    if (parent.getContainedParticipantsIn(parent.rewards).isEmpty()) {
                         player.teleport(new Location(parent.getWorld(), -126, 42, -685), PlayerTeleportEvent.TeleportCause.UNKNOWN);
                         final int amt = stack.getAmount() - 1;
                         server.getScheduler().runTaskLater(inst, () -> {
