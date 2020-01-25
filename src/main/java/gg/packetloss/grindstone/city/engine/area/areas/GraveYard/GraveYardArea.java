@@ -664,15 +664,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
     }
 
-    private void findRewardChest() {
-        RegionWalker.walk(rewards, (x, y, z) -> {
-            BlockState block = getWorld().getBlockAt(x, y, z).getState();
-            if (block.getType() == Material.CHEST) {
-                rewardChest.add(block.getLocation());
-            }
-        });
-    }
-
     protected void resetRewardChest() {
         for (Location location : rewardChest) {
             Chest chest = (Chest) location.getBlock().getState();
@@ -690,6 +681,16 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 chestInv.setItem(target, pickRandomItem());
             }
         }
+    }
+
+    private void findRewardChest() {
+        RegionWalker.walk(rewards, (x, y, z) -> {
+            BlockState block = getWorld().getBlockAt(x, y, z).getState();
+            if (block.getType() == Material.CHEST) {
+                rewardChest.add(block.getLocation());
+            }
+        });
+        resetRewardChest();
     }
 
     private ItemStack pickRandomItem() {
