@@ -280,7 +280,6 @@ public class CustomItemCenter {
 
         // Red Items
         CustomItem redFeather = new CustomItem(RED_FEATHER, Material.FEATHER);
-        redFeather.addSource(ItemSource.WILDERNESS_MOBS);
         redFeather.addSource(ItemSource.MARKET);
         redFeather.addUse("Consumes redstone to prevent up to 100% damage, " +
                 "but has a cool down based on the amount of damage taken.");
@@ -526,7 +525,6 @@ public class CustomItemCenter {
 
         // Magical Items
         CustomItem odeToTheFrozenKing = new CustomItem(ODE_TO_THE_FROZEN_KING, Material.PAPER);
-        odeToTheFrozenKing.addSource(ItemSource.WILDERNESS_MOBS);
         odeToTheFrozenKing.addSource(ItemSource.DROP_PARTY);
         odeToTheFrozenKing.addSource(ItemSource.PATIENT_X);
         odeToTheFrozenKing.addSource(ItemSource.MARKET);
@@ -589,13 +587,11 @@ public class CustomItemCenter {
 
         CustomPotion potionOfRestitution = new CustomPotion(POTION_OF_RESTITUTION, PotionType.POISON);
         potionOfRestitution.addEffect(PotionEffectType.POISON, 20 * 10, 1);
-        potionOfRestitution.addSource(ItemSource.WILDERNESS_MOBS);
         potionOfRestitution.addSource(ItemSource.MARKET);
         potionOfRestitution.addUse("Returns you to your last death point if a teleport can reach the location.");
         addItem(potionOfRestitution);
 
         CustomItem scrollOfSummation = new CustomItem(SCROLL_OF_SUMMATION, Material.PAPER);
-        scrollOfSummation.addSource(ItemSource.WILDERNESS_MOBS);
         scrollOfSummation.addSource(ItemSource.DROP_PARTY);
         scrollOfSummation.addSource(ItemSource.PATIENT_X);
         scrollOfSummation.addSource(ItemSource.MARKET);
