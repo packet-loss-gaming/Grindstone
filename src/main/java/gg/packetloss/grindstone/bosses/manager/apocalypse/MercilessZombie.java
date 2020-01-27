@@ -44,9 +44,9 @@ public class MercilessZombie {
 
     private SimpleRebindableBoss<Zombie> mercilessZombie;
 
-    private static final int BASE_MAX_HEALTH = 750;
-
     public static final String BOUND_NAME = "Merciless Zombie";
+    public static final int MIN_HEALTH = 750;
+    public static final int MAX_ACHIEVABLE_HEALTH = 15000;
 
     public MercilessZombie() {
         mercilessZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
@@ -141,8 +141,8 @@ public class MercilessZombie {
                     ((Zombie) anEntity).setCanPickupItems(false);
 
                     // Set health
-                    ((LivingEntity) anEntity).setMaxHealth(BASE_MAX_HEALTH);
-                    ((LivingEntity) anEntity).setHealth(BASE_MAX_HEALTH);
+                    ((LivingEntity) anEntity).setMaxHealth(MIN_HEALTH);
+                    ((LivingEntity) anEntity).setHealth(MIN_HEALTH);
 
                     // Modify speed
                     try {
@@ -179,7 +179,7 @@ public class MercilessZombie {
                     target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT, 64));
                 }
 
-                if (ChanceUtil.getChance(10 / (maxHealth / BASE_MAX_HEALTH))) {
+                if (ChanceUtil.getChance(10 / (maxHealth / MIN_HEALTH))) {
                     target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
                 }
 

@@ -63,6 +63,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -100,8 +102,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private StickyZombie stickyBossManager;
     private ChuckerZombie chuckerBossManager;
 
-    private boolean highLoad = false;
-
     @Override
     public void enable() {
         config = configure(new LocalConfiguration());
@@ -113,6 +113,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+
+        server.getScheduler().runTaskTimer(inst, this::upgradeToMerciless, 0, 20 * 5);
     }
 
     @Override
@@ -127,14 +129,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public int thorBossChance = 100;
         @Setting("boss-chance.zapper")
         public int zapperBossChance = 60;
-        @Setting("boss-chance.merciless.normal")
-        public int mercilessBossChanceNormal = 1000;
-        @Setting("boss-chance.merciless.high-load")
-        public int mercilessBossChanceHighLoad = 100;
         @Setting("boss-chance.sticky")
         public int stickyBossChance = 60;
         @Setting("boss-chance.chucker")
         public int chuckerBossChance = 60;
+        @Setting("merciless-zombie-requirement")
+        public int mercilessZombieRequirement = 100;
         @Setting("baby-chance")
         public int babyChance = 16;
         @Setting("amplification-noise")
@@ -431,8 +431,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         final int mobCount = world.getEntitiesByClasses(Zombie.class).size();
         final int mobCountMax = config.maxMobsHardCap;
 
-        highLoad = mobCount >= config.maxMobsEntry;
-
         // Lets not flood the world farther
         if (mobCount >= mobCountMax || world.getEntities().size() > (mobCountMax * 2)) return;
 
@@ -593,28 +591,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         return entity;
     }
 
-    private boolean makeMercilessMiniboss(LivingEntity entity) {
-        if (highLoad) {
-            if (ChanceUtil.getChance(config.mercilessBossChanceHighLoad)) {
-                mercilessBossManager.bind(entity);
-                return true;
-            }
-        } else {
-            if (ChanceUtil.getChance(config.mercilessBossChanceNormal)) {
-                mercilessBossManager.bind(entity);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private void maybeMakeMiniboss(LivingEntity entity) {
-        // Special, as this one also helps to lower server load.
-        if (makeMercilessMiniboss(entity)) {
-            return;
-        }
-
         if (ChanceUtil.getChance(config.thorBossChance)) {
             thorBossManager.bind(entity);
         } else if (ChanceUtil.getChance(config.zapperBossChance)) {
@@ -634,6 +611,64 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         LivingEntity monster = spawnBase(location, spawnConfig);
         if (spawnConfig.allowMiniBoss) {
             maybeMakeMiniboss(monster);
+        }
+    }
+
+    private void makeMercilessMiniboss(Location location, double totalHealth) {
+        Zombie entity = spawnBase(location, new ZombieSpawnConfig());
+        mercilessBossManager.bind(entity);
+        EntityUtil.extendHeal(entity, totalHealth, MercilessZombie.MAX_ACHIEVABLE_HEALTH);
+    }
+
+    private void upgradeToMerciless() {
+        for (World world : server.getWorlds()) {
+            if (!hasThunderstorm(world)) {
+                continue;
+            }
+
+            HashMap<LivingEntity, List<Zombie>> targetZombies = new HashMap<>();
+            for (Zombie zombie : world.getEntitiesByClass(Zombie.class)) {
+                LivingEntity target = zombie.getTarget();
+                if (target == null || !target.isValid()) {
+                    continue;
+                }
+
+                if (!ApocalypseHelper.checkEntity(zombie)) {
+                    continue;
+                }
+
+                targetZombies.compute(target, (ignored, values) -> {
+                    if (values == null) {
+                        values = new ArrayList<>();
+                    }
+                    values.add(zombie);
+                    return values;
+                });
+            }
+
+            targetZombies.forEach((target, zombies) -> {
+                int numZombies = zombies.size();
+                if (numZombies < config.mercilessZombieRequirement) {
+                    return;
+                }
+
+                // Sort zombies by distance to target to get the merciless zombie's location
+                Location targetLoc = target.getLocation();
+                zombies.sort((a, b) -> (int) (b.getLocation().distanceSquared(targetLoc) - a.getLocation().distanceSquared(targetLoc)));
+
+                Location replacementLoc = zombies.get(numZombies / 2).getLocation();
+
+                // Kill zombies and spawn merciless zombies
+                double[] health = {0}; // hack for lambda capture
+                ApocalypseHelper.suppressDrops(() -> {
+                    for (Zombie zombie : zombies) {
+                        health[0] += zombie.getHealth();
+                        zombie.setHealth(0);
+                    }
+                });
+
+                makeMercilessMiniboss(replacementLoc, health[0]);
+            });
         }
     }
 
