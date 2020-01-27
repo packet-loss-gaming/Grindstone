@@ -36,6 +36,7 @@ import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.jail.JailComponent;
+import gg.packetloss.grindstone.optimization.OptimizedZombieFactory;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
@@ -91,9 +92,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private SessionComponent sessions;
     @InjectComponent
     private HighScoresComponent highScoresComponent;
-
-
-    private static final Class<Zombie> attackMob = Zombie.class;
 
     private LocalConfiguration config;
     private ThorZombie thorBossManager;
@@ -171,7 +169,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         Entity target = event.getTarget();
         Entity targeter = event.getEntity();
 
-        if (!(target instanceof Player) || !targeter.isValid() || !attackMob.isInstance(targeter)) return;
+        if (!(target instanceof Player) || !targeter.isValid() || !(targeter instanceof Zombie)) return;
 
         Player player = (Player) target;
         if (checkEntity(targeter) && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(8)) {
@@ -288,8 +286,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         // Ensure the radius is at least 2
         if (safeRespawnRadius < 4) safeRespawnRadius = 4;
 
-        for (Entity entity : respawnPoint.getWorld().getEntitiesByClass(attackMob)) {
-            if (!(entity instanceof LivingEntity) || !checkEntity((LivingEntity) entity)) continue;
+        for (Entity entity : respawnPoint.getWorld().getEntitiesByClass(Zombie.class)) {
+            if (!(entity instanceof LivingEntity) || !checkEntity(entity)) continue;
             if (entity.getLocation().distanceSquared(respawnPoint) < safeRespawnRadius) entity.remove();
 
             for (int i = 0; i < 20; i++) {
@@ -430,7 +428,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         World world = lightning.getWorld();
 
         // Get the mob count
-        final int mobCount = world.getEntitiesByClasses(attackMob).size();
+        final int mobCount = world.getEntitiesByClasses(Zombie.class).size();
         final int mobCountMax = config.maxMobsHardCap;
 
         highLoad = mobCount >= config.maxMobsEntry;
@@ -508,7 +506,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         // Spawn however many zombies we determined need spawned.
         ZombieSpawnConfig bedSpawnConfig = new ZombieSpawnConfig();
         for (int i = 0; i < apocalypseEvent.getNumberOfZombies(); i++) {
-            spawn(apocalypseEvent.getLocation(), attackMob, bedSpawnConfig);
+            spawn(apocalypseEvent.getLocation(), bedSpawnConfig);
         }
     }
 
@@ -529,7 +527,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         int multiplier = config.strikeMultiplier * config.amplificationNoise;
         for (int i = 0; i < multiplier; ++i) {
-            spawn(strikeLocation, attackMob, strikeSpawnConfig);
+            spawn(strikeLocation, strikeSpawnConfig);
         }
     }
 
@@ -550,7 +548,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 continue;
             }
 
-            spawn(apocalypseEvent.getLocation(), attackMob, localSpawnConfig);
+            spawn(apocalypseEvent.getLocation(), localSpawnConfig);
         }
     }
 
@@ -568,13 +566,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         return l.getBlock().getType().isSolid() ? origin : l;
     }
 
-    private <T extends LivingEntity> T spawnBase(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
-        T entity = location.getWorld().spawn(location, clazz, (e) -> e.getEquipment().clear());
+    private Zombie spawnBase(Location location, ZombieSpawnConfig spawnConfig) {
+        Zombie entity = OptimizedZombieFactory.create(location);
 
         // Override baby defaults
-        if (entity instanceof Zombie) {
-            ((Zombie) entity).setBaby(ChanceUtil.getChance(config.babyChance));
-        }
+        entity.setBaby(ChanceUtil.getChance(config.babyChance));
 
         // Override pickup settings
         entity.setCanPickupItems(spawnConfig.allowItemPickup);
@@ -630,12 +626,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
-    private <T extends LivingEntity> void spawn(Location location, Class<T> clazz, ZombieSpawnConfig spawnConfig) {
+    private <T extends LivingEntity> void spawn(Location location, ZombieSpawnConfig spawnConfig) {
         if (!LocationUtil.isChunkLoadedAt(location)) {
             return;
         }
 
-        LivingEntity monster = spawnBase(location, clazz, spawnConfig);
+        LivingEntity monster = spawnBase(location, spawnConfig);
         if (spawnConfig.allowMiniBoss) {
             maybeMakeMiniboss(monster);
         }

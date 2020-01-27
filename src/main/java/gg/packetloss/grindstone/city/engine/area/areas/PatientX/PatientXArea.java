@@ -14,6 +14,7 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
+import gg.packetloss.grindstone.optimization.OptimizedZombieFactory;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
@@ -193,7 +194,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         double amt = getContainedParticipants().size() * difficulty;
         Location l = getCentralLoc();
         for (int i = 0; i < amt; i++) {
-            Zombie zombie = getWorld().spawn(l, Zombie.class);
+            Zombie zombie = OptimizedZombieFactory.create(l);
             zombie.setCanPickupItems(false);
             zombie.setBaby(true);
         }

@@ -19,6 +19,7 @@ import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.optimization.OptimizedZombieFactory;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
@@ -341,7 +342,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
             Location spawnPt = spawnPts.get(i);
             if (ChanceUtil.getChance(chancePerSpawn)) {
-                Zombie z = world.spawn(spawnPt, Zombie.class,(e) -> e.getEquipment().clear());
+                Zombie z = OptimizedZombieFactory.create(spawnPt);
 
                 // Create the baby with no item pickup
                 z.setBaby(true);

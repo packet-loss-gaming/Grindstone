@@ -10,29 +10,21 @@ import net.minecraft.server.v1_15_R1.*;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
-import org.bukkit.entity.Giant;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-public class HBGiant extends EntityGiantZombie {
+public class HBSimpleZombie extends EntityZombie {
     private static boolean registered = false;
     private static  EntityTypes<?> registration;
 
-    public HBGiant(EntityTypes<? extends EntityGiantZombie> var0, World var1) {
-        super(EntityTypes.GIANT, var1); // This ensures the giant shows and saves as a giant, instead of some custom
-                                        // invalid custom type. However, this also means that the this giant will
-                                        // not be restored to this class. So, we have to be careful to ensure we
-                                        // recreate the giant when coming from disk.
-    }
-
-    @Override
-    protected void initAttributes() {
-        super.initAttributes();
-        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.23D);
-        this.getAttributeInstance(GenericAttributes.ATTACK_DAMAGE).setValue(12.0D);
+    public HBSimpleZombie(EntityTypes<? extends EntityZombie> var0, World var1) {
+        super(EntityTypes.ZOMBIE, var1); // This ensures the zombie shows and saves as a zombie, instead of some custom
+                                         // invalid custom type. However, this also means that the this zombie will
+                                         // not be restored to this class.
     }
 
     @Override
@@ -57,30 +49,37 @@ public class HBGiant extends EntityGiantZombie {
         TaggedChoice.TaggedChoiceType<?> entityNameConverter = currentSchema.findChoiceType(DataConverterTypes.ENTITY);
 
         Map<Object, Type<?>> dataTypes = (Map<Object, Type<?>>) entityNameConverter.types();
-        dataTypes.put("minecraft:hb_giant", dataTypes.get("minecraft:giant"));
+        dataTypes.put("minecraft:hb_zombie", dataTypes.get("minecraft:zombie"));
 
         try {
             Method m = EntityTypes.class.getDeclaredMethod("a", String.class, EntityTypes.a.class);
             m.setAccessible(true);
-            registration = (EntityTypes<?>) m.invoke(null, "hb_giant", EntityTypes.a.a(HBGiant::new, EnumCreatureType.MONSTER).a(3.6F, 12.0F));
+            registration = (EntityTypes<?>) m.invoke(null, "hb_zombie", EntityTypes.a.a(HBSimpleZombie::new, EnumCreatureType.MONSTER).a(0.6F, 1.95F));
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
             ex.printStackTrace();
         }
     }
 
-    public static Giant spawn(Location loc) {
+    public static Zombie spawn(Location loc) {
         register();
 
         World world = ((CraftWorld) loc.getWorld()).getHandle();
-        net.minecraft.server.v1_15_R1.Entity nmsEntity = registration.a(world);
+        Entity nmsEntity = registration.a(world);
         nmsEntity.setPosition(loc.getX(), loc.getY(), loc.getZ());
 
+        ((EntityInsentient) nmsEntity).prepare(world, world.getDamageScaler(new BlockPosition(nmsEntity)), EnumMobSpawn.COMMAND, null, null);
+
+        // Reset the zombie
+        Zombie bukkitEntity = (Zombie) nmsEntity.getBukkitEntity();
+        bukkitEntity.getEquipment().clear();
+
+        // Add the zombie
         world.addEntity(nmsEntity, CreatureSpawnEvent.SpawnReason.CUSTOM);
 
-        return (Giant) nmsEntity.getBukkitEntity();
+        return bukkitEntity;
     }
 
     public static boolean is(org.bukkit.entity.Entity entity) {
-        return ((CraftEntity) entity).getHandle() instanceof HBGiant;
+        return ((CraftEntity) entity).getHandle() instanceof HBSimpleZombie;
     }
 }
