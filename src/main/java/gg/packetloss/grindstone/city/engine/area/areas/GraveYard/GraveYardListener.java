@@ -18,6 +18,7 @@ import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowerUseEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -26,6 +27,7 @@ import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -684,5 +686,44 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
 
         player.updateInventory();
+    }
+
+    @EventHandler
+    public void onPlayerStatePush(PlayerStatePushEvent event) {
+        if (!GraveYardArea.GRAVE_YARD_SPECTATOR_KINDS.contains(event.getKind())) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        // Create a spawn point looking at something interesting.
+        int minPlayersToAttemptRandomAssignment = parent.isParticipant(player) ? 2 : 1;
+        List<Player> participants = parent.getContainedParticipants();
+
+        Location pointOfInterest = RegionUtil.getCenterAt(parent.getWorld(), 92, parent.getRegion());
+        Location targetLocation = LocationUtil.pickLocation(
+                parent.getWorld(),
+                pointOfInterest.getY() + 25,
+                new RegionChecker(parent.getRegion())
+        );
+
+        if (participants.size() >= minPlayersToAttemptRandomAssignment) {
+            while (true) {
+                Player targetParticipant = CollectionUtil.getElement(participants);
+                if (targetParticipant != player) {
+                    pointOfInterest = targetParticipant.getLocation();
+                    targetLocation = LocationUtil.findRandomLoc(
+                            pointOfInterest,
+                            10,
+                            false,
+                            false
+                    ).add(0, 10, 0);
+                    break;
+                }
+            }
+        }
+
+        targetLocation.setDirection(VectorUtil.createDirectionalVector(targetLocation, pointOfInterest));
+        player.teleport(targetLocation, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 }

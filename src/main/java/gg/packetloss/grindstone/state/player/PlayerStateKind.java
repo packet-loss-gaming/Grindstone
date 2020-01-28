@@ -25,6 +25,8 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     FROSTBORN_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     SHNUGGLES_PRIME_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     GRAVE_YARD_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
+    GRAVE_YARD_SOUTH_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
+    GRAVE_YARD_NORTH_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     PATIENT_X_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     JUNGLE_RAID_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     SKY_WARS_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl());

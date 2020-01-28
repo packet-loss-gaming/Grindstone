@@ -67,6 +67,12 @@ import static org.bukkit.block.data.type.Chest.Type;
         plugins = {"WorldGuard"})
 public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
+    protected static List<PlayerStateKind> GRAVE_YARD_SPECTATOR_KINDS = List.of(
+            PlayerStateKind.GRAVE_YARD_SPECTATOR,
+            PlayerStateKind.GRAVE_YARD_NORTH_SPECTATOR,
+            PlayerStateKind.GRAVE_YARD_SOUTH_SPECTATOR
+    );
+
     @InjectComponent
     protected AdminComponent admin;
     @InjectComponent
@@ -141,17 +147,33 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         spawnBlockBreakerTask();
 
-        spectator.registerSpectatedRegion(PlayerStateKind.GRAVE_YARD_SPECTATOR, region);
+        for (PlayerStateKind kind : GRAVE_YARD_SPECTATOR_KINDS) {
+            spectator.registerSpectatedRegion(kind, region);
+        }
+
         spectator.registerSpectatorSkull(
                 PlayerStateKind.GRAVE_YARD_SPECTATOR,
                 new Location(world, -169, 94, -686),
                 () -> getTempleContained(Player.class).stream().anyMatch(this::isParticipant)
         );
+        spectator.registerSpectatorSkull(
+                PlayerStateKind.GRAVE_YARD_NORTH_SPECTATOR,
+                new Location(world, -161, 82, -767),
+                () -> !isEmpty()
+        );
+        spectator.registerSpectatorSkull(
+                PlayerStateKind.GRAVE_YARD_SOUTH_SPECTATOR,
+                new Location(world, -144, 82, -578),
+                () -> !isEmpty()
+        );
     }
 
     @Override
     public void enable() {
-        spectator.registerSpectatorKind(PlayerStateKind.GRAVE_YARD_SPECTATOR);
+        for (PlayerStateKind kind : GRAVE_YARD_SPECTATOR_KINDS) {
+            spectator.registerSpectatorKind(kind);
+        }
+
         server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
@@ -229,10 +251,14 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 .collect(Collectors.toList());
     }
 
+    private boolean isEvilSurface() {
+        return EnvironmentUtil.isNightTime(getWorld().getTime()) || getWorld().hasStorm();
+    }
+
     private boolean isEvilMode(Block block) {
         // Weather/Day Check
         //noinspection SimplifiableIfStatement
-        if (EnvironmentUtil.isNightTime(getWorld().getTime()) || getWorld().hasStorm()) return true;
+        if (isEvilSurface()) return true;
         return isHostileTempleArea(block.getLocation()) || block.getLightLevel() == 0;
     }
 
