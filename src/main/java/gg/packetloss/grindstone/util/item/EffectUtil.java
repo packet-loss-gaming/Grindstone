@@ -13,6 +13,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.bukkit.Effect;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.LivingEntity;
@@ -40,6 +41,10 @@ public class EffectUtil {
             EntityUtil.heal(entity, attackDamage);
 
             entity.getNearbyEntities(8, 8, 8).stream().filter(e -> e.isValid() && e instanceof LivingEntity).forEach(e -> {
+                if (e instanceof Player && ((Player) e).getGameMode() != GameMode.SURVIVAL) {
+                    return;
+                }
+
                 if (e.getType() == entity.getType()) {
                     ((LivingEntity) e).setHealth(Math.min(((LivingEntity) e).getHealth() + attackDamage,
                             ((LivingEntity) e).getMaxHealth()));
