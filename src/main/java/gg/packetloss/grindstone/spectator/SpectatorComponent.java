@@ -127,6 +127,11 @@ public class SpectatorComponent extends BukkitComponent implements Listener {
             return;
         }
 
+        Player player = event.getPlayer();
+        if (player.getGameMode() != GameMode.SURVIVAL) {
+            return;
+        }
+
         Block block = event.getClickedBlock();
         assert block != null;
 
@@ -138,7 +143,6 @@ public class SpectatorComponent extends BukkitComponent implements Listener {
         // Delay by 1 tick, players are getting teleported back because of some spectator related
         // net code in MC 1.15.1.
         server.getScheduler().runTask(inst, () -> {
-            Player player = event.getPlayer();
             try {
                 playerState.pushState(stateKind, player);
             } catch (IOException | ConflictingPlayerStateException e) {
