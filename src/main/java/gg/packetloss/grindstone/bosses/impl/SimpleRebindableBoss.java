@@ -8,11 +8,11 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.InstructionDispatch;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.util.EntityUtil;
+import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Zombie;
 import org.bukkit.plugin.Plugin;
 
-public class SimpleRebindableBoss<T> extends BukkitBossDeclaration<GenericDetail> {
+public class SimpleRebindableBoss<T extends Damageable> extends BukkitBossDeclaration<GenericDetail> {
     private String boundName;
     private Class<T> clazz;
 
@@ -30,8 +30,7 @@ public class SimpleRebindableBoss<T> extends BukkitBossDeclaration<GenericDetail
 
     @Override
     public LocalControllable<GenericDetail> tryRebind(LocalEntity entity) {
-        Zombie zombie = (Zombie) BukkitUtil.getBukkitEntity(entity);
-        var boss = new BukkitBoss<>(zombie, new GenericDetail());
+        var boss = new BukkitBoss<>(clazz.cast(BukkitUtil.getBukkitEntity(entity)), new GenericDetail());
         silentBind(boss);
         return boss;
     }
