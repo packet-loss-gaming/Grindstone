@@ -28,7 +28,7 @@ public class EntityUtil {
         if (entity == null || !entity.isValid() || !(entity instanceof LivingEntity)) return;
         double cur = ((LivingEntity) entity).getHealth();
 
-        // Clamp to the max health a bug where max health runs away
+        // Clamp to the max health to fix a bug where max health runs away
         double curMax = Math.min(maxHealth, ((LivingEntity) entity).getMaxHealth());
 
         double amtToHeal = Math.min(cur + amt, maxHealth);
