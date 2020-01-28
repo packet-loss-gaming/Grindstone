@@ -23,10 +23,11 @@ import java.util.function.Predicate;
 
 public class LocationUtil {
 
-    private static final BlockFace[] surroundingBlockFaces = new BlockFace[]{
+    private static final BlockFace[] SURROUNDING_BLOCK_FACES = new BlockFace[]{
             BlockFace.NORTH, BlockFace.EAST,
-            BlockFace.SOUTH, BlockFace.WEST, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST, BlockFace.SOUTH_EAST,
-            BlockFace.SOUTH_WEST
+            BlockFace.SOUTH, BlockFace.WEST,
+            BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
+            BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST
     };
 
     public static double distanceSquared2D(Location a, Location b) {
@@ -164,10 +165,7 @@ public class LocationUtil {
 
         int trueRadius = trueRandom ? ChanceUtil.getRandom(radius) : radius;
 
-        BlockFace dir;
-        do {
-            dir = CollectionUtil.getElement(BlockFace.values());
-        } while (dir == null);
+        BlockFace dir = CollectionUtil.getElement(SURROUNDING_BLOCK_FACES);
 
         if (airOnly) {
             return findFreePosition(searchFromLocation.getRelative(dir, trueRadius).getLocation());
@@ -410,7 +408,7 @@ public class LocationUtil {
         if (predicate.test(searchBlock.getType())) return true;
         if (searchBlock.getType() != Material.AIR) return false;
 
-        for (BlockFace blockFace : surroundingBlockFaces) {
+        for (BlockFace blockFace : SURROUNDING_BLOCK_FACES) {
             if (predicate.test(searchBlock.getRelative(blockFace).getType())) return true;
         }
         return false;
