@@ -519,7 +519,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         if (parent.contains(player, 1)) {
-            if (parent.isBossSpawned() && parent.isParticipant(player)) {
+            if (parent.isBossSpawned() && parent.isParticipant(player, true)) {
                 parent.handlePlayerSurrender();
             }
 

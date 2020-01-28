@@ -77,6 +77,14 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
         return contains(player) && player.getGameMode() == GameMode.SURVIVAL;
     }
 
+    public final boolean isParticipant(Player player, boolean includeDead) {
+        if (!includeDead && player.isDead()) {
+            return false;
+        }
+
+        return isParticipant(player);
+    }
+
     public List<Player> getContainedParticipants() {
         return world.getPlayers().stream()
                 .filter(this::isParticipant)
@@ -85,8 +93,8 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
 
     public List<Player> getContainedParticipantsIn(ProtectedRegion region) {
         return world.getPlayers().stream()
-                .filter(this::isParticipant)
                 .filter((p) -> contains(region, p))
+                .filter(this::isParticipant)
                 .collect(Collectors.toList());
     }
 
