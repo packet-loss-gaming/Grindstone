@@ -3,7 +3,6 @@ package gg.packetloss.grindstone.bosses.manager.apocalypse;
 import com.destroystokyo.paper.ParticleBuilder;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.OSBL.bukkit.entity.BukkitBoss;
 import com.skelril.OSBL.bukkit.util.BukkitAttackDamage;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
 import com.skelril.OSBL.entity.LocalControllable;
@@ -12,9 +11,8 @@ import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.OSBL.util.DamageSource;
 import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
-import gg.packetloss.grindstone.bosses.detail.GenericDetail;
-import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
-import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
+import gg.packetloss.grindstone.bosses.detail.BossBarDetail;
+import gg.packetloss.grindstone.bosses.impl.BossBarRebindableBoss;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -28,7 +26,10 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
@@ -42,27 +43,29 @@ public class MercilessZombie {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private SimpleRebindableBoss<Zombie> mercilessZombie;
+    private BossBarRebindableBoss<Zombie> mercilessZombie;
 
     public static final String BOUND_NAME = "Merciless Zombie";
     public static final int MIN_HEALTH = 750;
     public static final int MAX_ACHIEVABLE_HEALTH = 15000;
 
     public MercilessZombie() {
-        mercilessZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        mercilessZombie = new BossBarRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
         setupMercilessZombie();
         server.getScheduler().runTaskTimer(
                 inst,
                 () -> {
-                    Lists.newArrayList(mercilessZombie.controlled.values()).forEach((ce) -> mercilessZombie.process(ce));
+                    Lists.newArrayList(mercilessZombie.controlled.values()).forEach((ce) -> {
+                        mercilessZombie.process(ce);
+                    });
                 },
                 20 * 10,
                 20 * 2
         );
     }
 
-    public void bind(Damageable entity) {
-        mercilessZombie.bind(new BukkitBoss<>(entity, new GenericDetail()));
+    public void bind(Zombie entity) {
+        mercilessZombie.bind(entity);
     }
 
     private boolean isConsumableZombie(Entity entity) {
@@ -103,7 +106,6 @@ public class MercilessZombie {
     }
 
     private static final ParticleBuilder PASSIVE_PARTICLE_EFFECT = new ParticleBuilder(Particle.ENCHANTMENT_TABLE).allPlayers();
-    private static final ParticleBuilder REMOVAL_PARTICLE_EFFECT = new ParticleBuilder(Particle.SMOKE_LARGE).allPlayers();
 
     private void distanceTrap(LivingEntity boss, LivingEntity toHit) {
         toHit.teleport(boss);
@@ -126,10 +128,10 @@ public class MercilessZombie {
     }
 
     private void setupMercilessZombie() {
-        List<BindInstruction<GenericDetail>> bindInstructions = mercilessZombie.bindInstructions;
+        List<BindInstruction<BossBarDetail>> bindInstructions = mercilessZombie.bindInstructions;
         bindInstructions.add(new BindInstruction<>() {
             @Override
-            public InstructionResult<GenericDetail, BindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+            public InstructionResult<BossBarDetail, BindInstruction<BossBarDetail>> process(LocalControllable<BossBarDetail> controllable) {
                 Entity anEntity = BukkitUtil.getBukkitEntity(controllable);
                 if (anEntity instanceof Zombie) {
                     anEntity.setCustomName(BOUND_NAME);
@@ -163,10 +165,10 @@ public class MercilessZombie {
             }
         });
 
-        List<UnbindInstruction<GenericDetail>> unbindInstructions = mercilessZombie.unbindInstructions;
+        List<UnbindInstruction<BossBarDetail>> unbindInstructions = mercilessZombie.unbindInstructions;
         unbindInstructions.add(new UnbindInstruction<>() {
             @Override
-            public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+            public InstructionResult<BossBarDetail, UnbindInstruction<BossBarDetail>> process(LocalControllable<BossBarDetail> controllable) {
                 if (ApocalypseHelper.areDropsSuppressed()) {
                     return null;
                 }
@@ -187,21 +189,20 @@ public class MercilessZombie {
             }
         });
 
-        List<DamageInstruction<GenericDetail>> damageInstructions = mercilessZombie.damageInstructions;
+        List<DamageInstruction<BossBarDetail>> damageInstructions = mercilessZombie.damageInstructions;
         damageInstructions.add(new DamageInstruction<>() {
             @Override
-            public InstructionResult<GenericDetail, DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
+            public InstructionResult<BossBarDetail, DamageInstruction<BossBarDetail>> process(LocalControllable<BossBarDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 final Entity toHit = BukkitUtil.getBukkitEntity(entity);
                 ((LivingEntity) toHit).setHealth((int) (((LivingEntity) toHit).getHealth() / 4));
                 return null;
             }
         });
 
-        List<DamagedInstruction<GenericDetail>> damagedInstructions = mercilessZombie.damagedInstructions;
-        damagedInstructions.add(new HealthPrint<>());
+        List<DamagedInstruction<BossBarDetail>> damagedInstructions = mercilessZombie.damagedInstructions;
         damagedInstructions.add(new DamagedInstruction<>() {
             @Override
-            public InstructionResult<GenericDetail, DamagedInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, DamageSource damageSource, AttackDamage damage) {
+            public InstructionResult<BossBarDetail, DamagedInstruction<BossBarDetail>> process(LocalControllable<BossBarDetail> controllable, DamageSource damageSource, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 LocalEntity localToHit = damageSource.getDamagingEntity();
                 if (localToHit == null) return null;
@@ -216,10 +217,10 @@ public class MercilessZombie {
             }
         });
 
-        List<PassiveInstruction<GenericDetail>> passiveInstructions = mercilessZombie.passiveInstructions;
-        passiveInstructions.add(new PassiveInstruction<GenericDetail>() {
+        List<PassiveInstruction<BossBarDetail>> passiveInstructions = mercilessZombie.passiveInstructions;
+        passiveInstructions.add(new PassiveInstruction<BossBarDetail>() {
             @Override
-            public InstructionResult<GenericDetail, PassiveInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
+            public InstructionResult<BossBarDetail, PassiveInstruction<BossBarDetail>> process(LocalControllable<BossBarDetail> controllable) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 if (boss.isDead()) {
                     return null;
