@@ -11,6 +11,8 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.bukkittext.TextAction;
+import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
+import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.pixieitems.broker.EconomyBroker;
 import gg.packetloss.grindstone.pixieitems.broker.VoidBroker;
 import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
@@ -58,7 +60,7 @@ import java.util.logging.Logger;
 import static gg.packetloss.grindstone.util.EnvironmentUtil.isChest;
 
 @ComponentInformation(friendlyName = "Item Sorter", desc = "A system of magical pixie item sorting.")
-@Depend(components = {SessionComponent.class})
+@Depend(components = {SessionComponent.class, ManagedWorldComponent.class})
 public class ItemSorterComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -66,6 +68,8 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
     @InjectComponent
     private SessionComponent sessions;
+    @InjectComponent
+    private ManagedWorldComponent managedWorld;
 
     private Economy economy = null;
 
@@ -106,7 +110,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             return false;
         }
 
-        if (!block.getWorld().getName().equals("City")) {
+        if (!managedWorld.is(ManagedWorldIsQuery.ANY_BUIDABLE, block.getWorld())) {
             return false;
         }
 

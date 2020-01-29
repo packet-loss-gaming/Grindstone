@@ -31,6 +31,8 @@ public class ManagedWorldComponent extends BukkitComponent {
                        is(ManagedWorldIsQuery.LATEST_RANGE_NETHER, world);
             case SKY:
                 return worldName.equals(SKY_WORLD);
+            case ANY_BUIDABLE:
+                return is(ManagedWorldIsQuery.ANY_RANGE, world) || is(ManagedWorldIsQuery.SKY, world);
         }
 
         throw new UnsupportedOperationException();
