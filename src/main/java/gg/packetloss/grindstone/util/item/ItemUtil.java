@@ -193,19 +193,6 @@ public class ItemUtil {
         return count;
     }
 
-    public static int countItemsOfType(ItemStack[] itemStacks, ItemStack[] checkItemStacks) {
-
-        int count = 0;
-        for (ItemStack itemStack : itemStacks) {
-            for (ItemStack checkItem : checkItemStacks) {
-                if (itemStack != null && !isNamed(itemStack) && itemStack.equals(checkItem)) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
-
     public static int countItemsOfComputedName(ItemStack[] itemStacks, String computedName) {
         int count = 0;
 
