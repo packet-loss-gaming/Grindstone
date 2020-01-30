@@ -380,8 +380,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         event.getEntities().removeIf(next -> next instanceof Giant);
     }
 
-    private static String BARBARIAN_BONES = ChatColor.DARK_RED + "Barbarian Bone";
-
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         Entity e = event.getEntity();
@@ -406,7 +404,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 if (amt != 0) {
                     for (Player aPlayer : players) {
                         if (parent.admin.isAdmin(aPlayer)) continue;
-                        if (ItemUtil.countItemsOfName(aPlayer.getInventory().getContents(), BARBARIAN_BONES) >= required) {
+                        if (ItemUtil.countItemsOfName(aPlayer.getInventory().getContents(), CustomItems.BARBARIAN_BONE.toString()) >= required) {
                             player = aPlayer;
                             break;
                         }
@@ -453,8 +451,8 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
                 // Remove the Barbarian Bones
                 if (player != null) {
-                    int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), BARBARIAN_BONES) - required;
-                    ItemStack[] nc = ItemUtil.removeItemOfName(player.getInventory().getContents(), BARBARIAN_BONES);
+                    int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.BARBARIAN_BONE.toString()) - required;
+                    ItemStack[] nc = ItemUtil.removeItemOfName(player.getInventory().getContents(), CustomItems.BARBARIAN_BONE.toString());
                     player.getInventory().setContents(nc);
                     int amount = Math.min(c, 64);
                     while (amount > 0) {
