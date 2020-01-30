@@ -336,6 +336,12 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 if (ChanceUtil.getChance(15000)) {
                     drops.add(CustomItemCenter.build(CustomItems.PHANTOM_CLOCK, ChanceUtil.getRandom(3)));
                 }
+                if (ChanceUtil.getChance(1400)) {
+                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_POTION));
+                }
+                if (ChanceUtil.getChance(700)) {
+                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE));
+                }
                 if (ChanceUtil.getChance(325)) {
                     drops.add(CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL));
                 }
@@ -370,15 +376,11 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             } else if (customName.equals("Guardian Zombie")) {
                 drops.removeIf(stack -> stack != null && stack.getType() == Material.ROTTEN_FLESH);
 
-                if (ChanceUtil.getChance(120)) {
-                    drops.add(CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION));
-                } else if (ChanceUtil.getChance(80)) {
-                    drops.add(CustomItemCenter.build(CustomItems.HOLY_COMBAT_POTION));
-                } else if (ChanceUtil.getChance(60)) {
-                    drops.add(CustomItemCenter.build(CustomItems.EXTREME_COMBAT_POTION));
-                }
                 if (ChanceUtil.getChance(500)) {
                     drops.add(CustomItemCenter.build(CustomItems.PHANTOM_CLOCK));
+                }
+                if (ChanceUtil.getChance(90)) {
+                    drops.add(CustomItemCenter.build(CustomItems.PHANTOM_POTION));
                 }
                 if (ChanceUtil.getChance(80)) {
                     drops.add(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(8)));
