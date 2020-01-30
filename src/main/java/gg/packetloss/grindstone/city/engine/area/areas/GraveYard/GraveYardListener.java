@@ -34,6 +34,7 @@ import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
+import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -596,15 +597,35 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
     }
 
+    private static final int REQUIRED_PHANTOM_ESSENCE = 10;
+
     @EventHandler(ignoreCancelled = true)
     public void onHymnSing(HymnSingEvent event) {
-        Player player = event.getPlayer();
-        if (event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) {
-            if (LocationUtil.isInRegion(parent.getWorld(), parent.creepers, player)) {
-                ChatUtil.sendNotice(player, "A spirit carries you through the maze!");
-                player.teleport(new Location(parent.getWorld(), -162.5, 52, -704), PlayerTeleportEvent.TeleportCause.UNKNOWN);
-            }
+        if (event.getHymn() != HymnSingEvent.Hymn.PHANTOM) {
+            return;
         }
+
+        Player player = event.getPlayer();
+        if (!LocationUtil.isInRegion(parent.getWorld(), parent.creepers, player)) {
+            return;
+        }
+
+        PlayerInventory pInv = player.getInventory();
+        if (ItemUtil.countItemsOfName(pInv.getContents(), CustomItems.PHANTOM_ESSENCE.toString()) < REQUIRED_PHANTOM_ESSENCE) {
+            ChatUtil.sendError(player, "You don't have enough phantom essence for spirit assistance.");
+            return;
+        }
+
+        boolean removed = ItemUtil.removeItemOfName(
+                player,
+                CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE),
+                REQUIRED_PHANTOM_ESSENCE,
+                false
+        );
+        Validate.isTrue(removed);
+
+        ChatUtil.sendNotice(player, "A spirit carries you through the maze!");
+        player.teleport(new Location(parent.getWorld(), -162.5, 52, -704), PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
     @EventHandler(priority = EventPriority.HIGH)

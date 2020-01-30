@@ -42,6 +42,7 @@ import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -49,6 +50,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
@@ -90,21 +92,39 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         if (parent.contains(event.getPlayer())) event.setCancelled(true);
     }
 
+    private static final int REQUIRED_PHANTOM_ESSENCE = 20;
+
     @EventHandler(ignoreCancelled = true)
     public void onHymnUse(HymnSingEvent event) {
-        if (event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) {
-            Player player = event.getPlayer();
-            if (LocationUtil.isInRegion(parent.getWorld(), parent.entry, player)) {
-                boolean teleported;
-                do {
-                    teleported = player.teleport(parent.getRandomDest());
-                } while (parent.boss.hasLineOfSight(player));
-                if (teleported) {
-                    ChatUtil.sendWarning(player, "It's been a long time since I had a worthy opponent...");
-                    ChatUtil.sendWarning(player, "Let's see if you have what it takes...");
-                }
-            }
+        if (event.getHymn() != HymnSingEvent.Hymn.PHANTOM) {
+            return;
         }
+
+        Player player = event.getPlayer();
+        if (!LocationUtil.isInRegion(parent.getWorld(), parent.entry, player)) {
+            return;
+        }
+
+        PlayerInventory pInv = player.getInventory();
+        if (ItemUtil.countItemsOfName(pInv.getContents(), CustomItems.PHANTOM_ESSENCE.toString()) < REQUIRED_PHANTOM_ESSENCE) {
+            ChatUtil.sendError(player, "You don't have enough phantom essence to enter.");
+            return;
+        }
+
+        do {
+            player.teleport(parent.getRandomDest(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        } while (parent.boss.hasLineOfSight(player));
+
+        boolean removed = ItemUtil.removeItemOfName(
+                player,
+                CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE),
+                REQUIRED_PHANTOM_ESSENCE,
+                false
+        );
+        Validate.isTrue(removed);
+
+        ChatUtil.sendWarning(player, "It's been a long time since I had a worthy opponent...");
+        ChatUtil.sendWarning(player, "Let's see if you have what it takes...");
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -112,13 +132,12 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         Location from = event.getFrom();
         Location to = event.getTo();
 
-        if (parent.contains(to) && !parent.contains(from)) {
+        if (!parent.contains(from) && parent.contains(to) && !event.getCause().equals(PlayerTeleportEvent.TeleportCause.UNKNOWN)) {
             Player player = event.getPlayer();
             if (player.getGameMode() != GameMode.SURVIVAL) return;
-            if (!ItemUtil.removeItemOfName(player, CustomItemCenter.build(CustomItems.PHANTOM_HYMN), 1, false)) {
-                ChatUtil.sendError(player, "You need a Phantom Hymn to sacrifice to enter that area.");
-                event.setCancelled(true);
-            }
+
+            ChatUtil.sendError(player, "This teleport isn't strong enough to reach Patient X.");
+            event.setCancelled(true);
         }
     }
 

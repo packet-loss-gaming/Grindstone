@@ -16,12 +16,16 @@ import gg.packetloss.grindstone.events.entity.HallowCreeperEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import net.milkbowl.vault.economy.Economy;
+import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -31,6 +35,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
@@ -81,44 +86,67 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         }
     }
 
+    private boolean checkSufficientEssence(Player player, int numEssence) {
+        PlayerInventory pInv = player.getInventory();
+        if (ItemUtil.countItemsOfName(pInv.getContents(), CustomItems.PHANTOM_ESSENCE.toString()) < numEssence) {
+            ChatUtil.sendError(player, "You don't have enough phantom essence to enter.");
+            return false;
+        }
+
+        boolean removed = ItemUtil.removeItemOfName(
+                player,
+                CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE),
+                5,
+                false
+        );
+        Validate.isTrue(removed);
+
+        return true;
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onHymnSing(HymnSingEvent event) {
-        if (!event.getHymn().equals(HymnSingEvent.Hymn.PHANTOM)) return;
+        if (event.getHymn() != HymnSingEvent.Hymn.PHANTOM) {
+            return;
+        }
+
         Player player = event.getPlayer();
-        if (parent.contains(player)) {
-            parent.validateBosses();
-            if (parent.contains(parent.charlotte_RG, player)) {
-                // Teleport to Frimus
-                if (parent.charlotte == null && parent.checkFrimus()) {
-                    parent.cleanupFrimus();
-                    parent.spawnFrimus();
-                    player.teleport(parent.getFrimusEntrance(), TeleportCause.UNKNOWN);
-                }
-            } else if (parent.contains(parent.frimus_RG, player)) {
-                // Teleport to Da Bomb
-                if (parent.frimus == null && parent.checkDaBomb()) {
-                    parent.cleanupDaBomb();
-                    parent.spawnDaBomb();
-                    player.teleport(parent.getDaBombEntrance(), TeleportCause.UNKNOWN);
-                }
-            } else if (parent.contains(parent.dabomb_RG, player)) {
-                // Teleport to Snipee
-                if (parent.daBomb == null && parent.checkSnipee()) {
-                    parent.cleanupSnipee();
-                    parent.spawnSnipee();
-                    player.teleport(parent.getSnipeeEntrance(), TeleportCause.UNKNOWN);
-                }
-            } else if (parent.contains(parent.snipee_RG, player)) {
-                // Teleport to Spawn
-                if (parent.snipee == null) {
-                    player.teleport(parent.entrance);
-                }
-            } else if (parent.checkCharlotte()) {
-                // Teleport to Charlotte
-                parent.cleanupCharlotte();
-                parent.spawnCharlotte();
-                player.teleport(parent.getCharlotteEntrance(), TeleportCause.UNKNOWN);
+        if (!parent.contains(player)) {
+            return;
+        }
+
+        parent.validateBosses();
+        if (parent.contains(parent.charlotte_RG, player)) {
+            // Teleport to Frimus
+            if (parent.charlotte == null && parent.checkFrimus() && checkSufficientEssence(player, 15)) {
+                parent.cleanupFrimus();
+                parent.spawnFrimus();
+                player.teleport(parent.getFrimusEntrance(), TeleportCause.UNKNOWN);
             }
+        } else if (parent.contains(parent.frimus_RG, player)) {
+            // Teleport to Da Bomb
+            if (parent.frimus == null && parent.checkDaBomb() && checkSufficientEssence(player, 10)) {
+                parent.cleanupDaBomb();
+                parent.spawnDaBomb();
+                player.teleport(parent.getDaBombEntrance(), TeleportCause.UNKNOWN);
+            }
+        } else if (parent.contains(parent.dabomb_RG, player)) {
+            // Teleport to Snipee
+            if (parent.daBomb == null && parent.checkSnipee() && checkSufficientEssence(player, 5)) {
+                parent.cleanupSnipee();
+                parent.spawnSnipee();
+                player.teleport(parent.getSnipeeEntrance(), TeleportCause.UNKNOWN);
+            }
+        } else if (parent.contains(parent.snipee_RG, player)) {
+            // Teleport to Entrance
+            if (parent.snipee == null) {
+                player.teleport(parent.entrance);
+            }
+        } else if (parent.checkCharlotte() && checkSufficientEssence(player, 20)) {
+            // Teleport to Charlotte
+            parent.cleanupCharlotte();
+            parent.spawnCharlotte();
+            player.teleport(parent.getCharlotteEntrance(), TeleportCause.UNKNOWN);
         }
     }
 
