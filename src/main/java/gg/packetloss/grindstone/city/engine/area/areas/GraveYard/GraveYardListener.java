@@ -312,6 +312,14 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             player.updateInventory();
 
             event.setItemStack(null);
+        } else if (ItemUtil.isItem(item, CustomItems.PHANTOM_HYMN)) {
+            Player player = event.getPlayer();
+
+            for (int i = 0; i < item.getAmount(); ++i) {
+                player.getInventory().addItem(CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE, 20));
+            }
+
+            event.setItemStack(null);
         }
     }
 
