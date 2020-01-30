@@ -18,31 +18,26 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 
 import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Nightmare extends EntityAttack implements MeleeSpecial {
+    private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
+    private static final int NUM_SEED_POINTS = 100;
 
-    private Random r;
+    private HashSet<Location> locations = new HashSet<>();
 
     public Nightmare(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
         super(owner, usedItem, target);
-        r = new Random(System.currentTimeMillis());
+
+        seedLocations();
     }
 
-    @Override
-    public void activate() {
-
-        inform("You unleash a nightmare upon the plane.");
-
-        final Set<Location> locations = new HashSet<>();
-
+    private void seedLocations() {
         Location origin = target.getLocation().add(0, 5, 0);
 
-        for (int i = 0; i < 100; i++) {
-
-            double angle = r.nextDouble() * Math.PI * 2;
-            double radius = r.nextDouble() * 12;
+        for (int i = 0; i < NUM_SEED_POINTS; i++) {
+            double angle = RANDOM.nextDouble() * Math.PI * 2;
+            double radius = RANDOM.nextDouble() * 12;
 
             Location pt = origin.clone();
             pt.setX(origin.getX() + radius * Math.cos(angle));
@@ -50,6 +45,23 @@ public class Nightmare extends EntityAttack implements MeleeSpecial {
 
             locations.add(pt);
         }
+    }
+
+    public boolean isValid() {
+        int solid = 0;
+
+        for (Location location : locations) {
+            if (location.getBlock().getType().isSolid()) {
+                ++solid;
+            }
+        }
+
+        return locations.size() - solid > (locations.size() / 2);
+    }
+
+    @Override
+    public void activate() {
+        inform("You unleash a nightmare upon the plane.");
 
         IntegratedRunnable hellFire = new IntegratedRunnable() {
             @Override

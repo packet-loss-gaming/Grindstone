@@ -388,7 +388,10 @@ public class RogueListener implements Listener {
 
         if (event.getContext().equals(SpecType.MELEE)) {
             if (state.hasPower(RoguePower.NIGHTMARE_SPECIAL) && ChanceUtil.getChance(14)) {
-                event.setSpec(new Nightmare(attack.getOwner(), attack.getUsedItem(), attack.getTarget()));
+                Nightmare newSpec = new Nightmare(attack.getOwner(), attack.getUsedItem(), attack.getTarget());
+                if (newSpec.isValid()) {
+                    event.setSpec(newSpec);
+                }
             } else if (state.hasPower(RoguePower.SPEEDY_SPECIALS)) {
                 float remainingCooldownPercentage = ChanceUtil.getChance(10) ? .1F : .66F;
                 event.setContextCooldown((long) (event.getContextCoolDown() * remainingCooldownPercentage));
