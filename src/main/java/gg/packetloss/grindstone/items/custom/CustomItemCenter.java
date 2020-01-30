@@ -8,11 +8,11 @@ package gg.packetloss.grindstone.items.custom;
 
 import gg.packetloss.grindstone.items.implementations.MagicBucketImpl;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -385,7 +385,7 @@ public class CustomItemCenter {
         addItem(legendaryGodPickaxe);
 
         // Combat Potions
-        CustomPotion divineCombatPotion = new CustomPotion(DIVINE_COMBAT_POTION, PotionType.INSTANT_DAMAGE);
+        CustomPotion divineCombatPotion = new CustomPotion(DIVINE_COMBAT_POTION, Color.BLACK);
         divineCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 3);
         divineCombatPotion.addEffect(PotionEffectType.REGENERATION, 20 * 600, 3);
         divineCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 3);
@@ -396,7 +396,7 @@ public class CustomItemCenter {
         divineCombatPotion.addSource(ItemSource.MARKET);
         addItem(divineCombatPotion);
 
-        CustomPotion holyCombatPotion = new CustomPotion(HOLY_COMBAT_POTION, PotionType.INSTANT_DAMAGE);
+        CustomPotion holyCombatPotion = new CustomPotion(HOLY_COMBAT_POTION, Color.BLACK);
         holyCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 45, 3);
         holyCombatPotion.addEffect(PotionEffectType.REGENERATION, 20 * 45, 3);
         holyCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 45, 3);
@@ -407,7 +407,7 @@ public class CustomItemCenter {
         holyCombatPotion.addSource(ItemSource.MARKET);
         addItem(holyCombatPotion);
 
-        CustomPotion extremeCombatPotion = new CustomPotion(EXTREME_COMBAT_POTION, PotionType.INSTANT_DAMAGE);
+        CustomPotion extremeCombatPotion = new CustomPotion(EXTREME_COMBAT_POTION, Color.BLACK);
         extremeCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 2);
         extremeCombatPotion.addEffect(PotionEffectType.REGENERATION, 20 * 600, 2);
         extremeCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 2);
@@ -463,7 +463,7 @@ public class CustomItemCenter {
         phantomHymn.addUse("At the cost of the item, teleports the player into Patient X's room.");
         addItem(phantomHymn);
 
-        CustomPotion phantomPotion = new CustomPotion(PHANTOM_POTION, PotionType.INVISIBILITY);
+        CustomPotion phantomPotion = new CustomPotion(PHANTOM_POTION, Color.RED);
         phantomPotion.addEffect(PotionEffectType.INVISIBILITY, 20 * 30, 0);
         phantomPotion.addSource(ItemSource.GRAVE_YARD);
         phantomPotion.addSource(ItemSource.MARKET);
@@ -591,7 +591,7 @@ public class CustomItemCenter {
         barbarianBones.addUse("Improves the drops of the Giant Boss if in a suitable quantity.");
         addItem(barbarianBones);
 
-        CustomPotion potionOfRestitution = new CustomPotion(POTION_OF_RESTITUTION, PotionType.POISON);
+        CustomPotion potionOfRestitution = new CustomPotion(POTION_OF_RESTITUTION, Color.GREEN);
         potionOfRestitution.addEffect(PotionEffectType.POISON, 20 * 10, 1);
         potionOfRestitution.addSource(ItemSource.MARKET);
         potionOfRestitution.addUse("Returns you to your last death point if a teleport can reach the location.");

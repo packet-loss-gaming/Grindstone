@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.custom;
 
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -18,16 +19,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CustomPotion extends CustomItem {
-    private PotionType basePotionType;
+    private Color color;
     private List<Potion> effects = new ArrayList<>();
 
-    public CustomPotion(CustomItems item, PotionType basePotionType) {
+    public CustomPotion(CustomItems item, Color color) {
         super(item, Material.POTION);
-        this.basePotionType = basePotionType;
+        this.color = color;
     }
 
     public CustomPotion(CustomPotion potion) {
         super(potion);
+        this.color = potion.getColor();
         effects.addAll(potion.getEffects());
     }
 
@@ -37,6 +39,10 @@ public class CustomPotion extends CustomItem {
 
     public void addEffect(PotionEffectType type, int time, int level) {
         addEffect(new Potion(type, time, level));
+    }
+
+    public Color getColor() {
+        return color;
     }
 
     public List<Potion> getEffects() {
@@ -52,7 +58,8 @@ public class CustomPotion extends CustomItem {
     public ItemStack build() {
         ItemStack base = super.build();
         PotionMeta meta = (PotionMeta) base.getItemMeta();
-        meta.setBasePotionData(new PotionData(basePotionType));
+        meta.setBasePotionData(new PotionData(PotionType.UNCRAFTABLE));
+        meta.setColor(color);
         for (Potion potion : effects) {
             meta.addCustomEffect(new PotionEffect(potion.getType(), potion.getTime(), potion.getLevel()), false);
         }
