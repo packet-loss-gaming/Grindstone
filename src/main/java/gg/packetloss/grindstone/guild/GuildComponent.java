@@ -24,7 +24,6 @@ import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.Server;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.LivingEntity;
@@ -68,12 +67,12 @@ public class GuildComponent extends BukkitComponent implements Listener {
 
         inst.registerEvents(this);
 
-        inst.registerEvents(new NinjaListener(this::internalGetStateForEffects));
-        inst.registerEvents(new RogueListener(this::internalGetStateForEffects));
+        inst.registerEvents(new NinjaListener(this::internalGetState));
+        inst.registerEvents(new RogueListener(this::internalGetState));
 
         server.getScheduler().scheduleSyncRepeatingTask(
                 inst,
-                new PotionMetabolizer(this::internalGetStateForEffects),
+                new PotionMetabolizer(this::internalGetState),
                 20 * 2,
                 11
         );
@@ -96,14 +95,6 @@ public class GuildComponent extends BukkitComponent implements Listener {
 
     private InternalGuildState internalGetState(Player player) {
         return guildStateMap.get(player.getUniqueId());
-    }
-
-    private InternalGuildState internalGetStateForEffects(Player player) {
-        if (player.getGameMode() != GameMode.SURVIVAL) {
-            return null;
-        }
-
-        return internalGetState(player);
     }
 
     public Optional<GuildState> getState(Player player) {

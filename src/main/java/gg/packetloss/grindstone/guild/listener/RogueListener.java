@@ -61,6 +61,10 @@ public class RogueListener implements Listener {
     }
 
     private Optional<RogueState> getState(Player player) {
+        if (player.getGameMode() != GameMode.SURVIVAL) {
+            return Optional.empty();
+        }
+
         return getStateAllowDisabled(player).filter(InternalGuildState::isEnabled);
     }
 

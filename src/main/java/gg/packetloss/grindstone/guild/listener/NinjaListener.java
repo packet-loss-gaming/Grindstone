@@ -17,10 +17,7 @@ import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -60,6 +57,10 @@ public class NinjaListener implements Listener {
     }
 
     private Optional<NinjaState> getState(Player player) {
+        if (player.getGameMode() != GameMode.SURVIVAL) {
+            return Optional.empty();
+        }
+
         return getStateAllowDisabled(player).filter(InternalGuildState::isEnabled);
     }
 

@@ -5,6 +5,7 @@ import gg.packetloss.grindstone.guild.powers.RoguePower;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -22,6 +23,10 @@ public class PotionMetabolizer implements Runnable {
     }
 
     private Optional<RogueState> getState(Player player) {
+        if (player.getGameMode() != GameMode.SURVIVAL) {
+            return Optional.empty();
+        }
+
         InternalGuildState internalState = internalStateLookup.apply(player);
         if (internalState instanceof RogueState && internalState.isEnabled()) {
             return Optional.of((RogueState) internalState);
