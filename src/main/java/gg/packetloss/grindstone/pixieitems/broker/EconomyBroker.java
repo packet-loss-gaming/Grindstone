@@ -91,7 +91,7 @@ public class EconomyBroker implements TransactionBroker {
                 broker.reduceCost(STACK_BASE_COST);
             }
 
-            broker.reduceCost(unused.getAmount());
+            broker.reduceCost(PER_ITEM_COST * unused.getAmount());
         }
     }
 }
