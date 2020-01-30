@@ -778,7 +778,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             case 23:
                 return new ItemStack(Material.EMERALD, ChanceUtil.getRandom(64));
             case 24:
-                return new ItemStack(Material.REDSTONE, ChanceUtil.getRandom(64));
+                return CustomItemCenter.build(CustomItems.PHANTOM_POTION);
             case 25:
                 return CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE, ChanceUtil.getRandom(16));
             case 26:
