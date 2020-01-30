@@ -469,6 +469,11 @@ public class CustomItemCenter {
         phantomPotion.addUse("Returns you to your lost items if a teleport can reach the location.");
         addItem(phantomPotion);
 
+        CustomItem phantomEssence = new CustomItem(PHANTOM_ESSENCE, Material.GHAST_TEAR);
+        phantomEssence.addSource(ItemSource.GRAVE_YARD);
+        phantomEssence.addUse("Currency for bargaining with spirits.");
+        addItem(phantomEssence);
+
         // Linear Tools
         CustomItem linearAxe = new CustomItem(LINEAR_AXE, Material.DIAMOND_AXE);
         linearAxe.addTag(ChatColor.RED, "Distance", "3");

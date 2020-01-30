@@ -86,6 +86,7 @@ public enum CustomItems {
     PHANTOM_CLOCK(ChatColor.DARK_RED, "Phantom Clock"),
     PHANTOM_HYMN(ChatColor.DARK_RED, "Phantom Hymn"),
     PHANTOM_POTION(ChatColor.DARK_RED, "Phantom Potion"),
+    PHANTOM_ESSENCE(ChatColor.DARK_RED, "Phantom Essence"),
 
     // Linear Tools
     LINEAR_PICKAXE(ChatColor.DARK_GREEN, "Linear Pickaxe"),

@@ -724,24 +724,24 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             case 1:
                 return CustomItemCenter.build(CustomItems.GEM_OF_LIFE, 6);
             case 3:
-                if (!ChanceUtil.getChance(35)) return null;
+                if (!ChanceUtil.getChance(70)) return null;
                 if (ChanceUtil.getChance(2)) {
                     return CustomItemCenter.build(CustomItems.FEAR_SWORD);
                 } else {
                     return CustomItemCenter.build(CustomItems.FEAR_SHORT_SWORD);
                 }
             case 4:
-                if (!ChanceUtil.getChance(35)) return null;
+                if (!ChanceUtil.getChance(70)) return null;
                 return CustomItemCenter.build(CustomItems.FEAR_BOW);
             case 5:
-                if (!ChanceUtil.getChance(35)) return null;
+                if (!ChanceUtil.getChance(70)) return null;
                 if (ChanceUtil.getChance(2)) {
                     return CustomItemCenter.build(CustomItems.UNLEASHED_SWORD);
                 } else {
                     return CustomItemCenter.build(CustomItems.UNLEASHED_SHORT_SWORD);
                 }
             case 6:
-                if (!ChanceUtil.getChance(35)) return null;
+                if (!ChanceUtil.getChance(70)) return null;
                 return CustomItemCenter.build(CustomItems.UNLEASHED_BOW);
             case 7:
                 return CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL, ChanceUtil.getRandom(3));
@@ -780,9 +780,9 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             case 24:
                 return new ItemStack(Material.REDSTONE, ChanceUtil.getRandom(64));
             case 25:
-                return new ItemStack(Material.ENDER_PEARL, ChanceUtil.getRandom(16));
+                return CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE, ChanceUtil.getRandom(16));
             case 26:
-                return new ItemStack(Material.ENCHANTED_GOLDEN_APPLE, ChanceUtil.getRandom(64));
+                return new ItemStack(Material.ENCHANTED_GOLDEN_APPLE, ChanceUtil.getRandom(32));
             case 28:
                 return new ItemStack(Material.SADDLE);
             case 29:
