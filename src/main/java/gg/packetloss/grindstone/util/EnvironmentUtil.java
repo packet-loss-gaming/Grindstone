@@ -53,12 +53,24 @@ public class EnvironmentUtil {
             Material.WHEAT, Material.MELON_STEM, Material.CARROT, Material.POTATO, Material.PUMPKIN_STEM
     );
 
+    private static final Set<Material> BERRY_BUSHES = Set.of(
+            Material.SWEET_BERRY_BUSH
+    );
+
+    public static boolean isBerryBush(Material type) {
+        return BERRY_BUSHES.contains(type);
+    }
+
+    public static boolean isBerryBush(Block block) {
+        return isBerryBush(block.getType());
+    }
+
     public static boolean isCropBlock(Block block) {
         return isCropBlock(block.getType());
     }
 
-    public static boolean isCropBlock(Material block) {
-        return cropBlocks.contains(block);
+    public static boolean isCropBlock(Material type) {
+        return cropBlocks.contains(type) || isBerryBush(type);
     }
 
     private static final Set<Material> shrubBlocks = Set.of(
@@ -196,8 +208,11 @@ public class EnvironmentUtil {
     }
 
     private static final Set<Material> interactiveBlocks = Set.of(
-            Material.CRAFTING_TABLE, Material.ENCHANTING_TABLE, Material.BEACON, Material.ANVIL,
-            Material.LEVER, Material.STONE_BUTTON,
+            Material.CRAFTING_TABLE, Material.LOOM, Material.GRINDSTONE, Material.SMOKER,
+            Material.ENCHANTING_TABLE, Material.BEACON, Material.ANVIL,
+            Material.LEVER,
+
+            Material.STONE_BUTTON,
 
             // Wooden Buttons
             Material.ACACIA_BUTTON,
@@ -232,8 +247,7 @@ public class EnvironmentUtil {
     );
 
     private static boolean isInteractiveBlock(Material type) {
-
-        return interactiveBlocks.contains(type) || isContainer(type);
+        return interactiveBlocks.contains(type) || isContainer(type) || isBerryBush(type);
     }
 
     public static boolean isInteractiveBlock(Block block) {
