@@ -49,7 +49,11 @@ public class ItemNameCalculator {
             return Optional.of(maybeItemName);
         }
 
-        return Optional.of("minecraft:" + itemName);
+        if (Material.matchMaterial(itemName) != null) {
+            return Optional.of("minecraft:" + itemName);
+        }
+
+        return Optional.empty();
     }
 
     private static boolean hasItemOfName(String computedName) {
