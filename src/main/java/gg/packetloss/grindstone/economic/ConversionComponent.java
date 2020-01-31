@@ -38,7 +38,7 @@ import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Conversion", desc = "Convert your cash.")
-@Depend(plugins = {"Vault"}, components = {AdminComponent.class, ImpersonalComponent.class})
+@Depend(plugins = {"Vault"}, components = {AdminComponent.class})
 public class ConversionComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -47,8 +47,6 @@ public class ConversionComponent extends BukkitComponent implements Listener {
 
     @InjectComponent
     AdminComponent adminComponent;
-    @InjectComponent
-    ImpersonalComponent impersonalComponent;
 
     private static Economy economy = null;
     private List<Player> recentList = new ArrayList<>();
@@ -81,7 +79,6 @@ public class ConversionComponent extends BukkitComponent implements Listener {
         Sign sign = (Sign) block.getState();
 
         if (sign.getLine(1).equals("[Bank]") || sign.getLine(1).equals("[Conversion]")) {
-            if (!impersonalComponent.check(block, true)) return;
             if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
                 try {
                     InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);

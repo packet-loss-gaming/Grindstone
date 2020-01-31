@@ -9,7 +9,6 @@ package gg.packetloss.grindstone.city.engine.arena;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
@@ -69,7 +68,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     private Economy economy;
     private GuildComponent guildComponent;
-    private ImpersonalComponent impersonalComponent;
     private HighScoresComponent highScoresComponent;
     private PlayerStateComponent playerStateComponent;
 
@@ -96,8 +94,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private boolean leversTriggered = false;
 
     public GoldRush(World world, ProtectedRegion[] regions,
-                    GuildComponent guildComponent, ImpersonalComponent impersonalComponent,
-                    HighScoresComponent highScoresComponent, PlayerStateComponent playerStateComponent) {
+                    GuildComponent guildComponent, HighScoresComponent highScoresComponent,
+                    PlayerStateComponent playerStateComponent) {
 
         super(world, regions[0]);
 
@@ -111,7 +109,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         this.doorTwo = regions[6];
 
         this.guildComponent = guildComponent;
-        this.impersonalComponent = impersonalComponent;
         this.highScoresComponent = highScoresComponent;
         this.playerStateComponent = playerStateComponent;
 
@@ -678,8 +675,11 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
     @EventHandler
     public void onSignPlace(SignChangeEvent event) {
-
-        if (event.getLine(1).equals("Play Gold Rush")) impersonalComponent.check(event.getBlock(), true);
+        if (event.getLine(1).equals("Play Gold Rush")) {
+            if (!event.getPlayer().hasPermission("aurora.goldrush.sign")) {
+                event.setCancelled(true);
+            }
+        }
     }
 
     @EventHandler

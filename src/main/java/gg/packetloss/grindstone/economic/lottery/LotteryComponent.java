@@ -11,12 +11,10 @@ import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
-import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.data.DataBaseComponent;
-import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryTicketDatabase;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
 import gg.packetloss.grindstone.exceptions.NotFoundException;
@@ -48,15 +46,12 @@ import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Lottery", desc = "Can you win it big?")
-@Depend(plugins = {"Vault"}, components = {DataBaseComponent.class, ImpersonalComponent.class})
+@Depend(plugins = {"Vault"}, components = {DataBaseComponent.class})
 public class LotteryComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
-
-    @InjectComponent
-    ImpersonalComponent impersonalComponent;
 
     private LocalConfiguration config;
 
@@ -196,7 +191,6 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         Sign sign = (Sign) block.getState();
 
         if (sign.getLine(0).equals("[Lottery]") && inst.hasPermission(player, "aurora.lottery.ticket.buy.sign")) {
-            if (!impersonalComponent.check(block, true)) return;
             try {
                 int count = Integer.parseInt(sign.getLine(1).trim());
                 buyTickets(player, count);

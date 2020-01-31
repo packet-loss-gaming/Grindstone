@@ -29,7 +29,6 @@ import gg.packetloss.grindstone.city.engine.arena.factory.FactoryBrewer;
 import gg.packetloss.grindstone.city.engine.arena.factory.FactoryFloor;
 import gg.packetloss.grindstone.city.engine.arena.factory.FactoryMech;
 import gg.packetloss.grindstone.city.engine.arena.factory.FactorySmelter;
-import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.jail.JailComponent;
@@ -55,7 +54,7 @@ import java.util.logging.Logger;
 @ComponentInformation(friendlyName = "Arena", desc = "Arena Control.")
 @Depend(components = {
         AdminComponent.class, JailComponent.class, PrayerComponent.class, SacrificeComponent.class,
-        ImpersonalComponent.class, RestorationUtil.class, EggComponent.class, HighScoresComponent.class,
+        RestorationUtil.class, EggComponent.class, HighScoresComponent.class,
         PlayerStateComponent.class, BlockStateComponent.class, GuildComponent.class
 }, plugins = {"WorldEdit", "WorldGuard"})
 public class ArenaComponent extends BukkitComponent implements Listener, Runnable {
@@ -70,8 +69,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     private JailComponent jailComponent;
     @InjectComponent
     private PrayerComponent prayerComponent;
-    @InjectComponent
-    private ImpersonalComponent impersonalComponent;
     @InjectComponent
     private RestorationUtil restorationUtil;
     @InjectComponent
@@ -222,7 +219,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     PRs[5] = mgr.getRegion(region + "-door-one");
                     PRs[6] = mgr.getRegion(region + "-door-two");
                     arenas.add(new GoldRush(
-                            world, PRs, guildComponent, impersonalComponent,
+                            world, PRs, guildComponent,
                             highScoresComponent, playerStateComponent
                     ));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");

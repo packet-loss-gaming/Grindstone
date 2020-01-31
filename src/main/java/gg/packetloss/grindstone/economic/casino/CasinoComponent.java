@@ -9,11 +9,9 @@ package gg.packetloss.grindstone.economic.casino;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
-import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import gg.packetloss.grindstone.economic.ImpersonalComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
@@ -37,15 +35,12 @@ import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Casino", desc = "Risk it!")
-@Depend(plugins = {"Vault"}, components = {ImpersonalComponent.class})
+@Depend(plugins = {"Vault"})
 public class CasinoComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
-
-    @InjectComponent
-    ImpersonalComponent impersonalComponent;
 
     private double profit = 20000;
     private static Economy economy = null;
@@ -108,18 +103,15 @@ public class CasinoComponent extends BukkitComponent implements Listener, Runnab
 
         switch (sign.getLine(1)) {
             case "[Slots]":
-                if (!impersonalComponent.check(block, true)) return;
                 if (checkBalance(player, bet)) operateSlots(operator, player, bet);
                 break;
             case "[Roulette]":
-                if (!impersonalComponent.check(block, true)) return;
                 if (checkBalance(player, bet)) operateRoulette(operator, player, bet);
                 break;
             case "[RussianR]":
                 if (checkBalance(player, bet)) operateRussianRoulette(player);
                 break;
             case "[RS Dice]":
-                if (!impersonalComponent.check(block, true)) return;
                 if (checkBalance(player, bet)) operateRSDice(operator, player, bet);
                 break;
             default:

@@ -6,8 +6,8 @@
 
 package gg.packetloss.grindstone.events;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
@@ -18,20 +18,19 @@ public class PlayerSacrificeItemEvent extends PlayerEvent implements Cancellable
 
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
-    private final Block origin;
+    private final Location origin;
     private ItemStack itemStack;
 
 
-    public PlayerSacrificeItemEvent(final Player player, Block origin, ItemStack itemStack) {
+    public PlayerSacrificeItemEvent(final Player player, Location origin, ItemStack itemStack) {
 
         super(player);
         this.origin = origin;
         this.itemStack = itemStack;
     }
 
-    public Block getBlock() {
-
-        return origin;
+    public Location getPointOfSacrifice() {
+        return origin.clone();
     }
 
     public void setItemStack(ItemStack itemStack) {

@@ -44,11 +44,8 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -267,22 +264,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         return block.getType() == config.getSacrificialBlock();
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockBreak(BlockBreakEvent event) {
-        Block block = event.getBlock();
-
-        if (isSacrificeBlock(block)) {
-            event.setDropItems(false);
-        }
+    protected SacrificialPitChecker checkForPitAt(Location location) {
+        return new SacrificialPitChecker(location, this::isSacrificeBlock);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent event) {
-        Block block = event.getBlock();
-
-        if (isSacrificeBlock(block) && !admin.isAdmin(event.getPlayer())) {
-            event.setCancelled(true);
-        }
+    public boolean isPointOfSacrifice(Location location) {
+        return checkForPitAt(location).isValid();
     }
 
     @EventHandler
@@ -301,26 +288,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         surrounding.add(BlockFace.WEST);
     }
 
-    public void createFire(Block origin) {
-        if (!isSacrificeBlock(origin)) {
-            return;
-        }
-
-        while (isSacrificeBlock(origin.getRelative(BlockFace.UP))) {
-            origin = origin.getRelative(BlockFace.UP);
-        }
-
-        final Block above = origin.getRelative(BlockFace.UP);
-        if (above.getType() == Material.AIR) {
-            above.setType(Material.FIRE);
-            server.getScheduler().runTaskLater(inst, () -> above.setType(Material.AIR), 20 * 4);
-
-            for (BlockFace face : surrounding) {
-                createFire(origin.getRelative(face));
-            }
-        }
-    }
-
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
 
@@ -337,19 +304,16 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                     server.getScheduler().cancelTask(id);
                 }
             } else {
-                Block searchBlock = item.getLocation().getBlock();
+                Location itemLoc = item.getLocation();
 
-                while (isSacrificeBlock(searchBlock.getRelative(BlockFace.DOWN))) {
-                    searchBlock = searchBlock.getRelative(BlockFace.DOWN);
-                }
-
-                if (isSacrificeBlock(searchBlock)) {
-                    PlayerSacrificeItemEvent sacrificeItemEvent = new PlayerSacrificeItemEvent(player, searchBlock, item.getItemStack());
+                SacrificialPitChecker checker = checkForPitAt(itemLoc);
+                if (checker.isValid()) {
+                    PlayerSacrificeItemEvent sacrificeItemEvent = new PlayerSacrificeItemEvent(player, itemLoc, item.getItemStack());
                     server.getPluginManager().callEvent(sacrificeItemEvent);
                     if (sacrificeItemEvent.isCancelled()) return;
                     sacrifice(player, sacrificeItemEvent.getItemStack());
 
-                    createFire(searchBlock);
+                    checker.ignite();
                     removeEntity(item);
                     item.remove();
                     server.getScheduler().cancelTask(id);
@@ -365,9 +329,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         for (World world : server.getWorlds()) {
             for (LivingEntity entity : world.getEntitiesByClass(LivingEntity.class)) {
                 Location entityLoc = entity.getLocation();
-                Block searchBlock = entityLoc.getBlock().getRelative(BlockFace.DOWN, 3);
-                if (isSacrificeBlock(searchBlock)) {
-                    Location airLoc = LocationUtil.findRandomLoc(searchBlock, 3);
+                if (isPointOfSacrifice(entityLoc)) {
+                    Location airLoc = LocationUtil.findRandomLoc(entityLoc, 3);
 
                     Location newLoc = new Location(entity.getWorld(), airLoc.getX(), airLoc.getY(),
                             airLoc.getZ(), entityLoc.getYaw(), entityLoc.getPitch());

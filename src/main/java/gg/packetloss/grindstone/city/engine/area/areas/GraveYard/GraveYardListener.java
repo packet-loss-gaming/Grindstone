@@ -268,7 +268,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     }
 
     private boolean isInRewardsRoom(PlayerSacrificeItemEvent event) {
-        return isInRewardsRoom(event.getBlock().getLocation());
+        return isInRewardsRoom(event.getPointOfSacrifice());
     }
 
     private void processSacrificeRepair(PlayerSacrificeItemEvent event, CustomItems repairItem) {
