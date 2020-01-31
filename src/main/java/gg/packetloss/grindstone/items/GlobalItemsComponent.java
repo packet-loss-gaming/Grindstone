@@ -26,7 +26,6 @@ import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
 import gg.packetloss.grindstone.items.implementations.combotools.*;
@@ -44,7 +43,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -53,7 +51,6 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -305,7 +302,6 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerDrag(InventoryDragEvent event) {
-
         if (!(event.getWhoClicked() instanceof Player)) return;
 
         if (event.getInventory().getType().equals(InventoryType.ANVIL)) {
@@ -316,15 +312,6 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
                     return;
                 }
             }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onItemDrop(PlayerDropItemEvent event) {
-        Item item = event.getItemDrop();
-        if (ItemUtil.isInItemFamily(item.getItemStack(), ItemFamily.PWNG)) {
-            item.remove();
-            ChatUtil.sendNotice(event.getPlayer(), ChatColor.DARK_RED + "This item is too powerful for mere mortals.");
         }
     }
 
