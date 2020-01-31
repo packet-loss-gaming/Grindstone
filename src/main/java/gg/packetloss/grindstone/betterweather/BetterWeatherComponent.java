@@ -7,15 +7,19 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
+import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
+import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
+import gg.packetloss.grindstone.managedworld.ManagedWorldMassQuery;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.probability.WeightedPicker;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -40,10 +44,14 @@ import java.util.logging.Logger;
 import static com.zachsthings.libcomponents.bukkit.BasePlugin.callEvent;
 
 @ComponentInformation(friendlyName = "Better Weather", desc = "Improves weather mechanics.")
+@Depend(components = {ManagedWorldComponent.class})
 public class BetterWeatherComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
+
+    @InjectComponent
+    private ManagedWorldComponent managedWorld;
 
     private Path statesDir;
 
@@ -94,8 +102,6 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
         public int shortestThunderWarning = 2;
         @Setting("thunder-warning-duration.longest")
         public int longestThunderWarning = 5;
-        @Setting("affected-worlds")
-        public List<String> affectedWorlds = List.of("City", "Legit");
         @Setting("storm-type-weights.clear")
         public int clearStormTypeWeight = 4;
         @Setting("storm-type-weights.rain")
@@ -150,9 +156,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
     }
 
     private void syncWeather(WeatherType oldWeatherType, WeatherType newWeatherType) {
-        for (String worldName : config.affectedWorlds) {
-            World affectedWorld = Bukkit.getWorld(worldName);
-
+        for (World affectedWorld : managedWorld.getAll(ManagedWorldMassQuery.ENVIRONMENTALLY_CONTROLLED)) {
             if (oldWeatherType != newWeatherType) {
                 callEvent(new BetterWeatherChangeEvent(affectedWorld, oldWeatherType, newWeatherType));
             }
@@ -301,7 +305,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
             world.setThundering(false);
         }
 
-        if (config.affectedWorlds.contains(world.getName())) {
+        if (managedWorld.is(ManagedWorldIsQuery.ANY_ENVIRONMENTALLY_CONTROLLED, world)) {
             switch (weatherState.getCurrentWeather()) {
                 case THUNDERSTORM:
                 case RAIN:
@@ -325,7 +329,7 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
             world.setWeatherDuration(world.getThunderDuration());
         }
 
-        if (config.affectedWorlds.contains(world.getName())) {
+        if (managedWorld.is(ManagedWorldIsQuery.ANY_ENVIRONMENTALLY_CONTROLLED, world)) {
             switch (weatherState.getCurrentWeather()) {
                 case THUNDERSTORM:
                     if (!event.toThunderState()) {

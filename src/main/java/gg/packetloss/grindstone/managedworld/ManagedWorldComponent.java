@@ -5,6 +5,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.World;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @ComponentInformation(friendlyName = "Managed World", desc = "Managed world lookup.")
@@ -33,6 +34,8 @@ public class ManagedWorldComponent extends BukkitComponent {
                 return worldName.equals(SKY_WORLD);
             case ANY_BUIDABLE:
                 return is(ManagedWorldIsQuery.ANY_RANGE, world) || is(ManagedWorldIsQuery.SKY, world);
+            case ANY_ENVIRONMENTALLY_CONTROLLED:
+                return getAll(ManagedWorldMassQuery.ENVIRONMENTALLY_CONTROLLED).contains(world);
         }
 
         throw new UnsupportedOperationException();
@@ -57,6 +60,15 @@ public class ManagedWorldComponent extends BukkitComponent {
         switch (query) {
             case RANGE_OVERWORLDS:
                 return List.of(get(ManagedWorldGetQuery.LATEST_RANGE));
+            case ENVIRONMENTALLY_CONTROLLED: {
+                List<World> worlds = new ArrayList<>();
+
+                worlds.add(get(ManagedWorldGetQuery.CITY));
+                worlds.addAll(getAll(ManagedWorldMassQuery.RANGE_OVERWORLDS));
+                worlds.add(get(ManagedWorldGetQuery.SKY));
+
+                return worlds;
+            }
         }
 
         throw new UnsupportedOperationException();

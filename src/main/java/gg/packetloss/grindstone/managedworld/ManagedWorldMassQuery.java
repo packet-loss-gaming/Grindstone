@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.managedworld;
 
 public enum ManagedWorldMassQuery {
-    RANGE_OVERWORLDS
+    RANGE_OVERWORLDS,
+    ENVIRONMENTALLY_CONTROLLED
 }

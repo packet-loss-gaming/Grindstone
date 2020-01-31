@@ -2,47 +2,42 @@ package gg.packetloss.grindstone;
 
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import com.zachsthings.libcomponents.config.ConfigurationBase;
-import com.zachsthings.libcomponents.config.Setting;
-import org.bukkit.Bukkit;
+import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
+import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
+import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
+import gg.packetloss.grindstone.managedworld.ManagedWorldMassQuery;
 import org.bukkit.Server;
+import org.bukkit.World;
 
-import java.util.List;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Time Sync", desc = "Synchronizes time across worlds.")
+@Depend(components = {ManagedWorldComponent.class})
 public class TimeSyncComponent extends BukkitComponent {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
 
-    private LocalConfiguration config;
+    @InjectComponent
+    private ManagedWorldComponent managedWorld;
 
     @Override
     public void enable() {
-        config = configure(new LocalConfiguration());
-
         server.getScheduler().scheduleSyncRepeatingTask(inst, this::syncTime, 0, 20 * 60);
     }
 
-    @Override
-    public void reload() {
-        super.reload();
-        configure(config);
-    }
-
-    private static class LocalConfiguration extends ConfigurationBase {
-        @Setting("leader-world")
-        public String leaderWorld = "City";
-        @Setting("follower-worlds")
-        public List<String> affectedWorlds = List.of("Halzeil");
-    }
-
     private void syncTime() {
-        long leaderTime = Bukkit.getWorld(config.leaderWorld).getTime();
-        for (String worldName : config.affectedWorlds) {
-            Bukkit.getWorld(worldName).setTime(leaderTime);
+        long leaderTime = managedWorld.get(ManagedWorldGetQuery.CITY).getTime();
+
+        for (World world : managedWorld.getAll(ManagedWorldMassQuery.ENVIRONMENTALLY_CONTROLLED)) {
+            if (managedWorld.is(ManagedWorldIsQuery.CITY, world)) {
+                continue;
+            }
+
+            world.setTime(leaderTime);
         }
     }
 }

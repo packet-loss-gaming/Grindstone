@@ -6,5 +6,6 @@ public enum ManagedWorldIsQuery {
     LATEST_RANGE_NETHER,
     ANY_RANGE,
     SKY,
-    ANY_BUIDABLE
+    ANY_BUIDABLE,
+    ANY_ENVIRONMENTALLY_CONTROLLED
 }
