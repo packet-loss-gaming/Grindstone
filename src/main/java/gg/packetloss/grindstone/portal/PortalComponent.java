@@ -18,7 +18,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -27,9 +27,7 @@ import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @ComponentInformation(friendlyName = "Portal", desc = "Portal support.")
 @Depend(components = {FirstLoginComponent.class, ManagedWorldComponent.class, SkyWorldCoreComponent.class, WarpsComponent.class})
@@ -100,11 +98,54 @@ public class PortalComponent extends BukkitComponent implements Listener {
         return Optional.ofNullable(portalToType.get(fromBlock.getType())).map(type -> worldTypeLookup.get(type));
     }
 
+    private List<Entity> getAccompanyingEntities(Player player) {
+        List<Entity> accompanying = new ArrayList<>();
+
+        for (LivingEntity entity: player.getLocation().getNearbyLivingEntities(16)) {
+            if (entity.equals(player)) {
+                continue;
+            }
+
+            if (entity.isLeashed() && entity.getLeashHolder().equals(player)) {
+                accompanying.add(entity);
+                continue;
+            }
+
+            if (entity instanceof Sittable && entity instanceof Tameable) {
+                if (((Sittable) entity).isSitting()) {
+                    continue;
+                }
+
+                AnimalTamer tamer = ((Tameable) entity).getOwner();
+                if (tamer == null) {
+                    continue;
+                }
+
+                if (tamer.getUniqueId().equals(player.getUniqueId())) {
+                    accompanying.add(entity);
+                }
+            }
+        }
+
+        return accompanying;
+    }
+
     private void redirectPortalNoAgent(PlayerPortalEvent event, Location destination) {
         event.setCancelled(true);
 
         Player player = event.getPlayer();
-        player.teleport(destination, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
+        List<Entity> accompanying = getAccompanyingEntities(player);
+
+        player.teleportAsync(destination, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL).thenAccept((teleported) -> {
+            if (!teleported) {
+                return;
+            }
+
+            for (Entity entity : accompanying) {
+                entity.teleport(player, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
+            }
+        });
+
     }
 
     private void redirectPortalWithAgent(PlayerPortalEvent event, Location destination) {
