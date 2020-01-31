@@ -6,12 +6,16 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
+import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
 import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.playerhistory.PlayerHistoryComponent;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.concurrent.ExecutionException;
@@ -58,5 +62,31 @@ public class SkyWorldCoreComponent extends BukkitComponent implements Listener {
         }
 
         event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (event.getCause() != EntityDamageEvent.DamageCause.VOID) {
+            return;
+        }
+
+        if (!managedWorld.is(ManagedWorldIsQuery.SKY, event.getEntity().getWorld())) {
+            return;
+        }
+
+        event.setCancelled(true);
+
+        Location from = event.getEntity().getLocation();
+
+        World city = managedWorld.get(ManagedWorldGetQuery.CITY);
+        Location spawn = city.getSpawnLocation();
+        double entryRadius = 500;
+
+        event.getEntity().teleport(new Location(
+                city,
+                spawn.getX() + ((Math.abs(from.getBlockX()) % entryRadius) - (entryRadius / 2)),
+                260,
+                spawn.getZ() + ((Math.abs(from.getBlockZ()) % entryRadius) - (entryRadius / 2))
+        ), PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 }
