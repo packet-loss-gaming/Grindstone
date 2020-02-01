@@ -71,64 +71,88 @@ public class LocationUtil {
         return mPos;
     }
 
-    public static Location findRawFreePosition(final Location pos) {
-
-        World world = pos.getWorld();
-
-        // Let's try going down
-        Block block = pos.getBlock().getRelative(0, 1, 0);
-        int free = 0;
-
-        // Look for ground
-        while (block.getY() > 1 && !(block.getType().isSolid() || EnvironmentUtil.isWater(block))) {
-            free++;
-            block = block.getRelative(0, -1, 0);
+    private static boolean isOkayBodyBlock(Block block) {
+        Material type = block.getType();
+        if (EnvironmentUtil.isDangerous(type)) {
+            return false;
         }
 
-        if (block.getY() == 0) return null; // No ground below!
+        return !type.isSolid();
+    }
 
-        if (free >= 2) {
-            if (EnvironmentUtil.isDangerous(block)) {
-                return null; // Not safe
-            }
-
-            Block tb = block.getRelative(0, 1, 0);
-            Location l = tb.getLocation();
-
-            // FIXME: Reimplement this
-            // l.add(new Vector(0, BlockType.centralTopLimit(tb.getType(), tb.getData()), 0));
-
-            l.setPitch(pos.getPitch());
-            l.setYaw(pos.getYaw());
-            return l;
+    private static boolean isOkayStandingBlock(Block block) {
+        Material type = block.getType();
+        if (EnvironmentUtil.isDangerous(type)) {
+            return false;
         }
 
-        // Let's try going up
-        block = pos.getBlock().getRelative(0, -1, 0);
-        free = 0;
-        boolean foundGround = false;
+        // If we're standing on a solid block, we're fine
+        if (type.isSolid()) {
+            return true;
+        }
 
-        while (block.getY() + 1 < world.getMaxHeight()) {
-            if (!block.getType().isSolid()) {
-                free++;
-            } else {
-                free = 0;
-                foundGround = !EnvironmentUtil.isDangerous(block.getType());
+        // If we're standing on water, that's okay as well
+        if (EnvironmentUtil.isWater(type)) {
+            return true;
+        }
+
+        // Otherwise, we're standing on a non-solid block, and will fall.
+        return false;
+    }
+
+    public static boolean isSafeHeadLocation(Location headLoc) {
+        Block headBlock = headLoc.getBlock();
+
+        boolean headFree = isOkayBodyBlock(headBlock);
+        boolean feetFree = isOkayBodyBlock(headBlock.getRelative(BlockFace.DOWN));
+        boolean safeGround = isOkayStandingBlock(headBlock.getRelative(BlockFace.DOWN, 2));
+
+        return headFree && feetFree && safeGround;
+    }
+
+    private static Location findRawFreePositionDown(Location headLoc) {
+        headLoc = headLoc.clone();
+
+        while (headLoc.getBlockY() > 1) {
+            // If we have found a safe head loc, return the feet position
+            if (isSafeHeadLocation(headLoc)) {
+                return headLoc.add(0, -1, 0);
             }
 
-            if (foundGround && free == 2) {
-                Block tb = block.getRelative(0, -1, 0);
-                Location l = tb.getLocation();
+            // Move down
+            headLoc.add(0, -1, 0);
+        }
 
-                // FIXME: Reimplement this
-                // l.add(new Vector(0, BlockType.centralTopLimit(tb.getType(), tb.getData()), 0));
+        return null;
+    }
 
-                l.setPitch(pos.getPitch());
-                l.setYaw(pos.getYaw());
-                return l;
+    private static Location findRawFreePositionUp(Location headLoc) {
+        headLoc = headLoc.clone();
+
+        while (headLoc.getBlockY() < headLoc.getWorld().getMaxHeight()) {
+            // If we have found a safe head loc, return the feet position
+            if (isSafeHeadLocation(headLoc)) {
+                return headLoc.add(0, -1, 0);
             }
 
-            block = block.getRelative(0, 1, 0);
+            // Move up
+            headLoc.add(0, 1, 0);
+        }
+
+        return null;
+    }
+
+    public static Location findRawFreePosition(Location pos) {
+        Location headLoc = pos.clone().add(0, 1, 0);
+
+        Location downFreePos = findRawFreePositionDown(headLoc);
+        if (downFreePos != null) {
+            return downFreePos;
+        }
+
+        Location upFreePos = findRawFreePositionUp(headLoc);
+        if (upFreePos != null) {
+            return upFreePos;
         }
 
         return null;
