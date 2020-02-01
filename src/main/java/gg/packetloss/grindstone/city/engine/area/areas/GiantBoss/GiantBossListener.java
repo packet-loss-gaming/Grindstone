@@ -23,7 +23,6 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
-import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.unleashed.LifeLeech;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.Decimate;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.SoulSmite;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
@@ -138,7 +137,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         generalBlacklistedSpecs.add(FearBomb.class);
 
         bossBlacklistedSpecs.add(Famine.class);
-        bossBlacklistedSpecs.add(LifeLeech.class);
         bossBlacklistedSpecs.add(SoulSmite.class);
 
         ultimateBlacklistedSpecs.add(Decimate.class);
