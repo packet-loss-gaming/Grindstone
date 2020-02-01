@@ -34,13 +34,18 @@ import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
+import gg.packetloss.grindstone.util.BossBarUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -74,6 +79,8 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
     protected boolean editing = false;
 
     protected Set<BlockVector3> manuallyPlacedLocations = new HashSet<>();
+
+    protected BossBar progressBar = Bukkit.createBossBar("Arena Loading", BarColor.BLUE, BarStyle.SEGMENTED_6);
 
     @Override
     public void setUp() {
@@ -208,12 +215,13 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         int maxZ = diminsions.getZ();
 
         if (cy >= maxY) {
-            ChatUtil.sendNotice(getAudiblePlayers(), "Editing Completed.");
+            progressBar.removeAll();
             editing = false;
             freePlayers();
             return;
-        } else if (cx == 0 && cy % 10 == 0) {
-            ChatUtil.sendNotice(getAudiblePlayers(), "Editing Layer: " + cy + '/' + maxY);
+        } else {
+            progressBar.setProgress((double) cy / maxY);
+            BossBarUtil.syncWithPlayers(progressBar, getAudiblePlayers());
         }
 
         long start = System.nanoTime();
@@ -444,8 +452,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         public void areaLoad(CommandContext args, CommandSender sender) throws CommandException {
 
             String initFile = args.getString(0);
-
-            ChatUtil.sendNotice(sender, "Loading...");
 
             try {
                 try {
