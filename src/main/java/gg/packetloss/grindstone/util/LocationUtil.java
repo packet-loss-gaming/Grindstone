@@ -80,7 +80,7 @@ public class LocationUtil {
         int free = 0;
 
         // Look for ground
-        while (block.getY() > 1 && !block.getType().isSolid()) {
+        while (block.getY() > 1 && !(block.getType().isSolid() || EnvironmentUtil.isWater(block))) {
             free++;
             block = block.getRelative(0, -1, 0);
         }
