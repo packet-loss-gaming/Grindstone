@@ -7,8 +7,6 @@ import com.skelril.OSBL.bukkit.util.BukkitUtil;
 import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.InstructionDispatch;
-import com.skelril.OSBL.instruction.InstructionResult;
-import com.skelril.OSBL.instruction.UnbindInstruction;
 import gg.packetloss.grindstone.bosses.detail.BossBarDetail;
 import gg.packetloss.grindstone.util.BossBarUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
@@ -49,14 +47,13 @@ public class BossBarRebindableBoss<T extends Damageable> extends BukkitBossDecla
                 20 * 10,
                 5
         );
+    }
 
-        unbindInstructions.add(new UnbindInstruction<BossBarDetail>() {
-            @Override
-            public InstructionResult<BossBarDetail, UnbindInstruction<BossBarDetail>> process(LocalControllable<BossBarDetail> controllable) {
-                controllable.getDetail().getBossBar().removeAll();
-                return null;
-            }
-        });
+    @Override
+    public void silentUnbind(LocalControllable<BossBarDetail> controllable) {
+        super.silentUnbind(controllable);
+
+        controllable.getDetail().getBossBar().removeAll();
     }
 
     private void updateBossBarPlayers(LocalControllable<BossBarDetail> controllable) {
