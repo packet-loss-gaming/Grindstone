@@ -60,14 +60,14 @@ public class BossBarRebindableBoss<T extends Damageable> extends BukkitBossDecla
     }
 
     private void updateBossBarPlayers(LocalControllable<BossBarDetail> controllable) {
-        Entity entity = BukkitUtil.getBukkitEntity(controllable.getTarget());
+        Entity entity = BukkitUtil.getBukkitEntity(controllable.getLocalEntity());
         BossBar bossBar = controllable.getDetail().getBossBar();
         Collection<Player> players = entity.getLocation().getNearbyPlayers(25);
         BossBarUtil.syncWithPlayers(bossBar, players);
     }
 
     private void updateBossBarProgress(LocalControllable<BossBarDetail> controllable) {
-        LivingEntity entity = (LivingEntity) BukkitUtil.getBukkitEntity(controllable.getTarget());
+        LivingEntity entity = (LivingEntity) BukkitUtil.getBukkitEntity(controllable.getLocalEntity());
         BossBar bossBar = controllable.getDetail().getBossBar();
         bossBar.setProgress(entity.getHealth() / entity.getMaxHealth());
     }
