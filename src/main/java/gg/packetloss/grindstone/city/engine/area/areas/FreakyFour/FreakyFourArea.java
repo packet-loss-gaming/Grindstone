@@ -215,7 +215,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     public boolean checkCharlotte() {
-        return !LocationUtil.containsPlayer(world, charlotte_RG);
+        return getContainedParticipantsIn(charlotte_RG).isEmpty();
     }
 
     public void cleanupCharlotte() {
@@ -298,7 +298,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     public boolean checkFrimus() {
-        return !LocationUtil.containsPlayer(world, frimus_RG);
+        return getContainedParticipantsIn(frimus_RG).isEmpty();
     }
 
     public void cleanupFrimus() {
@@ -345,7 +345,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     public boolean checkDaBomb() {
-        return !LocationUtil.containsPlayer(world, dabomb_RG);
+        return getContainedParticipantsIn(dabomb_RG).isEmpty();
     }
 
     public void cleanupDaBomb() {
@@ -374,7 +374,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     public boolean checkSnipee() {
-        return !LocationUtil.containsPlayer(world, snipee_RG);
+        return getContainedParticipantsIn(snipee_RG).isEmpty();
     }
 
     public void cleanupSnipee() {
