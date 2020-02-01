@@ -14,6 +14,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.city.engine.arena.ArenaType;
 import gg.packetloss.grindstone.city.engine.arena.GenericArena;
 import gg.packetloss.grindstone.city.engine.arena.PersistentArena;
+import gg.packetloss.grindstone.events.entity.EntitySpawnBlockedEvent;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -147,6 +148,21 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
         if (((Player) entity).isFlying() && event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
             DamageUtil.multiplyFinalDamage(event, 2);
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntitySpawnBlocked(EntitySpawnBlockedEvent event) {
+        Entity entity = event.getEntity();
+
+        if (!contains(entity)) {
+            return;
+        }
+
+        if (!(entity instanceof Zombie || entity instanceof Skeleton || entity instanceof Spider)) {
+            return;
+        }
+
+        event.setCancelled(true);
     }
 
     @Override

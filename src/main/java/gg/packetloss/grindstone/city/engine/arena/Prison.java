@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.entity.EntitySpawnBlockedEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.guild.GuildComponent;
@@ -26,6 +27,8 @@ import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.BlockState;
+import org.bukkit.entity.Enderman;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -194,6 +197,21 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         if (isGuildBlocked(event.getPlayer())) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntitySpawnBlocked(EntitySpawnBlockedEvent event) {
+        Entity entity = event.getEntity();
+
+        if (!contains(entity)) {
+            return;
+        }
+
+        if (entity instanceof Enderman) {
+            return;
+        }
+
+        event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)

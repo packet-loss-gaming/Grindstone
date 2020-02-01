@@ -72,24 +72,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         super(parent);
     }
 
-    // Uncancel WorldGuard blocking of mob spanwers inside of the temple
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onEntitySpawn(CreatureSpawnEvent event) {
-        if (!event.isCancelled()) {
-            return;
-        }
-
-        if (event.getSpawnReason() != CreatureSpawnEvent.SpawnReason.SPAWNER) {
-            return;
-        }
-
-        if (!parent.isHostileTempleArea(event.getEntity().getLocation())) {
-            return;
-        }
-
-        event.setCancelled(false);
-    }
-
     @EventHandler(ignoreCancelled = true)
     public void onCreepSpeak(CreepSpeakEvent event) {
         if (parent.contains(event.getPlayer())) event.setCancelled(true);

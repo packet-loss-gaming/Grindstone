@@ -9,6 +9,9 @@ import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
 import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.playerhistory.PlayerHistoryComponent;
+import gg.packetloss.grindstone.util.listener.DoorRestorationListener;
+import gg.packetloss.grindstone.util.listener.NaturalSpawnBlockingListener;
+import gg.packetloss.grindstone.util.listener.NuisanceSpawnBlockingListener;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -32,6 +35,13 @@ public class SkyWorldCoreComponent extends BukkitComponent implements Listener {
     @Override
     public void enable() {
         CommandBook.registerEvents(this);
+        CommandBook.registerEvents(new DoorRestorationListener(this::isSkyWorld));
+        CommandBook.registerEvents(new NaturalSpawnBlockingListener(this::isSkyWorld));
+        CommandBook.registerEvents(new NuisanceSpawnBlockingListener(this::isSkyWorld));
+    }
+
+    private boolean isSkyWorld(World world) {
+        return managedWorld.is(ManagedWorldIsQuery.SKY, world);
     }
 
     public boolean hasAccess(Player player) {
@@ -53,7 +63,7 @@ public class SkyWorldCoreComponent extends BukkitComponent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
-        if (!managedWorld.is(ManagedWorldIsQuery.SKY, event.getTo().getWorld())) {
+        if (!isSkyWorld(event.getTo().getWorld())) {
             return;
         }
 
@@ -70,7 +80,7 @@ public class SkyWorldCoreComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        if (!managedWorld.is(ManagedWorldIsQuery.SKY, event.getEntity().getWorld())) {
+        if (!isSkyWorld(event.getEntity().getWorld())) {
             return;
         }
 

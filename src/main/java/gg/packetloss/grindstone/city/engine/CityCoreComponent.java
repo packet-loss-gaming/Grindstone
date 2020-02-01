@@ -17,6 +17,8 @@ import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.listener.DoorRestorationListener;
+import gg.packetloss.grindstone.util.listener.NaturalSpawnBlockingListener;
+import gg.packetloss.grindstone.util.listener.NuisanceSpawnBlockingListener;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -46,6 +48,8 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
         inst.registerEvents(this);
 
         CommandBook.registerEvents(new DoorRestorationListener(this::isCityWorld));
+        CommandBook.registerEvents(new NaturalSpawnBlockingListener(this::isCityWorld));
+        CommandBook.registerEvents(new NuisanceSpawnBlockingListener(this::isCityWorld));
     }
 
     private boolean isCityWorld(World world) {
