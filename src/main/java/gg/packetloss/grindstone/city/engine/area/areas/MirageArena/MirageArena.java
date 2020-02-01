@@ -226,6 +226,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
         long start = System.nanoTime();
 
+        boolean timedOut = false;
         edit:
         {
             for (int x = cx; x < maxX; ++x) {
@@ -249,6 +250,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                         if (System.nanoTime() - start >= TimeUnit.MILLISECONDS.toNanos(100)) {
                             cx = x;
                             cz = z + 1;
+                            timedOut = true;
                             break edit;
                         }
                     }
@@ -264,7 +266,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         final int finalCx = cx;
         server.getScheduler().runTaskLater(inst, () -> {
             callEdit(editor, board, finalCx, finalCz, finalCy, diminsions);
-        }, 10);
+        }, timedOut ? 10 : 1);
     }
 
     public void changeMirage(String newMirage) throws IOException, CommandException {
