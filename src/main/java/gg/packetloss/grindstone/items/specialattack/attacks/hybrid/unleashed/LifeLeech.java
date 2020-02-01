@@ -10,6 +10,7 @@ import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public class LifeLeech extends EntityAttack implements MeleeSpecial, RangedSpecial {
@@ -30,7 +31,12 @@ public class LifeLeech extends EntityAttack implements MeleeSpecial, RangedSpeci
             owner.setHealth(Math.min(ownerMax, ownerMax * (ownerHP + .1)));
             inform("Your weapon heals you.");
         } else {
-            target.setHealth(target.getMaxHealth() * ownerHP);
+            double newHealth = target.getMaxHealth() * ownerHP;
+            if (!(target instanceof Player)) {
+                newHealth = Math.max(target.getHealth() - (20 * (1 - ownerHP)), newHealth);
+            }
+
+            target.setHealth(newHealth);
             owner.setHealth(Math.min(ownerMax, ownerMax * targetHP * 1.1));
             inform("You leech the health of your foe.");
         }
