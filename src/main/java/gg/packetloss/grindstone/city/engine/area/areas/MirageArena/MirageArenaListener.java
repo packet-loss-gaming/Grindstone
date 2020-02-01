@@ -30,15 +30,14 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.*;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -234,6 +233,34 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         MirageArenaConfig config = parent.getConfig();
         MirageSession session = parent.sessions.getSession(MirageSession.class, result.getDefender());
         session.addDamage(Math.min(config.goldCap, ChanceUtil.getRandom(event.getFinalDamage())));
+    }
+
+    @EventHandler
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
+        Item item = event.getItemDrop();
+        if (!parent.contains(item)) {
+            return;
+        }
+
+        if (!parent.editing) {
+            return;
+        }
+
+        event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onItemSpawn(ItemSpawnEvent event) {
+        Item item = event.getEntity();
+        if (!parent.contains(item)) {
+            return;
+        }
+
+        if (!parent.editing) {
+            return;
+        }
+
+        event.setCancelled(true);
     }
 
     private static ItemCondenser goldCondenser = new ItemCondenser();
