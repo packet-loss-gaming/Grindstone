@@ -57,6 +57,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
     private Deque<ItemStack> drops;
     private BukkitTask task = null;
     private long lastDropPulse = 0;
+    private long dropPartyStart = 0;
 
     public DropPartyArena(World world, ProtectedRegion region) {
 
@@ -222,9 +223,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         List<ItemStack> newDrops = new ArrayList<>();
         final boolean populate = populatorValue > 0;
         if (populate) {
-            int playerCount = server.getOnlinePlayers().size();
-
-            for (int k = 0; k < playerCount * modifier; k++) {
+            for (int k = 0; k < server.getMaxPlayers() * modifier; k++) {
                 for (int i = 10; i > 0; --i) {
                     newDrops.add(new ItemStack(Material.EXPERIENCE_BOTTLE, 5));
                 }
@@ -234,8 +233,9 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 newDrops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
             }
 
-            if (playerCount > 0) {
-                newDrops.add(ItemUtil.makeSkull(CollectionUtil.getElement(server.getOnlinePlayers())));
+            Collection<? extends Player> onlinePlayers = server.getOnlinePlayers();
+            if (!onlinePlayers.isEmpty()) {
+                newDrops.add(ItemUtil.makeSkull(CollectionUtil.getElement(onlinePlayers)));
             }
         }
 
@@ -245,6 +245,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
         // Add new drops to the drop queue
         drops.addAll(newDrops);
+        dropPartyStart = System.currentTimeMillis();
 
         if (task != null) task.cancel();
 
@@ -264,8 +265,14 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 createFireworkExplosion(l);
             }
 
-            // Cancel if there is nothing more to drop
-            if (drops.size() < 1) {
+            // Cancel if there is nothing more to drop or the drop party is automatic and has been running too long
+            long runningTime = System.currentTimeMillis() - dropPartyStart;
+            boolean runningTooLong = populate && runningTime > TimeUnit.MINUTES.toMillis(10);
+            if (drops.size() < 1 || runningTooLong) {
+                if (populate) {
+                    drops.clear();
+                }
+
                 task.cancel();
                 task = null;
             }
