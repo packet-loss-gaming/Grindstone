@@ -28,8 +28,13 @@ class SacrificialPitChecker {
         this.isSacrificeBlock = isSacrificeBlock;
     }
 
+    private boolean isIgnitable(Block block) {
+        Material blockType = block.getType();
+        return blockType.isAir() || blockType == Material.FIRE;
+    }
+
     private boolean checkColumnFormat(Block block) {
-        if (!block.getType().isAir()) {
+        if (!isIgnitable(block)) {
             return false;
         }
 
