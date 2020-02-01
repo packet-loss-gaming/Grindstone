@@ -111,7 +111,8 @@ public class LocationUtil {
     }
 
     private static Location findRawFreePositionDown(Location headLoc) {
-        headLoc = headLoc.clone();
+        // Start one block higher to handle partially filled blocks better
+        headLoc = headLoc.clone().add(0, 1, 0);
 
         while (headLoc.getBlockY() > 1) {
             // If we have found a safe head loc, return the feet position
