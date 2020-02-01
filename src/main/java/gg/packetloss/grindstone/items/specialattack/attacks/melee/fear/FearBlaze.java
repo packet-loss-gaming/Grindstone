@@ -41,7 +41,12 @@ public class FearBlaze extends EntityAttack implements MeleeSpecial {
 
             double newPower = power;
             if (ChanceUtil.getChance(maxRuns)) {
-                newPower *= 4;
+                if (target instanceof Player) {
+                    newPower *= 4;
+                } else {
+                    newPower += 5;
+                }
+
                 ChatUtil.sendNotice(owner, "The strength of the blaze intensifies!");
             }
 
