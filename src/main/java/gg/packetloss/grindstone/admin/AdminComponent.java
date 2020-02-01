@@ -428,6 +428,26 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 ChatUtil.sendNotice(sender, "Viewing inventory of: " + target.getName());
             }
         }
+
+        @Command(aliases = {"search"},
+                 usage = "<name partial>", desc = "Search for previously online players",
+                 flags = "", min = 1, max = 1)
+        @CommandPermissions({"aurora.admin.user.search"})
+        public void searchUserCmd(CommandContext args, CommandSender sender) throws CommandException {
+            String search = args.getString(0).toLowerCase();
+            for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+                if (player.getName() == null) {
+                    continue;
+                }
+
+                String name = player.getName();
+                if (!name.toLowerCase().contains(search)) {
+                    continue;
+                }
+
+                ChatUtil.sendNotice(sender, name + " (" + player.getUniqueId() + ")");
+            }
+        }
     }
 
     public class NestedPermissionsCommands {
