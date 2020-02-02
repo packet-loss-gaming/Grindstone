@@ -144,7 +144,11 @@ public class LocationUtil {
     }
 
     public static Location findRawFreePosition(Location pos) {
-        Location headLoc = pos.clone().add(0, 1, 0);
+        Location headLoc = new Location(
+                pos.getWorld(),
+                pos.getBlockX(), pos.getBlockY() + 1, pos.getBlockZ(),
+                pos.getYaw(), pos.getPitch()
+        );
 
         Location downFreePos = findRawFreePositionDown(headLoc);
         if (downFreePos != null) {
