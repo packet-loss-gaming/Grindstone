@@ -5,6 +5,7 @@ import gg.packetloss.grindstone.events.entity.EntitySpawnBlockedEvent;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
+import org.bukkit.entity.Phantom;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -28,7 +29,7 @@ public class NaturalSpawnBlockingListener implements Listener {
             return;
         }
 
-        if (!(entity instanceof Monster)) {
+        if (!(entity instanceof Monster || entity instanceof Phantom)) {
             return;
         }
 
