@@ -111,8 +111,8 @@ public class PortalComponent extends BukkitComponent implements Listener {
                 continue;
             }
 
-            if (entity instanceof Sittable && entity instanceof Tameable) {
-                if (((Sittable) entity).isSitting()) {
+            if (entity instanceof Tameable) {
+                if (entity instanceof Sittable && ((Sittable) entity).isSitting()) {
                     continue;
                 }
 
