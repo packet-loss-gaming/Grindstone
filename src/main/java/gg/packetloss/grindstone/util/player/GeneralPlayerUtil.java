@@ -16,14 +16,17 @@ import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class GeneralPlayerUtil {
     public static boolean isFlyingGamemode(GameMode gameMode) {
-        List<GameMode> flyingGamemodes = Arrays.asList(
-          GameMode.CREATIVE,
-          GameMode.SPECTATOR
+        List<GameMode> flyingGamemodes = List.of(
+                GameMode.CREATIVE,
+                GameMode.SPECTATOR
         );
 
         return flyingGamemodes.contains(gameMode);
@@ -54,6 +57,29 @@ public class GeneralPlayerUtil {
             return true;
         }
         return false;
+    }
+
+    public static boolean isDamageableGamemode(GameMode gameMode) {
+        List<GameMode> damageableGamemodes = List.of(
+                GameMode.SURVIVAL,
+                GameMode.ADVENTURE
+        );
+
+        return damageableGamemodes.contains(gameMode);
+    }
+
+    /**
+     * Checks if the player has a gamemode that allows them to be injured.
+     *
+     * @param player The target player
+     * @return true - if player can be damaged
+     */
+    public static boolean hasDamageableGamemode(Player player) {
+        return isDamageableGamemode(player.getGameMode());
+    }
+
+    public static boolean isInvulnerable(Player player) {
+        return !hasDamageableGamemode(player);
     }
 
     public static void findSafeSpot(Player player) {

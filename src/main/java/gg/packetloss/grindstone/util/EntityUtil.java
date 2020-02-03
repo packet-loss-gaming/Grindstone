@@ -6,9 +6,11 @@
 
 package gg.packetloss.grindstone.util;
 
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.EntityEffect;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 
 public class EntityUtil {
     public static boolean nameMatches(Entity entity, String name) {
@@ -38,7 +40,21 @@ public class EntityUtil {
     }
 
     public static void forceDamage(Entity entity, double amt) {
-        if (entity == null || !entity.isValid() || !(entity instanceof LivingEntity)) return;
+        // Check for validity
+        if (entity == null || !entity.isValid()) {
+            return;
+        }
+
+        // Check living
+        if (!(entity instanceof LivingEntity)) {
+            return;
+        }
+
+        // Check damageable
+        if (entity instanceof Player && GeneralPlayerUtil.isInvulnerable((Player) entity)) {
+            return;
+        }
+
         double cur = ((LivingEntity) entity).getHealth();
 
         ((LivingEntity) entity).setHealth(Math.max(cur - amt, 0));
