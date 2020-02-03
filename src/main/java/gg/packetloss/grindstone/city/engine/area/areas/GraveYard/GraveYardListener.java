@@ -46,6 +46,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -196,6 +197,18 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
     }
 
+    private boolean shouldActivateAncientArmor(LivingEntity entity, DamageCause cause) {
+        if (entity instanceof Player && !hasThunderstorm(parent.getWorld())) {
+            return false;
+        }
+
+        if (!ItemUtil.hasAncientArmour(entity)) {
+            return false;
+        }
+
+        return cause == DamageCause.ENTITY_ATTACK || cause == DamageCause.PROJECTILE;
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
 
@@ -206,7 +219,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         LivingEntity attacker = result.getAttacker();
         if (parent.isHostileTempleArea(event.getEntity().getLocation())) {
             double damage = event.getDamage();
-            if (ItemUtil.hasAncientArmour(defender) && (hasThunderstorm(parent.getWorld()) || !(defender instanceof Player))) {
+            if (shouldActivateAncientArmor(defender, event.getCause())) {
                 double diff = defender.getMaxHealth() - defender.getHealth();
                 if (ChanceUtil.getChance((int) Math.max(3, Math.round(defender.getMaxHealth() - diff)))) {
                     EffectUtil.Ancient.powerBurst(defender, damage);
