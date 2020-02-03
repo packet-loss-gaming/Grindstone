@@ -61,7 +61,7 @@ public class RogueListener implements Listener {
     }
 
     private Optional<RogueState> getState(Player player) {
-        if (player.getGameMode() != GameMode.SURVIVAL) {
+        if (player.getGameMode() == GameMode.SPECTATOR) {
             return Optional.empty();
         }
 

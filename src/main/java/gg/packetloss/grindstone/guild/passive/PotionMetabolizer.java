@@ -23,7 +23,7 @@ public class PotionMetabolizer implements Runnable {
     }
 
     private Optional<RogueState> getState(Player player) {
-        if (player.getGameMode() != GameMode.SURVIVAL) {
+        if (player.getGameMode() == GameMode.SPECTATOR) {
             return Optional.empty();
         }
 
@@ -78,7 +78,6 @@ public class PotionMetabolizer implements Runnable {
             if (ChanceUtil.getChance(10)) {
                 metabolizeBadPotions(player);
             }
-
         }
     }
 }

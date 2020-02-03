@@ -57,7 +57,7 @@ public class NinjaListener implements Listener {
     }
 
     private Optional<NinjaState> getState(Player player) {
-        if (player.getGameMode() != GameMode.SURVIVAL) {
+        if (player.getGameMode() == GameMode.SPECTATOR) {
             return Optional.empty();
         }
 
