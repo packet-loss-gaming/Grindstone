@@ -583,6 +583,12 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
         boolean isSpectator = player.getGameMode() == GameMode.SPECTATOR;
         if (parent.contains(clickedLoc) && isSpectator && EnvironmentUtil.isContainer(blockType)) {
+            // If the location is in the rewards room, and players are in the rewards room looting it,
+            // allow players to see the loot.
+            if (isInRewardsRoom(clickedLoc) && !parent.getContainedParticipantsIn(parent.rewards).isEmpty()) {
+                return;
+            }
+
             event.setUseInteractedBlock(Event.Result.DENY);
         }
 
