@@ -633,6 +633,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                     continue;
                 }
 
+                // Don't consider merciless zombies in this check
+                if (MercilessZombie.is(zombie)) {
+                    continue;
+                }
+
                 if (!ApocalypseHelper.checkEntity(zombie)) {
                     continue;
                 }

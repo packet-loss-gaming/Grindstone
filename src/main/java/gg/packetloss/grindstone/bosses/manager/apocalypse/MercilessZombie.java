@@ -68,6 +68,15 @@ public class MercilessZombie {
         mercilessZombie.bind(entity);
     }
 
+    public static boolean is(Zombie zombie) {
+        String customName = zombie.getCustomName();
+        if (customName == null) {
+            return false;
+        }
+
+        return customName.equals(BOUND_NAME);
+    }
+
     private boolean isConsumableZombie(Entity entity) {
         String customName = entity.getCustomName();
         if (customName == null) {
