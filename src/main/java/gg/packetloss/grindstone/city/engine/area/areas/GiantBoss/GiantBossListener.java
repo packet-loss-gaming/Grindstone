@@ -440,7 +440,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 }
 
                 // Uber rare drops
-                if (ChanceUtil.getChance(15000 / m)) {
+                if (ChanceUtil.getChance(2500 / m)) {
                     event.getDrops().add(CustomItemCenter.build(CustomItems.ANCIENT_CROWN));
                 }
 
