@@ -626,6 +626,12 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             return;
         }
 
+        Location endOfMaze = new Location(parent.getWorld(), -162.5, 52, -704);
+        if (player.getLocation().distanceSquared(endOfMaze) <= Math.pow(15, 2)) {
+            ChatUtil.sendError(player, "You're too close to the end of the maze.");
+            return;
+        }
+
         boolean removed = ItemUtil.removeItemOfName(
                 player,
                 CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE),
@@ -635,7 +641,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         Validate.isTrue(removed);
 
         ChatUtil.sendNotice(player, "A spirit carries you through the maze!");
-        player.teleport(new Location(parent.getWorld(), -162.5, 52, -704), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        player.teleport(endOfMaze, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
     @EventHandler(priority = EventPriority.HIGH)
