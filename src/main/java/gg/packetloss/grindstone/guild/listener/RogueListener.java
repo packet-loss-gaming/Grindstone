@@ -206,6 +206,10 @@ public class RogueListener implements Listener {
                     if (entity instanceof Player && !PvPComponent.allowsPvP(player, (Player) entity)) continue;
                     if (entity.isDead()) continue;
 
+                    if (entity instanceof Tameable && ((Tameable) entity).isTamed()) {
+                        continue;
+                    }
+
                     ((LivingEntity) entity).damage(event.getDamage() * .5, player);
                     event.setCancelled(true);
                     break;
