@@ -3,9 +3,10 @@ package gg.packetloss.grindstone.util.listener;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.entity.EntitySpawnBlockedEvent;
 import org.bukkit.World;
+import org.bukkit.entity.Flying;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
-import org.bukkit.entity.Phantom;
+import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -29,7 +30,8 @@ public class NaturalSpawnBlockingListener implements Listener {
             return;
         }
 
-        if (!(entity instanceof Monster || entity instanceof Phantom)) {
+        // Slime (and descendants) as well as Flying (Phantom, Ghasts), are not considered monsters
+        if (!(entity instanceof Monster || entity instanceof Flying || entity instanceof Slime)) {
             return;
         }
 
