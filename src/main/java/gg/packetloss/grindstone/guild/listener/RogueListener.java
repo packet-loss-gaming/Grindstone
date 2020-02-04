@@ -1,6 +1,12 @@
 package gg.packetloss.grindstone.guild.listener;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLib;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.sk89q.commandbook.CommandBook;
+import fr.neatmonster.nocheatplus.checks.net.protocollib.ProtocolLibComponent;
 import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.click.ClickType;
@@ -25,7 +31,11 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
+import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.GameMode;
+import org.bukkit.Registry;
+import org.bukkit.command.Command;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -38,6 +48,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.Vector;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -136,7 +147,43 @@ public class RogueListener implements Listener {
 
         vel.setY(Math.min(yMax, Math.max(yMin, vel.getY())));
 
+        PacketContainer packetContainer = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ENTITY_METADATA);
+        packetContainer.getIntegers().write(0, player.getEntityId());
+        WrappedDataWatcher watcher = new WrappedDataWatcher();
+        WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
+        watcher.setEntity(player);
+        watcher.setObject(7, serializer, (byte) (0x04));
+        packetContainer.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
+        try {
+            ProtocolLibrary.getProtocolManager().sendServerPacket(player, packetContainer);
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
         player.setVelocity(vel);
+
+        CommandBook.server().getScheduler().runTaskTimer(CommandBook.inst(), new TimedRunnable(
+                new IntegratedRunnable() {
+                    @Override
+                    public boolean run(int times) {
+                        return !player.isOnGround();
+                    }
+
+                    @Override
+                    public void end() {
+                        watcher.setObject(7, serializer, (byte) (0x00), true);
+
+//                        watcher.remove(0);
+                        packetContainer.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
+                        try {
+                            ProtocolLibrary.getProtocolManager().sendServerPacket(player, packetContainer);
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }
+        , 5), 20, 20);
+
     }
 
     public void grenade(Player player, RogueState state) {
