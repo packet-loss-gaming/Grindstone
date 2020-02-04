@@ -154,35 +154,25 @@ public class RogueListener implements Listener {
         watcher.setEntity(player);
         watcher.setObject(7, serializer, (byte) (0x04));
         packetContainer.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
-        try {
-            ProtocolLibrary.getProtocolManager().sendServerPacket(player, packetContainer);
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        ProtocolLibrary.getProtocolManager().broadcastServerPacket(packetContainer, player.getLocation(), 25);
         player.setVelocity(vel);
 
-        CommandBook.server().getScheduler().runTaskTimer(CommandBook.inst(), new TimedRunnable(
-                new IntegratedRunnable() {
+        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), new Runnable() {
                     @Override
-                    public boolean run(int times) {
-                        return !player.isOnGround();
-                    }
-
-                    @Override
-                    public void end() {
-                        watcher.setObject(7, serializer, (byte) (0x00), true);
-
-//                        watcher.remove(0);
+                    public void run() {
+                        PacketContainer packetContainer = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ENTITY_METADATA);
+                        packetContainer.getIntegers().write(0, player.getEntityId());
+                        WrappedDataWatcher watcher = new WrappedDataWatcher();
+                        WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
+                        watcher.setEntity(player);
+                        watcher.setObject(7, serializer, (byte) (0x0));
                         packetContainer.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
-                        try {
-                            ProtocolLibrary.getProtocolManager().sendServerPacket(player, packetContainer);
-                        } catch (InvocationTargetException e) {
-                            e.printStackTrace();
-                        }
 
+                        ProtocolLibrary.getProtocolManager().broadcastServerPacket(packetContainer, player.getLocation(), 100);
                     }
-                }
-        , 5), 20, 20);
+
+
+        }, 25);
 
     }
 
