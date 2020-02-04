@@ -29,9 +29,12 @@ public class CustomEquipment extends CustomItem {
     public ItemStack build() {
         ItemStack stack = super.build();
         ItemMeta meta = stack.getItemMeta();
-        if (meta instanceof Repairable) {
+
+        // If has pre-populated enchantments, force them
+        if (meta instanceof Repairable && !getEnchants().isEmpty()) {
             ((Repairable) meta).setRepairCost(400);
         }
+
         stack.setItemMeta(meta);
         return stack;
     }

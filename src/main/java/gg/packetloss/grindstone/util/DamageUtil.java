@@ -7,8 +7,8 @@
 package gg.packetloss.grindstone.util;
 
 import com.sk89q.commandbook.CommandBook;
-import gg.packetloss.grindstone.events.custom.item.SpecialAttackPreDamageEvent;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import org.bukkit.Server;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -27,20 +27,9 @@ public class DamageUtil {
         event.setDamage(BASE, Math.max(0, event.getDamage() + (event.getFinalDamage() * (multiplier - 1))));
     }
 
+    @Deprecated
     public static boolean damageWithSpecialAttack(LivingEntity attacker, LivingEntity defender,
                                                   SpecialAttack spec, double amount) {
-        if (defender.isDead()) {
-            return false;
-        }
-
-        SpecialAttackPreDamageEvent event = new SpecialAttackPreDamageEvent(attacker, defender, spec, amount);
-        server.getPluginManager().callEvent(event);
-
-        if (event.isCancelled()) {
-            return false;
-        }
-
-        event.getDefender().damage(event.getDamage(), attacker);
-        return true;
+        return SpecialAttackFactory.processDamage(attacker, defender, spec, amount);
     }
 }

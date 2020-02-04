@@ -22,18 +22,17 @@ import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EntityDistanceComparator;
-import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.Registry;
 import org.bukkit.command.Command;
 import org.bukkit.entity.*;
@@ -46,20 +45,39 @@ import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 public class RogueListener implements Listener {
     private static final float DEFAULT_SPEED = .2F;
 
     private Function<Player, InternalGuildState> internalStateLookup;
 
+    private PacketContainer packetContainer = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ENTITY_METADATA);
+    private WrappedDataWatcher watcher = new WrappedDataWatcher();
+    private WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
+
+    private static final byte ENABLE_RIPTIDE = 0x04;
+    private static final byte DISABLE_RIPTIDE = 0x00;
+
     public RogueListener(Function<Player, InternalGuildState> internalStateLookup) {
         this.internalStateLookup = internalStateLookup;
+    }
+
+    private void sendRiptidePacket(Player player, byte packetVal) {
+        packetContainer.getIntegers().write(0, player.getEntityId());
+        watcher.setEntity(player);
+        watcher.setObject(7, serializer, packetVal);
+        packetContainer.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
+        ProtocolLibrary.getProtocolManager().broadcastServerPacket(packetContainer, player, true);
+//            ProtocolLibrary.getProtocolManager().sendServerPacket(player, packetContainer);
     }
 
     private Optional<RogueState> getStateAllowDisabled(Player player) {
@@ -147,32 +165,30 @@ public class RogueListener implements Listener {
 
         vel.setY(Math.min(yMax, Math.max(yMin, vel.getY())));
 
-        PacketContainer packetContainer = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ENTITY_METADATA);
-        packetContainer.getIntegers().write(0, player.getEntityId());
-        WrappedDataWatcher watcher = new WrappedDataWatcher();
-        WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
-        watcher.setEntity(player);
-        watcher.setObject(7, serializer, (byte) (0x04));
-        packetContainer.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
-        ProtocolLibrary.getProtocolManager().broadcastServerPacket(packetContainer, player.getLocation(), 25);
+        sendRiptidePacket(player, ENABLE_RIPTIDE);
         player.setVelocity(vel);
 
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), new Runnable() {
-                    @Override
-                    public void run() {
-                        PacketContainer packetContainer = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ENTITY_METADATA);
-                        packetContainer.getIntegers().write(0, player.getEntityId());
-                        WrappedDataWatcher watcher = new WrappedDataWatcher();
-                        WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
-                        watcher.setEntity(player);
-                        watcher.setObject(7, serializer, (byte) (0x0));
-                        packetContainer.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
+        TaskBuilder.Countdown task = TaskBuilder.countdown();
 
-                        ProtocolLibrary.getProtocolManager().broadcastServerPacket(packetContainer, player.getLocation(), 100);
-                    }
+        task.setInterval(4);
+        task.setDelay(20);
+        task.setNumberOfRuns(1);
+        task.setAction((times) -> {
+            Material type = player.getLocation().subtract(0, 1, 0).getBlock().getType();
+            Optional<RogueState> rogueState = getState(player);
+            if (rogueState.isPresent()) {
+                if (rogueState.get().canBlip() || type.isSolid() || EnvironmentUtil.isLiquid(type)) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        task.setFinishAction(() -> sendRiptidePacket(player, DISABLE_RIPTIDE));
+
+        task.build();
 
 
-        }, 25);
 
     }
 
