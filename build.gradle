@@ -60,8 +60,8 @@ dependencies {
     compile group: 'com.garbagemule', name: 'mobarena', version: '0.104.3-SNAPSHOT'
     compile group: 'gg.packetloss', name: 'Pitfall', version: '2.1.2'
 
-    compile group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.15.1-R0.1-SNAPSHOT'
-    compile group: 'com.destroystokyo.paper', name: 'paper', version: '1.15.1-R0.1-SNAPSHOT'
+    compile group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.15.2-R0.1-SNAPSHOT'
+    compile group: 'com.destroystokyo.paper', name: 'paper', version: '1.15.2-R0.1-SNAPSHOT'
 
     compile group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '7.1.0-SNAPSHOT'
     compile group: 'com.sk89q.worldguard', name: 'worldguard-legacy', version: '7.0.0-SNAPSHOT'
