@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.util.timer;
 
+@Deprecated
 public interface IntegratedRunnable {
 
     boolean run(int times);

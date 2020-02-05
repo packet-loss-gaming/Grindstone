@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.util.timer;
 
 import org.bukkit.scheduler.BukkitTask;
 
+@Deprecated
 public class TimedRunnable implements Runnable {
 
     private BukkitTask task;

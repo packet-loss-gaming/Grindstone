@@ -20,8 +20,7 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Sur
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
-import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
@@ -77,41 +76,41 @@ public class UnleashedBowImpl extends AbstractItemFeatureImpl implements SpecWea
 
                 projectile.setMetadata("splashed", new FixedMetadataValue(inst, true));
 
-                IntegratedRunnable vacuum = new IntegratedRunnable() {
-                    @Override
-                    public boolean run(int times) {
+                TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
-                        EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
+                taskBuilder.setInterval(10);
+                taskBuilder.setNumberOfRuns(3);
 
-                        targetLoc.getWorld().getEntitiesByClasses(Item.class).stream().filter(e -> e.isValid()
-                                && e.getLocation().distanceSquared(targetLoc) <= 16).forEach(e -> {
-                            e.teleport(owner);
-                        });
-                        return true;
-                    }
+                taskBuilder.setAction((times) -> {
+                    EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
 
-                    @Override
-                    public void end() {
+                    targetLoc.getWorld().getEntitiesByClasses(Item.class).stream().filter(e -> e.isValid()
+                            && e.getLocation().distanceSquared(targetLoc) <= 16).forEach(e -> {
+                        e.teleport(owner);
+                    });
 
-                        EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
+                    return true;
+                });
 
-                        for (Entity e : targetLoc.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
-                            if (!e.isValid() || e.equals(owner)) continue;
-                            if (e.getLocation().distanceSquared(targetLoc) <= 16) {
-                                if (e instanceof Item) {
-                                    e.teleport(owner);
-                                    continue;
-                                }
-                                if (e instanceof Player) {
-                                    if (!PvPComponent.allowsPvP(owner, (Player) e)) continue;
-                                }
-                                e.setFireTicks(20 * 4);
+                taskBuilder.setFinishAction(() -> {
+                    EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
+
+                    for (Entity e : targetLoc.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
+                        if (!e.isValid() || e.equals(owner)) continue;
+                        if (e.getLocation().distanceSquared(targetLoc) <= 16) {
+                            if (e instanceof Item) {
+                                e.teleport(owner);
+                                continue;
                             }
+                            if (e instanceof Player) {
+                                if (!PvPComponent.allowsPvP(owner, (Player) e)) continue;
+                            }
+                            e.setFireTicks(20 * 4);
                         }
                     }
-                };
-                TimedRunnable runnable = new TimedRunnable(vacuum, 3);
-                runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 1, 10));
+                });
+
+                taskBuilder.build();
             }
         }
     }

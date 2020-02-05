@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.util.timer;
 
+@Deprecated
 public abstract class CountdownTask implements IntegratedRunnable {
     public abstract boolean matchesFilter(int times);
     public abstract void performStep(int times);
