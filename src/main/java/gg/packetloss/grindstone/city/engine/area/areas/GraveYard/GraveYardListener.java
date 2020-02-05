@@ -24,6 +24,7 @@ import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.ItemFamily;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
@@ -203,6 +204,10 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
 
         if (!ItemUtil.hasAncientArmour(entity)) {
+            return false;
+        }
+
+        if (SpecialAttackFactory.getCurrentSpecialAttack().isPresent()) {
             return false;
         }
 
