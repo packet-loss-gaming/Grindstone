@@ -49,7 +49,11 @@ public class NetworkLoadingWorker implements Runnable {
                     break;
                 }
 
-                task.run();
+                try {
+                    task.run();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
             }
         } finally {
             lock.writeLock().unlock();
