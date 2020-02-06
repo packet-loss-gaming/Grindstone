@@ -37,22 +37,20 @@ import gg.packetloss.grindstone.items.migration.migrations.UnleashedSwordMigrati
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
-import gg.packetloss.grindstone.util.item.InventoryUtil;
+import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -256,63 +254,75 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         registerCommands(MigrationCommands.class);
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onClick(InventoryClickEvent event) {
+    private void updateResult(PrepareAnvilEvent event, ItemStack result) {
+        event.setResult(result);
 
-        if (!(event.getWhoClicked() instanceof Player)) return;
-
-        Player player = (Player) event.getWhoClicked();
-
-        ItemStack currentItem = event.getCurrentItem();
-        ItemStack cursorItem = event.getCursor();
-        InventoryType type = event.getInventory().getType();
-        InventoryAction action = event.getAction();
-
-        if (type.equals(InventoryType.ANVIL)) {
-            if (action.equals(InventoryAction.NOTHING)) return;
-            if (InventoryUtil.getMoveClicks().contains(event.getClick())) {
-                event.setResult(Event.Result.DENY);
-                ChatUtil.sendError(player, "You cannot move that here.");
-                return;
+        event.getInventory().getViewers().forEach((entity) -> {
+            if (entity instanceof Player) {
+                ((Player) entity).updateInventory();
             }
-
-            int rawSlot = event.getRawSlot();
-
-            if (rawSlot < 2) {
-                if (InventoryUtil.getPlaceActions().contains(action) && ItemUtil.isNamed(cursorItem)) {
-                    boolean isCustomItem = ItemUtil.isAuthenticCustomItem(cursorItem.getItemMeta().getDisplayName());
-
-                    if (!isCustomItem) return;
-
-                    event.setResult(Event.Result.DENY);
-                    ChatUtil.sendError(player, "You cannot place that here.");
-                }
-            } else if (rawSlot == 2) {
-                if (InventoryUtil.getPickUpActions().contains(action) && ItemUtil.isNamed(currentItem)) {
-                    boolean isCustomItem = ItemUtil.isAuthenticCustomItem(currentItem.getItemMeta().getDisplayName());
-
-                    if (!isCustomItem) return;
-
-                    event.setResult(Event.Result.DENY);
-                    ChatUtil.sendError(player, "You cannot name this item that name.");
-                }
-            }
-        }
+        });
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPlayerDrag(InventoryDragEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) return;
+    public void onPrepareAnvil(PrepareAnvilEvent event) {
+        AnvilInventory inventory = event.getInventory();
 
-        if (event.getInventory().getType().equals(InventoryType.ANVIL)) {
+        ItemStack[] slots = { inventory.getItem(0), inventory.getItem(1) };
 
-            for (int i : event.getRawSlots()) {
-                if (i + 1 <= event.getInventory().getSize()) {
-                    event.setResult(Event.Result.DENY);
-                    return;
-                }
-            }
+        // Always clear the result if we're using a custom item in the repair slot
+        if (ItemUtil.isAuthenticCustomItem(slots[1])) {
+            updateResult(event, null);
+            return;
         }
+
+        ItemStack result = event.getResult();
+        if (result == null) {
+            return;
+        }
+
+        // Always clear the slot if the result is a custom item, and the source isn't
+        if (!ItemUtil.isAuthenticCustomItem(slots[0]) && ItemUtil.isAuthenticCustomItem(result)) {
+            updateResult(event, null);
+            return;
+        }
+
+        // If the source isn't a custom item, we're done
+        if (!ItemUtil.isAuthenticCustomItem(slots[0])) {
+            return;
+        }
+
+        // If the repair item isn't a book of enchanting, block the anvil interaction for the custom block
+        if (slots[1] != null && slots[1].getType() != Material.ENCHANTED_BOOK) {
+            updateResult(event, null);
+            return;
+        }
+
+        // If the types don't match somehow, clear the type. At the time of writing I don't see any way this could
+        // happen, but I could see it happening.
+        if (result.getType() != slots[0].getType()) {
+            updateResult(event, null);
+            return;
+        }
+
+        ItemStack newResult = result.clone();
+
+        ItemMeta meta = newResult.getItemMeta();
+
+        Optional<String> optOriginalName = ItemNameCalculator.computeItemName(slots[0]);
+
+        // This isn't a real custom item, clear the result
+        if (optOriginalName.isEmpty()) {
+            updateResult(event, null);
+            return;
+        }
+
+        String originalName = optOriginalName.get().replaceFirst("grindstone:", "").toUpperCase();
+        CustomItems item = CustomItems.valueOf(originalName);
+        meta.setDisplayName(item.getColoredName());
+        newResult.setItemMeta(meta);
+
+        updateResult(event, newResult);
     }
 
     public class MigrationCommands {
