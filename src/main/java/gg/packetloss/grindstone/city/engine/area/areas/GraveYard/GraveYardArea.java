@@ -724,24 +724,24 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             case 1:
                 return CustomItemCenter.build(CustomItems.GEM_OF_LIFE, 6);
             case 3:
-                if (!ChanceUtil.getChance(70)) return null;
+                if (!ChanceUtil.getChance(200)) return null;
                 if (ChanceUtil.getChance(2)) {
                     return CustomItemCenter.build(CustomItems.FEAR_SWORD);
                 } else {
                     return CustomItemCenter.build(CustomItems.FEAR_SHORT_SWORD);
                 }
             case 4:
-                if (!ChanceUtil.getChance(70)) return null;
+                if (!ChanceUtil.getChance(200)) return null;
                 return CustomItemCenter.build(CustomItems.FEAR_BOW);
             case 5:
-                if (!ChanceUtil.getChance(70)) return null;
+                if (!ChanceUtil.getChance(200)) return null;
                 if (ChanceUtil.getChance(2)) {
                     return CustomItemCenter.build(CustomItems.UNLEASHED_SWORD);
                 } else {
                     return CustomItemCenter.build(CustomItems.UNLEASHED_SHORT_SWORD);
                 }
             case 6:
-                if (!ChanceUtil.getChance(70)) return null;
+                if (!ChanceUtil.getChance(200)) return null;
                 return CustomItemCenter.build(CustomItems.UNLEASHED_BOW);
             case 7:
                 return CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL, ChanceUtil.getRandom(3));
