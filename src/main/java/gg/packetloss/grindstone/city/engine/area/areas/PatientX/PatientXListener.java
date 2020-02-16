@@ -112,7 +112,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
         do {
             player.teleport(parent.getRandomDest(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
-        } while (parent.boss.hasLineOfSight(player));
+        } while (parent.boss != null && parent.boss.hasLineOfSight(player));
 
         boolean removed = ItemUtil.removeItemOfName(
                 player,

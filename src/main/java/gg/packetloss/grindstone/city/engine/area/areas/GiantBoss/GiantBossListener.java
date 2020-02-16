@@ -474,7 +474,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 Collection<Entity> containedEntities = parent.getContained(Zombie.class, ExperienceOrb.class);
 
                 // Remove remaining XP and que new xp
-                parent.removeXP(containedEntities, true);
                 for (int i = 0; i < 7; i++) {
                     server.getScheduler().runTaskLater(inst, parent.spawnXP, i * 2 * 20);
                 }
