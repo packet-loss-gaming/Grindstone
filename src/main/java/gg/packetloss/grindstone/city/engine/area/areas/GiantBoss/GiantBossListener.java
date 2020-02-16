@@ -316,7 +316,16 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     ((Giant) defender).setHealth(0);
                     final Player finalAttacker = (Player) attacker;
                     if (!finalAttacker.getGameMode().equals(GameMode.CREATIVE)) {
-                        server.getScheduler().runTaskLater(inst, () -> (finalAttacker).setItemInHand(null), 1);
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            ItemStack stack = finalAttacker.getItemInHand();
+                            if (stack.getAmount() == 1) {
+                                finalAttacker.setItemInHand(null);
+                            } else {
+                                ItemStack newStack = stack.clone();
+                                newStack.setAmount(newStack.getAmount() - 1);
+                                finalAttacker.setItemInHand(newStack);
+                            }
+                        }, 1);
                     }
                 }
             }
