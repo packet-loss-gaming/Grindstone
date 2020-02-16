@@ -217,12 +217,18 @@ public class CursedMine extends AbstractRegionedArena implements MonitoredArena,
             Material type = item.getItemStack().getType();
             for (Material aItem : AFFECTED_ITEMS) {
                 if (aItem == type) {
-                    double newAmt = item.getItemStack().getAmount() * .8;
+                    ItemStack stack = item.getItemStack();
+                    if (ItemUtil.isAuthenticCustomItem(stack)) {
+                        continue;
+                    }
+
+                    double newAmt = stack.getAmount() * .8;
                     if (newAmt < 1) {
                         item.remove();
                     } else {
                         item.getItemStack().setAmount((int) newAmt);
                     }
+
                     break;
                 }
             }
