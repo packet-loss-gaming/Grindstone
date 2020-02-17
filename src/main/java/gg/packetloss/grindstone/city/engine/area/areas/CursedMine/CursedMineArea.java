@@ -26,6 +26,7 @@ import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
+import gg.packetloss.grindstone.util.listener.InventorySlotBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.bukkit.Bukkit;
@@ -35,6 +36,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -101,6 +103,10 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
         config = new CursedMineConfig();
 
         CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
+        CommandBook.registerEvents(new InventorySlotBlockingListener(
+                this::isParticipant,
+                (st) -> st == InventoryType.SlotType.CRAFTING
+        ));
     }
 
     @Override
