@@ -233,24 +233,24 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
                 }
             }
 
-            ItemStack[] itemStacks = eInventory.getContents();
-            for (int i = 0; i < itemStacks.length; ++i) {
-                ItemStack stack = itemStacks[i];
+            for (int i = 0; i < eInventory.getSize(); ++i) {
+                ItemStack stack = eInventory.getItem(i);
 
                 int maxDrainAmount = getMaxStackDrain(stack);
                 if (maxDrainAmount == 0) {
                     continue;
                 }
 
+                assert stack != null;
+
                 int drainAmount = ChanceUtil.getRandom(maxDrainAmount);
                 int newAmt = stack.getAmount() - drainAmount;
                 if (newAmt < 1) {
-                    itemStacks[i] = null;
+                    eInventory.setItem(i, null);
                 } else {
                     stack.setAmount(newAmt);
                 }
             }
-            eInventory.setContents(itemStacks);
         }
     }
 
