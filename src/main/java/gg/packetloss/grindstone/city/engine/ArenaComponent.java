@@ -118,10 +118,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         protected Set<String> snowSpleefRegions = new HashSet<>(Arrays.asList(
                 "glacies-mare-district-spleef-snow"
         ));
-        @Setting("cursed-mines")
-        protected Set<String> cursedMines = new HashSet<>(Arrays.asList(
-                "oblitus-district-cursed-mine"
-        ));
         @Setting("enchanted-forest")
         protected Set<String> enchantedForest = new HashSet<>(Arrays.asList(
                 "carpe-diem-district-enchanted-forest"
@@ -158,20 +154,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         public void setupArenas() {
 
             RegionManager mgr = WorldGuardBridge.getManagerFor(world);
-            // Add Cursed Mines
-            for (String region : config.cursedMines) {
-                try {
-                    ProtectedRegion[] PRs = new ProtectedRegion[2];
-                    PRs[0] = mgr.getRegion(region);
-                    PRs[1] = mgr.getRegion(region + "-flood-gate");
-                    arenas.add(new CursedMine(world, PRs, adminComponent, prayerComponent, highScoresComponent, blockStateComponent, restorationUtil));
-                    if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
-                } catch (Exception e) {
-                    log.warning("Failed to add arena: " + region + ".");
-                    e.printStackTrace();
-                }
-            }
-
             // Add Enchanted Forest
             for (String region : config.enchantedForest) {
                 try {
