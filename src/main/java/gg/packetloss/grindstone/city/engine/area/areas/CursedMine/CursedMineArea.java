@@ -226,6 +226,10 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
             Inventory eInventory = ((InventoryHolder) e).getInventory();
 
             if (e instanceof Player) {
+                if (!isParticipant((Player) e)) {
+                    continue;
+                }
+
                 boolean hasItems = checkInventory((Player) e, eInventory.getContents());
                 if (hasItems && ChanceUtil.getChance(15)) {
                     ChatUtil.sendNotice(e, "Divine intervention protects some of your items.");
