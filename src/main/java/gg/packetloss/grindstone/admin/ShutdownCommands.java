@@ -26,9 +26,9 @@ public class ShutdownCommands {
             @Arg(desc = "Number of seconds before shutdown", def = "60") int delay,
             @Arg(desc = "How long the server will be down", def = "", variable = true) List<String> expectedDowntimeArgs) {
 
-        String expectedDowntime = "30 seconds";
-        if (expectedDowntimeArgs != null) {
-            expectedDowntime = Joiner.on(' ').join(expectedDowntimeArgs);
+        String expectedDowntime = Joiner.on(' ').join(expectedDowntimeArgs);
+        if (expectedDowntimeArgs.isEmpty()) {
+            expectedDowntime = "30 seconds";
         }
 
         component.shutdown(sender instanceof Player ? (Player) sender : null, delay, expectedDowntime);
