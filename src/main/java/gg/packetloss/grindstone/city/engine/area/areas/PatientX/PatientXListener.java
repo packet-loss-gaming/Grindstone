@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.city.engine.area.areas.PatientX;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.area.areas.DropParty.DropPartyTask;
@@ -37,7 +36,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.util.checker.RegionChecker;
+import gg.packetloss.grindstone.util.checker.NonSolidRegionChecker;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -406,13 +405,10 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     player.setVelocity(v);
                 }
                 CuboidRegion rg = new CuboidRegion(parent.drops.getMinimumPoint(), parent.drops.getMaximumPoint());
-                DropPartyTask task = new DropPartyTask(parent.getWorld(), rg, drops, new RegionChecker(rg) {
-                    @Override
-                    public Boolean evaluate(BlockVector3 v) {
-                        Location l = new Location(parent.getWorld(), v.getX(), v.getY(), v.getZ());
-                        return super.evaluate(v) && !l.getBlock().getType().isSolid();
-                    }
-                });
+                DropPartyTask task = new DropPartyTask(
+                        parent.getWorld(), rg, drops,
+                        new NonSolidRegionChecker(rg, parent.getWorld())
+                );
                 task.setXPChance(5);
                 task.setXPSize(10);
                 task.start(CommandBook.inst(), server.getScheduler(), 20 * 5, 20 * 3);

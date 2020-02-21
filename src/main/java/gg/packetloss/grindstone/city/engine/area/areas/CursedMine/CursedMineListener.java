@@ -4,6 +4,7 @@ import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.events.PlayerGraveProtectItemsEvent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -12,13 +13,14 @@ import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
+import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.checker.NonSolidRegionChecker;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -341,5 +343,44 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
         if (parent.blockState.hasPlayerBrokenBlocks(BlockStateKind.CURSED_MINE, player) && parent.contains(player)) {
             parent.addToHitList(player);
         }
+    }
+
+    @EventHandler
+    public void onPlayerStatePush(PlayerStatePushEvent event) {
+        if (event.getKind() != PlayerStateKind.CURSED_MINE_SPECTATOR) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        // Create a spawn point looking at something interesting.
+        int minPlayersToAttemptRandomAssignment = parent.isParticipant(player) ? 2 : 1;
+        List<Player> participants = parent.getContainedParticipants();
+
+        Location pointOfInterest = RegionUtil.getCenterAt(parent.getWorld(), 68, parent.getRegion());
+        Location targetLocation = LocationUtil.pickLocation(
+                parent.getWorld(),
+                pointOfInterest.getY() + 7,
+                new NonSolidRegionChecker(parent.getRegion(), parent.getWorld())
+        );
+
+        if (participants.size() >= minPlayersToAttemptRandomAssignment) {
+            while (true) {
+                Player targetParticipant = CollectionUtil.getElement(participants);
+                if (targetParticipant != player) {
+                    pointOfInterest = targetParticipant.getLocation();
+                    targetLocation = LocationUtil.findRandomLoc(
+                            pointOfInterest,
+                            10,
+                            false,
+                            false
+                    ).add(0, 10, 0);
+                    break;
+                }
+            }
+        }
+
+        targetLocation.setDirection(VectorUtil.createDirectionalVector(targetLocation, pointOfInterest));
+        player.teleport(targetLocation, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 }

@@ -21,6 +21,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     SKY_WARS(new TempPlayerStateTypeConfigImpl()),
     SPLEEF(new TempPlayerStateTypeConfigImpl()),
 
+    CURSED_MINE_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     FREAKY_FOUR_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     FROSTBORN_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     SHNUGGLES_PRIME_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),

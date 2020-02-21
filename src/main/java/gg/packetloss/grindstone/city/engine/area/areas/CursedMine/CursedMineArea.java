@@ -15,8 +15,10 @@ import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerFX.InventoryFX;
 import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
@@ -62,6 +64,8 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
     protected PrayerComponent prayer;
     @InjectComponent
     protected RestorationUtil restorationUtil;
+    @InjectComponent
+    protected SpectatorComponent spectator;
 
     protected ProtectedRegion floodGate_RG;
     protected ProtectedRegion skullsEast_RG;
@@ -107,10 +111,18 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
                 this::isParticipant,
                 (st) -> st == InventoryType.SlotType.CRAFTING
         ));
+
+        spectator.registerSpectatedRegion(PlayerStateKind.CURSED_MINE_SPECTATOR, region);
+        spectator.registerSpectatorSkull(
+                PlayerStateKind.CURSED_MINE_SPECTATOR,
+                new Location(world, 353, 66, -529),
+                () -> getContainedParticipants().size() > 1
+        );
     }
 
     @Override
     public void enable() {
+        spectator.registerSpectatorKind(PlayerStateKind.CURSED_MINE_SPECTATOR);
         server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
