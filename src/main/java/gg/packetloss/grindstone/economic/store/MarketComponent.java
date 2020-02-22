@@ -280,7 +280,12 @@ public class MarketComponent extends BukkitComponent {
                             return item;
                         }
 
-                        Optional<Double> optSellPrice = optMarketItem.get().getSellPriceForStack(item);
+                        MarketItem marketItem = optMarketItem.get();
+                        if (!marketItem.isSellable()) {
+                            return item;
+                        }
+
+                        Optional<Double> optSellPrice = marketItem.getSellPriceForStack(item);
                         if (optSellPrice.isEmpty()) {
                             return item;
                         }
@@ -288,7 +293,7 @@ public class MarketComponent extends BukkitComponent {
                         payment[0] += optSellPrice.get();
 
                         int amt = item.getAmount();
-                        transactions.merge(optMarketItem.get().getName(), amt, Integer::sum);
+                        transactions.merge(marketItem.getName(), amt, Integer::sum);
 
                         return null;
                     });
@@ -362,7 +367,12 @@ public class MarketComponent extends BukkitComponent {
                                 continue;
                             }
 
-                            Optional<Double> optSellPrice = optMarketItem.get().getSellPriceForStack(item);
+                            MarketItem marketItem = optMarketItem.get();
+                            if (!marketItem.isSellable()) {
+                                continue;
+                            }
+
+                            Optional<Double> optSellPrice = marketItem.getSellPriceForStack(item);
                             if (optSellPrice.isEmpty()) {
                                 continue;
                             }
@@ -370,10 +380,19 @@ public class MarketComponent extends BukkitComponent {
                             payment += optSellPrice.get();
 
                             int amt = item.getAmount();
-                            transactions.merge(optMarketItem.get().getName(), amt, Integer::sum);
+                            transactions.merge(marketItem.getName(), amt, Integer::sum);
 
                             it.remove();
                         }
+
+                        // Add anything that couldn't be sold back to the inventory, or drop it on the ground
+                        Inventory playerInv = player.getInventory();
+                        items.forEach((item) -> {
+                            ItemStack remainder = playerInv.addItem(item).get(0);
+                            if (remainder != null) {
+                                player.getWorld().dropItem(player.getLocation(), remainder);
+                            }
+                        });
 
                         if (transactions.isEmpty()) {
                             ChatUtil.sendError(player, "No sellable items found!");
@@ -392,15 +411,6 @@ public class MarketComponent extends BukkitComponent {
                         });
 
                         econ.depositPlayer(player, payment);
-
-                        // Add anything that couldn't be sold back to the inventory, or drop it on the ground
-                        Inventory playerInv = player.getInventory();
-                        items.forEach((item) -> {
-                            ItemStack remainder = playerInv.addItem(item).get(0);
-                            if (remainder != null) {
-                                player.getWorld().dropItem(player.getLocation(), remainder);
-                            }
-                        });
 
                         String paymentString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(payment), "");
                         ChatUtil.sendNotice(player, "Item(s) sold for: " + paymentString + "!");
