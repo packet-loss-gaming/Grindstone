@@ -14,26 +14,34 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
+import gg.packetloss.grindstone.ProtectedDroppedItemsComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.optimization.OptimizedZombieFactory;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
+import gg.packetloss.grindstone.util.dropttable.SimpleDropTable;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
+import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.BossBuggedRespawnListener;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import gg.packetloss.grindstone.util.timer.TimerUtil;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.entity.HBGiant;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -41,6 +49,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -68,6 +77,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     @InjectComponent
     protected PrayerComponent prayer;
     @InjectComponent
+    protected ProtectedDroppedItemsComponent dropProtector;
+    @InjectComponent
     protected PlayerStateComponent playerState;
     @InjectComponent
     protected SpectatorComponent spectator;
@@ -75,7 +86,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected HighScoresComponent highScores;
 
     protected static final int groundLevel = 82;
-    protected static final double scalOffst = 3;
 
     protected ProtectedRegion eastDoor, westDoor;
 
@@ -91,6 +101,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected List<Location> chestPts = new ArrayList<>();
 
     protected BossBar healthBar = Bukkit.createBossBar("Shnuggles Prime", BarColor.PURPLE, BarStyle.SEGMENTED_6);
+
+    protected SimpleDropTable dropTable = new SimpleDropTable();
 
     @Override
     public void setUp() {
@@ -114,6 +126,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                 (e) -> boss != null && boss.equals(e) && isArenaLoaded(),
                 (e) -> spawnBossEntity(e.getHealth(), e.getMaxHealth())
         ));
+
+        setupDropTable();
 
         spectator.registerSpectatedRegion(PlayerStateKind.SHNUGGLES_PRIME_SPECTATOR, region);
         spectator.registerSpectatorSkull(
@@ -162,6 +176,29 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     @Override
     public Collection<Player> getAudiblePlayers() {
         return getContained(1, Player.class);
+    }
+
+    private void setupDropTable() {
+        dropTable.registerCustomPlayerDrop((player, modifier, consumer) -> {
+            SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier, 400000).forEach(consumer);
+            SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier * 5, 15000).forEach(consumer);
+            SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier * 16, 4000).forEach(consumer);
+
+            for (int i = 0; i < modifier; i++) {
+                consumer.accept(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRangedRandom(32, 64)));
+            }
+        });
+
+        dropTable.registerPlayerDrop(() -> CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(9)));
+        dropTable.registerPlayerDrop(27, BookUtil.Lore.Monsters::skelril);
+
+        // Master Weapons
+        dropTable.registerPlayerDrop(276, () -> CustomItemCenter.build(CustomItems.MASTER_SWORD));
+        dropTable.registerPlayerDrop(276, () -> CustomItemCenter.build(CustomItems.MASTER_SHORT_SWORD));
+        dropTable.registerPlayerDrop(138, () -> CustomItemCenter.build(CustomItems.MASTER_BOW));
+
+        dropTable.registerPlayerDrop(200, () -> CustomItemCenter.build(CustomItems.MAGIC_BUCKET));
+        dropTable.registerPlayerDrop(2500, () -> CustomItemCenter.build(CustomItems.ANCIENT_CROWN));
     }
 
     public boolean isBossSpawnedFast() {
@@ -684,5 +721,31 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             doNextDoorBlock(limit, block.getRelative(face), north, newType, depth + 1);
         }
         server.getScheduler().runTaskLater(inst, () -> block.setType(newType, true), 9 * depth);
+    }
+
+    public void clearChests() {
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+        taskBuilder.setInterval(20);
+        taskBuilder.setNumberOfRuns(30);
+
+        taskBuilder.setAction((times) -> {
+            if (TimerUtil.matchesFilter(times, 10, 5)) {
+                ChatUtil.sendWarning(getAudiblePlayers(), "Clearing chest contents in: " + times + " seconds.");
+            }
+            return true;
+        });
+
+        taskBuilder.setFinishAction(() -> {
+            ChatUtil.sendWarning(getAudiblePlayers(), "Clearing chest contents!");
+            for (Location location : chestPts) {
+                BlockState state = location.getBlock().getState();
+                if (state instanceof Chest) {
+                    ((Chest) state).getInventory().clear();
+                }
+            }
+        });
+
+        taskBuilder.build();
     }
 }

@@ -32,20 +32,15 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearBomb
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.GlowingFog;
-import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
-import gg.packetloss.grindstone.util.item.BookUtil;
+import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
+import gg.packetloss.grindstone.util.dropttable.KillInfo;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
-import gg.packetloss.grindstone.util.timer.TimedRunnable;
-import gg.packetloss.grindstone.util.timer.TimerUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -58,15 +53,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.*;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class GiantBossListener extends AreaListener<GiantBossArea> {
     private final CommandBook inst = CommandBook.inst();
@@ -393,123 +384,61 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         if (parent.contains(e)) {
             if (parent.boss != null && e instanceof Giant) {
                 List<Player> players = parent.getContainedParticipants();
-                Collections.shuffle(players);
-                int amt = players.size();
 
                 // Update high scores
-                ScoreType scoreType = amt == 1
+                ScoreType scoreType = players.size() == 1
                         ? ScoreTypes.SHNUGGLES_PRIME_SOLO_KILLS
                         : ScoreTypes.SHNUGGLES_PRIME_TEAM_KILLS;
                 for (Player aPlayer : players) {
                     parent.highScores.update(aPlayer, scoreType, 1);
                 }
 
-                Player player = null;
-                int required = ChanceUtil.getRandom(13) + 3;
+                List<Player> playersWithSufficientBones = new ArrayList<>();
+                int requiredBoneCount = ChanceUtil.getRandom(13) + 3;
 
-                // Figure out if someone has Barbarian Bones
-                if (amt != 0) {
-                    for (Player aPlayer : players) {
-                        if (parent.admin.isAdmin(aPlayer)) continue;
-                        if (ItemUtil.countItemsOfName(aPlayer.getInventory().getContents(), CustomItems.BARBARIAN_BONE.toString()) >= required) {
-                            player = aPlayer;
-                            break;
-                        }
+                for (Player player : players) {
+                    boolean removed = ItemUtil.removeItemOfName(
+                            player,
+                            CustomItemCenter.build(CustomItems.BARBARIAN_BONE),
+                            requiredBoneCount,
+                            false
+                    );
+
+                    if (removed) {
+                        playersWithSufficientBones.add(player);
                     }
                 }
 
-                // Sacrificial drops
-                int m = EnvironmentUtil.hasThunderstorm(parent.getWorld()) ? 3 : 1;
-                m *= player != null ? 3 : 1;
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m, 400000));
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 15000));
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 4000));
-
-                // Gold drops
-                for (int i = 0; i < Math.sqrt(amt + m) + GiantBossArea.scalOffst; i++) {
-                    event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRangedRandom(32, 64)));
-                }
-
-                // Unique drops
-                if (ChanceUtil.getChance(25) || m > 1 && ChanceUtil.getChance(27 / m)) {
-                    event.getDrops().add(BookUtil.Lore.Monsters.skelril());
-                }
-                if (ChanceUtil.getChance(138) || m > 1 && ChanceUtil.getChance(84 / m)) {
-                    if (ChanceUtil.getChance(2)) {
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_SWORD));
-                    } else {
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_SHORT_SWORD));
+                new BoundDropSpawner(parent.dropProtector, e::getLocation).provide(parent.dropTable, new KillInfo() {
+                    @Override
+                    public int getGlobalChanceModifier() {
+                        return EnvironmentUtil.hasThunderstorm(parent.getWorld()) ? 3 : 1;
                     }
-                }
-                if (ChanceUtil.getChance(138) || m > 1 && ChanceUtil.getChance(84 / m)) {
-                    event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_BOW));
-                }
-                if (ChanceUtil.getChance(200) || m > 1 && ChanceUtil.getChance(108 / m)) {
-                    event.getDrops().add(CustomItemCenter.build(CustomItems.MAGIC_BUCKET));
-                }
 
-                // Uber rare drops
-                if (ChanceUtil.getChance(2500 / m)) {
-                    event.getDrops().add(CustomItemCenter.build(CustomItems.ANCIENT_CROWN));
-                }
-
-                // Add a few Barbarian Bones to the drop list
-                event.getDrops().add(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(Math.max(1, amt * 2))));
-
-                // Remove the Barbarian Bones
-                if (player != null) {
-                    int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.BARBARIAN_BONE.toString()) - required;
-                    ItemStack[] nc = ItemUtil.removeItemOfName(player.getInventory().getContents(), CustomItems.BARBARIAN_BONE.toString());
-                    player.getInventory().setContents(nc);
-                    int amount = Math.min(c, 64);
-                    while (amount > 0) {
-                        player.getInventory().addItem(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, amount));
-                        c -= amount;
-                        amount = Math.min(c, 64);
+                    @Override
+                    public int getChanceModifier(Player player) {
+                        return getGlobalChanceModifier() * (playersWithSufficientBones.contains(player) ? 3 : 1);
                     }
-                    //noinspection deprecation
-                    player.updateInventory();
-                }
 
-                LocalDate date = LocalDate.now().with(Month.APRIL).withDayOfMonth(6);
-                if (date.equals(LocalDate.now())) {
-                    ChatUtil.sendNotice(parent.getAudiblePlayers(), ChatColor.GOLD, "DROPS DOUBLED!");
-                    event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
-                }
+                    @Override
+                    public Collection<Player> getPlayers() {
+                        return players;
+                    }
+                });
 
                 // Reset respawn mechanics
                 parent.lastDeath = System.currentTimeMillis();
                 parent.boss = null;
-                Collection<Entity> containedEntities = parent.getContained(Zombie.class, ExperienceOrb.class);
 
                 // Remove remaining XP and que new xp
                 for (int i = 0; i < 7; i++) {
                     server.getScheduler().runTaskLater(inst, parent.spawnXP, i * 2 * 20);
                 }
+
                 parent.setDoor(parent.eastDoor, Material.AIR);
                 parent.setDoor(parent.westDoor, Material.AIR);
-                IntegratedRunnable normal = new IntegratedRunnable() {
-                    @Override
-                    public boolean run(int times) {
-                        if (TimerUtil.matchesFilter(times, 10, 5)) {
-                            ChatUtil.sendWarning(parent.getAudiblePlayers(), "Clearing chest contents in: " + times + " seconds.");
-                        }
-                        return true;
-                    }
-                    @Override
-                    public void end() {
-                        ChatUtil.sendWarning(parent.getAudiblePlayers(), "Clearing chest contents!");
-                        for (Location location : parent.chestPts) {
-                            BlockState state = location.getBlock().getState();
-                            if (state instanceof Chest) {
-                                ((Chest) state).getInventory().clear();
-                            }
-                        }
-                    }
-                };
-                TimedRunnable timed = new TimedRunnable(normal, 30);
-                BukkitTask task = server.getScheduler().runTaskTimer(inst, timed, 0, 20);
-                timed.setTask(task);
+
+                parent.clearChests();
             } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
                 event.getDrops().clear();
                 if (ChanceUtil.getChance(28)) {
