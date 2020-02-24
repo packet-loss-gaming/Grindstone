@@ -10,6 +10,7 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.OSBL.util.DamageSource;
+import gg.packetloss.grindstone.ProtectedDroppedItemsComponent;
 import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.bosses.detail.BossBarDetail;
 import gg.packetloss.grindstone.bosses.impl.BossBarRebindableBoss;
@@ -18,6 +19,9 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
+import gg.packetloss.grindstone.util.dropttable.OSBLKillInfo;
+import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -43,14 +47,20 @@ public class MercilessZombie {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    private final ProtectedDroppedItemsComponent dropProtector;
     private BossBarRebindableBoss<Zombie> mercilessZombie;
 
     public static final String BOUND_NAME = "Merciless Zombie";
     public static final int MIN_HEALTH = 750;
     public static final int MAX_ACHIEVABLE_HEALTH = 15000;
 
-    public MercilessZombie() {
+    private PerformanceDropTable dropTable = new PerformanceDropTable();
+
+    public MercilessZombie(ProtectedDroppedItemsComponent dropProtector) {
+        this.dropProtector = dropProtector;
+
         mercilessZombie = new BossBarRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        setupDropTable();
         setupMercilessZombie();
         server.getScheduler().runTaskTimer(
                 inst,
@@ -136,6 +146,16 @@ public class MercilessZombie {
 
     }
 
+    private void setupDropTable() {
+        dropTable.registerSlicedDrop((player, damageDone, consumer) -> {
+            for (int i = Math.min(60, ChanceUtil.getRandom((int) (damageDone / 250))); i > 0; --i) {
+                consumer.accept(new ItemStack(Material.GOLD_INGOT, 64));
+            }
+        });
+
+        dropTable.registerTakeAllDrop(10, () -> CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
+    }
+
     private void setupMercilessZombie() {
         List<BindInstruction<BossBarDetail>> bindInstructions = mercilessZombie.bindInstructions;
         bindInstructions.add(new BindInstruction<>() {
@@ -182,17 +202,15 @@ public class MercilessZombie {
                     return null;
                 }
 
-                Entity boss = BukkitUtil.getBukkitEntity(controllable);
+                LivingEntity boss = (LivingEntity) BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
 
-                int maxHealth = (int) ((Zombie) boss).getMaxHealth();
-                for (int i = Math.min(60, ChanceUtil.getRandom(maxHealth / 250)); i > 0; --i) {
-                    target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT, 64));
-                }
-
-                if (ChanceUtil.getChance(10 / (maxHealth / MIN_HEALTH))) {
-                    target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
-                }
+                new BoundDropSpawner(dropProtector, () -> target).provide(dropTable, new OSBLKillInfo(controllable) {
+                    @Override
+                    public int getChanceModifier() {
+                        return Math.max(1, (int) boss.getMaxHealth() / MIN_HEALTH);
+                    }
+                });
 
                 return null;
             }

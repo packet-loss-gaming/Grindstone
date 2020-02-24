@@ -15,6 +15,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.ProtectedDroppedItemsComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.bosses.manager.apocalypse.*;
@@ -75,7 +76,7 @@ import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 
 @ComponentInformation(friendlyName = "Apocalypse", desc = "Sends an invasion force after the residents of the server.")
 @Depend(components = {BuffComponent.class, JailComponent.class, AdminComponent.class,
-        WarpsComponent.class, HighScoresComponent.class})
+        ProtectedDroppedItemsComponent.class, WarpsComponent.class, HighScoresComponent.class})
 public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -88,6 +89,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private JailComponent jailComponent;
     @InjectComponent
     private AdminComponent adminComponent;
+    @InjectComponent
+    private ProtectedDroppedItemsComponent dropProtector;
     @InjectComponent
     private WarpsComponent warpsComponent;
     @InjectComponent
@@ -107,7 +110,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         config = configure(new LocalConfiguration());
         thorBossManager = new ThorZombie();
         zapperBossManager = new ZapperZombie();
-        mercilessBossManager = new MercilessZombie();
+        mercilessBossManager = new MercilessZombie(dropProtector);
         stickyBossManager = new StickyZombie();
         chuckerBossManager = new ChuckerZombie();
 
