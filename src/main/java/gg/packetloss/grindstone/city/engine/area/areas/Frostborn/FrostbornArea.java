@@ -21,8 +21,8 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
-import gg.packetloss.grindstone.util.dropttable.SimpleDropTable;
-import gg.packetloss.grindstone.util.dropttable.SimpleKillInfo;
+import gg.packetloss.grindstone.util.dropttable.MassBossDropTable;
+import gg.packetloss.grindstone.util.dropttable.MassBossKillInfo;
 import gg.packetloss.grindstone.util.item.itemstack.ProtectedSerializedItemStack;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
@@ -101,7 +101,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     protected BossBar healthBar = Bukkit.createBossBar("Frost Born", BarColor.WHITE, BarStyle.SEGMENTED_6);
 
-    protected SimpleDropTable dropTable = new SimpleDropTable();
+    protected MassBossDropTable dropTable = new MassBossDropTable();
 
     @Override
     public void setUp() {
@@ -616,7 +616,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         getContained(Item.class, Snowball.class, Bat.class).forEach(Entity::remove);
 
         // Drop the loot
-        new BoundDropSpawner(dropProtector, () -> bossSpawnLoc).provide(dropTable, new SimpleKillInfo(players));
+        new BoundDropSpawner(dropProtector, () -> bossSpawnLoc).provide(dropTable, new MassBossKillInfo(players));
 
         // Teleport the players to a reasonable location where they'll see the loot
         for (Player player : players) {

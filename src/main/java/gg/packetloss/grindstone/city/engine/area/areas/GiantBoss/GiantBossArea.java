@@ -31,7 +31,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
-import gg.packetloss.grindstone.util.dropttable.SimpleDropTable;
+import gg.packetloss.grindstone.util.dropttable.MassBossDropTable;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -102,7 +102,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     protected BossBar healthBar = Bukkit.createBossBar("Shnuggles Prime", BarColor.PURPLE, BarStyle.SEGMENTED_6);
 
-    protected SimpleDropTable dropTable = new SimpleDropTable();
+    protected MassBossDropTable dropTable = new MassBossDropTable();
 
     @Override
     public void setUp() {

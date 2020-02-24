@@ -35,7 +35,7 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Glo
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
-import gg.packetloss.grindstone.util.dropttable.KillInfo;
+import gg.packetloss.grindstone.util.dropttable.MassBossKillInfo;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.*;
@@ -56,7 +56,10 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class GiantBossListener extends AreaListener<GiantBossArea> {
@@ -409,7 +412,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     }
                 }
 
-                new BoundDropSpawner(parent.dropProtector, e::getLocation).provide(parent.dropTable, new KillInfo() {
+                new BoundDropSpawner(parent.dropProtector, e::getLocation).provide(parent.dropTable, new MassBossKillInfo(players) {
                     @Override
                     public int getGlobalChanceModifier() {
                         return EnvironmentUtil.hasThunderstorm(parent.getWorld()) ? 3 : 1;
@@ -418,11 +421,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     @Override
                     public int getChanceModifier(Player player) {
                         return getGlobalChanceModifier() * (playersWithSufficientBones.contains(player) ? 3 : 1);
-                    }
-
-                    @Override
-                    public Collection<Player> getPlayers() {
-                        return players;
                     }
                 });
 

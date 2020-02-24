@@ -16,7 +16,7 @@ public class BoundDropSpawner implements DropProvider {
     }
 
     @Override
-    public void provide(DropTable dropTable, KillInfo killInfo) {
+    public <T extends KillInfo> void provide(DropTable<T> dropTable, T killInfo) {
         dropTable.getDrops(killInfo, (drop) -> {
             Location destination  = dropDestination.get();
             Item item = destination.getWorld().dropItem(destination, drop.getDrop());

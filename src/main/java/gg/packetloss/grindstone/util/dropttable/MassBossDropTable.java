@@ -1,6 +1,5 @@
 package gg.packetloss.grindstone.util.dropttable;
 
-import gg.packetloss.grindstone.util.ChanceUtil;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -11,7 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class SimpleDropTable implements DropTable {
+public class MassBossDropTable implements DropTable<MassBossKillInfo> {
     private List<ChanceEntry> entries = new ArrayList<>();
     private List<BiConsumer<Integer, Consumer<ItemStack>>> customEntries = new ArrayList<>();
     private List<ChanceEntry> playerEntries = new ArrayList<>();
@@ -50,13 +49,13 @@ public class SimpleDropTable implements DropTable {
     }
 
     @Override
-    public void getDrops(KillInfo info, Consumer<Drop> drops) {
+    public void getDrops(MassBossKillInfo info, Consumer<Drop> drops) {
         int globalChanceModifier = info.getGlobalChanceModifier();
 
         for (ChanceEntry entry : entries) {
-            if (ChanceUtil.getChance(entry.getChance() / globalChanceModifier)) {
-                drops.accept(new SimpleDrop(entry.get()));
-            }
+            entry.get(globalChanceModifier).ifPresent((stack) -> {
+                drops.accept(new SimpleDrop(stack));
+            });
         }
 
         for (var entry : customEntries) {
@@ -68,9 +67,9 @@ public class SimpleDropTable implements DropTable {
         for (Player player : info.getPlayers()) {
             int playerChanceModifier = info.getChanceModifier(player);
             for (ChanceEntry entry : playerEntries) {
-                if (ChanceUtil.getChance(entry.getChance() / playerChanceModifier)) {
-                    drops.accept(new SimpleDrop(player, entry.get()));
-                }
+                entry.get(playerChanceModifier).ifPresent((stack) -> {
+                    drops.accept(new SimpleDrop(player, stack));
+                });
             }
 
             for (var entry : customPlayerEntries) {
@@ -81,21 +80,4 @@ public class SimpleDropTable implements DropTable {
         }
     }
 
-    private static class ChanceEntry {
-        private final int chance;
-        private final Supplier<ItemStack> supplier;
-
-        private ChanceEntry(int chance, Supplier<ItemStack> supplier) {
-            this.chance = chance;
-            this.supplier = supplier;
-        }
-
-        public int getChance() {
-            return chance;
-        }
-
-        public ItemStack get() {
-            return supplier.get();
-        }
-    }
 }
