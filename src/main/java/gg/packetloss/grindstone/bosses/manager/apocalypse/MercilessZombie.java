@@ -11,7 +11,6 @@ import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.OSBL.util.DamageSource;
-import gg.packetloss.grindstone.ProtectedDroppedItemsComponent;
 import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.bosses.detail.BossBarDetail;
 import gg.packetloss.grindstone.bosses.impl.BossBarRebindableBoss;
@@ -49,7 +48,6 @@ public class MercilessZombie {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private final ProtectedDroppedItemsComponent dropProtector;
     private BossBarRebindableBoss<Zombie> mercilessZombie;
 
     public static final String BOUND_NAME = "Merciless Zombie";
@@ -58,9 +56,7 @@ public class MercilessZombie {
 
     private PerformanceDropTable dropTable = new PerformanceDropTable();
 
-    public MercilessZombie(ProtectedDroppedItemsComponent dropProtector) {
-        this.dropProtector = dropProtector;
-
+    public MercilessZombie() {
         mercilessZombie = new BossBarRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
         setupDropTable();
         setupMercilessZombie();
@@ -208,7 +204,7 @@ public class MercilessZombie {
                 LivingEntity boss = (LivingEntity) BukkitUtil.getBukkitEntity(controllable);
                 Location target = boss.getLocation();
 
-                new BoundDropSpawner(dropProtector, () -> target).provide(dropTable, new OSBLKillInfo(controllable) {
+                new BoundDropSpawner(() -> target).provide(dropTable, new OSBLKillInfo(controllable) {
                     @Override
                     public int getChanceModifier() {
                         return Math.max(1, (int) boss.getMaxHealth() / MIN_HEALTH);

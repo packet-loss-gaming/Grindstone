@@ -7,7 +7,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
-import gg.packetloss.grindstone.ProtectedDroppedItemsComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.city.engine.area.PersistentArena;
@@ -57,9 +56,7 @@ import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemN
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
-@Depend(components = {
-        AdminComponent.class, ProtectedDroppedItemsComponent.class, BlockStateComponent.class,
-        SpectatorComponent.class},
+@Depend(components = {AdminComponent.class, BlockStateComponent.class, SpectatorComponent.class},
         plugins = {"WorldGuard"})
 public class FrostbornArea extends AreaComponent<FrostbornConfig> implements PersistentArena {
     protected static final int BASE_RAGE = -10;
@@ -67,8 +64,6 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     @InjectComponent
     protected AdminComponent admin;
-    @InjectComponent
-    protected ProtectedDroppedItemsComponent dropProtector;
     @InjectComponent
     protected BlockStateComponent blockState;
     @InjectComponent
@@ -616,7 +611,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         getContained(Item.class, Snowball.class, Bat.class).forEach(Entity::remove);
 
         // Drop the loot
-        new BoundDropSpawner(dropProtector, () -> bossSpawnLoc).provide(dropTable, new MassBossKillInfo(players));
+        new BoundDropSpawner(() -> bossSpawnLoc).provide(dropTable, new MassBossKillInfo(players));
 
         // Teleport the players to a reasonable location where they'll see the loot
         for (Player player : players) {

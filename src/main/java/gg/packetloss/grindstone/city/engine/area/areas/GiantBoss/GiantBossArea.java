@@ -14,7 +14,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
-import gg.packetloss.grindstone.ProtectedDroppedItemsComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
@@ -76,8 +75,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected AdminComponent admin;
     @InjectComponent
     protected PrayerComponent prayer;
-    @InjectComponent
-    protected ProtectedDroppedItemsComponent dropProtector;
     @InjectComponent
     protected PlayerStateComponent playerState;
     @InjectComponent

@@ -412,7 +412,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     }
                 }
 
-                new BoundDropSpawner(parent.dropProtector, e::getLocation).provide(parent.dropTable, new MassBossKillInfo(players) {
+                new BoundDropSpawner(e::getLocation).provide(parent.dropTable, new MassBossKillInfo(players) {
                     @Override
                     public int getGlobalChanceModifier() {
                         return EnvironmentUtil.hasThunderstorm(parent.getWorld()) ? 3 : 1;
