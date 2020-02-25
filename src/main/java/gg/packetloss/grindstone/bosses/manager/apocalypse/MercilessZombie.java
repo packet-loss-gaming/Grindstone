@@ -14,12 +14,12 @@ import com.skelril.OSBL.util.DamageSource;
 import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.bosses.detail.BossBarDetail;
 import gg.packetloss.grindstone.bosses.impl.BossBarRebindableBoss;
+import gg.packetloss.grindstone.bosses.manager.apocalypse.instruction.ApocalypseDropTableInstruction;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
-import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
 import gg.packetloss.grindstone.util.dropttable.OSBLKillInfo;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -198,24 +198,13 @@ public class MercilessZombie {
         });
 
         List<UnbindInstruction<BossBarDetail>> unbindInstructions = mercilessZombie.unbindInstructions;
-        unbindInstructions.add(new UnbindInstruction<>() {
+        unbindInstructions.add(new ApocalypseDropTableInstruction<>(dropTable, (controllable) -> new OSBLKillInfo(controllable) {
             @Override
-            public InstructionResult<BossBarDetail, UnbindInstruction<BossBarDetail>> process(LocalControllable<BossBarDetail> controllable) {
-                if (ApocalypseHelper.areDropsSuppressed()) {
-                    return null;
-                }
-
+            public int getChanceModifier() {
                 LivingEntity boss = (LivingEntity) BukkitUtil.getBukkitEntity(controllable);
-                new BoundDropSpawner(boss::getLocation).provide(dropTable, new OSBLKillInfo(controllable) {
-                    @Override
-                    public int getChanceModifier() {
-                        return Math.max(1, (int) boss.getMaxHealth() / MIN_HEALTH);
-                    }
-                });
-
-                return null;
+                return Math.max(1, (int) boss.getMaxHealth() / MIN_HEALTH);
             }
-        });
+        }));
 
         List<DamageInstruction<BossBarDetail>> damageInstructions = mercilessZombie.damageInstructions;
         damageInstructions.add(new DamageInstruction<>() {
