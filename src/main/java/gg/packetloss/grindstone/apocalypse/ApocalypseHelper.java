@@ -60,7 +60,10 @@ public class ApocalypseHelper {
         boolean prevValue = suppressDrops;
 
         suppressDrops = true;
-        op.run();
-        suppressDrops = prevValue;
+        try {
+            op.run();
+        } finally {
+            suppressDrops = prevValue;
+        }
     }
 }
