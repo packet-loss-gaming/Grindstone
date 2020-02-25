@@ -11,7 +11,9 @@ public interface PerformanceKillInfo extends KillInfo {
         return 1;
     }
 
+    public double getTotalDamage();
     public Optional<Double> getDamageDone(Player player);
+    public Optional<Float> getPercentDamageDone(Player player);
 
     public Collection<Player> getDamagers();
     default public Optional<Player> getTopDamager() {

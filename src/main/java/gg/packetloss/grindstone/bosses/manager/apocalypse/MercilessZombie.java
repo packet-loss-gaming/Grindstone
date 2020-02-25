@@ -146,11 +146,15 @@ public class MercilessZombie {
     }
 
     private void setupDropTable() {
-        dropTable.registerSlicedDrop((player, damageDone, consumer) -> {
-            for (int i = Math.min(60, ChanceUtil.getRandom((int) (damageDone / 250))); i > 0; --i) {
-                consumer.accept(new ItemStack(Material.GOLD_INGOT, 64));
-            }
-        });
+        dropTable.registerSlicedDrop(
+                (info) -> Math.min(60, ChanceUtil.getRandom((int) info.getTotalDamage() / 250)),
+                (info, player, consumer) -> {
+                    float percentDamageDone = info.getKillInfo().getPercentDamageDone(player).orElseThrow();
+                    for (int i = (int) (info.getPoints() * percentDamageDone); i > 0; --i) {
+                        consumer.accept(new ItemStack(Material.GOLD_INGOT, 64));
+                    }
+                }
+        );
 
         dropTable.registerTakeAllDrop(10, () -> CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
     }
@@ -202,9 +206,7 @@ public class MercilessZombie {
                 }
 
                 LivingEntity boss = (LivingEntity) BukkitUtil.getBukkitEntity(controllable);
-                Location target = boss.getLocation();
-
-                new BoundDropSpawner(() -> target).provide(dropTable, new OSBLKillInfo(controllable) {
+                new BoundDropSpawner(boss::getLocation).provide(dropTable, new OSBLKillInfo(controllable) {
                     @Override
                     public int getChanceModifier() {
                         return Math.max(1, (int) boss.getMaxHealth() / MIN_HEALTH);
