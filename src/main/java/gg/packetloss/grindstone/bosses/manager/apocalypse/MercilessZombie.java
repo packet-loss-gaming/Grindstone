@@ -3,6 +3,7 @@ package gg.packetloss.grindstone.bosses.manager.apocalypse;
 import com.destroystokyo.paper.ParticleBuilder;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
+import com.skelril.OSBL.bukkit.entity.BukkitEntity;
 import com.skelril.OSBL.bukkit.util.BukkitAttackDamage;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
 import com.skelril.OSBL.entity.LocalControllable;
@@ -39,6 +40,7 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public class MercilessZombie {
@@ -87,6 +89,11 @@ public class MercilessZombie {
         return customName.equals(BOUND_NAME);
     }
 
+    private boolean isMercilessZombie(Entity entity) {
+        String customName = entity.getCustomName();
+        return BOUND_NAME.equals(customName);
+    }
+
     private boolean isConsumableZombie(Entity entity) {
         String customName = entity.getCustomName();
         if (customName == null) {
@@ -106,10 +113,6 @@ public class MercilessZombie {
         }
 
         if (customName.equals(ThorZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(MercilessZombie.BOUND_NAME)) {
             return true;
         }
 
@@ -261,7 +264,17 @@ public class MercilessZombie {
                             continue;
                         }
 
-                        if (isConsumableZombie(entity)) {
+                        boolean isMerciless = isMercilessZombie(entity);
+
+                        // Merge damage if we're eating another merciless
+                        if (isMerciless) {
+                            LocalControllable<BossBarDetail> consumed = mercilessZombie.getBound(new BukkitEntity<>(entity));
+                            for (UUID damager : consumed.getDamagers()) {
+                                controllable.damaged(damager, consumed.getDamage(damager).orElseThrow());
+                            }
+                        }
+
+                        if (isMerciless || isConsumableZombie(entity)) {
                             totalHealth += ((Zombie) entity).getHealth();
                             ((Zombie) entity).setHealth(0);
                             continue;
