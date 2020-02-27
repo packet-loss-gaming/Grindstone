@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.util.dropttable;
 
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
@@ -7,9 +8,7 @@ import java.util.Iterator;
 import java.util.Optional;
 
 public interface PerformanceKillInfo extends KillInfo {
-    default public int getChanceModifier() {
-        return 1;
-    }
+    public LivingEntity getKilled();
 
     public double getTotalDamage();
     public Optional<Double> getDamageDone(Player player);

@@ -31,6 +31,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.dropttable.MassBossDropTable;
+import gg.packetloss.grindstone.util.dropttable.MassBossPlayerKillInfo;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -100,6 +101,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected BossBar healthBar = Bukkit.createBossBar("Shnuggles Prime", BarColor.PURPLE, BarStyle.SEGMENTED_6);
 
     protected MassBossDropTable dropTable = new MassBossDropTable();
+    protected Set<UUID> barbarianBonePlayers = new HashSet<>();
 
     @Override
     public void setUp() {
@@ -175,8 +177,24 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         return getContained(1, Player.class);
     }
 
+    private int getModifier(Player player) {
+        int modifier = 1;
+
+        if (EnvironmentUtil.hasThunderstorm(getWorld())) {
+            modifier *= 3;
+        }
+
+        if (barbarianBonePlayers.contains(player.getUniqueId())) {
+            modifier *= 3;
+        }
+
+        return modifier;
+    }
+
     private void setupDropTable() {
-        dropTable.registerCustomPlayerDrop((player, modifier, consumer) -> {
+        dropTable.registerCustomPlayerDrop((info, consumer) -> {
+            int modifier = getModifier(info.getPlayer());
+
             SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier, 400000).forEach(consumer);
             SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier * 5, 15000).forEach(consumer);
             SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier * 16, 4000).forEach(consumer);
@@ -187,15 +205,20 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         });
 
         dropTable.registerPlayerDrop(() -> CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(9)));
-        dropTable.registerPlayerDrop(27, BookUtil.Lore.Monsters::skelril);
+
+        // Chance modified drops
+        NumericPipeline.Builder<MassBossPlayerKillInfo> modifiedChance = NumericPipeline.builder();
+        modifiedChance.accept((info, chance) -> chance / getModifier(info.getPlayer()));
+
+        dropTable.registerPlayerDrop(modifiedChance.build(27), BookUtil.Lore.Monsters::skelril);
 
         // Master Weapons
-        dropTable.registerPlayerDrop(276, () -> CustomItemCenter.build(CustomItems.MASTER_SWORD));
-        dropTable.registerPlayerDrop(276, () -> CustomItemCenter.build(CustomItems.MASTER_SHORT_SWORD));
-        dropTable.registerPlayerDrop(138, () -> CustomItemCenter.build(CustomItems.MASTER_BOW));
+        dropTable.registerPlayerDrop(modifiedChance.build(276), () -> CustomItemCenter.build(CustomItems.MASTER_SWORD));
+        dropTable.registerPlayerDrop(modifiedChance.build(276), () -> CustomItemCenter.build(CustomItems.MASTER_SHORT_SWORD));
+        dropTable.registerPlayerDrop(modifiedChance.build(138), () -> CustomItemCenter.build(CustomItems.MASTER_BOW));
 
-        dropTable.registerPlayerDrop(200, () -> CustomItemCenter.build(CustomItems.MAGIC_BUCKET));
-        dropTable.registerPlayerDrop(2500, () -> CustomItemCenter.build(CustomItems.ANCIENT_CROWN));
+        dropTable.registerPlayerDrop(modifiedChance.build(200), () -> CustomItemCenter.build(CustomItems.MAGIC_BUCKET));
+        dropTable.registerPlayerDrop(modifiedChance.build(2500), () -> CustomItemCenter.build(CustomItems.ANCIENT_CROWN));
     }
 
     public boolean isBossSpawnedFast() {

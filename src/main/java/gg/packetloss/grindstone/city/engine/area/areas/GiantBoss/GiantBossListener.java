@@ -396,33 +396,26 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                     parent.highScores.update(aPlayer, scoreType, 1);
                 }
 
-                List<Player> playersWithSufficientBones = new ArrayList<>();
                 int requiredBoneCount = ChanceUtil.getRandom(13) + 3;
 
-                for (Player player : players) {
-                    boolean removed = ItemUtil.removeItemOfName(
-                            player,
-                            CustomItemCenter.build(CustomItems.BARBARIAN_BONE),
-                            requiredBoneCount,
-                            false
-                    );
+                try {
+                    for (Player player : players) {
+                        boolean removed = ItemUtil.removeItemOfName(
+                                player,
+                                CustomItemCenter.build(CustomItems.BARBARIAN_BONE),
+                                requiredBoneCount,
+                                false
+                        );
 
-                    if (removed) {
-                        playersWithSufficientBones.add(player);
+                        if (removed) {
+                            parent.barbarianBonePlayers.add(player.getUniqueId());
+                        }
                     }
+
+                    new BoundDropSpawner(e::getLocation).provide(parent.dropTable, new MassBossKillInfo(players));
+                } finally {
+                    parent.barbarianBonePlayers.clear();
                 }
-
-                new BoundDropSpawner(e::getLocation).provide(parent.dropTable, new MassBossKillInfo(players) {
-                    @Override
-                    public int getGlobalChanceModifier() {
-                        return EnvironmentUtil.hasThunderstorm(parent.getWorld()) ? 3 : 1;
-                    }
-
-                    @Override
-                    public int getChanceModifier(Player player) {
-                        return getGlobalChanceModifier() * (playersWithSufficientBones.contains(player) ? 3 : 1);
-                    }
-                });
 
                 // Reset respawn mechanics
                 parent.lastDeath = System.currentTimeMillis();

@@ -549,7 +549,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     private void setupDropTable() {
         // Custom Loot Drops
-        dropTable.registerCustomDrop((consumer) -> {
+        dropTable.registerCustomDrop((info, consumer) -> {
             Iterator<ProtectedSerializedItemStack> lootIt = lootItems.iterator();
             while (lootIt.hasNext()) {
                 ProtectedSerializedItemStack lootItem = lootIt.next();
@@ -562,13 +562,15 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 }
             }
         });
-        dropTable.registerCustomPlayerDrop((player, consumer) -> {
+        dropTable.registerCustomPlayerDrop((info, consumer) -> {
+            UUID playerID = info.getPlayer().getUniqueId();
+
             Iterator<ProtectedSerializedItemStack> lootIt = lootItems.iterator();
             while (lootIt.hasNext()) {
                 ProtectedSerializedItemStack lootItem = lootIt.next();
 
                 UUID ownerID = lootItem.getPlayer();
-                if (ownerID.equals(player.getUniqueId())) {
+                if (playerID.equals(ownerID)) {
                     lootIt.remove();
                     modifyDrop(lootItem, consumer);
                 }

@@ -20,8 +20,9 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
-import gg.packetloss.grindstone.util.dropttable.OSBLKillInfo;
+import gg.packetloss.grindstone.util.NumericPipeline;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
+import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -148,15 +149,30 @@ public class MercilessZombie {
     private void setupDropTable() {
         dropTable.registerSlicedDrop(
                 (info) -> Math.min(60, ChanceUtil.getRandom((int) info.getTotalDamage() / 250)),
-                (info, player, consumer) -> {
-                    float percentDamageDone = info.getKillInfo().getPercentDamageDone(player).orElseThrow();
-                    for (int i = (int) (info.getPoints() * percentDamageDone); i > 0; --i) {
+                (info, consumer) -> {
+                    Player player = info.getPlayer();
+
+                    // Get the point information
+                    int points = info.getSlicedPoints();
+                    PerformanceKillInfo killInfo = info.getKillInfo();
+                    float percentDamageDone = killInfo.getPercentDamageDone(player).orElseThrow();
+
+                    // Calculate and distribute the point slice
+                    for (int i = (int) (points * percentDamageDone); i > 0; --i) {
                         consumer.accept(new ItemStack(Material.GOLD_INGOT, 64));
                     }
                 }
         );
 
-        dropTable.registerTakeAllDrop(10, () -> CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
+        NumericPipeline.Builder<PerformanceKillInfo> healthAffectedChance = NumericPipeline.builder();
+        healthAffectedChance.accept((info, chance) -> {
+            return chance / (int) (info.getKilled().getMaxHealth() / MIN_HEALTH);
+        });
+
+        dropTable.registerTakeAllDrop(
+                healthAffectedChance.build(10),
+                () -> CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER)
+        );
     }
 
     private void setupMercilessZombie() {
@@ -198,13 +214,7 @@ public class MercilessZombie {
         });
 
         List<UnbindInstruction<BossBarDetail>> unbindInstructions = mercilessZombie.unbindInstructions;
-        unbindInstructions.add(new ApocalypseDropTableInstruction<>(dropTable, (controllable) -> new OSBLKillInfo(controllable) {
-            @Override
-            public int getChanceModifier() {
-                LivingEntity boss = (LivingEntity) BukkitUtil.getBukkitEntity(controllable);
-                return Math.max(1, (int) boss.getMaxHealth() / MIN_HEALTH);
-            }
-        }));
+        unbindInstructions.add(new ApocalypseDropTableInstruction<>(dropTable));
 
         List<DamageInstruction<BossBarDetail>> damageInstructions = mercilessZombie.damageInstructions;
         damageInstructions.add(new DamageInstruction<>() {

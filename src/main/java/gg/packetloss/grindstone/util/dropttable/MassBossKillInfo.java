@@ -11,14 +11,6 @@ public class MassBossKillInfo implements KillInfo {
         this.players = players;
     }
 
-    public int getGlobalChanceModifier() {
-        return 1;
-    }
-
-    public int getChanceModifier(Player player) {
-        return getGlobalChanceModifier();
-    }
-
     public Collection<Player> getPlayers() {
         return players;
     }

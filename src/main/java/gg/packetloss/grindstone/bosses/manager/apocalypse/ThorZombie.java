@@ -27,10 +27,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Damageable;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Zombie;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
@@ -62,9 +59,11 @@ public class ThorZombie {
     private void setupDropTable() {
         dropTable.registerSlicedDrop(
                 (info) -> ChanceUtil.getRangedRandom(12, 150),
-                (info, player, consumer) -> {
+                (info, consumer) -> {
+                    Player player = info.getPlayer();
+
                     float percentDamage = info.getKillInfo().getPercentDamageDone(player).orElseThrow();
-                    int bars = (int) (info.getPoints() * percentDamage);
+                    int bars = (int) (info.getSlicedPoints() * percentDamage);
                     for (int i = bars; i > 0; --i) {
                         consumer.accept(new ItemStack(Material.GOLD_INGOT));
                     }

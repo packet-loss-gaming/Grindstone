@@ -1,7 +1,9 @@
 package gg.packetloss.grindstone.util.dropttable;
 
+import com.skelril.OSBL.bukkit.util.BukkitUtil;
 import com.skelril.OSBL.entity.LocalControllable;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -11,6 +13,11 @@ public class OSBLKillInfo implements PerformanceKillInfo {
 
     public OSBLKillInfo(LocalControllable<?> controllable) {
         this.controllable = controllable;
+    }
+
+    @Override
+    public LivingEntity getKilled() {
+        return (LivingEntity) BukkitUtil.getBukkitEntity(controllable);
     }
 
     @Override

@@ -4,19 +4,20 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-class ChanceEntry {
-    private final int chance;
+class ChanceEntry<T> {
+    private final Function<T, Integer> chanceSupplier;
     private final Supplier<ItemStack> supplier;
 
-    ChanceEntry(int chance, Supplier<ItemStack> supplier) {
-        this.chance = chance;
+    ChanceEntry(Function<T, Integer> chanceSupplier, Supplier<ItemStack> supplier) {
+        this.chanceSupplier = chanceSupplier;
         this.supplier = supplier;
     }
 
-    public Optional<ItemStack> get(int chanceModifier) {
-        if (ChanceUtil.getChance(chance / chanceModifier)) {
+    public Optional<ItemStack> get(T info) {
+        if (ChanceUtil.getChance(chanceSupplier.apply(info))) {
             return Optional.of(supplier.get());
         }
 
