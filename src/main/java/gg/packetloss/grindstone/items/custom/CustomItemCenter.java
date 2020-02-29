@@ -733,6 +733,12 @@ public class CustomItemCenter {
         tomeOfLegends.addSource(ItemSource.MARKET);
         tomeOfLegends.addUse("Consumable to permanently reduce special attack cooldowns by 10%.");
         addItem(tomeOfLegends);
+
+        CustomItem tomeOfLife = new CustomItem(TOME_OF_LIFE, Material.BOOK);
+        tomeOfLife.addSource(ItemSource.FROSTBORN);
+        tomeOfLife.addSource(ItemSource.MARKET);
+        tomeOfLife.addUse("Consumable to permanently protect items on death.");
+        addItem(tomeOfLife);
     }
 
     public static Collection<CustomItem> values() {

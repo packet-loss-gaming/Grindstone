@@ -687,7 +687,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
 
         ItemStack[] dropsArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
-        boolean useGemOfLife = ItemUtil.findItemOfName(dropsArray, CustomItems.GEM_OF_LIFE.toString());
+        boolean useGemOfLife = player.hasPermission("aurora.tome.life") ||
+                ItemUtil.findItemOfName(dropsArray, CustomItems.GEM_OF_LIFE.toString());
 
         PlayerGraveProtectItemsEvent protectItemsEvent = new PlayerGraveProtectItemsEvent(
                 player,
@@ -734,6 +735,10 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
 
         Player player = event.getPlayer();
+        if (player.hasPermission("aurora.tome.life")) {
+            return;
+        }
+
         PlayerInventory pInv = player.getInventory();
 
         // Count then remove the Gems of Life

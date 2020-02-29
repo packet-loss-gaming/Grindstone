@@ -158,7 +158,8 @@ public enum CustomItems {
     TOME_OF_SACRIFICE(ChatColor.BLUE, "Tome of Sacrifice"),
     TOME_OF_DIVINITY(ChatColor.GOLD, "Tome of Divinity"),
     TOME_OF_THE_UNDEAD(ChatColor.DARK_RED, "Tome of the Undead"),
-    TOME_OF_LEGENDS(ChatColor.GOLD, "Tome of Legends");
+    TOME_OF_LEGENDS(ChatColor.GOLD, "Tome of Legends"),
+    TOME_OF_LIFE(ChatColor.DARK_AQUA, "Tome of Life");
 
     private final ItemFamily family;
     private final ChatColor color;

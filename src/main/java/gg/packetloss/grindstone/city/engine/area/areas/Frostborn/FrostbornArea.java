@@ -595,6 +595,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         dropTable.registerPlayerDrop(150, () -> CustomItemCenter.build(CustomItems.TOME_OF_POISON));
         dropTable.registerPlayerDrop(1500, () -> CustomItemCenter.build(CustomItems.TOME_OF_DIVINITY));
         dropTable.registerPlayerDrop(1500, () -> CustomItemCenter.build(CustomItems.TOME_OF_LEGENDS));
+        dropTable.registerPlayerDrop(7500, () -> CustomItemCenter.build(CustomItems.TOME_OF_LIFE));
     }
 
     protected void dropLoot() {

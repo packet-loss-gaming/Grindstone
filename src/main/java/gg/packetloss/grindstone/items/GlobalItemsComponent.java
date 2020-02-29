@@ -218,6 +218,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         tomeImpl.addTome(CustomItems.TOME_OF_DIVINITY, "aurora.tome.divinity");
         tomeImpl.addTome(CustomItems.TOME_OF_THE_UNDEAD, "aurora.tome.undead");
         tomeImpl.addTome(CustomItems.TOME_OF_LEGENDS, "aurora.tome.legends");
+        tomeImpl.addTome(CustomItems.TOME_OF_LIFE, "aurora.tome.life");
     }
 
     private void registerGuildOaths() {
