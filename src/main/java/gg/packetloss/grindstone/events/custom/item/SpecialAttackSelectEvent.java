@@ -1,9 +1,3 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
 package gg.packetloss.grindstone.events.custom.item;
 
 import gg.packetloss.grindstone.items.specialattack.SpecType;
@@ -14,26 +8,21 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
-public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
-
+public class SpecialAttackSelectEvent extends PlayerEvent implements Cancellable {
     private static final HandlerList handlers = new HandlerList();
+
     private boolean cancelled = false;
+    private boolean tryAgain = false;
     private final SpecType context;
     private SpecialAttack spec;
-    private long coolDown;
 
-    public SpecialAttackEvent(final Player owner, final SpecType context, final SpecialAttack spec) {
+    public SpecialAttackSelectEvent(final Player owner, final SpecType context, final SpecialAttack spec) {
         super(owner);
 
         Validate.isTrue(owner.equals(spec.getOwner()), "The owner and the spec owner must match!");
 
         this.context = context;
         this.spec = spec;
-        this.coolDown = context.getDelay() + spec.getCoolDown();
-
-        if (owner.hasPermission("aurora.tome.legends")) {
-            this.coolDown *= .9;
-        }
     }
 
     public SpecType getContext() {
@@ -44,12 +33,19 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
         return spec;
     }
 
-    public long getContextCoolDown() {
-        return coolDown;
+    public void setSpec(SpecialAttack spec) {
+        Validate.isTrue(getPlayer().equals(spec.getOwner()), "The owner and the spec owner must match!");
+
+        this.spec = spec;
     }
 
-    public void setContextCooldown(long coolDown) {
-        this.coolDown = coolDown;
+    public boolean shouldTryAgain() {
+        return tryAgain;
+    }
+
+    public void tryAgain() {
+        this.tryAgain = true;
+        this.cancelled = true;
     }
 
     @Override

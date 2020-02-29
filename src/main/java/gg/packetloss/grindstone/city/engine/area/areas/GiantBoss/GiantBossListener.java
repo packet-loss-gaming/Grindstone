@@ -13,6 +13,7 @@ import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
@@ -144,7 +145,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
     private long lastUltimateAttack = 0;
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
+    public void onSpecialAttack(SpecialAttackSelectEvent event) {
         SpecialAttack attack = event.getSpec();
         if (!parent.contains(attack.getLocation())) return;
 
@@ -153,7 +154,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
         if (target instanceof Giant) {
             if (bossBlacklistedSpecs.contains(specClass)) {
-                event.setCancelled(true);
+                event.tryAgain();
                 return;
             }
             if (ultimateBlacklistedSpecs.contains(specClass)) {
@@ -162,16 +163,22 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 } else if (System.currentTimeMillis() - lastUltimateAttack >= 15000) {
                     lastUltimateAttack = System.currentTimeMillis();
                 } else {
-                    event.setCancelled(true);
+                    event.tryAgain();
                     return;
                 }
             }
         }
 
         if (generalBlacklistedSpecs.contains(specClass)) {
-            event.setCancelled(true);
+            event.tryAgain();
             return;
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSpecialAttack(SpecialAttackEvent event) {
+        SpecialAttack attack = event.getSpec();
+        if (!parent.contains(attack.getLocation())) return;
 
         if (ItemUtil.isInItemFamily(attack.getUsedItem(), ItemFamily.MASTER)) {
             event.setContextCooldown(event.getContext().getDelay() / 2);

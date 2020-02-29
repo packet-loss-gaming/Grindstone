@@ -4,7 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
-import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.guild.*;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.powers.NinjaPower;
@@ -504,7 +504,7 @@ public class NinjaListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
+    public void onSpecialAttack(SpecialAttackSelectEvent event) {
         Player player = event.getPlayer();
 
         Optional<NinjaState> optState = getState(player);

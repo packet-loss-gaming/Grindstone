@@ -8,6 +8,7 @@ import gg.packetloss.grindstone.events.DoubleClickEvent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.guild.*;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.powers.RoguePower;
@@ -382,7 +383,7 @@ public class RogueListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
+    public void onSpecialAttack(SpecialAttackSelectEvent event) {
         Player player = event.getPlayer();
 
         Optional<RogueState> optState = getState(player);
@@ -400,7 +401,23 @@ public class RogueListener implements Listener {
                 if (newSpec.isValid()) {
                     event.setSpec(newSpec);
                 }
-            } else if (state.hasPower(RoguePower.SPEEDY_SPECIALS)) {
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onSpecialAttack(SpecialAttackEvent event) {
+        Player player = event.getPlayer();
+
+        Optional<RogueState> optState = getState(player);
+        if (optState.isEmpty()) {
+            return;
+        }
+
+        RogueState state = optState.get();
+
+        if (event.getContext().equals(SpecType.MELEE)) {
+            if (state.hasPower(RoguePower.SPEEDY_SPECIALS)) {
                 float remainingCooldownPercentage = ChanceUtil.getChance(10) ? .1F : .66F;
                 event.setContextCooldown((long) (event.getContextCoolDown() * remainingCooldownPercentage));
             }

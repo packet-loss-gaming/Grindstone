@@ -14,7 +14,7 @@ import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
-import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
@@ -164,18 +164,18 @@ public class PatientXListener extends AreaListener<PatientXArea> {
     private long lastUltimateAttack = 0;
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
+    public void onSpecialAttack(SpecialAttackSelectEvent event) {
 
         SpecialAttack attack = event.getSpec();
 
         if (!parent.contains(attack.getLocation())) return;
 
-        Class specClass = attack.getClass();
+        Class<?> specClass = attack.getClass();
         LivingEntity target = attack.getTarget();
 
         if (target != null && target.equals(parent.boss)) {
             if (bossBlacklistedSpecs.contains(specClass)) {
-                event.setCancelled(true);
+                event.tryAgain();
                 return;
             }
             if (ultimateBlacklistedSpecs.contains(specClass)) {
@@ -184,14 +184,14 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 } else if (System.currentTimeMillis() - lastUltimateAttack >= 15000) {
                     lastUltimateAttack = System.currentTimeMillis();
                 } else {
-                    event.setCancelled(true);
+                    event.tryAgain();
                     return;
                 }
             }
         }
 
         if (generalBlacklistedSpecs.contains(specClass)) {
-            event.setCancelled(true);
+            event.tryAgain();
         }
     }
 

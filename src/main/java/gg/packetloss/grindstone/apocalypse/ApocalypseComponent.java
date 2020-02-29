@@ -35,6 +35,7 @@ import gg.packetloss.grindstone.items.implementations.UnleashedSwordImpl;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackSelector;
 import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.optimization.OptimizedZombieFactory;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -221,13 +222,17 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         // If a master weapon has been used OR the overlord buff is active, enable overlord specs
         if (overlordCooldown != INIT_OVERLORD_EXTRA) {
-            SpecialAttack spec;
+            Optional<SpecialAttack> optSpecial = new SpecialAttackSelector(
+                    player,
+                    SpecType.OVERLORD,
+                    () -> getOverlordAttack(player, target, hasProjectile ? SpecType.RANGED : SpecType.MELEE)
+            ).getSpecial();
 
-            do {
-                spec = getOverlordAttack(player, target, hasProjectile ? SpecType.RANGED : SpecType.MELEE);
-            } while (spec == null);
+            if (optSpecial.isEmpty()) {
+                return;
+            }
 
-            new SpecialAttackFactory(sessions).process(player, spec, SpecType.OVERLORD, (specEvent) -> {
+            new SpecialAttackFactory(sessions).process(player, optSpecial.get(), SpecType.OVERLORD, (specEvent) -> {
                 specEvent.setContextCooldown(specEvent.getContextCoolDown() + (1000 * overlordCooldown));
             });
         }
