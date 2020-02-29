@@ -36,6 +36,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.*;
 
 import java.io.File;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -195,16 +196,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(inmate.getEnd());
 
-            builder.append(calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US));
-            builder.append(" ");
-            builder.append(calendar.get(Calendar.DAY_OF_MONTH));
-            builder.append(" ");
-            builder.append(calendar.get(Calendar.YEAR));
-            builder.append(" at ");
-            builder.append(calendar.get(Calendar.HOUR));
-            builder.append(":");
-            builder.append(calendar.get(Calendar.MINUTE));
-            builder.append(calendar.get(Calendar.AM_PM) == Calendar.AM ? "AM" : "PM");
+            builder.append(DateTimeFormatter.ofPattern("MMMM d yyyy 'at' h':'mma").format(calendar.toInstant()));
         } else {
             builder.append("indefinitely");
         }
