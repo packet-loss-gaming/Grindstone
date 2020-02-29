@@ -4,6 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.guild.*;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.powers.NinjaPower;
@@ -12,6 +13,9 @@ import gg.packetloss.grindstone.guild.state.NinjaState;
 import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.specialattack.SpecType;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.guild.ninja.Ignition;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
@@ -495,6 +499,26 @@ public class NinjaListener implements Listener {
             NinjaState state = optState.get();
             if (state.hasPower(NinjaPower.PITFALL_SNEAK) && player.isSneaking()) {
                 event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onSpecialAttack(SpecialAttackEvent event) {
+        Player player = event.getPlayer();
+
+        Optional<NinjaState> optState = getState(player);
+        if (optState.isEmpty()) {
+            return;
+        }
+
+        NinjaState state = optState.get();
+
+        SpecialAttack attack = event.getSpec();
+
+        if (event.getContext().equals(SpecType.RANGED)) {
+            if (state.hasPower(NinjaPower.IGNITION_SPECIAL) && ChanceUtil.getChance(14)) {
+                event.setSpec(new Ignition(attack.getOwner(), attack.getUsedItem(), attack.getTarget()));
             }
         }
     }

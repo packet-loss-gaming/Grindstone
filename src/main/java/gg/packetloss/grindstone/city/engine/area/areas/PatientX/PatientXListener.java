@@ -27,9 +27,11 @@ import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Ni
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.unleashed.DoomBlade;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearBomb;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.guild.ninja.Ignition;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.GlowingFog;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Surge;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -139,9 +141,9 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         }
     }
 
-    private static Set<Class> generalBlacklistedSpecs = new HashSet<>();
-    private static Set<Class> bossBlacklistedSpecs = new HashSet<>();
-    private static Set<Class> ultimateBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> generalBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> bossBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> ultimateBlacklistedSpecs = new HashSet<>();
 
     static {
         generalBlacklistedSpecs.add(Nightmare.class);
@@ -153,6 +155,8 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         bossBlacklistedSpecs.add(SoulSmite.class);
 
         ultimateBlacklistedSpecs.add(GlowingFog.class);
+        ultimateBlacklistedSpecs.add(Ignition.class);
+        ultimateBlacklistedSpecs.add(Surge.class);
         ultimateBlacklistedSpecs.add(Decimate.class);
         ultimateBlacklistedSpecs.add(DoomBlade.class);
     }

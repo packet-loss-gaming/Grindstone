@@ -29,9 +29,11 @@ import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Ni
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.unleashed.DoomBlade;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearBomb;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.guild.ninja.Ignition;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.GlowingFog;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Surge;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
@@ -119,12 +121,13 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         }
     }
 
-    private static Set<Class> generalBlacklistedSpecs = new HashSet<>();
-    private static Set<Class> bossBlacklistedSpecs = new HashSet<>();
-    private static Set<Class> ultimateBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> generalBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> bossBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> ultimateBlacklistedSpecs = new HashSet<>();
 
     static {
         generalBlacklistedSpecs.add(GlowingFog.class);
+        generalBlacklistedSpecs.add(Ignition.class);
         generalBlacklistedSpecs.add(Nightmare.class);
         generalBlacklistedSpecs.add(Disarm.class);
         generalBlacklistedSpecs.add(MobAttack.class);
@@ -133,6 +136,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         bossBlacklistedSpecs.add(Famine.class);
         bossBlacklistedSpecs.add(SoulSmite.class);
 
+        ultimateBlacklistedSpecs.add(Surge.class);
         ultimateBlacklistedSpecs.add(Decimate.class);
         ultimateBlacklistedSpecs.add(DoomBlade.class);
     }

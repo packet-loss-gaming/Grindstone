@@ -9,6 +9,7 @@ public enum NinjaPower implements GuildPower {
     HEALING_ARROWS(15),
     VAMPIRIC_SMOKE_BOMB(15),
     POTION_ARROW_BOMBS(20),
+    IGNITION_SPECIAL(25),
     MASTER_CLIMBER(30);
 
     private final int level;
