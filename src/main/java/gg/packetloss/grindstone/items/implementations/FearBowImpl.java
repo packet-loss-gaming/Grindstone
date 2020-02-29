@@ -17,7 +17,6 @@ import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.fear.Curse;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.*;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -25,6 +24,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
+
+import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
 
 public class FearBowImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
     @Override
@@ -49,37 +50,26 @@ public class FearBowImpl extends AbstractItemFeatureImpl implements SpecWeaponIm
 
     @EventHandler
     public void onArrowLand(ProjectileHitEvent event) {
-
         Projectile projectile = event.getEntity();
-        Entity shooter = null;
 
         ProjectileSource source = projectile.getShooter();
-        if (source instanceof Entity) {
-            shooter = (Entity) source;
-        }
+        if (source instanceof Player) {
+            getSpawningItem(projectile).ifPresent((launcher) -> {
+                final Player owner = (Player) source;
 
-        if (shooter instanceof Player && projectile.hasMetadata("launcher")) {
+                CustomItemSession session = getSession(owner);
 
-            Object test = projectile.getMetadata("launcher").get(0).value();
+                if (!session.canSpec(SpecType.RANGED)) {
 
-            if (!(test instanceof ItemStack)) return;
-
-            ItemStack launcher = (ItemStack) test;
-
-            final Player owner = (Player) shooter;
-
-            CustomItemSession session = getSession(owner);
-
-            if (!session.canSpec(SpecType.RANGED)) {
-
-                if (ItemUtil.isItem(launcher, CustomItems.FEAR_BOW)) {
-                    SpecialAttackEvent specEvent = callSpec(owner, SpecType.PASSIVE, new PassiveLightning(projectile, launcher));
-                    if (!specEvent.isCancelled()) {
-                        session.updateSpec(specEvent.getContext(), specEvent.getContextCoolDown());
-                        specEvent.getSpec().activate();
+                    if (ItemUtil.isItem(launcher, CustomItems.FEAR_BOW)) {
+                        SpecialAttackEvent specEvent = callSpec(owner, SpecType.PASSIVE, new PassiveLightning(projectile, launcher));
+                        if (!specEvent.isCancelled()) {
+                            session.updateSpec(specEvent.getContext(), specEvent.getContextCoolDown());
+                            specEvent.getSpec().activate();
+                        }
                     }
                 }
-            }
+            });
         }
     }
 }

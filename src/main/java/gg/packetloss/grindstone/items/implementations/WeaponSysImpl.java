@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
 import static org.bukkit.event.entity.EntityDamageEvent.DamageCause.*;
 
 public class WeaponSysImpl extends AbstractItemFeatureImpl {
@@ -179,13 +180,8 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
             ItemStack launcher = null;
             if (result.hasProjectile()) {
                 Projectile projectile = result.getProjectile();
-                if (projectile.hasMetadata("launcher")) {
-                    Object test = projectile.getMetadata("launcher").get(0).value();
-                    if (test instanceof ItemStack) {
-                        launcher = (ItemStack) test;
-                    }
-                }
 
+                launcher = getSpawningItem(projectile).orElse(null);
                 if (launcher == null) return null;
             }
 

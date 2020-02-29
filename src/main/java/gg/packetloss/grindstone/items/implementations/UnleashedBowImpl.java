@@ -30,6 +30,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.projectiles.ProjectileSource;
 
+import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
+
 public class UnleashedBowImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
     @Override
     public SpecialAttack getSpecial(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
@@ -52,66 +54,55 @@ public class UnleashedBowImpl extends AbstractItemFeatureImpl implements SpecWea
 
     @EventHandler
     public void onArrowLand(ProjectileHitEvent event) {
-
         Projectile projectile = event.getEntity();
-        Entity shooter = null;
 
         ProjectileSource source = projectile.getShooter();
-        if (source instanceof Entity) {
-            shooter = (Entity) source;
-        }
+        if (source instanceof Player) {
+            getSpawningItem(projectile).ifPresent((launcher) -> {
+                final Player owner = (Player) source;
+                final Location targetLoc = projectile.getLocation();
 
-        if (shooter instanceof Player && projectile.hasMetadata("launcher")) {
+                if (ItemUtil.isItem(launcher, CustomItems.UNLEASHED_BOW) && !projectile.hasMetadata("splashed")) {
 
-            Object test = projectile.getMetadata("launcher").get(0).value();
+                    projectile.setMetadata("splashed", new FixedMetadataValue(inst, true));
 
-            if (!(test instanceof ItemStack)) return;
+                    TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
-            ItemStack launcher = (ItemStack) test;
+                    taskBuilder.setInterval(10);
+                    taskBuilder.setNumberOfRuns(3);
 
-            final Player owner = (Player) shooter;
-            final Location targetLoc = projectile.getLocation();
+                    taskBuilder.setAction((times) -> {
+                        EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
 
-            if (ItemUtil.isItem(launcher, CustomItems.UNLEASHED_BOW) && !projectile.hasMetadata("splashed")) {
+                        targetLoc.getWorld().getEntitiesByClasses(Item.class).stream().filter(e -> e.isValid()
+                                && e.getLocation().distanceSquared(targetLoc) <= 16).forEach(e -> {
+                            e.teleport(owner);
+                        });
 
-                projectile.setMetadata("splashed", new FixedMetadataValue(inst, true));
-
-                TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
-
-                taskBuilder.setInterval(10);
-                taskBuilder.setNumberOfRuns(3);
-
-                taskBuilder.setAction((times) -> {
-                    EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
-
-                    targetLoc.getWorld().getEntitiesByClasses(Item.class).stream().filter(e -> e.isValid()
-                            && e.getLocation().distanceSquared(targetLoc) <= 16).forEach(e -> {
-                        e.teleport(owner);
+                        return true;
                     });
 
-                    return true;
-                });
+                    taskBuilder.setFinishAction(() -> {
+                        EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
 
-                taskBuilder.setFinishAction(() -> {
-                    EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
-
-                    for (Entity e : targetLoc.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
-                        if (!e.isValid() || e.equals(owner)) continue;
-                        if (e.getLocation().distanceSquared(targetLoc) <= 16) {
-                            if (e instanceof Item) {
-                                e.teleport(owner);
-                                continue;
+                        for (Entity e : targetLoc.getWorld().getEntitiesByClasses(Monster.class, Player.class)) {
+                            if (!e.isValid() || e.equals(owner)) continue;
+                            if (e.getLocation().distanceSquared(targetLoc) <= 16) {
+                                if (e instanceof Item) {
+                                    e.teleport(owner);
+                                    continue;
+                                }
+                                if (e instanceof Player) {
+                                    if (!PvPComponent.allowsPvP(owner, (Player) e)) continue;
+                                }
+                                e.setFireTicks(20 * 4);
                             }
-                            if (e instanceof Player) {
-                                if (!PvPComponent.allowsPvP(owner, (Player) e)) continue;
-                            }
-                            e.setFireTicks(20 * 4);
                         }
-                    }
-                });
+                    });
 
-                taskBuilder.build();
-            }
+                    taskBuilder.build();
+                }
+            });
         }
     }
 }
