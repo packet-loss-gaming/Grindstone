@@ -82,6 +82,10 @@ public class Necrosis {
         Player defender = result.getDefender();
         if (hasArmor.test(defender)) {
             LivingEntity attacker = result.getAttacker();
+            if (attacker.equals(defender)) {
+                return;
+            }
+
             if (attacker instanceof Player) {
                 handlePlayer((Player) attacker, defender, event.getDamage());
             } else {
