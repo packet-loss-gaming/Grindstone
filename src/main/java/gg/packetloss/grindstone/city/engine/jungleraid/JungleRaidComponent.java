@@ -701,7 +701,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         JungleRaidClass playerClass = CollectionUtil.getElement(JungleRaidClass.values());
         gameState.get(player).setCombatClass(playerClass);
 
-        ChatUtil.sendNotice(player, "You've been assigned the class:" + playerClass.name());
+        ChatUtil.sendNotice(player, "You've been assigned the class: " + playerClass.name());
     }
 
     private void addPlayer(Player player, Supplier<Location> startingPos) {
