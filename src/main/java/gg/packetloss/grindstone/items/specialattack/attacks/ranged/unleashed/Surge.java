@@ -1,13 +1,12 @@
 package gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed;
 
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
-import gg.packetloss.grindstone.util.DamageUtil;
 import gg.packetloss.grindstone.util.SimpleRayTrace;
 import gg.packetloss.grindstone.util.VectorUtil;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -44,8 +43,14 @@ public class Surge extends EntityAttack implements RangedSpecial {
             }
 
             Location finalLoc = loc;
-            Collection<LivingEntity> entityList = loc.getNearbyEntitiesByType(
-                    LivingEntity.class, RADIUS, (e) -> {
+
+            Class<? extends LivingEntity> filterType = target.getClass();
+            if (Monster.class.isAssignableFrom(filterType)) {
+                filterType = Monster.class;
+            }
+
+            Collection<? extends LivingEntity> entityList = loc.getNearbyEntitiesByType(
+                    filterType, RADIUS, (e) -> {
                         // Prevent targets being hit multiple times on corners, because of this being a bounding box
                         // as apposed to a proper radius check.
                         double distSqrd = e.getLocation().distanceSquared(finalLoc);
@@ -56,19 +61,12 @@ public class Surge extends EntityAttack implements RangedSpecial {
             int newDistance = distance + 1;
             double newTotal = totalDamage;
 
-            Class<? extends Entity> filterType = target.getClass();
-            if (Monster.class.isAssignableFrom(filterType)) {
-                filterType = Monster.class;
-            }
-
             for (LivingEntity e : entityList) {
-                if (e.isValid() && filterType.isInstance(e)) {
-                    if (e.equals(owner)) continue;
-
+                if (e.isValid() && !e.equals(owner)) {
                     e.setNoDamageTicks(0);
 
                     double damage = (e instanceof Player ? 5 : 15) * newDistance;
-                    if (!DamageUtil.damageWithSpecialAttack(owner, e, this, damage)) {
+                    if (!SpecialAttackFactory.processDamage(owner, e, this, damage)) {
                         continue;
                     }
 
