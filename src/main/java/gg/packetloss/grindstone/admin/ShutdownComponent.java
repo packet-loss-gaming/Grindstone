@@ -10,8 +10,9 @@ import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.ServerShutdownEvent;
-import gg.packetloss.grindstone.util.timer.CountdownTask;
-import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import gg.packetloss.grindstone.util.task.CountdownHandle;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
+import gg.packetloss.grindstone.util.timer.TimerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -51,17 +52,17 @@ public class ShutdownComponent extends BukkitComponent {
         return player.getUniqueId() == requester.getUniqueId();
     }
 
-    private TimedRunnable shutdownRunnable;
+    private CountdownHandle shutdownHandle;
     private String expectedDowntime;
 
-    private int checkForEarlyShutdown(Player requester, int seconds) {
+    private boolean checkForEarlyShutdown(Player requester) {
         Collection<? extends Player> players = server.getOnlinePlayers();
         if (players.isEmpty() || isRequesterOnlyPlayerOnline(players, requester)) {
-            shutdownRunnable.setTimes(0);
-            return 0;
+            shutdownHandle.setRunsRemaining(0);
+            return true;
         }
 
-        return seconds;
+        return false;
     }
 
     public void shutdown(@Nullable Player requester, int assignedSeconds, String givenDowntime) {
@@ -72,19 +73,22 @@ public class ShutdownComponent extends BukkitComponent {
 
         this.expectedDowntime = givenDowntime;
 
-        if (shutdownRunnable != null) {
-            shutdownRunnable.setTimes(assignedSeconds);
+        if (shutdownHandle != null) {
+            shutdownHandle.setRunsRemaining(assignedSeconds);
             return;
         }
 
-        CountdownTask shutdownTask = new CountdownTask() {
-            @Override
-            public boolean matchesFilter(int seconds) {
-                return seconds > 0 && (seconds % 5 == 0 || seconds <= 10);
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+        taskBuilder.setInterval(20);
+        taskBuilder.setNumberOfRuns(assignedSeconds);
+
+        taskBuilder.setAction((seconds) -> {
+            if (checkForEarlyShutdown(requester)) {
+                return true;
             }
 
-            @Override
-            public void performStep(int seconds) {
+            if (TimerUtil.matchesFilter(seconds, 10, 5)) {
                 String message = "Shutting down in " + seconds + " seconds - for " + expectedDowntime + " of downtime!";
 
                 Bukkit.getOnlinePlayers().forEach((player) -> {
@@ -94,25 +98,20 @@ public class ShutdownComponent extends BukkitComponent {
                 log.info(message);
             }
 
-            @Override
-            public void performFinal() {
-                Bukkit.getOnlinePlayers().forEach((player) -> {
-                    player.sendActionBar(ChatColor.RED + "Shutting down!");
-                });
+            server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
 
-                server.shutdown();
-            }
+            return true;
+        });
+        taskBuilder.setFinishAction(() -> {
+            server.getPluginManager().callEvent(new ServerShutdownEvent(0));
 
-            @Override
-            public void performEvery(int seconds) {
-                seconds = checkForEarlyShutdown(requester, seconds);
-                server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
-            }
-        };
+            Bukkit.getOnlinePlayers().forEach((player) -> {
+                player.sendActionBar(ChatColor.RED + "Shutting down!");
+            });
 
-        shutdownRunnable = new TimedRunnable(shutdownTask, assignedSeconds);
-        checkForEarlyShutdown(requester, assignedSeconds);
+            server.shutdown();
+        });
 
-        server.getScheduler().runTaskTimer(inst, shutdownRunnable, 0, 20);
+        shutdownHandle = taskBuilder.build();
     }
 }
