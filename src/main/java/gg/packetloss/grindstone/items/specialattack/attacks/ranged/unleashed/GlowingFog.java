@@ -8,16 +8,16 @@ package gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed;
 
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.DamageUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
-import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -31,35 +31,32 @@ public class GlowingFog extends EntityAttack implements RangedSpecial {
     public void activate() {
         final Location targeted = target.getLocation();
 
-        final GlowingFog spec = this;
-        IntegratedRunnable glowingFog = new IntegratedRunnable() {
-            @Override
-            public boolean run(int times) {
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
-                if (owner instanceof Player) {
-                    server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
-                }
+        taskBuilder.setInterval(10);
+        taskBuilder.setNumberOfRuns((ChanceUtil.getRandom(15) * 3) + 7);
 
-                EnvironmentUtil.generateRadialEffect(targeted, Effect.MOBSPAWNER_FLAMES);
-
-                for (Entity aEntity : targeted.getWorld().getEntitiesByClasses(LivingEntity.class)) {
-                    if (!aEntity.isValid() || aEntity.equals(owner)
-                            || aEntity.getLocation().distanceSquared(targeted) > 16) continue;
-                    if (aEntity instanceof LivingEntity) {
-                        DamageUtil.damageWithSpecialAttack(owner, (LivingEntity) aEntity, spec, 5);
-                    }
-                }
-                return true;
+        taskBuilder.setAction((times) -> {
+            if (owner instanceof Player) {
+                server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
             }
 
-            @Override
-            public void end() {
+            EnvironmentUtil.generateRadialEffect(targeted, Effect.MOBSPAWNER_FLAMES);
 
+            Class<? extends Entity> filterType = target.getClass();
+            if (Monster.class.isAssignableFrom(filterType)) {
+                filterType = Monster.class;
             }
-        };
 
-        TimedRunnable runnable = new TimedRunnable(glowingFog, (ChanceUtil.getRandom(15) * 3) + 7);
-        runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 0, 10));
+            for (Entity aEntity : targeted.getNearbyEntitiesByType(filterType, 4)) {
+                if (!aEntity.isValid() || aEntity.equals(owner)) continue;
+
+                SpecialAttackFactory.processDamage(owner, (LivingEntity) aEntity, this, 5);
+            }
+            return true;
+        });
+
+        taskBuilder.build();
 
         inform("Your bow unleashes a powerful glowing fog.");
     }
