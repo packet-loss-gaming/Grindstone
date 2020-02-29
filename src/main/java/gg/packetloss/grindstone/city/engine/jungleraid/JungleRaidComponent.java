@@ -107,6 +107,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
@@ -165,6 +166,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         return startTime;
     }
 
+    private static final String LEGENDARY_JUNGLE_BOW = ChatColor.DARK_GREEN + "Legendary Jungle Bow";
+
     private void applyClassEquipment(Player player) {
         player.getInventory().clear();
 
@@ -172,7 +175,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             return;
         }
 
-        JungleRaidClass combatClass = getClassForPlayer(player).get();
+        JungleRaidClass combatClass = getClassForPlayer(player).orElseThrow();
 
         List<ItemStack> gear = new ArrayList<>();
         switch (combatClass) {
@@ -218,11 +221,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             case SNIPER: {
                 ItemStack superBow = new ItemStack(Material.BOW);
                 ItemMeta superBowMeta = superBow.getItemMeta();
-                superBowMeta.addEnchant(Enchantment.ARROW_DAMAGE, 5, true);
-                superBowMeta.addEnchant(Enchantment.ARROW_FIRE, 1, true);
+                superBowMeta.setDisplayName(LEGENDARY_JUNGLE_BOW);
+                superBowMeta.setLore(List.of(ChatColor.GOLD + "Imbued with unique powers for long ranged combat."));
                 superBow.setItemMeta(superBowMeta);
-
-                superBow.setDurability((short) (superBow.getType().getMaxDurability() - combatClass.getArrowAmount()));
 
                 gear.add(superBow);
 
@@ -1391,13 +1392,14 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                             defendingPlayer.getLocation()
                     );
 
-                    if (getClassForPlayer(attackingPlayer).orElse(JungleRaidClass.BALANCED) == JungleRaidClass.SNIPER) {
-                        double targetDistSq = Math.pow(70, 2);
-                        double ratio = Math.min(distSq, targetDistSq) / targetDistSq;
-
-                        // Handle damage modification
-                        event.setDamage(event.getDamage() * ratio);
-                    }
+                    getSpawningItem(projectile).ifPresent((launcher) -> {
+                        if (ItemUtil.matchesFilter(launcher, LEGENDARY_JUNGLE_BOW)) {
+                            double unitDistSq = Math.pow(25, 2);
+                            for (int i = (int) (distSq / unitDistSq); i > 0; --i) {
+                                DeathUtil.throwSlashPotion(defendingPlayer.getLocation());
+                            }
+                        }
+                    });
 
                     double epicLongShotDist = Math.pow(150, 2);
                     double longShotDist = Math.pow(50, 2);

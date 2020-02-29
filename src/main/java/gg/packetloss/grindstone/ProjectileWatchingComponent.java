@@ -25,6 +25,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Projectile Watcher", desc = "Projectile Watcher.")
@@ -65,6 +66,17 @@ public class ProjectileWatchingComponent extends BukkitComponent implements List
     public void onArrowFire(ProjectileLaunchEvent event) {
 
         startTracker(event.getEntity(), -1);
+    }
+
+    public static Optional<ItemStack> getSpawningItem(Projectile projectile) {
+        if (projectile.hasMetadata("launcher")) {
+            Object test = projectile.getMetadata("launcher").get(0).value();
+            if (test instanceof ItemStack) {
+                return Optional.of((ItemStack) test);
+            }
+        }
+
+        return Optional.empty();
     }
 
     public boolean hasChangedLocation(Entity p) {
