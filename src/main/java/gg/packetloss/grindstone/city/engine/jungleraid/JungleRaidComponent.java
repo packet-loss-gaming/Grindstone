@@ -1401,8 +1401,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                         }
                     });
 
-                    double epicLongShotDist = Math.pow(150, 2);
-                    double longShotDist = Math.pow(50, 2);
+                    double epicLongShotDist = Math.pow(75, 2);
+                    double longShotDist = Math.pow(25, 2);
                     if (distSq > epicLongShotDist) {
                         adjustPoints(attackingPlayer, JungleRaidPointEvent.EPIC_LONG_SHOT);
                     } else if (distSq > longShotDist) {
