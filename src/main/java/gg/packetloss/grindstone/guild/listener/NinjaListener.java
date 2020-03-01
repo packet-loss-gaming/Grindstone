@@ -21,6 +21,8 @@ import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
@@ -202,23 +204,37 @@ public class NinjaListener implements Listener {
     }
 
     private void handleArrowBombArrow(Player player, NinjaState state, Arrow arrow) {
-        if (arrow instanceof TippedArrow && state.hasPower(NinjaPower.POTION_ARROW_BOMBS)) {
-            AreaEffectCloud effectCloud = arrow.getWorld().spawn(arrow.getLocation(), AreaEffectCloud.class);
-            effectCloud.setBasePotionData(((TippedArrow) arrow).getBasePotionData());
-            effectCloud.setDuration(20 * 10);
-            effectCloud.setSource(arrow.getShooter());
-        } else {
-            float launchForce = arrow.getMetadata("launch-force").get(0).asFloat();
+        arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
 
-            ExplosionStateFactory.createPvPExplosion(
-                    player,
-                    arrow.getLocation(), Math.max(2, 4 * launchForce),
-                    false,
-                    true
-            );
-        }
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
-        arrow.remove();
+        taskBuilder.setNumberOfRuns(20);
+
+        taskBuilder.setAction((times) -> {
+            SingleBlockParticleEffect.puffOfSmoke(arrow.getLocation());
+            return true;
+        });
+        taskBuilder.setFinishAction(() -> {
+            if (arrow instanceof TippedArrow && state.hasPower(NinjaPower.POTION_ARROW_BOMBS)) {
+                AreaEffectCloud effectCloud = arrow.getWorld().spawn(arrow.getLocation(), AreaEffectCloud.class);
+                effectCloud.setBasePotionData(((TippedArrow) arrow).getBasePotionData());
+                effectCloud.setDuration(20 * 10);
+                effectCloud.setSource(arrow.getShooter());
+            } else {
+                float launchForce = arrow.getMetadata("launch-force").get(0).asFloat();
+
+                ExplosionStateFactory.createPvPExplosion(
+                        player,
+                        arrow.getLocation(), Math.max(2, 4 * launchForce),
+                        false,
+                        true
+                );
+            }
+
+            arrow.remove();
+        });
+
+        taskBuilder.build();
     }
 
     public void arrowBomb(Player player, NinjaState state) {
