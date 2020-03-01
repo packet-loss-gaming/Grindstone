@@ -13,7 +13,6 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
 import gg.packetloss.grindstone.items.implementations.support.SweepPacketFilter;
-import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackSelector;
@@ -101,7 +100,7 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
 
         Optional<SpecialAttack> optSpecial = new SpecialAttackSelector(
                 owner,
-                SpecType.OVERLORD,
+                weaponType.getDefaultSpecType(),
                 () -> specImpl.getSpecial(owner, usedItem, target)
         ).getSpecial();
 
