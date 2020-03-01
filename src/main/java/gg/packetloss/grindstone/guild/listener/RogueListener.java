@@ -16,6 +16,7 @@ import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -219,6 +220,21 @@ public class RogueListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDamageEventMonitor(EntityDamageEvent event) {
+        Entity e = event.getEntity();
+        if (e instanceof Player) {
+            Player player = (Player) e;
+            Optional<RogueState> optState = getState(player);
+            if (optState.isEmpty()) {
+                return;
+            }
+
+            RogueState state = optState.get();
+            state.clearHits();
+        }
+    }
+
     private static EDBEExtractor<LivingEntity, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
             LivingEntity.class,
             LivingEntity.class,
@@ -226,7 +242,7 @@ public class RogueListener implements Listener {
     );
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-    public void onEntityDamageEntityEvent(EntityDamageByEntityEvent event) {
+    public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         CombatantPair<LivingEntity, LivingEntity, Projectile> result = extractor.extractFrom(event);
 
@@ -246,10 +262,53 @@ public class RogueListener implements Listener {
                 return;
             }
 
-            if (event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
+                if (SpecialAttackFactory.getCurrentSpecialAttack().isPresent()) {
+                    return;
+                }
+
                 RogueState state = optState.get();
-                if (state.hasPower(RoguePower.DAMAGE_BUFF)) {
-                    event.setDamage(Math.max(event.getDamage(), Math.min((event.getDamage() + 10) * 1.2, 20)));
+                if (state.hasPower(RoguePower.BERSERKER)) {
+                    int hits = state.getUninterruptedHits();
+                    if (hits > 0) {
+                        int boostDamage = (5 + (hits - 1));
+                        event.setDamage(event.getDamage() + boostDamage);
+                    }
+                }
+            }
+        }
+    }
+
+    private static List<EntityDamageEvent.DamageCause> MELEE_HIT_CAUSES = List.of(
+            EntityDamageEvent.DamageCause.ENTITY_ATTACK, EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK
+    );
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDamageEntityMonitor(EntityDamageByEntityEvent event) {
+        CombatantPair<LivingEntity, LivingEntity, Projectile> result = extractor.extractFrom(event);
+
+        if (result == null) return;
+
+        final LivingEntity attacker = result.getAttacker();
+        if (attacker instanceof Player) {
+            Optional<RogueState> optState = getState((Player) attacker);
+            if (optState.isEmpty()) {
+                return;
+            }
+
+            if (MELEE_HIT_CAUSES.contains(event.getCause())) {
+                if (SpecialAttackFactory.getCurrentSpecialAttack().isPresent()) {
+                    return;
+                }
+
+                RogueState state = optState.get();
+                if (state.hasPower(RoguePower.BERSERKER)) {
+                    LivingEntity defender = result.getDefender();
+                    if (EntityUtil.isHostileMobOrPlayer(defender)) {
+                        state.hitEntity();
+                    } else {
+                        state.clearHits();
+                    }
                 }
             }
         }

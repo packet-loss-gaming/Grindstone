@@ -81,4 +81,8 @@ public class EntityUtil {
 
         return false;
     }
+
+    public static boolean isHostileMobOrPlayer(Entity entity) {
+        return isHostileMob(entity) || entity instanceof Player;
+    }
 }
