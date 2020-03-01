@@ -34,6 +34,7 @@ public class SpecialAttackSelectEvent extends PlayerEvent implements Cancellable
     }
 
     public void setSpec(SpecialAttack spec) {
+        Validate.notNull(spec);
         Validate.isTrue(getPlayer().equals(spec.getOwner()), "The owner and the spec owner must match!");
 
         this.spec = spec;

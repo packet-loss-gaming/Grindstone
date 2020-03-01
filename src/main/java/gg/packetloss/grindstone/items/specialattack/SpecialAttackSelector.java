@@ -19,23 +19,19 @@ public class SpecialAttackSelector {
     }
 
     public Optional<SpecialAttack> getSpecial() {
-        SpecialAttack spec;
-
-        do {
-            spec = supplier.get();
-
-            SpecialAttackSelectEvent selectEvent = new SpecialAttackSelectEvent(player, specType, spec);
-
+        while (true) {
+            SpecialAttackSelectEvent selectEvent = new SpecialAttackSelectEvent(player, specType, supplier.get());
             CommandBook.callEvent(selectEvent);
 
             if (selectEvent.shouldTryAgain()) {
-                spec = null;
-            } else if (selectEvent.isCancelled()) {
-                return Optional.empty();
+                continue;
             }
 
-        } while (spec == null);
-
-        return Optional.of(spec);
+            if (selectEvent.isCancelled()) {
+                return Optional.empty();
+            } else {
+                return Optional.of(selectEvent.getSpec());
+            }
+        }
     }
 }
