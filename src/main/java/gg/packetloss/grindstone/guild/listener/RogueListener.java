@@ -419,10 +419,6 @@ public class RogueListener implements Listener {
             }
 
             RogueState state = optState.get();
-
-            Entity p = event.getProjectile();
-            p.setVelocity(p.getVelocity().multiply(.9));
-
             state.stallBlip();
         }
     }
