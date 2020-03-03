@@ -28,11 +28,11 @@ public class RogueState extends InternalGuildState {
     }
 
     public void blip() {
-        blip(2250);
+        blip(1750);
     }
 
     public void stallBlip() {
-        blip(TimeUnit.SECONDS.toMillis(12));
+        blip(5250);
     }
 
     public boolean canGrenade() {
