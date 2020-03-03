@@ -167,7 +167,9 @@ public class NinjaListener implements Listener {
         if (lastEvent != null && state.hasPower(NinjaPower.HEALING_ARROWS)) {
             double lastDamage = lastEvent.getFinalDamage();
             double scale = ((attacker.getMaxHealth() - attacker.getHealth()) / attacker.getMaxHealth());
-            EntityUtil.heal(attacker, ChanceUtil.getRandom(scale * lastDamage));
+
+            int chanceRuns = state.hasPower(NinjaPower.FULL_BLOODED_VAMPIRE) ? 1 : 2;
+            EntityUtil.heal(attacker, ChanceUtil.getRandomNTimes((int) (scale * lastDamage), chanceRuns));
         }
     }
 
@@ -329,7 +331,8 @@ public class NinjaListener implements Listener {
         }
 
         if (state.hasPower(NinjaPower.VAMPIRIC_SMOKE_BOMB)) {
-            EntityUtil.heal(player, ChanceUtil.getRandom(totalHealed));
+            int chanceRuns = state.hasPower(NinjaPower.FULL_BLOODED_VAMPIRE) ? 1 : 2;
+            EntityUtil.heal(player, ChanceUtil.getRandomNTimes(totalHealed, chanceRuns));
         }
 
         TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
