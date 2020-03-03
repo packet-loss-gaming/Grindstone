@@ -61,16 +61,15 @@ public class NinjaState extends InternalGuildState {
     }
 
     public void smokeBomb() {
-        nextSmokeBomb = System.currentTimeMillis() + 2000;
-        nextArrowBomb = Math.max(System.currentTimeMillis() + 1000, nextArrowBomb);
+        nextSmokeBomb = System.currentTimeMillis() + 4750;
     }
 
     public boolean canArrowBomb() {
         return nextArrowBomb == 0 || System.currentTimeMillis() >= nextArrowBomb;
     }
 
-    public void arrowBomb() {
-        nextArrowBomb = System.currentTimeMillis() + 3000;
+    public void arrowBomb(int numArrows) {
+        nextArrowBomb = System.currentTimeMillis() + 1750 + (1250 * numArrows);
     }
 
     public boolean hasPower(NinjaPower power) {

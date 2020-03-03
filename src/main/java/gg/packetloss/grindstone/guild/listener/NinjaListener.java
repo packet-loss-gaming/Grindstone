@@ -247,9 +247,9 @@ public class NinjaListener implements Listener {
         );
 
         CommandBook.server().getPluginManager().callEvent(event);
-        if (event.isCancelled() || arrows.isEmpty()) return;
+        if (event.isCancelled()) return;
 
-        state.arrowBomb();
+        state.arrowBomb(arrows.size());
 
         for (Arrow arrow : arrows) {
             handleArrowBombArrow(player, state, arrow);
@@ -329,30 +329,47 @@ public class NinjaListener implements Listener {
         }
 
         if (state.hasPower(NinjaPower.VAMPIRIC_SMOKE_BOMB)) {
-            EntityUtil.heal(player, ChanceUtil.getRandomNTimes(totalHealed, 3));
+            EntityUtil.heal(player, ChanceUtil.getRandom(totalHealed));
         }
 
-        Location[] locations = new Location[]{
-                player.getLocation(),
-                player.getEyeLocation()
-        };
-        EnvironmentUtil.generateRadialEffect(locations, Effect.SMOKE);
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+        taskBuilder.setNumberOfRuns(event.getDelay());
+
+        Location bombLocation = targetLoc.clone();
 
         // Offset by 1 so that the bomb is not messed up by blocks
-        if (targetLoc.getBlock().getType() != Material.AIR) {
-            targetLoc.add(0, 1, 0);
+        if (bombLocation.getBlock().getType() != Material.AIR) {
+            bombLocation.add(0, 1, 0);
         }
 
-        final Location finalTargetLoc = targetLoc;
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        taskBuilder.setAction((times) -> {
+            for (int i = 0; i < 10; ++i) {
+                bombLocation.getWorld().spawnParticle(
+                        Particle.CAMPFIRE_COSY_SMOKE,
+                        bombLocation.getX() + ChanceUtil.getRangedRandom(-.5, .5),
+                        bombLocation.getY(),
+                        bombLocation.getZ() + ChanceUtil.getRangedRandom(-.5, .5),
+                        0,
+                        ChanceUtil.getRangedRandom(-.1, .1),
+                        .1,
+                        ChanceUtil.getRangedRandom(-.1, .1)
+                );
+            }
+
+            return true;
+        });
+        taskBuilder.setFinishAction(() -> {
             ExplosionStateFactory.createPvPExplosion(
                     player,
-                    finalTargetLoc,
+                    bombLocation,
                     event.getExplosionPower(),
                     false,
                     true
             );
-        }, event.getDelay());
+        });
+
+        taskBuilder.build();
 
         player.teleport(event.getTeleportLoc(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
