@@ -271,7 +271,7 @@ public class RogueListener implements Listener {
                 if (state.hasPower(RoguePower.BERSERKER)) {
                     int hits = state.getUninterruptedHits();
                     if (hits > 0) {
-                        int boostDamage = (5 + (hits - 1));
+                        int boostDamage = Math.min(100, 5 + (hits - 1));
                         event.setDamage(event.getDamage() + boostDamage);
                     }
                 }
