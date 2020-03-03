@@ -318,7 +318,13 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
             if (attacker instanceof Player) {
                 if (ItemUtil.hasForgeBook((Player) attacker)) {
-                    ((Giant) defender).setHealth(0);
+                    try {
+                        parent.isKillFromBook = true;
+                        ((Giant) defender).setHealth(0);
+                    } finally {
+                        parent.isKillFromBook = false;
+                    }
+
                     final Player finalAttacker = (Player) attacker;
                     if (!finalAttacker.getGameMode().equals(GameMode.CREATIVE)) {
                         server.getScheduler().runTaskLater(inst, () -> {

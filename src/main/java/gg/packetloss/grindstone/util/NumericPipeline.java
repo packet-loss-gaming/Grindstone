@@ -1,5 +1,7 @@
 package gg.packetloss.grindstone.util;
 
+import com.google.common.collect.Lists;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -32,9 +34,16 @@ public class NumericPipeline<T> implements Function<T, Integer> {
         private List<BiFunction<T, Integer, Integer>> elements = new ArrayList<>();
 
         private Builder() { }
+        private Builder(List<BiFunction<T, Integer, Integer>> elements) {
+            this.elements = Lists.newArrayList(elements);
+        }
 
         public void accept(BiFunction < T, Integer, Integer > element) {
             elements.add(element);
+        }
+
+        public Builder<T> fork() {
+             return new Builder<>(elements);
         }
 
         public NumericPipeline<T> build(Supplier<Integer> sourceValue) {

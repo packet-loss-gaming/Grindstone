@@ -94,7 +94,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected boolean damageHeals = false;
     protected Random random = new Random();
 
-    protected double toHeal = 0;
     protected List<Location> spawnPts = new ArrayList<>();
     protected List<Location> chestPts = new ArrayList<>();
 
@@ -102,6 +101,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     protected MassBossDropTable dropTable = new MassBossDropTable();
     protected Set<UUID> barbarianBonePlayers = new HashSet<>();
+    protected boolean isKillFromBook = false;
 
     @Override
     public void setUp() {
@@ -210,7 +210,9 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         NumericPipeline.Builder<MassBossPlayerKillInfo> modifiedChance = NumericPipeline.builder();
         modifiedChance.accept((info, chance) -> chance / getModifier(info.getPlayer()));
 
-        dropTable.registerPlayerDrop(modifiedChance.build(27), BookUtil.Lore.Monsters::skelril);
+        NumericPipeline.Builder<MassBossPlayerKillInfo> bookChance = modifiedChance.fork();
+        bookChance.accept((info, chance) -> isKillFromBook ? Integer.MAX_VALUE : chance);
+        dropTable.registerPlayerDrop(bookChance.build(27), BookUtil.Lore.Monsters::skelril);
 
         // Master Weapons
         dropTable.registerPlayerDrop(modifiedChance.build(276), () -> CustomItemCenter.build(CustomItems.MASTER_SWORD));
