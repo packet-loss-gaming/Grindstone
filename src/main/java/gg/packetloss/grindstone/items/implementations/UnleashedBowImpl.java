@@ -30,6 +30,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.projectiles.ProjectileSource;
 
+import java.util.UUID;
+
 import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
 
 public class UnleashedBowImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
@@ -74,10 +76,12 @@ public class UnleashedBowImpl extends AbstractItemFeatureImpl implements SpecWea
                     taskBuilder.setAction((times) -> {
                         EnvironmentUtil.generateRadialEffect(targetLoc, Effect.ENDER_SIGNAL);
 
-                        targetLoc.getWorld().getEntitiesByClasses(Item.class).stream().filter(e -> e.isValid()
-                                && e.getLocation().distanceSquared(targetLoc) <= 16).forEach(e -> {
-                            e.teleport(owner);
-                        });
+                        targetLoc.getNearbyEntitiesByType(Item.class, 4).stream()
+                                .filter(Entity::isValid)
+                                .filter(e -> {
+                                    UUID itemOwner = e.getOwner();
+                                    return itemOwner == null || itemOwner.equals(owner.getUniqueId());
+                                }).forEach(e -> e.teleport(owner));
 
                         return true;
                     });
