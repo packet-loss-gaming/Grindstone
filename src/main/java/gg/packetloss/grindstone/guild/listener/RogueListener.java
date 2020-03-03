@@ -241,6 +241,16 @@ public class RogueListener implements Listener {
             Projectile.class
     );
 
+    private boolean isBackstab(Player attacker, LivingEntity defender) {
+        float attackerYaw = (defender.getEyeLocation().getYaw() + 180);
+        float defenderYaw = (attacker.getEyeLocation().getYaw() + 180);
+
+        float majorYaw = Math.max(attackerYaw, defenderYaw);
+        float minorYaw = Math.min(attackerYaw, defenderYaw);
+
+        return majorYaw - minorYaw < 90;
+    }
+
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
@@ -270,9 +280,16 @@ public class RogueListener implements Listener {
                 RogueState state = optState.get();
                 if (state.hasPower(RoguePower.BERSERKER)) {
                     int hits = state.getUninterruptedHits();
-                    if (hits > 0) {
-                        int boostDamage = Math.min(100, 5 + (hits - 1));
-                        event.setDamage(event.getDamage() + boostDamage);
+                    boolean backstabbed = state.hasPower(RoguePower.BACKSTAB) &&
+                                          isBackstab((Player) attacker, result.getDefender());
+                    if (hits > 0 || backstabbed) {
+                        int boostDamage = 5 + (hits - 1);
+                        if (backstabbed) {
+                            boostDamage *= 3;
+                            ChatUtil.sendNotice(attacker, "Backstabbed!");
+                        }
+
+                        event.setDamage(event.getDamage() + Math.min(100, boostDamage));
                     }
                 }
             }

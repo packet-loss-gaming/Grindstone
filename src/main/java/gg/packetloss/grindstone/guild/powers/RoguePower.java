@@ -7,6 +7,7 @@ public enum RoguePower implements GuildPower {
     POTION_METABOLIZATION(7),
     NIGHTMARE_SPECIAL(12),
     SNIPER_SNOWBALLS(17),
+    BACKSTAB(20),
     SPEEDY_SPECIALS(25),
     SUPER_SPEED(30);
 
