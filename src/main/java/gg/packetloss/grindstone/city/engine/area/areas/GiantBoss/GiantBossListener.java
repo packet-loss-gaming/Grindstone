@@ -197,7 +197,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         Player player = event.getPlayer();
         Block block = event.getClickedBlock();
         Action action = event.getAction();
-        if (parent.boss != null && action.equals(Action.PHYSICAL) && parent.contains(player, 1)) {
+        if (parent.isBossSpawnedFast() && action.equals(Action.PHYSICAL) && parent.contains(player, 1)) {
             switch (block.getType()) {
                 case STONE_PRESSURE_PLATE:
                     ProtectedRegion door;
@@ -207,7 +207,11 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                         door = parent.westDoor;
                     }
                     parent.setDoor(door, Material.AIR);
-                    server.getScheduler().runTaskLater(inst, () -> parent.setDoor(door, Material.CHISELED_SANDSTONE), 20 * 10);
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        if (parent.isBossSpawnedFast()) {
+                            parent.setDoor(door, Material.CHISELED_SANDSTONE);
+                        }
+                    }, 20 * 10);
                     break;
             }
         }
