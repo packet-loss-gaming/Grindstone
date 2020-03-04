@@ -534,7 +534,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 }
             });
 
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenApply(future::complete);
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(future::complete);
         });
 
         return future;
