@@ -242,13 +242,11 @@ public class RogueListener implements Listener {
     );
 
     private boolean isBackstab(Player attacker, LivingEntity defender) {
-        float attackerYaw = (defender.getEyeLocation().getYaw() + 180);
-        float defenderYaw = (attacker.getEyeLocation().getYaw() + 180);
+        float attackerYaw = (defender.getEyeLocation().getYaw() + 180) % 360;
+        float defenderYaw = (attacker.getEyeLocation().getYaw() + 180) % 360;
 
-        float majorYaw = Math.max(attackerYaw, defenderYaw);
-        float minorYaw = Math.min(attackerYaw, defenderYaw);
-
-        return majorYaw - minorYaw < 90;
+        float yawDiff = Math.abs(attackerYaw - defenderYaw);
+        return yawDiff <= 90 || yawDiff >= (360 - 90);
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
