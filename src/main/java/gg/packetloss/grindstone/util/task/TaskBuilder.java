@@ -60,6 +60,7 @@ public class TaskBuilder {
                 if (runsRemaining == 0) {
                     finishAction.run();
                     handle[0].cancel();
+                    return;
                 }
 
                 // Dirty marker prevents modifications during the action from being overridden.
