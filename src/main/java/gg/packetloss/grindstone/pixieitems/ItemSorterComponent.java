@@ -16,8 +16,6 @@ import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.pixieitems.broker.EconomyBroker;
 import gg.packetloss.grindstone.pixieitems.broker.VoidBroker;
 import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
-import gg.packetloss.grindstone.pixieitems.manager.NewSinkResult;
-import gg.packetloss.grindstone.pixieitems.manager.NewSourceResult;
 import gg.packetloss.grindstone.pixieitems.manager.PixieNetworkManager;
 import gg.packetloss.grindstone.pixieitems.manager.ThreadedPixieNetworkManager;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -165,29 +163,21 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         PixieCommand command = session.getCurrentCommand();
         switch (command) {
             case ADD_SOURCE: {
-                manager.addSource(networkID, block).thenAccept((optResult) -> {
-                    if (optResult.isEmpty()) {
-                        ChatUtil.sendError(player, "An error occurred while attempting to create this source.");
-                        return;
-                    }
-
-                    NewSourceResult result = optResult.get();
+                manager.addSource(networkID, block).thenAccept((result) -> {
                     if (result.isNew()) {
                         ChatUtil.sendNotice(player, "Chest updated to source!");
                     } else {
                         ChatUtil.sendError(player, "Chest is already a source!");
                     }
+                }).exceptionally((ex) -> {
+                    ex.printStackTrace();
+                    ChatUtil.sendError(player, "An error occurred while attempting to create this source.");
+                    return null;
                 });
                 break;
             }
             case ADD_SINK: {
-                manager.addSink(networkID, block, session.getTargetSinkVariant()).thenAccept((optResult) -> {
-                    if (optResult.isEmpty()) {
-                        ChatUtil.sendError(player, "An error occurred while attempting to create this sink.");
-                        return;
-                    }
-
-                    NewSinkResult result = optResult.get();
+                manager.addSink(networkID, block, session.getTargetSinkVariant()).thenAccept((result) -> {
                     ChatUtil.sendNotice(player, "Chest updated to sink! Accepts:");
 
                     ImmutableSet<String> sinkItems = result.getItemNames();
@@ -198,6 +188,10 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                             ChatUtil.sendNotice(player, " - " + ChatColor.BLUE + sinkItem.toUpperCase());
                         }
                     }
+                }).exceptionally((ex) -> {
+                    ex.printStackTrace();
+                    ChatUtil.sendError(player, "An error occurred while attempting to create this sink.");
+                    return null;
                 });
                 break;
             }

@@ -19,12 +19,12 @@ public interface PixieNetworkManager {
     CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(int networkID);
     CompletableFuture<List<PixieNetworkDetail>> selectNetworks(UUID namespace);
 
-    CompletableFuture<Optional<NewSourceResult>> addSource(int networkID, Block block);
-    CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block, PixieSinkVariant variant);
+    CompletableFuture<NewSourceResult> addSource(int networkID, Block block);
+    CompletableFuture<NewSinkResult> addSink(int networkID, Block block, PixieSinkVariant variant);
 
     boolean maybeExpandChest(Block block);
 
-    boolean removeChest(Location... locations);
+    CompletableFuture<Void> removeChest(Location... locations);
 
     Optional<Integer> getNetworkFromSourceChest(Block... blocks);
 

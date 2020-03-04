@@ -18,6 +18,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.region.RegionValueEvaluator;
+import gg.packetloss.grindstone.util.region.RegionValueReport;
 import org.bukkit.Location;
 import org.bukkit.World;
 
@@ -129,22 +130,20 @@ public class RegionUtil {
         return Math.pow(chunkCount, 4) * (chunkCount / 2);
     }
 
-    public static CompletableFuture<Optional<Double>> calcBlockPrice(Region region, World world) {
+    public static CompletableFuture<Double> calcBlockPrice(Region region, World world) {
         try {
-            CompletableFuture<Optional<Double>> future = new CompletableFuture<>();
-            new RegionValueEvaluator(false).walkRegion(region, world).thenAccept((report) -> {
-                future.complete(Optional.of(report.getBlockPrice()));
-            });
-            return future;
+            return new RegionValueEvaluator(false)
+                    .walkRegion(region, world)
+                    .thenApply(RegionValueReport::getBlockPrice);
         } catch (UnsupportedOperationException ex) {
-            return CompletableFuture.completedFuture(Optional.empty());
+            return CompletableFuture.failedFuture(ex);
         }
     }
 
     public static CompletableFuture<Optional<Double>> calcBlockPrice(ProtectedRegion region, World world) {
         Optional<Region> convertedRegion = convert(region);
         if (convertedRegion.isPresent()) {
-            return calcBlockPrice(convertedRegion.get(), world);
+            return calcBlockPrice(convertedRegion.get(), world).thenApply(Optional::of);
         }
 
         return CompletableFuture.completedFuture(Optional.empty());
@@ -159,16 +158,9 @@ public class RegionUtil {
             return future;
         }
 
-        CompletableFuture<Optional<Double>> blockPriceFuture = calcBlockPrice(region, world);
-        blockPriceFuture.thenAccept((optBlockPrice) -> {
-            if (optBlockPrice.isEmpty()) {
-                future.complete(Optional.empty());
-                return;
-            }
-
+        CompletableFuture<Double> blockPriceFuture = calcBlockPrice(region, world);
+        blockPriceFuture.thenAccept((blockPrice) -> {
             double chunkPrice = calcChunkPrice(size.get());
-            double blockPrice = optBlockPrice.get();
-
             double total = chunkPrice + blockPrice;
             if (commission) {
                 total *= 1.1;

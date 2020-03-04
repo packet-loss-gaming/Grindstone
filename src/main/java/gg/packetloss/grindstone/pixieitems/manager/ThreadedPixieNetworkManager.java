@@ -27,10 +27,10 @@ import org.bukkit.inventory.ItemStack;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemName;
@@ -147,12 +147,12 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         }
     }
 
-    private CompletableFuture<Boolean> processNetworkChanges(Runnable op, Location... locations) {
+    private <T> CompletableFuture<T> processNetworkChanges(Supplier<T> op, Location... locations) {
         Validate.isTrue(locations.length > 0);
 
         Set<Chunk> chunks = Arrays.stream(locations).map(Location::getChunk).collect(Collectors.toSet());
 
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        CompletableFuture<T> future = new CompletableFuture<>();
 
         CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
             List<Integer> added = new ArrayList<>();
@@ -162,13 +162,13 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
             HashMap<Chunk, Collection<Integer>> chunkNewNetworks = new HashMap<>();
 
             for (Chunk chunk : chunks) {
-                chunkPreviousNetworks.put(chunk, chestDatabase.getNetworksInChunk(chunk).get());
+                chunkPreviousNetworks.put(chunk, chestDatabase.getNetworksInChunk(chunk).orElseThrow());
             }
 
-            op.run();
+            T returnValue = op.get();
 
             for (Chunk chunk : chunks) {
-                chunkNewNetworks.put(chunk, chestDatabase.getNetworksInChunk(chunk).get());
+                chunkNewNetworks.put(chunk, chestDatabase.getNetworksInChunk(chunk).orElseThrow());
             }
 
             for (Chunk chunk : chunks) {
@@ -201,9 +201,9 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 updateLoadSet(removed, wasPreviouslyLoaded, loads, unloads);
 
                 if (loads.isEmpty()) {
-                    future.complete(true);
+                    future.complete(returnValue);
                 } else {
-                    loadNetworks(Lists.newArrayList(loads)).thenAccept(future::complete);
+                    loadNetworks(Lists.newArrayList(loads)).thenAccept((ignored) -> future.complete(returnValue));
                 }
 
                 if (!unloads.isEmpty()) {
@@ -228,56 +228,37 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public CompletableFuture<Optional<NewSourceResult>> addSource(int networkID, Block block) {
+    public CompletableFuture<NewSourceResult> addSource(int networkID, Block block) {
         Location[] locations = getLocationsToAdd(block).toArray(new Location[0]);
 
         if (hasAllSourceLocations(locations)) {
-            return CompletableFuture.completedFuture(Optional.of(new NewSourceResult(false)));
+            return CompletableFuture.completedFuture(new NewSourceResult(false));
         }
 
-        CompletableFuture<Optional<NewSourceResult>> future = new CompletableFuture<>();
+        return processNetworkChanges(() -> {
+            networkLock.writeLock().lock();
 
-        CompletableFuture<Boolean> networkLoadingFuture = new CompletableFuture<>();
-
-        processNetworkChanges(() -> {
             try {
-                networkLock.writeLock().lock();
+                PixieNetworkGraph network = idToNetworkMapping.get(networkID);
 
-                try {
-                    PixieNetworkGraph network = idToNetworkMapping.get(networkID);
-
-                    for (Location location : locations) {
-                        clearBlockMemoryOnly(network, location);
-                        if (network != null) {
-                            addSourceMemoryOnly(networkID, network, location);
-                        }
+                for (Location location : locations) {
+                    clearBlockMemoryOnly(network, location);
+                    if (network != null) {
+                        addSourceMemoryOnly(networkID, network, location);
                     }
-                } finally {
-                    networkLock.writeLock().unlock();
                 }
-
-                Optional<Integer> removedChestsCount = chestDatabase.removeChest(networkID, locations);
-                Validate.isTrue(removedChestsCount.isPresent());
-
-                boolean addedChests = chestDatabase.addSource(networkID, locations);
-                Validate.isTrue(addedChests);
-
-                networkLoadingFuture.thenAccept((result) -> {
-                    if (result) {
-                        // Successfully loaded, return the result.
-                        future.complete(Optional.of(new NewSourceResult(true)));
-                    } else {
-                        // Failed loading.
-                        future.complete(Optional.empty());
-                    }
-                });
-            } catch (Throwable t) {
-                future.complete(Optional.empty());
-                throw t;
+            } finally {
+                networkLock.writeLock().unlock();
             }
-        }, locations).thenAccept(networkLoadingFuture::complete);
 
-        return future;
+            Optional<Integer> removedChestsCount = chestDatabase.removeChest(networkID, locations);
+            Validate.isTrue(removedChestsCount.isPresent());
+
+            boolean addedChests = chestDatabase.addSource(networkID, locations);
+            Validate.isTrue(addedChests);
+
+            return new NewSourceResult(true);
+        }, locations);
     }
 
     private Set<String> extractItemNames(Inventory inventory) {
@@ -295,7 +276,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public CompletableFuture<Optional<NewSinkResult>> addSink(int networkID, Block block, PixieSinkVariant variant) {
+    public CompletableFuture<NewSinkResult> addSink(int networkID, Block block, PixieSinkVariant variant) {
         Inventory chestInventory = ((Chest) block.getState()).getInventory();
         Set<String> itemNames;
         switch (variant) {
@@ -309,45 +290,36 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
 
         Location[] locations = getLocationsToAdd(block).toArray(new Location[0]);
 
-        CompletableFuture<Optional<NewSinkResult>> future = new CompletableFuture<>();
+        return processNetworkChanges(() -> {
+            // Network may be unloaded for a sink chest
+            networkLock.writeLock().lock();
 
-        processNetworkChanges(() -> {
             try {
-                // Network may be unloaded for a sink chest
-                networkLock.writeLock().lock();
+                PixieNetworkGraph network = idToNetworkMapping.get(networkID);
 
-                try {
-                    PixieNetworkGraph network = idToNetworkMapping.get(networkID);
-
-                    for (Location location : locations) {
-                        // FIXME: This should load the network
-                        if (variant == PixieSinkVariant.ADD && network != null) {
-                            itemNames.addAll(network.getSinksAtLocation(location));
-                        }
-
-                        clearBlockMemoryOnly(network, location);
-                        if (network != null) {
-                            addSinkMemoryOnly(network, itemNames, location);
-                        }
+                for (Location location : locations) {
+                    // FIXME: This should load the network
+                    if (variant == PixieSinkVariant.ADD && network != null) {
+                        itemNames.addAll(network.getSinksAtLocation(location));
                     }
-                } finally {
-                    networkLock.writeLock().unlock();
+
+                    clearBlockMemoryOnly(network, location);
+                    if (network != null) {
+                        addSinkMemoryOnly(network, itemNames, location);
+                    }
                 }
-
-                Optional<Integer> removedChestsCount = chestDatabase.removeChest(networkID, locations);
-                Validate.isTrue(removedChestsCount.isPresent());
-
-                boolean addedChests = chestDatabase.addSink(networkID, itemNames, locations);
-                Validate.isTrue(addedChests);
-
-                future.complete(Optional.of(new NewSinkResult(removedChestsCount.get(), itemNames)));
-            } catch (Throwable t) {
-                future.complete(Optional.empty());
-                throw t;
+            } finally {
+                networkLock.writeLock().unlock();
             }
-        }, locations);
 
-        return future;
+            Optional<Integer> removedChestsCount = chestDatabase.removeChest(networkID, locations);
+            Validate.isTrue(removedChestsCount.isPresent());
+
+            boolean addedChests = chestDatabase.addSink(networkID, itemNames, locations);
+            Validate.isTrue(addedChests);
+
+            return new NewSinkResult(removedChestsCount.get(), itemNames);
+        }, locations);
     }
 
     @Override
@@ -404,8 +376,8 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public boolean removeChest(Location... locations) {
-        processNetworkChanges(() -> {
+    public CompletableFuture<Void> removeChest(Location... locations) {
+        return processNetworkChanges(() -> {
             Collection<Integer> networkIDs = chestDatabase.getNetworksInLocations(locations).get();
 
             networkLock.writeLock().lock();
@@ -423,9 +395,9 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
             for (int networkID : networkIDs) {
                 chestDatabase.removeChest(networkID, locations);
             }
-        }, locations);
 
-        return true;
+            return null;
+        }, locations);
     }
 
     @Override
@@ -523,11 +495,11 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         }
     }
 
-    private CompletableFuture<Boolean> loadNetworks(List<Integer> networkIDs) {
-        CompletableFuture<List<CompletableFuture<Integer>>> future = new CompletableFuture<>();
+    private CompletableFuture<Void> loadNetworks(List<Integer> networkIDs) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
 
         CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
-            Collection<PixieNetworkDefinition> networkDefinitions = chestDatabase.getChestsInNetworks(networkIDs).get();
+            Collection<PixieNetworkDefinition> networkDefinitions = chestDatabase.getChestsInNetworks(networkIDs).orElseThrow();
 
             List<CompletableFuture<Integer>> futures = new ArrayList<>();
 
@@ -562,22 +534,10 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 }
             });
 
-            // Mark this future complete so that we can wait
-            future.complete(futures);
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenApply(future::complete);
         });
 
-        return future.thenCompose((listOfFutures) -> {
-            try {
-                // Wait for the futures
-                CompletableFuture.allOf(listOfFutures.toArray(new CompletableFuture[0])).get();
-
-                return CompletableFuture.completedFuture(true);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-
-                return CompletableFuture.completedFuture(false);
-            }
-        });
+        return future;
     }
 
     private void unloadNetworks(List<Integer> networkIDs) {
@@ -596,7 +556,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     @Override
     public void handleChunkLoad(Chunk chunk) {
         CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
-            Collection<Integer> networksInChunk = chestDatabase.getNetworksInChunk(chunk).get();
+            Collection<Integer> networksInChunk = chestDatabase.getNetworksInChunk(chunk).orElseThrow();
 
             networkChunkRefCountLock.lock();
             try {
@@ -623,7 +583,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     @Override
     public void handleChunkUnload(Chunk chunk) {
         CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
-            Collection<Integer> networksInChunk = chestDatabase.getNetworksInChunk(chunk).get();
+            Collection<Integer> networksInChunk = chestDatabase.getNetworksInChunk(chunk).orElseThrow();
 
             networkChunkRefCountLock.lock();
             try {
