@@ -157,6 +157,10 @@ public class GeneralPlayerUtil {
           .collect(Collectors.toSet());
     }
 
+    public static boolean isLookingUp(Player player) {
+        return player.getEyeLocation().getPitch() < -60;
+    }
+
     public static boolean isLookingDown(Player player) {
         return player.getEyeLocation().getPitch() > 60;
     }

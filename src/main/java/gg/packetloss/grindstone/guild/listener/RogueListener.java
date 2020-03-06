@@ -131,24 +131,34 @@ public class RogueListener implements Listener {
         taskBuilder.build();
     }
 
-    private void normalBlip(Player player, double modifier, boolean auto) {
+    private void constrainedBlip(Player player, double modifier, double yMin, double yMax) {
         Vector vel = player.getLocation().getDirection();
         vel.multiply(3 * modifier * Math.max(.1, player.getFoodLevel() / 20.0));
-
-        double yMax;
-        double yMin;
-
-        if (auto) {
-            yMax = .8;
-            yMin = .175;
-        } else {
-            yMax = 1.4;
-            yMin = -2;
-        }
 
         vel.setY(Math.min(yMax, Math.max(yMin, vel.getY())));
 
         player.setVelocity(vel);
+    }
+
+    private void verticalBlip(Player player, double modifier) {
+        double yMax = 2;
+        double yMin = 0;
+
+        constrainedBlip(player, modifier, yMin, yMax);
+    }
+
+    private void autoBlip(Player player, double modifier) {
+        double yMax = .8;
+        double yMin = .175;
+
+        constrainedBlip(player, modifier, yMin, yMax);
+    }
+
+    private void normalBlip(Player player, double modifier) {
+        double yMax = 1.4;
+        double yMin = -2;
+
+        constrainedBlip(player, modifier, yMin, yMax);
     }
 
     public void blip(Player player, RogueState state, double modifier, boolean auto) {
@@ -162,13 +172,23 @@ public class RogueListener implements Listener {
 
         CommandBook.server().getPluginManager().callEvent(new ThrowPlayerEvent(player));
 
-        boolean impact = GeneralPlayerUtil.isLookingDown(player) && !GeneralPlayerUtil.isStandingOnSolidGround(player);
-        if (impact) {
+        if (auto) {
+            autoBlip(player, modifier);
+            return;
+        }
+
+        boolean isOnSolidGround = GeneralPlayerUtil.isStandingOnSolidGround(player);
+        if (GeneralPlayerUtil.isLookingDown(player) && !isOnSolidGround) {
             impactBlip(player, state);
             return;
         }
 
-        normalBlip(player, modifier, auto);
+        if (GeneralPlayerUtil.isLookingUp(player) && isOnSolidGround) {
+            verticalBlip(player, modifier);
+            return;
+        }
+
+        normalBlip(player, modifier);
     }
 
     public void grenade(Player player, RogueState state) {
