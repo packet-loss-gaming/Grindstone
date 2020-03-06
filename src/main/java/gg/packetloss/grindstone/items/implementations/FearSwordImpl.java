@@ -13,12 +13,13 @@ import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.fear.Curse;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.*;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public class FearSwordImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
     @Override
     public SpecialAttack getSpecial(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
-        switch (ChanceUtil.getRandom(6)) {
+        switch (ChanceUtil.getRandom(target instanceof Player ? 5 : 6)) {
             case 1:
                 return new ChainLightning(owner, usedItem, target);
             case 2:
@@ -29,6 +30,8 @@ public class FearSwordImpl extends AbstractItemFeatureImpl implements SpecWeapon
                 return new Weaken(owner, usedItem, target);
             case 5:
                 return new Decimate(owner, usedItem, target);
+
+            // Mob Only
             case 6:
                 return new SoulSmite(owner, usedItem, target);
         }
