@@ -223,7 +223,7 @@ public class RogueListener implements Listener {
             if (state.isUsingImpact()) {
                 event.setDamage(event.getDamage() * .4);
 
-                if (state.hasPower(RoguePower.LIKE_A_METEOR)) {
+                if (state.hasPower(RoguePower.LIKE_A_METEOR) && player.isSneaking()) {
                     final double circleDist = 2 * Math.PI;
                     final double explosionPointDist = circleDist / 8;
 
