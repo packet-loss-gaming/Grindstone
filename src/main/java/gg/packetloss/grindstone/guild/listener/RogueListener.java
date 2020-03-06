@@ -113,7 +113,8 @@ public class RogueListener implements Listener {
     }
 
     private void impactBlip(Player player, RogueState state) {
-        Vector newVelocity = player.getVelocity().setY(-6);
+        Vector oldVelocity = player.getVelocity();
+        Vector newVelocity = oldVelocity.setY(Math.min(oldVelocity.getY(), -6));
         player.setVelocity(newVelocity);
 
         state.setImpactEnabled(true);
