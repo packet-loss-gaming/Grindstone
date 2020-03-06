@@ -7,7 +7,7 @@ import gg.packetloss.grindstone.guild.setting.GuildSettingUpdate;
 import java.util.List;
 
 public class RogueStateSettings implements StateSettings {
-    private boolean blipWhileSneaking = true;
+    private boolean blipWhileSneaking = false;
     private boolean showBerserkerBuffs = false;
 
     public boolean shouldBlipWhileSneaking() {
