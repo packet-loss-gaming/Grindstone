@@ -7,10 +7,11 @@
 package gg.packetloss.grindstone.items.specialattack.attacks.hybrid.unleashed;
 
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
+import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public class LifeLeech extends EntityAttack implements MeleeSpecial, RangedSpecial {
@@ -19,26 +20,18 @@ public class LifeLeech extends EntityAttack implements MeleeSpecial, RangedSpeci
         super(owner, usedItem, target);
     }
 
+    private double getAttemptedDamage() {
+        double healthDiff = owner.getMaxHealth() - owner.getHealth();
+        return Math.min(target.getHealth(), Math.max(5, healthDiff / 2));
+    }
+
     @Override
     public void activate() {
+        double health = target.getHealth();
+        SpecialAttackFactory.processDamage(owner, target, this, getAttemptedDamage());
+        double leachedHealth = Math.max(0, health - target.getHealth());
 
-        final double ownerMax = owner.getMaxHealth();
-
-        final double ownerHP = owner.getHealth() / ownerMax;
-        final double targetHP = target.getHealth() / target.getMaxHealth();
-
-        if (ownerHP > targetHP) {
-            owner.setHealth(Math.min(ownerMax, ownerMax * (ownerHP + .1)));
-            inform("Your weapon heals you.");
-        } else {
-            double newHealth = target.getMaxHealth() * ownerHP;
-            if (!(target instanceof Player)) {
-                newHealth = Math.max(target.getHealth() - (20 * (1 - ownerHP)), newHealth);
-            }
-
-            target.setHealth(newHealth);
-            owner.setHealth(Math.min(ownerMax, ownerMax * targetHP * 1.1));
-            inform("You leech the health of your foe.");
-        }
+        EntityUtil.heal(owner, leachedHealth);
+        inform("You leach health from your opponent.");
     }
 }
