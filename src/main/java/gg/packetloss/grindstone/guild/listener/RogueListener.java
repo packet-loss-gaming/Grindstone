@@ -487,7 +487,8 @@ public class RogueListener implements Listener {
                 return;
             }
 
-            if (player.isSneaking() && !state.getSettings().shouldBlipWhileSneaking()) {
+            boolean isOnSolidGround = GeneralPlayerUtil.isStandingOnSolidGround(player);
+            if (isOnSolidGround && player.isSneaking() && !state.getSettings().shouldBlipWhileSneaking()) {
                 return;
             }
 
