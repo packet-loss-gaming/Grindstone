@@ -42,7 +42,15 @@ public class GuildState {
     }
 
     public int getLevel() {
-        return state.getLevel();
+        return GuildLevel.getLevel(state.getExperience());
+    }
+
+    public void setVirtualLevel(int level) {
+        state.setVirtualLevel(level);
+    }
+
+    public void clearVirtualLevel() {
+        state.clearVirtualLevel();
     }
 
     public boolean enablePowers() {
@@ -105,7 +113,7 @@ public class GuildState {
     }
 
     public void sendLevelChart(Player player, int page) {
-        int currentLevel = state.getLevel();
+        int currentLevel = getLevel();
         GuildPower[] powers = state.getType().getPowers();
 
         List<GuildLevel> levels = GuildLevel.getLevels();

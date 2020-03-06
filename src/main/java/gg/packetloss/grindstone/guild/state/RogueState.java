@@ -1,6 +1,5 @@
 package gg.packetloss.grindstone.guild.state;
 
-import gg.packetloss.grindstone.guild.GuildLevel;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.powers.RoguePower;
 
@@ -56,7 +55,7 @@ public class RogueState extends InternalGuildState {
     }
 
     public boolean hasPower(RoguePower power) {
-        return getExperience() >= GuildLevel.getExperienceForLevel(power.getUnlockLevel());
+        return hasLevelForPower(power);
     }
 
     @Override
