@@ -27,6 +27,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -287,7 +288,12 @@ public class RogueListener implements Listener {
                             ChatUtil.sendNotice(attacker, "Backstabbed!");
                         }
 
-                        event.setDamage(event.getDamage() + Math.min(100, boostDamage));
+                        boostDamage = Math.min(100, boostDamage);
+
+                        if (state.getSettings().shouldShowBerserkerBuffs()) {
+                            ((Player) attacker).sendActionBar(ChatColor.RED + "Berserker Boost: +" + boostDamage);
+                        }
+                        event.setDamage(event.getDamage() + boostDamage);
                     }
                 }
             }
