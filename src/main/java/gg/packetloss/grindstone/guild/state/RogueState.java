@@ -11,6 +11,7 @@ public class RogueState extends InternalGuildState {
     private long nextBlip = 0;
     private long nextGrenade = 0;
     private int hits = 0;
+    private boolean impact = false;
 
     private RogueStateSettings settings = new RogueStateSettings();
 
@@ -52,6 +53,14 @@ public class RogueState extends InternalGuildState {
 
     public int getUninterruptedHits() {
         return hits;
+    }
+
+    public void setImpactEnabled(boolean impact) {
+        this.impact = impact;
+    }
+
+    public boolean isUsingImpact() {
+        return impact;
     }
 
     public boolean hasPower(RoguePower power) {

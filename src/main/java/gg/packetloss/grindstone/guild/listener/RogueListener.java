@@ -7,7 +7,6 @@ import gg.packetloss.grindstone.click.ClickType;
 import gg.packetloss.grindstone.events.DoubleClickEvent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
-import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.guild.*;
 import gg.packetloss.grindstone.guild.GuildType;
@@ -27,6 +26,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.entity.*;
@@ -112,17 +112,25 @@ public class RogueListener implements Listener {
         ChatUtil.sendNotice(player, "You return to your weak existence.");
     }
 
-    public void blip(Player player, RogueState state, double modifier, boolean auto) {
-        RogueBlipEvent event = new RogueBlipEvent(player, modifier, auto);
-        CommandBook.server().getPluginManager().callEvent(event);
-        if (event.isCancelled()) return;
+    private void impactBlip(Player player, RogueState state) {
+        Vector newVelocity = player.getVelocity().setY(-6);
+        player.setVelocity(newVelocity);
 
-        modifier = event.getModifier();
+        state.setImpactEnabled(true);
 
-        state.blip();
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
-        CommandBook.server().getPluginManager().callEvent(new ThrowPlayerEvent(player));
+        taskBuilder.setAction((times) -> {
+            return GeneralPlayerUtil.isStandingOnSolidGround(player);
+        });
+        taskBuilder.setFinishAction(() -> {
+            state.setImpactEnabled(false);
+        });
 
+        taskBuilder.build();
+    }
+
+    private void normalBlip(Player player, double modifier, boolean auto) {
         Vector vel = player.getLocation().getDirection();
         vel.multiply(3 * modifier * Math.max(.1, player.getFoodLevel() / 20.0));
 
@@ -140,6 +148,26 @@ public class RogueListener implements Listener {
         vel.setY(Math.min(yMax, Math.max(yMin, vel.getY())));
 
         player.setVelocity(vel);
+    }
+
+    public void blip(Player player, RogueState state, double modifier, boolean auto) {
+        RogueBlipEvent event = new RogueBlipEvent(player, modifier, auto);
+        CommandBook.server().getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+
+        modifier = event.getModifier();
+
+        state.blip();
+
+        CommandBook.server().getPluginManager().callEvent(new ThrowPlayerEvent(player));
+
+        boolean impact = GeneralPlayerUtil.isLookingDown(player) && !GeneralPlayerUtil.isStandingOnSolidGround(player);
+        if (impact) {
+            impactBlip(player, state);
+            return;
+        }
+
+        normalBlip(player, modifier, auto);
     }
 
     public void grenade(Player player, RogueState state) {
@@ -191,6 +219,31 @@ public class RogueListener implements Listener {
             }
 
             RogueState state = optState.get();
+
+            if (state.isUsingImpact()) {
+                event.setDamage(event.getDamage() * .4);
+
+                if (state.hasPower(RoguePower.LIKE_A_METEOR)) {
+                    final double circleDist = 2 * Math.PI;
+                    final double explosionPointDist = circleDist / 8;
+
+                    final double radius = 5.5;
+
+                    for (double i = 0; i < circleDist; i += explosionPointDist) {
+                        double x = radius * Math.cos(i);
+                        double z = radius * Math.sin(i);
+
+                        ExplosionStateFactory.createPvPExplosion(
+                                player,
+                                player.getLocation().add(x, 0, z),
+                                3,
+                                true,
+                                true
+                        );
+                    }
+                }
+            }
+
             if (!state.hasPower(RoguePower.FALL_DAMAGE_REDIRECTION)) {
                 return;
             }
@@ -477,25 +530,6 @@ public class RogueListener implements Listener {
                 if (newSpec.isValid()) {
                     event.setSpec(newSpec);
                 }
-            }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
-        Player player = event.getPlayer();
-
-        Optional<RogueState> optState = getState(player);
-        if (optState.isEmpty()) {
-            return;
-        }
-
-        RogueState state = optState.get();
-
-        if (event.getContext().equals(SpecType.MELEE)) {
-            if (state.hasPower(RoguePower.SPEEDY_SPECIALS)) {
-                float remainingCooldownPercentage = ChanceUtil.getChance(10) ? .1F : .66F;
-                event.setContextCooldown((long) (event.getContextCoolDown() * remainingCooldownPercentage));
             }
         }
     }
