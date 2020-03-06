@@ -55,7 +55,7 @@ public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpeci
 
             final int radius = 4;
 
-            if (target.getLocation().distanceSquared(lockedLocation) > Math.pow(radius, 2)) {
+            if (LocationUtil.distanceSquared2D(target.getLocation(), lockedLocation) > Math.pow(radius, 2)) {
                 target.teleport(lockedLocation);
             }
 
