@@ -44,7 +44,7 @@ public class FearBowImpl extends AbstractItemFeatureImpl implements SpecWeaponIm
             case 4:
                 return new FearStrike(owner, usedItem, target);
             case 5:
-                return new FearBomb(owner, usedItem, target);
+                return new SoulReaper(owner, usedItem, target);
             case 6:
                 return new HellCano(owner, usedItem, target);
         }

@@ -27,7 +27,7 @@ import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.SoulSmite
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.unleashed.DoomBlade;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
-import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearBomb;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.SoulReaper;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.guild.ninja.Ignition;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
@@ -150,7 +150,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         generalBlacklistedSpecs.add(Nightmare.class);
         generalBlacklistedSpecs.add(Disarm.class);
         generalBlacklistedSpecs.add(MobAttack.class);
-        generalBlacklistedSpecs.add(FearBomb.class);
+        generalBlacklistedSpecs.add(SoulReaper.class);
 
         bossBlacklistedSpecs.add(Famine.class);
         bossBlacklistedSpecs.add(SoulSmite.class);
