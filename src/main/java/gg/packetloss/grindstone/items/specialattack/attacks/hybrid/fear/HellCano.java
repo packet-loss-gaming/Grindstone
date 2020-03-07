@@ -83,6 +83,10 @@ public class HellCano extends EntityAttack implements MeleeSpecial, RangedSpecia
                 return false;
             }
 
+            if (times % 10 != 0) {
+                return true;
+            }
+
             Class<? extends LivingEntity> filterType = target.getClass();
             if (Monster.class.isAssignableFrom(filterType)) {
                 filterType = Monster.class;

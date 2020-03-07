@@ -63,8 +63,6 @@ public class Surge extends EntityAttack implements RangedSpecial {
 
             for (LivingEntity e : entityList) {
                 if (e.isValid() && !e.equals(owner)) {
-                    e.setNoDamageTicks(0);
-
                     double damage = (e instanceof Player ? 5 : 15) * newDistance;
                     if (!SpecialAttackFactory.processDamage(owner, e, this, damage)) {
                         continue;

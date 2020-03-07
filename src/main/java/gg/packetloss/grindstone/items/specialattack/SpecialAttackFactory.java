@@ -27,7 +27,7 @@ public class SpecialAttackFactory {
 
     public static boolean processDamage(LivingEntity attacker, LivingEntity defender,
                                         SpecialAttack spec, double amount) {
-        if (defender.isDead() || defender.getNoDamageTicks() > 0) {
+        if (defender.isDead()) {
             return false;
         }
 
@@ -38,6 +38,7 @@ public class SpecialAttackFactory {
         }
 
         attackStack.executeOnStackWithCause(spec, () -> {
+            defender.setNoDamageTicks(0); // special attacks ignore no damage ticks
             event.getDefender().damage(event.getDamage(), attacker);
         });
 
