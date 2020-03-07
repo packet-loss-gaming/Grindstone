@@ -483,14 +483,34 @@ public class EnvironmentUtil {
         return e instanceof Monster;
     }
 
-    private static final BlockFace[] nearby = new BlockFace[]{
-            BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.EAST, BlockFace.NORTH_WEST,
-            BlockFace.SOUTH, BlockFace.SOUTH_EAST, BlockFace.WEST, BlockFace.SOUTH_WEST,
+    private static final BlockFace[] NEARBY_BLOCK_FACES = new BlockFace[]{
+            BlockFace.NORTH, BlockFace.EAST,
+            BlockFace.SOUTH, BlockFace.WEST,
+            BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
+            BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST,
             BlockFace.SELF
     };
 
     public static BlockFace[] getNearbyBlockFaces() {
+        return NEARBY_BLOCK_FACES;
+    }
 
-        return nearby;
+    private static final BlockFace[] CARDINAL_BLOCK_FACES = new BlockFace[] {
+            BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
+    };
+
+    public static BlockFace[] getCardinalBlockFaces() {
+        return CARDINAL_BLOCK_FACES;
+    }
+
+    private static final BlockFace[] SURROUNDING_BLOCK_FACES = new BlockFace[]{
+            BlockFace.NORTH, BlockFace.EAST,
+            BlockFace.SOUTH, BlockFace.WEST,
+            BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
+            BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST
+    };
+
+    public static BlockFace[] getSurroundingBlockFaces() {
+        return SURROUNDING_BLOCK_FACES;
     }
 }
