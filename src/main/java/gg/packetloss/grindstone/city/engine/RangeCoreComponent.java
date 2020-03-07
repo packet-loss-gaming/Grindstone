@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.managedworld.ManagedWorldMassQuery;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.listener.BetterMobSpawningListener;
 import gg.packetloss.grindstone.util.listener.DoorRestorationListener;
 import gg.packetloss.grindstone.util.listener.NuisanceSpawnBlockingListener;
 import org.bukkit.Server;
@@ -48,6 +49,7 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
         CommandBook.registerEvents(this);
         CommandBook.registerEvents(new DoorRestorationListener(this::isRangeWorld));
         CommandBook.registerEvents(new NuisanceSpawnBlockingListener(this::isRangeWorld));
+        CommandBook.registerEvents(new BetterMobSpawningListener(this::isRangeWorld));
 
         // Start tree growth task
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 20 * 2);

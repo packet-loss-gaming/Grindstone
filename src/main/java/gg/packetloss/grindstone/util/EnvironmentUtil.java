@@ -13,9 +13,11 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Dye;
 
+import java.util.Arrays;
 import java.util.Set;
 
 public class EnvironmentUtil {
@@ -512,5 +514,15 @@ public class EnvironmentUtil {
 
     public static BlockFace[] getSurroundingBlockFaces() {
         return SURROUNDING_BLOCK_FACES;
+    }
+
+    private static SpawnReason[] NON_NATURAL_SPAWN_REASONS = new SpawnReason[] {
+            SpawnReason.CUSTOM, SpawnReason.SPAWNER, SpawnReason.SPAWNER_EGG,
+            SpawnReason.SLIME_SPLIT, SpawnReason.ENDER_PEARL, SpawnReason.SILVERFISH_BLOCK,
+            SpawnReason.BUILD_WITHER
+    };
+
+    public static boolean isNonNaturalSpawnReason(SpawnReason reason) {
+        return Arrays.asList(NON_NATURAL_SPAWN_REASONS).contains(reason);
     }
 }
