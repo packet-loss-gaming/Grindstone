@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.fear.Curse;
+import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.fear.HellCano;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.*;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -30,7 +31,7 @@ import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningIt
 public class FearBowImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
     @Override
     public SpecialAttack getSpecial(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
-        switch (ChanceUtil.getRandom(5)) {
+        switch (ChanceUtil.getRandom(6)) {
             case 1:
                 Disarm disarmSpec = new Disarm(owner, usedItem, target);
                 if (disarmSpec.getItemStack() != null) {
@@ -44,6 +45,8 @@ public class FearBowImpl extends AbstractItemFeatureImpl implements SpecWeaponIm
                 return new FearStrike(owner, usedItem, target);
             case 5:
                 return new FearBomb(owner, usedItem, target);
+            case 6:
+                return new HellCano(owner, usedItem, target);
         }
         return null;
     }
