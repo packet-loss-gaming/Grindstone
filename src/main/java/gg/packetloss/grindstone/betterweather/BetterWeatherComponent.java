@@ -94,10 +94,18 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
         public int numToCreate = 20;
         @Setting("forecast.num-to-print")
         public int numToPrint = 5;
-        @Setting("duration.shortest")
-        public int shortestEvent = 5;
-        @Setting("duration.longest")
-        public int longestEvent = 30;
+        @Setting("duration.clear.shortest")
+        public int shortestClearEvent = 5;
+        @Setting("duration.clear.longest")
+        public int longestClearEvent = 30;
+        @Setting("duration.rain.shortest")
+        public int shortestRainEvent = 5;
+        @Setting("duration.rain.longest")
+        public int longestRainEvent = 30;
+        @Setting("duration.thunder.shortest")
+        public int shortestThunderEvent = 5;
+        @Setting("duration.thunder.longest")
+        public int longestThunderEvent = 30;
         @Setting("thunder-warning-duration.shortest")
         public int shortestThunderWarning = 2;
         @Setting("thunder-warning-duration.longest")
@@ -144,9 +152,44 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
         }
     }
 
+    private int getMinDuration(WeatherType weatherType) {
+        switch (weatherType) {
+            case CLEAR:
+                return config.shortestClearEvent;
+            case RAIN:
+                return config.shortestRainEvent;
+            case THUNDERSTORM:
+                return config.shortestThunderEvent;
+        }
+
+        throw new UnsupportedOperationException();
+    }
+
+
+    private int getMaxDuration(WeatherType weatherType) {
+        switch (weatherType) {
+            case CLEAR:
+                return config.longestClearEvent;
+            case RAIN:
+                return config.longestRainEvent;
+            case THUNDERSTORM:
+                return config.longestThunderEvent;
+        }
+
+        throw new UnsupportedOperationException();
+    }
+
+    private int getMaxDuration() {
+        int i = 0;
+        for (WeatherType weatherType : WeatherType.values()) {
+            i = Math.max(i, getMaxDuration(weatherType));
+        }
+        return i;
+    }
+
     private void syncWeather(World world, WeatherType weatherType) {
         // Update weather durations
-        int duration = 20 * 60 * (config.longestEvent + 1);
+        int duration = 20 * 60 * (getMaxDuration() + 1);
         world.setWeatherDuration(duration);
         world.setThunderDuration(duration);
 
@@ -205,7 +248,10 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
             // Calculate the new weather event and its time
             WeatherType newWeatherType = pickWeather();
 
-            long offset = TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(config.shortestEvent, config.longestEvent));
+            long offset = TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(
+                    getMinDuration(newWeatherType),
+                    getMaxDuration(newWeatherType)
+            ));
             long newWeatherEventTime = lastWeatherEventTime + offset;
 
             // Queue a bit of rain as a warning about the impending thunderstorm
