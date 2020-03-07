@@ -59,14 +59,14 @@ public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpeci
                 target.teleport(lockedLocation);
             }
 
-            final double speed = .6; // controls how fast we go through cycles
             final double loopInterval = 0.05; // controls how much progress we make per particle
-            final double loopAdjustment = .1; // controls how much we move when resetting
+            final double loopAdjustment = Math.PI / 6; // controls how much we move when resetting
             final double loopAmplification = 3; // controls how tight the spiraling is
-            final double height = Math.max(4, target.getHeight() * 1.5); // controls how tall the spiral is
+            final double height = Math.max(5, target.getHeight() * 1.5); // controls how tall the spiral is
+            final double speed = .05 * (height / 3); // controls how fast we go through cycles
 
             for (double yProgression = 0; yProgression < speed; yProgression += loopInterval) {
-                double newAnimationY = (animationY + yProgression) % height;
+                double newAnimationY = (animationY + loopInterval) % height;
 
                 // Adjust the run offset whenever we've looped around (hit the top and went back to the bottom
                 // this allows the animation not move and not just stay fixed in the same position.
