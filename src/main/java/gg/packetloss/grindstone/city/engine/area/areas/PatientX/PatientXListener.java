@@ -21,6 +21,7 @@ import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.fear.HellCano;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.Decimate;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.SoulSmite;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
@@ -155,6 +156,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         bossBlacklistedSpecs.add(SoulSmite.class);
 
         ultimateBlacklistedSpecs.add(GlowingFog.class);
+        ultimateBlacklistedSpecs.add(HellCano.class);
         ultimateBlacklistedSpecs.add(Ignition.class);
         ultimateBlacklistedSpecs.add(Surge.class);
         ultimateBlacklistedSpecs.add(Decimate.class);
