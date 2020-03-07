@@ -126,7 +126,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         updateBossBar();
 
         if (!isBossSpawned()) {
-            if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
+            if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 10) {
                 spawnBoss();
             }
         } else if (!isEmpty()) {
