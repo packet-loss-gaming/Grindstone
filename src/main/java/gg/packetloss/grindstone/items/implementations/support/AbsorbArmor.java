@@ -7,11 +7,18 @@ import org.bukkit.event.entity.EntityDamageEvent;
 
 import java.util.function.Predicate;
 
-public class NecrosAbsorb {
+public class AbsorbArmor {
     private final Predicate<Player> hasArmor;
+    private final int basePointOfActivation;
+    private final int pointOfActivationFluctuation;
+    private final int reductionRolls;
 
-    public NecrosAbsorb(Predicate<Player> hasArmor) {
+    public AbsorbArmor(Predicate<Player> hasArmor, int basePointOfActivation,
+                       int pointOfActivationFluctuation, int reductionRolls) {
         this.hasArmor = hasArmor;
+        this.basePointOfActivation = basePointOfActivation;
+        this.pointOfActivationFluctuation = pointOfActivationFluctuation;
+        this.reductionRolls = reductionRolls;
     }
 
     public void handleEvent(EntityDamageEvent event) {
@@ -19,7 +26,11 @@ public class NecrosAbsorb {
             return;
         }
 
-        int pointOfActivation = ChanceUtil.getRangedRandom(20, 30);
+        int pointOfActivation = ChanceUtil.getRangedRandom(
+                basePointOfActivation,
+                basePointOfActivation + pointOfActivationFluctuation
+        );
+
         if (event.getDamage() <= pointOfActivation) {
             return;
         }
@@ -28,7 +39,7 @@ public class NecrosAbsorb {
         if (hasArmor.test(player)) {
             // Calculate the damage that may be removed.
             double extra = event.getDamage() - pointOfActivation;
-            double newExtra = ChanceUtil.getRandomNTimes((int) extra, 2);
+            double newExtra = ChanceUtil.getRandomNTimes((int) extra, reductionRolls);
 
             // Change the damage
             event.setDamage(pointOfActivation + newExtra);

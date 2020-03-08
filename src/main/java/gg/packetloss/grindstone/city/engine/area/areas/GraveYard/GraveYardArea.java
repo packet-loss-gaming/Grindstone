@@ -752,13 +752,29 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             case 10:
                 return CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(64));
             case 11:
-                return CustomItemCenter.build(CustomItems.ANCIENT_HELMET);
+                if (ChanceUtil.getChance(500)) {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_HELMET);
+                } else {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_HELMET);
+                }
             case 12:
-                return CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE);
+                if (ChanceUtil.getChance(500)) {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_CHESTPLATE);
+                } else {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE);
+                }
             case 13:
-                return CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS);
+                if (ChanceUtil.getChance(500)) {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_LEGGINGS);
+                } else {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS);
+                }
             case 14:
-                return CustomItemCenter.build(CustomItems.ANCIENT_BOOTS);
+                if (ChanceUtil.getChance(500)) {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_BOOTS);
+                } else {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_BOOTS);
+                }
             case 15:
                 return CustomItemCenter.build(CustomItems.GOD_HELMET);
             case 16:

@@ -317,6 +317,7 @@ public class ItemUtil {
         }
         return false;
     }
+
     public static boolean hasAncientArmour(LivingEntity entity) {
 
         if (!entity.isValid()) return false;
@@ -332,6 +333,27 @@ public class ItemUtil {
             b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient");
         }
         return b[0] && b[1] && b[2] && b[3];
+    }
+
+    public static boolean hasAncientRoyalArmour(LivingEntity entity) {
+        if (!entity.isValid()) return false;
+
+        ItemStack[] armour;
+        EntityEquipment equipment = entity.getEquipment();
+        if (equipment != null) armour = equipment.getArmorContents();
+        else return false;
+
+        boolean[] b = new boolean[]{false, false, false, false};
+
+        b[0] = ItemUtil.isItem(armour[0], CustomItems.ANCIENT_CROWN) ||
+               ItemUtil.isItem(armour[0], CustomItems.ANCIENT_ROYAL_HELMET);
+
+        for (int i = 1; i < 4; i++) {
+            b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient Royal");
+        }
+
+        return b[0] && b[1] && b[2] && b[3];
+
     }
 
     public static boolean hasNecrosArmour(LivingEntity entity) {
