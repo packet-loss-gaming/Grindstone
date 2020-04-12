@@ -381,7 +381,13 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
                 if (chest instanceof Chest) {
 
                     Inventory chestInventory = ((Chest) chest).getBlockInventory();
-                    Collections.addAll(drops, chestInventory.getContents());
+                    for (ItemStack item : chestInventory.getContents()) {
+                        if (item == null || item.getType().isAir()) {
+                            continue;
+                        }
+
+                        drops.add(item);
+                    }
 
                     chestInventory.clear();
                 }
