@@ -47,6 +47,10 @@ public class BetterMobSpawningListener implements Listener {
             totalLight += block.getLightLevel();
         }
 
+        if (relevantSamples == 0) {
+            return loc.getBlock().getLightLevel();
+        }
+
         return totalLight / relevantSamples;
     }
 
