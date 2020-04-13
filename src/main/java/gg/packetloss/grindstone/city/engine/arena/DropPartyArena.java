@@ -237,11 +237,16 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             if (!onlinePlayers.isEmpty()) {
                 newDrops.add(ItemUtil.makeSkull(CollectionUtil.getElement(onlinePlayers)));
             }
-        }
 
-        // Remove null drops and shuffle all other drops
-        newDrops.removeAll(Collections.singleton(null));
-        Collections.shuffle(newDrops);
+            int generatedSize = newDrops.size();
+            for (int k = 0; k < generatedSize * 4; ++k) {
+                newDrops.add(new ItemStack(Material.GOLD_NUGGET, ChanceUtil.getRandom(18)));
+            }
+
+            // Remove null drops and shuffle all other drops
+            newDrops.removeAll(Collections.singleton(null));
+            Collections.shuffle(newDrops);
+        }
 
         // Add new drops to the drop queue
         drops.addAll(newDrops);
@@ -290,23 +295,18 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             return;
         }
 
-        if (ChanceUtil.getChance(5)) {
-            ItemStack drop = drops.poll();
-            if (drop != null) {
-                if (drop.getType() == Material.EXPERIENCE_BOTTLE) {
-                    for (int i = drop.getAmount(); i > 0; --i) {
-                        firework.getLocation().getWorld().spawn(firework.getLocation(), ThrownExpBottle.class);
-                    }
-
-                    return;
+        ItemStack drop = drops.poll();
+        if (drop != null) {
+            if (drop.getType() == Material.EXPERIENCE_BOTTLE) {
+                for (int i = drop.getAmount(); i > 0; --i) {
+                    firework.getLocation().getWorld().spawn(firework.getLocation(), ThrownExpBottle.class);
                 }
 
-                dropPartyBox(firework.getLocation(), drop);
                 return;
             }
-        }
 
-        dropPartyBox(firework.getLocation(), new ItemStack(Material.GOLD_NUGGET, ChanceUtil.getRandom(18)));
+            dropPartyBox(firework.getLocation(), drop);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
