@@ -901,8 +901,21 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             taskBuilder.setNumberOfRuns(3);
 
             taskBuilder.setAction((seconds) -> {
+                ChatColor color;
+                switch (seconds) {
+                    case 3:
+                        color = ChatColor.YELLOW;
+                        break;
+                    case 2:
+                        color = ChatColor.RED;
+                        break;
+                    default:
+                        color = ChatColor.DARK_RED;
+                        break;
+                }
+
                 for (Player player : getPlayersInArena()) {
-                    player.sendTitle(Title.builder().title(Text.of(ChatColor.DARK_RED, seconds).build()).build());
+                    player.sendTitle(Title.builder().title(Text.of(color, seconds).build()).build());
                 }
 
                 return true;
