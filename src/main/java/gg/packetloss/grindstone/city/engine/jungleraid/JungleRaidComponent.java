@@ -851,14 +851,14 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
 
             JungleRaidProfile profile = gameState.get(player);
-            switch (block.getData()) {
-                case 0:
+            switch (block.getType()) {
+                case WHITE_CONCRETE:
                     profile.setTeam(JungleRaidTeam.FREE_FOR_ALL);
                     break;
-                case 11:
+                case BLUE_CONCRETE:
                     profile.setTeam(JungleRaidTeam.BLUE);
                     break;
-                case 14:
+                case RED_CONCRETE:
                     profile.setTeam(JungleRaidTeam.RED);
                     break;
                 default:
