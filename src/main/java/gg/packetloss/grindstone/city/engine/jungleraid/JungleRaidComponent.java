@@ -1549,7 +1549,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 } else {
                     event.setDeathMessage(player.getName() + " is out");
                 }
-                event.getDrops().clear();
+
+                // Allow some drops to be kept if in Scavenger mode and the player dies inside the arena
+                if (arenaContains(player) && classSelectionMode == JungleRaidClassSelectionMode.SCAVENGER) {
+                    event.getDrops().removeIf((item) -> ItemUtil.isLeatherArmorPiece(item.getType()));
+                } else {
+                    event.getDrops().clear();
+                }
                 event.setDroppedExp(0);
 
                 died(player);
