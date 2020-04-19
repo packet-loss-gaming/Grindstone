@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.jungleraid;
 
+import com.destroystokyo.paper.Title;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.EditSession;
@@ -70,6 +71,7 @@ import gg.packetloss.grindstone.util.signwall.enumname.EnumNamePainter;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagClickHandler;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagDataBackend;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagPainter;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.hackbook.ModifierBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
@@ -302,7 +304,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             gear.add(new ItemStack(Material.ARROW, arrowRemainder));
         }
 
-        if (state == JungleRaidState.INITIALIZE && classSelectionMode == JungleRaidClassSelectionMode.SCAVENGER) {
+        if (state == JungleRaidState.INITIALIZE_ARENA && classSelectionMode == JungleRaidClassSelectionMode.SCAVENGER) {
             for (int i = 0; i < 3; ++i) {
                 Block block = getRandomLocation().getBlock();
                 block.setType(Material.CHEST);
@@ -873,7 +875,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             return;
         }
 
-        state = JungleRaidState.INITIALIZE;
+        state = JungleRaidState.INITIALIZE_ARENA;
 
         if (classSelectionMode == JungleRaidClassSelectionMode.SURVIVAL) {
             populateSurvivalResource();
@@ -885,10 +887,39 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private void tryBeginCombat() {
+        if (state == JungleRaidState.INITIALIZE_FIGHT) {
+            return;
+        }
+
         boolean cooldownPassed = System.currentTimeMillis() - startTime >= TimeUnit.MINUTES.toMillis(1);
         if (isFlagEnabled(JungleRaidFlag.NO_CHILL) || cooldownPassed) {
-            state = JungleRaidState.IN_PROGRESS;
-            ChatUtil.sendNotice(getPlayersInArena(), ChatColor.DARK_RED + "LET THE SLAUGHTER BEGIN!");
+            state = JungleRaidState.INITIALIZE_FIGHT;
+
+            TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+            taskBuilder.setInterval(20);
+            taskBuilder.setNumberOfRuns(3);
+
+            taskBuilder.setAction((seconds) -> {
+                for (Player player : getPlayersInArena()) {
+                    player.sendTitle(Title.builder().title(Text.of(ChatColor.DARK_RED, seconds).build()).build());
+                }
+
+                return true;
+            });
+            taskBuilder.setFinishAction(() -> {
+                state = JungleRaidState.IN_PROGRESS;
+
+                Collection<Player> players = getPlayersInArena();
+
+                for (Player player : players) {
+                    player.sendTitle(Title.builder().title(Text.of(
+                            ChatColor.DARK_RED, "LET THE SLAUGHTER BEGIN!"
+                    ).build()).build());
+                }
+            });
+
+            taskBuilder.build();
         }
     }
 
@@ -937,7 +968,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             return;
         }
 
-        if (state == JungleRaidState.INITIALIZE) {
+        if (state == JungleRaidState.INITIALIZE_ARENA) {
             tryBeginCombat();
             return;
         }
@@ -1310,7 +1341,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                     for (String string : resultSet) {
                         ChatUtil.sendNotice(player, string);
                     }
-                } else if (state == JungleRaidState.INITIALIZE) {
+                } else if (state == JungleRaidState.INITIALIZE_ARENA) {
                     player.teleport(getRandomLocation());
                 }
             }
