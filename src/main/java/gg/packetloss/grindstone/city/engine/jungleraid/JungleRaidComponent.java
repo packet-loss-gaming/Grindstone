@@ -1382,6 +1382,12 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 return;
             }
 
+            if (state != JungleRaidState.IN_PROGRESS) {
+                ChatUtil.sendError(attackingPlayer, "The game has not started yet!");
+                event.setCancelled(true);
+                return;
+            }
+
             if (isFriendlyFire(attackingPlayer, defendingPlayer)) {
                 event.setCancelled(true);
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
