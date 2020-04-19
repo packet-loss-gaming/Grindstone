@@ -58,8 +58,7 @@ import gg.packetloss.grindstone.util.signwall.SignWall;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagClickHandler;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagDataBackend;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagPainter;
-import gg.packetloss.grindstone.util.timer.CountdownTask;
-import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -79,7 +78,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.material.Door;
 import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
@@ -319,41 +317,36 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     }
 
     private void initFightCountdown() {
-        CountdownTask fightCountdown = new CountdownTask() {
-            @Override
-            public boolean matchesFilter(int times) {
-                return true;
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+        taskBuilder.setInterval(20);
+        taskBuilder.setNumberOfRuns(3);
+
+        taskBuilder.setAction((seconds) -> {
+            for (Player player : getPlayersInGame()) {
+                player.sendTitle(Title.builder().title(Text.of(ChatColor.DARK_RED, seconds).build()).build());
             }
 
-            @Override
-            public void performStep(int times) {
-                for (Player player : getPlayersInGame()) {
-                    player.sendTitle(Title.builder().title(Text.of(ChatColor.DARK_RED, times).build()).build());
-                }
+            return true;
+        });
+        taskBuilder.setFinishAction(() -> {
+            state = SkyWarsState.IN_PROGRESS;
+
+            Collection<Player> players = getPlayersInGame();
+
+            for (Player player : players) {
+                player.sendTitle(Title.builder().title(Text.of(ChatColor.DARK_GREEN, "FIGHT!").build()).build());
             }
 
-            @Override
-            public void performFinal() {
-                state = SkyWarsState.IN_PROGRESS;
-
-                Collection<Player> players = getPlayersInGame();
-
-                for (Player player : players) {
-                    player.sendTitle(Title.builder().title(Text.of(ChatColor.DARK_GREEN, "FIGHT!").build()).build());
-                }
-
-                for (Player player : players) {
-                    launchPlayer(player, 1);
-                    sessions.getSession(SkyWarSession.class, player).stopPushBack();
-                }
-
-                editStartingPad(BlockTypes.AIR);
+            for (Player player : players) {
+                launchPlayer(player, 1);
+                sessions.getSession(SkyWarSession.class, player).stopPushBack();
             }
-        };
 
-        TimedRunnable countdown = new TimedRunnable(fightCountdown, 3);
-        BukkitTask task = server.getScheduler().runTaskTimer(inst, countdown, 0, 20);
-        countdown.setTask(task);
+            editStartingPad(BlockTypes.AIR);
+        });
+
+        taskBuilder.build();
     }
 
     public void smartStart() {
