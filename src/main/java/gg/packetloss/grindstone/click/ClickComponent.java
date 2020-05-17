@@ -48,6 +48,13 @@ public class ClickComponent extends BukkitComponent implements Listener {
         }
     }
 
+    // Call the event delayed so as to queue this event after the current interact event.
+    // This helps simplify logic when we want to treat the interaction and the double click interaction
+    // as separate events.
+    private void callEvent(DoubleClickEvent event) {
+        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> CommandBook.callEvent(event));
+    }
+
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
@@ -56,21 +63,21 @@ public class ClickComponent extends BukkitComponent implements Listener {
         switch (event.getAction()) {
             case LEFT_CLICK_AIR:
                 if (clickRecord.isDoubleLeftClick()) {
-                    CommandBook.callEvent(new DoubleClickEvent(
+                    callEvent(new DoubleClickEvent(
                             player, ClickType.LEFT, null, null
                     ));
                 }
                 break;
             case LEFT_CLICK_BLOCK:
                 if (clickRecord.isDoubleLeftClick()) {
-                    CommandBook.callEvent(new DoubleClickEvent(
+                    callEvent(new DoubleClickEvent(
                             player, ClickType.LEFT, event.getClickedBlock(), event.getBlockFace()
                     ));
                 }
                 break;
             case RIGHT_CLICK_AIR:
                 if (clickRecord.isDoubleRightClick()) {
-                    CommandBook.callEvent(new DoubleClickEvent(
+                    callEvent(new DoubleClickEvent(
                             player, ClickType.RIGHT, null, null
                     ));
                 }
@@ -89,7 +96,7 @@ public class ClickComponent extends BukkitComponent implements Listener {
                 }
 
                 if (clickRecord.isDoubleRightClick()) {
-                    CommandBook.callEvent(new DoubleClickEvent(
+                    callEvent(new DoubleClickEvent(
                             player, ClickType.RIGHT, event.getClickedBlock(), event.getBlockFace()
                     ));
                 }

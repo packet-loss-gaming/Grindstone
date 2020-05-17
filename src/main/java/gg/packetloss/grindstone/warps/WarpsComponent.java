@@ -4,8 +4,11 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.click.ClickType;
+import gg.packetloss.grindstone.events.DoubleClickEvent;
 import gg.packetloss.grindstone.events.HomeTeleportEvent;
 import gg.packetloss.grindstone.events.PortalRecordEvent;
+import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -22,8 +25,10 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.io.File;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.click.ClickRecord.TICKS_FOR_DOUBLE_CLICK;
 
 @ComponentInformation(
         friendlyName = "Rift Warps",
@@ -130,41 +135,57 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         recordPortal(player, invertedViewLocation);
     }
 
-    private boolean canSetPlayerBed(Location loc) {
-        return !loc.getWorld().getName().toLowerCase().contains("legit");
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerBedEnter(PlayerBedEnterEvent event) {
-        Player player = event.getPlayer();
-        Location bedLoc = event.getBed().getLocation();
-
-        if (player == null || bedLoc == null) {
-            return;
-        }
-        if (!canSetPlayerBed(bedLoc)) {
-            return;
-        }
-
-        warpManager.setPlayerHomeAndNotify(player, bedLoc);
+        event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerRightClickBed(PlayerInteractEvent event) {
+    private List<UUID> rightClickedOnBedPlayers = new ArrayList<>();
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerClickBed(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
 
-        Player player = event.getPlayer();
         Block block = event.getClickedBlock();
-
         if (!EnvironmentUtil.isBed(block)) {
             return;
         }
-        if (!canSetPlayerBed(block.getLocation()))  {
+
+        event.setCancelled(true);
+
+        Player player = event.getPlayer();
+        rightClickedOnBedPlayers.add(player.getUniqueId());
+
+        queueRespawnMechanicNotification(player);
+    }
+
+    private void queueRespawnMechanicNotification(Player player) {
+        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            if (!rightClickedOnBedPlayers.contains(player.getUniqueId())) {
+                return;
+            }
+
+            ChatUtil.sendNotice(player, "Double right click to set respawn point.");
+            rightClickedOnBedPlayers.remove(player.getUniqueId());
+        }, TICKS_FOR_DOUBLE_CLICK + 1);
+    }
+
+    @EventHandler
+    public void onDoubleRightClickBed(DoubleClickEvent event) {
+        if (event.getClickType() != ClickType.RIGHT) {
             return;
         }
 
+        Block block = event.getAssociatedBlock();
+        if (block == null || !EnvironmentUtil.isBed(block)) {
+            return;
+        }
+
+        Player player = event.getPlayer();
         warpManager.setPlayerHomeAndNotify(player, block.getLocation());
+
+        rightClickedOnBedPlayers.removeAll(Collections.singleton(player.getUniqueId()));
     }
 }
