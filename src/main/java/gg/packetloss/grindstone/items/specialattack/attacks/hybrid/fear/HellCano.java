@@ -108,8 +108,10 @@ public class HellCano extends EntityAttack implements MeleeSpecial, RangedSpecia
             }
 
             // Damage the owner if too close regardless of filter type.
-            if (lockedLocation.distanceSquared(owner.getLocation()) <= RADIUS_SQ) {
-                damage(owner, damage);
+            if (owner.getWorld().equals(lockedLocation.getWorld())) {
+                if (lockedLocation.distanceSquared(owner.getLocation()) <= RADIUS_SQ) {
+                    damage(owner, damage);
+                }
             }
 
             return true;
