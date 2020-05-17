@@ -887,10 +887,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private void tryBeginCombat() {
-        if (state == JungleRaidState.INITIALIZE_FIGHT) {
-            return;
-        }
-
         boolean cooldownPassed = System.currentTimeMillis() - startTime >= TimeUnit.MINUTES.toMillis(1);
         if (isFlagEnabled(JungleRaidFlag.NO_CHILL) || cooldownPassed) {
             state = JungleRaidState.INITIALIZE_FIGHT;
@@ -921,6 +917,10 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 return true;
             });
             taskBuilder.setFinishAction(() -> {
+                if (state != JungleRaidState.INITIALIZE_FIGHT) {
+                    return;
+                }
+
                 state = JungleRaidState.IN_PROGRESS;
 
                 Collection<Player> players = getPlayersInArena();
