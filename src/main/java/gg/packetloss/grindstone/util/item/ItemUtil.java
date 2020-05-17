@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class ItemUtil {
 
@@ -40,11 +39,10 @@ public class ItemUtil {
         return LEATHER_ARMOR_TYPES.contains(type);
     }
 
-    public static final ItemStack[] LEATHER_ARMOR = LEATHER_ARMOR_TYPES.stream()
-            .map(ItemStack::new)
-            .collect(Collectors.toList())
-            .toArray(new ItemStack[0]);
-
+    public static final ItemStack[] LEATHER_ARMOR  = new ItemStack[]{
+            new ItemStack(Material.LEATHER_BOOTS), new ItemStack(Material.LEATHER_LEGGINGS),
+            new ItemStack(Material.LEATHER_CHESTPLATE), new ItemStack(Material.LEATHER_HELMET)
+    };
     public static final ItemStack[] IRON_ARMOR = new ItemStack[]{
             new ItemStack(Material.IRON_BOOTS), new ItemStack(Material.IRON_LEGGINGS),
             new ItemStack(Material.IRON_CHESTPLATE), new ItemStack(Material.IRON_HELMET)

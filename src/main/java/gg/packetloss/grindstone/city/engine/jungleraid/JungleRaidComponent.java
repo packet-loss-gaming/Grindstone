@@ -324,7 +324,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private void applyTeamEquipment(Player player) {
         Color teamColor = getTeamColorForPlayer(player).get();
 
-        ItemStack[] leatherArmour = ItemUtil.LEATHER_ARMOR;
+        ItemStack[] leatherArmour = ItemUtil.clone(ItemUtil.LEATHER_ARMOR);
 
         LeatherArmorMeta helmMeta = (LeatherArmorMeta) leatherArmour[3].getItemMeta();
         helmMeta.setDisplayName(ChatColor.WHITE + "Team Hood");
