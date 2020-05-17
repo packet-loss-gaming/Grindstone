@@ -146,6 +146,10 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
         ShulkerBox shulkerBox = (ShulkerBox) itemMeta.getBlockState();
         shulkerBox.getInventory().forEach((item) -> {
+            if (item == null || item.getType().isAir()) {
+                return;
+            }
+
             location.getWorld().dropItem(location, item);
         });
     }
