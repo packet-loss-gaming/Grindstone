@@ -14,7 +14,10 @@ import java.util.Set;
 public class ComboShovel extends AbstractItemFeatureImpl {
     protected static Set<Material> acceptedMaterials = Set.of(
         Material.DIRT,
-        Material.GRASS,
+        Material.COARSE_DIRT,
+        Material.PODZOL,
+        Material.GRASS_BLOCK,
+        Material.GRASS_PATH,
         Material.SAND,
         Material.CLAY,
         Material.MYCELIUM,
