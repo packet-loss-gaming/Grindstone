@@ -634,17 +634,18 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             }
         }
 
-        for (final BlockVector2 chunkCoords : chunkList) {
+        for (int i = 0; i < chunkList.size(); ++i) {
+            BlockVector2 chunkCoords = chunkList.get(i);
+
             try {
                 server.getScheduler().runTaskLater(inst, () -> {
                     for (BlockState aSign : world.getChunkAt(chunkCoords.getX(), chunkCoords.getZ()).getTileEntities()) {
                         if (!(aSign instanceof Sign)) continue;
                         checkHeadStone((Sign) aSign);
                     }
-                }, chunkList.indexOf(chunkCoords) * 20);
+                }, i);
             } catch (NullPointerException ex) {
-                findHeadStones();
-                log.info("Failed to get head stones for Chunk: " + chunkCoords.getX() + ", " + chunkCoords.getZ() + ".");
+                log.warning("Failed to get head stones for Chunk: " + chunkCoords.getX() + ", " + chunkCoords.getZ() + ".");
                 return;
             }
         }
