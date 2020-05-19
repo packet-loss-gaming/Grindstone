@@ -46,6 +46,7 @@ public class CustomItemCenter {
         ancientCrown.addSource(ItemSource.MARKET);
         ancientCrown.addSource(ItemSource.GIANT_BOSS);
         ancientCrown.addUse("Set Effect: Ancient Armor");
+        ancientCrown.addUse("Set Effect: Ancient Royal Armor");
         ancientCrown.addUse("Double Health Regen");
         ancientCrown.addUse("Double XP Gain");
         ancientCrown.addUse("Acts as an Imbued Crystal");
@@ -53,6 +54,61 @@ public class CustomItemCenter {
         ancientCrown.addUse("Acts as an Ancient Helmet");
         ancientCrown.addUse("Repaired when worn while attacking creatures or players");
         addItem(ancientCrown);
+
+        CustomEquipment ancientRoyalHelmet = new CustomEquipment(ANCIENT_ROYAL_HELMET, Material.CHAINMAIL_HELMET);
+        ancientRoyalHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+        ancientRoyalHelmet.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
+        ancientRoyalHelmet.addEnchant(Enchantment.PROTECTION_FIRE, 4);
+        ancientRoyalHelmet.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientRoyalHelmet.addEnchant(Enchantment.OXYGEN, 3);
+        ancientRoyalHelmet.addEnchant(Enchantment.WATER_WORKER, 1);
+        ancientRoyalHelmet.addSource(ItemSource.SACRIFICIAL_PIT);
+        ancientRoyalHelmet.addSource(ItemSource.GRAVE_YARD);
+        ancientRoyalHelmet.addSource(ItemSource.MARKET);
+        ancientRoyalHelmet.addUse("Set Effect: Ancient Armor");
+        ancientRoyalHelmet.addUse("Set Effect: Ancient Royal Armor");
+        ancientRoyalHelmet.addUse("Repaired when worn while attacking creatures or players");
+        addItem(ancientRoyalHelmet);
+
+        CustomEquipment ancientRoyalChestplate = new CustomEquipment(ANCIENT_ROYAL_CHESTPLATE, Material.CHAINMAIL_CHESTPLATE);
+        ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+        ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
+        ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
+        ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientRoyalChestplate.addSource(ItemSource.SACRIFICIAL_PIT);
+        ancientRoyalChestplate.addSource(ItemSource.GRAVE_YARD);
+        ancientRoyalChestplate.addSource(ItemSource.MARKET);
+        ancientRoyalChestplate.addUse("Set Effect: Ancient Armor");
+        ancientRoyalChestplate.addUse("Set Effect: Ancient Royal Armor");
+        ancientRoyalChestplate.addUse("Repaired when worn while attacking creatures or players");
+        addItem(ancientRoyalChestplate);
+
+        CustomEquipment ancientRoyalLeggings = new CustomEquipment(ANCIENT_ROYAL_LEGGINGS, Material.CHAINMAIL_LEGGINGS);
+        ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+        ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
+        ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
+        ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientRoyalLeggings.addSource(ItemSource.SACRIFICIAL_PIT);
+        ancientRoyalLeggings.addSource(ItemSource.GRAVE_YARD);
+        ancientRoyalLeggings.addSource(ItemSource.MARKET);
+        ancientRoyalLeggings.addUse("Set Effect: Ancient Armor");
+        ancientRoyalLeggings.addUse("Set Effect: Ancient Royal Armor");
+        ancientRoyalLeggings.addUse("Repaired when worn while attacking creatures or players");
+        addItem(ancientRoyalLeggings);
+
+        CustomEquipment ancientRoyalBoots = new CustomEquipment(ANCIENT_ROYAL_BOOTS, Material.CHAINMAIL_BOOTS);
+        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
+        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
+        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_FALL, 4);
+        ancientRoyalBoots.addSource(ItemSource.SACRIFICIAL_PIT);
+        ancientRoyalBoots.addSource(ItemSource.GRAVE_YARD);
+        ancientRoyalBoots.addSource(ItemSource.MARKET);
+        ancientRoyalBoots.addUse("Set Effect: Ancient Armor");
+        ancientRoyalBoots.addUse("Set Effect: Ancient Royal Armor");
+        ancientRoyalBoots.addUse("Repaired when worn while attacking creatures or players");
+        addItem(ancientRoyalBoots);
 
         CustomEquipment ancientHelmet = new CustomEquipment(ANCIENT_HELMET, Material.CHAINMAIL_HELMET);
         ancientHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
@@ -733,6 +789,12 @@ public class CustomItemCenter {
         tomeOfLegends.addSource(ItemSource.MARKET);
         tomeOfLegends.addUse("Consumable to permanently reduce special attack cooldowns by 10%.");
         addItem(tomeOfLegends);
+
+        CustomItem tomeOfLife = new CustomItem(TOME_OF_LIFE, Material.BOOK);
+        tomeOfLife.addSource(ItemSource.FROSTBORN);
+        tomeOfLife.addSource(ItemSource.MARKET);
+        tomeOfLife.addUse("Consumable to permanently protect items on death.");
+        addItem(tomeOfLife);
     }
 
     public static Collection<CustomItem> values() {

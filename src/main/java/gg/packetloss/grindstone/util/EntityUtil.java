@@ -8,9 +8,7 @@ package gg.packetloss.grindstone.util;
 
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.EntityEffect;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 
 public class EntityUtil {
     public static boolean nameMatches(Entity entity, String name) {
@@ -59,5 +57,32 @@ public class EntityUtil {
 
         ((LivingEntity) entity).setHealth(Math.max(cur - amt, 0));
         entity.playEffect(EntityEffect.HURT);
+    }
+
+    public static boolean isHostileMob(Entity entity) {
+        if (entity instanceof Monster) {
+            return true;
+        }
+
+        // Slime (and descendants) are not considered monsters
+        if (entity instanceof Slime) {
+            return true;
+        }
+
+        // Flying (Phantom, Ghasts) are not considered monsters
+        if (entity instanceof Flying) {
+            return true;
+        }
+
+        // Skeleton Horses are not considered monsters
+        if (entity instanceof SkeletonHorse) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isHostileMobOrPlayer(Entity entity) {
+        return isHostileMob(entity) || entity instanceof Player;
     }
 }

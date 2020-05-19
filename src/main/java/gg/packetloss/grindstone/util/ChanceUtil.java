@@ -27,6 +27,10 @@ public class ChanceUtil {
         return highestValue == 0 ? 1 : highestValue < 0 ? (r().nextInt(highestValue * -1) + 1) * -1 : r().nextInt(highestValue) + 1;
     }
 
+    public static int getPolarizedRandom(int highestValue) {
+        return getRandom(highestValue) * (ChanceUtil.getChance(2) ? 1 : -1);
+    }
+
     public static int getRandomNTimes(int highestValue, int n) {
         Validate.isTrue(n > 0);
 

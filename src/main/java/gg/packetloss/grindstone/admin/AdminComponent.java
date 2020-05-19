@@ -6,7 +6,9 @@
 
 package gg.packetloss.grindstone.admin;
 
+import com.destroystokyo.paper.Title;
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.god.GodComponent;
 import com.sk89q.commandbook.component.info.InfoComponent;
 import com.sk89q.commandbook.util.InputUtil;
@@ -17,6 +19,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
@@ -26,7 +29,6 @@ import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.item.InventoryUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import net.milkbowl.vault.permission.Permission;
 import org.apache.commons.lang.Validate;
@@ -36,17 +38,14 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Dispenser;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -54,6 +53,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -78,6 +78,11 @@ public class AdminComponent extends BukkitComponent implements Listener {
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         setupPermissions();
+
+        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
+        registrar.registerTopLevelCommands((commandManager, registration) -> {
+            registration.register(commandManager, AdminTeleportCommandsRegistration.builder(), new AdminTeleportCommands());
+        });
     }
 
     private WorldEditPlugin worldEdit() {
@@ -221,52 +226,38 @@ public class AdminComponent extends BukkitComponent implements Listener {
         }
     }
 
-    private static Set<InventoryType> accepted = new HashSet<>();
-
-    static {
-        accepted.add(InventoryType.PLAYER);
-        accepted.add(InventoryType.CRAFTING);
-        accepted.add(InventoryType.CREATIVE);
-        accepted.add(InventoryType.ENCHANTING);
-        accepted.add(InventoryType.WORKBENCH);
-        accepted.add(InventoryType.ANVIL);
-    }
+    private Set<UUID> recentlyWarned = new HashSet<>();
 
     @EventHandler(ignoreCancelled = true)
-    public void onPlayerClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) return;
-
-        Player player = (Player) event.getWhoClicked();
-
-        if (isAdmin(player) && !accepted.contains(event.getInventory().getType())) {
-            if (event.getAction().equals(InventoryAction.NOTHING)) return;
-            if (InventoryUtil.getAcceptedActions().contains(event.getAction())) {
-                if (event.getRawSlot() + 1 > event.getInventory().getSize()) {
-                    return;
-                }
-            }
-
-            event.setResult(Event.Result.DENY);
-            ChatUtil.sendWarning(player, "You cannot do this while in admin mode.");
+    public void onPlayerOpenInventory(InventoryOpenEvent event) {
+        HumanEntity entity = event.getPlayer();
+        if (!(entity instanceof Player)) {
+            return;
         }
-    }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerDrag(InventoryDragEvent event) {
-
-        if (!(event.getWhoClicked() instanceof Player)) return;
-
-        Player player = (Player) event.getWhoClicked();
-
-        if (isAdmin(player) && !accepted.contains(event.getInventory().getType())) {
-            for (int i : event.getRawSlots()) {
-                if (i + 1 <= event.getInventory().getSize()) {
-                    event.setResult(Event.Result.DENY);
-                    ChatUtil.sendWarning(player, "You cannot do this while in admin mode.");
-                    return;
-                }
-            }
+        Player player = (Player) entity;
+        if (!isAdmin(player)) {
+            return;
         }
+
+        UUID playerID = player.getUniqueId();
+        if (recentlyWarned.contains(playerID)) {
+            return;
+        }
+
+        recentlyWarned.add(playerID);
+        event.setCancelled(true);
+
+        Title warning = Title.builder()
+                .title(Text.of(ChatColor.DARK_RED, "WARNING").build())
+                .subtitle(Text.of(ChatColor.DARK_RED, "ADMIN MODE ENABLED").build())
+                .stay(20)
+                .build();
+        player.sendTitle(warning);
+
+        server.getScheduler().runTaskLater(inst, () -> {
+            recentlyWarned.remove(playerID);
+        }, 40);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -291,7 +282,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
-
         Player player = event.getEntity();
 
         if (isAdmin(player)) {

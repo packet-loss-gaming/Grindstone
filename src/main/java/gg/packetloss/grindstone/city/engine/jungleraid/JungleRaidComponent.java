@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.city.engine.jungleraid;
 
+import com.destroystokyo.paper.Title;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.EditSession;
@@ -70,6 +71,7 @@ import gg.packetloss.grindstone.util.signwall.enumname.EnumNamePainter;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagClickHandler;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagDataBackend;
 import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagPainter;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.hackbook.ModifierBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
@@ -107,6 +109,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
@@ -165,6 +168,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         return startTime;
     }
 
+    private static final String LEGENDARY_JUNGLE_BOW = ChatColor.DARK_GREEN + "Legendary Jungle Bow";
+
     private void applyClassEquipment(Player player) {
         player.getInventory().clear();
 
@@ -172,7 +177,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             return;
         }
 
-        JungleRaidClass combatClass = getClassForPlayer(player).get();
+        JungleRaidClass combatClass = getClassForPlayer(player).orElseThrow();
 
         List<ItemStack> gear = new ArrayList<>();
         switch (combatClass) {
@@ -218,11 +223,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             case SNIPER: {
                 ItemStack superBow = new ItemStack(Material.BOW);
                 ItemMeta superBowMeta = superBow.getItemMeta();
-                superBowMeta.addEnchant(Enchantment.ARROW_DAMAGE, 5, true);
-                superBowMeta.addEnchant(Enchantment.ARROW_FIRE, 1, true);
+                superBowMeta.setDisplayName(LEGENDARY_JUNGLE_BOW);
+                superBowMeta.setLore(List.of(ChatColor.GOLD + "Imbued with unique powers for long ranged combat."));
                 superBow.setItemMeta(superBowMeta);
-
-                superBow.setDurability((short) (superBow.getType().getMaxDurability() - combatClass.getArrowAmount()));
 
                 gear.add(superBow);
 
@@ -301,7 +304,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             gear.add(new ItemStack(Material.ARROW, arrowRemainder));
         }
 
-        if (state == JungleRaidState.INITIALIZE && classSelectionMode == JungleRaidClassSelectionMode.SCAVENGER) {
+        if (state == JungleRaidState.INITIALIZE_ARENA && classSelectionMode == JungleRaidClassSelectionMode.SCAVENGER) {
             for (int i = 0; i < 3; ++i) {
                 Block block = getRandomLocation().getBlock();
                 block.setType(Material.CHEST);
@@ -321,7 +324,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private void applyTeamEquipment(Player player) {
         Color teamColor = getTeamColorForPlayer(player).get();
 
-        ItemStack[] leatherArmour = ItemUtil.LEATHER_ARMOR;
+        ItemStack[] leatherArmour = ItemUtil.clone(ItemUtil.LEATHER_ARMOR);
 
         LeatherArmorMeta helmMeta = (LeatherArmorMeta) leatherArmour[3].getItemMeta();
         helmMeta.setDisplayName(ChatColor.WHITE + "Team Hood");
@@ -700,7 +703,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         JungleRaidClass playerClass = CollectionUtil.getElement(JungleRaidClass.values());
         gameState.get(player).setCombatClass(playerClass);
 
-        ChatUtil.sendNotice(player, "You've been assigned the class:" + playerClass.name());
+        ChatUtil.sendNotice(player, "You've been assigned the class: " + playerClass.name());
     }
 
     private void addPlayer(Player player, Supplier<Location> startingPos) {
@@ -848,14 +851,14 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
 
             JungleRaidProfile profile = gameState.get(player);
-            switch (block.getData()) {
-                case 0:
+            switch (block.getType()) {
+                case WHITE_CONCRETE:
                     profile.setTeam(JungleRaidTeam.FREE_FOR_ALL);
                     break;
-                case 11:
+                case BLUE_CONCRETE:
                     profile.setTeam(JungleRaidTeam.BLUE);
                     break;
-                case 14:
+                case RED_CONCRETE:
                     profile.setTeam(JungleRaidTeam.RED);
                     break;
                 default:
@@ -872,7 +875,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             return;
         }
 
-        state = JungleRaidState.INITIALIZE;
+        state = JungleRaidState.INITIALIZE_ARENA;
 
         if (classSelectionMode == JungleRaidClassSelectionMode.SURVIVAL) {
             populateSurvivalResource();
@@ -886,8 +889,50 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     private void tryBeginCombat() {
         boolean cooldownPassed = System.currentTimeMillis() - startTime >= TimeUnit.MINUTES.toMillis(1);
         if (isFlagEnabled(JungleRaidFlag.NO_CHILL) || cooldownPassed) {
-            state = JungleRaidState.IN_PROGRESS;
-            ChatUtil.sendNotice(getPlayersInArena(), ChatColor.DARK_RED + "LET THE SLAUGHTER BEGIN!");
+            state = JungleRaidState.INITIALIZE_FIGHT;
+
+            TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+            taskBuilder.setInterval(20);
+            taskBuilder.setNumberOfRuns(3);
+
+            taskBuilder.setAction((seconds) -> {
+                ChatColor color;
+                switch (seconds) {
+                    case 3:
+                        color = ChatColor.YELLOW;
+                        break;
+                    case 2:
+                        color = ChatColor.RED;
+                        break;
+                    default:
+                        color = ChatColor.DARK_RED;
+                        break;
+                }
+
+                for (Player player : getPlayersInArena()) {
+                    player.sendTitle(Title.builder().title(Text.of(color, seconds).build()).build());
+                }
+
+                return true;
+            });
+            taskBuilder.setFinishAction(() -> {
+                if (state != JungleRaidState.INITIALIZE_FIGHT) {
+                    return;
+                }
+
+                state = JungleRaidState.IN_PROGRESS;
+
+                Collection<Player> players = getPlayersInArena();
+
+                for (Player player : players) {
+                    player.sendTitle(Title.builder().title(Text.of(
+                            ChatColor.DARK_RED, "LET THE SLAUGHTER BEGIN!"
+                    ).build()).build());
+                }
+            });
+
+            taskBuilder.build();
         }
     }
 
@@ -936,7 +981,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             return;
         }
 
-        if (state == JungleRaidState.INITIALIZE) {
+        if (state == JungleRaidState.INITIALIZE_ARENA) {
             tryBeginCombat();
             return;
         }
@@ -1309,7 +1354,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                     for (String string : resultSet) {
                         ChatUtil.sendNotice(player, string);
                     }
-                } else if (state == JungleRaidState.INITIALIZE) {
+                } else if (state == JungleRaidState.INITIALIZE_ARENA) {
                     player.teleport(getRandomLocation());
                 }
             }
@@ -1381,6 +1426,12 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 return;
             }
 
+            if (state != JungleRaidState.IN_PROGRESS) {
+                ChatUtil.sendError(attackingPlayer, "The game has not started yet!");
+                event.setCancelled(true);
+                return;
+            }
+
             if (isFriendlyFire(attackingPlayer, defendingPlayer)) {
                 event.setCancelled(true);
                 ChatUtil.sendWarning(attackingPlayer, "Don't hit your team mates!");
@@ -1391,16 +1442,17 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                             defendingPlayer.getLocation()
                     );
 
-                    if (getClassForPlayer(attackingPlayer).orElse(JungleRaidClass.BALANCED) == JungleRaidClass.SNIPER) {
-                        double targetDistSq = Math.pow(70, 2);
-                        double ratio = Math.min(distSq, targetDistSq) / targetDistSq;
+                    getSpawningItem(projectile).ifPresent((launcher) -> {
+                        if (ItemUtil.matchesFilter(launcher, LEGENDARY_JUNGLE_BOW)) {
+                            double unitDistSq = Math.pow(25, 2);
+                            for (int i = (int) (distSq / unitDistSq); i > 0; --i) {
+                                DeathUtil.throwSlashPotion(defendingPlayer.getLocation());
+                            }
+                        }
+                    });
 
-                        // Handle damage modification
-                        event.setDamage(event.getDamage() * ratio);
-                    }
-
-                    double epicLongShotDist = Math.pow(150, 2);
-                    double longShotDist = Math.pow(50, 2);
+                    double epicLongShotDist = Math.pow(75, 2);
+                    double longShotDist = Math.pow(25, 2);
                     if (distSq > epicLongShotDist) {
                         adjustPoints(attackingPlayer, JungleRaidPointEvent.EPIC_LONG_SHOT);
                     } else if (distSq > longShotDist) {
@@ -1497,7 +1549,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 } else {
                     event.setDeathMessage(player.getName() + " is out");
                 }
-                event.getDrops().clear();
+
+                // Allow some drops to be kept if in Scavenger mode and the player dies inside the arena
+                if (arenaContains(player) && classSelectionMode == JungleRaidClassSelectionMode.SCAVENGER) {
+                    event.getDrops().removeIf((item) -> ItemUtil.isLeatherArmorPiece(item.getType()));
+                } else {
+                    event.getDrops().clear();
+                }
                 event.setDroppedExp(0);
 
                 died(player);
@@ -1684,6 +1742,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
             gameState.removePlayer(player);
             prayerComponent.uninfluencePlayer(player);
+            player.getActivePotionEffects().clear();
 
             player.teleport(lobbyExitLocation);
         }

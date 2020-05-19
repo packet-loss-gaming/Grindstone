@@ -17,90 +17,72 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Effect;
 import org.bukkit.Location;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Bat;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
+
+import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
 
 public class BatBowImpl extends AbstractItemFeatureImpl {
     @EventHandler
     public void onArrowLand(ProjectileHitEvent event) {
-
         Projectile projectile = event.getEntity();
-        Entity shooter = null;
 
         ProjectileSource source = projectile.getShooter();
-        if (source instanceof Entity) {
-            shooter = (Entity) source;
-        }
+        if (source instanceof Player) {
+            getSpawningItem(projectile).ifPresent((launcher) -> {
+                final Player owner = (Player) source;
+                final Location targetLoc = projectile.getLocation();
 
-        if (shooter instanceof Player && projectile.hasMetadata("launcher")) {
+                CustomItemSession session = getSession(owner);
 
-            Object test = projectile.getMetadata("launcher").get(0).value();
+                if (session.canSpec(SpecType.ANIMAL_BOW)) {
+                    Class<? extends LivingEntity> type = null;
+                    if (ItemUtil.isItem(launcher, CustomItems.BAT_BOW)) {
+                        type = Bat.class;
+                    }
 
-            if (!(test instanceof ItemStack)) return;
-
-            ItemStack launcher = (ItemStack) test;
-
-            final Player owner = (Player) shooter;
-            final Location targetLoc = projectile.getLocation();
-
-            CustomItemSession session = getSession(owner);
-
-            if (session.canSpec(SpecType.ANIMAL_BOW)) {
-                Class<? extends LivingEntity> type = null;
-                if (ItemUtil.isItem(launcher, CustomItems.BAT_BOW)) {
-                    type = Bat.class;
-                }
-
-                if (type != null) {
-                    SpecialAttackEvent specEvent = callSpec(owner, SpecType.ANIMAL_BOW, new MobAttack(owner, launcher, targetLoc, type));
-                    if (!specEvent.isCancelled()) {
-                        session.updateSpec(specEvent.getContext(), specEvent.getContextCoolDown());
-                        specEvent.getSpec().activate();
+                    if (type != null) {
+                        SpecialAttackEvent specEvent = callSpec(owner, SpecType.ANIMAL_BOW, new MobAttack(owner, launcher, targetLoc, type));
+                        if (!specEvent.isCancelled()) {
+                            session.updateSpec(specEvent.getContext(), specEvent.getContextCoolDown());
+                            specEvent.getSpec().activate();
+                        }
                     }
                 }
-            }
+            });
         }
     }
 
     @EventHandler
     public void onArrowTick(ProjectileTickEvent event) {
-
         Projectile projectile = event.getEntity();
-        Entity shooter = null;
 
         ProjectileSource source = projectile.getShooter();
-        if (source instanceof Entity) {
-            shooter = (Entity) source;
-        }
+        if (source instanceof Player) {
+            getSpawningItem(projectile).ifPresent((launcher) -> {
+                final Location location = projectile.getLocation();
+                if (ItemUtil.isItem(launcher, CustomItems.BAT_BOW)) {
 
-        if (shooter instanceof Player && projectile.hasMetadata("launcher")) {
-
-            Object test = projectile.getMetadata("launcher").get(0).value();
-
-            if (!(test instanceof ItemStack)) return;
-
-            ItemStack launcher = (ItemStack) test;
-
-            final Location location = projectile.getLocation();
-            if (ItemUtil.isItem(launcher, CustomItems.BAT_BOW)) {
-
-                if (!ChanceUtil.getChance(5)) return;
-                server.getScheduler().runTaskLater(inst, () -> {
-                    final Bat bat = location.getWorld().spawn(location, Bat.class);
-                    bat.setRemoveWhenFarAway(true);
+                    if (!ChanceUtil.getChance(5)) return;
                     server.getScheduler().runTaskLater(inst, () -> {
-                        if (bat.isValid()) {
-                            bat.remove();
-                            for (int i = 0; i < 20; i++) {
-                                bat.getWorld().playEffect(bat.getLocation(), Effect.SMOKE, 0);
+                        final Bat bat = location.getWorld().spawn(location, Bat.class);
+                        bat.setRemoveWhenFarAway(true);
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            if (bat.isValid()) {
+                                bat.remove();
+                                for (int i = 0; i < 20; i++) {
+                                    bat.getWorld().playEffect(bat.getLocation(), Effect.SMOKE, 0);
+                                }
                             }
-                        }
-                    }, 20 * 3);
-                }, 3);
-            }
+                        }, 20 * 3);
+                    }, 3);
+                }
+            });
         }
     }
 }

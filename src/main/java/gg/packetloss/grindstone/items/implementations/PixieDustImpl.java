@@ -8,100 +8,144 @@ package gg.packetloss.grindstone.items.implementations;
 
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.flight.FlightCategory;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.ItemPointTranslator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
+import gg.packetloss.grindstone.util.item.inventory.PlayerStickyInventoryAdapter;
+import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
-import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
-import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitTask;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 public class PixieDustImpl extends AbstractItemFeatureImpl {
+    private static final ItemPointTranslator PIXIE_DUST_CONVERTER = new ItemPointTranslator();
 
-    private List<UUID> players = new ArrayList<>();
+    static {
+        PIXIE_DUST_CONVERTER.addMapping(CustomItemCenter.build(CustomItems.PIXIE_DUST), 1);
+    }
+
+    private static class PixieFlightData {
+        private final static int FULL_CREDIT = 15;
+        private int secondsOfCredit = FULL_CREDIT;
+
+        public boolean needsRefresh() {
+            return secondsOfCredit <= 0;
+        }
+
+        public int getSecondsOfCredit() {
+            return secondsOfCredit;
+        }
+
+        public void setSecondsOfCredit(int secondsRemaining) {
+            this.secondsOfCredit = secondsRemaining;
+        }
+    }
+
+    private void maybeWarnPlayer(Player player, PixieFlightData flightData) {
+        InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
+
+        int pixieDustCount = PIXIE_DUST_CONVERTER.calculateValue(adapter, false);
+        if (pixieDustCount == 0) {
+            ChatUtil.sendWarning(player, "You will be out of pixie dust in: " + flightData.getSecondsOfCredit() + " seconds");
+        }
+    }
+
+    /**
+     *
+     * @param player
+     * @return true if out of pixie dust
+     */
+    private boolean takeOnePixieDust(Player player) {
+        InventoryAdapter adapter = new PlayerStickyInventoryAdapter(
+                player,
+                PlayerStickyInventoryAdapter.Priority.HOTBAR,
+                (item -> ItemUtil.isItem(item, CustomItems.PIXIE_DUST))
+        );
+
+        int pixieDustCount = PIXIE_DUST_CONVERTER.calculateValue(adapter, true);
+
+        // Welp, that's it, they're out of credit, and there's no dust to renew
+        if (pixieDustCount == 0) {
+            return true;
+        }
+
+        PIXIE_DUST_CONVERTER.assignValue(adapter, pixieDustCount - 1);
+        adapter.applyChanges();
+
+        return false;
+    }
 
     public boolean handleRightClick(final Player player) {
-
-        if (admin.isAdmin(player)) return false;
-
-        final long currentTime = System.currentTimeMillis();
-
-        if (player.getAllowFlight()) return false;
-
-        if (players.contains(player.getUniqueId())) {
-            ChatUtil.sendError(player, "You need to wait to regain your faith, and trust.");
+        if (player.getAllowFlight()) {
             return false;
         }
 
+        player.setFlySpeed(FlightCategory.PIXIE_DUST.getSpeed());
         player.setAllowFlight(true);
-        player.setFlySpeed(.6F);
+        flightItems.registerFlightProvider(player, FlightCategory.PIXIE_DUST);
         // antiCheat.exempt(player, CheckType.FLY);
 
         ChatUtil.sendNotice(player, "You use the Pixie Dust to gain flight.");
+        takeOnePixieDust(player);
 
-        IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
-            @Override
-            public boolean run(int times) {
-                // Just get out of here you stupid players who don't exist!
-                if (!player.isValid()) return true;
+        TaskBuilder.Countdown builder = TaskBuilder.countdown();
 
-                // If the player does not have flight enabled, we do not need to remove any pixie dust.
-                if (!player.getAllowFlight()) return true;
+        builder.setInterval(20);
 
-                // If the player is not in a flying gamemode, use some pixie dust to sustain them.
-                if (!GeneralPlayerUtil.isFlyingGamemode(player.getGameMode())) {
-                    int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.PIXIE_DUST.toString()) - 1;
-
-                    if (c >= 0) {
-                        ItemStack[] pInventory = player.getInventory().getContents();
-                        pInventory = ItemUtil.removeItemOfName(pInventory, CustomItems.PIXIE_DUST.toString());
-                        player.getInventory().setContents(pInventory);
-
-                        int amount = Math.min(c, 64);
-                        while (amount > 0) {
-                            player.getInventory().addItem(CustomItemCenter.build(CustomItems.PIXIE_DUST, amount));
-                            c -= amount;
-                            amount = Math.min(c, 64);
-                        }
-
-                        //noinspection deprecation
-                        player.updateInventory();
-
-                        if (System.currentTimeMillis() >= currentTime + 13000) {
-                            ChatUtil.sendNotice(player, "You use some more Pixie Dust to keep flying.");
-                        }
-                        return false;
-                    }
-                    ChatUtil.sendWarning(player, "The effects of the Pixie Dust are about to wear off!");
-                }
+        PixieFlightData flightData = new PixieFlightData();
+        builder.setAction((times) -> {
+            // Don't loop forever on a disconnected player
+            if (!player.isValid()) {
                 return true;
             }
 
-            @Override
-            public void end() {
+            // Warn player if they're out of dust
+            maybeWarnPlayer(player, flightData);
 
-                if (player.isValid()) {
-                    if (GeneralPlayerUtil.takeFlightSafely(player)) {
-                        ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
-                        // antiCheat.unexempt(player, CheckType.FLY);
-                    }
+            // Decrement credits, this should be after the warning so that the warning is base 1, not base 0
+            flightData.setSecondsOfCredit(flightData.getSecondsOfCredit() - 1);
+
+            // Attempt a refresh if necessary
+            if (flightData.needsRefresh()) {
+                // They've landed, or they're getting flight elsewhere, don't worry about a refresh
+                boolean landed = !player.isFlying() && GeneralPlayerUtil.isStandingOnSolidGround(player);
+                if (landed || GeneralPlayerUtil.isFlyingGamemode(player.getGameMode())) {
+                    return true;
                 }
-            }
-        };
 
-        TimedRunnable runnable = new TimedRunnable(integratedRunnable, 1);
-        BukkitTask task = server.getScheduler().runTaskTimer(inst, runnable, 0, 20 * 15);
-        runnable.setTask(task);
+                // Welp, that's it, they're out of credit, and there's no dust to renew
+                if (takeOnePixieDust(player)) {
+                    return true;
+                }
+
+                flightData.setSecondsOfCredit(PixieFlightData.FULL_CREDIT);
+
+                ChatUtil.sendNotice(player, "You use some more Pixie Dust to keep flying.");
+            }
+
+            // They have credit, continue
+            return false;
+        });
+        builder.setFinishAction(() -> {
+            if (!player.isValid()) {
+                return;
+            }
+
+            if (GeneralPlayerUtil.takeFlightSafely(player)) {
+                ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
+                // antiCheat.unexempt(player, CheckType.FLY);
+            }
+        });
+
+        builder.build();
+
         return true;
     }
 
@@ -131,25 +175,5 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
         }
         //noinspection deprecation
         server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerSneak(PlayerToggleSneakEvent event) {
-
-        Player player = event.getPlayer();
-
-        if (event.isSneaking() && player.getAllowFlight() && player.isOnGround()) {
-
-            if (player.getFlySpeed() != .6F || !ItemUtil.hasItem(player, CustomItems.PIXIE_DUST)) return;
-
-            if (GeneralPlayerUtil.takeFlightSafely(player)) {
-                // antiCheat.unexempt(player, CheckType.FLY);
-                ChatUtil.sendNotice(player, "You are no longer influenced by the Pixie Dust.");
-            }
-
-            UUID playerID = player.getUniqueId();
-            players.add(playerID);
-            server.getScheduler().runTaskLater(inst, () -> players.remove(playerID), 20 * 30);
-        }
     }
 }

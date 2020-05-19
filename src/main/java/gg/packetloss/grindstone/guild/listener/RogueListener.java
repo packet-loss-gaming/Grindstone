@@ -13,7 +13,7 @@ import gg.packetloss.grindstone.click.ClickType;
 import gg.packetloss.grindstone.events.DoubleClickEvent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
-import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.guild.*;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.powers.RoguePower;
@@ -21,20 +21,23 @@ import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
-import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EntityDistanceComparator;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
+import org.bukkit.ChatColor;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.GameMode;
-import org.bukkit.Material;
-import org.bukkit.Registry;
-import org.bukkit.command.Command;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -48,12 +51,9 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.awt.*;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.logging.Logger;
 
 public class RogueListener implements Listener {
     private static final float DEFAULT_SPEED = .2F;
@@ -138,6 +138,55 @@ public class RogueListener implements Listener {
         ChatUtil.sendNotice(player, "You return to your weak existence.");
     }
 
+    private void impactBlip(Player player, RogueState state) {
+        Vector oldVelocity = player.getVelocity();
+        Vector newVelocity = oldVelocity.setY(Math.min(oldVelocity.getY(), -6));
+        player.setVelocity(newVelocity);
+
+        state.setImpactEnabled(true);
+
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+        taskBuilder.setAction((times) -> {
+            return GeneralPlayerUtil.isStandingOnSolidGround(player);
+        });
+        taskBuilder.setFinishAction(() -> {
+            state.setImpactEnabled(false);
+        });
+
+        taskBuilder.build();
+    }
+
+    private void constrainedBlip(Player player, double modifier, double yMin, double yMax) {
+        Vector vel = player.getLocation().getDirection();
+        vel.multiply(3 * modifier * Math.max(.1, player.getFoodLevel() / 20.0));
+
+        vel.setY(Math.min(yMax, Math.max(yMin, vel.getY())));
+
+        player.setVelocity(vel);
+    }
+
+    private void verticalBlip(Player player, double modifier) {
+        double yMax = 2;
+        double yMin = 0;
+
+        constrainedBlip(player, modifier, yMin, yMax);
+    }
+
+    private void autoBlip(Player player, double modifier) {
+        double yMax = .8;
+        double yMin = .175;
+
+        constrainedBlip(player, modifier, yMin, yMax);
+    }
+
+    private void normalBlip(Player player, double modifier) {
+        double yMax = 1.4;
+        double yMin = -2;
+
+        constrainedBlip(player, modifier, yMin, yMax);
+    }
+
     public void blip(Player player, RogueState state, double modifier, boolean auto) {
         RogueBlipEvent event = new RogueBlipEvent(player, modifier, auto);
         CommandBook.server().getPluginManager().callEvent(event);
@@ -149,22 +198,23 @@ public class RogueListener implements Listener {
 
         CommandBook.server().getPluginManager().callEvent(new ThrowPlayerEvent(player));
 
-        Vector vel = player.getLocation().getDirection();
-        vel.multiply(3 * modifier * Math.max(.1, player.getFoodLevel() / 20.0));
-
-        double yMax;
-        double yMin;
-
         if (auto) {
-            yMax = .8;
-            yMin = .175;
-        } else {
-            yMax = 1.4;
-            yMin = -2;
+            autoBlip(player, modifier);
+            return;
         }
 
-        vel.setY(Math.min(yMax, Math.max(yMin, vel.getY())));
+        boolean isOnSolidGround = GeneralPlayerUtil.isStandingOnSolidGround(player);
+        if (GeneralPlayerUtil.isLookingDown(player) && !isOnSolidGround) {
+            impactBlip(player, state);
+            return;
+        }
 
+        if (GeneralPlayerUtil.isLookingUp(player) && isOnSolidGround) {
+            verticalBlip(player, modifier);
+            return;
+        }
+
+        normalBlip(player, modifier);
         sendRiptidePacket(player, ENABLE_RIPTIDE);
         player.setVelocity(vel);
 
@@ -241,6 +291,31 @@ public class RogueListener implements Listener {
             }
 
             RogueState state = optState.get();
+
+            if (state.isUsingImpact()) {
+                event.setDamage(event.getDamage() * .4);
+
+                if (state.hasPower(RoguePower.LIKE_A_METEOR) && player.isSneaking()) {
+                    final double circleDist = 2 * Math.PI;
+                    final double explosionPointDist = circleDist / 8;
+
+                    final double radius = 5.5;
+
+                    for (double i = 0; i < circleDist; i += explosionPointDist) {
+                        double x = radius * Math.cos(i);
+                        double z = radius * Math.sin(i);
+
+                        ExplosionStateFactory.createPvPExplosion(
+                                player,
+                                player.getLocation().add(x, 0, z),
+                                3,
+                                true,
+                                true
+                        );
+                    }
+                }
+            }
+
             if (!state.hasPower(RoguePower.FALL_DAMAGE_REDIRECTION)) {
                 return;
             }
@@ -271,14 +346,37 @@ public class RogueListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDamageEventMonitor(EntityDamageEvent event) {
+        Entity e = event.getEntity();
+        if (e instanceof Player) {
+            Player player = (Player) e;
+            Optional<RogueState> optState = getState(player);
+            if (optState.isEmpty()) {
+                return;
+            }
+
+            RogueState state = optState.get();
+            state.clearHits();
+        }
+    }
+
     private static EDBEExtractor<LivingEntity, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
             LivingEntity.class,
             LivingEntity.class,
             Projectile.class
     );
 
+    private boolean isBackstab(Player attacker, LivingEntity defender) {
+        float attackerYaw = (defender.getEyeLocation().getYaw() + 180) % 360;
+        float defenderYaw = (attacker.getEyeLocation().getYaw() + 180) % 360;
+
+        float yawDiff = Math.abs(attackerYaw - defenderYaw);
+        return yawDiff <= 90 || yawDiff >= (360 - 90);
+    }
+
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-    public void onEntityDamageEntityEvent(EntityDamageByEntityEvent event) {
+    public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
         CombatantPair<LivingEntity, LivingEntity, Projectile> result = extractor.extractFrom(event);
 
@@ -298,10 +396,65 @@ public class RogueListener implements Listener {
                 return;
             }
 
-            if (event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
+                if (SpecialAttackFactory.getCurrentSpecialAttack().isPresent()) {
+                    return;
+                }
+
                 RogueState state = optState.get();
-                if (state.hasPower(RoguePower.DAMAGE_BUFF)) {
-                    event.setDamage(Math.max(event.getDamage(), Math.min((event.getDamage() + 10) * 1.2, 20)));
+                if (state.hasPower(RoguePower.BERSERKER)) {
+                    int hits = state.getUninterruptedHits();
+                    boolean backstabbed = state.hasPower(RoguePower.BACKSTAB) &&
+                                          isBackstab((Player) attacker, result.getDefender());
+                    if (hits > 0 || backstabbed) {
+                        int boostDamage = 5 + (hits - 1);
+                        if (backstabbed) {
+                            boostDamage *= 3;
+                            ChatUtil.sendNotice(attacker, "Backstabbed!");
+                        }
+
+                        boostDamage = Math.min(100, boostDamage);
+
+                        if (state.getSettings().shouldShowBerserkerBuffs()) {
+                            ((Player) attacker).sendActionBar(ChatColor.RED + "Berserker Boost: +" + boostDamage);
+                        }
+                        event.setDamage(event.getDamage() + boostDamage);
+                    }
+                }
+            }
+        }
+    }
+
+    private static List<EntityDamageEvent.DamageCause> MELEE_HIT_CAUSES = List.of(
+            EntityDamageEvent.DamageCause.ENTITY_ATTACK, EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK
+    );
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDamageEntityMonitor(EntityDamageByEntityEvent event) {
+        CombatantPair<LivingEntity, LivingEntity, Projectile> result = extractor.extractFrom(event);
+
+        if (result == null) return;
+
+        final LivingEntity attacker = result.getAttacker();
+        if (attacker instanceof Player) {
+            Optional<RogueState> optState = getState((Player) attacker);
+            if (optState.isEmpty()) {
+                return;
+            }
+
+            if (MELEE_HIT_CAUSES.contains(event.getCause())) {
+                if (SpecialAttackFactory.getCurrentSpecialAttack().isPresent()) {
+                    return;
+                }
+
+                RogueState state = optState.get();
+                if (state.hasPower(RoguePower.BERSERKER)) {
+                    LivingEntity defender = result.getDefender();
+                    if (EntityUtil.isHostileMobOrPlayer(defender)) {
+                        state.hitEntity();
+                    } else {
+                        state.clearHits();
+                    }
                 }
             }
         }
@@ -385,7 +538,8 @@ public class RogueListener implements Listener {
                 return;
             }
 
-            if (player.isSneaking() && !state.getSettings().shouldBlipWhileSneaking()) {
+            boolean isOnSolidGround = GeneralPlayerUtil.isStandingOnSolidGround(player);
+            if (isOnSolidGround && player.isSneaking() && !state.getSettings().shouldBlipWhileSneaking()) {
                 return;
             }
 
@@ -412,10 +566,6 @@ public class RogueListener implements Listener {
             }
 
             RogueState state = optState.get();
-
-            Entity p = event.getProjectile();
-            p.setVelocity(p.getVelocity().multiply(.9));
-
             state.stallBlip();
         }
     }
@@ -435,7 +585,7 @@ public class RogueListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
+    public void onSpecialAttack(SpecialAttackSelectEvent event) {
         Player player = event.getPlayer();
 
         Optional<RogueState> optState = getState(player);
@@ -453,9 +603,6 @@ public class RogueListener implements Listener {
                 if (newSpec.isValid()) {
                     event.setSpec(newSpec);
                 }
-            } else if (state.hasPower(RoguePower.SPEEDY_SPECIALS)) {
-                float remainingCooldownPercentage = ChanceUtil.getChance(10) ? .1F : .66F;
-                event.setContextCooldown((long) (event.getContextCoolDown() * remainingCooldownPercentage));
             }
         }
     }

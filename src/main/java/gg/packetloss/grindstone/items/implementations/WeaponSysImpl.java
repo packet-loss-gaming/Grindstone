@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
 import gg.packetloss.grindstone.items.implementations.support.SweepPacketFilter;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackSelector;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -27,11 +28,9 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
 import static org.bukkit.event.entity.EntityDamageEvent.DamageCause.*;
 
 public class WeaponSysImpl extends AbstractItemFeatureImpl {
@@ -87,17 +86,29 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
         Player owner = attackInfo.getAttacker();
         LivingEntity target = attackInfo.getDefender();
 
-        if (target != null && owner != target) {
-            WeaponType weaponType = attackInfo.wasRangedAttack() ? WeaponType.RANGED : WeaponType.MELEE;
-
-            ItemStack usedItem = attackInfo.getUsedItem();
-            SpecWeaponImpl specImpl = getSpecialImplForItem(usedItem, weaponType);
-            SpecialAttack spec = specImpl == null ? null : specImpl.getSpecial(owner, usedItem, target);
-
-            if (spec != null) {
-                new SpecialAttackFactory(sessions).process(owner, spec, weaponType.getDefaultSpecType());
-            }
+        if (target == null || owner == target) {
+            return;
         }
+
+        WeaponType weaponType = attackInfo.wasRangedAttack() ? WeaponType.RANGED : WeaponType.MELEE;
+
+        ItemStack usedItem = attackInfo.getUsedItem();
+        SpecWeaponImpl specImpl = getSpecialImplForItem(usedItem, weaponType);
+        if (specImpl == null) {
+            return;
+        }
+
+        Optional<SpecialAttack> optSpecial = new SpecialAttackSelector(
+                owner,
+                weaponType.getDefaultSpecType(),
+                () -> specImpl.getSpecial(owner, usedItem, target)
+        ).getSpecial();
+
+        if (optSpecial.isEmpty()) {
+            return;
+        }
+
+        new SpecialAttackFactory(sessions).process(owner, optSpecial.get(), weaponType.getDefaultSpecType());
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -179,13 +190,8 @@ public class WeaponSysImpl extends AbstractItemFeatureImpl {
             ItemStack launcher = null;
             if (result.hasProjectile()) {
                 Projectile projectile = result.getProjectile();
-                if (projectile.hasMetadata("launcher")) {
-                    Object test = projectile.getMetadata("launcher").get(0).value();
-                    if (test instanceof ItemStack) {
-                        launcher = (ItemStack) test;
-                    }
-                }
 
+                launcher = getSpawningItem(projectile).orElse(null);
                 if (launcher == null) return null;
             }
 

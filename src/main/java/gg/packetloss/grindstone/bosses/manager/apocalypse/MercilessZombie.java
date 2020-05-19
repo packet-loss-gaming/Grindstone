@@ -3,6 +3,7 @@ package gg.packetloss.grindstone.bosses.manager.apocalypse;
 import com.destroystokyo.paper.ParticleBuilder;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
+import com.skelril.OSBL.bukkit.entity.BukkitEntity;
 import com.skelril.OSBL.bukkit.util.BukkitAttackDamage;
 import com.skelril.OSBL.bukkit.util.BukkitUtil;
 import com.skelril.OSBL.entity.LocalControllable;
@@ -13,11 +14,15 @@ import com.skelril.OSBL.util.DamageSource;
 import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.bosses.detail.BossBarDetail;
 import gg.packetloss.grindstone.bosses.impl.BossBarRebindableBoss;
+import gg.packetloss.grindstone.bosses.manager.apocalypse.instruction.ApocalypseDropTableInstruction;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.NumericPipeline;
+import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
+import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -35,6 +40,7 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public class MercilessZombie {
@@ -49,8 +55,11 @@ public class MercilessZombie {
     public static final int MIN_HEALTH = 750;
     public static final int MAX_ACHIEVABLE_HEALTH = 15000;
 
+    private PerformanceDropTable dropTable = new PerformanceDropTable();
+
     public MercilessZombie() {
         mercilessZombie = new BossBarRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        setupDropTable();
         setupMercilessZombie();
         server.getScheduler().runTaskTimer(
                 inst,
@@ -77,6 +86,11 @@ public class MercilessZombie {
         return customName.equals(BOUND_NAME);
     }
 
+    private boolean isMercilessZombie(Entity entity) {
+        String customName = entity.getCustomName();
+        return BOUND_NAME.equals(customName);
+    }
+
     private boolean isConsumableZombie(Entity entity) {
         String customName = entity.getCustomName();
         if (customName == null) {
@@ -96,10 +110,6 @@ public class MercilessZombie {
         }
 
         if (customName.equals(ThorZombie.BOUND_NAME)) {
-            return true;
-        }
-
-        if (customName.equals(MercilessZombie.BOUND_NAME)) {
             return true;
         }
 
@@ -134,6 +144,35 @@ public class MercilessZombie {
             }
         }, 10);
 
+    }
+
+    private void setupDropTable() {
+        dropTable.registerSlicedDrop(
+                (info) -> Math.min(60, ChanceUtil.getRandom((int) info.getTotalDamage() / 250)),
+                (info, consumer) -> {
+                    Player player = info.getPlayer();
+
+                    // Get the point information
+                    int points = info.getSlicedPoints();
+                    PerformanceKillInfo killInfo = info.getKillInfo();
+                    float percentDamageDone = killInfo.getPercentDamageDone(player).orElseThrow();
+
+                    // Calculate and distribute the point slice
+                    for (int i = (int) (points * percentDamageDone); i > 0; --i) {
+                        consumer.accept(new ItemStack(Material.GOLD_INGOT, 64));
+                    }
+                }
+        );
+
+        NumericPipeline.Builder<PerformanceKillInfo> healthAffectedChance = NumericPipeline.builder();
+        healthAffectedChance.accept((info, chance) -> {
+            return chance / (int) (info.getKilled().getMaxHealth() / MIN_HEALTH);
+        });
+
+        dropTable.registerTakeAllDrop(
+                healthAffectedChance.build(10),
+                () -> CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER)
+        );
     }
 
     private void setupMercilessZombie() {
@@ -175,28 +214,7 @@ public class MercilessZombie {
         });
 
         List<UnbindInstruction<BossBarDetail>> unbindInstructions = mercilessZombie.unbindInstructions;
-        unbindInstructions.add(new UnbindInstruction<>() {
-            @Override
-            public InstructionResult<BossBarDetail, UnbindInstruction<BossBarDetail>> process(LocalControllable<BossBarDetail> controllable) {
-                if (ApocalypseHelper.areDropsSuppressed()) {
-                    return null;
-                }
-
-                Entity boss = BukkitUtil.getBukkitEntity(controllable);
-                Location target = boss.getLocation();
-
-                int maxHealth = (int) ((Zombie) boss).getMaxHealth();
-                for (int i = Math.min(60, ChanceUtil.getRandom(maxHealth / 250)); i > 0; --i) {
-                    target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT, 64));
-                }
-
-                if (ChanceUtil.getChance(10 / (maxHealth / MIN_HEALTH))) {
-                    target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
-                }
-
-                return null;
-            }
-        });
+        unbindInstructions.add(new ApocalypseDropTableInstruction<>(dropTable));
 
         List<DamageInstruction<BossBarDetail>> damageInstructions = mercilessZombie.damageInstructions;
         damageInstructions.add(new DamageInstruction<>() {
@@ -243,7 +261,17 @@ public class MercilessZombie {
                             continue;
                         }
 
-                        if (isConsumableZombie(entity)) {
+                        boolean isMerciless = isMercilessZombie(entity);
+
+                        // Merge damage if we're eating another merciless
+                        if (isMerciless) {
+                            LocalControllable<BossBarDetail> consumed = mercilessZombie.getBound(new BukkitEntity<>(entity));
+                            for (UUID damager : consumed.getDamagers()) {
+                                controllable.damaged(damager, consumed.getDamage(damager).orElseThrow());
+                            }
+                        }
+
+                        if (isMerciless || isConsumableZombie(entity)) {
                             totalHealth += ((Zombie) entity).getHealth();
                             ((Zombie) entity).setHealth(0);
                             continue;

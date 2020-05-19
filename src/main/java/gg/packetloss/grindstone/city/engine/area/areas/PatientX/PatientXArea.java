@@ -20,6 +20,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
+import gg.packetloss.grindstone.util.listener.BossBuggedRespawnListener;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -87,6 +88,11 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         config = new PatientXConfig();
 
         CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
+        CommandBook.registerEvents(new BossBuggedRespawnListener(
+                "Patient X",
+                (e) -> boss != null && boss.equals(e) && isArenaLoaded(),
+                (e) -> spawnBossEntity(e.getHealth())
+        ));
 
         server.getScheduler().runTaskTimer(inst, (Runnable) this::runAttack, 0, 20 * 20);
         server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
@@ -120,7 +126,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         updateBossBar();
 
         if (!isBossSpawned()) {
-            if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
+            if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 10) {
                 spawnBoss();
             }
         } else if (!isEmpty()) {
@@ -436,16 +442,12 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         return isBossSpawnedFast();
     }
 
-    public void spawnBoss() {
-
-        resetDifficulty();
-        freezeBlocks(false);
-
-        boss = getWorld().spawn(getCentralLoc(), Zombie.class, (e) -> e.getEquipment().clear());
+    private void spawnBossEntity(double currentHealth) {
+        boss = getWorld().spawn(getRandomDest(), Zombie.class, (e) -> e.getEquipment().clear());
 
         // Handle vitals
         boss.setMaxHealth(config.bossHealth);
-        boss.setHealth(config.bossHealth);
+        boss.setHealth(currentHealth);
         boss.setRemoveWhenFarAway(false);
 
         // Handle item pickup
@@ -460,6 +462,13 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         } catch (UnsupportedFeatureException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public void spawnBoss() {
+        resetDifficulty();
+        freezeBlocks(false);
+
+        spawnBossEntity(config.bossHealth);
 
         ChatUtil.sendWarning(getAudiblePlayers(), "Ice to meet you again!");
     }

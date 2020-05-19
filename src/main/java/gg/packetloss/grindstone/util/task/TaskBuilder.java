@@ -56,15 +56,16 @@ public class TaskBuilder {
             CountdownHandle[] handle = { null };
 
             BukkitTask underlyingTask = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), () -> {
-                int runsRemaining = handle[0].getRunsRemaining();
-
-                if (testedAction.apply(runsRemaining)) {
-                    handle[0].setRunsRemaining(--runsRemaining);
-                }
-
+                int runsRemaining = handle[0].acceptRuns();
                 if (runsRemaining == 0) {
                     finishAction.run();
                     handle[0].cancel();
+                    return;
+                }
+
+                // Dirty marker prevents modifications during the action from being overridden.
+                if (testedAction.apply(runsRemaining) && !handle[0].isDirty()) {
+                    handle[0].setRunsRemaining(runsRemaining - 1);
                 }
             }, delay, interval);
 

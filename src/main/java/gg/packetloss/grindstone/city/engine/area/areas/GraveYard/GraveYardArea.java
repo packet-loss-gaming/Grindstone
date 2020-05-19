@@ -634,17 +634,18 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             }
         }
 
-        for (final BlockVector2 chunkCoords : chunkList) {
+        for (int i = 0; i < chunkList.size(); ++i) {
+            BlockVector2 chunkCoords = chunkList.get(i);
+
             try {
                 server.getScheduler().runTaskLater(inst, () -> {
                     for (BlockState aSign : world.getChunkAt(chunkCoords.getX(), chunkCoords.getZ()).getTileEntities()) {
                         if (!(aSign instanceof Sign)) continue;
                         checkHeadStone((Sign) aSign);
                     }
-                }, chunkList.indexOf(chunkCoords) * 20);
+                }, i);
             } catch (NullPointerException ex) {
-                findHeadStones();
-                log.info("Failed to get head stones for Chunk: " + chunkCoords.getX() + ", " + chunkCoords.getZ() + ".");
+                log.warning("Failed to get head stones for Chunk: " + chunkCoords.getX() + ", " + chunkCoords.getZ() + ".");
                 return;
             }
         }
@@ -752,13 +753,29 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             case 10:
                 return CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(64));
             case 11:
-                return CustomItemCenter.build(CustomItems.ANCIENT_HELMET);
+                if (ChanceUtil.getChance(500)) {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_HELMET);
+                } else {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_HELMET);
+                }
             case 12:
-                return CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE);
+                if (ChanceUtil.getChance(500)) {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_CHESTPLATE);
+                } else {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE);
+                }
             case 13:
-                return CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS);
+                if (ChanceUtil.getChance(500)) {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_LEGGINGS);
+                } else {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS);
+                }
             case 14:
-                return CustomItemCenter.build(CustomItems.ANCIENT_BOOTS);
+                if (ChanceUtil.getChance(500)) {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_BOOTS);
+                } else {
+                    return CustomItemCenter.build(CustomItems.ANCIENT_BOOTS);
+                }
             case 15:
                 return CustomItemCenter.build(CustomItems.GOD_HELMET);
             case 16:

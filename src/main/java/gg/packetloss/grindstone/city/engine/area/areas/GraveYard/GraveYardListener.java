@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.events.*;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
+import gg.packetloss.grindstone.events.custom.item.RepairItemEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowerUseEvent;
@@ -271,36 +272,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         return isInRewardsRoom(event.getPointOfSacrifice());
     }
 
-    private void processSacrificeRepair(PlayerSacrificeItemEvent event, CustomItems repairItem) {
-        Player player = event.getPlayer();
-
-        ItemStack item = event.getItemStack();
-        int o = 1;
-
-        if (!isInRewardsRoom(event)) {
-            o = 2;
-        }
-
-        int m = item.getType().getMaxDurability();
-        int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), repairItem.toString());
-        ItemStack[] i = ItemUtil.removeItemOfName(player.getInventory().getContents(), repairItem.toString());
-        player.getInventory().setContents(i);
-        while (item.getDurability() > 0 && c >= o) {
-            item.setDurability((short) Math.max(0, item.getDurability() - (m / 9)));
-            c -= o;
-        }
-        player.getInventory().addItem(item);
-        int amount = Math.min(c, 64);
-        while (amount > 0) {
-            player.getInventory().addItem(CustomItemCenter.build(repairItem, amount));
-            c -= amount;
-            amount = Math.min(c, 64);
-        }
-        player.updateInventory();
-
-        event.setItemStack(null);
-    }
-
     @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSacrifice(PlayerSacrificeItemEvent event) {
@@ -315,21 +286,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             Player player = event.getPlayer();
             parent.economy.depositPlayer(player.getName(), amount * item.getAmount());
             event.setItemStack(null);
-        } else if (ItemUtil.isInItemFamily(item, ItemFamily.FEAR)) {
-            processSacrificeRepair(event, CustomItems.GEM_OF_DARKNESS);
-        } else if (ItemUtil.isInItemFamily(item, ItemFamily.UNLEASHED)) {
-            processSacrificeRepair(event, CustomItems.IMBUED_CRYSTAL);
-        } else if (ItemUtil.isInItemFamily(item, ItemFamily.MASTER)) {
-            Player player = event.getPlayer();
-
-            int maxDurability = item.getType().getMaxDurability();
-            int maxRepair = isInRewardsRoom(event) ? 0 : maxDurability / 5;
-            item.setDurability((short) Math.min(item.getDurability(), maxRepair));
-
-            player.getInventory().addItem(item);
-            player.updateInventory();
-
-            event.setItemStack(null);
         } else if (ItemUtil.isItem(item, CustomItems.PHANTOM_HYMN)) {
             Player player = event.getPlayer();
 
@@ -338,6 +294,13 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             }
 
             event.setItemStack(null);
+        }
+    }
+
+    @EventHandler
+    public void onItemRepair(RepairItemEvent event) {
+        if (isInRewardsRoom(event.getPlayer().getLocation())) {
+            event.setRepairPercentage(Math.min(1, event.getRepairPercentage() * 2));
         }
     }
 
@@ -687,7 +650,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
 
         ItemStack[] dropsArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
-        boolean useGemOfLife = ItemUtil.findItemOfName(dropsArray, CustomItems.GEM_OF_LIFE.toString());
+        boolean useGemOfLife = player.hasPermission("aurora.tome.life") ||
+                ItemUtil.findItemOfName(dropsArray, CustomItems.GEM_OF_LIFE.toString());
 
         PlayerGraveProtectItemsEvent protectItemsEvent = new PlayerGraveProtectItemsEvent(
                 player,
@@ -734,6 +698,10 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
 
         Player player = event.getPlayer();
+        if (player.hasPermission("aurora.tome.life")) {
+            return;
+        }
+
         PlayerInventory pInv = player.getInventory();
 
         // Count then remove the Gems of Life

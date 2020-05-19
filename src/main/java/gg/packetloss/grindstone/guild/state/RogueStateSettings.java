@@ -7,10 +7,15 @@ import gg.packetloss.grindstone.guild.setting.GuildSettingUpdate;
 import java.util.List;
 
 public class RogueStateSettings implements StateSettings {
-    private boolean blipWhileSneaking = true;
+    private boolean blipWhileSneaking = false;
+    private boolean showBerserkerBuffs = false;
 
     public boolean shouldBlipWhileSneaking() {
         return blipWhileSneaking;
+    }
+
+    public boolean shouldShowBerserkerBuffs() {
+        return showBerserkerBuffs;
     }
 
     // Wrappers
@@ -18,10 +23,15 @@ public class RogueStateSettings implements StateSettings {
             "Blip While Sneaking", () -> blipWhileSneaking
     );
 
+    private transient BooleanGuildSetting showBerserkerBuffsWrapper = new BooleanGuildSetting(
+            "Show Berserker Buffs", () -> showBerserkerBuffs
+    );
+
     @Override
     public List<GuildSetting> getAll() {
         return List.of(
-                blipWhileSneakingWrapper
+                blipWhileSneakingWrapper,
+                showBerserkerBuffsWrapper
         );
     }
 
@@ -29,6 +39,9 @@ public class RogueStateSettings implements StateSettings {
     public boolean updateSetting(GuildSettingUpdate setting) {
         if (setting.getSetting().getKey().equals(blipWhileSneakingWrapper.getKey())) {
             blipWhileSneaking = Boolean.parseBoolean(setting.getNewValue());
+            return true;
+        } else if (setting.getSetting().getKey().equals(showBerserkerBuffsWrapper.getKey())) {
+            showBerserkerBuffs = Boolean.parseBoolean(setting.getNewValue());
             return true;
         }
 

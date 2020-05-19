@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.city.engine.area.areas.PatientX;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
 import gg.packetloss.grindstone.city.engine.area.areas.DropParty.DropPartyTask;
@@ -15,29 +14,32 @@ import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
-import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.fear.HellCano;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.Decimate;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.SoulSmite;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.unleashed.DoomBlade;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
-import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearBomb;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.SoulReaper;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.guild.ninja.Ignition;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.GlowingFog;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Surge;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.util.checker.RegionChecker;
+import gg.packetloss.grindstone.util.checker.NonSolidRegionChecker;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -112,7 +114,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
         do {
             player.teleport(parent.getRandomDest(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
-        } while (parent.boss.hasLineOfSight(player));
+        } while (parent.boss != null && parent.boss.hasLineOfSight(player));
 
         boolean removed = ItemUtil.removeItemOfName(
                 player,
@@ -140,20 +142,23 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         }
     }
 
-    private static Set<Class> generalBlacklistedSpecs = new HashSet<>();
-    private static Set<Class> bossBlacklistedSpecs = new HashSet<>();
-    private static Set<Class> ultimateBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> generalBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> bossBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> ultimateBlacklistedSpecs = new HashSet<>();
 
     static {
         generalBlacklistedSpecs.add(Nightmare.class);
         generalBlacklistedSpecs.add(Disarm.class);
         generalBlacklistedSpecs.add(MobAttack.class);
-        generalBlacklistedSpecs.add(FearBomb.class);
+        generalBlacklistedSpecs.add(SoulReaper.class);
 
         bossBlacklistedSpecs.add(Famine.class);
         bossBlacklistedSpecs.add(SoulSmite.class);
 
         ultimateBlacklistedSpecs.add(GlowingFog.class);
+        ultimateBlacklistedSpecs.add(HellCano.class);
+        ultimateBlacklistedSpecs.add(Ignition.class);
+        ultimateBlacklistedSpecs.add(Surge.class);
         ultimateBlacklistedSpecs.add(Decimate.class);
         ultimateBlacklistedSpecs.add(DoomBlade.class);
     }
@@ -161,18 +166,18 @@ public class PatientXListener extends AreaListener<PatientXArea> {
     private long lastUltimateAttack = 0;
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
+    public void onSpecialAttack(SpecialAttackSelectEvent event) {
 
         SpecialAttack attack = event.getSpec();
 
         if (!parent.contains(attack.getLocation())) return;
 
-        Class specClass = attack.getClass();
+        Class<?> specClass = attack.getClass();
         LivingEntity target = attack.getTarget();
 
         if (target != null && target.equals(parent.boss)) {
             if (bossBlacklistedSpecs.contains(specClass)) {
-                event.setCancelled(true);
+                event.tryAgain();
                 return;
             }
             if (ultimateBlacklistedSpecs.contains(specClass)) {
@@ -181,14 +186,14 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 } else if (System.currentTimeMillis() - lastUltimateAttack >= 15000) {
                     lastUltimateAttack = System.currentTimeMillis();
                 } else {
-                    event.setCancelled(true);
+                    event.tryAgain();
                     return;
                 }
             }
         }
 
         if (generalBlacklistedSpecs.contains(specClass)) {
-            event.setCancelled(true);
+            event.tryAgain();
         }
     }
 
@@ -406,13 +411,10 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     player.setVelocity(v);
                 }
                 CuboidRegion rg = new CuboidRegion(parent.drops.getMinimumPoint(), parent.drops.getMaximumPoint());
-                DropPartyTask task = new DropPartyTask(parent.getWorld(), rg, drops, new RegionChecker(rg) {
-                    @Override
-                    public Boolean evaluate(BlockVector3 v) {
-                        Location l = new Location(parent.getWorld(), v.getX(), v.getY(), v.getZ());
-                        return super.evaluate(v) && !l.getBlock().getType().isSolid();
-                    }
-                });
+                DropPartyTask task = new DropPartyTask(
+                        parent.getWorld(), rg, drops,
+                        new NonSolidRegionChecker(rg, parent.getWorld())
+                );
                 task.setXPChance(5);
                 task.setXPSize(10);
                 task.start(CommandBook.inst(), server.getScheduler(), 20 * 5, 20 * 3);

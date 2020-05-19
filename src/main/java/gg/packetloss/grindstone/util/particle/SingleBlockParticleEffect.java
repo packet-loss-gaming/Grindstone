@@ -6,13 +6,25 @@
 
 package gg.packetloss.grindstone.util.particle;
 
+import gg.packetloss.grindstone.util.ChanceUtil;
 import org.bukkit.Effect;
 import org.bukkit.Location;
-import org.bukkit.block.BlockFace;
+import org.bukkit.Particle;
 
 public class SingleBlockParticleEffect {
     public static void puffOfSmoke(Location loc) {
-        loc.getWorld().playEffect(loc, Effect.SMOKE, BlockFace.UP);
+        for (int i = 0; i < 10; ++i) {
+            loc.getWorld().spawnParticle(
+                    Particle.SMOKE_NORMAL,
+                    loc.getX(),
+                    loc.getY(),
+                    loc.getZ(),
+                    0,
+                    ChanceUtil.getRangedRandom(-.07, .07),
+                    .1,
+                    ChanceUtil.getRangedRandom(-.07, .07)
+            );
+        }
     }
 
     public static void burstOfFlames(Location loc) {

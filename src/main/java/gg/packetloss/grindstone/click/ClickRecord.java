@@ -1,12 +1,17 @@
 package gg.packetloss.grindstone.click;
 
 public class ClickRecord {
+    private static final long MILLS_FOR_DOUBLE_CLICK = 500;
+
+    // Exposed to allow scheduling past the double click delay
+    public static final int TICKS_FOR_DOUBLE_CLICK = (int) MILLS_FOR_DOUBLE_CLICK / 50;
+
     private long[] lastClickOfType = new long[ClickType.values().length];
     private long lastAttack = 0;
     private long lastInteraction = 0;
 
     private boolean isDoubleClick(long currentClickTime, ClickType clickType) {
-        boolean isDoubleClick = currentClickTime - lastClickOfType[clickType.ordinal()] < 500;
+        boolean isDoubleClick = currentClickTime - lastClickOfType[clickType.ordinal()] < MILLS_FOR_DOUBLE_CLICK;
         lastClickOfType[clickType.ordinal()] = currentClickTime;
         return isDoubleClick;
     }

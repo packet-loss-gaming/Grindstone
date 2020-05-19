@@ -19,11 +19,10 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
     private final SpecType context;
-    private SpecialAttack spec;
+    private final SpecialAttack spec;
     private long coolDown;
 
-    public SpecialAttackEvent(final Player owner, final SpecType context, final SpecialAttack spec) {
-
+    public SpecialAttackEvent(Player owner, SpecType context, SpecialAttack spec) {
         super(owner);
 
         Validate.isTrue(owner.equals(spec.getOwner()), "The owner and the spec owner must match!");
@@ -38,20 +37,11 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
     }
 
     public SpecType getContext() {
-
         return context;
     }
 
     public SpecialAttack getSpec() {
-
         return spec;
-    }
-
-    public void setSpec(SpecialAttack spec) {
-
-        Validate.isTrue(getPlayer().equals(spec.getOwner()), "The owner and the spec owner must match!");
-
-        this.spec = spec;
     }
 
     public long getContextCoolDown() {
@@ -62,23 +52,22 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
         this.coolDown = coolDown;
     }
 
-    public HandlerList getHandlers() {
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
 
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
+
+    @Override
+    public HandlerList getHandlers() {
         return handlers;
     }
 
     public static HandlerList getHandlerList() {
-
         return handlers;
-    }
-
-    public boolean isCancelled() {
-
-        return cancelled;
-    }
-
-    public void setCancelled(boolean cancelled) {
-
-        this.cancelled = cancelled;
     }
 }

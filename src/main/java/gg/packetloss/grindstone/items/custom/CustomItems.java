@@ -15,6 +15,10 @@ public enum CustomItems {
 
     // Ancient Armor
     ANCIENT_CROWN(ChatColor.GOLD, "Ancient Crown"),
+    ANCIENT_ROYAL_HELMET(ChatColor.GOLD, "Ancient Royal Helmet"),
+    ANCIENT_ROYAL_CHESTPLATE(ChatColor.GOLD, "Ancient Royal Chestplate"),
+    ANCIENT_ROYAL_LEGGINGS(ChatColor.GOLD, "Ancient Royal Leggings"),
+    ANCIENT_ROYAL_BOOTS(ChatColor.GOLD, "Ancient Royal Boots"),
     ANCIENT_HELMET(ChatColor.GOLD, "Ancient Helmet"),
     ANCIENT_CHESTPLATE(ChatColor.GOLD, "Ancient Chestplate"),
     ANCIENT_LEGGINGS(ChatColor.GOLD, "Ancient Leggings"),
@@ -158,7 +162,8 @@ public enum CustomItems {
     TOME_OF_SACRIFICE(ChatColor.BLUE, "Tome of Sacrifice"),
     TOME_OF_DIVINITY(ChatColor.GOLD, "Tome of Divinity"),
     TOME_OF_THE_UNDEAD(ChatColor.DARK_RED, "Tome of the Undead"),
-    TOME_OF_LEGENDS(ChatColor.GOLD, "Tome of Legends");
+    TOME_OF_LEGENDS(ChatColor.GOLD, "Tome of Legends"),
+    TOME_OF_LIFE(ChatColor.DARK_AQUA, "Tome of Life");
 
     private final ItemFamily family;
     private final ChatColor color;

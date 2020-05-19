@@ -4,6 +4,7 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
 import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.guild.*;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.powers.NinjaPower;
@@ -12,11 +13,16 @@ import gg.packetloss.grindstone.guild.state.NinjaState;
 import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.specialattack.SpecType;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.guild.ninja.Ignition;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
@@ -161,7 +167,9 @@ public class NinjaListener implements Listener {
         if (lastEvent != null && state.hasPower(NinjaPower.HEALING_ARROWS)) {
             double lastDamage = lastEvent.getFinalDamage();
             double scale = ((attacker.getMaxHealth() - attacker.getHealth()) / attacker.getMaxHealth());
-            EntityUtil.heal(attacker, ChanceUtil.getRandom(scale * lastDamage));
+
+            int chanceRuns = state.hasPower(NinjaPower.FULL_BLOODED_VAMPIRE) ? 1 : 2;
+            EntityUtil.heal(attacker, ChanceUtil.getRandomNTimes((int) (scale * lastDamage), chanceRuns));
         }
     }
 
@@ -198,23 +206,37 @@ public class NinjaListener implements Listener {
     }
 
     private void handleArrowBombArrow(Player player, NinjaState state, Arrow arrow) {
-        if (arrow instanceof TippedArrow && state.hasPower(NinjaPower.POTION_ARROW_BOMBS)) {
-            AreaEffectCloud effectCloud = arrow.getWorld().spawn(arrow.getLocation(), AreaEffectCloud.class);
-            effectCloud.setBasePotionData(((TippedArrow) arrow).getBasePotionData());
-            effectCloud.setDuration(20 * 10);
-            effectCloud.setSource(arrow.getShooter());
-        } else {
-            float launchForce = arrow.getMetadata("launch-force").get(0).asFloat();
+        arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
 
-            ExplosionStateFactory.createPvPExplosion(
-                    player,
-                    arrow.getLocation(), Math.max(2, 4 * launchForce),
-                    false,
-                    true
-            );
-        }
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
-        arrow.remove();
+        taskBuilder.setNumberOfRuns(20);
+
+        taskBuilder.setAction((times) -> {
+            SingleBlockParticleEffect.puffOfSmoke(arrow.getLocation());
+            return true;
+        });
+        taskBuilder.setFinishAction(() -> {
+            if (arrow instanceof TippedArrow && state.hasPower(NinjaPower.POTION_ARROW_BOMBS)) {
+                AreaEffectCloud effectCloud = arrow.getWorld().spawn(arrow.getLocation(), AreaEffectCloud.class);
+                effectCloud.setBasePotionData(((TippedArrow) arrow).getBasePotionData());
+                effectCloud.setDuration(20 * 10);
+                effectCloud.setSource(arrow.getShooter());
+            } else {
+                float launchForce = arrow.getMetadata("launch-force").get(0).asFloat();
+
+                ExplosionStateFactory.createPvPExplosion(
+                        player,
+                        arrow.getLocation(), Math.max(2, 4 * launchForce),
+                        false,
+                        true
+                );
+            }
+
+            arrow.remove();
+        });
+
+        taskBuilder.build();
     }
 
     public void arrowBomb(Player player, NinjaState state) {
@@ -227,9 +249,9 @@ public class NinjaListener implements Listener {
         );
 
         CommandBook.server().getPluginManager().callEvent(event);
-        if (event.isCancelled() || arrows.isEmpty()) return;
+        if (event.isCancelled()) return;
 
-        state.arrowBomb();
+        state.arrowBomb(arrows.size());
 
         for (Arrow arrow : arrows) {
             handleArrowBombArrow(player, state, arrow);
@@ -309,30 +331,48 @@ public class NinjaListener implements Listener {
         }
 
         if (state.hasPower(NinjaPower.VAMPIRIC_SMOKE_BOMB)) {
-            EntityUtil.heal(player, ChanceUtil.getRandomNTimes(totalHealed, 3));
+            int chanceRuns = state.hasPower(NinjaPower.FULL_BLOODED_VAMPIRE) ? 1 : 2;
+            EntityUtil.heal(player, ChanceUtil.getRandomNTimes(totalHealed, chanceRuns));
         }
 
-        Location[] locations = new Location[]{
-                player.getLocation(),
-                player.getEyeLocation()
-        };
-        EnvironmentUtil.generateRadialEffect(locations, Effect.SMOKE);
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+        taskBuilder.setNumberOfRuns(event.getDelay());
+
+        Location bombLocation = targetLoc.clone();
 
         // Offset by 1 so that the bomb is not messed up by blocks
-        if (targetLoc.getBlock().getType() != Material.AIR) {
-            targetLoc.add(0, 1, 0);
+        if (bombLocation.getBlock().getType() != Material.AIR) {
+            bombLocation.add(0, 1, 0);
         }
 
-        final Location finalTargetLoc = targetLoc;
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        taskBuilder.setAction((times) -> {
+            for (int i = 0; i < 10; ++i) {
+                bombLocation.getWorld().spawnParticle(
+                        Particle.CAMPFIRE_COSY_SMOKE,
+                        bombLocation.getX() + ChanceUtil.getRangedRandom(-.5, .5),
+                        bombLocation.getY(),
+                        bombLocation.getZ() + ChanceUtil.getRangedRandom(-.5, .5),
+                        0,
+                        ChanceUtil.getRangedRandom(-.1, .1),
+                        .1,
+                        ChanceUtil.getRangedRandom(-.1, .1)
+                );
+            }
+
+            return true;
+        });
+        taskBuilder.setFinishAction(() -> {
             ExplosionStateFactory.createPvPExplosion(
                     player,
-                    finalTargetLoc,
+                    bombLocation,
                     event.getExplosionPower(),
                     false,
                     true
             );
-        }, event.getDelay());
+        });
+
+        taskBuilder.build();
 
         player.teleport(event.getTeleportLoc(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
@@ -495,6 +535,26 @@ public class NinjaListener implements Listener {
             NinjaState state = optState.get();
             if (state.hasPower(NinjaPower.PITFALL_SNEAK) && player.isSneaking()) {
                 event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onSpecialAttack(SpecialAttackSelectEvent event) {
+        Player player = event.getPlayer();
+
+        Optional<NinjaState> optState = getState(player);
+        if (optState.isEmpty()) {
+            return;
+        }
+
+        NinjaState state = optState.get();
+
+        SpecialAttack attack = event.getSpec();
+
+        if (event.getContext().equals(SpecType.RANGED)) {
+            if (state.hasPower(NinjaPower.IGNITION_SPECIAL) && ChanceUtil.getChance(14)) {
+                event.setSpec(new Ignition(attack.getOwner(), attack.getUsedItem(), attack.getTarget()));
             }
         }
     }

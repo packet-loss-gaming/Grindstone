@@ -7,16 +7,23 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 public class PlayerStoragePriorityInventoryAdapter implements InventoryAdapter {
-    private Player player;
-    private PlayerInventory playerInventory;
-    private ItemStack[] itemStacks;
+    private final Player player;
+    private final PlayerInventory playerInventory;
+
+    private final int length;
+    private final ItemStack[] itemStacks;
+    private final boolean[] updateMask;
 
     public PlayerStoragePriorityInventoryAdapter(Player player) {
         this.player = player;
 
         this.playerInventory = player.getInventory();
-        this.itemStacks = playerInventory.getContents();
 
+        this.length = playerInventory.getSize();
+        this.itemStacks = playerInventory.getContents();
+        this.updateMask = new boolean[length];
+
+        Validate.isTrue(length == InventoryConstants.PLAYER_INV_LENGTH);
         Validate.isTrue(itemStacks.length == InventoryConstants.PLAYER_INV_LENGTH);
     }
 
@@ -24,7 +31,9 @@ public class PlayerStoragePriorityInventoryAdapter implements InventoryAdapter {
         this.player = adapter.player;
 
         this.playerInventory = adapter.playerInventory;
+        this.length = adapter.length;
         this.itemStacks = ItemUtil.clone(adapter.itemStacks);
+        this.updateMask = adapter.updateMask.clone();
     }
 
     @Override
@@ -58,6 +67,7 @@ public class PlayerStoragePriorityInventoryAdapter implements InventoryAdapter {
     @Override
     public void setAt(int index, ItemStack stack) {
         itemStacks[translateExternalIndexToInternal(index)] = stack;
+        updateMask[translateExternalIndexToInternal(index)] = true;
     }
 
     @Override
@@ -67,7 +77,10 @@ public class PlayerStoragePriorityInventoryAdapter implements InventoryAdapter {
 
     @Override
     public void applyChanges() {
-        playerInventory.setContents(itemStacks);
-        player.updateInventory();
+        for (int i = 0; i < length; ++i) {
+            if (updateMask[i]) {
+                playerInventory.setItem(i, itemStacks[i]);
+            }
+        }
     }
 }

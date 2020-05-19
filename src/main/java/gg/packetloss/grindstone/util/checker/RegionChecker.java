@@ -7,9 +7,9 @@
 package gg.packetloss.grindstone.util.checker;
 
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import gg.packetloss.grindstone.util.RegionUtil;
 
 public class RegionChecker extends Checker<Region, BlockVector3> {
 
@@ -18,7 +18,7 @@ public class RegionChecker extends Checker<Region, BlockVector3> {
     }
 
     public RegionChecker(ProtectedRegion region) {
-        super(new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint()));
+        this(RegionUtil.convert(region).orElseThrow());
     }
 
     @Override

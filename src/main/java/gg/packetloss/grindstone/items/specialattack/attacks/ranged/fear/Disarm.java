@@ -36,7 +36,10 @@ public class Disarm extends EntityAttack implements RangedSpecial {
             ItemStack[] items = inv.getContents();
 
             int heldIndex = inv.getHeldItemSlot();
-            int itemIndex = ChanceUtil.getRandom(27) + 8;
+            int itemIndex;
+            do {
+                itemIndex = ChanceUtil.getRandom(9) - 1;
+            } while (itemIndex == heldIndex);
 
             ItemStack previousItem = items[itemIndex];
             items[itemIndex] = items[heldIndex];

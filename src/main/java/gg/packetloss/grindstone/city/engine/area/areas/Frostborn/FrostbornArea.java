@@ -7,7 +7,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
-import gg.packetloss.grindstone.ProtectedDroppedItemsComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.city.engine.area.PersistentArena;
@@ -20,6 +19,9 @@ import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.database.IOUtil;
+import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
+import gg.packetloss.grindstone.util.dropttable.MassBossDropTable;
+import gg.packetloss.grindstone.util.dropttable.MassBossKillInfo;
 import gg.packetloss.grindstone.util.item.itemstack.ProtectedSerializedItemStack;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
@@ -47,15 +49,14 @@ import org.bukkit.util.Vector;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemName;
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
-@Depend(components = {
-        AdminComponent.class, ProtectedDroppedItemsComponent.class, BlockStateComponent.class,
-        SpectatorComponent.class},
+@Depend(components = {AdminComponent.class, BlockStateComponent.class, SpectatorComponent.class},
         plugins = {"WorldGuard"})
 public class FrostbornArea extends AreaComponent<FrostbornConfig> implements PersistentArena {
     protected static final int BASE_RAGE = -10;
@@ -63,8 +64,6 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     @InjectComponent
     protected AdminComponent admin;
-    @InjectComponent
-    protected ProtectedDroppedItemsComponent dropProtector;
     @InjectComponent
     protected BlockStateComponent blockState;
     @InjectComponent
@@ -97,6 +96,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     protected BossBar healthBar = Bukkit.createBossBar("Frost Born", BarColor.WHITE, BarStyle.SEGMENTED_6);
 
+    protected MassBossDropTable dropTable = new MassBossDropTable();
+
     @Override
     public void setUp() {
         world = server.getWorlds().get(0);
@@ -115,6 +116,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
 
         reloadData();
+
+        setupDropTable();
 
         spectator.registerSpectatedRegion(PlayerStateKind.FROSTBORN_SPECTATOR, region);
         spectator.registerSpectatorSkull(
@@ -525,12 +528,81 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         replaceBlocksInEntrance(Material.AIR, Material.ICE);
     }
 
+    private void modifyDrop(ProtectedSerializedItemStack lootItem, Consumer<ItemStack> consumer) {
+        ItemStack bukkitStack = lootItem.getItemStack().bukkitRestore();
+
+        Optional<String> itemName = computeItemName(bukkitStack);
+
+        boolean isFrozen = itemName.orElse("").contains("frozen");
+        if (!isFrozen && ChanceUtil.getChance(config.chanceofActivation)) {
+            if (ChanceUtil.getChance(config.chanceOfDupe)) {
+                consumer.accept(bukkitStack.clone());
+                ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.GOLD + "An item has been duplicated!");
+            } else {
+                ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "An item has been destroyed!");
+                return;
+            }
+        }
+
+        consumer.accept(bukkitStack.clone());
+    }
+
+    private void setupDropTable() {
+        // Custom Loot Drops
+        dropTable.registerCustomDrop((info, consumer) -> {
+            Iterator<ProtectedSerializedItemStack> lootIt = lootItems.iterator();
+            while (lootIt.hasNext()) {
+                ProtectedSerializedItemStack lootItem = lootIt.next();
+                long timeSinceAddition = System.currentTimeMillis() - lootItem.getAdditionDate();
+                boolean stillProtected = timeSinceAddition <= TimeUnit.DAYS.toMillis(1);
+
+                if (!stillProtected) {
+                    lootIt.remove();
+                    modifyDrop(lootItem, consumer);
+                }
+            }
+        });
+        dropTable.registerCustomPlayerDrop((info, consumer) -> {
+            UUID playerID = info.getPlayer().getUniqueId();
+
+            Iterator<ProtectedSerializedItemStack> lootIt = lootItems.iterator();
+            while (lootIt.hasNext()) {
+                ProtectedSerializedItemStack lootItem = lootIt.next();
+
+                UUID ownerID = lootItem.getPlayer();
+                if (playerID.equals(ownerID)) {
+                    lootIt.remove();
+                    modifyDrop(lootItem, consumer);
+                }
+            }
+        });
+
+        // Guaranteed Drops
+        for (int i = 0; i < 2; ++i) {
+            dropTable.registerPlayerDrop(() -> CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION, ChanceUtil.getRandom(64)));
+        }
+
+        // Hymns
+        dropTable.registerPlayerDrop(250, () -> CustomItemCenter.build(CustomItems.HYMN_OF_SUMMATION));
+        dropTable.registerPlayerDrop(250, () -> CustomItemCenter.build(CustomItems.HYMN_OF_HARVEST));
+
+        // Tomes
+        dropTable.registerPlayerDrop(7, () -> CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
+        dropTable.registerPlayerDrop(15, () -> CustomItemCenter.build(CustomItems.TOME_OF_THE_CLEANLY));
+        dropTable.registerPlayerDrop(25, () -> CustomItemCenter.build(CustomItems.TOME_OF_THE_UNDEAD));
+        dropTable.registerPlayerDrop(75, () -> CustomItemCenter.build(CustomItems.TOME_OF_CURSED_SMELTING));
+        dropTable.registerPlayerDrop(150, () -> CustomItemCenter.build(CustomItems.TOME_OF_SACRIFICE));
+        dropTable.registerPlayerDrop(150, () -> CustomItemCenter.build(CustomItems.TOME_OF_POISON));
+        dropTable.registerPlayerDrop(1500, () -> CustomItemCenter.build(CustomItems.TOME_OF_DIVINITY));
+        dropTable.registerPlayerDrop(1500, () -> CustomItemCenter.build(CustomItems.TOME_OF_LEGENDS));
+        dropTable.registerPlayerDrop(7500, () -> CustomItemCenter.build(CustomItems.TOME_OF_LIFE));
+    }
+
     protected void dropLoot() {
         blockState.popAllBlocks(BlockStateKind.FROSTBORN);
 
         // Gather the players in the arena
         Collection<Player> players = getContainedParticipants();
-        Collection<UUID> playerIds = players.stream().map(Entity::getUniqueId).collect(Collectors.toList());
 
         // Clear the players inventories
         for (Player player : players) {
@@ -542,85 +614,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         getContained(Item.class, Snowball.class, Bat.class).forEach(Entity::remove);
 
         // Drop the loot
-        Iterator<ProtectedSerializedItemStack> lootIt = lootItems.iterator();
-        while (lootIt.hasNext()) {
-            ProtectedSerializedItemStack lootItem = lootIt.next();
-            long timeSinceAddition = System.currentTimeMillis() - lootItem.getAdditionDate();
-            boolean stillProtected = timeSinceAddition <= TimeUnit.DAYS.toMillis(1);
-
-            UUID ownerID = lootItem.getPlayer();
-            if (!stillProtected || playerIds.contains(ownerID)) {
-                ItemStack bukkitStack = lootItem.getItemStack().bukkitRestore();
-                lootIt.remove();
-
-                Optional<String> itemName = computeItemName(bukkitStack);
-                boolean isFrozen = itemName.orElse("").contains("frozen");
-                if (!isFrozen && ChanceUtil.getChance(config.chanceofActivation)) {
-                    if (ChanceUtil.getChance(config.chanceOfDupe)) {
-                        Item firstSpawnedItem = world.dropItem(bossSpawnLoc, bukkitStack.clone());
-                        if (stillProtected) {
-                            dropProtector.protectDrop(firstSpawnedItem, ownerID);
-                        }
-
-                        ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.GOLD + "An item has been duplicated!");
-                    } else {
-                        ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "An item has been destroyed!");
-                        continue;
-                    }
-                }
-
-                Item firstSpawnedItem = world.dropItem(bossSpawnLoc, bukkitStack.clone());
-                if (stillProtected) {
-                    dropProtector.protectDrop(firstSpawnedItem, ownerID);
-                }
-            }
-        }
-
-        // Drop from custom drop table
-        for (int i = 0; i < 8 * players.size(); ++i) {
-            world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION, ChanceUtil.getRandom(16)));
-        }
-
-        for (int i = 0; i < players.size(); ++i) {
-            if (ChanceUtil.getChance(100)) {
-                switch (ChanceUtil.getRandom(2)) {
-                    case 1:
-                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.HYMN_OF_SUMMATION));
-                        break;
-                    case 2:
-                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.HYMN_OF_HARVEST));
-                        break;
-                }
-            }
-            if (ChanceUtil.getChance(300)) {
-                switch (ChanceUtil.getRandom(8)) {
-                    case 1:
-                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
-                        break;
-                    case 2:
-                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_POISON));
-                        break;
-                    case 3:
-                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_THE_CLEANLY));
-                        break;
-                    case 4:
-                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_SACRIFICE));
-                        break;
-                    case 5:
-                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_DIVINITY));
-                        break;
-                    case 6:
-                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_THE_UNDEAD));
-                        break;
-                    case 7:
-                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_LEGENDS));
-                        break;
-                    case 8:
-                        world.dropItem(bossSpawnLoc, CustomItemCenter.build(CustomItems.TOME_OF_CURSED_SMELTING));
-                        break;
-                }
-            }
-        }
+        new BoundDropSpawner(() -> bossSpawnLoc).provide(dropTable, new MassBossKillInfo(players));
 
         // Teleport the players to a reasonable location where they'll see the loot
         for (Player player : players) {

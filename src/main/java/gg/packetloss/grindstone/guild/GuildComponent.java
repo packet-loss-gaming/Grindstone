@@ -20,9 +20,13 @@ import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
 import gg.packetloss.grindstone.guild.state.NinjaState;
 import gg.packetloss.grindstone.guild.state.RogueState;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreType;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.entity.Arrow;
@@ -50,6 +54,8 @@ public class GuildComponent extends BukkitComponent implements Listener {
 
     @InjectComponent
     private AdminComponent admin;
+    @InjectComponent
+    private HighScoresComponent highScores;
 
     private PlayerGuildDatabase database = new MySQLPlayerGuildDatabase();
     private Map<UUID, InternalGuildState> guildStateMap = new HashMap<>();
@@ -89,7 +95,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
     @Override
     public void disable() {
         for (Map.Entry<UUID, InternalGuildState> entry: guildStateMap.entrySet()) {
-            database.updateActive(entry.getKey(), entry.getValue());
+            update(Bukkit.getPlayer(entry.getKey()), entry.getValue());
         }
     }
 
@@ -136,7 +142,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
             }
 
             // Sync the current guild
-            database.updateActive(playerID, currentGuild);
+            update(player, currentGuild);
         }
 
         Optional<InternalGuildState> optNewGuildState = database.loadGuild(playerID, guildType);
@@ -153,7 +159,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
         }
 
         // Sync the new guild
-        database.updateActive(playerID, newGuildState);
+        update(player, newGuildState);
         guildStateMap.put(playerID, newGuildState);
 
         // Swap powers
@@ -165,6 +171,21 @@ public class GuildComponent extends BukkitComponent implements Listener {
         return true;
     }
 
+    private ScoreType getScoreType(InternalGuildState state) {
+        switch (state.getType()) {
+            case NINJA:
+                return ScoreTypes.NINJA_LEVEL;
+            case ROGUE:
+                return ScoreTypes.ROGUE_LEVEL;
+        }
+
+        throw new IllegalStateException();
+    }
+
+    private void update(Player player, InternalGuildState state) {
+        highScores.update(player, getScoreType(state), (int) state.getExperience());
+        database.updateActive(player.getUniqueId(), state);
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -191,7 +212,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
         }
 
         server.getScheduler().runTaskAsynchronously(inst, () -> {
-           database.updateActive(player.getUniqueId(), internalState);
+           update(player, internalState);
         });
 
         new GuildState(player, internalState).disablePowers();
@@ -218,6 +239,8 @@ public class GuildComponent extends BukkitComponent implements Listener {
                             newLevel
                     ).build()
             ).build());
+
+            update(player, state);
         });
     }
 

@@ -22,4 +22,9 @@ public class NinjaArrowBombEvent extends NinjaPowerUseEvent {
     public List<Arrow> getArrows() {
         return arrows;
     }
+
+    @Override
+    public boolean isCancelled() {
+        return super.isCancelled() || arrows.isEmpty();
+    }
 }

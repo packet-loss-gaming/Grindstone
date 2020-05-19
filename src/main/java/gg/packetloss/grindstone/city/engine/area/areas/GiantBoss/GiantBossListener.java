@@ -13,6 +13,7 @@ import gg.packetloss.grindstone.events.PrayerApplicationEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
@@ -23,29 +24,27 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.fear.HellCano;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.Decimate;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.SoulSmite;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.unleashed.DoomBlade;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
-import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.FearBomb;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.SoulReaper;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.guild.ninja.Ignition;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Famine;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.GlowingFog;
-import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed.Surge;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
-import gg.packetloss.grindstone.util.item.BookUtil;
+import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
+import gg.packetloss.grindstone.util.dropttable.MassBossKillInfo;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
-import gg.packetloss.grindstone.util.timer.TimedRunnable;
-import gg.packetloss.grindstone.util.timer.TimerUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -58,15 +57,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.Month;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class GiantBossListener extends AreaListener<GiantBossArea> {
     private final CommandBook inst = CommandBook.inst();
@@ -125,20 +123,23 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         }
     }
 
-    private static Set<Class> generalBlacklistedSpecs = new HashSet<>();
-    private static Set<Class> bossBlacklistedSpecs = new HashSet<>();
-    private static Set<Class> ultimateBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> generalBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> bossBlacklistedSpecs = new HashSet<>();
+    private static Set<Class<?>> ultimateBlacklistedSpecs = new HashSet<>();
 
     static {
         generalBlacklistedSpecs.add(GlowingFog.class);
+        generalBlacklistedSpecs.add(HellCano.class);
+        generalBlacklistedSpecs.add(Ignition.class);
         generalBlacklistedSpecs.add(Nightmare.class);
         generalBlacklistedSpecs.add(Disarm.class);
         generalBlacklistedSpecs.add(MobAttack.class);
-        generalBlacklistedSpecs.add(FearBomb.class);
+        generalBlacklistedSpecs.add(SoulReaper.class);
 
         bossBlacklistedSpecs.add(Famine.class);
         bossBlacklistedSpecs.add(SoulSmite.class);
 
+        ultimateBlacklistedSpecs.add(Surge.class);
         ultimateBlacklistedSpecs.add(Decimate.class);
         ultimateBlacklistedSpecs.add(DoomBlade.class);
     }
@@ -146,7 +147,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
     private long lastUltimateAttack = 0;
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onSpecialAttack(SpecialAttackEvent event) {
+    public void onSpecialAttack(SpecialAttackSelectEvent event) {
         SpecialAttack attack = event.getSpec();
         if (!parent.contains(attack.getLocation())) return;
 
@@ -155,7 +156,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
         if (target instanceof Giant) {
             if (bossBlacklistedSpecs.contains(specClass)) {
-                event.setCancelled(true);
+                event.tryAgain();
                 return;
             }
             if (ultimateBlacklistedSpecs.contains(specClass)) {
@@ -164,16 +165,22 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 } else if (System.currentTimeMillis() - lastUltimateAttack >= 15000) {
                     lastUltimateAttack = System.currentTimeMillis();
                 } else {
-                    event.setCancelled(true);
+                    event.tryAgain();
                     return;
                 }
             }
         }
 
         if (generalBlacklistedSpecs.contains(specClass)) {
-            event.setCancelled(true);
+            event.tryAgain();
             return;
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSpecialAttack(SpecialAttackEvent event) {
+        SpecialAttack attack = event.getSpec();
+        if (!parent.contains(attack.getLocation())) return;
 
         if (ItemUtil.isInItemFamily(attack.getUsedItem(), ItemFamily.MASTER)) {
             event.setContextCooldown(event.getContext().getDelay() / 2);
@@ -192,7 +199,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         Player player = event.getPlayer();
         Block block = event.getClickedBlock();
         Action action = event.getAction();
-        if (parent.boss != null && action.equals(Action.PHYSICAL) && parent.contains(player, 1)) {
+        if (parent.isBossSpawnedFast() && action.equals(Action.PHYSICAL) && parent.contains(player, 1)) {
             switch (block.getType()) {
                 case STONE_PRESSURE_PLATE:
                     ProtectedRegion door;
@@ -202,7 +209,11 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                         door = parent.westDoor;
                     }
                     parent.setDoor(door, Material.AIR);
-                    server.getScheduler().runTaskLater(inst, () -> parent.setDoor(door, Material.CHISELED_SANDSTONE), 20 * 10);
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        if (parent.isBossSpawnedFast()) {
+                            parent.setDoor(door, Material.CHISELED_SANDSTONE);
+                        }
+                    }, 20 * 10);
                     break;
             }
         }
@@ -313,10 +324,25 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
             if (attacker instanceof Player) {
                 if (ItemUtil.hasForgeBook((Player) attacker)) {
-                    ((Giant) defender).setHealth(0);
+                    try {
+                        parent.isKillFromBook = true;
+                        ((Giant) defender).setHealth(0);
+                    } finally {
+                        parent.isKillFromBook = false;
+                    }
+
                     final Player finalAttacker = (Player) attacker;
                     if (!finalAttacker.getGameMode().equals(GameMode.CREATIVE)) {
-                        server.getScheduler().runTaskLater(inst, () -> (finalAttacker).setItemInHand(null), 1);
+                        server.getScheduler().runTaskLater(inst, () -> {
+                            ItemStack stack = finalAttacker.getItemInHand();
+                            if (stack.getAmount() == 1) {
+                                finalAttacker.setItemInHand(null);
+                            } else {
+                                ItemStack newStack = stack.clone();
+                                newStack.setAmount(newStack.getAmount() - 1);
+                                finalAttacker.setItemInHand(newStack);
+                            }
+                        }, 1);
                     }
                 }
             }
@@ -384,124 +410,49 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
         if (parent.contains(e)) {
             if (parent.boss != null && e instanceof Giant) {
                 List<Player> players = parent.getContainedParticipants();
-                Collections.shuffle(players);
-                int amt = players.size();
 
                 // Update high scores
-                ScoreType scoreType = amt == 1
+                ScoreType scoreType = players.size() == 1
                         ? ScoreTypes.SHNUGGLES_PRIME_SOLO_KILLS
                         : ScoreTypes.SHNUGGLES_PRIME_TEAM_KILLS;
                 for (Player aPlayer : players) {
                     parent.highScores.update(aPlayer, scoreType, 1);
                 }
 
-                Player player = null;
-                int required = ChanceUtil.getRandom(13) + 3;
+                int requiredBoneCount = ChanceUtil.getRandom(13) + 3;
 
-                // Figure out if someone has Barbarian Bones
-                if (amt != 0) {
-                    for (Player aPlayer : players) {
-                        if (parent.admin.isAdmin(aPlayer)) continue;
-                        if (ItemUtil.countItemsOfName(aPlayer.getInventory().getContents(), CustomItems.BARBARIAN_BONE.toString()) >= required) {
-                            player = aPlayer;
-                            break;
+                try {
+                    for (Player player : players) {
+                        boolean removed = ItemUtil.removeItemOfName(
+                                player,
+                                CustomItemCenter.build(CustomItems.BARBARIAN_BONE),
+                                requiredBoneCount,
+                                false
+                        );
+
+                        if (removed) {
+                            parent.barbarianBonePlayers.add(player.getUniqueId());
                         }
                     }
-                }
 
-                // Sacrificial drops
-                int m = EnvironmentUtil.hasThunderstorm(parent.getWorld()) ? 3 : 1;
-                m *= player != null ? 3 : 1;
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m, 400000));
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 10, 15000));
-                event.getDrops().addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), m * 32, 4000));
-
-                // Gold drops
-                for (int i = 0; i < Math.sqrt(amt + m) + GiantBossArea.scalOffst; i++) {
-                    event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRangedRandom(32, 64)));
-                }
-
-                // Unique drops
-                if (ChanceUtil.getChance(25) || m > 1 && ChanceUtil.getChance(27 / m)) {
-                    event.getDrops().add(BookUtil.Lore.Monsters.skelril());
-                }
-                if (ChanceUtil.getChance(138) || m > 1 && ChanceUtil.getChance(84 / m)) {
-                    if (ChanceUtil.getChance(2)) {
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_SWORD));
-                    } else {
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_SHORT_SWORD));
-                    }
-                }
-                if (ChanceUtil.getChance(138) || m > 1 && ChanceUtil.getChance(84 / m)) {
-                    event.getDrops().add(CustomItemCenter.build(CustomItems.MASTER_BOW));
-                }
-                if (ChanceUtil.getChance(200) || m > 1 && ChanceUtil.getChance(108 / m)) {
-                    event.getDrops().add(CustomItemCenter.build(CustomItems.MAGIC_BUCKET));
-                }
-
-                // Uber rare drops
-                if (ChanceUtil.getChance(2500 / m)) {
-                    event.getDrops().add(CustomItemCenter.build(CustomItems.ANCIENT_CROWN));
-                }
-
-                // Add a few Barbarian Bones to the drop list
-                event.getDrops().add(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(Math.max(1, amt * 2))));
-
-                // Remove the Barbarian Bones
-                if (player != null) {
-                    int c = ItemUtil.countItemsOfName(player.getInventory().getContents(), CustomItems.BARBARIAN_BONE.toString()) - required;
-                    ItemStack[] nc = ItemUtil.removeItemOfName(player.getInventory().getContents(), CustomItems.BARBARIAN_BONE.toString());
-                    player.getInventory().setContents(nc);
-                    int amount = Math.min(c, 64);
-                    while (amount > 0) {
-                        player.getInventory().addItem(CustomItemCenter.build(CustomItems.BARBARIAN_BONE, amount));
-                        c -= amount;
-                        amount = Math.min(c, 64);
-                    }
-                    //noinspection deprecation
-                    player.updateInventory();
-                }
-
-                LocalDate date = LocalDate.now().with(Month.APRIL).withDayOfMonth(6);
-                if (date.equals(LocalDate.now())) {
-                    ChatUtil.sendNotice(parent.getAudiblePlayers(), ChatColor.GOLD, "DROPS DOUBLED!");
-                    event.getDrops().addAll(event.getDrops().stream().map(ItemStack::clone).collect(Collectors.toList()));
+                    new BoundDropSpawner(e::getLocation).provide(parent.dropTable, new MassBossKillInfo(players));
+                } finally {
+                    parent.barbarianBonePlayers.clear();
                 }
 
                 // Reset respawn mechanics
                 parent.lastDeath = System.currentTimeMillis();
                 parent.boss = null;
-                Collection<Entity> containedEntities = parent.getContained(Zombie.class, ExperienceOrb.class);
 
                 // Remove remaining XP and que new xp
-                parent.removeXP(containedEntities, true);
                 for (int i = 0; i < 7; i++) {
                     server.getScheduler().runTaskLater(inst, parent.spawnXP, i * 2 * 20);
                 }
+
                 parent.setDoor(parent.eastDoor, Material.AIR);
                 parent.setDoor(parent.westDoor, Material.AIR);
-                IntegratedRunnable normal = new IntegratedRunnable() {
-                    @Override
-                    public boolean run(int times) {
-                        if (TimerUtil.matchesFilter(times, 10, 5)) {
-                            ChatUtil.sendWarning(parent.getAudiblePlayers(), "Clearing chest contents in: " + times + " seconds.");
-                        }
-                        return true;
-                    }
-                    @Override
-                    public void end() {
-                        ChatUtil.sendWarning(parent.getAudiblePlayers(), "Clearing chest contents!");
-                        for (Location location : parent.chestPts) {
-                            BlockState state = location.getBlock().getState();
-                            if (state instanceof Chest) {
-                                ((Chest) state).getInventory().clear();
-                            }
-                        }
-                    }
-                };
-                TimedRunnable timed = new TimedRunnable(normal, 30);
-                BukkitTask task = server.getScheduler().runTaskTimer(inst, timed, 0, 20);
-                timed.setTask(task);
+
+                parent.clearChests();
             } else if (e instanceof Zombie && ((Zombie) e).isBaby()) {
                 event.getDrops().clear();
                 if (ChanceUtil.getChance(28)) {

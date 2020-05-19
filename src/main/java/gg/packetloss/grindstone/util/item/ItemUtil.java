@@ -30,7 +30,16 @@ import java.util.Set;
 
 public class ItemUtil {
 
-    public static final ItemStack[] LEATHER_ARMOR = new ItemStack[]{
+    private static final Set<Material> LEATHER_ARMOR_TYPES = Set.of(
+            Material.LEATHER_BOOTS, Material.LEATHER_LEGGINGS,
+            Material.LEATHER_CHESTPLATE, Material.LEATHER_HELMET
+    );
+
+    public static boolean isLeatherArmorPiece(Material type) {
+        return LEATHER_ARMOR_TYPES.contains(type);
+    }
+
+    public static final ItemStack[] LEATHER_ARMOR  = new ItemStack[]{
             new ItemStack(Material.LEATHER_BOOTS), new ItemStack(Material.LEATHER_LEGGINGS),
             new ItemStack(Material.LEATHER_CHESTPLATE), new ItemStack(Material.LEATHER_HELMET)
     };
@@ -49,6 +58,7 @@ public class ItemUtil {
     public static final ItemStack[] NO_ARMOR = new ItemStack[] {
             null, null, null, null
     };
+
 
     public static ItemStack makeSkull(OfflinePlayer offlinePlayer) {
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
@@ -317,6 +327,7 @@ public class ItemUtil {
         }
         return false;
     }
+
     public static boolean hasAncientArmour(LivingEntity entity) {
 
         if (!entity.isValid()) return false;
@@ -332,6 +343,27 @@ public class ItemUtil {
             b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient");
         }
         return b[0] && b[1] && b[2] && b[3];
+    }
+
+    public static boolean hasAncientRoyalArmour(LivingEntity entity) {
+        if (!entity.isValid()) return false;
+
+        ItemStack[] armour;
+        EntityEquipment equipment = entity.getEquipment();
+        if (equipment != null) armour = equipment.getArmorContents();
+        else return false;
+
+        boolean[] b = new boolean[]{false, false, false, false};
+
+        b[0] = ItemUtil.isItem(armour[0], CustomItems.ANCIENT_CROWN) ||
+               ItemUtil.isItem(armour[0], CustomItems.ANCIENT_ROYAL_HELMET);
+
+        for (int i = 1; i < 4; i++) {
+            b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient Royal");
+        }
+
+        return b[0] && b[1] && b[2] && b[3];
+
     }
 
     public static boolean hasNecrosArmour(LivingEntity entity) {

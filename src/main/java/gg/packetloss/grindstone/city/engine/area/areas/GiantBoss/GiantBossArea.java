@@ -19,20 +19,29 @@ import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.optimization.OptimizedZombieFactory;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
+import gg.packetloss.grindstone.util.dropttable.MassBossDropTable;
+import gg.packetloss.grindstone.util.dropttable.MassBossPlayerKillInfo;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
+import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.listener.BossBuggedRespawnListener;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import gg.packetloss.grindstone.util.timer.TimerUtil;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.entity.HBGiant;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -40,6 +49,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -74,7 +84,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected HighScoresComponent highScores;
 
     protected static final int groundLevel = 82;
-    protected static final double scalOffst = 3;
 
     protected ProtectedRegion eastDoor, westDoor;
 
@@ -83,14 +92,16 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     protected int lastAttackNumber = -1;
     protected long lastDeath = 0;
     protected boolean damageHeals = false;
-    protected BukkitTask mobDestroyer;
     protected Random random = new Random();
 
-    protected double toHeal = 0;
     protected List<Location> spawnPts = new ArrayList<>();
     protected List<Location> chestPts = new ArrayList<>();
 
     protected BossBar healthBar = Bukkit.createBossBar("Shnuggles Prime", BarColor.PURPLE, BarStyle.SEGMENTED_6);
+
+    protected MassBossDropTable dropTable = new MassBossDropTable();
+    protected Set<UUID> barbarianBonePlayers = new HashSet<>();
+    protected boolean isKillFromBook = false;
 
     @Override
     public void setUp() {
@@ -103,19 +114,19 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         listener = new GiantBossListener(this);
         config = new GiantBossConfig();
 
-        mobDestroyer = server.getScheduler().runTaskTimer(inst, () -> {
-            Collection<Entity> contained = getContained(1, Zombie.class, ExperienceOrb.class);
-            if (!EnvironmentUtil.hasThunderstorm(getWorld())) removeOutsideZombies(contained);
-            if (isBossSpawned()) {
-                removeXP(contained);
-            }
-        }, 0, 20 * 2);
         server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
 
         // First spawn requirement
         probeArea();
 
         CommandBook.registerEvents(new FlightBlockingListener(admin, this::contains));
+        CommandBook.registerEvents(new BossBuggedRespawnListener(
+                "Shnuggles Prime",
+                (e) -> boss != null && boss.equals(e) && isArenaLoaded(),
+                (e) -> spawnBossEntity(e.getHealth(), e.getMaxHealth())
+        ));
+
+        setupDropTable();
 
         spectator.registerSpectatedRegion(PlayerStateKind.SHNUGGLES_PRIME_SPECTATOR, region);
         spectator.registerSpectatorSkull(
@@ -132,17 +143,12 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     }
 
     @Override
-    public void disable() {
-        removeMobs();
-    }
-
-    @Override
     public void run() {
         updateBossBar();
 
         if (!isBossSpawned()) {
             if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
-                removeMobs();
+                clearArenaEntities();
                 spawnBoss();
             }
         } else if (!isEmpty()) {
@@ -169,6 +175,52 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     @Override
     public Collection<Player> getAudiblePlayers() {
         return getContained(1, Player.class);
+    }
+
+    private int getModifier(Player player) {
+        int modifier = 1;
+
+        if (EnvironmentUtil.hasThunderstorm(getWorld())) {
+            modifier *= 3;
+        }
+
+        if (barbarianBonePlayers.contains(player.getUniqueId())) {
+            modifier *= 3;
+        }
+
+        return modifier;
+    }
+
+    private void setupDropTable() {
+        dropTable.registerCustomPlayerDrop((info, consumer) -> {
+            int modifier = getModifier(info.getPlayer());
+
+            SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier, 400000).forEach(consumer);
+            SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier * 5, 15000).forEach(consumer);
+            SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier * 16, 4000).forEach(consumer);
+
+            for (int i = 0; i < modifier; i++) {
+                consumer.accept(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRangedRandom(32, 64)));
+            }
+        });
+
+        dropTable.registerPlayerDrop(() -> CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(9)));
+
+        // Chance modified drops
+        NumericPipeline.Builder<MassBossPlayerKillInfo> modifiedChance = NumericPipeline.builder();
+        modifiedChance.accept((info, chance) -> chance / getModifier(info.getPlayer()));
+
+        NumericPipeline.Builder<MassBossPlayerKillInfo> bookChance = modifiedChance.fork();
+        bookChance.accept((info, chance) -> isKillFromBook ? Integer.MAX_VALUE : chance);
+        dropTable.registerPlayerDrop(bookChance.build(27), BookUtil.Lore.Monsters::skelril);
+
+        // Master Weapons
+        dropTable.registerPlayerDrop(modifiedChance.build(276), () -> CustomItemCenter.build(CustomItems.MASTER_SWORD));
+        dropTable.registerPlayerDrop(modifiedChance.build(276), () -> CustomItemCenter.build(CustomItems.MASTER_SHORT_SWORD));
+        dropTable.registerPlayerDrop(modifiedChance.build(138), () -> CustomItemCenter.build(CustomItems.MASTER_BOW));
+
+        dropTable.registerPlayerDrop(modifiedChance.build(200), () -> CustomItemCenter.build(CustomItems.MAGIC_BUCKET));
+        dropTable.registerPlayerDrop(modifiedChance.build(2500), () -> CustomItemCenter.build(CustomItems.ANCIENT_CROWN));
     }
 
     public boolean isBossSpawnedFast() {
@@ -207,10 +259,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         return RegionUtil.getCenterAt(getWorld(), groundLevel, getRegion());
     }
 
-    public void spawnBoss() {
+    private void spawnBossEntity(double currentHealth, double maxHealth) {
         boss = HBGiant.spawn(getBossSpawnLocation());
-        boss.setMaxHealth(config.maxHealthNormal);
-        boss.setHealth(config.maxHealthNormal);
+        boss.setMaxHealth(maxHealth);
+        boss.setHealth(currentHealth);
         boss.setRemoveWhenFarAway(true);
 
         try {
@@ -219,6 +271,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         } catch (UnsupportedFeatureException ex) {
             log.warning("Boss NMS attributes not properly set.");
         }
+    }
+
+    public void spawnBoss() {
+        spawnBossEntity(config.maxHealthNormal, config.maxHealthNormal);
 
         setDoor(eastDoor, Material.CHISELED_SANDSTONE);
         setDoor(westDoor, Material.CHISELED_SANDSTONE);
@@ -257,31 +313,28 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         }
     };
 
-    public void removeXP(Collection<? extends Entity> contained) {
-        removeXP(contained, false);
-    }
+    public void clearArenaEntities() {
+        getContained(Monster.class, ExperienceOrb.class).forEach(e -> {
+            if (e.getType() != EntityType.EXPERIENCE_ORB) {
+                for (int i = 0; i < 20; i++) {
+                    getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
+                }
+            }
 
-    public void removeXP(Collection<? extends Entity> contained, boolean force) {
-        contained.stream()
-                .filter(e -> e.isValid() && e instanceof ExperienceOrb && (force || e.getTicksLived() > 20 * 13))
-                .forEach(Entity::remove);
-    }
-
-    public void removeMobs() {
-        getContained(1, Monster.class).forEach(e -> {
-            for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
             e.remove();
         });
     }
 
-    public void removeOutsideZombies(Collection<? extends Entity> contained) {
-        contained.stream()
-                .filter(e -> e instanceof Zombie && ((Zombie) e).isBaby() && !contains(e))
+    public void removeBabies() {
+        getContained(1, Zombie.class).stream()
+                .filter(Zombie::isBaby)
                 .forEach(e -> {
-                        for (int i = 0; i < 20; i++) getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
-                        e.remove();
+                    for (int i = 0; i < 20; i++) {
+                        getWorld().playEffect(e.getLocation(), Effect.SMOKE, 0);
                     }
-                );
+
+                    e.remove();
+                });
     }
 
     public void equalize() {
@@ -400,7 +453,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
             if (getContainedParticipants().isEmpty()) {
                 boss.setHealth(boss.getMaxHealth());
-                removeMobs();
+                removeBabies();
             } else {
                 EntityUtil.heal(boss, boss.getMaxHealth() / 3);
             }
@@ -690,5 +743,31 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             doNextDoorBlock(limit, block.getRelative(face), north, newType, depth + 1);
         }
         server.getScheduler().runTaskLater(inst, () -> block.setType(newType, true), 9 * depth);
+    }
+
+    public void clearChests() {
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+        taskBuilder.setInterval(20);
+        taskBuilder.setNumberOfRuns(30);
+
+        taskBuilder.setAction((times) -> {
+            if (TimerUtil.matchesFilter(times, 10, 5)) {
+                ChatUtil.sendWarning(getAudiblePlayers(), "Clearing chest contents in: " + times + " seconds.");
+            }
+            return true;
+        });
+
+        taskBuilder.setFinishAction(() -> {
+            ChatUtil.sendWarning(getAudiblePlayers(), "Clearing chest contents!");
+            for (Location location : chestPts) {
+                BlockState state = location.getBlock().getState();
+                if (state instanceof Chest) {
+                    ((Chest) state).getInventory().clear();
+                }
+            }
+        });
+
+        taskBuilder.build();
     }
 }

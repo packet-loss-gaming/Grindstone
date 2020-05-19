@@ -60,6 +60,14 @@ public class ItemNameCalculator {
         return names.contains(computedName);
     }
 
+    public static String getDisplayName(ItemStack stack) {
+        ItemMeta stackMeta = stack.getItemMeta();
+        if (stackMeta.hasDisplayName()) {
+            return stackMeta.getDisplayName();
+        }
+        return stack.getI18NDisplayName();
+    }
+
     public static Optional<String> computeItemName(ItemStack stack) {
         if (stack == null || stack.getType() == Material.AIR) {
             return Optional.empty();

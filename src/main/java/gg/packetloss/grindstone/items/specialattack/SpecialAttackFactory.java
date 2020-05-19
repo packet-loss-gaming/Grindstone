@@ -38,6 +38,7 @@ public class SpecialAttackFactory {
         }
 
         attackStack.executeOnStackWithCause(spec, () -> {
+            defender.setNoDamageTicks(0); // special attacks ignore no damage ticks
             event.getDefender().damage(event.getDamage(), attacker);
         });
 

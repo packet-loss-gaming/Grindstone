@@ -13,23 +13,21 @@ import com.skelril.OSBL.entity.LocalControllable;
 import com.skelril.OSBL.entity.LocalEntity;
 import com.skelril.OSBL.instruction.*;
 import com.skelril.OSBL.util.AttackDamage;
-import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.bosses.instruction.ExplosiveUnbind;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
+import gg.packetloss.grindstone.bosses.manager.apocalypse.instruction.ApocalypseDropTableInstruction;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Damageable;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Zombie;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
@@ -46,13 +44,33 @@ public class ThorZombie {
 
     public static final String BOUND_NAME = "Thor Zombie";
 
+    private PerformanceDropTable dropTable = new PerformanceDropTable();
+
     public ThorZombie() {
         thorZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        setupDropTable();
         setupThorZombie();
     }
 
     public void bind(Damageable entity) {
         thorZombie.bind(new BukkitBoss<>(entity, new GenericDetail()));
+    }
+
+    private void setupDropTable() {
+        dropTable.registerSlicedDrop(
+                (info) -> ChanceUtil.getRangedRandom(12, 150),
+                (info, consumer) -> {
+                    Player player = info.getPlayer();
+
+                    float percentDamage = info.getKillInfo().getPercentDamageDone(player).orElseThrow();
+                    int bars = (int) (info.getSlicedPoints() * percentDamage);
+                    for (int i = bars; i > 0; --i) {
+                        consumer.accept(new ItemStack(Material.GOLD_INGOT));
+                    }
+                }
+        );
+
+        dropTable.registerTakeAllDrop(1000, () -> CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
     }
 
     private void setupThorZombie() {
@@ -92,27 +110,7 @@ public class ThorZombie {
                 return 4F;
             }
         });
-        unbindInstructions.add(new UnbindInstruction<>() {
-            @Override
-            public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
-                if (ApocalypseHelper.areDropsSuppressed()) {
-                    return null;
-                }
-
-                Entity boss = BukkitUtil.getBukkitEntity(controllable);
-                Location target = boss.getLocation();
-
-                for (int i = ChanceUtil.getRangedRandom(12, 150); i > 0; --i) {
-                    target.getWorld().dropItem(target, new ItemStack(Material.GOLD_INGOT));
-                }
-
-                if (ChanceUtil.getChance(1000)) {
-                    target.getWorld().dropItem(target, CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
-                }
-
-                return null;
-            }
-        });
+        unbindInstructions.add(new ApocalypseDropTableInstruction<>(dropTable));
 
         List<DamageInstruction<GenericDetail>> damageInstructions = thorZombie.damageInstructions;
         damageInstructions.add(new DamageInstruction<>() {
