@@ -10,6 +10,7 @@ import gg.packetloss.grindstone.items.custom.CustomItem;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.Tag;
+import gg.packetloss.grindstone.items.flight.FlightCategory;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -51,8 +52,10 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
     private boolean grantFlight(Player player) {
         ChatUtil.sendNotice(player, "The bucket glows brightly.");
 
-        player.setFlySpeed(getHeldBucketSpeed(player).getSpeed());
+        FlightCategory flightCategory = getHeldBucketSpeed(player).getCategory();
+        player.setFlySpeed(flightCategory.getSpeed());
         player.setAllowFlight(true);
+        flightItems.registerFlightProvider(player, flightCategory);
 
         return true;
     }
@@ -209,18 +212,18 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
     }
 
     public enum MagicBucketSpeed {
-        SLOW(.1f),
-        MEDIUM(.2f),
-        FAST(.4f);
+        SLOW(FlightCategory.MAGIC_BUCKET_SLOW),
+        MEDIUM(FlightCategory.MAGIC_BUCKET_MEDIUM),
+        FAST(FlightCategory.MAGIC_BUCKET_FAST);
 
-        private final float speed;
+        private final FlightCategory category;
 
-        private MagicBucketSpeed(float speed) {
-            this.speed = speed;
+        private MagicBucketSpeed(FlightCategory category) {
+            this.category = category;
         }
 
-        public float getSpeed() {
-            return speed;
+        public FlightCategory getCategory() {
+            return category;
         }
     }
 }

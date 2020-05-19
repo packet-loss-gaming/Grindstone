@@ -26,6 +26,7 @@ import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.flight.FlightItemsComponent;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
 import gg.packetloss.grindstone.items.implementations.combotools.*;
@@ -62,7 +63,8 @@ import java.util.Set;
 
 @ComponentInformation(friendlyName = "Global Items Component", desc = "Global Custom Item effects")
 @Depend(components = {
-        SessionComponent.class, AdminComponent.class, PacketInterceptionComponent.class, PrayerComponent.class
+        SessionComponent.class, AdminComponent.class, PacketInterceptionComponent.class, PrayerComponent.class,
+        FlightItemsComponent.class
 })
 public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
@@ -79,6 +81,8 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     protected static PrayerComponent prayers;
     @InjectComponent
     protected static GuildComponent guilds;
+    @InjectComponent
+    protected static FlightItemsComponent flightItems;
 
     private static ItemCondenser goldCondenser = new ItemCondenser();
 
@@ -169,6 +173,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         AbstractItemFeatureImpl.applyResource(sessions);
         AbstractItemFeatureImpl.applyResource(prayers);
         AbstractItemFeatureImpl.applyResource(guilds);
+        AbstractItemFeatureImpl.applyResource(flightItems);
     }
 
     private void registerSpecWeapons() {

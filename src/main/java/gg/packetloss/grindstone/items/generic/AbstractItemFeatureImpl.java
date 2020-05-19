@@ -12,6 +12,7 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.items.CustomItemSession;
+import gg.packetloss.grindstone.items.flight.FlightItemsComponent;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
@@ -39,6 +40,7 @@ public abstract class AbstractItemFeatureImpl implements Listener {
     protected static SessionComponent sessions;
     protected static PrayerComponent prayers;
     protected static GuildComponent guilds;
+    protected static FlightItemsComponent flightItems;
 
     public static void applyResource(AdminComponent admin) {
         AbstractItemFeatureImpl.admin = admin;
@@ -51,6 +53,9 @@ public abstract class AbstractItemFeatureImpl implements Listener {
     }
     public static void applyResource(GuildComponent guilds) {
         AbstractItemFeatureImpl.guilds = guilds;
+    }
+    public static void applyResource(FlightItemsComponent flightItems) {
+        AbstractItemFeatureImpl.flightItems = flightItems;
     }
 
     public CustomItemSession getSession(Player player) {

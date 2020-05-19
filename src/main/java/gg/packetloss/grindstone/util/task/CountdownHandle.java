@@ -6,6 +6,7 @@ public class CountdownHandle {
     private final BukkitTask underlyingTask;
     private int runsRemaining;
     private boolean isDirty = false;
+    private boolean canceled = false;
 
     public CountdownHandle(BukkitTask underlyingTask, int runsRemaining) {
         this.underlyingTask = underlyingTask;
@@ -31,6 +32,11 @@ public class CountdownHandle {
     }
 
     public void cancel() {
+        if (canceled) {
+            return;
+        }
+
         underlyingTask.cancel();
+        canceled = true;
     }
 }
