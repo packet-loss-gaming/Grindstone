@@ -274,7 +274,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     public boolean isPointOfSacrifice(Location location) {
-        return checkForPitAt(location).isValid();
+        return LocationUtil.isChunkLoadedAt(location) && checkForPitAt(location).isValid();
     }
 
     @EventHandler
