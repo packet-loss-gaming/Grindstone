@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ItemPointTranslator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
+import gg.packetloss.grindstone.util.item.inventory.PlayerStickyInventoryAdapter;
 import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
@@ -62,7 +63,11 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
      * @return true if out of pixie dust
      */
     private boolean takeOnePixieDust(Player player) {
-        InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
+        InventoryAdapter adapter = new PlayerStickyInventoryAdapter(
+                player,
+                PlayerStickyInventoryAdapter.Priority.HOTBAR,
+                (item -> ItemUtil.isItem(item, CustomItems.PIXIE_DUST))
+        );
 
         int pixieDustCount = PIXIE_DUST_CONVERTER.calculateValue(adapter, true);
 
