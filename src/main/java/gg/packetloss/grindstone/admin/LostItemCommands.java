@@ -41,15 +41,15 @@ public class LostItemCommands {
 
     @Command(name = "/give", desc = "Custom Item give command")
     @CommandPermissions({"aurora.lostitems"})
-    public void giveCmd(Player sendingPlayer,
+    public void giveCmd(CommandSender sender,
                         @Arg(desc = "items", def = "") CustomItemBundle customItems,
                         @Arg(desc = "count", def = "1") int count,
                         @Arg(desc = "target", def = "") SinglePlayerTarget player) {
         if (customItems == null) {
-            ChatUtil.sendNotice(sendingPlayer, ChatColor.GOLD + "Valid items:");
+            ChatUtil.sendNotice(sender, ChatColor.GOLD + "Valid items:");
             int counter = 0;
             for (CustomItems aItem : CustomItems.values()) {
-                sendingPlayer.sendMessage(Text.of(
+                sender.sendMessage(Text.of(
                         aItem.getColor(),
                         counter++,
                         "). ", aItem.getSnakecaseName().toUpperCase(),
@@ -61,7 +61,12 @@ public class LostItemCommands {
         }
 
         if (player == null) {
-            player = new SinglePlayerTarget(sendingPlayer);
+            if (sender instanceof Player) {
+                player = new SinglePlayerTarget((Player) sender);
+            } else {
+                ChatUtil.sendError(sender, "A target must be specified.");
+                return;
+            }
         }
 
         // Map all to verify via exceptions first
@@ -70,7 +75,7 @@ public class LostItemCommands {
         // Give resolved items
         Player targetPlayer = player.get();
         items.forEach((item) -> {
-            giveItem(sendingPlayer, targetPlayer, item, count);
+            giveItem(sender, targetPlayer, item, count);
         });
     }
 }
