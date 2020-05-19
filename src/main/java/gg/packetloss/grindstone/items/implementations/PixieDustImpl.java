@@ -115,7 +115,7 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
             // Attempt a refresh if necessary
             if (flightData.needsRefresh()) {
                 // They've landed, or they're getting flight elsewhere, don't worry about a refresh
-                if (!player.isFlying() || GeneralPlayerUtil.isFlyingGamemode(player.getGameMode())) {
+                if ((!player.isFlying() && player.isOnGround()) || GeneralPlayerUtil.isFlyingGamemode(player.getGameMode())) {
                     return true;
                 }
 
