@@ -151,6 +151,9 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onFlightItemActivation(FlightItemActivatedEvent event) {
-        maybeNerfFlightSpeed(event.getPlayer());
+        Player player = event.getPlayer();
+        if (isRangeWorld(player.getWorld())) {
+            maybeNerfFlightSpeed(player);
+        }
     }
 }
