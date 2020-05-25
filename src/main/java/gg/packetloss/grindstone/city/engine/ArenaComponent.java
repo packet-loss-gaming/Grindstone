@@ -226,11 +226,13 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
             // Add factories
             for (String region : config.factories) {
                 try {
-                    ProtectedRegion[] PRs = new ProtectedRegion[4];
+                    ProtectedRegion[] PRs = new ProtectedRegion[6];
                     PRs[0] = mgr.getRegion(region);
                     PRs[1] = mgr.getRegion(region + "-producer");
                     PRs[2] = mgr.getRegion(region + "-smelter-1");
                     PRs[3] = mgr.getRegion(region + "-smelter-2");
+                    PRs[4] = mgr.getRegion(region + "-smelter-1-track");
+                    PRs[5] = mgr.getRegion(region + "-smelter-2-track");
 
                     YAMLProcessor processor = new YAMLProcessor(
                             new File(inst.getDataFolder() + "/area/" + PRs[0] .getId()+ "/data.yml"),

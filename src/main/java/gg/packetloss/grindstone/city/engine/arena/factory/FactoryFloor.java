@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.util.yaml.YAMLNode;
 import com.sk89q.util.yaml.YAMLProcessor;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.city.engine.arena.ArenaType;
 import gg.packetloss.grindstone.city.engine.arena.GenericArena;
@@ -19,6 +20,7 @@ import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.DamageUtil;
+import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.item.itemstack.StackSerializer;
 import org.bukkit.Location;
@@ -28,9 +30,11 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -46,11 +50,12 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
 
     private YAMLProcessor processor;
     private List<FactoryMech> mechs;
-    private LinkedList<ItemStack> que = new LinkedList<>();
+    private ArrayDeque<ItemStack> que = new ArrayDeque<>();
     private long nextMobSpawn = 0L;
+    private boolean queueDirty = false;
 
     public FactoryFloor(World world, ProtectedRegion[] regions, List<FactoryMech> mechs, YAMLProcessor processor) {
-        super(world, regions[0], regions[1], Arrays.copyOfRange(regions, 2, 4));
+        super(world, regions[0], regions[1], Arrays.copyOfRange(regions, 2, 4), Arrays.copyOfRange(regions, 4, 6));
         this.processor = processor;
         this.mechs = Lists.newArrayList(mechs);
 
@@ -100,37 +105,59 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
         return ChamberType.POTION;
     }
 
+    private Location getSpawnPoint(ProtectedRegion protectedRegion) {
+        Region region = RegionUtil.convert(protectedRegion).orElseThrow();
+        Location spawnLoc = RegionUtil.getCenter(getWorld(), protectedRegion);
+
+        // Divide by 2 since we're center, then subtract 1/2 a block divided by 2 (1/4 block)
+        // so that the items don't get stuck in the sides of the device.
+        double xWidth = (RegionUtil.getXWidth(region).orElseThrow() / 2.0) - .25;
+        double zWidth = (RegionUtil.getZWidth(region).orElseThrow() / 2.0) - .25;
+
+        if (xWidth > zWidth) {
+            spawnLoc.add(ChanceUtil.getRangedRandom(-xWidth, xWidth), 0, 0);
+        } else {
+            spawnLoc.add(0, 0, ChanceUtil.getRangedRandom(-zWidth, zWidth));
+        }
+
+        return spawnLoc;
+    }
+
     public void produce(ItemStack product) {
-        ProtectedRegion region = getChamber(getProductType(product));
-        getWorld().dropItem(RegionUtil.getCenter(getWorld(), region), product);
+        ProtectedRegion protectedRegion = getChamber(getProductType(product));
+        Item item = getWorld().dropItem(getSpawnPoint(protectedRegion), product);
+        item.setVelocity(new Vector());
     }
 
     @Override
     public void run() {
+        if (queueDirty) {
+            writePrime();
+        }
 
         if (isEmpty()) return;
 
         equalize();
+
         if (System.currentTimeMillis() < nextMobSpawn) {
             throwPotions();
         }
 
         int queueSize = que.size();
         for (FactoryMech mech : Collections.synchronizedList(mechs)) que.addAll(mech.process());
-
         if (queueSize != que.size()) {
-            writePrime();
-            queueSize = que.size();
+            queueDirty = true;
         }
 
         if (que.isEmpty()) return;
         boolean hexa = ModifierComponent.getModifierCenter().isActive(ModifierType.HEXA_FACTORY_SPEED);
         int max = getContained(Player.class).size() * (hexa ? 54 : 9);
-        for (int i = ChanceUtil.getRangedRandom(max / 3, max); i > 0; --i) {
-            if (que.isEmpty()) break;
-            produce(que.poll());
+        for (int i = Math.min(que.size(), ChanceUtil.getRangedRandom(max / 3, max)); i > 0; --i) {
+            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                produce(que.poll());
+                queueDirty = true;
+            }, i * 10 + ChanceUtil.getRandom(10));
         }
-        if (queueSize != que.size()) writePrime();
     }
 
     @Override
@@ -165,6 +192,15 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
         event.setCancelled(true);
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onItemMege(ItemMergeEvent event) {
+        for (ProtectedRegion region : smeltingTracks) {
+            if (LocationUtil.isInRegion(region, event.getEntity()) || LocationUtil.isInRegion(region, event.getTarget())) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
     @Override
     public String getId() {
         return getRegion().getId();
@@ -181,12 +217,14 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     public void writePrime() {
         processor.setProperty("mob-delay-timer", nextMobSpawn);
         processor.removeProperty("products");
-        for (int i = 0; i < que.size(); ++i) {
-            YAMLNode node = processor.addNode("products." + i);
-            ItemStack stack = que.get(i);
+        int counter = 0;
+        for (ItemStack stack : que) {
+            YAMLNode node = processor.addNode("products." + counter++);
             node.setProperty("stack-data", StackSerializer.getMap(stack));
         }
         processor.save();
+
+        queueDirty = false;
     }
 
     public void writeAreas() {
@@ -223,8 +261,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
                     try {
                         YAMLNode node = entry.getValue();
                         //noinspection unchecked
-                        ItemStack is = StackSerializer.fromMap((Map<String, Object>) node.getProperty("stack-data"));
-                        que.add(Integer.parseInt(entry.getKey()), is);
+                        que.add(StackSerializer.fromMap((Map<String, Object>) node.getProperty("stack-data")));
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }

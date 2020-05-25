@@ -15,12 +15,15 @@ public class AbstractFactoryArea extends AbstractRegionedArena {
 
     protected ProtectedRegion potionChamber;
     protected ProtectedRegion[] smeltingChamber;
+    protected ProtectedRegion[] smeltingTracks;
 
     public AbstractFactoryArea(World world, ProtectedRegion region,
-                               ProtectedRegion potionChamber, ProtectedRegion[] smeltingChamer) {
+                               ProtectedRegion potionChamber, ProtectedRegion[] smeltingChamer,
+                               ProtectedRegion[] smeltingTracks) {
         super(world, region);
         this.potionChamber = potionChamber;
         this.smeltingChamber = smeltingChamer;
+        this.smeltingTracks = smeltingTracks;
     }
 
     public ProtectedRegion getChamber(ChamberType type) {
