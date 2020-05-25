@@ -248,9 +248,11 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
             // Calculate the new weather event and its time
             WeatherType newWeatherType = pickWeather();
 
+            // We need to calculate the offset based on the last weather event's time as
+            // we're setting the end of that event, and the start of this event.
             long offset = TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(
-                    getMinDuration(newWeatherType),
-                    getMaxDuration(newWeatherType)
+                    getMinDuration(lastWeatherType),
+                    getMaxDuration(lastWeatherType)
             ));
             long newWeatherEventTime = lastWeatherEventTime + offset;
 
