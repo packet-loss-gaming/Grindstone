@@ -64,7 +64,7 @@ dependencies {
     compile group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.15.1-R0.1-SNAPSHOT'
     compile group: 'com.destroystokyo.paper', name: 'paper', version: '1.15.1-R0.1-SNAPSHOT'
 
-    compile group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '7.1.0-SNAPSHOT'
+    compile group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '7.2.0-SNAPSHOT'
     compile group: 'com.sk89q.worldguard', name: 'worldguard-legacy', version: '7.0.0-SNAPSHOT'
     compile(group: 'com.sk89q', name: 'commandbook', version: '3.0-SNAPSHOT') {
         exclude group: 'com.sk89q', module: 'worldedit'
@@ -85,8 +85,8 @@ dependencies {
 
     compile group: 'com.zaxxer', name: 'HikariCP', version: '3.4.1'
 
-    compileOnly 'com.sk89q.worldedit.worldedit-libs:ap:7.1.0-SNAPSHOT'
-    annotationProcessor 'com.sk89q.worldedit.worldedit-libs:ap:7.1.0-SNAPSHOT'
+    compileOnly 'com.sk89q.worldedit.worldedit-libs:ap:7.2.0-SNAPSHOT'
+    annotationProcessor 'com.sk89q.worldedit.worldedit-libs:ap:7.2.0-SNAPSHOT'
     annotationProcessor "com.google.guava:guava:21.0"
 
     testCompile group: 'junit', name: 'junit', version: '4.12'

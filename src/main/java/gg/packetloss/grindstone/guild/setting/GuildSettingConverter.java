@@ -33,7 +33,7 @@ public class GuildSettingConverter implements ArgumentConverter<GuildSettingUpda
     }
 
     @Override
-    public List<String> getSuggestions(String input) {
+    public List<String> getSuggestions(String argument, InjectedValueAccess context) {
         return List.of();
     }
 }

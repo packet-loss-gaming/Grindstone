@@ -5,7 +5,9 @@ import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.util.formatting.text.Component;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.enginehub.piston.CommandManager;
 import org.enginehub.piston.converter.ArgumentConverter;
 import org.enginehub.piston.converter.ConversionResult;
@@ -17,6 +19,7 @@ import org.enginehub.piston.inject.Key;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class WarpPointConverter implements ArgumentConverter<WarpPoint> {
     private WarpsComponent component;
@@ -69,12 +72,21 @@ public class WarpPointConverter implements ArgumentConverter<WarpPoint> {
         }
     }
 
+    private Stream<WarpPoint> getWarpPointStream(InjectedValueAccess context) {
+        CommandSender sender = context.injectedValue(Key.of(CommandSender.class)).orElse(Bukkit.getConsoleSender());
+        if (sender instanceof Player) {
+            return component.getWarpManager().getWarpsForPlayer((Player) sender).stream();
+        } else {
+            return component.getWarpManager().getGlobalWarps().stream();
+        }
+    }
+
     @Override
-    public List<String> getSuggestions(String input) {
-        return component.getWarpManager().getGlobalWarps().stream()
+    public List<String> getSuggestions(String argument, InjectedValueAccess context) {
+        return getWarpPointStream(context)
                 .map(WarpPoint::getQualifiedName)
                 .map(WarpQualifiedName::getDisplayName)
-                .filter((s) -> s.contains(input.toUpperCase()))
+                .filter((s) -> s.contains(argument.toUpperCase()))
                 .collect(Collectors.toList());
     }
 }

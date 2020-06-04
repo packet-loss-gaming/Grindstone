@@ -50,10 +50,10 @@ public class CustomItemsConverter implements ArgumentConverter<CustomItemBundle>
     }
 
     @Override
-    public List<String> getSuggestions(String input) {
+    public List<String> getSuggestions(String argument, InjectedValueAccess context) {
         return Stream.of(CustomItems.values())
                 .map(CustomItems::name)
-                .filter((s) -> s.contains(input.toUpperCase()))
+                .filter((s) -> s.contains(argument.toUpperCase()))
                 .collect(Collectors.toList());
     }
 }
