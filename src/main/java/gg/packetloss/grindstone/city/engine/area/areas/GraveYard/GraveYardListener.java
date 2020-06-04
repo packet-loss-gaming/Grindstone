@@ -664,8 +664,9 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             return;
         }
 
-        // Remove drops from ground
+        // Remove drops from ground, and drop no XP
         drops.clear();
+        event.setDroppedExp(0);
 
         if (protectItemsEvent.isUsingGemOfLife()) {
             GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
@@ -673,7 +674,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (!aEvent.isCancelled()) {
                 try {
                     parent.playerState.pushState(PlayerStateKind.GRAVE_YARD, player);
-                    event.setDroppedExp(0);
                     return;
                 } catch (IOException | ConflictingPlayerStateException e) {
                     e.printStackTrace();
