@@ -92,7 +92,7 @@ public class MarketComponent extends BukkitComponent {
         MarketItemConverter.register(registrar, this);
         MarketItemSetConverter.register(registrar, this);
         registrar.registerTopLevelCommands((commandManager, registration) -> {
-            registrar.registerAsSubCommand("market", "Admin Market", commandManager, (innerCommandManager, innerRegistration) -> {
+            registrar.registerAsSubCommand("market", Set.of("mk"), "Admin Market", commandManager, (innerCommandManager, innerRegistration) -> {
                 innerRegistration.register(innerCommandManager, MarketCommandsRegistration.builder(), new MarketCommands(this, invGUI, econ));
             });
         });
