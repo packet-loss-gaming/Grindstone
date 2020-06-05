@@ -4,7 +4,9 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Optional;
 
-public class MarketItem {
+import static gg.packetloss.grindstone.util.StringUtil.toTitleCase;
+
+public class MarketItem implements Comparable<MarketItem> {
     private MarketItemInfo itemInfo;
 
     public MarketItem(MarketItemInfo itemInfo) {
@@ -13,6 +15,10 @@ public class MarketItem {
 
     public String getName() {
         return itemInfo.getName();
+    }
+
+    public String getTitleCasedName() {
+        return toTitleCase(itemInfo.getUnqualifiedName());
     }
 
     public String getDisplayName() {
@@ -75,4 +81,8 @@ public class MarketItem {
         return itemInfo.displaySellInfo();
     }
 
+    @Override
+    public int compareTo(MarketItem o) {
+        return itemInfo.compareTo(o.itemInfo);
+    }
 }

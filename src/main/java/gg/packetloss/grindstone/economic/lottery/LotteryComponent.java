@@ -17,6 +17,7 @@ import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryTicketDatabase;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
+import gg.packetloss.grindstone.events.economy.MarketPurchaseEvent;
 import gg.packetloss.grindstone.exceptions.NotFoundException;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -33,6 +34,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
@@ -55,7 +57,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
     private LocalConfiguration config;
 
-    private static String LOTTERY_BANK_ACCOUNT = "Lottery";
+    private static final String LOTTERY_BANK_ACCOUNT = "Lottery";
     private static double MIN_WINNING;
     private List<Player> recentList = new ArrayList<>();
     private LotteryTicketDatabase lotteryTicketDatabase;
@@ -176,6 +178,13 @@ public class LotteryComponent extends BukkitComponent implements Listener {
                         + winner.getName() + ChatColor.GOLD + " - " + ChatColor.WHITE + economy.format(winner.getAmt()));
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onMarketPurchase(MarketPurchaseEvent event) {
+        // Deposit into the lottery account
+        double lottery = event.getTotalCost() * .03;
+        economy.bankDeposit(LOTTERY_BANK_ACCOUNT, lottery);
     }
 
     @EventHandler(ignoreCancelled = true)

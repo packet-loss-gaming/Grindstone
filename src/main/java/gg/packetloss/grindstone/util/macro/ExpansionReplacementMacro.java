@@ -1,7 +1,8 @@
 package gg.packetloss.grindstone.util.macro;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 public class ExpansionReplacementMacro extends AbstractMacro {
@@ -13,8 +14,8 @@ public class ExpansionReplacementMacro extends AbstractMacro {
     }
 
     @Override
-    public List<String> expand(String input) {
-        List<String> expansions = new ArrayList<>(substitutions.size());
+    public Set<String> expand(String input) {
+        Set<String> expansions = new HashSet<>(substitutions.size());
 
         Matcher matcher = pattern.matcher(input);
         for (String substitution : substitutions) {
