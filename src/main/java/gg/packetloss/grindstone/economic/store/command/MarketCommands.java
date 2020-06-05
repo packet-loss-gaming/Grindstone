@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.item.inventory.InventoryConstants;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -29,8 +30,7 @@ import org.enginehub.piston.annotation.param.Switch;
 
 import java.util.*;
 
-import static gg.packetloss.grindstone.economic.store.MarketComponent.getBaseStack;
-import static gg.packetloss.grindstone.economic.store.MarketComponent.getLookupInstanceFromStacksImmediately;
+import static gg.packetloss.grindstone.economic.store.MarketComponent.*;
 
 @CommandContainer
 public class MarketCommands {
@@ -227,15 +227,19 @@ public class MarketCommands {
         }.display(sender, itemCollection, page);
     }
 
-    // FIXME: Add support for using the held item again
-    @Command(name = "lookup", desc = "Value an item")
-    public void lookup(CommandSender sender, @Switch(name = 'e', desc = "extra") boolean extra,
-                       @Arg(desc = "item filter") MarketItem item) throws CommandException {
-        Text itemNameText = Text.of(
-                item.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED,
-                item.getDisplayName(),
-                TextAction.Hover.showItem(getBaseStack(item.getName()))
-        );
+    private void printDetails(
+            CommandSender sender, MarketItem item, ItemStack stack, boolean showExtra) {
+        Text itemNameText;
+        try {
+            itemNameText = Text.of(
+                    item.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED,
+                    item.getDisplayName(),
+                    TextAction.Hover.showItem(getBaseStack(item.getName()))
+            );
+        } catch (CommandException ex) {
+            ChatUtil.sendError(sender, ex.getMessage());
+            return;
+        }
 
         sender.sendMessage(Text.of(ChatColor.GOLD, "Price Information for: ", itemNameText).build());
 
@@ -255,7 +259,7 @@ public class MarketCommands {
         // Sale Information
         if (item.displaySellInfo()) {
             double fullyRepairedPrice = item.getSellPrice();
-            double sellPrice = /*stack == null ? */fullyRepairedPrice/* : item.getSellUnitPriceForStack(stack).orElse(0d)*/;
+            double sellPrice = stack == null ? fullyRepairedPrice : item.getSellUnitPriceForStack(stack).orElse(0d);
 
             String sellPriceString = ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(sellPrice), "");
             ChatUtil.sendNotice(sender, "When you sell it you get:");
@@ -270,15 +274,15 @@ public class MarketCommands {
         }
 
         // True value / admin information
-        if (extra) {
-            if (!sender.hasPermission("aurora.admin.adminstore.truevalue")) {
-                throw new CommandException("You do not have permission to see extra information about this item.");
-            }
-
-            String basePrice = ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(item.getValue()), "");
-
+        if (showExtra) {
             ChatUtil.sendNotice(sender, "Base price:");
-            ChatUtil.sendNotice(sender, " - " + basePrice + " each.");
+            if (sender.hasPermission("aurora.admin.adminstore.truevalue")) {
+                String basePrice = ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(item.getValue()), "");
+
+                ChatUtil.sendNotice(sender, " - " + basePrice + " each.");
+            } else {
+                ChatUtil.sendError(sender, " - permission denied.");
+            }
         }
 
         if (sender instanceof Player) {
@@ -343,4 +347,28 @@ public class MarketCommands {
         }
     }
 
+    @Command(name = "lookup", desc = "Value an item")
+    public void lookup(CommandSender sender, @Switch(name = 'e', desc = "extra") boolean extra,
+                       @Arg(desc = "item filter") MarketItem item) {
+        printDetails(sender, item, null, extra);
+    }
+
+    @Command(name = "pricecheck", desc = "Price check your held")
+    public void lookup(Player player, @Switch(name = 'e', desc = "extra") boolean extra) {
+        ItemStack held = player.getInventory().getItemInMainHand();
+        if (held.getType() == Material.AIR) {
+            ChatUtil.sendError(player, "Hold an item to price check.");
+            return;
+        }
+
+        MarketComponent.getLookupInstanceFromStacks(List.of(held)).thenAccept((lookupInstance -> {
+            Optional<MarketItem> itemInfo = lookupInstance.getItemDetails(held);
+            if (itemInfo.isEmpty()) {
+                ChatUtil.sendError(player, NOT_AVAILIBLE);
+                return;
+            }
+
+            printDetails(player, itemInfo.get(), held, extra);
+        }));
+    }
 }
