@@ -12,6 +12,9 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.events.guild.GuildGrantExpEvent;
 import gg.packetloss.grindstone.events.guild.GuildLevelUpEvent;
+import gg.packetloss.grindstone.guild.base.GuildBase;
+import gg.packetloss.grindstone.guild.base.NinjaBase;
+import gg.packetloss.grindstone.guild.base.RogueBase;
 import gg.packetloss.grindstone.guild.db.PlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.db.mysql.MySQLPlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.listener.GuildCombatXPListener;
@@ -27,6 +30,8 @@ import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreType;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
+import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
+import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
 import gg.packetloss.grindstone.util.StringUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
@@ -55,9 +60,12 @@ public class GuildComponent extends BukkitComponent implements Listener {
     private HighScoresComponent highScores;
     @InjectComponent
     private ChatBridgeComponent chatBridge;
+    @InjectComponent
+    private ManagedWorldComponent managedWorld;
 
     private PlayerGuildDatabase database = new MySQLPlayerGuildDatabase();
     private Map<UUID, InternalGuildState> guildStateMap = new HashMap<>();
+    private Map<GuildType, GuildBase> guildBaseMap = new EnumMap<>(GuildType.class);
 
     private static GuildComponent guildInst;
 
@@ -91,6 +99,9 @@ public class GuildComponent extends BukkitComponent implements Listener {
                 innerRegistration.register(innerCommandManager, GuildCommandsRegistration.builder(), new GuildCommands(this));
             });
         });
+
+        guildBaseMap.put(GuildType.NINJA, new NinjaBase(managedWorld.get(ManagedWorldGetQuery.CITY)));
+        guildBaseMap.put(GuildType.ROGUE, new RogueBase(managedWorld.get(ManagedWorldGetQuery.CITY)));
     }
 
     @Override
@@ -104,13 +115,17 @@ public class GuildComponent extends BukkitComponent implements Listener {
         return guildStateMap.get(player.getUniqueId());
     }
 
+    private GuildState getState(Player player, InternalGuildState internalGuildState) {
+        return new GuildState(player, internalGuildState, guildBaseMap.get(internalGuildState.getType()));
+    }
+
     public Optional<GuildState> getState(Player player) {
         InternalGuildState baseState = internalGetState(player);
         if (baseState == null) {
             return Optional.empty();
         }
 
-        return Optional.of(new GuildState(player, baseState));
+        return Optional.of(getState(player, baseState));
     }
 
     private CompletableFuture<Optional<InternalGuildState>> constructGuildState(Player player) {
@@ -181,9 +196,9 @@ public class GuildComponent extends BukkitComponent implements Listener {
 
         // Swap powers
         if (currentGuild != null) {
-            new GuildState(player, currentGuild).disablePowers();
+            getState(player, currentGuild).disablePowers();
         }
-        new GuildState(player, newGuildState).enablePowers();
+        getState(player, newGuildState).enablePowers();
 
         return true;
     }
@@ -213,7 +228,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
                 server.getScheduler().runTask(inst, () -> {
                     guildStateMap.put(player.getUniqueId(), internalGuildState);
 
-                    new GuildState(player, internalGuildState).enablePowers();
+                    getState(player, internalGuildState).enablePowers();
                 });
             }));
         });
@@ -232,7 +247,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
            update(player, internalState);
         });
 
-        new GuildState(player, internalState).disablePowers();
+        getState(player, internalState).disablePowers();
     }
 
     @EventHandler(ignoreCancelled = true)

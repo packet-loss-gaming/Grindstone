@@ -76,6 +76,21 @@ public class GuildCommands {
         state.sendLevelChart(player, page);
     }
 
+    @Command(name = "teleport", desc = "Teleport to your guild base")
+    public void guildTeleportCmd(Player player) throws CommandException {
+        Optional<GuildState> optState = component.getState(player);
+        if (optState.isEmpty()) {
+            throw new CommandException("You are not in a guild!");
+        }
+
+        GuildState state = optState.get();
+        state.teleportToGuild().thenAccept((success) -> {
+            if (success) {
+                ChatUtil.sendNotice(player, "Teleported.");
+            }
+        });
+    }
+
     @Command(name = "settings", desc = "View level information")
     public void guildSettingsCmd(Player player,
                                  @Arg(desc = "Setting update", def = "") GuildSettingUpdate setting) throws CommandException {

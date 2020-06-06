@@ -8,6 +8,7 @@ import gg.packetloss.grindstone.events.guild.GuildPowersDisableEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.guild.GuildLevel;
 import gg.packetloss.grindstone.guild.GuildType;
+import gg.packetloss.grindstone.guild.base.GuildBase;
 import gg.packetloss.grindstone.guild.powers.GuildPower;
 import gg.packetloss.grindstone.guild.setting.GuildSetting;
 import gg.packetloss.grindstone.guild.setting.GuildSettingUpdate;
@@ -20,14 +21,17 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class GuildState {
     private Player player;
     private InternalGuildState state;
+    private GuildBase base;
 
-    public GuildState(Player player, InternalGuildState state) {
+    public GuildState(Player player, InternalGuildState state, GuildBase base) {
         this.player = player;
         this.state = state;
+        this.base = base;
     }
 
     public boolean isEnabled() {
@@ -195,5 +199,9 @@ public class GuildState {
         GuildGrantExpEvent event = new GuildGrantExpEvent(player, getType(), amount);
         CommandBook.callEvent(event);
         return !event.isCancelled();
+    }
+
+    public CompletableFuture<Boolean> teleportToGuild() {
+        return player.teleportAsync(base.getLocation());
     }
 }
