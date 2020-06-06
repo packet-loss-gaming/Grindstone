@@ -26,6 +26,7 @@ import org.bukkit.entity.Player;
 
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -151,21 +152,10 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         }
     }
 
-    private void clearState(Player player, NinjaParkourPlayerState playerState) {
-        clearStateColumns(playerState);
-        playerStateMap.remove(player);
-    }
-
-    protected void clearState(Player player) {
-        NinjaParkourPlayerState playerState = playerStateMap.get(player);
-        if (playerState != null) {
-            clearState(player, playerState);
-        }
-    }
-
     private void reset(Player player, NinjaParkourPlayerState playerState) {
         teleportToStart(player);
-        clearState(player, playerState);
+        clearStateColumns(playerState);
+        playerStateMap.remove(player);
     }
 
     private void reset(Player player) {
@@ -232,6 +222,26 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         return isStandingOnBlock(player, Material.OBSIDIAN);
     }
 
+    private long lastCleanup = 0;
+
+    private void tryStateCleanup() {
+        if (System.currentTimeMillis() - lastCleanup < TimeUnit.SECONDS.toMillis(5)) {
+            return;
+        }
+
+        Iterator<Map.Entry<Player, NinjaParkourPlayerState>> it = playerStateMap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Player, NinjaParkourPlayerState> entry = it.next();
+            Player player = entry.getKey();
+            if (!player.isValid() || !contains(player)) {
+                clearStateColumns(entry.getValue());
+                it.remove();
+            }
+        }
+
+        lastCleanup = System.currentTimeMillis();
+    }
+
     @Override
     public void run() {
         for (Player player : getContainedParticipants()) {
@@ -250,5 +260,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
                 createColumns(player);
             }
         }
+
+        tryStateCleanup();
     }
 }

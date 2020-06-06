@@ -5,7 +5,6 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 public class NinjaParkourListener extends AreaListener<NinjaParkour> {
@@ -19,11 +18,6 @@ public class NinjaParkourListener extends AreaListener<NinjaParkour> {
         if (parent.contains(player)) {
             parent.teleportToStart(player);
         }
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        parent.clearState(event.getPlayer());
     }
 
     @EventHandler
