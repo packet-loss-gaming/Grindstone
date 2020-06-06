@@ -163,16 +163,18 @@ public class GuildComponent extends BukkitComponent implements Listener {
         if (optNewGuildState.isPresent()) {
             newGuildState = optNewGuildState.get();
 
+            // Allow admins to switch guilds for free while in admin mode, for testing purposes
             if (!admin.isAdmin(player)) {
-                // Allow admins to switch guilds for free while in admin mode, for testing purposes
                 double reduction = Math.min(newGuildState.getExperience() * .1, 1000);
                 newGuildState.setExperience(Math.max(0, newGuildState.getExperience() - reduction));
-
-                // Don't announce if this is an admin change
-                announceGuildJoin(player, getGuildName(newGuildState));
             }
         } else {
             newGuildState = constructDefaultGuildState(guildType);
+        }
+
+        // Don't announce if this is an admin change
+        if (!admin.isAdmin(player)) {
+            announceGuildJoin(player, getGuildName(newGuildState));
         }
 
         // Sync the new guild
