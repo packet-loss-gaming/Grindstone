@@ -132,4 +132,41 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
         }
         return Optional.empty();
     }
+
+    @Override
+    public Optional<Integer> getAverageScore(ScoreType scoreType) {
+        try (Connection con = MySQLHandle.getConnection()) {
+            String IS_EMPTY_SQL = "SELECT `high-scores`.`id` FROM `high-scores` " +
+                    "WHERE `high-scores`.`score-type-id` = ? LIMIT 1";
+
+            try (PreparedStatement statement = con.prepareStatement(IS_EMPTY_SQL)) {
+                statement.setInt(1, scoreType.getId());
+
+                try (ResultSet results = statement.executeQuery()) {
+                    if (!results.next()) {
+                        return Optional.empty();
+                    }
+                }
+            }
+
+            String SQL = "SELECT AVG(`high-scores`.`value`) FROM `high-scores` " +
+                    "WHERE `high-scores`.`score-type-id` = ?";
+
+            try (PreparedStatement statement = con.prepareStatement(SQL)) {
+                statement.setInt(1, scoreType.getId());
+
+                try (ResultSet results = statement.executeQuery()) {
+                    if (results.next()) {
+                        return Optional.of(results.getInt(1));
+                    }
+
+                    throw new IllegalStateException();
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
 }

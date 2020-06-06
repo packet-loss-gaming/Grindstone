@@ -106,6 +106,10 @@ public class HighScoresComponent extends BukkitComponent {
         return getTop(scoreType, 5);
     }
 
+    public Optional<Integer> getAverage(ScoreType scoreType) {
+        return database.getAverageScore(scoreType);
+    }
+
     private Text createScoreLine(int rank, ScoreEntry entry, ScoreType scoreType) {
         String playerName = entry.getPlayer().getName();
 

@@ -3,6 +3,7 @@ package gg.packetloss.grindstone.guild.state;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.bukkittext.TextAction;
+import gg.packetloss.grindstone.events.guild.GuildGrantExpEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersDisableEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.guild.GuildLevel;
@@ -184,5 +185,15 @@ public class GuildState {
                 return levelText;
             }
         }.display(player, levels, page);
+    }
+
+    public boolean grantExp(double amount) {
+        if (isDisabled()) {
+            return false;
+        }
+
+        GuildGrantExpEvent event = new GuildGrantExpEvent(player, getType(), amount);
+        CommandBook.callEvent(event);
+        return !event.isCancelled();
     }
 }

@@ -7,4 +7,6 @@ public interface HighScoreDatabase {
     void batchProcess(List<HighScoreUpdate> scoresToUpdate);
 
     Optional<List<ScoreEntry>> getTop(ScoreType scoreType, int amt);
+
+    public Optional<Integer> getAverageScore(ScoreType scoreType);
 }

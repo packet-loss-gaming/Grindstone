@@ -10,9 +10,11 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
+import gg.packetloss.grindstone.events.guild.GuildGrantExpEvent;
 import gg.packetloss.grindstone.events.guild.GuildLevelUpEvent;
 import gg.packetloss.grindstone.guild.db.PlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.db.mysql.MySQLPlayerGuildDatabase;
+import gg.packetloss.grindstone.guild.listener.GuildCombatXPListener;
 import gg.packetloss.grindstone.guild.listener.NinjaListener;
 import gg.packetloss.grindstone.guild.listener.RogueListener;
 import gg.packetloss.grindstone.guild.passive.PotionMetabolizer;
@@ -26,18 +28,14 @@ import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreType;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.util.StringUtil;
-import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
-import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -73,6 +71,8 @@ public class GuildComponent extends BukkitComponent implements Listener {
         guildInst = this;
 
         inst.registerEvents(this);
+
+        inst.registerEvents(new GuildCombatXPListener(this::getState));
 
         inst.registerEvents(new NinjaListener(this::internalGetState));
         inst.registerEvents(new RogueListener(this::internalGetState));
@@ -235,6 +235,18 @@ public class GuildComponent extends BukkitComponent implements Listener {
         new GuildState(player, internalState).disablePowers();
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onWhoisLookup(InfoComponent.PlayerWhoisEvent event) {
+        if (event.getPlayer() instanceof Player) {
+            Player player = (Player) event.getPlayer();
+
+            getState(player).ifPresent((guild) -> {
+                event.addWhoisInformation("Guild", guild.getType().name());
+                event.addWhoisInformation("Guild Powers Enabled", guild.isEnabled());
+            });
+        }
+    }
+
     private void showTitleForNewLevel(Player player, String guildName, int newLevel) {
         player.sendTitle(Title.builder().title(
                 Text.of(
@@ -300,44 +312,15 @@ public class GuildComponent extends BukkitComponent implements Listener {
         });
     }
 
-    private static EDBEExtractor<Player, LivingEntity, Arrow> extractor = new EDBEExtractor<>(
-            Player.class,
-            LivingEntity.class,
-            Arrow.class
-    );
-
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onEntityDamage(EntityDamageByEntityEvent event) {
-        if (event.getFinalDamage() < 1) {
-            return;
-        }
+    public void onGuildGrantExp(GuildGrantExpEvent event) {
+        Player player = event.getPlayer();
+        InternalGuildState state = internalGetState(player);
 
-        CombatantPair<Player, LivingEntity, Arrow> result = extractor.extractFrom(event);
-        if (result == null) return;
+        Validate.notNull(state);
+        Validate.isTrue(state.isEnabled());
+        Validate.isTrue(state.getType() == event.getGuild());
 
-        final Player attacker = result.getAttacker();
-        InternalGuildState state = internalGetState(attacker);
-        if (state == null) {
-            return;
-        }
-
-        if (!state.isEnabled()) {
-            return;
-        }
-
-        double maxDamage = Math.min(500, Math.min(result.getDefender().getMaxHealth(), event.getFinalDamage()));
-        grantExp(attacker, state, maxDamage * .1);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onWhoisLookup(InfoComponent.PlayerWhoisEvent event) {
-        if (event.getPlayer() instanceof Player) {
-            Player player = (Player) event.getPlayer();
-
-            getState(player).ifPresent((guild) -> {
-               event.addWhoisInformation("Guild", guild.getType().name());
-               event.addWhoisInformation("Guild Powers Enabled", guild.isEnabled());
-            });
-        }
+        grantExp(player, state, event.getGrantedExp());
     }
 }

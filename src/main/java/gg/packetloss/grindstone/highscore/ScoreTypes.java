@@ -24,4 +24,5 @@ public class ScoreTypes {
     public static final ScoreType SHNUGGLES_PRIME_TEAM_KILLS = new ScoreType(14, true, ScoreType.Order.DESC);
     public static final ScoreType NINJA_LEVEL = new ExpBasedScoreType(15);
     public static final ScoreType ROGUE_LEVEL = new ExpBasedScoreType(16);
+    public static final ScoreType FASTEST_NINJA_PARKOUR = new TimeBasedScoreType(17, false, ScoreType.Order.ASC);
 }
