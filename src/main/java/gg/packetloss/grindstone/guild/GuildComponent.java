@@ -16,6 +16,7 @@ import gg.packetloss.grindstone.guild.db.mysql.MySQLPlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.listener.NinjaListener;
 import gg.packetloss.grindstone.guild.listener.RogueListener;
 import gg.packetloss.grindstone.guild.passive.PotionMetabolizer;
+import gg.packetloss.grindstone.guild.powers.GuildPower;
 import gg.packetloss.grindstone.guild.setting.GuildSettingConverter;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.guild.state.InternalGuildState;
@@ -40,10 +41,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
@@ -237,12 +235,6 @@ public class GuildComponent extends BukkitComponent implements Listener {
         new GuildState(player, internalState).disablePowers();
     }
 
-    private void announceNewLevel(Player player, String guildName, int newLevel) {
-        String baseMessage = player.getDisplayName() + " is now " + guildName + " level " + newLevel + "!";
-        chatBridge.broadcast(baseMessage);
-        Bukkit.broadcast(Text.of(ChatColor.GOLD, baseMessage).build());
-    }
-
     private void showTitleForNewLevel(Player player, String guildName, int newLevel) {
         player.sendTitle(Title.builder().title(
                 Text.of(
@@ -259,6 +251,37 @@ public class GuildComponent extends BukkitComponent implements Listener {
         ).build());
     }
 
+    private void announceNewLevel(Player player, String guildName, int newLevel) {
+        String baseMessage = player.getDisplayName() + " is now " + guildName + " level " + newLevel + "!";
+        chatBridge.broadcast(baseMessage);
+        Bukkit.broadcast(Text.of(ChatColor.GOLD, baseMessage).build());
+    }
+
+    private void showNewPowers(Player player, InternalGuildState state, int newLevel) {
+        List<GuildPower> newPowers = new ArrayList<>();
+
+        for (GuildPower power : state.getType().getPowers()) {
+            // Note: We could break once we reach a level past newLevel, but this is relatively
+            // cheap, and we could introduce subtle bugs if powers were to even get temporarily out
+            // of order.
+            if (power.getUnlockLevel() == newLevel) {
+                newPowers.add(power);
+            }
+        }
+
+        if (newPowers.isEmpty()) {
+            return;
+        }
+
+        player.sendMessage(Text.of(ChatColor.YELLOW, "Powers unlocked:").build());
+        for (GuildPower power : newPowers) {
+            player.sendMessage(Text.of(
+                    ChatColor.YELLOW, " - ",
+                    ChatColor.DARK_GREEN, StringUtil.toTitleCase(power.name())
+            ).build());
+        }
+    }
+
     private void grantExp(Player player, InternalGuildState state, double exp) {
         double currentExp = state.getExperience();
 
@@ -270,6 +293,8 @@ public class GuildComponent extends BukkitComponent implements Listener {
             String guildName = getGuildName(state);
             showTitleForNewLevel(player, guildName, newLevel);
             announceNewLevel(player, guildName, newLevel);
+
+            showNewPowers(player, state, newLevel);
 
             update(player, state);
         });
