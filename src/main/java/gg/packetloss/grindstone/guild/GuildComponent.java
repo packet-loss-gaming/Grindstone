@@ -9,6 +9,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.events.guild.GuildLevelUpEvent;
 import gg.packetloss.grindstone.guild.db.PlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.db.mysql.MySQLPlayerGuildDatabase;
@@ -56,6 +57,8 @@ public class GuildComponent extends BukkitComponent implements Listener {
     private AdminComponent admin;
     @InjectComponent
     private HighScoresComponent highScores;
+    @InjectComponent
+    private ChatBridgeComponent chatBridge;
 
     private PlayerGuildDatabase database = new MySQLPlayerGuildDatabase();
     private Map<UUID, InternalGuildState> guildStateMap = new HashMap<>();
@@ -132,6 +135,16 @@ public class GuildComponent extends BukkitComponent implements Listener {
         throw new UnsupportedOperationException();
     }
 
+    private String getGuildName(InternalGuildState state) {
+        return state.getType().name().toLowerCase();
+    }
+
+    private void announceGuildJoin(Player player, String guildName) {
+        String baseMessage = player.getDisplayName() + " has joined the " + guildName + " guild!";
+        chatBridge.broadcast(baseMessage);
+        Bukkit.broadcast(Text.of(ChatColor.GOLD, baseMessage).build());
+    }
+
     public boolean joinGuild(Player player, GuildType guildType) {
         UUID playerID = player.getUniqueId();
 
@@ -150,9 +163,13 @@ public class GuildComponent extends BukkitComponent implements Listener {
         if (optNewGuildState.isPresent()) {
             newGuildState = optNewGuildState.get();
 
-            // Allow admins to switch guilds for free while in admin mode, for testing purposes
             if (!admin.isAdmin(player)) {
-                newGuildState.setExperience(newGuildState.getExperience() * .9);
+                // Allow admins to switch guilds for free while in admin mode, for testing purposes
+                double reduction = Math.min(newGuildState.getExperience() * .1, 1000);
+                newGuildState.setExperience(Math.max(0, newGuildState.getExperience() - reduction));
+
+                // Don't announce if this is an admin change
+                announceGuildJoin(player, getGuildName(newGuildState));
             }
         } else {
             newGuildState = constructDefaultGuildState(guildType);
@@ -218,6 +235,28 @@ public class GuildComponent extends BukkitComponent implements Listener {
         new GuildState(player, internalState).disablePowers();
     }
 
+    private void announceNewLevel(Player player, String guildName, int newLevel) {
+        String baseMessage = player.getDisplayName() + " is now " + guildName + " level " + newLevel + "!";
+        chatBridge.broadcast(baseMessage);
+        Bukkit.broadcast(Text.of(ChatColor.GOLD, baseMessage).build());
+    }
+
+    private void showTitleForNewLevel(Player player, String guildName, int newLevel) {
+        player.sendTitle(Title.builder().title(
+                Text.of(
+                        ChatColor.GOLD,
+                        "LEVEL UP"
+                ).build()
+        ).subtitle(
+                Text.of(
+                        ChatColor.GOLD,
+                        StringUtil.toTitleCase(guildName),
+                        " Level ",
+                        newLevel
+                ).build()
+        ).build());
+    }
+
     private void grantExp(Player player, InternalGuildState state, double exp) {
         double currentExp = state.getExperience();
 
@@ -226,19 +265,9 @@ public class GuildComponent extends BukkitComponent implements Listener {
         GuildLevel.getNewLevel(currentExp, exp).ifPresent((newLevel) -> {
             CommandBook.callEvent(new GuildLevelUpEvent(player, state.getType(), newLevel));
 
-            player.sendTitle(Title.builder().title(
-                    Text.of(
-                            ChatColor.GOLD,
-                            "LEVEL UP"
-                    ).build()
-            ).subtitle(
-                    Text.of(
-                            ChatColor.GOLD,
-                            StringUtil.toTitleCase(state.getType().name()),
-                            " Level ",
-                            newLevel
-                    ).build()
-            ).build());
+            String guildName = getGuildName(state);
+            showTitleForNewLevel(player, guildName, newLevel);
+            announceNewLevel(player, guildName, newLevel);
 
             update(player, state);
         });
