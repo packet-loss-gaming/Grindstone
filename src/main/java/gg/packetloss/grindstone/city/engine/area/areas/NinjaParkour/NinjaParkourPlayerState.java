@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class NinjaParkourPlayerState {
-    private long startTime = System.currentTimeMillis();
+    private long startTime = 0;
     private List<BlockVector2> columnVectors = new ArrayList<>();
     private BlockVector2 lastSurvivor = null;
 
@@ -55,8 +55,12 @@ public class NinjaParkourPlayerState {
 
         if (!columnVectors.isEmpty()) {
             lastSurvivor = columnVectors.get(0);
+            if (startTime == 0) {
+                startTime = System.currentTimeMillis();
+            }
         } else {
             lastSurvivor = WorldEditBridge.toBlockVec2(player);
+            startTime = 0;
         }
     }
 }

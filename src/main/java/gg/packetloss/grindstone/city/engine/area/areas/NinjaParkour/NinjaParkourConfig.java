@@ -6,6 +6,8 @@ import com.zachsthings.libcomponents.config.Setting;
 public class NinjaParkourConfig extends ConfigurationBase {
     @Setting("columns.count")
     public int columnCount = 10;
+    @Setting("columns.min-range")
+    public int columnMinRange = 1;
     @Setting("columns.max-range")
-    public int columMaxRange = 5;
+    public int columnMaxRange = 5;
 }

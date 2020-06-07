@@ -27,6 +27,7 @@ import org.bukkit.entity.Player;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -111,21 +112,45 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
 
         playerState.cleanupPoints(player, this::clearColumn);
 
-        int range = config.columMaxRange;
         BlockVector2 origin = playerState.getLastSurvivor();
-        for (int i = 0; i < config.columnCount; ++i) {
-            BlockVector2 targetColumn = origin.add(
-                    ChanceUtil.getRangedRandom(-range, range),
-                    ChanceUtil.getRangedRandom(-range, range)
-            );
 
-            if (!isValidTarget(targetColumn)) {
+        int minRange = config.columnMinRange;
+        int randomRange = config.columnMaxRange - minRange;
+
+        List<BlockVector2> columnVectors = playerState.getColumnVectors();
+        for (int i = 0; i < config.columnCount; ++i) {
+            // Calculate column position
+            int xAdjustment = minRange + ChanceUtil.getRandom(randomRange);
+            if (ChanceUtil.getChance(2)) {
+                xAdjustment = -xAdjustment;
+            }
+            int zAdjustment = -(minRange + ChanceUtil.getRandom(randomRange));
+
+            BlockVector2 targetColumn = origin.add(xAdjustment, zAdjustment);
+
+            // Check if column is near an existing column
+            boolean nearExistingColumn = false;
+            checkNearExisting: {
+                for (int x = -1; x <= 1; ++x) {
+                    for (int z = -1; z <= 1; ++z) {
+                        if (columnVectors.contains(targetColumn.add(x, z))) {
+                            // Backtrack we've double selected within ourself
+                            --i;
+                            nearExistingColumn = true;
+                            break checkNearExisting;
+                        }
+                    }
+                }
+            }
+
+            // If near an existing column, or otherwise an invalid point, don't add it
+            if (nearExistingColumn || !isValidTarget(targetColumn)) {
                 continue;
             }
 
+            // Create and add the column
             createColumn(targetColumn);
-
-            playerState.getColumnVectors().add(targetColumn);
+            columnVectors.add(targetColumn);
         }
     }
 
