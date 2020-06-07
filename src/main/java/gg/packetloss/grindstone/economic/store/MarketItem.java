@@ -82,6 +82,16 @@ public class MarketItem implements Comparable<MarketItem> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        return o instanceof MarketItem && itemInfo.getName().equals(((MarketItem) o).getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return itemInfo.getName().hashCode();
+    }
+
+    @Override
     public int compareTo(MarketItem o) {
         return itemInfo.compareTo(o.itemInfo);
     }
