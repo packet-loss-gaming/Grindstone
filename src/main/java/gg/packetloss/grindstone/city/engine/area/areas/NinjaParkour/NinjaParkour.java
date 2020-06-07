@@ -73,12 +73,24 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         playerStateMap.values().forEach(this::clearStateColumns);
     }
 
-    private void createColumn(BlockVector2 position) {
+    private void createColumn(Player forPlayer, BlockVector2 position) {
         int targetHeight = FLOOR_LEVEL + ChanceUtil.getRangedRandom(-3, 2);
 
         Block block = world.getBlockAt(position.getBlockX(), LAVA_START, position.getBlockZ());
         do {
             block.setType(Material.OBSIDIAN);
+
+            if (block.getY() > LAVA_END) {
+                Block changedBlock = block;
+                CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                    getContainedParticipants().forEach(player -> {
+                        if (player == forPlayer) {
+                            return;
+                        }
+                        player.sendBlockChange(changedBlock.getLocation(), Material.BLACK_STAINED_GLASS.createBlockData());
+                    });
+                }, 1);
+            }
 
             block = block.getRelative(BlockFace.UP);
         } while (block.getY() < targetHeight);
@@ -150,7 +162,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
             }
 
             // Create and add the column
-            createColumn(targetColumn);
+            createColumn(player, targetColumn);
             columnVectors.add(targetColumn);
         }
     }
