@@ -49,9 +49,10 @@ public class MarketCommands {
                     @Arg(desc = "amount", def = "1") int amount,
                     @Arg(desc = "item") MarketItemSet items)
             throws CommandException {
-        amount = Math.min(InventoryConstants.PLAYER_INV_STORAGE_LENGTH, Math.max(1, amount));
-
         MarketTransactionBuilder transactionBuilder = new MarketTransactionBuilder();
+
+        // Place a reasonable cap on the amount of items that can be purchased.
+        amount = Math.min((InventoryConstants.PLAYER_INV_STORAGE_LENGTH * 64) / items.size(), Math.max(1, amount));
 
         for (MarketItem item : items) {
             if (!item.isBuyable()) {

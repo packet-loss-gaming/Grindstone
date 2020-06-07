@@ -16,6 +16,10 @@ public class MarketItemSet implements Iterable<MarketItem> {
         return items;
     }
 
+    public int size() {
+        return items.size();
+    }
+
     @Override
     public Iterator<MarketItem> iterator() {
         return items.iterator();
