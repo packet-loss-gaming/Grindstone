@@ -74,7 +74,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
     }
 
     private void createColumn(BlockVector2 position) {
-        int targetHeight = FLOOR_LEVEL + ChanceUtil.getRangedRandom(-4, 2);
+        int targetHeight = FLOOR_LEVEL + ChanceUtil.getRangedRandom(-3, 2);
 
         Block block = world.getBlockAt(position.getBlockX(), LAVA_START, position.getBlockZ());
         do {
