@@ -121,7 +121,7 @@ public class RogueChaser extends AreaComponent<RogueChaserConfig> {
             long expGranted = Math.max(90 - timeTaken, 30);
             if (guildState.grantExp(expGranted)) {
                 ChatUtil.sendNotice(
-                        getContainedParticipants(),
+                        getAudiblePlayers(),
                         player.getDisplayName() + " got the dragon for " +
                                 ChatColor.WHITE + expGranted +
                                 ChatColor.YELLOW + " experience!"

@@ -13,6 +13,7 @@ import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
@@ -213,6 +214,11 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
 
             double expGranted = relativePerformance * 350;
             if (guildState.grantExp(expGranted)) {
+                ChatUtil.sendNotice(getAudiblePlayers(),
+                        player.getDisplayName() + " successfully crossed in " +
+                                ChatColor.WHITE + seconds +
+                                ChatColor.YELLOW + " seconds!");
+
                 Text text = Text.of(
                         ChatColor.YELLOW, "Your performance earns you ",
                         Text.of(ChatColor.WHITE, new DecimalFormat("#.##").format(expGranted)),
