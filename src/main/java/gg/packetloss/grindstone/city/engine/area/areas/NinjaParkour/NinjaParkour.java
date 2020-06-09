@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import org.bukkit.ChatColor;
@@ -27,10 +28,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Ninja Parkour", desc = "Ninja parkour course")
@@ -51,6 +49,8 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
     protected Location resetPoint;
 
     private Map<Player, NinjaParkourPlayerState> playerStateMap = new HashMap<>();
+    private List<BlockVector2> columnVectors = new ArrayList<>();
+    private long generationTime = 0;
 
     public NinjaParkour() {
         super(1);
@@ -71,27 +71,15 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
 
     @Override
     public void disable() {
-        playerStateMap.values().forEach(this::clearStateColumns);
+        columnVectors.forEach(this::clearColumn);
     }
 
-    private void createColumn(Player forPlayer, BlockVector2 position) {
+    private void createColumn(BlockVector2 position) {
         int targetHeight = FLOOR_LEVEL + ChanceUtil.getRangedRandom(-3, 2);
 
         Block block = world.getBlockAt(position.getBlockX(), LAVA_START, position.getBlockZ());
         do {
             block.setType(Material.OBSIDIAN);
-
-            if (block.getY() > LAVA_END) {
-                Block changedBlock = block;
-                CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                    getContainedParticipants().forEach(player -> {
-                        if (player == forPlayer) {
-                            return;
-                        }
-                        player.sendBlockChange(changedBlock.getLocation(), Material.BLACK_STAINED_GLASS.createBlockData());
-                    });
-                }, 1);
-            }
 
             block = block.getRelative(BlockFace.UP);
         } while (block.getY() < targetHeight);
@@ -111,28 +99,15 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         return true;
     }
 
-    private void createColumns(Player player) {
-        NinjaParkourPlayerState playerState = playerStateMap.compute(player, (ignored, existingState) -> {
-            if (existingState == null) {
-                existingState = new NinjaParkourPlayerState();
-            }
-
-            return existingState;
-        });
-
-        if (playerState.isOnStableColumn(player)) {
-            return;
-        }
-
-        playerState.cleanupPoints(player, this::clearColumn);
-
-        BlockVector2 origin = playerState.getLastSurvivor();
-
+    private void generateColumns(BlockVector2 origin) {
         int minRange = config.columnMinRange;
         int randomRange = config.columnMaxRange - minRange;
 
-        List<BlockVector2> columnVectors = playerState.getColumnVectors();
-        for (int i = 0; i < config.columnCount; ++i) {
+        int columnsGenerated = 0;
+        final int columnsToGenerate = config.columnCount;
+        int allowedFailuresRemaining = 10;
+
+        while (columnsGenerated != columnsToGenerate && allowedFailuresRemaining != 0) {
             // Calculate column position
             int xAdjustment = minRange + ChanceUtil.getRandom(randomRange);
             if (ChanceUtil.getChance(2)) {
@@ -148,8 +123,6 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
                 for (int x = -1; x <= 1; ++x) {
                     for (int z = -1; z <= 1; ++z) {
                         if (columnVectors.contains(targetColumn.add(x, z))) {
-                            // Backtrack we've double selected within ourself
-                            --i;
                             nearExistingColumn = true;
                             break checkNearExisting;
                         }
@@ -159,13 +132,45 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
 
             // If near an existing column, or otherwise an invalid point, don't add it
             if (nearExistingColumn || !isValidTarget(targetColumn)) {
+                --allowedFailuresRemaining;
                 continue;
             }
 
             // Create and add the column
-            createColumn(player, targetColumn);
+            createColumn(targetColumn);
             columnVectors.add(targetColumn);
+
+            ++columnsGenerated;
         }
+
+        if (columnsGenerated == 0) {
+            return;
+        }
+
+        int newColumnStart = columnVectors.size() - columnsGenerated;
+
+        BlockVector2 furthestColumn = columnVectors.get(newColumnStart);
+        for (int i = newColumnStart + 1; i < columnVectors.size(); ++i) {
+            BlockVector2 column = columnVectors.get(i);
+            if (column.getZ() < furthestColumn.getZ()) {
+                furthestColumn = column;
+            }
+        }
+
+        generateColumns(furthestColumn);
+    }
+
+    private void createColumns(Player player) {
+        playerStateMap.putIfAbsent(player, new NinjaParkourPlayerState());
+
+        if (!columnVectors.isEmpty()) {
+            return;
+        }
+
+        BlockVector2 origin = WorldEditBridge.toBlockVec2(player);
+        generateColumns(origin);
+
+        generationTime = System.currentTimeMillis();
     }
 
     private void clearColumn(BlockVector2 position) {
@@ -181,29 +186,72 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         }
     }
 
+    private boolean degradeColumn(BlockVector2 position) {
+        Block block = world.getBlockAt(position.getBlockX(), LAVA_START, position.getBlockZ());
+        while (block.getType() == Material.OBSIDIAN) {
+            Block next = block.getRelative(BlockFace.UP);
+
+            if (next.getType() == Material.AIR) {
+                if (block.getY() <= LAVA_END) {
+                    block.setType(Material.LAVA);
+                    return true;
+                } else {
+                    block.setType(Material.AIR);
+                    return false;
+                }
+            }
+
+            block = next;
+        }
+        return false;
+    }
+
+    private boolean allStandingOn(Material material) {
+        for (Player player : getContainedParticipants()) {
+            if (!isStandingOnBlock(player, material)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void tryDegradeColumns() {
+        if (columnVectors.isEmpty()) {
+            return;
+        }
+
+        int chanceOfDegrade = config.degradeChance;
+        int numToCheck = Math.max(1, columnVectors.size() / 4);
+
+        if (allStandingOn(Material.SANDSTONE) || isEmpty()) {
+            chanceOfDegrade = 1;
+            numToCheck = columnVectors.size();
+        } else if (System.currentTimeMillis() - generationTime < TimeUnit.SECONDS.toMillis(10)) {
+            return;
+        }
+
+        Iterator<BlockVector2> it = columnVectors.iterator();
+        for (int i = 0; i < numToCheck; ++i) {
+            BlockVector2 column = it.next();
+            if (!ChanceUtil.getChance(chanceOfDegrade)) {
+                continue;
+            }
+
+            if (degradeColumn(column)) {
+                clearColumn(column);
+                it.remove();
+            }
+        }
+    }
+
     protected void teleportToStart(Player player) {
         player.teleport(resetPoint);
     }
 
-    private void clearStateColumns(NinjaParkourPlayerState playerState) {
-        for (BlockVector2 columnPosition : playerState.getColumnVectors()) {
-            clearColumn(columnPosition);
-        }
-    }
-
-    private void reset(Player player, NinjaParkourPlayerState playerState) {
-        teleportToStart(player);
-        clearStateColumns(playerState);
-        playerStateMap.remove(player);
-    }
-
     private void reset(Player player) {
-        NinjaParkourPlayerState playerState = playerStateMap.get(player);
-        if (playerState == null) {
-            teleportToStart(player);
-        } else {
-            reset(player, playerState);
-        }
+        playerStateMap.remove(player);
+        teleportToStart(player);
     }
 
     private int getBestTime() {
@@ -214,11 +262,8 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         NinjaParkourPlayerState playerState = playerStateMap.get(player);
 
         // This player wasn't really playing
-        if (playerState == null) {
-            teleportToStart(player);
-            return;
-        } else if (!isParticipant(player)) {
-            reset(player, playerState);
+        if (playerState == null || !isParticipant(player)) {
+            reset(player);
             return;
         }
 
@@ -230,10 +275,10 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
             double relativePerformance = ((bestTime * 2.0) / seconds);
             boolean newRecord = seconds < bestTime;
             if (newRecord) {
-                relativePerformance = 10;
+                relativePerformance = config.newRecordXpMultiplier;
             }
 
-            double expGranted = relativePerformance * 225;
+            double expGranted = relativePerformance * config.baseXp;
             if (guildState.grantExp(expGranted)) {
                 if (newRecord) {
                     ChatUtil.sendNotice(
@@ -259,7 +304,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
 
         highScores.update(player, ScoreTypes.FASTEST_NINJA_PARKOUR, seconds);
 
-        reset(player, playerState);
+        reset(player);
     }
 
     private boolean isOnStartingHalf(Player player) {
@@ -274,12 +319,10 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         return player.getLocation().add(0, -1, 0).getBlock().getType() == blockType;
     }
 
-    private boolean isStandingOnStoneBrick(Player player) {
-        return isStandingOnBlock(player, Material.STONE_BRICKS);
-    }
-
-    private boolean isStandingOnObsidian(Player player) {
-        return isStandingOnBlock(player, Material.OBSIDIAN);
+    private void ensurePlayerStateSet(Player player) {
+        if (!playerStateMap.containsKey(player)) {
+            reset(player);
+        }
     }
 
     private long lastCleanup = 0;
@@ -293,8 +336,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         while (it.hasNext()) {
             Map.Entry<Player, NinjaParkourPlayerState> entry = it.next();
             Player player = entry.getKey();
-            if (!player.isValid() || !contains(player)) {
-                clearStateColumns(entry.getValue());
+            if (!player.isValid() || !contains(player) || isStandingOnBlock(player, Material.SANDSTONE)) {
                 it.remove();
             }
         }
@@ -310,17 +352,18 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
                 continue;
             }
 
-            if (isStandingOnStoneBrick(player)) {
+            if (isStandingOnBlock(player, Material.STONE_BRICKS)) {
                 if (isOnStartingHalf(player)) {
                     createColumns(player);
                 } else {
                     finished(player);
                 }
-            } else if (isStandingOnObsidian(player)) {
-                createColumns(player);
+            } else if (isStandingOnBlock(player, Material.OBSIDIAN)) {
+                ensurePlayerStateSet(player);
             }
         }
 
+        tryDegradeColumns();
         tryStateCleanup();
     }
 }
