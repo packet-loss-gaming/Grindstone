@@ -98,6 +98,15 @@ public class HighScoresComponent extends BukkitComponent {
         queueUpdate(new HighScoreUpdate(player.getUniqueId(), scoreType, value));
     }
 
+    public Optional<ScoreEntry> getBest(ScoreType scoreType) {
+        List<ScoreEntry> scores = database.getTop(scoreType, 1).get();
+        if (scores.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(scores.get(0));
+    }
+
     public List<ScoreEntry> getTop(ScoreType scoreType, int amt) {
         return database.getTop(scoreType, amt).get();
     }

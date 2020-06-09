@@ -9,6 +9,7 @@ import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreEntry;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
 import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
@@ -205,6 +206,10 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         }
     }
 
+    private int getBestTime() {
+        return highScores.getBest(ScoreTypes.FASTEST_NINJA_PARKOUR).map(ScoreEntry::getScore).orElse(Integer.MAX_VALUE);
+    }
+
     private void finished(Player player) {
         NinjaParkourPlayerState playerState = playerStateMap.get(player);
 
@@ -220,16 +225,28 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         int seconds = (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - playerState.getStartTime());
 
         guild.getState(player).ifPresent(guildState -> {
-            int averageScore = highScores.getAverage(ScoreTypes.FASTEST_NINJA_PARKOUR).orElse(0);
+            int bestTime = getBestTime();
 
-            double relativePerformance = ((double) averageScore / seconds);
+            double relativePerformance = ((bestTime * 2.0) / seconds);
+            boolean newRecord = seconds < bestTime;
+            if (newRecord) {
+                relativePerformance = 10;
+            }
 
-            double expGranted = relativePerformance * 350;
+            double expGranted = relativePerformance * 225;
             if (guildState.grantExp(expGranted)) {
-                ChatUtil.sendNotice(getAudiblePlayers(),
+                if (newRecord) {
+                    ChatUtil.sendNotice(
+                            getAudiblePlayers(),
+                            ChatColor.GOLD + player.getDisplayName() + " set a new record!"
+                    );
+                }
+                ChatUtil.sendNotice(
+                        getAudiblePlayers(),
                         player.getDisplayName() + " successfully crossed in " +
                                 ChatColor.WHITE + seconds +
-                                ChatColor.YELLOW + " seconds!");
+                                ChatColor.YELLOW + " seconds!"
+                );
 
                 Text text = Text.of(
                         ChatColor.YELLOW, "Your performance earns you ",
