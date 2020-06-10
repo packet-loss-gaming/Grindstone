@@ -8,70 +8,97 @@ package gg.packetloss.grindstone;
 
 import com.garbagemule.MobArena.events.ArenaPlayerJoinEvent;
 import com.garbagemule.MobArena.events.ArenaPlayerLeaveEvent;
+import com.garbagemule.MobArena.framework.Arena;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.guild.GuildGrantExpEvent;
+import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.guild.GuildComponent;
+import gg.packetloss.grindstone.guild.state.GuildState;
+import gg.packetloss.grindstone.state.player.PlayerStateComponent;
+import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChatUtil;
-import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Logger;
+import java.io.IOException;
 
 
 @ComponentInformation(friendlyName = "MACL", desc = "Mob Arena Compatibility Layer")
-@Depend(plugins = {"MobArena"}, components = {AdminComponent.class})
+@Depend(plugins = {"MobArena"}, components = {PlayerStateComponent.class, GuildComponent.class})
 public class MobArenaCLComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
-    private AdminComponent admin;
-
-    Set<Player> playerList = new HashSet<>();
+    private PlayerStateComponent playerState;
+    @InjectComponent
+    private GuildComponent guilds;
 
     @Override
     public void enable() {
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    public boolean isInArena(Player player) {
+        return playerState.hasValidStoredState(PlayerStateKind.MOB_ARENA_COMPATIBILITY, player);
+    }
+
+    private boolean isGuildArena(Arena arena) {
+        return arena.arenaName().toLowerCase().contains("guild");
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onArenaEnter(ArenaPlayerJoinEvent event) {
-
         Player player = event.getPlayer();
 
-        if (!admin.deadmin(player)) {
-            ChatUtil.sendError(player, "Failed to disable admin mode, mob arena add cancelled.");
-            event.setCancelled(true);
-            return;
+        try {
+            playerState.pushState(PlayerStateKind.MOB_ARENA_COMPATIBILITY, player);
+            if (!isGuildArena(event.getArena())) {
+                guilds.getState(player).ifPresent(GuildState::disablePowers);
+            }
+        } catch (IOException | ConflictingPlayerStateException e) {
+            e.printStackTrace();
+
+            ChatUtil.sendError(player, "Failed to clear temporary state.");
         }
-        playerList.add(player);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onArenaLeave(ArenaPlayerLeaveEvent event) {
-
         Player player = event.getPlayer();
 
-        playerList.remove(player);
+        try {
+            playerState.popState(PlayerStateKind.MOB_ARENA_COMPATIBILITY, player);
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            ChatUtil.sendError(player, "Mob arena integration is failing. Please report this error.");
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPrayerApplication(PrayerApplicationEvent event) {
+        if (!isInArena(event.getPlayer())) {
+            return;
+        }
 
-        Player player = event.getPlayer();
+        event.setCancelled(true);
+    }
 
-        if (playerList.contains(player)) event.setCancelled(true);
+    @EventHandler
+    public void onGuildExp(GuildGrantExpEvent event) {
+        if (!isInArena(event.getPlayer())) {
+            return;
+        }
+
+        double baseExp = event.getGrantedExp();
+
+        // Cap the xp doubling to +200 "just in case"
+        double targetExp = Math.min(baseExp + 200, baseExp * 2);
+        event.setGrantedExp(targetExp);
     }
 }
