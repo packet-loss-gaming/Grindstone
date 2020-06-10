@@ -377,6 +377,10 @@ public class NinjaListener implements Listener {
         player.teleport(event.getTeleportLoc(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
+    private boolean isGrappleable(Material blockType) {
+        return blockType.isSolid() && blockType != Material.BARRIER;
+    }
+
     public void grapple(final Player player, NinjaState state, Block block, BlockFace clickedFace, double maxClimb) {
 
         NinjaGrappleEvent event = new NinjaGrappleEvent(player, maxClimb);
@@ -413,14 +417,14 @@ public class NinjaListener implements Listener {
         }
 
         Block nextBlock = block.getRelative(BlockFace.UP);
-        boolean nextBlockIsSolid = nextBlock.getType().isSolid();
+        boolean nextIsGrappleable = isGrappleable(nextBlock.getType());
 
         int i;
         Vector increment = new Vector(0, .1, 0);
-        for (i = 0; i < event.getMaxClimb() && (i < z || block.getType().isSolid() || nextBlockIsSolid); i++) {
+        for (i = 0; i < event.getMaxClimb() && (i < z || isGrappleable(block.getType()) || nextIsGrappleable); i++) {
 
             // Determine whether we need to add more velocity
-            double ctl = nextBlockIsSolid ? 1 : 0; // FIXME: reimplement this BlockType.centralTopLimit(block.getType(), block.getData());
+            double ctl = nextIsGrappleable ? 1 : 0; // FIXME: reimplement this BlockType.centralTopLimit(block.getType(), block.getData());
 
             if (EnvironmentUtil.isWater(block.getRelative(clickedFace))) {
                 ctl *= 2;
@@ -433,7 +437,7 @@ public class NinjaListener implements Listener {
             nextBlock = nextBlock.getRelative(BlockFace.UP);
 
             // Update boolean
-            nextBlockIsSolid = nextBlock.getType().isSolid();
+            nextIsGrappleable = isGrappleable(nextBlock.getType());
         }
 
         player.setVelocity(vel);
