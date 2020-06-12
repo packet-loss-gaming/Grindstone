@@ -118,7 +118,8 @@ public class RogueChaser extends AreaComponent<RogueChaserConfig> {
         guild.getState(player).ifPresent(guildState -> {
             long timeTaken = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - chasedSpawnTime);
 
-            long expGranted = Math.max(90 - timeTaken, 30);
+            long baseExp = config.baseXp + (getContainedParticipants().size() * config.playerCountXpModifier);
+            long expGranted = Math.max(baseExp - timeTaken, config.minXp);
             if (guildState.grantExp(expGranted)) {
                 ChatUtil.sendNotice(
                         getAudiblePlayers(),
