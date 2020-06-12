@@ -15,18 +15,23 @@ import gg.packetloss.grindstone.guild.setting.GuildSettingUpdate;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
+import gg.packetloss.grindstone.util.task.DebounceHandle;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class GuildState {
-    private Player player;
-    private InternalGuildState state;
-    private GuildBase base;
+    private final Player player;
+    private final InternalGuildState state;
+    private final GuildBase base;
+
+    private DebounceHandle<Double> gainedExpDebounce;
 
     public GuildState(Player player, InternalGuildState state, GuildBase base) {
         this.player = player;
@@ -91,7 +96,7 @@ public class GuildState {
     }
 
     public void sendSettings(Player player) {
-        List<GuildSetting> settings = state.getSettings().getAll();
+        List<GuildSetting> settings = state.getSettings().getAllSorted();
         for (GuildSetting setting : settings) {
             Text text = Text.of(
                     ChatColor.YELLOW,
@@ -191,6 +196,29 @@ public class GuildState {
         }.display(player, levels, page);
     }
 
+    private void lazySetupExpDebounce() {
+        if (gainedExpDebounce != null) {
+            return;
+        }
+
+        TaskBuilder.Debounce<Double> builder = TaskBuilder.debounce();
+        builder.setWaitTime(2); // 2 because delaying by 1 tick for the same action isn't that uncommon
+        builder.setInitialValue(0D);
+        builder.setUpdateFunction(Double::sum);
+        builder.setBounceAction((exp) -> {
+            player.sendMessage(Text.of(
+                    ChatColor.GOLD, "Guild Experience: +",
+                    Text.of(ChatColor.WHITE, new DecimalFormat("#.##").format(exp))
+            ).build());
+        });
+        builder.setExistingState(state.getExpNoticeDebounce());
+
+        gainedExpDebounce = builder.build();
+
+        // Update or set the shared state object
+        state.setExpNoticeDebounce(gainedExpDebounce.getState());
+    }
+
     public boolean grantExp(double amount) {
         if (isDisabled()) {
             return false;
@@ -198,7 +226,14 @@ public class GuildState {
 
         GuildGrantExpEvent event = new GuildGrantExpEvent(player, getType(), amount);
         CommandBook.callEvent(event);
-        return !event.isCancelled();
+
+        boolean success = !event.isCancelled();
+        if (success && state.getSettings().shouldPrintExpVerbose()) {
+            lazySetupExpDebounce();
+            gainedExpDebounce.accept(event.getGrantedExp());
+        }
+
+        return success;
     }
 
     public CompletableFuture<Boolean> teleportToGuild() {

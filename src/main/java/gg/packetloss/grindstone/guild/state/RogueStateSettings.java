@@ -4,9 +4,10 @@ import gg.packetloss.grindstone.guild.setting.BooleanGuildSetting;
 import gg.packetloss.grindstone.guild.setting.GuildSetting;
 import gg.packetloss.grindstone.guild.setting.GuildSettingUpdate;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class RogueStateSettings implements StateSettings {
+public class RogueStateSettings extends BaseStateSettings {
     private boolean blipWhileSneaking = false;
     private boolean showBerserkerBuffs = false;
 
@@ -29,14 +30,23 @@ public class RogueStateSettings implements StateSettings {
 
     @Override
     public List<GuildSetting> getAll() {
-        return List.of(
+        List<GuildSetting> baseSetting = new ArrayList<>();
+
+        baseSetting.addAll(super.getAll());
+        baseSetting.addAll(List.of(
                 blipWhileSneakingWrapper,
                 showBerserkerBuffsWrapper
-        );
+        ));
+
+        return baseSetting;
     }
 
     @Override
     public boolean updateSetting(GuildSettingUpdate setting) {
+        if (super.updateSetting(setting)) {
+            return true;
+        }
+
         if (setting.getSetting().getKey().equals(blipWhileSneakingWrapper.getKey())) {
             blipWhileSneaking = Boolean.parseBoolean(setting.getNewValue());
             return true;
