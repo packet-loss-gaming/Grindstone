@@ -1,9 +1,12 @@
 package gg.packetloss.grindstone.util.task;
 
 import com.sk89q.commandbook.CommandBook;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class TaskBuilder {
@@ -70,6 +73,62 @@ public class TaskBuilder {
             }, delay, interval);
 
             return handle[0] = new CountdownHandle(underlyingTask, numRuns);
+        }
+    }
+
+    public static <T> Debounce<T> debounce() {
+        return new Debounce<T>();
+    }
+
+    public static class Debounce<T> {
+        private long waitTime;
+        private T initialValue;
+        private BiFunction<T, T, T> updateFunction;
+        private Consumer<T> bounceAction;
+        private DebounceHandle<T>.State state;
+
+        private Debounce() {
+            reset();
+        }
+
+        public void reset() {
+            waitTime = 20;
+            initialValue = null;
+            updateFunction = null;
+            bounceAction = null;
+            state = null;
+        }
+
+        public void setWaitTime(long waitTime) {
+            this.waitTime = waitTime;
+        }
+
+        public void setInitialValue(T initialValue) {
+            this.initialValue = initialValue;
+        }
+
+        public void setUpdateFunction(BiFunction<T, T, T> updateFunction) {
+            this.updateFunction = updateFunction;
+        }
+
+        public void setBounceAction(Consumer<T> bounceAction) {
+            this.bounceAction = bounceAction;
+        }
+
+        public void setExistingState(DebounceHandle<T>.State state) {
+            this.state = state;
+        }
+
+        public DebounceHandle<T> build() {
+            Validate.isTrue(waitTime > 0);
+            Validate.isTrue(updateFunction != null);
+            Validate.isTrue(bounceAction != null);
+
+            if (state != null) {
+                return new DebounceHandle<>(waitTime, initialValue, updateFunction, bounceAction, state);
+            } else {
+                return new DebounceHandle<>(waitTime, initialValue, updateFunction, bounceAction);
+            }
         }
     }
 }
