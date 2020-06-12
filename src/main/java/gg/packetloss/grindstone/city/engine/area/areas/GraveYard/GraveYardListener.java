@@ -39,6 +39,8 @@ import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -562,15 +564,24 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             }
         }
 
-        boolean isSpectator = player.getGameMode() == GameMode.SPECTATOR;
-        if (parent.contains(clickedLoc) && isSpectator && EnvironmentUtil.isContainer(blockType)) {
-            // If the location is in the rewards room, and players are in the rewards room looting it,
-            // allow players to see the loot.
-            if (isInRewardsRoom(clickedLoc) && !parent.getContainedParticipantsIn(parent.rewards).isEmpty()) {
-                return;
-            }
+        if (parent.contains(clickedLoc) && EnvironmentUtil.isContainer(blockType)) {
+            boolean isSpectator = player.getGameMode() == GameMode.SPECTATOR;
+            if (isSpectator) {
+                // If the location is in the rewards room, and players are in the rewards room looting it,
+                // allow players to see the loot.
+                if (isInRewardsRoom(clickedLoc) && !parent.getContainedParticipantsIn(parent.rewards).isEmpty()) {
+                    return;
+                }
 
-            event.setUseInteractedBlock(Event.Result.DENY);
+                event.setUseInteractedBlock(Event.Result.DENY);
+            } else {
+                // If this is a grave, check if the player is allowed to open/loot this particular grave.
+                BlockState blockState = block.getState();
+                if (blockState instanceof Chest && !parent.isGraveOpenableBy((Chest) blockState, player)) {
+                    event.setUseInteractedBlock(Event.Result.DENY);
+                    ChatUtil.sendError(player, "This player died very recently! Show some respect!");
+                }
+            }
         }
 
         switch (action) {

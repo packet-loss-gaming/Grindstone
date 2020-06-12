@@ -401,6 +401,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
     }
 
+    private boolean isGraveOwnedByPlayer(Sign signState, Player player) {
+        return signState.getLine(2).equalsIgnoreCase(player.getName());
+    }
+
     private Chest findChestForHeadstone(Sign signState) {
         Location chestTrialLoc = signState.getLocation();
 
@@ -419,7 +423,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
 
         // Try again, but try using the wall sign information
-        if (signState instanceof WallSign) {
+        if (signState.getBlockData() instanceof WallSign) {
             WallSign sign = (WallSign) signState.getBlockData();
             BlockFace attachedFace = sign.getFacing().getOppositeFace();
 
@@ -446,8 +450,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST
     };
 
-
-    private void forGraveInventory(Chest chest, Consumer<Inventory> inventoryConsumer) {
+    private void forGraveChest(Chest chest, Consumer<Chest> chestConsumer) {
         boolean isFoundLeft = ((org.bukkit.block.data.type.Chest) chest.getBlockData()).getType() == Type.LEFT;
 
         Chest left = isFoundLeft ? chest : null;
@@ -468,11 +471,81 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         // This order ensures that items are added "top" to "bottom" in the chest
         if (right != null) {
-            inventoryConsumer.accept(right.getInventory());
+            chestConsumer.accept(right);
         }
         if (left != null) {
-            inventoryConsumer.accept(left.getInventory());
+            chestConsumer.accept(left);
         }
+    }
+
+    private void forGraveInventory(Chest chest, Consumer<Inventory> inventoryConsumer) {
+        forGraveChest(chest, (foundChest) -> inventoryConsumer.accept(foundChest.getInventory()));
+    }
+
+    private Sign findHeadstoneForChestFromChest(Chest chestState) {
+        Location signTrialLoc = chestState.getLocation();
+
+        // Try the block 2 blocks up
+        signTrialLoc.add(0, 2, 0);
+        BlockState signState = signTrialLoc.getBlock().getState();
+        if (signState instanceof Sign) {
+            return (Sign) signState;
+        }
+
+        // Try the block 3 blocks up
+        signTrialLoc.add(0, 1, 0);
+        signState = signTrialLoc.getBlock().getState();
+        if (signState instanceof Sign) {
+            return (Sign) signState;
+        }
+
+        // Prod for a nearby chest
+        for (BlockFace checkDir : CHECK_ORDER) {
+            signTrialLoc = chestState.getLocation();
+
+            // Try the block 2 blocks in this direction
+            signTrialLoc.add(checkDir.getDirection().multiply(2));
+            signState = signTrialLoc.getBlock().getState();
+            if (signState.getBlockData() instanceof WallSign) {
+                return (Sign) signState;
+            }
+
+            // Try the block 2 blocks in this direction, 1 block up
+            signTrialLoc.add(0, 1, 0);
+            signState = signTrialLoc.getBlock().getState();
+            if (signState.getBlockData() instanceof WallSign) {
+                return (Sign) signState;
+            }
+        }
+
+        return null;
+    }
+
+    private Sign findHeadstoneForChest(Chest chest) {
+        Sign[] sign = new Sign[1];
+        forGraveChest(chest, (foundChest) -> {
+            if (sign[0] != null) {
+                return;
+            }
+
+            sign[0] = findHeadstoneForChestFromChest(foundChest);
+        });
+        return sign[0];
+    }
+
+    protected boolean isGraveOpenableBy(Chest chest, Player player) {
+        // Any temple chest are openable
+        if (isHostileTempleArea(chest.getLocation())) {
+            return true;
+        }
+
+        Sign headStone = findHeadstoneForChest(chest);
+        if (headStone == null) {
+            // No headstone found, assume yes
+            return true;
+        }
+
+        return !isGraveTooNew(headStone) || isGraveOwnedByPlayer(headStone, player);
     }
 
     private void compactAndClearGrave(Chest chest, ArrayDeque<ItemStack> itemStacks) {
