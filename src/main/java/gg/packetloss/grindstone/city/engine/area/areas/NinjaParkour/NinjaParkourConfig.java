@@ -12,6 +12,8 @@ public class NinjaParkourConfig extends ConfigurationBase {
     public int columnMaxRange = 5;
     @Setting("columns.degrade-chance")
     public int degradeChance = 100;
+    @Setting("columns.protected-time")
+    public int columnProtectedTime = 15;
     @Setting("xp.new-record-multiplier")
     public int newRecordXpMultiplier = 10;
     @Setting("xp.base-exp")

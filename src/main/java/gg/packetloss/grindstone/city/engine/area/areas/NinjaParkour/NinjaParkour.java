@@ -206,29 +206,21 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         return false;
     }
 
-    private boolean allStandingOn(Material material) {
-        for (Player player : getContainedParticipants()) {
-            if (!isStandingOnBlock(player, material)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     private void tryDegradeColumns() {
         if (columnVectors.isEmpty()) {
+            return;
+        }
+
+        if (System.currentTimeMillis() - generationTime < TimeUnit.SECONDS.toMillis(config.columnProtectedTime)) {
             return;
         }
 
         int chanceOfDegrade = config.degradeChance;
         int numToCheck = Math.max(1, columnVectors.size() / 4);
 
-        if (allStandingOn(Material.SANDSTONE) || isEmpty()) {
+        if (playerStateMap.isEmpty()) {
             chanceOfDegrade = 1;
             numToCheck = columnVectors.size();
-        } else if (System.currentTimeMillis() - generationTime < TimeUnit.SECONDS.toMillis(10)) {
-            return;
         }
 
         Iterator<BlockVector2> it = columnVectors.iterator();
@@ -267,7 +259,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
             return;
         }
 
-        int seconds = (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - playerState.getStartTime());
+        int seconds = (int) TimeUnit.MILLISECONDS.toSeconds(playerState.getElapsedTime());
 
         guild.getState(player).ifPresent(guildState -> {
             int bestTime = getBestTime();
@@ -325,23 +317,28 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         }
     }
 
-    private long lastCleanup = 0;
+    private static final DecimalFormat FINE_TIME_FORMATTER = new DecimalFormat("0.000");
 
-    private void tryStateCleanup() {
-        if (System.currentTimeMillis() - lastCleanup < TimeUnit.SECONDS.toMillis(5)) {
-            return;
-        }
+    private void sendCurrentTime(Player player, NinjaParkourPlayerState playerState, long currentTime) {
+        double elapsedTime = playerState.getElapsedTime(currentTime) / 1000D;
+        player.sendActionBar(FINE_TIME_FORMATTER.format(elapsedTime) + " (" + (int) elapsedTime + ")");
+    }
+
+    private void handlePlayerStates() {
+        long currentTime = System.currentTimeMillis();
 
         Iterator<Map.Entry<Player, NinjaParkourPlayerState>> it = playerStateMap.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Player, NinjaParkourPlayerState> entry = it.next();
             Player player = entry.getKey();
-            if (!player.isValid() || !contains(player) || isStandingOnBlock(player, Material.SANDSTONE)) {
+            if (!contains(player) || isStandingOnBlock(player, Material.SANDSTONE)) {
                 it.remove();
+                continue;
             }
-        }
 
-        lastCleanup = System.currentTimeMillis();
+            NinjaParkourPlayerState playerState = entry.getValue();
+            sendCurrentTime(player, playerState, currentTime);
+        }
     }
 
     @Override
@@ -363,7 +360,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
             }
         }
 
+        handlePlayerStates();
         tryDegradeColumns();
-        tryStateCleanup();
     }
 }

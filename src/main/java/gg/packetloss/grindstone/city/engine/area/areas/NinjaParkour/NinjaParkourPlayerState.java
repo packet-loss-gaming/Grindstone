@@ -6,4 +6,12 @@ public class NinjaParkourPlayerState {
     public long getStartTime() {
         return startTime;
     }
+
+    public long getElapsedTime(long fromTime) {
+        return fromTime - getStartTime();
+    }
+
+    public long getElapsedTime() {
+        return getElapsedTime(System.currentTimeMillis());
+    }
 }
