@@ -1,6 +1,9 @@
 package gg.packetloss.grindstone.chatbridge;
 
+import com.sk89q.commandbook.CommandBook;
+import com.zachsthings.libcomponents.AbstractComponent;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.ComponentManager;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 
 import java.lang.reflect.InvocationTargetException;
@@ -17,12 +20,36 @@ public class ChatBridgeComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-        integrateWithTelegram();
+        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), this::integrateWithTelegram, 1);
+    }
+
+    private void handleIntegrationNotFound(String integrationName) {
+        CommandBook.logger().info(integrationName + " was not found, not integrated.");
+    }
+
+    private void handleIncompatibleIntegration(String integrationName, Throwable t) {
+        CommandBook.logger().warning(integrationName + " did not integrate properly.");
+        t.printStackTrace();
+    }
+
+    private AbstractComponent getTelegramBotComponent() {
+        ComponentManager<BukkitComponent> componentManager = CommandBook.inst().getComponentManager();
+        return componentManager.getComponent("telegram-bot");
     }
 
     private void integrateWithTelegram() {
+        String integrationName = "Telegram chat bridge";
+
+        AbstractComponent componentInst = getTelegramBotComponent();
+        if (componentInst == null) {
+            handleIntegrationNotFound(integrationName);
+            return;
+        }
+
         try {
-            Object telegramBotInst = Class.forName("gg.packetloss.telegrambot.BotComponent").getMethod("getBot").invoke(null);
+            // Get the bot instance
+            Class<?> telegramBotComponent = componentInst.getClass();
+            Object telegramBotInst = telegramBotComponent.getMethod("getBot").invoke(null);
 
             // Find methods
             Method sendToSyncChannels = telegramBotInst.getClass().getMethod("sendMessageToSyncChannels", String.class);
@@ -31,20 +58,20 @@ public class ChatBridgeComponent extends BukkitComponent {
             // Register consumers
             messageConsumers.add((message) -> {
                 try {
-                    sendToSyncChannels.invoke(message);
+                    sendToSyncChannels.invoke(telegramBotInst, message);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
             });
             playerMessageConsumers.add((fromUser, message) -> {
                 try {
-                    sentToSyncChannelsPlayer.invoke(fromUser, message);
+                    sentToSyncChannelsPlayer.invoke(telegramBotInst, fromUser, message);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
             });
-        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
-
+        } catch (Throwable t) {
+            handleIncompatibleIntegration(integrationName, t);
         }
     }
 
