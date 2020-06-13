@@ -35,6 +35,7 @@ import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.city.engine.minigame.Win;
 import gg.packetloss.grindstone.city.engine.minigame.WinType;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
@@ -159,6 +160,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     SpectatorComponent spectatorComponent;
     @InjectComponent
     EconomyComponent economyComponent;
+    @InjectComponent
+    ChatBridgeComponent chatBridgeComponent;
 
     public JungleRaidState getState() {
         return state;
@@ -966,6 +969,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         gameState.getPlayers().forEach(this::handleWin);
 
         Bukkit.broadcastMessage(ChatColor.GOLD + rawWinMessage);
+        chatBridgeComponent.broadcast(rawWinMessage);
     }
 
     @Override

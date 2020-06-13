@@ -28,6 +28,7 @@ import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.city.engine.minigame.Win;
 import gg.packetloss.grindstone.city.engine.minigame.WinType;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
@@ -127,6 +128,8 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     private EconomyComponent economy;
     @InjectComponent
     private HighScoresComponent highScores;
+    @InjectComponent
+    private ChatBridgeComponent chatBridge;
 
     private void setupRegionInfo() {
         world = Bukkit.getWorld(config.worldName);
@@ -452,6 +455,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         gameState.getPlayers().forEach(this::handleWin);
 
         Bukkit.broadcastMessage(ChatColor.GOLD + rawWinMessage);
+        chatBridge.broadcast(rawWinMessage);
     }
 
     public void end() {

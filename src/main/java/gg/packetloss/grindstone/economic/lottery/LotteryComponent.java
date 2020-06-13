@@ -11,9 +11,11 @@ import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryTicketDatabase;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
@@ -54,6 +56,9 @@ public class LotteryComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
+
+    @InjectComponent
+    private ChatBridgeComponent chatBridge;
 
     private LocalConfiguration config;
 
@@ -304,8 +309,10 @@ public class LotteryComponent extends BukkitComponent implements Listener {
     private void handleWinner(LotteryWinner winner) {
         economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
 
-        Bukkit.broadcastMessage(ChatColor.YELLOW + winner.getName() + " has won: " +
-                ChatUtil.makeCountString(economy.format(winner.getAmt()), " via the lottery!"));
+        String winMessage = ChatColor.YELLOW + winner.getName() + " has won: " +
+                ChatUtil.makeCountString(economy.format(winner.getAmt()), " via the lottery!");
+        Bukkit.broadcastMessage(winMessage);
+        chatBridge.broadcast(ChatColor.stripColor(winMessage));
 
         if (winner.isBot()) {
             lotteryWinnerDatabase.addCPUWin(winner.getAmt());
@@ -335,7 +342,6 @@ public class LotteryComponent extends BukkitComponent implements Listener {
     }
 
     public void broadcastLottery(Iterable<? extends CommandSender> senders) {
-
         for (CommandSender receiver : senders) {
             ChatUtil.sendNotice(receiver, "The lottery currently has: "
                     + ChatUtil.makeCountString(lotteryTicketDatabase.getTicketCount(), " tickets and is worth: ")
