@@ -82,6 +82,7 @@ public class RogueChaser extends AreaComponent<RogueChaserConfig> {
 
         chased = world.spawn(spawnPoint, ArmorStand.class);
         chased.getEquipment().setHelmet(new ItemStack(Material.DRAGON_HEAD));
+        chased.getEquipment().setChestplate(new ItemStack(Material.ELYTRA));
         chased.setVisible(false);
 
         chasedSpawnTime = System.currentTimeMillis();
