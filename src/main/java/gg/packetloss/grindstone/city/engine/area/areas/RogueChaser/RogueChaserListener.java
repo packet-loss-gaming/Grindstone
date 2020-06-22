@@ -21,7 +21,7 @@ public class RogueChaserListener extends AreaListener<RogueChaser> {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerInteract(EntityDamageByEntityEvent event) {
+    public void onChasedHit(EntityDamageByEntityEvent event) {
         Entity entity = event.getEntity();
         if (parent.isChased(entity)) {
             Entity damager = event.getDamager();

@@ -96,13 +96,28 @@ public class RogueChaser extends AreaComponent<RogueChaserConfig> {
         getContained(ArmorStand.class).forEach(Entity::remove);
     }
 
-    private void moveChased() {
-        chased.setVelocity(chased.getVelocity().add(new Vector(
+    private Vector getNewVelocity() {
+        return chased.getVelocity().add(new Vector(
                 ChanceUtil.getRangedRandom(-config.chasedSpeed, config.chasedSpeed),
                 (ChanceUtil.getChance(config.chanceOfJump) ? 2 : 0),
                 ChanceUtil.getRangedRandom(-config.chasedSpeed, config.chasedSpeed)
-        )));
-        chased.setHeadPose(chased.getHeadPose().add(0, .1, 0));
+        ));
+    }
+
+    private Location getNewLocation() {
+        Location currentLoc = chased.getLocation();
+        currentLoc.setYaw((currentLoc.getYaw() + 180 + 10 % 360) - 180);
+        return currentLoc;
+    }
+
+    private void moveChased() {
+        Vector newVelocity = getNewVelocity();
+        Location newLocation = getNewLocation();
+
+        // Update location to change rotation
+        chased.teleport(newLocation);
+        // Update velocity based on original velocity before any changes were made
+        chased.setVelocity(newVelocity);
 
         Location particleLoc = chased.getEyeLocation().add(0, -.5, 0);
         new ParticleBuilder(Particle.LAVA).count(3).location(particleLoc).allPlayers().spawn();
