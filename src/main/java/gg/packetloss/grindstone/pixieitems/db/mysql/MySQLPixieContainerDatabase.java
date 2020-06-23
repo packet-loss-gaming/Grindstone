@@ -2,11 +2,11 @@ package gg.packetloss.grindstone.pixieitems.db.mysql;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import gg.packetloss.grindstone.pixieitems.db.PixieChestDatabase;
+import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.pixieitems.db.PixieChestDefinition;
 import gg.packetloss.grindstone.pixieitems.db.PixieChestDetail;
+import gg.packetloss.grindstone.pixieitems.db.PixieContainerDatabase;
 import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDefinition;
-import gg.packetloss.grindstone.data.MySQLHandle;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 
@@ -20,7 +20,7 @@ import java.util.*;
 import static gg.packetloss.grindstone.util.DBUtil.preparePlaceHolders;
 import static gg.packetloss.grindstone.util.DBUtil.setIntValues;
 
-public class MySQLPixieChestDatabase implements PixieChestDatabase {
+public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
     private boolean addChests(int networkID, String itemNames, Location... locations) {
         try (Connection connection = MySQLHandle.getConnection()) {
             String sql = "INSERT INTO `pixie-chests` (`network-id`, `world`, `x`, `y`, `z`, `cx`, `cz`, `item-names`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -113,7 +113,7 @@ public class MySQLPixieChestDatabase implements PixieChestDatabase {
     }
 
     @Override
-    public Optional<Integer> removeChest(int networkID, Location... locations) {
+    public Optional<Integer> removeContainer(int networkID, Location... locations) {
         try (Connection connection = MySQLHandle.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(getChestDeleteSQL(locations))) {
                 statement.setInt(1, networkID);

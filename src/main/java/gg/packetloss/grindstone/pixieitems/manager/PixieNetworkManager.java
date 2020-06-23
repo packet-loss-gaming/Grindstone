@@ -24,9 +24,9 @@ public interface PixieNetworkManager {
 
     boolean maybeExpandChest(Block block);
 
-    CompletableFuture<Void> removeChest(Location... locations);
+    CompletableFuture<Void> removeContainer(Location... locations);
 
-    Optional<Integer> getNetworkFromSourceChest(Block... blocks);
+    Optional<Integer> getNetworkFromSourceContainers(Block... blocks);
 
     void sourceItems(TransactionBroker broker, int networkID, Inventory inventory);
 

@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public interface PixieChestDatabase {
+public interface PixieContainerDatabase {
     boolean addSource(int networkID, Location... locations);
     boolean addSink(int networkID, Set<String> itemNames, Location... locations);
 
-    Optional<Integer> removeChest(int networkID, Location... locations);
+    Optional<Integer> removeContainer(int networkID, Location... locations);
 
     Optional<PixieChestDetail> getDetailsAtLocation(Location location);
     Optional<Collection<Integer>> getNetworksInLocations(Location... locations);

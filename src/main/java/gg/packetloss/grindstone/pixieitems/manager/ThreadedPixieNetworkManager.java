@@ -7,7 +7,7 @@ import gg.packetloss.grindstone.pixieitems.BrokerTransaction;
 import gg.packetloss.grindstone.pixieitems.PixieSinkVariant;
 import gg.packetloss.grindstone.pixieitems.TransactionBroker;
 import gg.packetloss.grindstone.pixieitems.db.*;
-import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieChestDatabase;
+import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieContainerDatabase;
 import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieNetworkDatabase;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.RefCountedTracker;
@@ -16,10 +16,7 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.DoubleChest;
+import org.bukkit.block.*;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -44,7 +41,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     private ReentrantReadWriteLock networkLock = new ReentrantReadWriteLock();
 
     private PixieNetworkDatabase networkDatabase = new MySQLPixieNetworkDatabase();
-    private PixieChestDatabase chestDatabase = new MySQLPixieChestDatabase();
+    private PixieContainerDatabase chestDatabase = new MySQLPixieContainerDatabase();
 
     private NetworkLoadingWorker networkLoadingWorker;
 
@@ -98,7 +95,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     private List<Location> getLocationsToAdd(Block block) {
-        Chest chest = (Chest) block.getState();
+        Container chest = (Container) block.getState();
         if (chest.getInventory() instanceof DoubleChestInventory) {
             DoubleChest doubleChest = (DoubleChest) chest.getInventory().getHolder();
             Chest leftChest = (Chest) doubleChest.getLeftSide();
@@ -251,7 +248,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 networkLock.writeLock().unlock();
             }
 
-            Optional<Integer> removedChestsCount = chestDatabase.removeChest(networkID, locations);
+            Optional<Integer> removedChestsCount = chestDatabase.removeContainer(networkID, locations);
             Validate.isTrue(removedChestsCount.isPresent());
 
             boolean addedChests = chestDatabase.addSource(networkID, locations);
@@ -277,7 +274,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
 
     @Override
     public CompletableFuture<NewSinkResult> addSink(int networkID, Block block, PixieSinkVariant variant) {
-        Inventory chestInventory = ((Chest) block.getState()).getInventory();
+        Inventory chestInventory = ((Container) block.getState()).getInventory();
         Set<String> itemNames;
         switch (variant) {
             case VOID:
@@ -312,7 +309,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 networkLock.writeLock().unlock();
             }
 
-            Optional<Integer> removedChestsCount = chestDatabase.removeChest(networkID, locations);
+            Optional<Integer> removedChestsCount = chestDatabase.removeContainer(networkID, locations);
             Validate.isTrue(removedChestsCount.isPresent());
 
             boolean addedChests = chestDatabase.addSink(networkID, itemNames, locations);
@@ -376,7 +373,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public CompletableFuture<Void> removeChest(Location... locations) {
+    public CompletableFuture<Void> removeContainer(Location... locations) {
         return processNetworkChanges(() -> {
             Collection<Integer> networkIDs = chestDatabase.getNetworksInLocations(locations).get();
 
@@ -393,7 +390,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
             }
 
             for (int networkID : networkIDs) {
-                chestDatabase.removeChest(networkID, locations);
+                chestDatabase.removeContainer(networkID, locations);
             }
 
             return null;
@@ -401,7 +398,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public Optional<Integer> getNetworkFromSourceChest(Block... blocks) {
+    public Optional<Integer> getNetworkFromSourceContainers(Block... blocks) {
         networkLock.readLock().lock();
 
         try {
@@ -469,12 +466,12 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                     BlockState state = location.getBlock().getState();
 
                     // If we found an invalid chest, remove it.
-                    if (!(state instanceof Chest)) {
-                        removeChest(location);
+                    if (!(state instanceof Container)) {
+                        removeContainer(location);
                         continue;
                     }
 
-                    Inventory destInv = ((Chest) state).getInventory();
+                    Inventory destInv = ((Container) state).getInventory();
 
                     playEffect(inventory, destInv);
 
