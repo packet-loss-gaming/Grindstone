@@ -1,8 +1,8 @@
 package gg.packetloss.grindstone.portal;
 
-import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
-import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
 import gg.packetloss.grindstone.warps.WarpsComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;

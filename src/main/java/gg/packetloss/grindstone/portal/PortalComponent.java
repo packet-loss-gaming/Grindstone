@@ -7,12 +7,13 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.city.engine.SkyWorldCoreComponent;
 import gg.packetloss.grindstone.firstlogin.FirstLoginComponent;
-import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
-import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
-import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.warps.WarpsComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
+import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
+import gg.packetloss.grindstone.world.timetravel.TimeTravelComponent;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -30,7 +31,8 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import java.util.*;
 
 @ComponentInformation(friendlyName = "Portal", desc = "Portal support.")
-@Depend(components = {FirstLoginComponent.class, ManagedWorldComponent.class, SkyWorldCoreComponent.class, WarpsComponent.class})
+@Depend(components = {FirstLoginComponent.class, ManagedWorldComponent.class,
+        SkyWorldCoreComponent.class, TimeTravelComponent.class, WarpsComponent.class})
 public class PortalComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private FirstLoginComponent firstLogin;
@@ -39,6 +41,8 @@ public class PortalComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private SkyWorldCoreComponent skyWorldCore;
     @InjectComponent
+    private TimeTravelComponent timeTravel;
+    @InjectComponent
     private WarpsComponent warps;
 
     private Map<PortalDestinationType, WorldResolver> worldTypeLookup = new HashMap<>();
@@ -46,7 +50,7 @@ public class PortalComponent extends BukkitComponent implements Listener {
 
     private void initWorldLookup() {
         worldTypeLookup.put(PortalDestinationType.CITY, new SimpleWorldResolver(managedWorld, ManagedWorldGetQuery.CITY, warps));
-        worldTypeLookup.put(PortalDestinationType.RANGE, new RangeWorldResolver(managedWorld, ManagedWorldGetQuery.LATEST_RANGE, warps, firstLogin));
+        worldTypeLookup.put(PortalDestinationType.RANGE, new RangeWorldResolver(managedWorld, ManagedWorldGetQuery.RANGE_OVERWORLD, warps, firstLogin, timeTravel));
         worldTypeLookup.put(PortalDestinationType.SKY, new SkyWorldResolver(managedWorld, ManagedWorldGetQuery.SKY, warps, skyWorldCore));
     }
 
@@ -178,9 +182,9 @@ public class PortalComponent extends BukkitComponent implements Listener {
         }
 
         // Range Code
-        if (managedWorld.is(ManagedWorldIsQuery.LATEST_RANGE, fromWorld)) {
+        if (managedWorld.is(ManagedWorldIsQuery.RANGE_OVERWORLD, fromWorld)) {
             redirectPortalWithAgent(event, new Location(
-                    managedWorld.get(ManagedWorldGetQuery.LATEST_RANGE_NETHER),
+                    managedWorld.get(ManagedWorldGetQuery.RANGE_NETHER, timeTravel.getTimeContextFor(player)),
                     from.getX() / 8,
                     from.getBlockY(),
                     from.getZ() / 8
@@ -188,9 +192,9 @@ public class PortalComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        if (managedWorld.is(ManagedWorldIsQuery.LATEST_RANGE_NETHER, fromWorld)) {
+        if (managedWorld.is(ManagedWorldIsQuery.RANGE_NETHER, fromWorld)) {
             redirectPortalWithAgent(event, new Location(
-                    managedWorld.get(ManagedWorldGetQuery.LATEST_RANGE),
+                    managedWorld.get(ManagedWorldGetQuery.RANGE_OVERWORLD, timeTravel.getTimeContextFor(player)),
                     from.getX() * 8,
                     from.getBlockY(),
                     from.getZ() * 8

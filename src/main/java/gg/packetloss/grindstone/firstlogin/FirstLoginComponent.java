@@ -22,14 +22,15 @@ import gg.packetloss.grindstone.events.PortalRecordEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
-import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
-import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.playerhistory.PlayerHistoryComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.parser.HelpTextParser;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
+import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
+import gg.packetloss.grindstone.world.managed.ManagedWorldTimeContext;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -109,8 +110,8 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         public int welcomeProtectionHours = 24;
     }
 
-    public Location getNewPlayerStartingLocation(Player player) {
-        return managedWorld.get(ManagedWorldGetQuery.LATEST_RANGE).getSpawnLocation();
+    public Location getNewPlayerStartingLocation(Player player, ManagedWorldTimeContext timeContext) {
+        return managedWorld.get(ManagedWorldGetQuery.RANGE_OVERWORLD, timeContext).getSpawnLocation();
     }
 
     public Location getSafeRoomLocation() {
@@ -252,7 +253,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         if (isInSafeRoom(event.getFrom())) {
             event.setCancelled(true);
             event.getPlayer().teleport(
-                    getNewPlayerStartingLocation(event.getPlayer()),
+                    getNewPlayerStartingLocation(event.getPlayer(), ManagedWorldTimeContext.LATEST),
                     PlayerTeleportEvent.TeleportCause.NETHER_PORTAL
             );
         }

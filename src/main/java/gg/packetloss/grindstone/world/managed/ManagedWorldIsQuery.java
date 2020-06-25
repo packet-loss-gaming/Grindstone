@@ -1,9 +1,9 @@
-package gg.packetloss.grindstone.managedworld;
+package gg.packetloss.grindstone.world.managed;
 
 public enum ManagedWorldIsQuery {
     CITY,
-    LATEST_RANGE,
-    LATEST_RANGE_NETHER,
+    RANGE_OVERWORLD,
+    RANGE_NETHER,
     ANY_RANGE,
     SKY,
     ANY_BUIDABLE,
