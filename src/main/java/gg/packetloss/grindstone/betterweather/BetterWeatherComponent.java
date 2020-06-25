@@ -1,6 +1,6 @@
 package gg.packetloss.grindstone.betterweather;
 
-import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
@@ -16,6 +16,7 @@ import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
+import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import gg.packetloss.grindstone.util.probability.WeightedPicker;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
@@ -31,12 +32,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -53,11 +49,8 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
     @InjectComponent
     private ManagedWorldComponent managedWorld;
 
-    private Path statesDir;
-
-    private Gson gson = new Gson();
-
     private WeatherState weatherState = new WeatherState();
+    private SingleFileFilesystemStateHelper<WeatherState> stateHelper;
 
     private LocalConfiguration config;
 
@@ -66,12 +59,10 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
         config = configure(new LocalConfiguration());
 
         try {
-            Path baseDir = Path.of(inst.getDataFolder().getPath(), "state");
-            statesDir = Files.createDirectories(baseDir.resolve("states"));
-
-            loadWeatherState();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+            stateHelper = new SingleFileFilesystemStateHelper<>("weather.json", new TypeToken<>() { });
+            stateHelper.load().ifPresent(loadedState -> weatherState = loadedState);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         registerCommands(Commands.class);
@@ -118,36 +109,15 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
         public int thunderStormStormTypeWeight = 1;
     }
 
-    private Path getStateFile() {
-        return statesDir.resolve("weather.json");
-    }
-
-    private void loadWeatherState() {
-        Path stateFile = getStateFile();
-        if (!Files.exists(stateFile)) {
-            return;
-        }
-
-        try (BufferedReader reader = Files.newBufferedReader(stateFile)) {
-            weatherState = gson.fromJson(reader, WeatherState.class);
-        } catch (IOException e) {
-            log.warning("Failed to load previous weather state");
-            e.printStackTrace();
-        }
-    }
-
     private void saveWeatherState() {
         if (!weatherState.isDirty()) {
             return;
         }
 
-        Path stateFile = getStateFile();
-        try (BufferedWriter writer = Files.newBufferedWriter(
-                stateFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            writer.write(gson.toJson(weatherState));
+        try {
+            stateHelper.save(weatherState);
             weatherState.resetDirtyFlag();
         } catch (IOException e) {
-            log.warning("Failed to save previous weather state");
             e.printStackTrace();
         }
     }

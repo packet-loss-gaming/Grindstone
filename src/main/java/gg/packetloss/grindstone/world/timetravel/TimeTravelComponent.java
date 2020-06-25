@@ -1,25 +1,19 @@
 package gg.packetloss.grindstone.world.timetravel;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.managed.ManagedWorldTimeContext;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,17 +23,14 @@ public class TimeTravelComponent extends BukkitComponent {
     @InjectComponent
     private ManagedWorldComponent managedWorlds;
 
-    private Path statesDir;
-
     private Map<UUID, ManagedWorldTimeContext> timeContextOverride = new HashMap<>();
+    private SingleFileFilesystemStateHelper<Map<UUID, ManagedWorldTimeContext>> stateHelper;
 
     @Override
     public void enable() {
         try {
-            Path baseDir = Path.of(CommandBook.inst().getDataFolder().getPath(), "state");
-            statesDir = Files.createDirectories(baseDir.resolve("states"));
-
-            loadTimeTravelState();
+            stateHelper = new SingleFileFilesystemStateHelper<>("time-travel.json", new TypeToken<>() {});
+            stateHelper.load().ifPresent(loadedState -> timeContextOverride = loadedState);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -55,37 +46,9 @@ public class TimeTravelComponent extends BukkitComponent {
 
     @Override
     public void disable() {
-        saveTimeTravelState();
-    }
-
-    private Path getStateFile() {
-        return statesDir.resolve("time-travel.json");
-    }
-
-    private void loadTimeTravelState() {
-        Path stateFile = getStateFile();
-        if (!Files.exists(stateFile)) {
-            return;
-        }
-
-        try (BufferedReader reader = Files.newBufferedReader(stateFile)) {
-            Type overrideMapType = new TypeToken<Map<UUID, ManagedWorldTimeContext>>() { }.getType();
-
-            timeContextOverride = new Gson().fromJson(reader, overrideMapType);
+        try {
+            stateHelper.save(timeContextOverride);
         } catch (IOException e) {
-            CommandBook.logger().warning("Failed to load previous time travel state");
-            e.printStackTrace();
-        }
-    }
-
-    private void saveTimeTravelState() {
-        Path stateFile = getStateFile();
-        try (BufferedWriter writer = Files.newBufferedWriter(
-                stateFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            Type overrideMapType = new TypeToken<Map<UUID, ManagedWorldTimeContext>>() { }.getType();
-            writer.write(new Gson().toJson(timeContextOverride, overrideMapType));
-        } catch (IOException e) {
-            CommandBook.logger().warning("Failed to save previous weather state");
             e.printStackTrace();
         }
     }
