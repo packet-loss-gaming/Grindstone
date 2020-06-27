@@ -12,7 +12,6 @@ public class RangeWorldList {
         // NOTE: It's important to add these in order, from oldest to newest.
         // The last registered will be considered ManagedWorldTimeContext.LATEST.
         register("Halzeil", ManagedWorldTimeContext.V_1_15);
-        register("Kailen", ManagedWorldTimeContext.V_1_16);
 
         completeRegistration();
     }
