@@ -6,10 +6,10 @@ import com.mojang.datafixers.schemas.Schema;
 import com.mojang.datafixers.types.Type;
 import com.mojang.datafixers.types.templates.TaggedChoice;
 import gg.packetloss.hackbook.DataMigrator;
-import net.minecraft.server.v1_15_R1.*;
+import net.minecraft.server.v1_16_R1.*;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
@@ -52,9 +52,11 @@ public class HBSimpleZombie extends EntityZombie {
         dataTypes.put("minecraft:hb_zombie", dataTypes.get("minecraft:zombie"));
 
         try {
-            Method m = EntityTypes.class.getDeclaredMethod("a", String.class, EntityTypes.a.class);
+            Method m = EntityTypes.class.getDeclaredMethod("a", String.class, EntityTypes.Builder.class);
             m.setAccessible(true);
-            registration = (EntityTypes<?>) m.invoke(null, "hb_zombie", EntityTypes.a.a(HBSimpleZombie::new, EnumCreatureType.MONSTER).a(0.6F, 1.95F));
+
+            EntityTypes.Builder<Entity> b = EntityTypes.Builder.a(HBSimpleZombie::new, EnumCreatureType.MONSTER).a(0.6F, 1.95F);
+            registration = (EntityTypes<?>) m.invoke(null, "hb_zombie", b);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
             ex.printStackTrace();
         }
@@ -67,7 +69,13 @@ public class HBSimpleZombie extends EntityZombie {
         Entity nmsEntity = registration.a(world);
         nmsEntity.setPosition(loc.getX(), loc.getY(), loc.getZ());
 
-        ((EntityInsentient) nmsEntity).prepare(world, world.getDamageScaler(new BlockPosition(nmsEntity)), EnumMobSpawn.COMMAND, null, null);
+        ((EntityInsentient) nmsEntity).prepare(
+                world,
+                world.getDamageScaler(new BlockPosition(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())),
+                EnumMobSpawn.COMMAND,
+                null,
+                null
+        );
 
         // Reset the zombie
         Zombie bukkitEntity = (Zombie) nmsEntity.getBukkitEntity();

@@ -7,10 +7,10 @@
 package gg.packetloss.hackbook;
 
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import net.minecraft.server.v1_15_R1.EntityInsentient;
-import net.minecraft.server.v1_15_R1.GenericAttributes;
-import net.minecraft.server.v1_15_R1.IAttribute;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftLivingEntity;
+import net.minecraft.server.v1_16_R1.AttributeBase;
+import net.minecraft.server.v1_16_R1.EntityInsentient;
+import net.minecraft.server.v1_16_R1.GenericAttributes;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
 
 public class AttributeBook {
@@ -23,9 +23,9 @@ public class AttributeBook {
         MOVEMENT_SPEED(GenericAttributes.MOVEMENT_SPEED),
         ATTACK_DAMAGE(GenericAttributes.ATTACK_DAMAGE);
 
-        public final IAttribute attribute;
+        public final AttributeBase attribute;
 
-        Attribute(IAttribute attribute) {
+        Attribute(AttributeBase attribute) {
             this.attribute = attribute;
         }
     }
