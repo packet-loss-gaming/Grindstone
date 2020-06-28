@@ -49,6 +49,8 @@ public class MarketCommands {
                     @Arg(desc = "amount", def = "1") int amount,
                     @Arg(desc = "item") MarketItemSet items)
             throws CommandException {
+        component.checkPlayer(player);
+
         MarketTransactionBuilder transactionBuilder = new MarketTransactionBuilder();
 
         // Place a reasonable cap on the amount of items that can be purchased.
@@ -70,7 +72,9 @@ public class MarketCommands {
     }
 
     @Command(name = "sell", desc = "Sell items")
-    public void sell(Player player, @Arg(desc = "item filter", def = "") String itemFilter) {
+    public void sell(Player player, @Arg(desc = "item filter", def = "") String itemFilter) throws CommandException {
+        component.checkPlayer(player);
+
         Inventory sellInv = invGUI.openClosableChest(player, "Sell Items", (inv) -> {
             List<ItemStack> items = new ArrayList<>();
 

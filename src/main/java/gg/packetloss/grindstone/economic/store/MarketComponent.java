@@ -376,7 +376,7 @@ public class MarketComponent extends BukkitComponent {
                 .collect(Collectors.toList());
     }
 
-    public Player checkPlayer(CommandSender sender) throws CommandException {
+    public void checkPlayer(CommandSender sender) throws CommandException {
         Player player = PlayerUtil.checkPlayer(sender);
 
         if (adminComponent.isAdmin(player)) {
@@ -384,8 +384,6 @@ public class MarketComponent extends BukkitComponent {
         }
 
         checkInArea(player);
-
-        return player;
     }
 
     public void checkInArea(Player player) throws CommandException {
