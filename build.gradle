@@ -59,7 +59,7 @@ dependencies {
     compile group: 'gg.packetloss', name: 'OSBL', version: '1.1-SNAPSHOT'
     compile group: 'com.garbagemule', name: 'mobarena', version: '0.104.3-SNAPSHOT'
     compile group: 'gg.packetloss', name: 'Pitfall', version: '2.1.2'
-    compile group: 'gg.packetloss', name: 'bukkit-text', version: '1.0'
+    compile group: 'gg.packetloss', name: 'bukkit-text', version: '1.16.1.0'
 
     compile group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.16.1-R0.1-SNAPSHOT'
     compile group: 'com.destroystokyo.paper', name: 'paper', version: '1.16.1-R0.1-SNAPSHOT'
