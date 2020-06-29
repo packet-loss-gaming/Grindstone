@@ -6,82 +6,63 @@
 
 package gg.packetloss.grindstone.admin;
 
+import com.destroystokyo.paper.event.server.ServerTickEndEvent;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import org.bukkit.ChatColor;
-import org.bukkit.Server;
+import com.zachsthings.libcomponents.config.ConfigurationBase;
+import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
+import gg.packetloss.grindstone.util.task.DebounceHandle;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 
-import java.text.DecimalFormat;
-import java.util.logging.Logger;
+import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Problem Detector", desc = "Problem detection system.")
-public class ProblemDetectionComponent extends BukkitComponent implements Runnable {
+@Depend(components = ChatBridgeComponent.class)
+public class ProblemDetectionComponent extends BukkitComponent {
+    @InjectComponent
+    private ChatBridgeComponent chatBridge;
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+    private LocalConfiguration config;
 
-    private final DecimalFormat format = new DecimalFormat("#.#");
-
-    private long lastTickWarning = 0, lastMemoryWarning = 0;
-    private long lastTick = 0;
-    private double averageError = 0;
+    private DebounceHandle<Long> serverLagDebounce;
 
     @Override
     public void enable() {
+        config = configure(new LocalConfiguration());
 
-        //server.getScheduler().runTaskTimer(inst, this, 20, 20);
+        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            CommandBook.registerEvents(new TickMonitor());
+        }, 20 * 5);
     }
 
     @Override
-    public void run() {
-
-        try {
-            checkMemory();
-        } catch (Exception ex) {
-            if (lastMemoryWarning == 0 || System.currentTimeMillis() - lastMemoryWarning > 1000) {
-                System.gc();
-                server.broadcastMessage(ChatColor.RED + "[WARNING] " + ex.getMessage());
-                lastMemoryWarning = System.currentTimeMillis();
-            }
-        }
-
-        try {
-            checkTicks();
-        } catch (Exception ex) {
-            if (lastTickWarning == 0 || System.currentTimeMillis() - lastTickWarning > 1000) {
-                server.broadcastMessage(ChatColor.RED + "[WARNING] " + ex.getMessage());
-                lastTickWarning = System.currentTimeMillis();
-            }
-        }
+    public void reload() {
+        super.reload();
+        configure(config);
     }
 
-    public void checkTicks() throws Exception {
-
-        if (lastTick == 0) {
-            lastTick = System.currentTimeMillis();
-            return;
-        }
-        long elapsedTime = System.currentTimeMillis() - lastTick;
-
-        double error = (1000 - elapsedTime) * -1;
-
-        averageError = (error + averageError) / 2;
-        lastTick = System.currentTimeMillis();
-
-        if (averageError < 50) return;
-
-        throw new Exception("Slow clock rate, Current error: " + format.format(error) +
-                ", AVG error: " + format.format(averageError) + "!");
+    private static class LocalConfiguration extends ConfigurationBase {
+        @Setting("tick-watcher.min-report-ms")
+        public long minFallback = 500;
     }
 
-    public void checkMemory() throws Exception {
+    private class TickMonitor implements Listener {
+        @EventHandler
+        public void onServerTick(ServerTickEndEvent event) {
+            long timeRemaining = event.getTimeRemaining();
+            if (timeRemaining < 0) {
+                long millsLost = TimeUnit.NANOSECONDS.toMillis(Math.abs(timeRemaining));
+                if (millsLost < config.minFallback) {
+                    return;
+                }
 
-        double memory = Math.floor(Runtime.getRuntime().freeMemory() / 1024.0 / 1024.0);
-
-        if (memory < 70) {
-            throw new Exception("Low RAM: " + memory + " MB!");
+                chatBridge.modBroadcast("Server fell behind (by " + millsLost + " ms)!");
+            }
         }
     }
 }
