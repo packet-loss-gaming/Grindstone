@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 public class ChatBridgeComponent extends BukkitComponent {
     private List<Consumer<String>> messageConsumers = new ArrayList<>();
     private List<BiConsumer<String, String>> playerMessageConsumers = new ArrayList<>();
+    private List<Consumer<String>> modMessageConsumers = new ArrayList<>();
 
     @Override
     public void enable() {
@@ -54,6 +55,7 @@ public class ChatBridgeComponent extends BukkitComponent {
             // Find methods
             Method sendToSyncChannels = telegramBotInst.getClass().getMethod("sendMessageToSyncChannels", String.class);
             Method sentToSyncChannelsPlayer = telegramBotInst.getClass().getMethod("sendMessageToSyncChannels", String.class, String.class);
+            Method sendToModChannels = telegramBotInst.getClass().getMethod("sendMessageToModChannels", String.class);
 
             // Register consumers
             messageConsumers.add((message) -> {
@@ -66,6 +68,13 @@ public class ChatBridgeComponent extends BukkitComponent {
             playerMessageConsumers.add((fromUser, message) -> {
                 try {
                     sentToSyncChannelsPlayer.invoke(telegramBotInst, fromUser, message);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            });
+            modMessageConsumers.add((message) -> {
+                try {
+                    sendToModChannels.invoke(telegramBotInst, message);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
@@ -84,6 +93,12 @@ public class ChatBridgeComponent extends BukkitComponent {
     public void sendMessageToSyncChannels(String fromUser, String message) {
         for (BiConsumer<String, String> playerMessageConsumer : playerMessageConsumers) {
             playerMessageConsumer.accept(fromUser, message);
+        }
+    }
+
+    public void modBroadcast(String message) {
+        for (Consumer<String> modMessageConsumer : modMessageConsumers) {
+            modMessageConsumer.accept(message);
         }
     }
 }
