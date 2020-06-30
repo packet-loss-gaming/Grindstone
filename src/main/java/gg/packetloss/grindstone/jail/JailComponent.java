@@ -7,7 +7,7 @@
 package gg.packetloss.grindstone.jail;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.InputUtil;
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -72,7 +72,16 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         jailCells = new CSVJailCellDatabase(jailDirectory);
         inmates.load();
         jailCells.load();
+
+        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
+        PrisonIdentifierConverter.register(registrar, this);
+        registrar.registerTopLevelCommands((commandManager, registration) -> {
+            //  PrisonIdentifierConverter.register(commandManager, this);
+            registration.register(commandManager, JailCommandsRegistration.builder(), new JailCommands(this));
+        });
+
         registerCommands(Commands.class);
+
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         server.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 20 * 2);
@@ -125,6 +134,36 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
      */
     public JailCellDatabase getJailCellDatabase() {
         return jailCells;
+    }
+
+    public boolean isPrison(String prisonName) {
+        return jailCells.prisonExist(prisonName);
+    }
+
+    public String getDefaultPrison() {
+        return config.defaultJail;
+    }
+
+    public void broadcastJailing(CommandSender jailer, OfflinePlayer inmate, String reason) {
+        if (!config.broadcastJails) {
+            return;
+        }
+
+        String jailBroadcastMessage = jailer.getName() + " has jailed " + inmate.getName() +
+                (reason.isEmpty() ? "." : " - " + reason + ".");
+        ChatUtil.sendNotice(CommandBook.server().getOnlinePlayers(), jailBroadcastMessage);
+        chatBridge.broadcast(jailBroadcastMessage);
+    }
+
+    public void broadcastUnjailing(CommandSender liberator, OfflinePlayer inmate, String reason) {
+        if (!config.broadcastJails) {
+            return;
+        }
+
+        String unjailBroadcastMessage = liberator.getName() + " has unjailed " + inmate.getName() +
+                (reason.isEmpty() ? "." : " - " + reason + ".");
+        ChatUtil.sendNotice(server.getOnlinePlayers(), unjailBroadcastMessage);
+        chatBridge.broadcast(unjailBroadcastMessage);
     }
 
     public void jail(UUID ID, String source, String reason, long time, boolean mute) {
@@ -365,117 +404,6 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     }
 
     public class Commands {
-
-        @Command(aliases = {"jail"}, usage = "[-t end] <target> [prison] [reason...]",
-                desc = "Jail a player", flags = "mset:o", min = 1, max = -1)
-        @CommandPermissions({"aurora.jail.jail"})
-        public void jailCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            Player inmate = null;
-            UUID inmateID = null;
-            String prisonName = args.argsLength() >= 2 ? args.getString(1) : config.defaultJail;
-            long endDate = args.hasFlag('t') ? InputUtil.TimeParser.matchFutureDate(args.getFlag('t')) : 0L;
-            String message = args.argsLength() >= 3 ? args.getJoinedStrings(2) : "";
-
-            final boolean hasExemptOverride = args.hasFlag('o') && inst.hasPermission(sender, "aurora.jail.exempt.override");
-
-            String inmateName = args.getString(0)
-                    .replace("\r", "")
-                    .replace("\n", "")
-                    .replace("\0", "")
-                    .replace("\b", "");
-
-            // Check if it's a player in the server right now
-            try {
-                // Exact mode matches names exactly
-                if (args.hasFlag('e')) {
-                    inmate = InputUtil.PlayerParser.matchPlayerExactly(sender, inmateName);
-                } else {
-                    inmate = InputUtil.PlayerParser.matchSinglePlayer(sender, inmateName);
-                }
-
-                inmateID = inmate.getUniqueId();
-
-                // They are offline
-            } catch (CommandException e) {
-                OfflinePlayer player = server.getOfflinePlayer(inmateName);
-                inmateID = player == null ? null : player.getUniqueId();
-            }
-
-            if (!hasExemptOverride) {
-                try {
-                    if (inst.hasPermission(inmate, "aurora.jail.exempt")) {
-                        if (inst.hasPermission(sender, "aurora.jail.exempt.override")) {
-                            throw new CommandException("That player is exempt from being jailed! (use -o flag to override this)");
-                        } else {
-                            throw new CommandException("That player is exempt from being jailed!");
-                        }
-                    }
-                } catch (NullPointerException npe) {
-                    if (inst.hasPermission(sender, "aurora.jail.exempt.override")) {
-                        throw new CommandException("That player is offline, and cannot be jailed! (use -o flag to override this)");
-                    } else {
-                        throw new CommandException("That player is offline, and cannot be jailed!");
-                    }
-                }
-            }
-
-            if (!jailCells.prisonExist(prisonName)) throw new CommandException("No such prison exists.");
-
-            if (inmateID == null) {
-                throw new CommandException("That player could not be jailed!");
-            }
-
-            // Jail the player
-            jail(inmateID, prisonName, sender, message, endDate, args.hasFlag('m'));
-
-            // Tell the sender of their success
-            ChatUtil.sendNotice(sender, "The player: " + inmateName + " has been jailed!");
-
-            if (!inmates.save()) {
-                throw new CommandException("Inmate database failed to save. See console.");
-            }
-
-            // Broadcast the Message
-            if (config.broadcastJails && !args.hasFlag('s')) {
-                String jailBroadcastMessage = sender.getName() + " has jailed " + inmateName +
-                        (message.isEmpty() ? "." : " - " + message + ".");
-                ChatUtil.sendNotice(server.getOnlinePlayers(), jailBroadcastMessage);
-                chatBridge.broadcast(jailBroadcastMessage);
-            }
-        }
-
-        @Command(aliases = {"unjail"}, usage = "<target> [reason...]", desc = "Unjail a player",
-                flags = "s", min = 1, max = -1)
-        @CommandPermissions({"aurora.jail.unjail"})
-        public void unjailCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            String message = args.argsLength() >= 2 ? args.getJoinedStrings(1) : "";
-
-            String inmateName = args.getString(0)
-                    .replace("\r", "")
-                    .replace("\n", "")
-                    .replace("\0", "")
-                    .replace("\b", "");
-
-            UUID ID = CommandBook.server().getOfflinePlayer(inmateName).getUniqueId();
-
-            if (unjail(ID, sender, message)) {
-                ChatUtil.sendNotice(sender, inmateName + " unjailed.");
-                if (config.broadcastJails && !args.hasFlag('s')) {
-                    String unjailBroadcastMessage = sender.getName() + " has unjailed " + inmateName;
-                    ChatUtil.sendNotice(server.getOnlinePlayers(), unjailBroadcastMessage);
-                    chatBridge.broadcast(unjailBroadcastMessage);
-                }
-
-                if (!inmates.save()) {
-                    throw new CommandException("Inmate database failed to save. See console.");
-                }
-            } else {
-                ChatUtil.sendError(sender, inmateName + " was not jailed.");
-            }
-        }
-
         @Command(aliases = {"cells"}, desc = "Jail Cell management")
         @NestedCommand({ManagementCommands.class})
         public void cellCmds(CommandContext args, CommandSender sender) throws CommandException {
