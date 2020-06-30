@@ -7,7 +7,10 @@
 package gg.packetloss.grindstone.util;
 
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.function.Predicate;
 
 public class TimeUtil {
@@ -112,5 +115,26 @@ public class TimeUtil {
         }
 
         return hour + ":" + minuteString + " " + ampm;
+    }
+
+    private static final DateTimeFormatter PRETTY_END_DATE_FORMATTER = DateTimeFormatter.ofPattern(
+            "MMMM d yyyy 'at' h':'mma"
+    ).withLocale(Locale.US).withZone(ZoneId.systemDefault());
+
+    public static String getPrettyEndDate(long time) {
+        StringBuilder builder = new StringBuilder();
+
+        if (time != 0) {
+            builder.append("until ");
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(time);
+
+            builder.append(PRETTY_END_DATE_FORMATTER.format(calendar.toInstant()));
+        } else {
+            builder.append("indefinitely");
+        }
+
+        return builder.toString();
     }
 }

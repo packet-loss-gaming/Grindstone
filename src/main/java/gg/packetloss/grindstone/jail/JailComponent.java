@@ -23,6 +23,7 @@ import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.CollectionUtil;
+import gg.packetloss.grindstone.util.TimeUtil;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -34,7 +35,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.*;
 
 import java.io.File;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -188,10 +188,10 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         inmates.jail(ID, prison, source, reason, end, mute);
 
         chatBridge.modBroadcast(String.format(
-                "%s %s jailed %s: %s",
+                "%s jailed %s %s: %s",
                 source,
-                end == 0 ? "indefinitely" : "temporarily",
                 Bukkit.getOfflinePlayer(ID).getName(),
+                TimeUtil.getPrettyEndDate(end),
                 reason
         ));
     }
@@ -265,20 +265,9 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         String reason = inmate.getReason();
 
         StringBuilder builder = new StringBuilder();
+
         builder.append("Jailed ");
-
-        // Date
-        if (inmate.getEnd() != 0) {
-            builder.append("till: ");
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(inmate.getEnd());
-
-            builder.append(DateTimeFormatter.ofPattern("MMMM d yyyy 'at' h':'mma").format(calendar.toInstant()));
-        } else {
-            builder.append("indefinitely");
-        }
-
+        builder.append(TimeUtil.getPrettyEndDate(inmate.getEnd()));
         if (reason != null) {
             builder.append(" for: ").append(reason);
         }

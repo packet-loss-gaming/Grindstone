@@ -11,6 +11,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.entity.player.UUIDUtil;
+import gg.packetloss.grindstone.util.TimeUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 
@@ -212,10 +213,10 @@ public class CSVInmateDatabase implements InmateDatabase {
         Inmate inmate = new Inmate(ID, prison, reason, start, end, mute);
         UUIDInmate.put(ID, inmate);
         auditLogger.info(String.format(
-                "JAIL: %s %s jailed %s (%s): %s",
+                "JAIL: %s jailed %s (%s) %s: %s",
                 source,
-                end == 0 ? "indefinitely" : "temporarily",
                 ID, Bukkit.getOfflinePlayer(ID).getName(),
+                TimeUtil.getPrettyEndDate(end),
                 reason.trim()
         ));
     }
