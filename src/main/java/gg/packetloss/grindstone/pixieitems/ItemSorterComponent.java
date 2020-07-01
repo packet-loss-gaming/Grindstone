@@ -117,7 +117,8 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
     }
 
     private static final Set<Material> SINK_CONTAINERS = Set.of(
-            Material.CHEST, Material.TRAPPED_CHEST, Material.DISPENSER, Material.DROPPER, Material.SHULKER_BOX
+            Material.CHEST, Material.TRAPPED_CHEST, Material.DISPENSER, Material.DROPPER, Material.SHULKER_BOX,
+            Material.BARREL
     );
 
     private boolean shouldConsiderAsSink(Block block) {
