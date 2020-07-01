@@ -122,7 +122,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
 
         ItemStack itemInHand = player.getItemInHand();
 
-        if (EnvironmentUtil.isValuableOre(block) && ItemUtil.isPickaxe(itemInHand)) {
+        if (EnvironmentUtil.isOre(block) && ItemUtil.isPickaxe(itemInHand)) {
             Material type = block.getType();
 
             getMiningResult(player, type, (item) -> {

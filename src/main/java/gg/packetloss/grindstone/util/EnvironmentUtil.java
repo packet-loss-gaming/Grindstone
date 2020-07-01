@@ -17,7 +17,9 @@ import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Dye;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 public class EnvironmentUtil {
@@ -88,37 +90,41 @@ public class EnvironmentUtil {
         return shrubBlocks.contains(type) || isCropBlock(type);
     }
 
-    private static final Set<Material> valuableOres = Set.of(
-            Material.GOLD_ORE, Material.LAPIS_ORE, Material.IRON_ORE, Material.DIAMOND_ORE,
-            Material.REDSTONE_ORE, Material.EMERALD_ORE, Material.NETHER_QUARTZ_ORE
-    );
+    private static final Set<Material> ORES;
 
-    public static boolean isValuableOre(Block block) {
-        return isValuableOre(block.getType());
+    static {
+        List<Material> newOreBlocks = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_ORE")) {
+                newOreBlocks.add(material);
+            }
+        }
+
+        ORES = Set.copyOf(newOreBlocks);
     }
-
-    public static boolean isValuableOre(Material type) {
-        return valuableOres.contains(type);
-    }
-
-    private static final Set<Material> invaluableOres = Set.of(Material.COAL_ORE);
 
     public static boolean isOre(Block block) {
         return isOre(block.getType());
     }
 
     public static boolean isOre(Material type) {
-        return invaluableOres.contains(type) || isValuableOre(type);
+        return ORES.contains(type);
     }
 
-    private static final Set<Material> LOGS = Set.of(
-            Material.ACACIA_LOG,
-            Material.BIRCH_LOG,
-            Material.DARK_OAK_LOG,
-            Material.JUNGLE_LOG,
-            Material.SPRUCE_LOG,
-            Material.OAK_LOG
-    );
+    private static final Set<Material> LOGS;
+
+    static {
+        List<Material> newSaplingsBlocks = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_LOG")) {
+                newSaplingsBlocks.add(material);
+            }
+        }
+
+        LOGS = Set.copyOf(newSaplingsBlocks);
+    }
 
     public static boolean isLog(Block block) {
         return isLog(block.getType());
@@ -128,14 +134,19 @@ public class EnvironmentUtil {
         return LOGS.contains(type);
     }
 
-    private static final Set<Material> SAPLINGS = Set.of(
-            Material.ACACIA_SAPLING,
-            Material.BIRCH_SAPLING,
-            Material.DARK_OAK_SAPLING,
-            Material.JUNGLE_SAPLING,
-            Material.SPRUCE_SAPLING,
-            Material.OAK_SAPLING
-    );
+    private static final Set<Material> SAPLINGS;
+
+    static {
+        List<Material> newSaplingsBlocks = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_SAPLING")) {
+                newSaplingsBlocks.add(material);
+            }
+        }
+
+        SAPLINGS = Set.copyOf(newSaplingsBlocks);
+    }
 
     public static boolean isSapling(Block block) {
         return isSapling(block.getType());
@@ -179,26 +190,30 @@ public class EnvironmentUtil {
         }
     }
 
-    private static final Set<Material> containerBlocks = Set.of(
-            Material.BREWING_STAND, Material.CHEST, Material.DISPENSER, Material.DROPPER, Material.FURNACE,
-            Material.JUKEBOX, Material.ENDER_CHEST, Material.TRAPPED_CHEST, Material.HOPPER,
-            Material.SHULKER_BOX,
+    private static final Set<Material> CONTAINER_BLOCKS;
 
-            // These are only valid in the inventory
-            Material.WHITE_SHULKER_BOX, Material.ORANGE_SHULKER_BOX,
-            Material.MAGENTA_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX,
-            Material.LIME_SHULKER_BOX, Material.PINK_SHULKER_BOX, Material.GRAY_SHULKER_BOX,
-            Material.LIGHT_GRAY_SHULKER_BOX, Material.CYAN_SHULKER_BOX, Material.PURPLE_SHULKER_BOX,
-            Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
-            Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX
-    );
+    static {
+        List<Material> newContainerBlocks = new ArrayList<>(List.of(
+                Material.BREWING_STAND, Material.CHEST, Material.DISPENSER, Material.DROPPER, Material.FURNACE,
+                Material.JUKEBOX, Material.ENDER_CHEST, Material.TRAPPED_CHEST, Material.HOPPER,
+                Material.SHULKER_BOX
+        ));
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_SHULKER_BOX")) {
+                newContainerBlocks.add(material);
+            }
+        }
+
+        CONTAINER_BLOCKS = Set.copyOf(newContainerBlocks);
+    }
 
     public static boolean isContainer(Block block) {
         return isContainer(block.getType());
     }
 
     public static boolean isContainer(Material type) {
-        return containerBlocks.contains(type);
+        return CONTAINER_BLOCKS.contains(type);
     }
 
     public static boolean isChest(Material type) {
@@ -209,47 +224,37 @@ public class EnvironmentUtil {
         return isChest(block.getType());
     }
 
-    private static final Set<Material> interactiveBlocks = Set.of(
-            Material.CRAFTING_TABLE, Material.LOOM, Material.GRINDSTONE, Material.SMOKER,
-            Material.ENCHANTING_TABLE, Material.BEACON, Material.ANVIL,
-            Material.LEVER,
+    private static final Set<Material> INTERACTIVE_BLOCKS;
 
-            Material.STONE_BUTTON,
+    static {
+        List<Material> newInteractiveBlocks = new ArrayList<>(List.of(
+                Material.CRAFTING_TABLE, Material.LOOM, Material.GRINDSTONE, Material.SMOKER,
+                Material.ENCHANTING_TABLE, Material.BEACON, Material.ANVIL,
+                Material.LEVER
+        ));
 
-            // Wooden Buttons
-            Material.ACACIA_BUTTON,
-            Material.BIRCH_BUTTON,
-            Material.DARK_OAK_BUTTON,
-            Material.JUNGLE_BUTTON,
-            Material.SPRUCE_BUTTON,
-            Material.OAK_BUTTON,
+        for (Material material : Material.values()) {
+            String name = material.name();
+            if (name.endsWith("_BUTTON")) {
+                newInteractiveBlocks.add(material);
+            } else if (name.endsWith("_DOOR")) {
+                if (material == Material.IRON_DOOR) {
+                    continue;
+                }
 
-            // Doors
-            Material.ACACIA_DOOR,
-            Material.BIRCH_DOOR,
-            Material.DARK_OAK_DOOR,
-            Material.JUNGLE_DOOR,
-            Material.SPRUCE_DOOR,
-            Material.OAK_DOOR,
+                newInteractiveBlocks.add(material);
+            } else if (name.endsWith("_TRAPDOOR")) {
+                newInteractiveBlocks.add(material);
+            } else if (name.endsWith("_FENCE_GATE")) {
+                newInteractiveBlocks.add(material);
+            }
+        }
 
-            Material.ACACIA_TRAPDOOR,
-            Material.BIRCH_TRAPDOOR,
-            Material.DARK_OAK_TRAPDOOR,
-            Material.JUNGLE_TRAPDOOR,
-            Material.SPRUCE_TRAPDOOR,
-            Material.OAK_TRAPDOOR,
-
-            // Fence Gates
-            Material.ACACIA_FENCE_GATE,
-            Material.BIRCH_FENCE_GATE,
-            Material.DARK_OAK_FENCE_GATE,
-            Material.JUNGLE_FENCE_GATE,
-            Material.SPRUCE_FENCE_GATE,
-            Material.OAK_FENCE_GATE
-    );
+        INTERACTIVE_BLOCKS = Set.copyOf(newInteractiveBlocks);
+    }
 
     private static boolean isInteractiveBlock(Material type) {
-        return interactiveBlocks.contains(type) || isContainer(type) || isBerryBush(type);
+        return INTERACTIVE_BLOCKS.contains(type) || isContainer(type) || isBerryBush(type);
     }
 
     public static boolean isInteractiveBlock(Block block) {
@@ -280,39 +285,41 @@ public class EnvironmentUtil {
         return false;
     }
 
-    private static final Set<Material> signBlocks = Set.of(
-            Material.ACACIA_SIGN,
-            Material.BIRCH_SIGN,
-            Material.DARK_OAK_SIGN,
-            Material.JUNGLE_SIGN,
-            Material.SPRUCE_SIGN,
-            Material.OAK_SIGN,
+    private static final Set<Material> SIGN_BLOCKS;
 
-            Material.ACACIA_WALL_SIGN,
-            Material.BIRCH_WALL_SIGN,
-            Material.DARK_OAK_WALL_SIGN,
-            Material.JUNGLE_WALL_SIGN,
-            Material.SPRUCE_WALL_SIGN,
-            Material.OAK_WALL_SIGN
-    );
+    static {
+        List<Material> newSignBlocks = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_SIGN")) {
+                newSignBlocks.add(material);
+            }
+        }
+
+        SIGN_BLOCKS = Set.copyOf(newSignBlocks);
+    }
 
     public static boolean isSign(Block block) {
         return isSign(block.getType());
     }
 
     public static boolean isSign(Material type) {
-
-        return signBlocks.contains(type);
+        return SIGN_BLOCKS.contains(type);
     }
 
-    private static final Set<Material> WOOL = Set.of(
-            Material.WHITE_WOOL, Material.ORANGE_WOOL, Material.MAGENTA_WOOL,
-            Material.LIGHT_BLUE_WOOL, Material.YELLOW_WOOL, Material.LIME_WOOL,
-            Material.PINK_WOOL, Material.GRAY_WOOL, Material.LIGHT_GRAY_WOOL,
-            Material.CYAN_WOOL, Material.PURPLE_WOOL, Material.BLUE_WOOL,
-            Material.BROWN_WOOL, Material.GREEN_WOOL,
-            Material.RED_WOOL, Material.BLACK_WOOL
-    );
+    private static final Set<Material> WOOL;
+
+    static {
+        List<Material> newWoolBlocks = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_WOOL")) {
+                newWoolBlocks.add(material);
+            }
+        }
+
+        WOOL = Set.copyOf(newWoolBlocks);
+    }
 
     public static boolean isWool(Material type) {
         return WOOL.contains(type);
@@ -322,14 +329,19 @@ public class EnvironmentUtil {
         return isWool(block.getType());
     }
 
-    private static final Set<Material> CONCRETE = Set.of(
-            Material.WHITE_CONCRETE, Material.ORANGE_CONCRETE, Material.MAGENTA_CONCRETE,
-            Material.LIGHT_BLUE_CONCRETE, Material.YELLOW_CONCRETE, Material.LIME_CONCRETE,
-            Material.PINK_CONCRETE, Material.GRAY_CONCRETE, Material.LIGHT_GRAY_CONCRETE,
-            Material.CYAN_CONCRETE, Material.PURPLE_CONCRETE, Material.BLUE_CONCRETE,
-            Material.BROWN_CONCRETE, Material.GREEN_CONCRETE,
-            Material.RED_CONCRETE, Material.BLACK_CONCRETE
-    );
+    private static final Set<Material> CONCRETE;
+
+    static {
+        List<Material> newConcreteBlocks = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_CONCRETE")) {
+                newConcreteBlocks.add(material);
+            }
+        }
+
+        CONCRETE = Set.copyOf(newConcreteBlocks);
+    }
 
     public static boolean isConcrete(Material type) {
         return CONCRETE.contains(type);
@@ -339,14 +351,19 @@ public class EnvironmentUtil {
         return isConcrete(block.getType());
     }
 
-    private static final Set<Material> STAINED_GLASS_BLOCKS = Set.of(
-            Material.WHITE_STAINED_GLASS, Material.ORANGE_STAINED_GLASS, Material.MAGENTA_STAINED_GLASS,
-            Material.LIGHT_BLUE_STAINED_GLASS, Material.YELLOW_STAINED_GLASS, Material.LIME_STAINED_GLASS,
-            Material.PINK_STAINED_GLASS, Material.GRAY_STAINED_GLASS, Material.LIGHT_GRAY_STAINED_GLASS,
-            Material.CYAN_STAINED_GLASS, Material.PURPLE_STAINED_GLASS, Material.BLUE_STAINED_GLASS,
-            Material.BROWN_STAINED_GLASS, Material.GREEN_STAINED_GLASS,
-            Material.RED_STAINED_GLASS, Material.BLACK_STAINED_GLASS
-    );
+    private static final Set<Material> STAINED_GLASS_BLOCKS;
+
+    static {
+        List<Material> newStainedGlassBlocks = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_STAINED_GLASS")) {
+                newStainedGlassBlocks.add(material);
+            }
+        }
+
+        STAINED_GLASS_BLOCKS = Set.copyOf(newStainedGlassBlocks);
+    }
 
     public static boolean isStainedGlassBlock(Material type) {
         return STAINED_GLASS_BLOCKS.contains(type);
@@ -356,16 +373,19 @@ public class EnvironmentUtil {
         return isStainedGlassBlock(block.getType());
     }
 
-    private static final Set<Material> STAINED_GLASS_PANES = Set.of(
-            Material.WHITE_STAINED_GLASS_PANE, Material.ORANGE_STAINED_GLASS_PANE,
-            Material.MAGENTA_STAINED_GLASS_PANE, Material.LIGHT_BLUE_STAINED_GLASS_PANE,
-            Material.YELLOW_STAINED_GLASS_PANE, Material.LIME_STAINED_GLASS_PANE,
-            Material.PINK_STAINED_GLASS_PANE, Material.GRAY_STAINED_GLASS_PANE,
-            Material.LIGHT_GRAY_STAINED_GLASS_PANE, Material.CYAN_STAINED_GLASS_PANE,
-            Material.PURPLE_STAINED_GLASS_PANE, Material.BLUE_STAINED_GLASS_PANE,
-            Material.BROWN_STAINED_GLASS_PANE, Material.GREEN_STAINED_GLASS_PANE,
-            Material.RED_STAINED_GLASS_PANE, Material.BLACK_STAINED_GLASS_PANE
-    );
+    private static final Set<Material> STAINED_GLASS_PANES;
+
+    static {
+        List<Material> newStainedGlassPanes = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_STAINED_GLASS_PANE")) {
+                newStainedGlassPanes.add(material);
+            }
+        }
+
+        STAINED_GLASS_PANES = Set.copyOf(newStainedGlassPanes);
+    }
 
     public static boolean isStainedGlassPane(Material type) {
         return STAINED_GLASS_PANES.contains(type);
@@ -383,16 +403,19 @@ public class EnvironmentUtil {
         return isStainedGlass(block.getType());
     }
 
-    private static final Set<Material> BEDS = Set.of(
-            Material.WHITE_BED, Material.ORANGE_BED,
-            Material.MAGENTA_BED, Material.LIGHT_BLUE_BED,
-            Material.YELLOW_BED, Material.LIME_BED,
-            Material.PINK_BED, Material.GRAY_BED,
-            Material.LIGHT_GRAY_BED, Material.CYAN_BED,
-            Material.PURPLE_BED, Material.BLUE_BED,
-            Material.BROWN_BED, Material.GREEN_BED,
-            Material.RED_BED, Material.BLACK_BED
-    );
+    private static final Set<Material> BEDS;
+
+    static {
+        List<Material> newBeds = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_BED")) {
+                newBeds.add(material);
+            }
+        }
+
+        BEDS = Set.copyOf(newBeds);
+    }
 
     public static boolean isBed(Material type) {
         return BEDS.contains(type);
