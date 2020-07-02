@@ -161,6 +161,31 @@ public class CustomItemCenter {
         ancientBoots.addUse("Repaired when worn while attacking creatures or players");
         addItem(ancientBoots);
 
+        // Apocalyptic Camouflage
+        CustomEquipment apocalypticCamouflageHelmet = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_HELMET, Material.LEATHER_HELMET);
+        apocalypticCamouflageHelmet.addSource(ItemSource.APOCALYPSE);
+        apocalypticCamouflageHelmet.addSource(ItemSource.MARKET);
+        apocalypticCamouflageHelmet.addUse("Set Effect: Apocalyptic Camouflage");
+        addItem(apocalypticCamouflageHelmet);
+
+        CustomEquipment apocalypticCamouflageChestplate = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_CHESTPLATE, Material.LEATHER_CHESTPLATE);
+        apocalypticCamouflageChestplate.addSource(ItemSource.APOCALYPSE);
+        apocalypticCamouflageChestplate.addSource(ItemSource.MARKET);
+        apocalypticCamouflageChestplate.addUse("Set Effect: Apocalyptic Camouflage");
+        addItem(apocalypticCamouflageChestplate);
+
+        CustomEquipment apocalypticCamouflageLeggings = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_LEGGINGS, Material.LEATHER_LEGGINGS);
+        apocalypticCamouflageLeggings.addSource(ItemSource.APOCALYPSE);
+        apocalypticCamouflageLeggings.addSource(ItemSource.MARKET);
+        apocalypticCamouflageLeggings.addUse("Set Effect: Apocalyptic Camouflage");
+        addItem(apocalypticCamouflageLeggings);
+
+        CustomEquipment apocalypticCamouflageBoots = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_BOOTS, Material.LEATHER_BOOTS);
+        apocalypticCamouflageBoots.addSource(ItemSource.APOCALYPSE);
+        apocalypticCamouflageBoots.addSource(ItemSource.MARKET);
+        apocalypticCamouflageBoots.addUse("Set Effect: Apocalyptic Camouflage");
+        addItem(apocalypticCamouflageBoots);
+
         // Nectric Armor
         CustomEquipment nectricHelmet = new CustomEquipment(NECTRIC_HELMET, Material.DIAMOND_HELMET);
         nectricHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);

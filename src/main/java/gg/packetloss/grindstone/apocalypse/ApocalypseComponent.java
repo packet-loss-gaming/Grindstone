@@ -398,6 +398,23 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             if (ChanceUtil.getChance(10000)) {
                 event.getDrops().add(CustomItemCenter.build(CustomItems.TOME_OF_THE_RIFT_SPLITTER));
             }
+
+            if (ChanceUtil.getChance(5000)) {
+                switch (ChanceUtil.getRandom(4)) {
+                    case 1:
+                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_HELMET));
+                        break;
+                    case 2:
+                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_CHESTPLATE));
+                        break;
+                    case 3:
+                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_LEGGINGS));
+                        break;
+                    default:
+                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_BOOTS));
+                        break;
+                }
+            }
         }
     }
 

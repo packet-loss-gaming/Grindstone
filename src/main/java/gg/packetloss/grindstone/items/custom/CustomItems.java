@@ -24,6 +24,12 @@ public enum CustomItems {
     ANCIENT_LEGGINGS(ChatColor.GOLD, "Ancient Leggings"),
     ANCIENT_BOOTS(ChatColor.GOLD, "Ancient Boots"),
 
+    // Apocalyptic Camouflage Armor
+    APOCALYPTIC_CAMOUFLAGE_HELMET(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Helmet"),
+    APOCALYPTIC_CAMOUFLAGE_CHESTPLATE(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Chestplate"),
+    APOCALYPTIC_CAMOUFLAGE_LEGGINGS(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Leggings"),
+    APOCALYPTIC_CAMOUFLAGE_BOOTS(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Boots"),
+
     // Nectric Armor
     NECTRIC_HELMET(ChatColor.DARK_RED, "Nectric Helmet"),
     NECTRIC_CHESTPLATE(ChatColor.DARK_RED, "Nectric Chestplate"),

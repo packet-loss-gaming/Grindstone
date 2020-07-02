@@ -328,76 +328,57 @@ public class ItemUtil {
         return false;
     }
 
-    public static boolean hasAncientArmour(LivingEntity entity) {
+    private static int getNumOfPiecesWorn(LivingEntity entity, String namePrefix) {
+        if (!entity.isValid()) return 0;
 
-        if (!entity.isValid()) return false;
-
-        ItemStack[] armour;
         EntityEquipment equipment = entity.getEquipment();
-        if (equipment != null) armour = equipment.getArmorContents();
-        else return false;
-
-        boolean[] b = new boolean[]{false, false, false, false};
-
-        for (int i = 0; i < 4; i++) {
-            b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient");
+        if (equipment == null) {
+            return 0;
         }
-        return b[0] && b[1] && b[2] && b[3];
+
+        ItemStack[] armour = equipment.getArmorContents();
+
+        int numWorn = 0;
+        for (int i = 0; i < 4; i++) {
+            if (matchesFilter(armour[i], namePrefix)) {
+                ++numWorn;
+            }
+        }
+
+        return numWorn;
+    }
+
+    private static boolean hasArmour(LivingEntity entity, String namePrefix) {
+        return getNumOfPiecesWorn(entity, namePrefix) == 4;
+    }
+
+    public static boolean hasAncientArmour(LivingEntity entity) {
+        return hasArmour(entity, ChatColor.GOLD + "Ancient");
     }
 
     public static boolean hasAncientRoyalArmour(LivingEntity entity) {
-        if (!entity.isValid()) return false;
+        int numWorn = getNumOfPiecesWorn(entity, ChatColor.GOLD + "Ancient Royal");
 
-        ItemStack[] armour;
-        EntityEquipment equipment = entity.getEquipment();
-        if (equipment != null) armour = equipment.getArmorContents();
-        else return false;
-
-        boolean[] b = new boolean[]{false, false, false, false};
-
-        b[0] = ItemUtil.isItem(armour[0], CustomItems.ANCIENT_CROWN) ||
-               ItemUtil.isItem(armour[0], CustomItems.ANCIENT_ROYAL_HELMET);
-
-        for (int i = 1; i < 4; i++) {
-            b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient Royal");
+        // Check to see if there's an ancient crown in the mix
+        if (numWorn == 3) {
+            if (ItemUtil.isItem(entity.getEquipment().getHelmet(), CustomItems.ANCIENT_CROWN)) {
+                ++numWorn;
+            }
         }
 
-        return b[0] && b[1] && b[2] && b[3];
-
+        return numWorn == 4;
     }
 
     public static boolean hasNecrosArmour(LivingEntity entity) {
-
-        if (!entity.isValid()) return false;
-
-        ItemStack[] armour;
-        EntityEquipment equipment = entity.getEquipment();
-        if (equipment != null) armour = equipment.getArmorContents();
-        else return false;
-
-        boolean[] b = new boolean[]{false, false, false, false};
-
-        for (int i = 0; i < 4; i++) {
-            b[i] = matchesFilter(armour[i], ChatColor.DARK_RED + "Necros");
-        }
-        return b[0] && b[1] && b[2] && b[3];
+        return hasArmour(entity, ChatColor.DARK_RED + "Necros");
     }
 
     public static boolean hasNectricArmour(LivingEntity entity) {
+        return hasArmour(entity, ChatColor.DARK_RED + "Nectric");
+    }
 
-        if (!entity.isValid()) return false;
-
-        ItemStack[] armour;
-        EntityEquipment equipment = entity.getEquipment();
-        if (equipment != null) armour = equipment.getArmorContents();
-        else return false;
-
-        boolean[] b = new boolean[]{false, false, false, false};
-
-        for (int i = 0; i < 4; i++) {
-            b[i] = matchesFilter(armour[i], ChatColor.DARK_RED + "Nectric");
-        }
-        return b[0] && b[1] && b[2] && b[3];
+    public static boolean hasApocalypticCamouflage(LivingEntity entity) {
+        return hasArmour(entity, ChatColor.DARK_GREEN + "Apocalyptic Camouflage");
     }
 
     public static boolean isNamed(ItemStack stack) {
