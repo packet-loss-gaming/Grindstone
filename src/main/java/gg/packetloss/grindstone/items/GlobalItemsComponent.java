@@ -94,6 +94,9 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     private static ItemCondenser summationCondenser = new ItemCondenser();
 
     static {
+        // Bone
+        summationCondenser.addSupport(new ItemStack(Material.BONE_MEAL, 9), new ItemStack(Material.BONE_BLOCK, 1));
+
         // Coal
         summationCondenser.addSupport(new ItemStack(Material.COAL, 9), new ItemStack(Material.COAL_BLOCK, 1));
 
@@ -116,6 +119,9 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
         // Emerald
         summationCondenser.addSupport(new ItemStack(Material.EMERALD, 9), new ItemStack(Material.EMERALD_BLOCK, 1));
+
+        // Netherite
+        summationCondenser.addSupport(new ItemStack(Material.NETHERITE_INGOT, 9), new ItemStack(Material.NETHERITE_BLOCK, 1));
 
         // Slime
         summationCondenser.addSupport(new ItemStack(Material.SLIME_BALL, 9), new ItemStack(Material.SLIME_BLOCK, 1));
