@@ -17,4 +17,9 @@ public class PrettyfierComponent extends BukkitComponent {
         CommandBook.registerEvents(autoCloser);
         prettyfiers.add(autoCloser);
     }
+
+    @Override
+    public void disable() {
+        prettyfiers.forEach(Prettyfier::forceFinish);
+    }
 }
