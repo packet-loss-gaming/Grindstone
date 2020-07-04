@@ -324,6 +324,15 @@ public class RogueListener implements Listener {
         return yawDiff <= 90 || yawDiff >= (360 - 90);
     }
 
+    private int getBoostDamage(int hits, boolean backstabbed) {
+        int boostDamage = 5 + (hits - 1);
+        if (backstabbed) {
+            boostDamage *= 3;
+        }
+
+        return Math.min(100, boostDamage);
+    }
+
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
@@ -356,18 +365,22 @@ public class RogueListener implements Listener {
                     boolean backstabbed = state.hasPower(RoguePower.BACKSTAB) &&
                                           isBackstab((Player) attacker, result.getDefender());
                     if (hits > 0 || backstabbed) {
-                        int boostDamage = 5 + (hits - 1);
-                        if (backstabbed) {
-                            boostDamage *= 3;
-                            ChatUtil.sendNotice(attacker, "Backstabbed!");
-                        }
-
-                        boostDamage = Math.min(100, boostDamage);
-
-                        if (state.getSettings().shouldShowBerserkerBuffs()) {
-                            ((Player) attacker).sendActionBar(ChatColor.RED + "Berserker Boost: +" + boostDamage);
-                        }
+                        int boostDamage = getBoostDamage(hits, backstabbed);
                         event.setDamage(event.getDamage() + boostDamage);
+
+                        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+                            if (event.isCancelled()) {
+                                return;
+                            }
+
+                            if (backstabbed) {
+                                ChatUtil.sendNotice(attacker, "Backstabbed!");
+                            }
+
+                            if (state.getSettings().shouldShowBerserkerBuffs()) {
+                                ((Player) attacker).sendActionBar(ChatColor.RED + "Berserker Boost: +" + boostDamage);
+                            }
+                        });
                     }
                 }
             }
