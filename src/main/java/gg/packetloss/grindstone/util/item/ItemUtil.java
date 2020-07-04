@@ -23,10 +23,7 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class ItemUtil {
 
@@ -220,14 +217,22 @@ public class ItemUtil {
         return count;
     }
 
-    private static final Set<Material> swords = Set.of(
-            Material.WOODEN_SWORD, Material.STONE_SWORD,
-            Material.IRON_SWORD, Material.GOLDEN_SWORD,
-            Material.DIAMOND_SWORD
-    );
+    private static final Set<Material> SWORDS;
+
+    static {
+        List<Material> newSwords = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_SWORD")) {
+                newSwords.add(material);
+            }
+        }
+
+        SWORDS = Set.copyOf(newSwords);
+    }
 
     public static boolean isSword(Material item) {
-        return swords.contains(item);
+        return SWORDS.contains(item);
     }
 
     public static boolean isSword(ItemStack stack) {
@@ -242,11 +247,19 @@ public class ItemUtil {
         return isBow(stack.getType());
     }
 
-    private static final Set<Material> AXES = Set.of(
-            Material.WOODEN_AXE, Material.STONE_AXE,
-            Material.IRON_AXE, Material.GOLDEN_AXE,
-            Material.DIAMOND_AXE
-    );
+    private static final Set<Material> AXES;
+
+    static {
+        List<Material> newAxes = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_AXE")) {
+                newAxes.add(material);
+            }
+        }
+
+        AXES = Set.copyOf(newAxes);
+    }
 
     public static boolean isAxe(Material type) {
         return AXES.contains(type);
@@ -256,11 +269,19 @@ public class ItemUtil {
         return isAxe(itemStack.getType());
     }
 
-    private static final Set<Material> PICKAXES = Set.of(
-            Material.WOODEN_PICKAXE, Material.STONE_PICKAXE,
-            Material.IRON_PICKAXE, Material.GOLDEN_PICKAXE,
-            Material.DIAMOND_PICKAXE
-    );
+    private static final Set<Material> PICKAXES;
+
+    static {
+        List<Material> newPickaxes = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_PICKAXE")) {
+                newPickaxes.add(material);
+            }
+        }
+
+        PICKAXES = Set.copyOf(newPickaxes);
+    }
 
     public static boolean isPickaxe(Material type) {
         return PICKAXES.contains(type);
@@ -278,21 +299,11 @@ public class ItemUtil {
         return isTool(stack.getType());
     }
 
-    private static final Set<Material> INGOTS = Set.of(
-            Material.IRON_INGOT, Material.GOLD_INGOT
-    );
-
-    public static boolean isIngot(Material type) {
-        return INGOTS.contains(type);
-    }
-
     public static boolean hasItem(Player player, CustomItems type) {
         return player.isValid() && findItemOfName(player.getInventory().getContents(), type.toString());
     }
 
-
     public static boolean isItem(ItemStack stack, CustomItems type) {
-
         return matchesFilter(stack, type.toString(), false);
     }
 
