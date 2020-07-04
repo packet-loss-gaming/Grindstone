@@ -40,7 +40,7 @@ public abstract class RadialExecutor {
         this.itemType = itemType;
     }
 
-    public abstract boolean accepts(Material material);
+    public abstract boolean accepts(Block block);
 
     public void process(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) {
@@ -121,9 +121,8 @@ public abstract class RadialExecutor {
         }
 
         final World world = clicked.getWorld();
-        final Material initialType = clicked.getType();
 
-        if (!accepts(initialType)) return;
+        if (!accepts(clicked)) return;
 
         event.setCancelled(true);
 
@@ -179,6 +178,8 @@ public abstract class RadialExecutor {
         CuboidRegion region = new CuboidRegion(min, max);
         min = region.getMinimumPoint();
         max = region.getMaximumPoint();
+
+        final Material initialType = clicked.getType();
 
         // callEvent(new RapidBlockBreakEvent(player));
         short degradation = 0;
