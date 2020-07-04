@@ -38,6 +38,18 @@ public class DebounceHandle<T> {
         return state;
     }
 
+    private void cancelCurrentTask() {
+        BukkitTask currentTask = state.getCurrentTask();
+        if (currentTask != null) {
+            currentTask.cancel();
+        }
+    }
+
+    private void performBounceAction() {
+        bounceAction.accept(state.getCurrentValue());
+        reset();
+    }
+
     private void reset() {
         state.setCurrentValue(initialValue);
         state.setCurrentTask(null);
@@ -46,15 +58,18 @@ public class DebounceHandle<T> {
     public void accept(T newValue) {
         state.setCurrentValue(updateFunction.apply(state.getCurrentValue(), newValue));
 
-        BukkitTask currentTask = state.getCurrentTask();
-        if (currentTask != null) {
-            currentTask.cancel();
-        }
+        cancelCurrentTask();
 
-        state.setCurrentTask(CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-            bounceAction.accept(state.getCurrentValue());
-            reset();
-        }, waitTime));
+        state.setCurrentTask(CommandBook.server().getScheduler().runTaskLater(
+                CommandBook.inst(),
+                this::performBounceAction,
+                waitTime
+        ));
+    }
+
+    public void bounceNow() {
+        cancelCurrentTask();
+        performBounceAction();
     }
 
     public class State {

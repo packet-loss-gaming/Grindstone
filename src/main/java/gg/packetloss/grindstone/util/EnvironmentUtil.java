@@ -224,20 +224,14 @@ public class EnvironmentUtil {
         return isChest(block.getType());
     }
 
-    private static final Set<Material> INTERACTIVE_BLOCKS;
+    private static final Set<Material> CLOSEABLE_BLOCKS;
 
     static {
-        List<Material> newInteractiveBlocks = new ArrayList<>(List.of(
-                Material.CRAFTING_TABLE, Material.LOOM, Material.GRINDSTONE, Material.SMOKER,
-                Material.ENCHANTING_TABLE, Material.BEACON, Material.ANVIL,
-                Material.LEVER
-        ));
+        List<Material> newInteractiveBlocks = new ArrayList<>();
 
         for (Material material : Material.values()) {
             String name = material.name();
-            if (name.endsWith("_BUTTON")) {
-                newInteractiveBlocks.add(material);
-            } else if (name.endsWith("_DOOR")) {
+            if (name.endsWith("_DOOR")) {
                 if (material == Material.IRON_DOOR) {
                     continue;
                 }
@@ -250,11 +244,42 @@ public class EnvironmentUtil {
             }
         }
 
+        CLOSEABLE_BLOCKS = Set.copyOf(newInteractiveBlocks);
+    }
+
+    public static boolean isClosable(Material type) {
+        return CLOSEABLE_BLOCKS.contains(type);
+    }
+
+    public static boolean isClosable(Block block) {
+        return isClosable(block.getType());
+    }
+
+    private static final Set<Material> INTERACTIVE_BLOCKS;
+
+    static {
+        List<Material> newInteractiveBlocks = new ArrayList<>(List.of(
+                Material.CRAFTING_TABLE, Material.LOOM, Material.GRINDSTONE, Material.SMOKER,
+                Material.ENCHANTING_TABLE, Material.BEACON, Material.ANVIL,
+                Material.LEVER
+        ));
+
+        newInteractiveBlocks.addAll(CONTAINER_BLOCKS);
+        newInteractiveBlocks.addAll(CLOSEABLE_BLOCKS);
+        newInteractiveBlocks.addAll(BERRY_BUSHES);
+
+        for (Material material : Material.values()) {
+            String name = material.name();
+            if (name.endsWith("_BUTTON")) {
+                newInteractiveBlocks.add(material);
+            }
+        }
+
         INTERACTIVE_BLOCKS = Set.copyOf(newInteractiveBlocks);
     }
 
     private static boolean isInteractiveBlock(Material type) {
-        return INTERACTIVE_BLOCKS.contains(type) || isContainer(type) || isBerryBush(type);
+        return INTERACTIVE_BLOCKS.contains(type);
     }
 
     public static boolean isInteractiveBlock(Block block) {
