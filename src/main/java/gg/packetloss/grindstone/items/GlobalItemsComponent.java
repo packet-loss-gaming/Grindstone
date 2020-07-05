@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items;
 
+import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -269,10 +270,10 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         registerCommands(MigrationCommands.class);
     }
 
-    private void updateResult(PrepareAnvilEvent event, ItemStack result) {
+    private void updateResult(PrepareResultEvent event, ItemStack result) {
         event.setResult(result);
 
-        event.getInventory().getViewers().forEach((entity) -> {
+        event.getViewers().forEach((entity) -> {
             if (entity instanceof Player) {
                 ((Player) entity).updateInventory();
             }
@@ -338,6 +339,21 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         newResult.setItemMeta(meta);
 
         updateResult(event, newResult);
+    }
+
+    @EventHandler
+    public void onPrepareResult(PrepareResultEvent event) {
+        // Handled in the onPrepareAnvil handler
+        if (event instanceof PrepareAnvilEvent) {
+            return;
+        }
+
+        for (ItemStack itemStack : event.getInventory().getContents()) {
+            if (ItemUtil.isAuthenticCustomItem(itemStack)) {
+                updateResult(event, null);
+                return;
+            }
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
