@@ -44,9 +44,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
@@ -336,6 +338,18 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         newResult.setItemMeta(meta);
 
         updateResult(event, newResult);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onCraftCustomItem(CraftItemEvent event) {
+        HumanEntity crafter = event.getWhoClicked();
+        for (ItemStack itemStack : event.getInventory().getMatrix()) {
+            if (ItemUtil.isAuthenticCustomItem(itemStack)) {
+                ChatUtil.sendError(crafter, "You cannot use custom items as part of a crafting recipe.");
+                event.setCancelled(true);
+                return;
+            }
+        }
     }
 
     public class MigrationCommands {
