@@ -22,7 +22,12 @@ import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 public class ApocalypticCamouflageArmorImpl extends AbstractItemFeatureImpl {
     @EventHandler(ignoreCancelled = true)
     public void onEntityTargetEvent(EntityTargetLivingEntityEvent event) {
-        if (ApocalypseHelper.checkEntity(event.getEntity()) && ItemUtil.hasApocalypticCamouflage(event.getTarget())) {
+        LivingEntity target = event.getTarget();
+        if (target == null) {
+            return;
+        }
+
+        if (ApocalypseHelper.checkEntity(event.getEntity()) && ItemUtil.hasApocalypticCamouflage(target)) {
             event.setCancelled(true);
         }
     }
