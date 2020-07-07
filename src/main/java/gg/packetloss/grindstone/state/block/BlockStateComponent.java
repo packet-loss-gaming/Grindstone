@@ -108,16 +108,12 @@ public class BlockStateComponent extends BukkitComponent implements Listener {
         states[kind.ordinal()].push(BlockStateRecordTranslator.constructFrom(blockState));
     }
 
-    private void popBlock(BlockStateRecord record) {
-        BlockStateRecordTranslator.restore(record);
-    }
-
     public void dropAllBlocks(BlockStateKind kind) {
         states[kind.ordinal()].dropAll();
     }
 
     public void popAllBlocks(BlockStateKind kind) {
-        states[kind.ordinal()].popAll(this::popBlock);
+        states[kind.ordinal()].popAll(BlockStateRecordTranslator::restore);
     }
 
     public void popBlocksOlderThan(BlockStateKind kind, long maxAge) {
@@ -125,7 +121,7 @@ public class BlockStateComponent extends BukkitComponent implements Listener {
 
         states[kind.ordinal()].popWhere(
                 (record) ->  currentTime - record.getCreationTime() >= maxAge,
-                this::popBlock
+                BlockStateRecordTranslator::restore
         );
     }
 
@@ -141,12 +137,12 @@ public class BlockStateComponent extends BukkitComponent implements Listener {
     public void popBlocksCreatedBy(BlockStateKind kind, Player player) {
         states[kind.ordinal()].popWhere(
                 (record) -> recordMatchesPlayer(record, player),
-                this::popBlock
+                BlockStateRecordTranslator::restore
         );
     }
 
     public void popBlocksWhere(BlockStateKind kind, Predicate<BlockStateRecord> predicate) {
-        states[kind.ordinal()].popWhere(predicate, this::popBlock);
+        states[kind.ordinal()].popWhere(predicate, BlockStateRecordTranslator::restore);
     }
 
     public boolean hasPlayerBrokenBlocks(BlockStateKind kind, Player player) {

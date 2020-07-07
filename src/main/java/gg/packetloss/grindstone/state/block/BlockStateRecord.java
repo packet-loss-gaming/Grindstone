@@ -51,6 +51,14 @@ public class BlockStateRecord {
         return z;
     }
 
+    public int getChunkX() {
+        return x >> 4;
+    }
+
+    public int getChunkZ() {
+        return z >> 4;
+    }
+
     public long getCreationTime() {
         return creationTime;
     }

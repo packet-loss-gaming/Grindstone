@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class BlockStateRecordTranslator {
     private BlockStateRecordTranslator() { }
@@ -32,10 +33,13 @@ public class BlockStateRecordTranslator {
         return constructFrom((UUID) null, blockState);
     }
 
-    public static void restore(BlockStateRecord record) {
+    public static CompletableFuture<Boolean> restore(BlockStateRecord record) {
         World world = Bukkit.getWorld(record.getWorldName());
 
-        Block block = world.getBlockAt(record.getX(), record.getY(), record.getZ());
-        block.setBlockData(Bukkit.createBlockData(record.getBlockData()));
+        return world.getChunkAtAsync(record.getChunkX(), record.getChunkZ()).thenApply((chunk) -> {
+            Block block = world.getBlockAt(record.getX(), record.getY(), record.getZ());
+            block.setBlockData(Bukkit.createBlockData(record.getBlockData()));
+            return true;
+        });
     }
 }
