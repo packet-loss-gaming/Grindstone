@@ -235,9 +235,9 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             if (cachedEmpty()) return;
             for (LivingEntity e : getContained(LivingEntity.class)) {
                 // Auto break stuff
-                Location belowLoc = e.getLocation();
-                if (!(e instanceof Player) || (isInEvilRegion(belowLoc) && isParticipant((Player) e))) {
-                    breakBlock(e, belowLoc.add(0, -1, 0));
+                Location belowLoc = e.getLocation().add(0, -1, 0);
+                if (!(e instanceof Player) || (isHostileTempleArea(belowLoc) && isParticipant((Player) e))) {
+                    breakBlock(e, belowLoc);
                     breakBlock(e, belowLoc.add(0, -1, 0));
                     breakBlock(e, belowLoc.add(0, -1, 0));
                 }
@@ -262,15 +262,16 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         return isHostileTempleArea(block.getLocation()) || block.getLightLevel() == 0;
     }
 
-    public boolean isHostileTempleArea(Location location) {
-        return isInEvilRegion(location) && location.getY() < 93 && location.getBlock().getLightFromSky() < 4;
+    private boolean isInTemplateArea(Location location) {
+        if (LocationUtil.isInRegion(getWorld(), temple, location)) {
+            return true;
+        }
+
+        return location.getY() < 69 && contains(location);
     }
 
-    private boolean isInEvilRegion(Location location) {
-        for (ProtectedRegion region : new ProtectedRegion[]{temple}) {
-            if (LocationUtil.isInRegion(getWorld(), region, location)) return true;
-        }
-        return location.getY() < 69 && contains(location);
+    public boolean isHostileTempleArea(Location location) {
+        return isInTemplateArea(location) && location.getY() < 93 && location.getBlock().getLightFromSky() < 4;
     }
 
     public void restoreBlocks() {
