@@ -171,7 +171,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
     public void onProjectileLand(ProjectileHitEvent event) {
         Projectile p = event.getEntity();
         if (p instanceof Snowball && parent.contains(p)) {
-            if (!parent.isBossSpawned()) {
+            if (!parent.isBossSpawnedFast()) {
                 return;
             }
 
