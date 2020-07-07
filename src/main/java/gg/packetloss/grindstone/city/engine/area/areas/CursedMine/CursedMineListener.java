@@ -284,7 +284,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
         if (containsPlayer || parent.isOnHitList(player)) {
             parent.highScores.update(player, ScoreTypes.CURSED_MINE_DEATHS, 1);
 
-            if (containsPlayer && ChanceUtil.getChance(500)) {
+            if (parent.isOnHitList(player) && ChanceUtil.getChance(50)) {
                 ChatUtil.sendNotice(player, "You feel as though a spirit is trying to tell you something...");
                 event.getDrops().add(BookUtil.Lore.Areas.theGreatMine());
             }
