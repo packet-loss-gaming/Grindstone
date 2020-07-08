@@ -7,10 +7,10 @@
 package gg.packetloss.grindstone.city.engine.area.areas.MirageArena;
 
 import com.google.common.collect.Lists;
+import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.session.SessionComponent;
-import com.sk89q.commandbook.util.PaginatedResult;
-import com.sk89q.commandbook.util.entity.player.PlayerUtil;
-import com.sk89q.minecraft.util.commands.*;
+import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
@@ -46,7 +46,6 @@ import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.io.*;
@@ -55,6 +54,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Mirage Arena", desc = "What will you see next?")
 @Depend(components = {AdminComponent.class, SessionComponent.class, HighScoresComponent.class,
@@ -82,6 +82,10 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
     protected BossBar progressBar = Bukkit.createBossBar("Arena Loading", BarColor.BLUE, BarStyle.SEGMENTED_6);
 
+    public MirageArena() {
+        super(1);
+    }
+
     @Override
     public void setUp() {
         world = server.getWorlds().get(0);
@@ -91,13 +95,19 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         config = new MirageArenaConfig();
 
         registerScope();
-        registerCommands(Commands.class);
     }
 
     @Override
     public void enable() {
-        // WorldGuard loads late for some reason
-        server.getScheduler().runTaskLater(inst, super::enable, 1);
+        super.enable();
+
+        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
+        MirageArenaSchematicConverter.register(registrar, this);
+        registrar.registerTopLevelCommands((commandManager, registration) -> {
+            registrar.registerAsSubCommand("mirage", "Mirage Arena Control Commands", commandManager, (innerCommandManager, innerRegistration) -> {
+                innerRegistration.register(innerCommandManager, MirageArenaCommandsRegistration.builder(), new MirageArenaCommands(this));
+            });
+        });
     }
 
     @Override
@@ -117,7 +127,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
             @Override
             public boolean allowed(Player attacker, Player defender) {
-                return !sessions.getSession(MirageSession.class, attacker).isIgnored(defender.getName());
+                return !sessions.getSession(MirageSession.class, attacker).isIgnored(defender.getUniqueId());
             }
         });
     }
@@ -132,7 +142,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         ++ticks;
 
         if (ticks >= 60) {
-            String next = getNextMirage(true);
+            MirageArenaSchematic next = getNextMirage(true);
             if (next == null) {
                 return;
             }
@@ -143,22 +153,22 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
             Collection<Player> players = getAudiblePlayers();
             try {
-                ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, "Attempting to change the current mirage to " + next + "...");
+                ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, "Attempting to change the current mirage to " + next.getArenaName() + "...");
                 changeMirage(next);
             } catch (CommandException e) {
                 ChatUtil.sendError(players, "The arena was already changing, the vote has been cancelled!");
             } catch (IOException e) {
                 e.printStackTrace();
-                ChatUtil.sendError(players, "The arena could not be changed to " + next + "!");
+                ChatUtil.sendError(players, "The arena could not be changed to " + next.getArenaName() + "!");
             }
         } else if (ticks % 10 == 0) {
-            String next = getNextMirage(false);
+            MirageArenaSchematic next = getNextMirage(false);
             if (next == null) {
                 return;
             }
 
             Collection<Player> players = getAudiblePlayers();
-            ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, "The currently winning mirage is " + next + '.');
+            ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, "The currently winning mirage is " + next.getArenaName() + '.');
             ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, ((60 - ticks) * 5) + " seconds til arena change.");
         }
     }
@@ -176,7 +186,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         });
     }
 
-    public String getNextMirage(boolean clearOldVotes) {
+    public MirageArenaSchematic getNextMirage(boolean clearOldVotes) {
         Map<String, ArenaVote> votes = new HashMap<>();
         getAudiblePlayers().forEach(p -> {
             MirageSession session = sessions.getSession(MirageSession.class, p);
@@ -195,7 +205,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         });
         List<ArenaVote> results = Lists.newArrayList(votes.values());
         results.sort((o1, o2) -> o2.getVotes() - o1.getVotes());
-        return results.isEmpty() ? null : results.get(0).getArena();
+        return results.isEmpty() ? null : new MirageArenaSchematic(getFile(results.get(0).getArena()));
     }
 
     public void resetBlockRecordIndex() {
@@ -269,17 +279,13 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         }, timedOut ? 10 : 1);
     }
 
-    public void changeMirage(String newMirage) throws IOException, CommandException {
-        File file = getFile(newMirage);
-        if (!file.exists()) {
-            throw new FileNotFoundException();
-        }
-
+    public void changeMirage(MirageArenaSchematic schematic) throws IOException, CommandException {
         if (editing) {
             throw new CommandException("Editing is already in progress!");
         }
         editing = true;
 
+        File file = schematic.getPath().toFile();
         EditSession editor = WorldEditBridge.getSystemEditSessionFor(world);
 
         try (Closer closer = Closer.create()) {
@@ -308,8 +314,26 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         }
     }
 
+    private MirageSession getSession(Player player) {
+        return sessions.getSession(MirageSession.class, player);
+    }
+
+    public void registerVote(Player player, MirageArenaSchematic arena) {
+        getSession(player).vote(arena.getArenaName());
+
+        voting = true;
+    }
+
+    public void registerIgnore(Player player, Player target) {
+        getSession(player).ignore(target.getUniqueId());
+    }
+
+    public void unregisterIgnore(Player player, Player target) {
+        getSession(player).unignore(target.getUniqueId());
+    }
+
     // FIXME: Provide a migration path from the old to new format.
-    public File getFile(String name) {
+    public Path getFile(String name) {
         String targetDir = getWorkingDir().getPath() + '/' + name + '/';
 
         Path legacyPath = Paths.get(
@@ -317,154 +341,64 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                 "arena." + BuiltInClipboardFormat.MCEDIT_SCHEMATIC.getPrimaryFileExtension()
         );
         if (Files.exists(legacyPath)) {
-            return legacyPath.toFile();
+            return legacyPath;
         }
 
         return Paths.get(
                 targetDir,
                 "arena." + BuiltInClipboardFormat.SPONGE_SCHEMATIC.getPrimaryFileExtension()
-        ).toFile();
+        );
     }
 
-    public class Commands {
-        @Command(aliases = {"mirage"}, desc = "Mirage Commands")
-        @NestedCommand({MirageCommands.class})
-        public void profileCommands(CommandContext args, CommandSender sender) throws CommandException {
-
+    public List<MirageArenaSchematic> getArenas(String filter) {
+        boolean noFilter = filter == null || filter.isBlank();
+        try {
+            return Files.list(getWorkingDir().toPath())
+                    .filter(p -> Files.isDirectory(p))
+                    .map(Path::getFileName).map(Path::toString)
+                    .filter(name -> noFilter ||name.toUpperCase().contains(filter.toUpperCase()))
+                    .map(this::getFile).map(MirageArenaSchematic::new)
+                    .collect(Collectors.toList());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new ArrayList<>();
         }
     }
 
-    public class MirageCommands {
+    public void saveArena(String arenaName, boolean overwrite) throws CommandException {
+        File file = getFile(arenaName.toLowerCase()).toFile();
 
-        @Command(aliases = {"vote"},
-                usage = "<arena>", desc = "Vote for a mirage arena",
-                flags = "", min = 1, max = 1)
-        @CommandPermissions("aurora.mirage.vote")
-        public void vote(CommandContext args, CommandSender sender) throws CommandException {
-            String initFile = args.getString(0);
-            File file = getFile(initFile);
-
-            if (!file.exists()) {
-                throw new CommandException("No arena exist by that name!");
-            }
-
-            MirageSession session = sessions.getSession(MirageSession.class, PlayerUtil.checkPlayer(sender));
-            session.vote(initFile);
-
-            voting = true;
-
-            ChatUtil.sendNotice(sender, "Your vote has been set to " + initFile + '.');
-        }
-
-        @Command(aliases = {"ignore"},
-                usage = "<player[, player]>", desc = "Ignore a player",
-                flags = "", min = 1, max = 1)
-        @CommandPermissions("aurora.mirage.ignore")
-        public void ignore(CommandContext args, CommandSender sender) throws CommandException {
-            MirageSession session = sessions.getSession(MirageSession.class, PlayerUtil.checkPlayer(sender));
-            String[] targets = args.getString(0).split(",");
-            for (String target : targets) {
-                session.ignore(target);
-                ChatUtil.sendNotice(sender, "You will no longer be able to damage " + target + ".");
+        File directory = file.getParentFile();
+        if (!directory.exists()) {
+            directory.mkdirs();
+        } else {
+            if (!overwrite) {
+                throw new CommandException("An arena state by that name already exist!");
+            } else if (file.exists()) {
+                file.delete();
             }
         }
 
-        @Command(aliases = {"unignore"},
-                usage = "<player[, player]>", desc = "Unignore a player",
-                flags = "", min = 1, max = 1)
-        @CommandPermissions("aurora.mirage.unignore")
-        public void unignore(CommandContext args, CommandSender sender) throws CommandException {
-            MirageSession session = sessions.getSession(MirageSession.class, PlayerUtil.checkPlayer(sender));
-            String[] targets = args.getString(0).split(",");
-            for (String target : targets) {
-                session.unignore(target);
-                ChatUtil.sendNotice(sender, "You will now be able to damage " + target + ".");
-            }
-        }
+        EditSession editor = WorldEditBridge.getSystemEditSessionFor(world);
 
-        @Command(aliases = {"list"},
-                usage = "[-p page] [prefix]", desc = "List all arena states",
-                flags = "p:", min = 0, max = 1)
-        @CommandPermissions("aurora.mirage.list")
-        public void areaList(CommandContext args, CommandSender sender) throws CommandException {
-            new PaginatedResult<File>(ChatColor.GOLD + "Arenas") {
-                @Override
-                public String format(File file) {
-                    return file.getName();
-                }
-            }.display(
-                    sender,
-                    Arrays.asList(getWorkingDir().listFiles((dir, name)
-                            -> (args.argsLength() < 1 || name.startsWith(args.getString(0)))
-                            && new File(dir, name).isDirectory())),
-                    args.getFlagInteger('p', 1)
-            );
-        }
+        try (Closer closer = Closer.create()) {
+            FileOutputStream fis = closer.register(new FileOutputStream(file));
+            BufferedOutputStream bos = closer.register(new BufferedOutputStream(fis));
 
-        @Command(aliases = {"save"},
-                usage = "<name>", desc = "Save an arena state",
-                flags = "o", min = 1, max = 1)
-        @CommandPermissions("aurora.mirage.save")
-        public void areaSave(CommandContext args, CommandSender sender) throws CommandException {
-            BlockVector3 min = region.getMinimumPoint();
+            ClipboardWriter writer = closer.register(BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(bos));
 
-            String initFile = args.getString(0);
-            File file = getFile(initFile);
+            Region internalRegion = RegionUtil.convert(region).orElseThrow();
+            BlockArrayClipboard clipboard = new BlockArrayClipboard(internalRegion);
 
-            File directory = file.getParentFile();
-            if (!directory.exists()) {
-                directory.mkdirs();
-            } else {
-                if (!args.hasFlag('o')) {
-                    throw new CommandException("An arena state by that name already exist!");
-                } else if (file.exists()) {
-                    file.delete();
-                }
-            }
+            ForwardExtentCopy copy = new ForwardExtentCopy(editor, internalRegion, clipboard, region.getMinimumPoint());
+            copy.setCopyingEntities(false);
+            copy.setCopyingBiomes(false);
 
-            EditSession editor = WorldEditBridge.getSystemEditSessionFor(world);
+            Operations.completeLegacy(copy);
 
-            try (Closer closer = Closer.create()) {
-                FileOutputStream fis = closer.register(new FileOutputStream(file));
-                BufferedOutputStream bos = closer.register(new BufferedOutputStream(fis));
-
-                ClipboardWriter writer = closer.register(BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(bos));
-
-                Region internalRegion = RegionUtil.convert(region).orElseThrow();
-                BlockArrayClipboard clipboard = new BlockArrayClipboard(internalRegion);
-
-                ForwardExtentCopy copy = new ForwardExtentCopy(editor, internalRegion, clipboard, region.getMinimumPoint());
-                copy.setCopyingEntities(false);
-                copy.setCopyingBiomes(false);
-
-                Operations.completeLegacy(copy);
-
-                writer.write(clipboard);
-            } catch (IOException | MaxChangedBlocksException e) {
-                e.printStackTrace();
-            }
-
-            ChatUtil.sendNotice(sender, "Successfully saved.");
-        }
-
-        @Command(aliases = {"load"},
-                usage = "<name>", desc = "Load an arena state",
-                flags = "", min = 1, max = 1)
-        @CommandPermissions("aurora.mirage.load")
-        public void areaLoad(CommandContext args, CommandSender sender) throws CommandException {
-
-            String initFile = args.getString(0);
-
-            try {
-                try {
-                    changeMirage(initFile);
-                } catch (FileNotFoundException ex) {
-                    throw new CommandException("No arena state exist by that name!");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                ChatUtil.sendError(sender, "Error encountered, check console.");
-            }
+            writer.write(clipboard);
+        } catch (IOException | MaxChangedBlocksException e) {
+            e.printStackTrace();
         }
     }
 }

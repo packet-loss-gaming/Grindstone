@@ -10,12 +10,13 @@ import com.sk89q.commandbook.component.session.PersistentSession;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class MirageSession extends PersistentSession {
 
     private String vote;
-    private Set<String> ignored = new HashSet<>();
+    private Set<UUID> ignored = new HashSet<UUID>();
     private double dmgTaken = 0;
 
     protected MirageSession() {
@@ -30,15 +31,15 @@ public class MirageSession extends PersistentSession {
         return vote;
     }
 
-    public boolean isIgnored(String player) {
+    public boolean isIgnored(UUID player) {
         return ignored.contains(player);
     }
 
-    public void ignore(String player) {
+    public void ignore(UUID player) {
         ignored.add(player);
     }
 
-    public void unignore(String player) {
+    public void unignore(UUID player) {
         ignored.remove(player);
     }
 
