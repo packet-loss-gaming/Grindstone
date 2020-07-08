@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.city.engine.area.areas.MirageArena;
 
-import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.session.SessionComponent;
@@ -181,26 +180,40 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         });
     }
 
-    public MirageArenaSchematic getNextMirage(boolean clearOldVotes) {
-        Map<String, ArenaVote> votes = new HashMap<>();
+    private Map<MirageArenaSchematic, Integer> countVotes(boolean clearWhileCounting) {
+        Map<MirageArenaSchematic, Integer> votes = new HashMap<>();
+
         getAudiblePlayers().forEach(p -> {
             MirageSession session = sessions.getSession(MirageSession.class, p);
-            String vote = session.getVote();
-            if (vote != null) {
-                ArenaVote aVote = votes.get(vote);
-                if (aVote == null) {
-                    aVote = new ArenaVote(vote);
-                }
-                aVote.addVote();
-                votes.put(vote, aVote);
+
+            MirageArenaSchematic vote = session.getVote();
+            if (vote == null) {
+                return;
             }
-            if (clearOldVotes) {
+
+            votes.merge(vote, 1, Integer::sum);
+            if (clearWhileCounting) {
                 session.vote(null);
             }
         });
-        List<ArenaVote> results = Lists.newArrayList(votes.values());
-        results.sort((o1, o2) -> o2.getVotes() - o1.getVotes());
-        return results.isEmpty() ? null : new MirageArenaSchematic(getFile(results.get(0).getArena()));
+
+        return votes;
+    }
+
+    public MirageArenaSchematic getNextMirage(boolean clearOldVotes) {
+        Map<MirageArenaSchematic, Integer> votes = countVotes(clearOldVotes);
+
+        int topVote = 0;
+        MirageArenaSchematic newArena = null;
+        for (Map.Entry<MirageArenaSchematic, Integer> entry : votes.entrySet()) {
+            int voteCount = entry.getValue();
+            if (voteCount > topVote) {
+                topVote = voteCount;
+                newArena = entry.getKey();
+            }
+        }
+
+        return newArena;
     }
 
     public void resetBlockRecordIndex() {
@@ -322,7 +335,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
     }
 
     public void registerVote(Player player, MirageArenaSchematic arena) {
-        getSession(player).vote(arena.getArenaName());
+        getSession(player).vote(arena);
 
         voting = true;
         updateVoteProgress();

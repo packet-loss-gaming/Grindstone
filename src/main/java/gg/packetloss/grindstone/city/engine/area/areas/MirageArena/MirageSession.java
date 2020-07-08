@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MirageSession extends PersistentSession {
 
-    private String vote;
+    private MirageArenaSchematic vote;
     private Set<UUID> ignored = new HashSet<UUID>();
     private double dmgTaken = 0;
 
@@ -23,11 +23,11 @@ public class MirageSession extends PersistentSession {
         super(TimeUnit.MINUTES.toMillis(30));
     }
 
-    public void vote(String vote) {
+    public void vote(MirageArenaSchematic vote) {
         this.vote = vote;
     }
 
-    public String getVote() {
+    public MirageArenaSchematic getVote() {
         return vote;
     }
 
