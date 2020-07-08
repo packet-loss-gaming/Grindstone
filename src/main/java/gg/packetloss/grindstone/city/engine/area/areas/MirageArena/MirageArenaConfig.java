@@ -10,6 +10,8 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 
 public class MirageArenaConfig extends ConfigurationBase {
+    @Setting("voting.ticks")
+    public int votingTicks = 60;
     @Setting("fake-xp-amount")
     public int fakeXP = 100;
     @Setting("gold.cap")

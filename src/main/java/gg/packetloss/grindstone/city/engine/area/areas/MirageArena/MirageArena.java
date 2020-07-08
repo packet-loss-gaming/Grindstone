@@ -80,7 +80,8 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
     protected Set<BlockVector3> manuallyPlacedLocations = new HashSet<>();
 
-    protected BossBar progressBar = Bukkit.createBossBar("Arena Loading", BarColor.BLUE, BarStyle.SEGMENTED_6);
+    protected BossBar loadingProgressBar = Bukkit.createBossBar("Arena Loading", BarColor.BLUE, BarStyle.SEGMENTED_6);
+    protected BossBar voteProgressBar = Bukkit.createBossBar("Arena Vote", BarColor.WHITE, BarStyle.SEGMENTED_6);
 
     public MirageArena() {
         super(1);
@@ -141,7 +142,9 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         // Increment ticks
         ++ticks;
 
-        if (ticks >= 60) {
+        updateVoteProgress();
+
+        if (ticks >= config.votingTicks) {
             MirageArenaSchematic next = getNextMirage(true);
             if (next == null) {
                 return;
@@ -150,6 +153,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
             // Reset voting system
             voting = false;
             ticks = 0;
+            voteProgressBar.removeAll();
 
             Collection<Player> players = getAudiblePlayers();
             try {
@@ -161,15 +165,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                 e.printStackTrace();
                 ChatUtil.sendError(players, "The arena could not be changed to " + next.getArenaName() + "!");
             }
-        } else if (ticks % 10 == 0) {
-            MirageArenaSchematic next = getNextMirage(false);
-            if (next == null) {
-                return;
-            }
-
-            Collection<Player> players = getAudiblePlayers();
-            ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, "The currently winning mirage is " + next.getArenaName() + '.');
-            ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, ((60 - ticks) * 5) + " seconds til arena change.");
         }
     }
 
@@ -225,13 +220,13 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         int maxZ = diminsions.getZ();
 
         if (cy >= maxY) {
-            progressBar.removeAll();
+            loadingProgressBar.removeAll();
             editing = false;
             freePlayers();
             return;
         } else {
-            progressBar.setProgress((double) cy / maxY);
-            BossBarUtil.syncWithPlayers(progressBar, getAudiblePlayers());
+            loadingProgressBar.setProgress((double) cy / maxY);
+            BossBarUtil.syncWithPlayers(loadingProgressBar, getAudiblePlayers());
         }
 
         long start = System.nanoTime();
@@ -318,10 +313,19 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         return sessions.getSession(MirageSession.class, player);
     }
 
+    private void updateVoteProgress() {
+        voteProgressBar.setProgress((double) ticks / config.votingTicks);
+        BossBarUtil.syncWithPlayers(voteProgressBar, getAudiblePlayers());
+
+        MirageArenaSchematic next = getNextMirage(false);
+        voteProgressBar.setTitle("Arena Vote - Leader: " + next.getArenaName());
+    }
+
     public void registerVote(Player player, MirageArenaSchematic arena) {
         getSession(player).vote(arena.getArenaName());
 
         voting = true;
+        updateVoteProgress();
     }
 
     public void registerIgnore(Player player, Player target) {
