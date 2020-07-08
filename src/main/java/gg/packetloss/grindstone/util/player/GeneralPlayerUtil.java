@@ -13,6 +13,7 @@ import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
@@ -183,5 +184,23 @@ public class GeneralPlayerUtil {
         }
 
         return false;
+    }
+
+    public static UUID resolveMacroNamespace(String qualifier) {
+        if (qualifier.startsWith("#")) {
+            String name = qualifier.substring(1);
+
+            for (OfflinePlayer player : CommandBook.server().getOfflinePlayers()) {
+                if (name.equalsIgnoreCase(player.getName())) {
+                    return player.getUniqueId();
+                }
+            }
+        } else {
+            try {
+                return UUID.fromString(qualifier);
+            } catch (IllegalArgumentException ignored) { }
+        }
+
+        return null;
     }
 }

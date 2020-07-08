@@ -5,6 +5,7 @@ import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.util.formatting.text.Component;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -16,8 +17,7 @@ import org.enginehub.piston.converter.SuccessfulConversion;
 import org.enginehub.piston.inject.InjectedValueAccess;
 import org.enginehub.piston.inject.Key;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,9 +72,14 @@ public class WarpPointConverter implements ArgumentConverter<WarpPoint> {
         }
     }
 
-    private Stream<WarpPoint> getWarpPointStream(InjectedValueAccess context) {
-        CommandSender sender = context.injectedValue(Key.of(CommandSender.class)).orElse(Bukkit.getConsoleSender());
-        if (sender instanceof Player) {
+    private CommandSender getSender(InjectedValueAccess context) {
+        return context.injectedValue(Key.of(CommandSender.class)).orElse(Bukkit.getConsoleSender());
+    }
+
+    private Stream<WarpPoint> getWarpPointStream(CommandSender sender, UUID namespaceOverride) {
+        if (namespaceOverride != null) {
+            return component.getWarpManager().getWarpsForNamespace(namespaceOverride).stream();
+        } else if (sender instanceof Player) {
             return component.getWarpManager().getWarpsForPlayer((Player) sender).stream();
         } else {
             return component.getWarpManager().getGlobalWarps().stream();
@@ -83,10 +88,45 @@ public class WarpPointConverter implements ArgumentConverter<WarpPoint> {
 
     @Override
     public List<String> getSuggestions(String argument, InjectedValueAccess context) {
-        return getWarpPointStream(context)
+        CommandSender sender = getSender(context);
+
+        if (argument.startsWith("#") && !argument.contains(":")) {
+            String nameFilter = argument.substring(1).toUpperCase();
+            return Arrays.stream(Bukkit.getServer().getOfflinePlayers())
+                    .filter(p -> p.getName() != null)
+                    .filter(p -> p.getName().toUpperCase().contains(nameFilter))
+                    .filter(p -> sender.hasPermission("aurora.warp.access." + p.getUniqueId()))
+                    .map(p -> "#" + p.getName() + ":")
+                    .collect(Collectors.toList());
+        }
+
+        boolean endsWithColon = argument.endsWith(":");
+        String[] parts = endsWithColon ? new String[] { argument.substring(0, argument.length() - 1), "" }
+                                       : argument.split(":");
+
+        UUID namespaceOverride = null;
+        String filterText = argument;
+
+        if (parts.length == 2) {
+            UUID namespace = GeneralPlayerUtil.resolveMacroNamespace(parts[0]);
+            if (namespace == null) {
+                return new ArrayList<>();
+            }
+
+            if (!sender.hasPermission("aurora.warp.access." + namespace)) {
+                return new ArrayList<>();
+            }
+
+            namespaceOverride = namespace;
+            filterText = parts[1];
+        }
+
+        String finalFilterText = filterText.toUpperCase();
+        return getWarpPointStream(sender, namespaceOverride)
                 .map(WarpPoint::getQualifiedName)
                 .map(WarpQualifiedName::getDisplayName)
-                .filter((s) -> s.contains(argument.toUpperCase()))
+                .filter((s) -> s.contains(finalFilterText))
+                .map(name -> parts.length == 1 ? name : parts[0] + ":" + name)
                 .collect(Collectors.toList());
     }
 }

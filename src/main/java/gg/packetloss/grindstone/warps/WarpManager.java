@@ -1,14 +1,14 @@
 package gg.packetloss.grindstone.warps;
 
-import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class WarpManager {
     private WarpDatabase warpData;
@@ -17,8 +17,12 @@ public class WarpManager {
         this.warpData = warpDatabase;
     }
 
+    public List<WarpPoint> getWarpsForNamespace(UUID namespace) {
+        return warpData.getWarpsInNamespace(namespace);
+    }
+
     public List<WarpPoint> getWarpsForPlayer(Player player) {
-        List<WarpPoint> warps = warpData.getWarpsInNamespace(player.getUniqueId());
+        List<WarpPoint> warps = getWarpsForNamespace(player.getUniqueId());
         warps.addAll(warpData.getGlobalWarps());
         return warps;
     }
@@ -37,13 +41,13 @@ public class WarpManager {
             return getExactWarp(new WarpQualifiedName(name));
         }
 
-        // Try and use the qualifier as a player name
-        OfflinePlayer player = CommandBook.server().getOfflinePlayer(qualifier);
-        if (player == null) {
+        // Try and use the qualifier as a macro player name
+        UUID playerId = GeneralPlayerUtil.resolveMacroNamespace(qualifier);
+        if (playerId == null) {
             return Optional.empty();
         }
 
-        return getExactWarp(new WarpQualifiedName(player.getUniqueId(), name));
+        return getExactWarp(new WarpQualifiedName(playerId, name));
     }
 
     public Optional<WarpPoint> lookupWarp(Player requester, String name) {
