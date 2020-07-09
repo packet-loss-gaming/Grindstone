@@ -27,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -279,6 +280,45 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         network.addSink(itemNames, location);
     }
 
+    private CompletableFuture<Void> incrementNetworkLoad(int networkID) {
+        networkChunkRefCountLock.lock();
+        try {
+            if (networkChunkRefCount.increment(networkID)) {
+                return loadNetworks(List.of(networkID));
+            } else {
+                return CompletableFuture.completedFuture(null);
+            }
+        } finally {
+            networkChunkRefCountLock.unlock();
+        }
+    }
+
+    private void decrementNetworkLoad(int networkID) {
+        networkChunkRefCountLock.lock();
+        try {
+            if (networkChunkRefCount.decrement(networkID)) {
+                unloadNetworks(List.of(networkID));
+            }
+        } finally {
+            networkChunkRefCountLock.unlock();
+        }
+    }
+
+    private <T> CompletableFuture<T> temporarilyLoadIfUnloaded(int networkID, Function<PixieNetworkGraph, CompletableFuture<T>> consumer) {
+        return incrementNetworkLoad(networkID).thenApply((ignored) -> {
+            networkLock.readLock().lock();
+
+            try {
+                return idToNetworkMapping.get(networkID);
+            } finally {
+                networkLock.readLock().unlock();
+            }
+        }).thenApply(consumer).thenCompose((result) -> {
+            decrementNetworkLoad(networkID);
+            return result;
+        });
+    }
+
     @Override
     public CompletableFuture<NewSinkResult> addSink(int networkID, Block block, PixieSinkVariant variant) {
         Inventory chestInventory = ((Container) block.getState()).getInventory();
@@ -294,23 +334,18 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
 
         Location[] locations = getLocationsToAdd(block).toArray(new Location[0]);
 
-        return processNetworkChanges(() -> {
-            // Network may be unloaded for a sink chest
+        // Since this is a sink chest, it may not "just be loaded".
+        return temporarilyLoadIfUnloaded(networkID, (network) -> processNetworkChanges(() -> {
             networkLock.writeLock().lock();
 
             try {
-                PixieNetworkGraph network = idToNetworkMapping.get(networkID);
-
                 for (Location location : locations) {
-                    // FIXME: This should load the network
-                    if (variant == PixieSinkVariant.ADD && network != null) {
+                    if (variant == PixieSinkVariant.ADD) {
                         itemNames.addAll(network.getSinksAtLocation(location));
                     }
 
                     clearBlockMemoryOnly(network, location);
-                    if (network != null) {
-                        addSinkMemoryOnly(network, itemNames, location);
-                    }
+                    addSinkMemoryOnly(network, itemNames, location);
                 }
             } finally {
                 networkLock.writeLock().unlock();
@@ -323,7 +358,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
             Validate.isTrue(addedChests);
 
             return new NewSinkResult(removedChestsCount.get(), itemNames);
-        }, locations);
+        }, locations));
     }
 
     @Override
@@ -567,10 +602,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 List<Integer> networksToLoad = new ArrayList<>();
 
                 for (Integer networkID : networksInChunk) {
-                    boolean alreadyLoaded = networkChunkRefCount.contains(networkID);
-                    networkChunkRefCount.increment(networkID);
-
-                    if (!alreadyLoaded) {
+                    if (networkChunkRefCount.increment(networkID)) {
                         networksToLoad.add(networkID);
                     }
                 }
@@ -594,10 +626,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 List<Integer> networksToUnload = new ArrayList<>();
 
                 for (Integer networkID : networksInChunk) {
-                    networkChunkRefCount.decrement(networkID);
-                    boolean networkStillLoaded = networkChunkRefCount.contains(networkID);
-
-                    if (!networkStillLoaded) {
+                    if (networkChunkRefCount.decrement(networkID)) {
                         networksToUnload.add(networkID);
                     }
                 }
