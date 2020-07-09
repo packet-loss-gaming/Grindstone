@@ -215,10 +215,16 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     private boolean hasAllSourceLocations(Location... locations) {
-        for (Location loc : locations) {
-            if (!sourceToNetworkMapping.containsKey(loc)) {
-                return false;
+        networkLock.readLock().lock();
+
+        try {
+            for (Location loc : locations) {
+                if (!sourceToNetworkMapping.containsKey(loc)) {
+                    return false;
+                }
             }
+        } finally {
+            networkLock.readLock().unlock();
         }
 
         return true;
