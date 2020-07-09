@@ -214,12 +214,12 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         return future;
     }
 
-    private boolean hasAllSourceLocations(Location... locations) {
+    private boolean isAlreadySourceForNetwork(int networkID, Location... locations) {
         networkLock.readLock().lock();
 
         try {
             for (Location loc : locations) {
-                if (!sourceToNetworkMapping.containsKey(loc)) {
+                if (!sourceToNetworkMapping.containsKey(loc) || sourceToNetworkMapping.get(loc) != networkID) {
                     return false;
                 }
             }
@@ -234,7 +234,8 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     public CompletableFuture<NewSourceResult> addSource(int networkID, Block block) {
         Location[] locations = getLocationsToAdd(block).toArray(new Location[0]);
 
-        if (hasAllSourceLocations(locations)) {
+        // Detect reassigning the block to a source.
+        if (isAlreadySourceForNetwork(networkID, locations)) {
             return CompletableFuture.completedFuture(new NewSourceResult(false));
         }
 
