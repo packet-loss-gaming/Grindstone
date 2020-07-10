@@ -79,7 +79,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
 
         Block block = world.getBlockAt(position.getBlockX(), LAVA_START, position.getBlockZ());
         do {
-            block.setType(Material.OBSIDIAN);
+            block.setType(Material.BASALT);
 
             block = block.getRelative(BlockFace.UP);
         } while (block.getY() < targetHeight);
@@ -175,7 +175,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
 
     private void clearColumn(BlockVector2 position) {
         Block block = world.getBlockAt(position.getBlockX(), LAVA_START, position.getBlockZ());
-        while (block.getType() == Material.OBSIDIAN) {
+        while (block.getType() == Material.BASALT) {
             if (block.getY() <= LAVA_END) {
                 block.setType(Material.LAVA);
             } else {
@@ -188,7 +188,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
 
     private boolean degradeColumn(BlockVector2 position) {
         Block block = world.getBlockAt(position.getBlockX(), LAVA_START, position.getBlockZ());
-        while (block.getType() == Material.OBSIDIAN) {
+        while (block.getType() == Material.BASALT) {
             Block next = block.getRelative(BlockFace.UP);
 
             if (next.getType() == Material.AIR) {
@@ -355,7 +355,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
                 } else {
                     finished(player);
                 }
-            } else if (isStandingOnBlock(player, Material.OBSIDIAN)) {
+            } else if (isStandingOnBlock(player, Material.BASALT)) {
                 ensurePlayerStateSet(player);
             }
         }
