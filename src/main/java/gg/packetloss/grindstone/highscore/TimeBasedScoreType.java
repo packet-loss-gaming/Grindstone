@@ -8,17 +8,22 @@ package gg.packetloss.grindstone.highscore;
 
 import com.google.common.base.Joiner;
 
+import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 class TimeBasedScoreType extends ScoreType {
+    private static final DecimalFormat FINE_TIME_FORMATTER = new DecimalFormat("0.000");
+
     protected TimeBasedScoreType(int id, boolean incremental, Order order) {
         super(id, incremental, order);
     }
 
-    public String format(int score) {
-        Duration duration = Duration.ofSeconds(score);
+    @Override
+    public String format(long score) {
+        Duration duration = Duration.ofMillis(score);
 
         List<String> components = new ArrayList<>();
 
@@ -30,8 +35,10 @@ class TimeBasedScoreType extends ScoreType {
             components.add(duration.toMinutes() + " minutes");
             duration = duration.minusMinutes(duration.toMinutes());
         }
-        if (duration.getSeconds() > 0) {
-            components.add(duration.getSeconds() + " seconds");
+        if (duration.getSeconds() > 0 || duration.getNano() > 0) {
+            double fractionalSeconds = duration.getSeconds() + ((double) duration.getNano() / TimeUnit.SECONDS.toNanos(1));
+            String formattedSeconds = FINE_TIME_FORMATTER.format(fractionalSeconds);
+            components.add(formattedSeconds + " seconds");
         }
 
         return Joiner.on(' ').join(components);

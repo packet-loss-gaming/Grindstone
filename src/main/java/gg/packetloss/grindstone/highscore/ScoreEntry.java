@@ -7,9 +7,9 @@ import java.util.UUID;
 
 public class ScoreEntry {
     private UUID playerID;
-    private int score;
+    private long score;
 
-    public ScoreEntry(UUID playerID, int score) {
+    public ScoreEntry(UUID playerID, long score) {
         this.playerID = playerID;
         this.score = score;
     }
@@ -22,7 +22,7 @@ public class ScoreEntry {
         return Bukkit.getOfflinePlayer(playerID);
     }
 
-    public int getScore() {
+    public long getScore() {
         return score;
     }
 }

@@ -13,7 +13,8 @@ class ExpBasedScoreType extends ScoreType {
         super(id, false, Order.DESC);
     }
 
-    public String format(int score) {
+    @Override
+    public String format(long score) {
         return String.valueOf(GuildLevel.getLevel(score));
     }
 }

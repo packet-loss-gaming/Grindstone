@@ -36,7 +36,7 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
 //        }
 //    }
 
-    private void incrementalUpdate(Connection con, UUID playerId, ScoreType scoreType, int amt) throws SQLException {
+    private void incrementalUpdate(Connection con, UUID playerId, ScoreType scoreType, long amt) throws SQLException {
         String SQL = "INSERT INTO `high-scores` (`player-id`, `score-type-id`, `value`) " +
                 "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?) " +
                 "ON DUPLICATE KEY UPDATE value = values(value) + value";
@@ -44,13 +44,13 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
         try (PreparedStatement statement = con.prepareStatement(SQL)) {
             statement.setString(1, playerId.toString());
             statement.setInt(2, scoreType.getId());
-            statement.setInt(3, amt);
+            statement.setLong(3, amt);
 
             statement.execute();
         }
     }
 
-    private void overrideIfBetter(Connection con, UUID playerId, ScoreType scoreType, int value) throws SQLException {
+    private void overrideIfBetter(Connection con, UUID playerId, ScoreType scoreType, long value) throws SQLException {
         String SQL = "INSERT INTO `high-scores` (`player-id`, `score-type-id`, `value`) " +
                 "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?) " +
                 "ON DUPLICATE KEY UPDATE value = " + (scoreType.getOrder() == ScoreType.Order.DESC ? "greatest(" : "least(") + "value, values(value))";
@@ -58,7 +58,7 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
         try (PreparedStatement statement = con.prepareStatement(SQL)) {
             statement.setString(1, playerId.toString());
             statement.setInt(2, scoreType.getId());
-            statement.setInt(3, value);
+            statement.setLong(3, value);
 
             statement.execute();
         }

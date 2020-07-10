@@ -246,8 +246,14 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         teleportToStart(player);
     }
 
-    private int getBestTime() {
-        return highScores.getBest(ScoreTypes.FASTEST_NINJA_PARKOUR).map(ScoreEntry::getScore).orElse(Integer.MAX_VALUE);
+    private long getBestTime() {
+        return highScores.getBest(ScoreTypes.FASTEST_NINJA_PARKOUR).map(ScoreEntry::getScore).orElse(Long.MAX_VALUE);
+    }
+
+    private static final DecimalFormat FINE_TIME_FORMATTER = new DecimalFormat("0.000");
+
+    private String formatElapsedTime(long elapsedTime) {
+        return FINE_TIME_FORMATTER.format(elapsedTime / 1000D);
     }
 
     private void finished(Player player) {
@@ -259,13 +265,13 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
             return;
         }
 
-        int seconds = (int) TimeUnit.MILLISECONDS.toSeconds(playerState.getElapsedTime());
+        long elapsedTime = playerState.getElapsedTime();
 
         guild.getState(player).ifPresent(guildState -> {
-            int bestTime = getBestTime();
+            long bestTime = getBestTime();
 
-            double relativePerformance = ((bestTime * 2.0) / seconds);
-            boolean newRecord = seconds < bestTime;
+            double relativePerformance = ((bestTime * 2.0) / elapsedTime);
+            boolean newRecord = elapsedTime < bestTime;
             if (newRecord) {
                 relativePerformance = config.newRecordXpMultiplier;
             }
@@ -281,7 +287,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
                 ChatUtil.sendNotice(
                         getAudiblePlayers(),
                         player.getDisplayName() + " successfully crossed in " +
-                                ChatColor.WHITE + seconds +
+                                ChatColor.WHITE + formatElapsedTime(elapsedTime) +
                                 ChatColor.YELLOW + " seconds!"
                 );
 
@@ -294,7 +300,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
             }
         });
 
-        highScores.update(player, ScoreTypes.FASTEST_NINJA_PARKOUR, seconds);
+        highScores.update(player, ScoreTypes.FASTEST_NINJA_PARKOUR, elapsedTime);
 
         reset(player);
     }
@@ -317,11 +323,8 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         }
     }
 
-    private static final DecimalFormat FINE_TIME_FORMATTER = new DecimalFormat("0.000");
-
     private void sendCurrentTime(Player player, NinjaParkourPlayerState playerState, long currentTime) {
-        double elapsedTime = playerState.getElapsedTime(currentTime) / 1000D;
-        player.sendActionBar(FINE_TIME_FORMATTER.format(elapsedTime) + " (" + (int) elapsedTime + ")");
+        player.sendActionBar(formatElapsedTime(playerState.getElapsedTime(currentTime)));
     }
 
     private void handlePlayerStates() {

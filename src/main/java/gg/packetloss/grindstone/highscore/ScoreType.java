@@ -31,7 +31,7 @@ public class ScoreType {
         return order;
     }
 
-    public String format(int score) {
+    public String format(long score) {
         DecimalFormat df = new DecimalFormat("#,###");
         return df.format(score);
     }

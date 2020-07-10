@@ -11,9 +11,9 @@ import java.util.UUID;
 public class HighScoreUpdate {
     private final UUID playerId;
     private final ScoreType scoreType;
-    private final int value;
+    private final long value;
 
-    public HighScoreUpdate(UUID playerId, ScoreType scoreType, int value) {
+    public HighScoreUpdate(UUID playerId, ScoreType scoreType, long value) {
         this.playerId = playerId;
         this.scoreType = scoreType;
         this.value = value;
@@ -27,7 +27,7 @@ public class HighScoreUpdate {
         return scoreType;
     }
 
-    public int getValue() {
+    public long getValue() {
         return value;
     }
 }

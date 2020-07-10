@@ -642,8 +642,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     playerStateComponent.popState(PlayerStateKind.GOLD_RUSH, event.getPlayer());
 
                     highScoresComponent.update(event.getPlayer(), ScoreTypes.GOLD_RUSH_ROBBERIES, 1);
-                    int seconds = (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTime);
-                    highScoresComponent.update(event.getPlayer(), ScoreTypes.FASTEST_GOLD_RUSH, seconds);
+                    long duration = System.currentTimeMillis() - startTime;
+                    highScoresComponent.update(event.getPlayer(), ScoreTypes.FASTEST_GOLD_RUSH, duration);
 
                     ChatUtil.sendNotice(event.getPlayer(), "You have successfully robbed the bank!\n");
                     ChatUtil.sendNotice(event.getPlayer(), "[Partner] I've put your split of the money in your account.");

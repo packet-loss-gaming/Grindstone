@@ -89,7 +89,7 @@ public class HighScoresComponent extends BukkitComponent {
         }
     }
 
-    public void update(Player player, ScoreType scoreType, int value) {
+    public void update(Player player, ScoreType scoreType, long value) {
         // Disqualify any high score gains in admin mode
         if (adminComponent.isAdmin(player)) {
             return;
