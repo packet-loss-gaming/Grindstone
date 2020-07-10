@@ -186,6 +186,15 @@ public class GeneralPlayerUtil {
         return false;
     }
 
+    public static OfflinePlayer findOfflinePlayer(UUID playerID) {
+        for (OfflinePlayer player : CommandBook.server().getOfflinePlayers()) {
+            if (playerID.equals(player.getUniqueId())) {
+                return player;
+            }
+        }
+        return null;
+    }
+
     public static UUID resolveMacroNamespace(String qualifier) {
         if (qualifier.startsWith("#")) {
             String name = qualifier.substring(1);

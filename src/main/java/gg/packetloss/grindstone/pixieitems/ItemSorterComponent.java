@@ -20,6 +20,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import net.milkbowl.vault.economy.Economy;
@@ -311,7 +312,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
                     PixieNetworkDetail networkDetail = optNetworkDetail.get();
 
-                    OfflinePlayer player = Bukkit.getOfflinePlayer(networkDetail.getNamespace());
+                    OfflinePlayer player = GeneralPlayerUtil.findOfflinePlayer(networkDetail.getNamespace());
                     TransactionBroker broker = player != null ?  new EconomyBroker(economy, player) : new VoidBroker();
 
                     manager.sourceItems(broker, networkID, inventory);
