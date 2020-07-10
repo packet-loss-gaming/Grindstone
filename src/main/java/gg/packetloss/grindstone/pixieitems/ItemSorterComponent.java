@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
 import gg.packetloss.grindstone.pixieitems.manager.PixieNetworkManager;
 import gg.packetloss.grindstone.pixieitems.manager.ThreadedPixieNetworkManager;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
@@ -181,16 +182,31 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     return;
                 }
 
-                manager.addSource(networkID, block).thenAccept((result) -> {
-                    if (result.isNew()) {
-                        ChatUtil.sendNotice(player, "Chest updated to source!");
-                    } else {
-                        ChatUtil.sendError(player, "Chest is already a source!");
+                manager.selectNetwork(networkID).thenAccept((optNetworkDetail) -> {
+                    if (optNetworkDetail.isEmpty()) {
+                        return;
                     }
-                }).exceptionally((ex) -> {
-                    ex.printStackTrace();
-                    ChatUtil.sendError(player, "An error occurred while attempting to create this source.");
-                    return null;
+
+                    PixieNetworkDetail networkDetail = optNetworkDetail.get();
+                    CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+                        Location origin = networkDetail.getOrigin();
+                        if (!LocationUtil.isWithin2DDistance(block.getLocation(), origin, 50)) {
+                            ChatUtil.sendError(player, "This block is too far away from the network creation point.");
+                            return;
+                        }
+
+                        manager.addSource(networkID, block).thenAccept((result) -> {
+                            if (result.isNew()) {
+                                ChatUtil.sendNotice(player, "Chest updated to source!");
+                            } else {
+                                ChatUtil.sendError(player, "Chest is already a source!");
+                            }
+                        }).exceptionally((ex) -> {
+                            ex.printStackTrace();
+                            ChatUtil.sendError(player, "An error occurred while attempting to create this source.");
+                            return null;
+                        });
+                    });
                 });
                 break;
             }
@@ -359,7 +375,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             Player owner = PlayerUtil.checkPlayer(sender);
             String name = args.getString(0).toUpperCase();
 
-            manager.createNetwork(owner.getUniqueId(), name).thenAccept((optNetworkDetail) -> {
+            manager.createNetwork(owner.getUniqueId(), name, owner.getLocation()).thenAccept((optNetworkDetail) -> {
                 server.getScheduler().runTask(inst, () -> {
                     if (optNetworkDetail.isEmpty()) {
                         ChatUtil.sendError(sender, "Failed to create network!");

@@ -14,7 +14,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public interface PixieNetworkManager {
-    CompletableFuture<Optional<PixieNetworkDetail>> createNetwork(UUID namespace, String name);
+    CompletableFuture<Optional<PixieNetworkDetail>> createNetwork(UUID namespace, String name, Location origin);
     CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(UUID namespace, String name);
     CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(int networkID);
     CompletableFuture<List<PixieNetworkDetail>> selectNetworks(UUID namespace);

@@ -52,11 +52,11 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public CompletableFuture<Optional<PixieNetworkDetail>> createNetwork(UUID namespace, String name) {
+    public CompletableFuture<Optional<PixieNetworkDetail>> createNetwork(UUID namespace, String name, Location origin) {
         CompletableFuture<Optional<PixieNetworkDetail>> future = new CompletableFuture<>();
 
         CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
-            future.complete(networkDatabase.createNetwork(namespace, name));
+            future.complete(networkDatabase.createNetwork(namespace, name, origin));
         });
 
         return future;
