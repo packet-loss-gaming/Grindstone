@@ -958,7 +958,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                     continue;
                 }
 
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 5 * 20, 3));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 7 * 20, 3));
             }
         }
     }
