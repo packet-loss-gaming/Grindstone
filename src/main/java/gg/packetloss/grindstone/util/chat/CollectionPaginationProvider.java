@@ -17,14 +17,25 @@ public class CollectionPaginationProvider<T> implements PaginationProvider<T> {
         return items.size() == ITEMS_PER_PAGE + 1;
     }
 
-    @Override
-    public int getNumberOfPages() {
-        int pageCount = (items.size() / ITEMS_PER_PAGE);
-        if (!isExtendedPageWithoutPager() && items.size() % ITEMS_PER_PAGE != 0) {
+    private int getPageCount(int numItems) {
+        int pageCount = (numItems / ITEMS_PER_PAGE);
+        if (!isExtendedPageWithoutPager() && numItems % ITEMS_PER_PAGE != 0) {
             ++pageCount;
         }
 
         return pageCount;
+    }
+
+    @Override
+    public int getPageForIndex(int elementIndex) {
+        // Trick the page count algorithm into telling us what page this item is on
+        // by pretending this item's index is the number of items we need pages for
+        return getPageCount(elementIndex + 1);
+    }
+
+    @Override
+    public int getNumberOfPages() {
+        return getPageCount(items.size());
     }
 
     @Override

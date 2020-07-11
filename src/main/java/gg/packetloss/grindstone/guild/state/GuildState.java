@@ -193,7 +193,14 @@ public class GuildState {
 
                 return levelText;
             }
-        }.display(player, levels, page);
+        }.display(player, levels, (provider) -> {
+            if (page < 1) {
+                // currentLevel - 1 is the level index of the current level, so this works out
+                return provider.getPageForIndex(currentLevel - 1);
+            }
+
+            return page;
+        });
     }
 
     private void lazySetupExpDebounce() {

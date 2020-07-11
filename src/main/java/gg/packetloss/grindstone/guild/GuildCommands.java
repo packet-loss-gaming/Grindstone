@@ -66,7 +66,7 @@ public class GuildCommands {
 
     @Command(name = "level", desc = "View level information")
     public void guildLevelCmd(Player player,
-                              @ArgFlag(name = 'p', desc = "Page of results to return", def = "1") int page) throws CommandException {
+                              @ArgFlag(name = 'p', desc = "Page of results to return", def = "0") int page) throws CommandException {
         Optional<GuildState> optState = component.getState(player);
         if (optState.isEmpty()) {
             throw new CommandException("You are not in a guild!");
