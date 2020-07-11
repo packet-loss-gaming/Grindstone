@@ -37,7 +37,9 @@ import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.*;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.MultipleFacing;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -256,6 +258,15 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             Block block = getWorld().getBlockAt(x, y, z);
             if (block.getType() != type) {
                 block.setType(type);
+
+                // Properly set the fence
+                BlockData blockData =  block.getBlockData();
+                if (blockData instanceof MultipleFacing) {
+                    MultipleFacing multipleFacing = (MultipleFacing) blockData;
+                    multipleFacing.setFace(BlockFace.NORTH, true);
+                    multipleFacing.setFace(BlockFace.SOUTH, true);
+                    block.setBlockData(multipleFacing);
+                }
             }
         });
     }
