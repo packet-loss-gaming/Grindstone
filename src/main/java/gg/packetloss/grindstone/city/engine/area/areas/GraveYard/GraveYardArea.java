@@ -460,8 +460,15 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             }
         }
 
-        Block playerBlock = player.getLocation().getBlock();
-        for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
+        Location playerLoc = player.getLocation();
+        Block playerBlock = playerLoc.getBlock();
+
+        int numZombies = ChanceUtil.getRandom(16 - playerBlock.getLightLevel());
+        if (isHotTorchArea(playerLoc)) {
+            numZombies = ChanceUtil.getRangedRandom(6, 16);
+        }
+
+        for (int i = numZombies; i > 0; --i) {
             Location ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
             if (ls.getBlock().getType().isSolid()) {
                 ls = player.getLocation();
