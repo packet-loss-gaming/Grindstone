@@ -156,7 +156,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         findTorches();
         findRewardChest();
 
-        resetPhysicalObstacles();
+        regenParkour();
+        setRewardsDoor(Material.AIR);
 
         setupEconomy();
 
@@ -257,11 +258,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 block.setType(type);
             }
         });
-    }
-
-    private void resetPhysicalObstacles() {
-        regenParkour();
-        setRewardsDoor(Material.AIR);
     }
 
     private void handleRewardsRoomOccupied() {
