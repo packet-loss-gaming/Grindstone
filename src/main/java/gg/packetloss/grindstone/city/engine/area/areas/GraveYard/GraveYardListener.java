@@ -508,6 +508,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
     static {
         watchedCauses.add(PlayerTeleportEvent.TeleportCause.ENDER_PEARL);
+        watchedCauses.add(PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
         watchedCauses.add(PlayerTeleportEvent.TeleportCause.COMMAND);
         watchedCauses.add(PlayerTeleportEvent.TeleportCause.PLUGIN);
     }
