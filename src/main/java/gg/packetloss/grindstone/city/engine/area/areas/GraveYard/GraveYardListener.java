@@ -249,7 +249,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
                     degradeGoodPotions((Player) defender);
                 } else if (parent.isHotTorchArea(defenderLoc)) {
-                    defender.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 4 * 20, 3));
+                    defender.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 8 * 20, 3));
                 }
             }
         }

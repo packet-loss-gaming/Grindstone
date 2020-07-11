@@ -937,6 +937,16 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             newDirectional.setFacing(oldDirectional.getFacing());
             block.setBlockData(newDirectional);
         }
+
+        if (torchesHot) {
+            for (Player player : getContained(torchArea, Player.class)) {
+                if (!isParticipant(player)) {
+                    continue;
+                }
+
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 5 * 20, 3));
+            }
+        }
     }
 
     protected void resetRewardChest() {
