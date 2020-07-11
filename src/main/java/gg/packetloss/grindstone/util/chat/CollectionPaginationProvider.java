@@ -11,10 +11,16 @@ public class CollectionPaginationProvider<T> implements PaginationProvider<T> {
         this.items = items;
     }
 
+    // Returns true if we're not going to display the pager, but we are going to
+    // fil an extra row in its place.
+    public boolean isExtendedPageWithoutPager() {
+        return items.size() == ITEMS_PER_PAGE + 1;
+    }
+
     @Override
     public int getNumberOfPages() {
         int pageCount = (items.size() / ITEMS_PER_PAGE);
-        if (items.size() % ITEMS_PER_PAGE != 0) {
+        if (!isExtendedPageWithoutPager() && items.size() % ITEMS_PER_PAGE != 0) {
             ++pageCount;
         }
 
@@ -30,8 +36,7 @@ public class CollectionPaginationProvider<T> implements PaginationProvider<T> {
             consumer.accept(items.get(i));
         }
 
-        // If we're not going to display the pager, use an extra row
-        if (items.size() == ITEMS_PER_PAGE + 1) {
+        if (isExtendedPageWithoutPager()) {
             consumer.accept(items.get(ITEMS_PER_PAGE));
         }
     }
