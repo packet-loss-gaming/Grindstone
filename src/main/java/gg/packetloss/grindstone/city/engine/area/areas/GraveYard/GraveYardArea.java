@@ -370,7 +370,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         long nextRunDelay = TimeUtil.getTicksTill(nextEventHour);
 
         // Schedule an update task for every hour
-        server.getScheduler().runTaskTimerAsynchronously(
+        server.getScheduler().runTaskTimer(
                 inst, this::regenParkour, nextRunDelay, TimeUtil.convertHoursToTicks(1)
         );
     }
