@@ -366,7 +366,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
     private void spawnParkourRegenTask() {
         // Calculate delay
-        int nextEventHour = TimeUtil.getNextHour((hour) -> hour % 2 == 0);
+        int nextEventHour = TimeUtil.getNextHour((hour) -> true);
         long nextRunDelay = TimeUtil.getTicksTill(nextEventHour);
 
         // Schedule an update task for every hour
