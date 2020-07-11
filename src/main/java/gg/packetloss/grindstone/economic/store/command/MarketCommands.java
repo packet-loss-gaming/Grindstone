@@ -1,5 +1,6 @@
 package gg.packetloss.grindstone.economic.store.command;
 
+import com.google.common.base.Joiner;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.CommandException;
 import gg.packetloss.bukkittext.Text;
@@ -190,7 +191,9 @@ public class MarketCommands {
 
     @Command(name = "list", desc = "Get a list of items and their prices")
     public void list(CommandSender sender, @ArgFlag(name = 'p', desc = "page", def = "1") int page,
-                     @Arg(desc = "item filter", def = "") String itemFilter) throws CommandException {
+                     @Arg(name = "itemFilter", desc = "item filter", def = "", variable = true) List<String> itemFilterArgs) {
+        String itemFilter = Joiner.on(' ').join(itemFilterArgs);
+
         List<MarketItem> itemCollection = component.getItemListFor(sender, itemFilter);
         Collections.sort(itemCollection);
 
