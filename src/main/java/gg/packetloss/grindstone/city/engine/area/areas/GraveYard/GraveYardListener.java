@@ -227,31 +227,42 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         LivingEntity attacker = result.getAttacker();
         if (parent.isHostileTempleArea(event.getEntity().getLocation())) {
             double damage = event.getDamage();
+
             if (shouldActivateAncientArmor(defender, event.getCause())) {
                 double diff = defender.getMaxHealth() - defender.getHealth();
                 if (ChanceUtil.getChance((int) Math.max(3, Math.round(defender.getMaxHealth() - diff)))) {
                     EffectUtil.Ancient.powerBurst(defender, damage);
                 }
             }
+
             if (attacker instanceof Player) {
                 Player player = (Player) attacker;
                 player.getActivePotionEffects().stream().filter(effect -> !excludedTypes.contains(effect.getType())).forEach(defender::addPotionEffect);
-            } else if (defender instanceof Player && parent.contains(parent.rewards, defender)) {
-                event.setDamage(event.getDamage() + (parent.rewardsRoomOccupiedTicks / 3.0));
 
-                degradeGoodPotions((Player) defender);
+                if (parent.isHotTorchArea(player.getLocation())) {
+                    EntityUtil.forceDamage(player, ChanceUtil.getRandom(event.getDamage()));
+                }
+            } else if (defender instanceof Player) {
+                Location defenderLoc = defender.getLocation();
+                if (parent.isRewardsArea(defenderLoc)) {
+                    event.setDamage(event.getDamage() + (parent.rewardsRoomOccupiedTicks / 3.0));
+
+                    degradeGoodPotions((Player) defender);
+                } else if (parent.isHotTorchArea(defenderLoc)) {
+                    defender.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 4 * 20, 3));
+                }
             }
         }
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onRogueBlip(GuildPowerUseEvent event) {
+    public void onGuildPowerUse(GuildPowerUseEvent event) {
         Player player = event.getPlayer();
-        if (!parent.contains(parent.parkour, player)) {
-            return;
+        if (parent.contains(parent.parkour, player)) {
+            event.setCancelled(true);
+        } else if (parent.isHotTorchArea(player.getLocation())) {
+            event.setCancelled(true);
         }
-
-        event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -266,14 +277,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         });
     }
 
-    private boolean isInRewardsRoom(Location origin) {
-        return LocationUtil.isInRegion(parent.getWorld(), parent.rewards, origin);
-    }
-
-    private boolean isInRewardsRoom(PlayerSacrificeItemEvent event) {
-        return isInRewardsRoom(event.getPointOfSacrifice());
-    }
-
     @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSacrifice(PlayerSacrificeItemEvent event) {
@@ -282,7 +285,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         if (ItemUtil.isItem(item, CustomItems.PHANTOM_GOLD)) {
             int amount = 50;
 
-            if (!isInRewardsRoom(event)) {
+            if (!parent.isRewardsArea(event.getPointOfSacrifice())) {
                 amount = 100;
             }
             Player player = event.getPlayer();
@@ -301,7 +304,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
     @EventHandler
     public void onItemRepair(RepairItemEvent event) {
-        if (isInRewardsRoom(event.getPlayer().getLocation())) {
+        if (parent.isRewardsArea(event.getPlayer().getLocation())) {
             event.setRepairPercentage(Math.min(1, event.getRepairPercentage() * 2));
         }
     }
@@ -483,9 +486,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         Location contactedLoc = block.getLocation();
         if (parent.isHostileTempleArea(contactedLoc)) {
             if (block.getType() == Material.STONE_PRESSURE_PLATE) {
-                if (contactedLoc.getBlockY() < 57) {
-                    EntityUtil.heal(event.getEntity(), 1);
-                } else if (parent.isPressurePlateLocked) {
+                if (parent.isPressurePlateLocked || contactedLoc.getBlockY() < 57) {
                     DeathUtil.throwSlashPotion(contactedLoc);
                 }
             }
@@ -569,7 +570,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (isSpectator) {
                 // If the location is in the rewards room, and players are in the rewards room looting it,
                 // allow players to see the loot.
-                if (isInRewardsRoom(clickedLoc) && !parent.getContainedParticipantsIn(parent.rewards).isEmpty()) {
+                if (parent.isRewardsArea(clickedLoc) && !parent.getContainedParticipantsIn(parent.rewards).isEmpty()) {
                     return;
                 }
 

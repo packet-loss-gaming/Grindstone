@@ -37,6 +37,7 @@ import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.*;
+import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -86,7 +87,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     protected Economy economy;
 
     // Temple regions
-    protected ProtectedRegion temple, pressurePlateLockArea, creepers, parkour, rewards;
+    protected ProtectedRegion temple, pressurePlateLockArea, torchArea, creepers, parkour, rewards, rewardsDoor;
+    protected ProtectedRegion[] parkourGen;
 
     // Block information
     protected static final Set<Material> BREAKABLE = Set.of(
@@ -120,6 +122,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     protected boolean isPressurePlateLocked = true;
     protected ConcurrentHashMap<Location, Boolean> pressurePlateLocks = new ConcurrentHashMap<>();
 
+    // Lights
+    protected boolean torchesHot = false;
+    protected List<Location> torchLocations = new ArrayList<>();
+
     @Override
     public void setUp() {
         world = server.getWorlds().get(0);
@@ -129,9 +135,15 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         region = manager.getRegion(base);
         temple = manager.getRegion(base + "-temple");
         pressurePlateLockArea = manager.getRegion(base + "-temple-puzzle-one");
+        torchArea = manager.getRegion(base + "-lights");
         creepers = manager.getRegion(base + "-creepers");
         parkour = manager.getRegion(base + "-parkour");
+        parkourGen = new ProtectedRegion[] {
+                manager.getRegion(base + "-parkour-gen-1"),
+                manager.getRegion(base + "-parkour-gen-2")
+        };
         rewards = manager.getRegion(base + "-temple-rewards");
+        rewardsDoor = manager.getRegion(base + "-temple-rewards-door");
 
         tick = 4 * 20;
         listener = new GraveYardListener(this);
@@ -141,11 +153,16 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         findHeadStones();
         findPressurePlateLockLevers();
+        findTorches();
         findRewardChest();
+
+        resetPhysicalObstacles();
 
         setupEconomy();
 
         spawnBlockBreakerTask();
+        spawnTorchToggleTask();
+        spawnParkourRegenTask();
 
         for (PlayerStateKind kind : GRAVE_YARD_SPECTATOR_KINDS) {
             spectator.registerSpectatedRegion(kind, region);
@@ -177,6 +194,86 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
+    private void regenParkour(ProtectedRegion region, int initialZ) {
+        // Clear any lingering blocks, note that we may miss a block currently despawned.
+        // This case is not really worth worrying about though, as it won't majorly affect
+        // the outcome.
+        RegionWalker.walk(region, (x, y, z) -> {
+            Block block = getWorld().getBlockAt(x, y, z);
+            if (block.getType() == Material.CRACKED_STONE_BRICKS) {
+                block.setType(Material.AIR);
+            }
+        });
+
+        int maxX = region.getMaximumPoint().getBlockX();
+        // Subtract 1 because the starting area isn't included in the region, so we could get impossible jumps
+        int minX = region.getMinimumPoint().getBlockX() - 1;
+
+        int lastZ = initialZ;
+
+        for (int x = maxX; x > minX;) {
+            int zAdjustment = 0;
+
+            if (ChanceUtil.getChance(12)) {
+                x -= 5;
+            } else {
+                x -= ChanceUtil.getRangedRandom(2, 3);
+
+                zAdjustment = ChanceUtil.getRandom(2);
+                if (ChanceUtil.getChance(2)) {
+                    zAdjustment = -zAdjustment;
+                }
+            }
+
+            // Try our random zAdjustment, if that fails, try inverting it
+            Block targetBlock = world.getBlockAt(x, 51, lastZ + zAdjustment);
+            if (!targetBlock.getType().isAir()) {
+                targetBlock = world.getBlockAt(x, 51, lastZ - zAdjustment);
+            }
+
+            if (!region.contains(targetBlock.getX(), targetBlock.getY(), targetBlock.getZ())) {
+                break;
+            }
+
+            if (!targetBlock.getType().isAir()) {
+                break;
+            }
+
+            targetBlock.setType(Material.CRACKED_STONE_BRICKS);
+
+            lastZ = targetBlock.getZ();
+        }
+    }
+
+    private void regenParkour() {
+        regenParkour(parkourGen[0], -698);
+        regenParkour(parkourGen[1], -685);
+    }
+
+    private void setRewardsDoor(Material type) {
+        RegionWalker.walk(rewardsDoor, (x, y, z) -> {
+            Block block = getWorld().getBlockAt(x, y, z);
+            if (block.getType() != type) {
+                block.setType(type);
+            }
+        });
+    }
+
+    private void resetPhysicalObstacles() {
+        regenParkour();
+        setRewardsDoor(Material.AIR);
+    }
+
+    private void handleRewardsRoomOccupied() {
+        ++rewardsRoomOccupiedTicks;
+
+        if (rewardsRoomOccupiedTicks > 1) {
+            return;
+        }
+
+        setRewardsDoor(Material.IRON_BARS);
+    }
+
     private void handleEmptyRewardsRoom() {
         if (rewardsRoomOccupiedTicks == 0) {
             return;
@@ -189,6 +286,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         resetPressurePlateLock();
         isPressurePlateLocked = !checkPressurePlateLock();
         resetRewardChest();
+
+        resetPhysicalObstacles();
     }
 
     @Override
@@ -224,10 +323,16 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
 
         if (playerInRewardsRoom) {
-            ++rewardsRoomOccupiedTicks;
+            handleRewardsRoomOccupied();
         } else {
             handleEmptyRewardsRoom();
         }
+    }
+
+    private void breakBlocks(Entity entity, Location startingLoc) {
+        breakBlock(entity, startingLoc);
+        breakBlock(entity, startingLoc.add(0, -1, 0));
+        breakBlock(entity, startingLoc.add(0, -1, 0));
     }
 
     private void spawnBlockBreakerTask() {
@@ -236,13 +341,38 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             for (LivingEntity e : getContained(LivingEntity.class)) {
                 // Auto break stuff
                 Location belowLoc = e.getLocation().add(0, -1, 0);
-                if (!(e instanceof Player) || (isHostileTempleArea(belowLoc) && isParticipant((Player) e))) {
-                    breakBlock(e, belowLoc);
-                    breakBlock(e, belowLoc.add(0, -1, 0));
-                    breakBlock(e, belowLoc.add(0, -1, 0));
+                if (!(e instanceof Player)) {
+                    breakBlocks(e, belowLoc);
+                } else if (isHostileTempleArea(belowLoc) && isParticipant((Player) e)) {
+                    server.getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                        breakBlocks(e, belowLoc);
+                    }, 5);
                 }
             }
         }, 0, 5);
+    }
+
+    private void spawnTorchToggleTask() {
+        server.getScheduler().runTaskTimer(inst, () -> {
+            if (cachedEmpty()) {
+                return;
+            }
+
+            if (ChanceUtil.getChance(3)) {
+                toggleTorches();
+            }
+        }, 0, 20);
+    }
+
+    private void spawnParkourRegenTask() {
+        // Calculate delay
+        int nextEventHour = TimeUtil.getNextHour((hour) -> hour % 2 == 0);
+        long nextRunDelay = TimeUtil.getTicksTill(nextEventHour);
+
+        // Schedule an update task for every hour
+        server.getScheduler().runTaskTimerAsynchronously(
+                inst, this::regenParkour, nextRunDelay, TimeUtil.convertHoursToTicks(1)
+        );
     }
 
     public <T extends Entity> Collection<T> getTempleContained(Class<T> clazz) {
@@ -272,6 +402,14 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
     public boolean isHostileTempleArea(Location location) {
         return isInTemplateArea(location) && location.getY() < 93 && location.getBlock().getLightFromSky() < 4;
+    }
+
+    public boolean isHotTorchArea(Location location) {
+        return torchesHot && contains(torchArea, location);
+    }
+
+    public boolean isRewardsArea(Location location) {
+        return contains(rewards, location);
     }
 
     public void restoreBlocks() {
@@ -307,6 +445,13 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
 
         if (!ChanceUtil.getChance(3)) return;
+
+        // Don't spawn zombies on players doing parkour
+        for (ProtectedRegion generatedParkour : parkourGen) {
+            if (LocationUtil.isBelowPlayer(world, generatedParkour, player)) {
+                return;
+            }
+        }
 
         Block playerBlock = player.getLocation().getBlock();
         for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
@@ -762,6 +907,35 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             state.setData(lever);
             state.update(true);
             pressurePlateLocks.put(entry, !ChanceUtil.getChance(3));
+        }
+    }
+
+    private void findTorches() {
+        RegionWalker.walk(torchArea, (x, y, z) -> {
+            Block block = getWorld().getBlockAt(x, y, z);
+            if (block.getType() == Material.WALL_TORCH || block.getType() == Material.SOUL_WALL_TORCH) {
+                torchLocations.add(block.getLocation());
+            }
+        });
+        toggleTorches();
+    }
+
+    private void toggleTorches() {
+        torchesHot = !torchesHot;
+
+        for (Location location : torchLocations) {
+            Block block = location.getBlock();
+            Directional oldDirectional = (Directional) block.getBlockData();
+
+            if (torchesHot) {
+                block.setType(Material.SOUL_WALL_TORCH);
+            } else {
+                block.setType(Material.WALL_TORCH);
+            }
+
+            Directional newDirectional = ((Directional) block.getBlockData());
+            newDirectional.setFacing(oldDirectional.getFacing());
+            block.setBlockData(newDirectional);
         }
     }
 
