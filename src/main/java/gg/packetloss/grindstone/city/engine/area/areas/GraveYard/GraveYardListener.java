@@ -486,7 +486,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         Location contactedLoc = block.getLocation();
         if (parent.isHostileTempleArea(contactedLoc)) {
             if (block.getType() == Material.STONE_PRESSURE_PLATE) {
-                if (parent.isPressurePlateLocked || contactedLoc.getBlockY() < 57) {
+                if (parent.isPressurePlateLocked || (contactedLoc.getBlockY() < 57 && ChanceUtil.getChance(5))) {
                     DeathUtil.throwSlashPotion(contactedLoc);
                 }
             }
