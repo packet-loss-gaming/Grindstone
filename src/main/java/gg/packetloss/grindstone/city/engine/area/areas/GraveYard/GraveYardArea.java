@@ -287,7 +287,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         isPressurePlateLocked = !checkPressurePlateLock();
         resetRewardChest();
 
-        resetPhysicalObstacles();
+        setRewardsDoor(Material.AIR);
     }
 
     @Override
