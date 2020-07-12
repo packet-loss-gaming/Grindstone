@@ -32,6 +32,8 @@ import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
+import gg.packetloss.hackbook.AttributeBook;
+import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -126,6 +128,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
     // Lights
     protected boolean torchesHot = false;
+    protected long torchesHotTime = 0;
     protected List<Location> torchLocations = new ArrayList<>();
 
     @Override
@@ -368,6 +371,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             if (ChanceUtil.getChance(3)) {
                 toggleTorches();
             }
+
+            applyTorchDebuff();
         }, 0, 20);
     }
 
@@ -412,7 +417,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     public boolean isHotTorchArea(Location location) {
-        return torchesHot && contains(torchArea, location);
+        return torchesHot && System.currentTimeMillis() - torchesHotTime > 250 && contains(torchArea, location);
     }
 
     public boolean isRewardsArea(Location location) {
@@ -424,7 +429,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     private void localSpawn(Player player) {
-        if (LocationUtil.isInRegion(getWorld(), rewards, player)) {
+        Location playerLoc = player.getLocation();
+        if (isRewardsArea(playerLoc)) {
             // Redirect local spawns to be rewards room spawns
             Location spawnPoint = new Location(world, -130.5, 41, -685);
 
@@ -449,6 +455,20 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 equipment.setBootsDropChance(0);
             }
             return;
+        } else if (isHotTorchArea(playerLoc)) {
+            // Redirect local spawns to be the end of the hall way
+            Location spawnPoint = new Location(world, -223, 56, -755);
+
+            for (int i = ChanceUtil.getRangedRandom(5, 10); i > 0; --i) {
+                Zombie z = spawnAndArm(spawnPoint, Zombie.class, true);
+                z.setTarget(player);
+
+                try {
+                    AttributeBook.setAttribute(z, AttributeBook.Attribute.ATTACK_KNOCKBACK, 10);
+                } catch (UnsupportedFeatureException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         if (!ChanceUtil.getChance(3)) return;
@@ -460,15 +480,9 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             }
         }
 
-        Location playerLoc = player.getLocation();
         Block playerBlock = playerLoc.getBlock();
 
-        int numZombies = ChanceUtil.getRandom(16 - playerBlock.getLightLevel());
-        if (isHotTorchArea(playerLoc)) {
-            numZombies = ChanceUtil.getRangedRandom(6, 16);
-        }
-
-        for (int i = numZombies; i > 0; --i) {
+        for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
             Location ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
             if (ls.getBlock().getType().isSolid()) {
                 ls = player.getLocation();
@@ -937,6 +951,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     private void toggleTorches() {
         torchesHot = !torchesHot;
 
+        torchesHotTime = System.currentTimeMillis();
+
         for (Location location : torchLocations) {
             Block block = location.getBlock();
             Directional oldDirectional = (Directional) block.getBlockData();
@@ -951,15 +967,19 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             newDirectional.setFacing(oldDirectional.getFacing());
             block.setBlockData(newDirectional);
         }
+    }
 
-        if (torchesHot) {
-            for (Player player : getContained(torchArea, Player.class)) {
-                if (!isParticipant(player)) {
-                    continue;
-                }
+    private void applyTorchDebuff() {
+        if (!torchesHot) {
+            return;
+        }
 
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 7 * 20, 3));
+        for (Player player : getContained(torchArea, Player.class)) {
+            if (!isParticipant(player)) {
+                continue;
             }
+
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 5 * 20, 3));
         }
     }
 

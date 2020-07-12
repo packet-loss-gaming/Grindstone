@@ -21,6 +21,7 @@ public class AttributeBook {
         FOLLOW_RANGE(GenericAttributes.FOLLOW_RANGE),
         KNOCKBACK_RESISTANCE(GenericAttributes.KNOCKBACK_RESISTANCE),
         MOVEMENT_SPEED(GenericAttributes.MOVEMENT_SPEED),
+        ATTACK_KNOCKBACK(GenericAttributes.ATTACK_KNOCKBACK),
         ATTACK_DAMAGE(GenericAttributes.ATTACK_DAMAGE);
 
         public final AttributeBase attribute;

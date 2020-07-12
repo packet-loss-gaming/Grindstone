@@ -240,7 +240,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 player.getActivePotionEffects().stream().filter(effect -> !excludedTypes.contains(effect.getType())).forEach(defender::addPotionEffect);
 
                 if (parent.isHotTorchArea(player.getLocation())) {
-                    EntityUtil.forceDamage(player, ChanceUtil.getRandom(event.getDamage()));
+                    EntityUtil.forceDamage(player, ChanceUtil.getRandom(5));
                 }
             } else if (defender instanceof Player) {
                 Location defenderLoc = defender.getLocation();
@@ -248,8 +248,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     event.setDamage(event.getDamage() + (parent.rewardsRoomOccupiedTicks / 3.0));
 
                     degradeGoodPotions((Player) defender);
-                } else if (parent.isHotTorchArea(defenderLoc)) {
-                    defender.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 14 * 20, 3));
                 }
             }
         }
