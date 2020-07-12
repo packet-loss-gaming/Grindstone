@@ -53,7 +53,7 @@ import java.util.concurrent.TimeUnit;
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 @ComponentInformation(friendlyName = "Cursed Mine", desc = "Dave says hi")
-@Depend(components = {
+@Depend(plugins = {"WorldGuard"}, components = {
         AdminComponent.class, BlockStateComponent.class, HighScoresComponent.class,
         PrayerComponent.class, RestorationUtil.class, SpectatorComponent.class
 })

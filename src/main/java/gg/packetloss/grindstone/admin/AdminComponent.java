@@ -58,7 +58,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Admin", desc = "Player Administration commands.")
-@Depend(plugins = {"WorldEdit, Vault"}, components = {GodComponent.class, PlayerStateComponent.class})
+@Depend(plugins = {"WorldEdit", "Vault"}, components = {GodComponent.class, PlayerStateComponent.class})
 public class AdminComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
