@@ -475,7 +475,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         config = configure(new LocalConfiguration());
 
         spectatorComponent.registerSpectatorKind(PlayerStateKind.JUNGLE_RAID_SPECTATOR);
-        server.getScheduler().runTaskLater(inst, this::setupRegionInfo, 1);
+        setupRegionInfo();
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(new JungleRaidListener());

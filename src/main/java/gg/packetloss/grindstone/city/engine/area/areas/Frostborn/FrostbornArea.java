@@ -100,6 +100,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     @Override
     public void setUp() {
+        spectator.registerSpectatorKind(PlayerStateKind.FROSTBORN_SPECTATOR);
+
         world = server.getWorlds().get(0);
         gateOuter = new Location(world, -48.5, 81, 392, 270, 0);
         gateInner = new Location(world, -50.5, 81, 392, 90, 0);
@@ -125,12 +127,6 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 new Location(world, -76, 81, 387),
                 () -> !isEmpty()
         );
-    }
-
-    @Override
-    public void enable() {
-        spectator.registerSpectatorKind(PlayerStateKind.FROSTBORN_SPECTATOR);
-        server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
     @Override

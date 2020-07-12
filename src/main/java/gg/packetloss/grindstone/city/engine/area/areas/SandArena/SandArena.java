@@ -46,12 +46,6 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
     }
 
     @Override
-    public void enable() {
-        // WorldGuard loads late for some reason
-        server.getScheduler().runTaskLater(inst, super::enable, 1);
-    }
-
-    @Override
     public void run() {
         if (!isLoaded()) {
             return;

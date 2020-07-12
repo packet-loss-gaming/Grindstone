@@ -34,9 +34,6 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
     protected final Logger log = inst.getLogger();
     protected final Server server = CommandBook.server();
 
-    // FIMXE: this shouldn't be needed
-    private int delayInit;
-
     protected int tick;
     protected AreaListener<? extends AreaComponent<Config>> listener;
 
@@ -45,17 +42,10 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
     protected Config config;
     protected boolean empty = true;
 
-    public AreaComponent() {
-        this(0);
-    }
-
-    public AreaComponent(int delayInit) {
-        this.delayInit = delayInit;
-    }
-
     public abstract void setUp();
 
-    private void performEnable() {
+    @Override
+    public void enable() {
         setUp();
         if (listener != null) {
             //noinspection AccessStaticViaInstance
@@ -66,15 +56,6 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
             saveConfig();
         }
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, tick);
-    }
-
-    @Override
-    public void enable() {
-        if (delayInit != 0) {
-            server.getScheduler().runTaskLater(inst, this::performEnable, delayInit);
-        } else {
-            performEnable();
-        }
     }
 
     @Override

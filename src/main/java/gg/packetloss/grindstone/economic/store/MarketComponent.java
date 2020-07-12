@@ -87,6 +87,14 @@ public class MarketComponent extends BukkitComponent {
         // Setup economy
         setupEconomy();
 
+        itemDatabase = new MySQLItemStoreDatabase();
+        itemDatabase.load();
+
+        transactionDatabase = new MySQLMarketTransactionDatabase();
+        transactionDatabase.load();
+
+        CommandBook.registerEvents(new MarketTransactionLogger(transactionDatabase));
+
         // Register user facing commands
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
         MarketItemConverter.register(registrar, this);
@@ -97,33 +105,20 @@ public class MarketComponent extends BukkitComponent {
             });
         });
 
-        // FIXME: Work around for database load order issue.
-        server.getScheduler().runTaskLater(inst, () -> {
-            itemDatabase = new MySQLItemStoreDatabase();
-            itemDatabase.load();
+        // Register admin commands
+        registerCommands(Commands.class);
 
-            transactionDatabase = new MySQLMarketTransactionDatabase();
-            transactionDatabase.load();
+        // Get the region
+        region = WorldGuardBridge.getManagerFor(Bukkit.getWorld("City")).getRegion("vineam-district-bank");
 
-            CommandBook.registerEvents(new MarketTransactionLogger(transactionDatabase));
+        // Calculate delay
+        int nextEventHour = TimeUtil.getNextHour((hour) -> hour % 2 == 0);
+        long nextRunDelay = TimeUtil.getTicksTill(nextEventHour);
 
-            // Register admin commands
-            registerCommands(Commands.class);
-
-            // Get the region
-            server.getScheduler().runTaskLater(inst, () -> {
-                region = WorldGuardBridge.getManagerFor(Bukkit.getWorld("City")).getRegion("vineam-district-bank");
-            }, 1);
-
-            // Calculate delay
-            int nextEventHour = TimeUtil.getNextHour((hour) -> hour % 2 == 0);
-            long nextRunDelay = TimeUtil.getTicksTill(nextEventHour);
-
-            // Schedule an update task for every two hours
-            server.getScheduler().runTaskTimerAsynchronously(
-              inst, (Runnable) this::simulateMarket, nextRunDelay, TimeUtil.convertHoursToTicks(2)
-            );
-        }, 1);
+        // Schedule an update task for every two hours
+        server.getScheduler().runTaskTimerAsynchronously(
+          inst, (Runnable) this::simulateMarket, nextRunDelay, TimeUtil.convertHoursToTicks(2)
+        );
     }
 
     @Override

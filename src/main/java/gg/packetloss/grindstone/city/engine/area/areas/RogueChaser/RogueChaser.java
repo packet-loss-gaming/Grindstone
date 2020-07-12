@@ -43,10 +43,6 @@ public class RogueChaser extends AreaComponent<RogueChaserConfig> {
 
     private long chasedSpawnTime = System.currentTimeMillis();
 
-    public RogueChaser() {
-        super(1);
-    }
-
     @Override
     public void setUp() {
         world = managedWorld.get(ManagedWorldGetQuery.CITY);

@@ -7,6 +7,7 @@ import com.sk89q.worldedit.world.block.BlockTypes;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
@@ -52,6 +53,10 @@ import java.util.concurrent.TimeUnit;
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 @ComponentInformation(friendlyName = "Cursed Mine", desc = "Dave says hi")
+@Depend(components = {
+        AdminComponent.class, BlockStateComponent.class, HighScoresComponent.class,
+        PrayerComponent.class, RestorationUtil.class, SpectatorComponent.class
+})
 public class CursedMineArea extends AreaComponent<CursedMineConfig> {
 
     @InjectComponent
@@ -93,6 +98,8 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
 
     @Override
     public void setUp() {
+        spectator.registerSpectatorKind(PlayerStateKind.CURSED_MINE_SPECTATOR);
+
         world = server.getWorlds().get(0);
 
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
@@ -118,12 +125,6 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
                 new Location(world, 353, 66, -529),
                 () -> getContainedParticipants().size() > 1
         );
-    }
-
-    @Override
-    public void enable() {
-        spectator.registerSpectatorKind(PlayerStateKind.CURSED_MINE_SPECTATOR);
-        server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
     @Override

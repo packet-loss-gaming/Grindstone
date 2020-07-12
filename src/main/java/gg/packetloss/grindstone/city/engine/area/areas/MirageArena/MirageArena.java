@@ -82,10 +82,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
     protected BossBar loadingProgressBar = Bukkit.createBossBar("Arena Loading", BarColor.BLUE, BarStyle.SEGMENTED_6);
     protected BossBar voteProgressBar = Bukkit.createBossBar("Arena Vote", BarColor.WHITE, BarStyle.SEGMENTED_6);
 
-    public MirageArena() {
-        super(1);
-    }
-
     @Override
     public void setUp() {
         world = server.getWorlds().get(0);
@@ -95,11 +91,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         config = new MirageArenaConfig();
 
         registerScope();
-    }
-
-    @Override
-    public void enable() {
-        super.enable();
 
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
         MirageArenaSchematicConverter.register(registrar, this);

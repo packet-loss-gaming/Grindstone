@@ -76,6 +76,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     @Override
     public void setUp() {
+        spectator.registerSpectatorKind(PlayerStateKind.PATIENT_X_SPECTATOR);
+
         world = server.getWorlds().get(0);
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
         String base = "glacies-mare-district-mad-man";
@@ -112,13 +114,6 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 new Location(world, -421, 82, -109),
                 () -> !isEmpty()
         );
-    }
-
-    @Override
-    public void enable() {
-        // WorldGuard loads late for some reason
-        spectator.registerSpectatorKind(PlayerStateKind.PATIENT_X_SPECTATOR);
-        server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
     @Override

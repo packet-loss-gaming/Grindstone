@@ -133,6 +133,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
     @Override
     public void setUp() {
+        for (PlayerStateKind kind : GRAVE_YARD_SPECTATOR_KINDS) {
+            spectator.registerSpectatorKind(kind);
+        }
+
         world = server.getWorlds().get(0);
 
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
@@ -189,15 +193,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 new Location(world, -144, 82, -578),
                 () -> !isEmpty()
         );
-    }
-
-    @Override
-    public void enable() {
-        for (PlayerStateKind kind : GRAVE_YARD_SPECTATOR_KINDS) {
-            spectator.registerSpectatorKind(kind);
-        }
-
-        server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
     private void regenParkour(ProtectedRegion region, int initialZ) {

@@ -52,10 +52,6 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
     private List<BlockVector2> columnVectors = new ArrayList<>();
     private long generationTime = 0;
 
-    public NinjaParkour() {
-        super(1);
-    }
-
     @Override
     public void setUp() {
         world = managedWorld.get(ManagedWorldGetQuery.CITY);

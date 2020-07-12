@@ -33,15 +33,11 @@ public class CustomICComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-
-        server.getScheduler().runTaskLater(inst, () -> {
-            ICCore = ICManager.inst();
-            if (ICCore == null) {
-                log.warning("ICManager is null!");
-            }
-            registerICs();
-        }, 1);
-
+        ICCore = ICManager.inst();
+        if (ICCore == null) {
+            log.warning("ICManager is null!");
+        }
+        registerICs();
     }
 
     @SuppressWarnings("AccessStaticViaInstance")

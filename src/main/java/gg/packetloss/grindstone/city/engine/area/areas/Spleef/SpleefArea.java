@@ -58,7 +58,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
     public void enable() {
         config = new SpleefConfig();
 
-        server.getScheduler().runTaskLater(inst, this::reloadConfig, 1);
+        reloadConfig();
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(new SpleefListener(this));

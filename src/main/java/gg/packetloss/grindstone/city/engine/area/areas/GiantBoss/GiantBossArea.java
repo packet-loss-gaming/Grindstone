@@ -105,6 +105,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     @Override
     public void setUp() {
+        spectator.registerSpectatorKind(PlayerStateKind.SHNUGGLES_PRIME_SPECTATOR);
+
         world = server.getWorlds().get(0);
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
         region = manager.getRegion("vineam-district-giant-boss-area");
@@ -134,12 +136,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                 new Location(world, 201, 87, 60),
                 () -> !isEmpty()
         );
-    }
-
-    @Override
-    public void enable() {
-        spectator.registerSpectatorKind(PlayerStateKind.SHNUGGLES_PRIME_SPECTATOR);
-        server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
     @Override

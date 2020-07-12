@@ -164,7 +164,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         config = configure(new LocalConfiguration());
 
         spectatorComponent.registerSpectatorKind(PlayerStateKind.SKY_WARS_SPECTATOR);
-        server.getScheduler().runTaskLater(inst, this::setupRegionInfo, 1);
+        setupRegionInfo();
 
         //noinspection AccessStaticViaInstance
         inst.registerEvents(new SkyWarsListener());

@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Optional;
 
 @ComponentInformation(friendlyName = "Freaky Four", desc = "The craziest bosses ever")
-@Depend(components = {AdminComponent.class, PlayerStateComponent.class, EconomyComponent.class},
+@Depend(components = {AdminComponent.class, PlayerStateComponent.class, SpectatorComponent.class, EconomyComponent.class},
         plugins = {"WorldGuard"})
 public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
 
@@ -67,6 +67,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
 
     @Override
     public void setUp() {
+        spectator.registerSpectatorKind(PlayerStateKind.FREAKY_FOUR_SPECTATOR);
+
         world = server.getWorlds().get(0);
         entrance = new Location(world, 401.5, 79, -304, 270, 0);
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
@@ -89,12 +91,6 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                 new Location(world, 400, 79, -307),
                 () -> getFirstFullRoom().isPresent()
         );
-    }
-
-    @Override
-    public void enable() {
-        spectator.registerSpectatorKind(PlayerStateKind.FREAKY_FOUR_SPECTATOR);
-        server.getScheduler().runTaskLater(inst, super::enable, 1);
     }
 
     @Override
