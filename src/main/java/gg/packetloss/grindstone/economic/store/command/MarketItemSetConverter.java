@@ -1,6 +1,5 @@
 package gg.packetloss.grindstone.economic.store.command;
 
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.worldedit.util.formatting.text.Component;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
@@ -28,10 +27,6 @@ public class MarketItemSetConverter implements ArgumentConverter<MarketItemSet> 
 
     public MarketItemSetConverter(MarketComponent component) {
         this.marketItemConverter = new BasicMarketItemConverter(component);
-    }
-
-    public static void register(ComponentCommandRegistrar registrar, MarketComponent component) {
-        registrar.registerConverter(Key.of(MarketItemSet.class), new MarketItemSetConverter(component));
     }
 
     public static void register(CommandManager commandManager, MarketComponent component) {

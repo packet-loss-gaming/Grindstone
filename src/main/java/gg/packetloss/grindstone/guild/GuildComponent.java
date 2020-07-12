@@ -93,8 +93,9 @@ public class GuildComponent extends BukkitComponent implements Listener {
         );
 
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        GuildSettingConverter.register(registrar);
         registrar.registerTopLevelCommands((commandManager, registration) -> {
+            GuildSettingConverter.register(commandManager);
+
             registrar.registerAsSubCommand("guild", "Guild commands", commandManager, (innerCommandManager, innerRegistration) -> {
                 innerRegistration.register(innerCommandManager, GuildCommandsRegistration.builder(), new GuildCommands(this));
             });

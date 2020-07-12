@@ -24,10 +24,10 @@ public class LostItemsComponent extends BukkitComponent {
     @Override
     public void enable() {
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        CustomItemsConverter.register(registrar);
 
         registrar.registerTopLevelCommands((commandManager, registration) -> {
-            //  CustomItemsConverter.register(commandManager);
+            CustomItemsConverter.register(commandManager);
+
             registration.register(commandManager, LostItemCommandsRegistration.builder(), new LostItemCommands());
         });
     }

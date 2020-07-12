@@ -38,8 +38,9 @@ public class TimeTravelComponent extends BukkitComponent {
         CommandBook.registerEvents(new TimeTravelListener(this));
 
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        TimeContextConverter.register(registrar);
         registrar.registerTopLevelCommands((commandManager, registration) -> {
+            TimeContextConverter.register(commandManager);
+
             registration.register(commandManager, TimeTravelCommandsRegistration.builder(), new TimeTravelCommands(this));
         });
     }

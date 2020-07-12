@@ -97,9 +97,10 @@ public class MarketComponent extends BukkitComponent {
 
         // Register user facing commands
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        MarketItemConverter.register(registrar, this);
-        MarketItemSetConverter.register(registrar, this);
         registrar.registerTopLevelCommands((commandManager, registration) -> {
+            MarketItemConverter.register(commandManager, this);
+            MarketItemSetConverter.register(commandManager, this);
+
             registrar.registerAsSubCommand("market", Set.of("mk"), "Admin Market", commandManager, (innerCommandManager, innerRegistration) -> {
                 innerRegistration.register(innerCommandManager, MarketCommandsRegistration.builder(), new MarketCommands(this, invGUI, econ));
             });

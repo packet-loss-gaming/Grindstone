@@ -74,9 +74,9 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         jailCells.load();
 
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        PrisonIdentifierConverter.register(registrar, this);
         registrar.registerTopLevelCommands((commandManager, registration) -> {
-            //  PrisonIdentifierConverter.register(commandManager, this);
+            PrisonIdentifierConverter.register(commandManager, this);
+
             registration.register(commandManager, JailCommandsRegistration.builder(), new JailCommands(this));
         });
 

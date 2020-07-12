@@ -93,8 +93,9 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         registerScope();
 
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        MirageArenaSchematicConverter.register(registrar, this);
         registrar.registerTopLevelCommands((commandManager, registration) -> {
+            MirageArenaSchematicConverter.register(commandManager, this);
+
             registrar.registerAsSubCommand("mirage", "Mirage Arena Control Commands", commandManager, (innerCommandManager, innerRegistration) -> {
                 innerRegistration.register(innerCommandManager, MirageArenaCommandsRegistration.builder(), new MirageArenaCommands(this));
             });

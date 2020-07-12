@@ -1,10 +1,10 @@
 package gg.packetloss.grindstone.admin;
 
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.worldedit.util.formatting.text.Component;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
+import org.enginehub.piston.CommandManager;
 import org.enginehub.piston.converter.ArgumentConverter;
 import org.enginehub.piston.converter.ConversionResult;
 import org.enginehub.piston.converter.FailedConversion;
@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CustomItemsConverter implements ArgumentConverter<CustomItemBundle> {
-    public static void register(ComponentCommandRegistrar registrar) {
-        registrar.registerConverter(Key.of(CustomItemBundle.class), new CustomItemsConverter());
+    public static void register(CommandManager commandManager) {
+        commandManager.registerConverter(Key.of(CustomItemBundle.class), new CustomItemsConverter());
     }
 
     @Override

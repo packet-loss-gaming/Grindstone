@@ -50,9 +50,9 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         CommandBook.registerEvents(this);
 
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        WarpPointConverter.register(registrar, this);
         registrar.registerTopLevelCommands((commandManager, registration) -> {
-            //  WarpPointConverter.register(commandManager, this);
+            WarpPointConverter.register(commandManager, this);
+
             registration.register(commandManager, WarpCommandsRegistration.builder(), new WarpCommands(this));
 
             registrar.registerAsSubCommand("warps", "Warp management", commandManager, (innerCommandManager, innerRegistration) -> {

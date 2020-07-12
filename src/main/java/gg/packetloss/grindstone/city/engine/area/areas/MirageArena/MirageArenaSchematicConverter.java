@@ -1,6 +1,5 @@
 package gg.packetloss.grindstone.city.engine.area.areas.MirageArena;
 
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.worldedit.util.formatting.text.Component;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
 import org.enginehub.piston.CommandManager;
@@ -22,10 +21,6 @@ public class MirageArenaSchematicConverter implements ArgumentConverter<MirageAr
 
     public MirageArenaSchematicConverter(MirageArena component) {
         this.component = component;
-    }
-
-    public static void register(ComponentCommandRegistrar registrar, MirageArena component) {
-        registrar.registerConverter(Key.of(MirageArenaSchematic.class), new MirageArenaSchematicConverter(component));
     }
 
     public static void register(CommandManager commandManager, MirageArena component) {
