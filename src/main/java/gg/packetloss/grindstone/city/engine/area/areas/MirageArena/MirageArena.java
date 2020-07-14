@@ -19,8 +19,11 @@ import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.util.SideEffect;
+import com.sk89q.worldedit.util.SideEffectSet;
 import com.sk89q.worldedit.util.io.Closer;
 import com.sk89q.worldedit.world.block.BlockState;
+import com.sk89q.worldedit.world.block.BlockTypes;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -53,6 +56,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Mirage Arena", desc = "What will you see next?")
@@ -218,65 +222,92 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         }
     }
 
-    public void callEdit(EditSession editor, Clipboard board,
-                         int cx, int cz, int cy, BlockVector3 diminsions) {
-        int maxX = diminsions.getX();
-        int maxY = diminsions.getY();
-        int maxZ = diminsions.getZ();
+    private void doEditStep(MirageEditorState editorState, boolean ascending, Consumer<BlockVector3> op) {
+        long start = System.nanoTime();
 
-        if (cy >= maxY) {
+        final int yIncrement = (ascending ? 1 : -1);
+
+        for (int y = editorState.getY(); (ascending ? y < editorState.getMaxY() : y >= 0); y = y + yIncrement) {
+            for (int x = editorState.getX(); x < editorState.getMaxX(); ++x) {
+                for (int z = editorState.getZ(); z < editorState.getMaxZ(); ++z) {
+                    op.accept(BlockVector3.at(x, y, z));
+
+                    if (z % 30 == 0) {
+                        editorState.getSession().flushSession();
+
+                        if (System.nanoTime() - start >= TimeUnit.MILLISECONDS.toNanos(25)) {
+                            editorState.setX(x);
+                            editorState.setY(y);
+                            editorState.setZ(z + 1);
+                            return;
+                        }
+                    }
+                }
+                editorState.setZ(0);
+            }
+            editorState.setX(0);
+        }
+        editorState.setY((ascending ? editorState.getMaxY() : -1));
+    }
+
+    public void callDrainEdit(MirageEditorState editorState) {
+        if (editorState.getY() < 0) {
+            // Now reset to the bottom, and move upwards
+            editorState.setY(0);
+            callEdit(editorState);
+            return;
+        } else {
+            loadingProgressBar.setTitle("Arena Draining Fluids");
+            loadingProgressBar.setProgress((double) (editorState.getMaxX() - editorState.getY()) / editorState.getMaxX());
+            BossBarUtil.syncWithPlayers(loadingProgressBar, getAudiblePlayers());
+        }
+
+        doEditStep(editorState, false, (relativePoint) -> {
+            BlockVector3 placementTarget = relativePoint.add(region.getMinimumPoint());
+
+            EditSession session = editorState.getSession();
+            if (!session.getBlock(placementTarget).getBlockType().getMaterial().isLiquid()) {
+                return;
+            }
+
+            session.rawSetBlock(placementTarget, BlockTypes.AIR.getDefaultState());
+        });
+
+        server.getScheduler().runTaskLater(inst, () -> {
+            callDrainEdit(editorState);
+        }, 1);
+    }
+
+    public void callEdit(MirageEditorState editorState) {
+        if (editorState.getY() >= editorState.getMaxY()) {
             loadingProgressBar.removeAll();
             editing = false;
             freePlayers();
             return;
         } else {
-            loadingProgressBar.setProgress((double) cy / maxY);
+            loadingProgressBar.setTitle("Arena Loading");
+            loadingProgressBar.setProgress((double) editorState.getY() / editorState.getMaxY());
             BossBarUtil.syncWithPlayers(loadingProgressBar, getAudiblePlayers());
         }
 
-        long start = System.nanoTime();
+        doEditStep(editorState, true, (relativePoint) -> {
+            BlockVector3 placementTarget = relativePoint.add(region.getMinimumPoint());
 
-        boolean timedOut = false;
-        edit:
-        {
-            for (int x = cx; x < maxX; ++x) {
-                for (int z = cz; z < maxZ; ++z) {
-                    BlockVector3 relativePoint = BlockVector3.at(x, cy, z);
+            Clipboard clipboard = editorState.getClipboard();
+            BlockVector3 containedTarget = relativePoint.add(clipboard.getMinimumPoint());
+            BlockState targetBlock = clipboard.getBlock(containedTarget);
 
-                    BlockVector3 placementTarget = relativePoint.add(region.getMinimumPoint());
-
-                    BlockVector3 containedTarget = relativePoint.add(board.getMinimumPoint());
-                    BlockState targetBlock = board.getBlock(containedTarget);
-
-                    if (editor.getBlock(placementTarget).equals(targetBlock)) {
-                        continue;
-                    }
-
-                    editor.rawSetBlock(placementTarget, targetBlock);
-
-                    if (z % 30 == 0) {
-                        editor.flushSession();
-
-                        if (System.nanoTime() - start >= TimeUnit.MILLISECONDS.toNanos(100)) {
-                            cx = x;
-                            cz = z + 1;
-                            timedOut = true;
-                            break edit;
-                        }
-                    }
-                }
-                cz = 0;
+            EditSession session = editorState.getSession();
+            if (session.getBlock(placementTarget).equals(targetBlock)) {
+                return;
             }
-            cx = 0;
-            cy++;
-        }
 
-        final int finalCy = cy;
-        final int finalCz = cz;
-        final int finalCx = cx;
+            session.rawSetBlock(placementTarget, targetBlock);
+        });
+
         server.getScheduler().runTaskLater(inst, () -> {
-            callEdit(editor, board, finalCx, finalCz, finalCy, diminsions);
-        }, timedOut ? 10 : 1);
+            callEdit(editorState);
+        }, 1);
     }
 
     public void changeMirage(MirageArenaSchematic schematic) throws IOException, CommandException {
@@ -286,7 +317,8 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         editing = true;
 
         File file = schematic.getPath().toFile();
-        EditSession editor = WorldEditBridge.getSystemEditSessionFor(world);
+        EditSession session = WorldEditBridge.getSystemEditSessionFor(world);
+        session.setSideEffectApplier(SideEffectSet.defaults().with(SideEffect.NEIGHBORS, SideEffect.State.OFF));
 
         try (Closer closer = Closer.create()) {
             FileInputStream fis = closer.register(new FileInputStream(file));
@@ -298,7 +330,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
             Clipboard clipboard = reader.read();
             resetBlockRecordIndex();
 
-            callEdit(editor, clipboard, 0, 0, 0, clipboard.getDimensions());
+            callDrainEdit(new MirageEditorState(session, clipboard));
         }
     }
 
