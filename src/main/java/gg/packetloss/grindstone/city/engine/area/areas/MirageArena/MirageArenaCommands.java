@@ -18,6 +18,8 @@ import org.enginehub.piston.annotation.param.ArgFlag;
 import org.enginehub.piston.annotation.param.Switch;
 
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 @CommandContainer(superTypes = CommandPermissionsConditionGenerator.Registration.class)
@@ -40,6 +42,9 @@ public class MirageArenaCommands {
     @CommandPermissions("aurora.mirage.list")
     public void listCmd(CommandSender sender, @ArgFlag(name = 'p', desc = "page", def = "1") int page,
                         @Arg(desc = "name filter text", def = "") String filter) {
+        List<MirageArenaSchematic> arenas = component.getArenas(filter);
+        arenas.sort(Comparator.comparing(MirageArenaSchematic::getArenaName));
+
         new TextComponentChatPaginator<MirageArenaSchematic>(ChatColor.GOLD, "Arenas") {
             @Override
             public Optional<String> getPagerCommand(int page) {
@@ -55,7 +60,7 @@ public class MirageArenaCommands {
                         TextAction.Hover.showText(Text.of("Vote for this arena next"))
                 );
             }
-        }.display(sender, component.getArenas(filter), page);
+        }.display(sender, arenas, page);
     }
 
     @Command(name = "ignore", desc = "Ignore a player")
