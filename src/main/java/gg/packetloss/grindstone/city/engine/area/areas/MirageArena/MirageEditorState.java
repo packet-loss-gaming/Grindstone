@@ -5,6 +5,7 @@ import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
 
 class MirageEditorState {
+    private final MirageArenaSchematic schematic;
     private final EditSession editor;
     private final Clipboard clipboard;
 
@@ -14,7 +15,8 @@ class MirageEditorState {
     private int y;
     private int z;
 
-    public MirageEditorState(EditSession editor, Clipboard clipboard) {
+    public MirageEditorState(MirageArenaSchematic schematic, EditSession editor, Clipboard clipboard) {
+        this.schematic = schematic;
         this.editor = editor;
         this.clipboard = clipboard;
 
@@ -23,6 +25,10 @@ class MirageEditorState {
         this.x = getMaxX();
         this.y = getMaxY();
         this.z = getMaxZ();
+    }
+
+    public MirageArenaSchematic getSchematic() {
+        return schematic;
     }
 
     public EditSession getSession() {

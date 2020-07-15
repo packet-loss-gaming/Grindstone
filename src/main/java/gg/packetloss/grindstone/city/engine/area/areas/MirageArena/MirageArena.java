@@ -152,7 +152,6 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
             Collection<Player> players = getAudiblePlayers();
             try {
-                ChatUtil.sendNotice(players, ChatColor.DARK_AQUA, "Attempting to change the current mirage to " + next.getArenaName() + "...");
                 changeMirage(next);
             } catch (CommandException e) {
                 ChatUtil.sendError(players, "The arena was already changing, the vote has been cancelled!");
@@ -285,7 +284,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
             freePlayers();
             return;
         } else {
-            loadingProgressBar.setTitle("Arena Loading");
+            loadingProgressBar.setTitle("Arena Loading - " + editorState.getSchematic().getArenaName());
             loadingProgressBar.setProgress((double) editorState.getY() / editorState.getMaxY());
             BossBarUtil.syncWithPlayers(loadingProgressBar, getAudiblePlayers());
         }
@@ -330,7 +329,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
             Clipboard clipboard = reader.read();
             resetBlockRecordIndex();
 
-            callDrainEdit(new MirageEditorState(session, clipboard));
+            callDrainEdit(new MirageEditorState(schematic, session, clipboard));
         }
     }
 
