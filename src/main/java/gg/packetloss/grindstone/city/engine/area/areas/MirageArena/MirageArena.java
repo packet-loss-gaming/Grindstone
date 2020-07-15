@@ -36,19 +36,18 @@ import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
-import gg.packetloss.grindstone.util.BossBarUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.util.RegionUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -85,6 +84,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
     protected BossBar loadingProgressBar = Bukkit.createBossBar("Arena Loading", BarColor.BLUE, BarStyle.SEGMENTED_6);
     protected BossBar voteProgressBar = Bukkit.createBossBar("Arena Vote", BarColor.WHITE, BarStyle.SEGMENTED_6);
+    protected Scoreboard voteScoreBoard = Bukkit.getScoreboardManager().getNewScoreboard();
 
     @Override
     public void setUp() {
@@ -108,8 +108,8 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
     @Override
     public void run() {
+        shiftMirage();
         if (!isEmpty()) {
-            shiftMirage();
             revertBlocks();
         }
     }
@@ -145,10 +145,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
                 return;
             }
 
-            // Reset voting system
-            voting = false;
-            ticks = 0;
-            voteProgressBar.removeAll();
+            resetVoting();
 
             Collection<Player> players = getAudiblePlayers();
             try {
@@ -349,12 +346,38 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
         return sessions.getSession(MirageSession.class, player);
     }
 
+    private Objective resetVotingObjective() {
+        Objective existingObjective = voteScoreBoard.getObjective("mirage_vote");
+        if (existingObjective != null) {
+            existingObjective.unregister();
+        }
+
+        Objective newObjective = voteScoreBoard.registerNewObjective("mirage_vote", "dummy", "Next Arena");
+        newObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        return newObjective;
+    }
+
     private void updateVoteProgress() {
         voteProgressBar.setProgress((double) ticks / config.votingTicks);
-        BossBarUtil.syncWithPlayers(voteProgressBar, getAudiblePlayers());
 
-        MirageArenaSchematic next = getNextMirage(false);
-        voteProgressBar.setTitle("Arena Vote - Leader: " + next.getArenaName());
+        Objective arenaChangeObjective = resetVotingObjective();
+        for (Map.Entry<MirageArenaSchematic, Integer> votes : countVotes(false).entrySet()) {
+            arenaChangeObjective.getScore(votes.getKey().getArenaName()).setScore(votes.getValue());
+        }
+
+        Collection<Player> audiblePlayers = getAudiblePlayers();
+        BossBarUtil.syncWithPlayers(voteProgressBar, audiblePlayers);
+        ScoreboardUtil.syncWithPlayers(voteScoreBoard, audiblePlayers);
+    }
+
+    private void resetVoting() {
+        voting = false;
+        ticks = 0;
+
+        resetVotingObjective();
+
+        voteProgressBar.removeAll();
+        ScoreboardUtil.syncWithPlayers(voteScoreBoard, List.of());
     }
 
     public void registerVote(Player player, MirageArenaSchematic arena) {
