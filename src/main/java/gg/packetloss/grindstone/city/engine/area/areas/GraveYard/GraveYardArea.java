@@ -411,8 +411,12 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         return isInTemplateArea(location) && location.getY() < 93 && location.getBlock().getLightFromSky() < 4;
     }
 
+    public boolean isTorchArea(Location location) {
+        return contains(torchArea, location);
+    }
+
     public boolean isHotTorchArea(Location location) {
-        return torchesHot && System.currentTimeMillis() - torchesHotTime > 250 && contains(torchArea, location);
+        return torchesHot && System.currentTimeMillis() - torchesHotTime > 250 && isTorchArea(location);
     }
 
     public boolean isRewardsArea(Location location) {
@@ -450,7 +454,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 equipment.setBootsDropChance(0);
             }
             return;
-        } else if (isHotTorchArea(playerLoc)) {
+        } else if (isTorchArea(playerLoc)) {
             // Redirect local spawns to be the end of the hall way
             Location spawnPoint = new Location(world, -223, 56, -755);
 
