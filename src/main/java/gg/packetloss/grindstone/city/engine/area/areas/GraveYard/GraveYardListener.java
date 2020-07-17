@@ -635,8 +635,25 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         player.teleport(endOfMaze, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
+    @EventHandler
+    public void onPlayerDeathInGraveYard(PlayerDeathEvent event) { // Handles Grave Yard Specific Logic
+        Player player = event.getEntity();
+        Location playerLoc = player.getLocation();
+        if (!parent.contains(playerLoc)) {
+            return;
+        }
+
+        if (parent.isTorchArea(playerLoc)) {
+            // Remove all zombies in the torch area if all players in the torch area are dead
+            Collection<Entity> entities = parent.getContained(parent.torchArea, Player.class, Zombie.class);
+            if (entities.stream().noneMatch((e) -> e instanceof Player)) {
+                entities.forEach(Entity::remove);
+            }
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
-    public void onPlayerDeath(PlayerDeathEvent event) {
+    public void onPlayerDeath(PlayerDeathEvent event) { // Handles Death System
         Player player = event.getEntity();
         List<ItemStack> drops = event.getDrops();
 
