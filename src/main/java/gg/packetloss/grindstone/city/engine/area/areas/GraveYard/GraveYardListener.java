@@ -122,6 +122,11 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             return;
         }
 
+        // Don't mess with strikes that weren't added/at a grave site
+        if (event.getLocation().equals(event.getTriggeringLocation())) {
+            return;
+        }
+
         GraveYardConfig config = parent.getConfig();
         event.setNumberOfZombies(ChanceUtil.getRangedRandom(
                 config.apocalypseNumZombiesMin,
