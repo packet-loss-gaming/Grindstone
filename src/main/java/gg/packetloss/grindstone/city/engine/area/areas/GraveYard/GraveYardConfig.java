@@ -10,6 +10,12 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 
 public class GraveYardConfig extends ConfigurationBase {
-    @Setting("thunder-storm-cool-down")
-    public long tStormCoolDown = 1000 * 60 * 60;
+    @Setting("apocalypse.chance-of-grave-spawn")
+    public int apocalypseChanceOfGraveSpawn = 16;
+    @Setting("apocalypse.num-zombies.min")
+    public int apocalypseNumZombiesMin = 3;
+    @Setting("apocalypse.num-zombies.max")
+    public int apocalypseNumZombiesMax = 6;
+    @Setting("apocalypse.chance-of-removal")
+    public int apocalypseChanceOfPurge = 5;
 }

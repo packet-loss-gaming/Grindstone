@@ -7,12 +7,12 @@
 package gg.packetloss.grindstone.city.engine.area.areas.GraveYard;
 
 import com.sk89q.commandbook.CommandBook;
-import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
-import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.city.engine.area.AreaListener;
-import gg.packetloss.grindstone.events.*;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
-import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
+import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
+import gg.packetloss.grindstone.events.PlayerGraveProtectItemsEvent;
+import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
+import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.apocalypse.*;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.custom.item.RepairItemEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
@@ -55,7 +55,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
@@ -65,7 +64,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
-import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 
 public class GraveYardListener extends AreaListener<GraveYardArea> {
@@ -99,61 +97,56 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onThunderChange(BetterWeatherChangeEvent event) {
-        if (event.getOldWeatherType() == WeatherType.THUNDERSTORM) {
-            World world = event.getWorld();
-
-            ChatUtil.sendNotice(world.getPlayers(), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
-
-            ApocalypseHelper.suppressDrops(() -> {
-                for (Zombie zombie : world.getEntitiesByClass(Zombie.class)) {
-                    if (!checkEntity(zombie)) {
-                        continue;
-                    }
-
-                    if (parent.contains(zombie)) {
-                        if (!ChanceUtil.getChance(5)) {
-                            continue;
-                        }
-
-                        // Only kill zombies not in the dungeon
-                        if (parent.isHostileTempleArea(zombie.getLocation())) {
-                            continue;
-                        }
-                    }
-
-                    zombie.setHealth(0);
-                }
-            });
-        }
-    }
-
-    private boolean graveYardTriggeredSpike = false;
-
-    @EventHandler(ignoreCancelled = true)
-    public void onLightningStrike(LightningStrikeEvent event) {
-        if (event.getLightning().isEffect() || graveYardTriggeredSpike) {
+    @EventHandler
+    public void onApocalypsePreSpawn(ApocalypsePreSpawnEvent event) {
+        if (parent.getWorld() != event.getInitialLightningStrikePoint().getWorld()) {
             return;
         }
 
-        World world = event.getWorld();
-        if (parent.getWorld().equals(world) && hasThunderstorm(world)) {
-            if (ChanceUtil.getChance(20)) {
-                graveYardTriggeredSpike = true;
-                for (int i = 0; i < 5; ++i) {
-                    world.strikeLightning(CollectionUtil.getElement(parent.headStones));
-                }
-                graveYardTriggeredSpike = false;
-            } else {
-                for (Location headStone : parent.headStones) {
-                    if (world.getEntitiesByClass(Zombie.class).size() > 1000) return;
-                    if (ChanceUtil.getChance(18)) {
-                        for (int i = 0; i < ChanceUtil.getRangedRandom(3, 6); i++) {
-                            parent.spawnAndArm(headStone, Zombie.class, true);
-                        }
-                    }
-                }
+        for (Location headStone : parent.headStones) {
+            if (!ChanceUtil.getChance(parent.getConfig().apocalypseChanceOfGraveSpawn)) {
+                continue;
+            }
+
+            if (!headStone.isChunkLoaded()) {
+                continue;
+            }
+
+            event.getLightningStrikePoints().add(headStone.clone());
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onApocalypseLightningSpawn(ApocalypseLightningStrikeSpawnEvent event) {
+        if (!parent.contains(event.getLocation())) {
+            return;
+        }
+
+        GraveYardConfig config = parent.getConfig();
+        event.setNumberOfZombies(ChanceUtil.getRangedRandom(
+                config.apocalypseNumZombiesMin,
+                config.apocalypseNumZombiesMax
+        ));
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onApocalypsePurge(ApocalypsePurgeEvent event) {
+        Iterator<Zombie> it = event.getZombies().iterator();
+        while (it.hasNext()) {
+            Location entityLoc = it.next().getLocation();
+            if (!parent.contains(entityLoc)) {
+                continue;
+            }
+
+            // Don't kill all the zombies in the grave yard
+            if (!ChanceUtil.getChance(parent.getConfig().apocalypseChanceOfPurge)) {
+                it.remove();
+                continue;
+            }
+
+            // Only kill zombies not in the dungeon
+            if (parent.isHostileTempleArea(entityLoc)) {
+                it.remove();
             }
         }
     }

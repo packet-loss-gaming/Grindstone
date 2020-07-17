@@ -69,6 +69,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
@@ -377,6 +378,10 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (checkEntity(ent)) {
             event.getDrops().removeIf(next -> next != null && next.getType() == Material.ROTTEN_FLESH);
 
+            if (ApocalypseHelper.areDropsSuppressed()) {
+                return;
+            }
+
             if (killer != null) {
                 maybeIncreaseBuff(killer);
 
@@ -385,10 +390,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 });
 
                 highScoresComponent.update(killer, ScoreTypes.APOCALYPSE_MOBS_SLAIN, 1);
-            }
-
-            if (ApocalypseHelper.areDropsSuppressed()) {
-                return;
             }
 
             if (ChanceUtil.getChance(5)) {
@@ -469,8 +470,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
         if (strikeLoc == null) return;
 
+        ApocalypsePreSpawnEvent event = new ApocalypsePreSpawnEvent(strikeLoc);
+        CommandBook.callEvent(event);
+
         // Spawn zombies at the strike location.
-        strikeSpawn(strikeLoc);
+        strikeSpawn(event);
 
         // Get players on this world.
         List<Player> applicable = location.getWorld().getPlayers();
@@ -534,21 +538,34 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         return ChanceUtil.getRandomNTimes(config.amplificationNoise, config.amplificationDescale);
     }
 
-    public void strikeSpawn(Location strikeLocation) {
-        ApocalypseLightningStrikeSpawnEvent apocalypseEvent = new ApocalypseLightningStrikeSpawnEvent(strikeLocation);
-        server.getPluginManager().callEvent(apocalypseEvent);
-        if (apocalypseEvent.isCancelled()) {
+    private void strikeSpawn(Location initialStrikeLoc, Location strikeLoc) {
+        var event = new ApocalypseLightningStrikeSpawnEvent(
+                initialStrikeLoc,
+                strikeLoc,
+                config.strikeMultiplier * config.amplificationNoise
+        );
+        CommandBook.callEvent(event);
+        if (event.isCancelled()) {
             return;
+        }
+
+        // Create a lightning effect if one was not already present.
+        if (!initialStrikeLoc.equals(strikeLoc)) {
+            strikeLoc.getWorld().strikeLightningEffect(strikeLoc);
         }
 
         ZombieSpawnConfig strikeSpawnConfig = new ZombieSpawnConfig();
         strikeSpawnConfig.allowItemPickup = true;
         strikeSpawnConfig.allowMiniBoss = true;
 
-        int multiplier = config.strikeMultiplier * config.amplificationNoise;
-        for (int i = 0; i < multiplier; ++i) {
-            spawn(strikeLocation, strikeSpawnConfig);
+        for (int i = 0; i < event.getNumberOfZombies(); ++i) {
+            spawn(strikeLoc, strikeSpawnConfig);
         }
+    }
+
+    public void strikeSpawn(ApocalypsePreSpawnEvent event) {
+        Location initialStrikeLoc = event.getInitialLightningStrikePoint();
+        event.getLightningStrikePoints().forEach((strikeLoc) -> strikeSpawn(initialStrikeLoc, strikeLoc));
     }
 
     public void bedSpawn(List<Player> players) {
@@ -699,10 +716,31 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
+    public void clearApocalypseMobs(World world) {
+        List<Zombie> zombies = world.getEntitiesByClass(Zombie.class).stream()
+                .filter(ApocalypseHelper::checkEntity)
+                .collect(Collectors.toList());
+
+        ApocalypsePurgeEvent event = new ApocalypsePurgeEvent(zombies);
+        CommandBook.callEvent(event);
+
+        ApocalypseHelper.suppressDrops(() -> {
+            for (Zombie zombie : event.getZombies()) {
+                zombie.setHealth(0);
+            }
+        });
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onThunderChange(BetterWeatherChangeEvent event) {
         if (event.getOldWeatherType() == WeatherType.THUNDERSTORM) {
             buffComponent.clearBuffs(BuffCategory.APOCALYPSE);
+
+            World world = event.getWorld();
+
+            ChatUtil.sendNotice(world.getPlayers(), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
+
+            clearApocalypseMobs(world);
         }
     }
 

@@ -32,8 +32,6 @@ import org.bukkit.util.Vector;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
-
 public class ChuckerZombie {
 
     private final CommandBook inst = CommandBook.inst();
@@ -129,8 +127,8 @@ public class ChuckerZombie {
                 nearestPlayerVel.multiply(2);
                 nearestPlayerVel.setY(ChanceUtil.getRangedRandom(.4, .8));
 
-                for (Entity entity : boss.getNearbyEntities(4, 4, 4)) {
-                    if (checkEntity(entity) && ChanceUtil.getChance(5)) {
+                for (Entity entity : boss.getLocation().getNearbyEntitiesByType(Zombie.class, 4)) {
+                    if (ChanceUtil.getChance(5)) {
                         entity.setVelocity(nearestPlayerVel);
                     }
                 }
