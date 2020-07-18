@@ -19,6 +19,8 @@ import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
@@ -68,7 +70,8 @@ import static org.bukkit.block.data.type.Chest.Type;
 @ComponentInformation(friendlyName = "Grave Yard", desc = "The home of the undead")
 @Depend(components = {
         AdminComponent.class, PlayerStateComponent.class,
-        SpectatorComponent.class, BlockStateComponent.class},
+        SpectatorComponent.class, BlockStateComponent.class,
+        HighScoresComponent.class},
         plugins = {"WorldGuard"})
 public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
@@ -86,6 +89,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     protected SpectatorComponent spectator;
     @InjectComponent
     protected BlockStateComponent blockState;
+    @InjectComponent
+    protected HighScoresComponent highScores;
 
     // Other
     protected Economy economy;
@@ -269,7 +274,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         });
     }
 
-    private void handleRewardsRoomOccupied() {
+    private void handleRewardsRoomOccupied(List<Player> playersInRewardsRoom) {
         ++rewardsRoomOccupiedTicks;
 
         if (rewardsRoomOccupiedTicks > 1) {
@@ -277,6 +282,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
 
         setRewardsDoor(Material.IRON_BARS);
+
+        for (Player player : playersInRewardsRoom) {
+            highScores.update(player, ScoreTypes.GRAVE_YARD_LOOTINGS, 1);
+        }
     }
 
     private void handleEmptyRewardsRoom() {
@@ -303,7 +312,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             return;
         }
 
-        boolean playerInRewardsRoom = false;
+        List<Player> playersInRewardsRoom = new ArrayList<>();
 
         for (LivingEntity entity : getContained(LivingEntity.class)) {
             if (!entity.isValid()) continue;
@@ -321,16 +330,16 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 fogPlayer(player);
                 localSpawn(player);
 
-                if (!playerInRewardsRoom && contains(rewards, player)) {
-                    playerInRewardsRoom = true;
+                if (contains(rewards, player)) {
+                    playersInRewardsRoom.add(player);
                 }
             }
         }
 
-        if (playerInRewardsRoom) {
-            handleRewardsRoomOccupied();
-        } else {
+        if (playersInRewardsRoom.isEmpty()) {
             handleEmptyRewardsRoom();
+        } else {
+            handleRewardsRoomOccupied(playersInRewardsRoom);
         }
     }
 

@@ -26,4 +26,5 @@ public class ScoreTypes {
     public static final ScoreType ROGUE_LEVEL = new ExpBasedScoreType(16);
     public static final ScoreType NINJA_PARKOUR_FASTEST_RUN = new TimeBasedScoreType(17, false, ScoreType.Order.ASC);
     public static final ScoreType NINJA_PARKOUR_CROSSINGS = new ScoreType(18, true, ScoreType.Order.DESC);
+    public static final ScoreType GRAVE_YARD_LOOTINGS = new ScoreType(19, true, ScoreType.Order.DESC);
 }
