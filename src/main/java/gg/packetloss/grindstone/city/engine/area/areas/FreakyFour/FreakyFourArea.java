@@ -16,6 +16,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
@@ -41,7 +42,9 @@ import java.util.List;
 import java.util.Optional;
 
 @ComponentInformation(friendlyName = "Freaky Four", desc = "The craziest bosses ever")
-@Depend(components = {AdminComponent.class, PlayerStateComponent.class, SpectatorComponent.class, EconomyComponent.class},
+@Depend(components = {
+        AdminComponent.class, PlayerStateComponent.class, SpectatorComponent.class, EconomyComponent.class,
+        HighScoresComponent.class},
         plugins = {"WorldGuard"})
 public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
 
@@ -55,6 +58,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     protected SpectatorComponent spectator;
     @InjectComponent
     protected EconomyComponent economy;
+    @InjectComponent
+    protected HighScoresComponent highScores;
 
     protected ProtectedRegion charlotte_RG, frimus_RG, dabomb_RG, snipee_RG, heads;
 

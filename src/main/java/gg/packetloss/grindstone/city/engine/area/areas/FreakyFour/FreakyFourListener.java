@@ -16,6 +16,7 @@ import gg.packetloss.grindstone.events.entity.HallowCreeperEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
@@ -300,10 +301,11 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 if (killer != null && parent.economy.isEnabled()) {
                     Economy economyHandle = parent.economy.getHandle();
 
-                    double loot = economyHandle.getBalance(killer.getName()) * parent.getConfig().bankPercent;
+                    double loot = economyHandle.getBalance(killer) * parent.getConfig().bankPercent;
                     loot = Math.max(loot, parent.getConfig().minLoot);
-                    economyHandle.depositPlayer(killer.getName(), loot);
+                    economyHandle.depositPlayer(killer, loot);
                     ChatUtil.sendNotice(killer, "The boss drops " + ChatColor.WHITE + economyHandle.format(loot));
+                    parent.highScores.update(killer, ScoreTypes.FREAKY_FOUR_KILLS, 1);
                 }
             }
             event.getDrops().clear();
