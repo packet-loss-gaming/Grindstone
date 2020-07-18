@@ -10,6 +10,9 @@ import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
 import gg.packetloss.grindstone.city.engine.area.PersistentArena;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.ScoreType;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
@@ -30,7 +33,6 @@ import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -56,7 +58,8 @@ import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemN
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Frostborn", desc = "The frozen king")
-@Depend(components = {AdminComponent.class, BlockStateComponent.class, SpectatorComponent.class},
+@Depend(components = {
+        AdminComponent.class, BlockStateComponent.class, SpectatorComponent.class, HighScoresComponent.class},
         plugins = {"WorldGuard"})
 public class FrostbornArea extends AreaComponent<FrostbornConfig> implements PersistentArena {
     protected static final int BASE_RAGE = -10;
@@ -68,8 +71,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     protected BlockStateComponent blockState;
     @InjectComponent
     protected SpectatorComponent spectator;
-
-    protected Economy economy;
+    @InjectComponent
+    protected HighScoresComponent highScores;
 
     protected ProtectedRegion gate_RG, entrance_RG;
 
@@ -600,10 +603,16 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         // Gather the players in the arena
         Collection<Player> players = getContainedParticipants();
 
-        // Clear the players inventories
+        ScoreType scoreType = players.size() == 1
+                ? ScoreTypes.FROSTBORN_SOLO_KILLS
+                : ScoreTypes.FROSTBORN_TEAM_KILLS;
+
+        // Clear the players inventories and update high scores
         for (Player player : players) {
             player.getInventory().setArmorContents(NO_ARMOR);
             player.getInventory().clear();
+
+            highScores.update(player, scoreType, 1);
         }
 
         // Clear items on the ground, and any lingering snowballs and bats

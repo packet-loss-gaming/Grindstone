@@ -30,4 +30,6 @@ public class ScoreTypes {
     public static final ScoreType FREAKY_FOUR_KILLS = new ScoreType(20, true, ScoreType.Order.DESC);
     public static final ScoreType PATIENT_X_SOLO_KILLS = new ScoreType(21, true, ScoreType.Order.DESC);
     public static final ScoreType PATIENT_X_TEAM_KILLS = new ScoreType(22, true, ScoreType.Order.DESC);
+    public static final ScoreType FROSTBORN_SOLO_KILLS = new ScoreType(23, true, ScoreType.Order.DESC);
+    public static final ScoreType FROSTBORN_TEAM_KILLS = new ScoreType(24, true, ScoreType.Order.DESC);
 }
