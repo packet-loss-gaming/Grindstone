@@ -18,6 +18,8 @@ import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
+import gg.packetloss.grindstone.highscore.ScoreType;
+import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
@@ -396,6 +398,10 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 }
 
                 Location target = parent.getCentralLoc();
+                ScoreType scoreType = contained.size() == 1
+                        ? ScoreTypes.PATIENT_X_SOLO_KILLS
+                        : ScoreTypes.PATIENT_X_TEAM_KILLS;
+
                 for (Player player : contained) {
                     player.teleport(target);
                     Vector v = new Vector(
@@ -409,6 +415,8 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                         v.setZ(0);
                     }
                     player.setVelocity(v);
+
+                    parent.highScores.update(player, scoreType, 1);
                 }
                 CuboidRegion rg = new CuboidRegion(parent.drops.getMinimumPoint(), parent.drops.getMaximumPoint());
                 DropPartyTask task = new DropPartyTask(

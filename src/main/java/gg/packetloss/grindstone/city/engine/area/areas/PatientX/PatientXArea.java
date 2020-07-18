@@ -14,6 +14,7 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.city.engine.area.AreaComponent;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.optimization.OptimizedZombieFactory;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
@@ -45,7 +46,8 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Patient X Arena", desc = "The mad boss of Ice")
-@Depend(components = {AdminComponent.class, PlayerStateComponent.class, SpectatorComponent.class},
+@Depend(components = {
+        AdminComponent.class, PlayerStateComponent.class, SpectatorComponent.class, HighScoresComponent.class},
         plugins = {"WorldGuard"})
 public class PatientXArea extends AreaComponent<PatientXConfig> {
 
@@ -55,6 +57,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     protected PlayerStateComponent playerState;
     @InjectComponent
     protected SpectatorComponent spectator;
+    @InjectComponent
+    protected HighScoresComponent highScores;
 
     protected static final Random random = new Random();
     protected static final int groundLevel = 54;
