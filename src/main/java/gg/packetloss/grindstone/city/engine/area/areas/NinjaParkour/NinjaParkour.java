@@ -243,7 +243,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
     }
 
     private long getBestTime() {
-        return highScores.getBest(ScoreTypes.FASTEST_NINJA_PARKOUR).map(ScoreEntry::getScore).orElse(Long.MAX_VALUE);
+        return highScores.getBest(ScoreTypes.NINJA_PARKOUR_FASTEST_RUN).map(ScoreEntry::getScore).orElse(Long.MAX_VALUE);
     }
 
     private static final DecimalFormat FINE_TIME_FORMATTER = new DecimalFormat("0.000");
@@ -296,7 +296,8 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
             }
         });
 
-        highScores.update(player, ScoreTypes.FASTEST_NINJA_PARKOUR, elapsedTime);
+        highScores.update(player, ScoreTypes.NINJA_PARKOUR_CROSSINGS, 1);
+        highScores.update(player, ScoreTypes.NINJA_PARKOUR_FASTEST_RUN, elapsedTime);
 
         reset(player);
     }
