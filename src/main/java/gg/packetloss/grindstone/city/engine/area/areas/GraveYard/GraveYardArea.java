@@ -464,12 +464,17 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             }
             return;
         } else if (isTorchArea(playerLoc)) {
+            if (!ChanceUtil.getChance(5) && getContained(torchArea, Zombie.class).size() >= 10) {
+                return;
+            }
+
             // Redirect local spawns to be the end of the hall way
             Location spawnPoint = new Location(world, -223, 56, -755);
 
-            for (int i = ChanceUtil.getRangedRandom(5, 10); i > 0; --i) {
+            for (int i = ChanceUtil.getRangedRandom(2, 5); i > 0; --i) {
                 Zombie z = spawnAndArm(spawnPoint, Zombie.class, true);
                 z.setTarget(player);
+                z.setHealth(10);
 
                 try {
                     AttributeBook.setAttribute(z, AttributeBook.Attribute.ATTACK_KNOCKBACK, 10);
@@ -477,6 +482,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                     e.printStackTrace();
                 }
             }
+            return;
         }
 
         if (!ChanceUtil.getChance(3)) return;
