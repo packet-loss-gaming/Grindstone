@@ -148,6 +148,10 @@ public class SkyWorldCoreComponent extends BukkitComponent implements Listener {
     }
 
     public void expelPlayer(Player player) {
+        if (!isSkyWorld(player.getWorld())) {
+            return;
+        }
+
         player.teleportAsync(managedWorld.get(ManagedWorldGetQuery.CITY).getSpawnLocation()).thenAccept(teleported -> {
             if (teleported) {
                 ChatUtil.sendNotice(player, "Your host has left, thanks for visiting!");
