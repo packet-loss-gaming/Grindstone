@@ -472,7 +472,16 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             Location spawnPoint = new Location(world, -223, 56, -755);
 
             for (int i = ChanceUtil.getRangedRandom(2, 5); i > 0; --i) {
-                Zombie z = spawnAndArm(spawnPoint, Zombie.class, true);
+                Zombie z = spawnAndArm(
+                        spawnPoint.clone().add(
+                                ChanceUtil.getRangedRandom(-2, 2),
+                                0,
+                                0
+                        ),
+                        Zombie.class,
+                        true
+                );
+
                 z.setTarget(player);
                 z.setHealth(10);
 
