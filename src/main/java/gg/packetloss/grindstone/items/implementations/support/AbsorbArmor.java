@@ -47,7 +47,7 @@ public class AbsorbArmor {
             // Inform the player about the armor's effect
             double removed = extra - newExtra;
             if (removed >= 1) {
-                ChatUtil.sendNotice(player, "Your armor absorbs " + (int) removed + " damaged.");
+                ChatUtil.sendNotice(player, "Your armor absorbs " + (int) removed + " damage.");
             }
         }
     }
