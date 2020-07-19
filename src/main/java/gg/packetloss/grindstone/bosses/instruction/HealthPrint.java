@@ -13,7 +13,7 @@ import com.skelril.OSBL.instruction.DamagedInstruction;
 import com.skelril.OSBL.instruction.InstructionResult;
 import com.skelril.OSBL.util.AttackDamage;
 import com.skelril.OSBL.util.DamageSource;
-import gg.packetloss.grindstone.city.engine.combat.PvMComponent;
+import gg.packetloss.grindstone.world.type.city.combat.PvMComponent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;

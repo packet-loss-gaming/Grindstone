@@ -2,7 +2,6 @@ package gg.packetloss.grindstone.guild.listener;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.click.ClickType;
 import gg.packetloss.grindstone.events.DoubleClickEvent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
@@ -27,6 +26,7 @@ import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
+import gg.packetloss.grindstone.world.type.city.combat.PvPComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.entity.*;

@@ -6,9 +6,9 @@
 
 package gg.packetloss.grindstone.prayer.PrayerFX;
 
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.world.type.city.combat.PvPComponent;
 import org.apache.commons.lang.Validate;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;

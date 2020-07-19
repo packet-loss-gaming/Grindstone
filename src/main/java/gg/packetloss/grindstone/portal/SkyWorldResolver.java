@@ -1,9 +1,9 @@
 package gg.packetloss.grindstone.portal;
 
-import gg.packetloss.grindstone.city.engine.SkyWorldCoreComponent;
 import gg.packetloss.grindstone.warps.WarpsComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
+import gg.packetloss.grindstone.world.type.sky.SkyWorldCoreComponent;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
