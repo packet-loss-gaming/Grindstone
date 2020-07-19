@@ -509,6 +509,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             Location ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
             if (ls.getBlock().getType().isSolid()) {
                 ls = player.getLocation();
+            } else {
+                ls = ls.add(.5, 0, .5);
             }
 
             spawnAndArm(ls, Zombie.class, true);
