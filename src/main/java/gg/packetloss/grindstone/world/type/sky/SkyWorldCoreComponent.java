@@ -77,6 +77,8 @@ public class SkyWorldCoreComponent extends BukkitComponent implements Listener {
 
             Player player = Bukkit.getPlayer(senderID);
             assert player != null;
+
+            ChatUtil.sendNotice(player, invitee.getDisplayName() + " accepted your invite.");
             return invitee.teleportAsync(player.getLocation());
         }
 

@@ -47,6 +47,8 @@ public class SkyCommands {
                 Text.of(ChatColor.BLUE, "ACCEPT"),
                 "."
         ).build());
+
+        ChatUtil.sendNotice(sender, "Invite sent.");
     }
 
     @Command(name = "accept", desc = "Accept an invite to the sky world")
