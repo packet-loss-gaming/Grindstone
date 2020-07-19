@@ -272,6 +272,8 @@ public class EnvironmentUtil {
             String name = material.name();
             if (name.endsWith("_BUTTON")) {
                 newInteractiveBlocks.add(material);
+            } else if (name.endsWith("_BED")) {
+                newInteractiveBlocks.add(material);
             }
         }
 
