@@ -211,9 +211,9 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             }
         });
 
-        int maxX = region.getMaximumPoint().getBlockX();
-        // Subtract 1 because the starting area isn't included in the region, so we could get impossible jumps
-        int minX = region.getMinimumPoint().getBlockX() - 1;
+        // Add 1 because the starting area isn't included in the region, so we could get impossible jumps
+        int maxX = region.getMaximumPoint().getBlockX() + 1;
+        int minX = region.getMinimumPoint().getBlockX();
 
         int lastZ = initialZ;
 
