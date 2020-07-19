@@ -256,7 +256,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         Player player = event.getPlayer();
         if (parent.contains(parent.parkour, player)) {
             event.setCancelled(true);
-        } else if (parent.isHotTorchArea(player.getLocation())) {
+        } else if (parent.isTorchArea(player.getLocation())) {
             event.setCancelled(true);
         }
     }
