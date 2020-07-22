@@ -57,7 +57,7 @@ repositories {
 
 dependencies {
     compileOnly group: 'com.garbagemule', name: 'mobarena', version: '0.104.3-SNAPSHOT'
-    compileOnly group: 'gg.packetloss', name: 'Pitfall', version: '2.1.2'
+    compileOnly group: 'gg.packetloss', name: 'pitfall', version: '2.1.2'
 
     implementation group: 'gg.packetloss', name: 'OSBL', version: '1.1'
     implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.16.1.0'
