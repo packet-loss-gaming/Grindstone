@@ -19,7 +19,7 @@ repositories {
 
     maven {
         name 'Packet Loss Gaming Repository'
-        url 'http://service.packetloss.gg/maven/'
+        url 'https://mvn.packetloss.gg/'
     }
     maven {
         name 'Paper Repository'
@@ -59,7 +59,7 @@ dependencies {
     compileOnly group: 'com.garbagemule', name: 'mobarena', version: '0.104.3-SNAPSHOT'
     compileOnly group: 'gg.packetloss', name: 'Pitfall', version: '2.1.2'
 
-    implementation group: 'gg.packetloss', name: 'OSBL', version: '1.1-SNAPSHOT'
+    implementation group: 'gg.packetloss', name: 'OSBL', version: '1.1'
     implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.16.1.0'
 
     compileOnly group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.16.1-R0.1-SNAPSHOT'
