@@ -130,5 +130,8 @@ shadowJar {
         relocate ("gg.packetloss.bukkittext", "gg.packetloss.grindstone.shaded.bukkittext") {
             include(dependency("gg.packetloss:bukkit-text"))
         }
+        relocate ("gg.packetloss.hackbook", "gg.packetloss.grindstone.shaded.hackbook") {
+            include(dependency("gg.packetloss:hackbook"))
+        }
     }
 }
