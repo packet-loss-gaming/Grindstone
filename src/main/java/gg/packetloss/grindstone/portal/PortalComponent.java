@@ -13,6 +13,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.firstlogin.FirstLoginComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.warps.WarpsComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
@@ -121,7 +122,7 @@ public class PortalComponent extends BukkitComponent implements Listener {
                 continue;
             }
 
-            if (entity instanceof Tameable) {
+            if (EntityUtil.willFollowOwner(entity)) {
                 if (entity instanceof Sittable && ((Sittable) entity).isSitting()) {
                     continue;
                 }

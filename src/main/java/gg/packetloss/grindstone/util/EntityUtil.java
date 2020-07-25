@@ -85,4 +85,20 @@ public class EntityUtil {
     public static boolean isHostileMobOrPlayer(Entity entity) {
         return isHostileMob(entity) || entity instanceof Player;
     }
+
+    public static boolean willFollowOwner(Entity entity) {
+        if (entity instanceof Wolf) {
+            return true;
+        }
+
+        if (entity instanceof Cat) {
+            return true;
+        }
+
+        if (entity instanceof Parrot) {
+            return true;
+        }
+
+        return false;
+    }
 }
