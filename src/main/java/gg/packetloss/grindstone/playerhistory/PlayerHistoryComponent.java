@@ -56,6 +56,9 @@ public class PlayerHistoryComponent extends BukkitComponent implements Listener 
     public void onPlayerJoin(AsyncPlayerPreLoginEvent event) {
         UUID playerID = event.getUniqueId();
         try {
+            // Players can sometimes join before they've fully disconnected
+            playerHistory.remove(playerID);
+
             Optional<Long> optOnlineTime = MySQLHandle.getOnlineTime(playerID);
             if (optOnlineTime.isPresent()) {
                 getHistory(playerID).loadExistingPlayer(optOnlineTime.get());
