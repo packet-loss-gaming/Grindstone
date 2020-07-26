@@ -15,6 +15,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -236,13 +237,9 @@ public class LocationUtil {
 
     public static List<Player> getPlayersStandingOnRegion(World world, ProtectedRegion region,
                                                           boolean includeInRegion) {
-
         List<Player> playerList = new ArrayList<>();
         for (Player player : world.getPlayers()) {
-            Location loc = player.getLocation();
-            BlockVector3 vec = BlockVector3.at(loc.getX(), loc.getY(), loc.getZ());
-
-            if (region.contains(vec.add(0, -1, 0)) || region.contains(vec.add(0, -2, 0))) {
+            if (isStandingOn(world, region, player)) {
                 playerList.add(player);
             }
 
@@ -250,31 +247,55 @@ public class LocationUtil {
                 continue;
             }
 
-            if (region.contains(vec) || region.contains(vec.add(0, 1, 0))) {
+            if (isStandingIn(world, region, player)) {
                 playerList.add(player);
             }
         }
+
         return playerList;
     }
 
-    public static boolean isBelowPlayer(World world, ProtectedRegion region) {
-
-        for (Player player : world.getPlayers()) {
-            Block block = player.getLocation().getBlock();
-            if (region.contains(block.getX(), block.getY() - 1, block.getZ())
-                    || region.contains(block.getX(), block.getY() - 2, block.getZ())) {
-                return true;
-            }
+    public static boolean isImmediatelyAbove(World world, ProtectedRegion region, Location location) {
+        if (!world.equals(location.getWorld())) {
+            return false;
         }
+
+        return region.contains(location.getBlockX(), location.getBlockY() - 1, location.getBlockZ());
+    }
+
+    public static boolean isStandingOn(World world, ProtectedRegion region, Entity entity) {
+        if (!world.equals(entity.getWorld())) {
+            return false;
+        }
+
+        Location entityLoc = entity.getLocation();
+        if (region.contains(entityLoc.getBlockX(), entityLoc.getBlockY() - 1, entityLoc.getBlockZ())) {
+            return true;
+        }
+        if (region.contains(entityLoc.getBlockX(), entityLoc.getBlockY() - 2, entityLoc.getBlockZ())) {
+            return true;
+        }
+
         return false;
     }
 
-    public static boolean isBelowPlayer(World world, ProtectedRegion region, Player player) {
+    public static boolean isStandingIn(World world, ProtectedRegion region, Entity entity) {
+        if (!world.equals(entity.getWorld())) {
+            return false;
+        }
 
-        Block block = player.getLocation().getBlock();
-        return (region.contains(block.getX(), block.getY() - 1, block.getZ())
-                || region.contains(block.getX(), block.getY() - 2, block.getZ()))
-                && world.equals(player.getWorld());
+        Location entityLoc = entity.getLocation();
+        if (region.contains(entityLoc.getBlockX(), entityLoc.getBlockY(), entityLoc.getBlockZ())) {
+            return true;
+        }
+        if (entity instanceof LivingEntity) {
+            Location eyeLoc = ((LivingEntity) entity).getEyeLocation();
+            if (region.contains(eyeLoc.getBlockX(), eyeLoc.getBlockY(), eyeLoc.getBlockZ())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static boolean isCloseToPlayer(Block block, int distance) {

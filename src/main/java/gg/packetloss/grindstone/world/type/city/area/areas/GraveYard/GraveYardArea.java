@@ -436,6 +436,20 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         blockState.popBlocksOlderThan(BlockStateKind.GRAVEYARD, TimeUnit.SECONDS.toMillis(27));
     }
 
+    private boolean isAcceptableLocalSpawnLocation(Location location) {
+        for (ProtectedRegion generatedParkour : parkourGen) {
+            if (LocationUtil.isImmediatelyAbove(world, generatedParkour, location)) {
+                return false;
+            }
+        }
+
+        if (location.getBlock().getType().isSolid()) {
+            return false;
+        }
+
+        return true;
+    }
+
     private void localSpawn(Player player) {
         Location playerLoc = player.getLocation();
         if (isRewardsArea(playerLoc)) {
@@ -498,7 +512,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         // Don't spawn zombies on players doing parkour
         for (ProtectedRegion generatedParkour : parkourGen) {
-            if (LocationUtil.isBelowPlayer(world, generatedParkour, player)) {
+            if (LocationUtil.isStandingOn(world, generatedParkour, player)) {
                 return;
             }
         }
@@ -507,10 +521,11 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
             Location ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
-            if (ls.getBlock().getType().isSolid()) {
-                ls = player.getLocation();
-            } else {
+
+            if (isAcceptableLocalSpawnLocation(ls)) {
                 ls = ls.add(.5, 0, .5);
+            } else {
+                ls = player.getLocation();
             }
 
             spawnAndArm(ls, Zombie.class, true);
