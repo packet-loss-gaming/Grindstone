@@ -6,14 +6,14 @@
 
 package gg.packetloss.grindstone.bosses.impl;
 
-import com.skelril.OSBL.bukkit.BukkitBossDeclaration;
-import com.skelril.OSBL.bukkit.entity.BukkitBoss;
-import com.skelril.OSBL.bukkit.util.BukkitUtil;
-import com.skelril.OSBL.entity.LocalControllable;
-import com.skelril.OSBL.entity.LocalEntity;
-import com.skelril.OSBL.instruction.InstructionDispatch;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.openboss.bukkit.BukkitBossDeclaration;
+import gg.packetloss.openboss.bukkit.entity.BukkitBoss;
+import gg.packetloss.openboss.bukkit.util.BukkitUtil;
+import gg.packetloss.openboss.entity.LocalControllable;
+import gg.packetloss.openboss.entity.LocalEntity;
+import gg.packetloss.openboss.instruction.InstructionDispatch;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;

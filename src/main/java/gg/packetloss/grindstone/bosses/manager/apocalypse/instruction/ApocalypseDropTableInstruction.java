@@ -6,16 +6,16 @@
 
 package gg.packetloss.grindstone.bosses.manager.apocalypse.instruction;
 
-import com.skelril.OSBL.bukkit.util.BukkitUtil;
-import com.skelril.OSBL.entity.EntityDetail;
-import com.skelril.OSBL.entity.LocalControllable;
-import com.skelril.OSBL.instruction.InstructionResult;
-import com.skelril.OSBL.instruction.UnbindInstruction;
 import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
 import gg.packetloss.grindstone.util.dropttable.DropTable;
 import gg.packetloss.grindstone.util.dropttable.OSBLKillInfo;
 import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
+import gg.packetloss.openboss.bukkit.util.BukkitUtil;
+import gg.packetloss.openboss.entity.EntityDetail;
+import gg.packetloss.openboss.entity.LocalControllable;
+import gg.packetloss.openboss.instruction.InstructionResult;
+import gg.packetloss.openboss.instruction.UnbindInstruction;
 import org.bukkit.entity.LivingEntity;
 
 public class ApocalypseDropTableInstruction<T extends EntityDetail> extends UnbindInstruction<T> {

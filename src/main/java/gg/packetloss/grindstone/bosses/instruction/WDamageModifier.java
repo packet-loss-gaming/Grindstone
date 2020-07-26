@@ -6,14 +6,14 @@
 
 package gg.packetloss.grindstone.bosses.instruction;
 
-import com.skelril.OSBL.bukkit.util.BukkitAttackDamage;
-import com.skelril.OSBL.entity.LocalControllable;
-import com.skelril.OSBL.entity.LocalEntity;
-import com.skelril.OSBL.instruction.DamageInstruction;
-import com.skelril.OSBL.instruction.InstructionResult;
-import com.skelril.OSBL.util.AttackDamage;
 import gg.packetloss.grindstone.bosses.detail.WBossDetail;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.openboss.bukkit.util.BukkitAttackDamage;
+import gg.packetloss.openboss.entity.LocalControllable;
+import gg.packetloss.openboss.entity.LocalEntity;
+import gg.packetloss.openboss.instruction.DamageInstruction;
+import gg.packetloss.openboss.instruction.InstructionResult;
+import gg.packetloss.openboss.util.AttackDamage;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 public class WDamageModifier extends DamageInstruction<WBossDetail> {

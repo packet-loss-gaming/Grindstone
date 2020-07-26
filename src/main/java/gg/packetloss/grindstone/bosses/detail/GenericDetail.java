@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.bosses.detail;
 
-import com.skelril.OSBL.entity.EntityDetail;
+import gg.packetloss.openboss.entity.EntityDetail;
 
 public class GenericDetail implements EntityDetail {
 }

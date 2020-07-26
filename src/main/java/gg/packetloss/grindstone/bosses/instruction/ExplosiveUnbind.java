@@ -6,12 +6,12 @@
 
 package gg.packetloss.grindstone.bosses.instruction;
 
-import com.skelril.OSBL.bukkit.util.BukkitUtil;
-import com.skelril.OSBL.entity.EntityDetail;
-import com.skelril.OSBL.entity.LocalControllable;
-import com.skelril.OSBL.instruction.InstructionResult;
-import com.skelril.OSBL.instruction.UnbindInstruction;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
+import gg.packetloss.openboss.bukkit.util.BukkitUtil;
+import gg.packetloss.openboss.entity.EntityDetail;
+import gg.packetloss.openboss.entity.LocalControllable;
+import gg.packetloss.openboss.instruction.InstructionResult;
+import gg.packetloss.openboss.instruction.UnbindInstruction;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 

@@ -59,7 +59,7 @@ dependencies {
     compileOnly group: 'com.garbagemule', name: 'mobarena', version: '0.104.3-SNAPSHOT'
     compileOnly group: 'gg.packetloss', name: 'pitfall', version: '2.1.2'
 
-    implementation group: 'gg.packetloss', name: 'OSBL', version: '1.1'
+    implementation group: 'gg.packetloss', name: 'open-boss', version: '1.2'
     implementation group: 'gg.packetloss', name: 'hackbook', version: '1.16.1.0'
     implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.16.1.0'
 
@@ -118,7 +118,7 @@ artifacts {
 
 shadowJar {
     dependencies {
-        relocate ("com.skelril.OSBL", "gg.packetloss.grindstone.shaded.OSBL") {
+        relocate ("gg.packetloss.openboss", "gg.packetloss.grindstone.shaded.OSBL") {
             include(dependency("gg.packetloss:OSBL"))
         }
         relocate ("com.zaxxer.hikari", "gg.packetloss.grindstone.shaded.hikari") {

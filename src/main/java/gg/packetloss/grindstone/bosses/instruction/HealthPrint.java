@@ -6,14 +6,14 @@
 
 package gg.packetloss.grindstone.bosses.instruction;
 
-import com.skelril.OSBL.bukkit.util.BukkitUtil;
-import com.skelril.OSBL.entity.EntityDetail;
-import com.skelril.OSBL.entity.LocalControllable;
-import com.skelril.OSBL.instruction.DamagedInstruction;
-import com.skelril.OSBL.instruction.InstructionResult;
-import com.skelril.OSBL.util.AttackDamage;
-import com.skelril.OSBL.util.DamageSource;
 import gg.packetloss.grindstone.world.type.city.combat.PvMComponent;
+import gg.packetloss.openboss.bukkit.util.BukkitUtil;
+import gg.packetloss.openboss.entity.EntityDetail;
+import gg.packetloss.openboss.entity.LocalControllable;
+import gg.packetloss.openboss.instruction.DamagedInstruction;
+import gg.packetloss.openboss.instruction.InstructionResult;
+import gg.packetloss.openboss.util.AttackDamage;
+import gg.packetloss.openboss.util.DamageSource;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
