@@ -118,8 +118,8 @@ artifacts {
 
 shadowJar {
     dependencies {
-        relocate ("gg.packetloss.openboss", "gg.packetloss.grindstone.shaded.OSBL") {
-            include(dependency("gg.packetloss:OSBL"))
+        relocate ("gg.packetloss.openboss", "gg.packetloss.grindstone.shaded.openboss") {
+            include(dependency("gg.packetloss:open-boss"))
         }
         relocate ("com.zaxxer.hikari", "gg.packetloss.grindstone.shaded.hikari") {
             include(dependency("com.zaxxer:HikariCP"))
