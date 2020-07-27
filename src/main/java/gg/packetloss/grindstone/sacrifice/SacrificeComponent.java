@@ -456,8 +456,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
         session.addItems(getCalculatedLoot(player, -1, totalValue));
 
-        while (pInventory.firstEmpty() != -1 && session.hasItems()) {
-            pInventory.addItem(session.pollItem());
+        while (session.hasItems()) {
+            ItemStack remainder = pInventory.addItem(session.pollItem()).get(0);
+            if (remainder != null) {
+                session.addItem(remainder);
+                break;
+            }
         }
 
         if (session.hasItems()) {
