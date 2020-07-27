@@ -46,7 +46,7 @@ class SacrificialRegistry {
     }
 
     private boolean getChance(CommandSender sender, int modifier, double rarityL) {
-        boolean hasEfficiency = sender.hasPermission("aurora.sacrifice.efficiency");
+        boolean hasEfficiency = sender.hasPermission("aurora.tome.sacrifice");
         int baseChance = (int) (hasEfficiency ? rarityL * 100 : rarityL * 200);
 
         return ChanceUtil.getChance(Math.max(1, baseChance - modifier));
