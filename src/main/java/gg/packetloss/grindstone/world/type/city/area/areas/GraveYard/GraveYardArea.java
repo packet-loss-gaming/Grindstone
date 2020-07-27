@@ -105,7 +105,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             Material.ROSE_BUSH,
             Material.DANDELION,
             Material.DIRT,
-            Material.TORCH,
             Material.CRACKED_STONE_BRICKS,
             Material.COBWEB,
             Material.OAK_LEAVES
