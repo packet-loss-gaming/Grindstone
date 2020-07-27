@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.sacrifice;
 
-import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import org.bukkit.Location;
@@ -27,6 +27,7 @@ class SacrificialPitChecker {
     private final Predicate<Block> isSacrificeBlock;
     private final Set<BlockVector3> points = new HashSet<>();
 
+    private BlockVector2 minimumPoint = BlockVector2.at(Integer.MAX_VALUE, Integer.MAX_VALUE);
     private boolean foundWrongDepth = false;
 
     public SacrificialPitChecker(Location origin, Predicate<Block> isSacrificeBlock) {
@@ -72,9 +73,18 @@ class SacrificialPitChecker {
 
         points.add(blockCoords);
 
+        minimumPoint = BlockVector2.at(
+                Math.min(blockCoords.getBlockX(), minimumPoint.getBlockX()),
+                Math.min(blockCoords.getBlockZ(), minimumPoint.getBlockZ())
+        );
+
         for (BlockFace face : new BlockFace[] { BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST }) {
             crawlBlocks(block.getRelative(face));
         }
+    }
+
+    public BlockVector2 getIdentifyingPoint() {
+        return minimumPoint;
     }
 
     public boolean isValid() {
@@ -83,19 +93,20 @@ class SacrificialPitChecker {
         return !foundWrongDepth && MIN_AREA <= points.size() && points.size() <= MAX_AREA;
     }
 
-    public void ignite() {
+    private void fillWith(Material type) {
         for (BlockVector3 point : points) {
             Block block = origin.getWorld().getBlockAt(point.getBlockX(), point.getBlockY(), point.getBlockZ());
-            block.setType(Material.FIRE);
-        }
-
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-            for (BlockVector3 point : points) {
-                Block block = origin.getWorld().getBlockAt(point.getBlockX(), point.getBlockY(), point.getBlockZ());
-                if (block.getType() == Material.FIRE) {
-                    block.setType(Material.AIR);
-                }
+            if (block.getType() != type) {
+                block.setType(type);
             }
-        }, 20 * 4);
+        }
+    }
+
+    public void ignite() {
+        fillWith(Material.FIRE);
+    }
+
+    public void extinguish() {
+        fillWith(Material.AIR);
     }
 }

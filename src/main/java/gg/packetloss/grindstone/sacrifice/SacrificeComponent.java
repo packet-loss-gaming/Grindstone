@@ -14,6 +14,7 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.NestedCommand;
+import com.sk89q.worldedit.math.BlockVector2;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -33,6 +34,8 @@ import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.task.DebounceHandle;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -122,6 +125,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
             return sacrificialBlockMaterial;
         }
+
+        @Setting("sacrificial-debounce-seconds")
+        public int debounceSeconds = 5;
     }
 
     private void addEntityTaskId(Entity entity, int taskId) {
@@ -293,6 +299,62 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         surrounding.add(BlockFace.WEST);
     }
 
+    private final Map<UUID, DebounceHandle<List<ItemStack>>> playerToSacrificeHandle = new HashMap<>();
+
+    private DebounceHandle<List<ItemStack>> createPlayerHandle(Player player) {
+        player.sendMessage(ChatColor.GOLD + "An ancient fire ignites.");
+
+        TaskBuilder.Debounce<List<ItemStack>> builder = TaskBuilder.debounce();
+        builder.setWaitTime(20 * config.debounceSeconds);
+
+        builder.setInitialValue(new ArrayList<>());
+        builder.setUpdateFunction((oldList, newList) -> {
+            oldList.addAll(newList);
+            return oldList;
+        });
+
+        builder.setBounceAction((items) -> {
+            sacrifice(player, items);
+            playerToSacrificeHandle.remove(player.getUniqueId());
+        });
+
+        return builder.build();
+    }
+
+    private DebounceHandle<List<ItemStack>> getOrCreatePlayerHandle(Player player) {
+        UUID playerID = player.getUniqueId();
+        if (!playerToSacrificeHandle.containsKey(playerID)) {
+            playerToSacrificeHandle.put(playerID, createPlayerHandle(player));
+        }
+
+        return playerToSacrificeHandle.get(playerID);
+    }
+
+    private final Map<BlockVector2, DebounceHandle<Integer>> pointToFireHandle = new HashMap<>();
+
+    private DebounceHandle<Integer> createFireHandle(BlockVector2 point, SacrificialPitChecker checker) {
+        TaskBuilder.Debounce<Integer> builder = TaskBuilder.debounce();
+        builder.setWaitTime(20 * config.debounceSeconds);
+
+        builder.setInitialValue(0);
+        builder.setUpdateFunction(Integer::sum);
+
+        builder.setBounceAction((numRelights) -> {
+            checker.extinguish();
+            pointToFireHandle.remove(point);
+        });
+
+        return builder.build();
+    }
+
+    private DebounceHandle<Integer> getOrCreateFireHandle(BlockVector2 point, SacrificialPitChecker checker) {
+        if (!pointToFireHandle.containsKey(point)) {
+            pointToFireHandle.put(point, createFireHandle(point, checker));
+        }
+
+        return pointToFireHandle.get(point);
+    }
+
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
 
@@ -316,13 +378,15 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
                     PlayerSacrificeItemEvent sacrificeItemEvent = new PlayerSacrificeItemEvent(player, itemLoc, item.getItemStack());
                     server.getPluginManager().callEvent(sacrificeItemEvent);
                     if (sacrificeItemEvent.isCancelled()) return;
-                    sacrifice(player, sacrificeItemEvent.getItemStack());
 
                     checker.ignite();
+
+                    getOrCreateFireHandle(checker.getIdentifyingPoint(), checker).accept(1);
+                    getOrCreatePlayerHandle(player).accept(List.of(sacrificeItemEvent.getItemStack()));
+
                     removeEntity(item);
                     item.remove();
                     server.getScheduler().cancelTask(id);
-                    player.sendMessage(ChatColor.GOLD + "An ancient fire ignites.");
                 }
             }
         }, 0, 1); // Start at 0 ticks and repeat every 1 ticks
@@ -361,22 +425,30 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }
     }
 
-    private void sacrifice(Player player, ItemStack item) {
-        if (item.getType() == Material.AIR) return;
-
+    private void sacrifice(Player player, List<ItemStack> items) {
         PlayerInventory pInventory = player.getInventory();
 
-        final double value = registry.getValue(item);
-        if (value < 0) {
-            pInventory.addItem(item);
+        double totalValue = 0;
+
+        for (ItemStack itemStack : items) {
+            double value = registry.getValue(itemStack);
+            if (value <= 0) {
+                pInventory.addItem(itemStack);
+                continue;
+            }
+
+            totalValue += value;
+        }
+
+        if (totalValue <= 0) {
             ChatUtil.sendError(player, "The gods reject your offer.");
             return;
         }
 
-        highScores.update(player, ScoreTypes.SACRIFICED_VALUE, (int) Math.ceil(value));
+        highScores.update(player, ScoreTypes.SACRIFICED_VALUE, (int) Math.ceil(totalValue));
 
         SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
-        session.addItems(getCalculatedLoot(player, -1, value));
+        session.addItems(getCalculatedLoot(player, -1, totalValue));
 
         while (pInventory.firstEmpty() != -1 && session.hasItems()) {
             pInventory.addItem(session.pollItem());
@@ -387,7 +459,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             ChatUtil.sendNotice(player, " - Punch a chest to fill it with items");
         }
 
-        if (ChanceUtil.getChance(5) && value >= 500) {
+        if (ChanceUtil.getChance(5) && totalValue >= 500) {
 
             PrayerType prayerType;
             switch (ChanceUtil.getRandom(7)) {
