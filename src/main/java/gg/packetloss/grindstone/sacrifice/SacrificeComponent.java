@@ -60,7 +60,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -262,8 +261,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         if (session.hasItems() && clicked instanceof Chest) {
             final int starting = session.remaining();
             Inventory inventory = ((Chest) clicked).getInventory();
-            while (inventory.firstEmpty() != -1 && session.hasItems()) {
-                inventory.addItem(session.pollItem());
+            while (session.hasItems()) {
+                ItemStack remainder = inventory.addItem(session.pollItem()).get(0);
+                if (remainder != null) {
+                    session.addItem(remainder);
+                    break;
+                }
             }
             final int ending = session.remaining();
 
@@ -540,7 +543,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     private static class SacrificeSession extends PersistentSession {
         public static final long MAX_AGE = TimeUnit.MINUTES.toMillis(30);
 
-        private Queue<ItemStack> queue = new ConcurrentLinkedQueue<>();
+        private List<ItemStack> queue = new ArrayList<>(); // technically a stack, but this performs better
 
         protected SacrificeSession() {
             super(MAX_AGE);
@@ -551,12 +554,20 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             return sender instanceof Player ? (Player) sender : null;
         }
 
+        public void addItem(ItemStack itemStack) {
+            queue.add(itemStack);
+        }
+
         public void addItems(List<ItemStack> itemStacks) {
             queue.addAll(itemStacks);
         }
 
         public ItemStack pollItem() {
-            return queue.poll();
+            ItemStack result = queue.remove(queue.size() - 1);
+            if (queue.isEmpty()) {
+                queue = new ArrayList<>(); // free potentially large queue memory
+            }
+            return result;
         }
 
         public boolean hasItems() {
