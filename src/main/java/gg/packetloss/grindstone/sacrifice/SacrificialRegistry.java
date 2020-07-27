@@ -78,7 +78,7 @@ class SacrificialRegistry {
         return lookupInstance;
     }
 
-    private double getValue(MarketItemLookupInstance lookupInstance, ItemStack itemStack) {
+    protected double getValue(MarketItemLookupInstance lookupInstance, ItemStack itemStack) {
         // FIXME: These can be added back to the market now
         if (SpawnEgg.fromMaterial(itemStack.getType()) != null) {
             return 12.5;

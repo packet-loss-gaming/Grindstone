@@ -23,6 +23,8 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.ConfigurationNode;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.economic.store.MarketComponent;
+import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
 import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
@@ -430,8 +432,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         double totalValue = 0;
 
+        MarketItemLookupInstance lookupInst = MarketComponent.getLookupInstanceFromStacksImmediately(items);
         for (ItemStack itemStack : items) {
-            double value = registry.getValue(itemStack);
+            double value = registry.getValue(lookupInst, itemStack);
             if (value <= 0) {
                 pInventory.addItem(itemStack);
                 continue;
