@@ -462,7 +462,10 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             ChatUtil.sendNotice(player, " - Punch a chest to fill it with items");
         }
 
-        if (ChanceUtil.getChance(5) && totalValue >= 500) {
+        for (double i = totalValue; i > 0; i -= 500) {
+            if (!ChanceUtil.getChance(5)) {
+                continue;
+            }
 
             PrayerType prayerType;
             switch (ChanceUtil.getRandom(7)) {
