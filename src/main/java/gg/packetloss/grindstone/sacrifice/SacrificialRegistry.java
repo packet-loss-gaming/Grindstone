@@ -12,6 +12,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.SpawnEgg;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
+import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 
@@ -38,6 +39,11 @@ class SacrificialRegistry {
             return;
         }
 
+        if (!valuable.isEmpty()) {
+            SacrificeCommonality precedingCommonality = valuable.get(valuable.size() - 1).commonality;
+            Validate.isTrue(precedingCommonality.getAdditionalChance() <= commonality.getAdditionalChance());
+        }
+
         valuable.add(new ChancedEntry(dropSupplier, commonality));
     }
 
@@ -53,8 +59,12 @@ class SacrificialRegistry {
     }
 
     private ItemStack getValuableItem(CommandSender sender, int modifier) {
+        int position = valuable.size();
         do {
-            ChancedEntry supplier = CollectionUtil.getElement(valuable);
+            // Update the position with a strong biased towards higher value items
+            position = Math.max(0, position - ChanceUtil.getRandomNTimes(valuable.size(), 3));
+
+            ChancedEntry supplier = valuable.get(position);
             if (supplier.commonality == SacrificeCommonality.NORMAL) {
                 return supplier.dropSupplier.get();
             }
