@@ -230,8 +230,13 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
      * @param value  - The value put towards the items returned
      * @return - The ItemStacks that should be received
      */
+    @Deprecated
     public static List<ItemStack> getCalculatedLoot(CommandSender sender, int max, double value) {
-        return inst.registry.getCalculatedLoot(sender, max, value);
+        return getCalculatedLoot(new SacrificeInformation(sender, max, value));
+    }
+
+    public static List<ItemStack> getCalculatedLoot(SacrificeInformation sacrificeInformation) {
+        return inst.registry.getCalculatedLoot(sacrificeInformation);
     }
 
     // For use by SacrificeSession
@@ -449,7 +454,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         highScores.update(player, ScoreTypes.SACRIFICED_VALUE, (int) Math.ceil(totalValue));
 
         SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
-        session.addItems(getCalculatedLoot(player, -1, totalValue));
+        session.addItems(getCalculatedLoot(new SacrificeInformation(player, totalValue)));
 
         session.pollItems((itemStack -> {
             ItemStack remainder = pInventory.addItem(itemStack).get(0);
