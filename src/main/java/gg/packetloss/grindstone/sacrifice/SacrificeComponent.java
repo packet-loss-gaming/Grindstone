@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.sacrifice;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.component.session.PersistentSession;
 import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.Command;
@@ -34,6 +33,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.state.player.NativeSerializerComponent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.task.DebounceHandle;
@@ -61,17 +61,16 @@ import org.bukkit.inventory.PlayerInventory;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.sacrifice.SacrificeCommonality.*;
 
 @ComponentInformation(friendlyName = "Sacrifice", desc = "Sacrifice! Sacrifice! Sacrifice!")
-@Depend(components = {SessionComponent.class, PrayerComponent.class, AdminComponent.class, HighScoresComponent.class})
+@Depend(components = {
+        SessionComponent.class, PrayerComponent.class, AdminComponent.class, HighScoresComponent.class,
+        NativeSerializerComponent.class
+})
 public class SacrificeComponent extends BukkitComponent implements Listener, Runnable {
-
-    private static final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+    private static SacrificeComponent inst;
 
     @InjectComponent
     private SessionComponent sessions;
@@ -81,11 +80,17 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     private AdminComponent admin;
     @InjectComponent
     private HighScoresComponent highScores;
+    @InjectComponent
+    private NativeSerializerComponent nativeSerializer;
 
     private LocalConfiguration config;
-    private Map<Integer, Integer> entityTaskId = new HashMap<>();
+    private final List<Item> protectedEntities = new ArrayList<>();
 
-    private static SacrificialRegistry registry = new SacrificialRegistry();
+    private final SacrificialRegistry registry = new SacrificialRegistry();
+
+    public SacrificeComponent() {
+        inst = this;
+    }
 
     @Override
     public void enable() {
@@ -94,10 +99,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         populateRegistry();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
         registerCommands(Commands.class);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20);
+        CommandBook.server().getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 20);
     }
 
     @Override
@@ -129,26 +133,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         @Setting("sacrificial-debounce-seconds")
         public int debounceSeconds = 5;
-    }
-
-    private void addEntityTaskId(Entity entity, int taskId) {
-
-        entityTaskId.put(entity.getEntityId(), taskId);
-    }
-
-    private void removeEntity(Entity entity) {
-
-        entityTaskId.remove(entity.getEntityId());
-
-    }
-
-    private int getEntityTaskId(Entity entity) {
-
-        int getEntityTaskId = 0;
-        if (entityTaskId.containsKey(entity.getEntityId())) {
-            getEntityTaskId = entityTaskId.get(entity.getEntityId());
-        }
-        return getEntityTaskId;
     }
 
     private void populateRegistry() {
@@ -216,11 +200,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.HOLY_COMBAT_POTION), RARE_4);
 
         registry.registerItem(() -> {
-            if (server.getOfflinePlayers().length < 1) {
+            OfflinePlayer[] offlinePlayers = CommandBook.server().getOfflinePlayers();
+            if (offlinePlayers.length < 1) {
                 return new ItemStack(Material.PLAYER_HEAD);
             }
 
-            return ItemUtil.makeSkull(CollectionUtil.getElement(server.getOfflinePlayers()));
+            return ItemUtil.makeSkull(CollectionUtil.getElement(offlinePlayers));
         }, RARE_5);
 
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION), RARE_6);
@@ -246,7 +231,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
      * @return - The ItemStacks that should be received
      */
     public static List<ItemStack> getCalculatedLoot(CommandSender sender, int max, double value) {
-        return registry.getCalculatedLoot(sender, max, value);
+        return inst.registry.getCalculatedLoot(sender, max, value);
+    }
+
+    // For use by SacrificeSession
+    protected static NativeSerializerComponent getNativeSerializer() {
+        return inst.nativeSerializer;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -260,14 +250,18 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         if (session.hasItems() && clicked instanceof Chest) {
             final int starting = session.remaining();
+
             Inventory inventory = ((Chest) clicked).getInventory();
-            while (session.hasItems()) {
-                ItemStack remainder = inventory.addItem(session.pollItem()).get(0);
+            session.pollItems((itemStack -> {
+                ItemStack remainder = inventory.addItem(itemStack).get(0);
                 if (remainder != null) {
                     session.addItem(remainder);
-                    break;
+                    return true;
                 }
-            }
+
+                return false;
+            }));
+
             final int ending = session.remaining();
 
             if (starting != ending) {
@@ -290,18 +284,10 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
     @EventHandler
     public void onEntityCombust(EntityCombustEvent event) {
-
-        if (entityTaskId.containsKey(event.getEntity().getEntityId())) event.setCancelled(true);
-    }
-
-    private static Set<BlockFace> surrounding = new HashSet<>();
-
-    static {
-        surrounding.add(BlockFace.SELF);
-        surrounding.add(BlockFace.NORTH);
-        surrounding.add(BlockFace.EAST);
-        surrounding.add(BlockFace.SOUTH);
-        surrounding.add(BlockFace.WEST);
+        //noinspection SuspiciousMethodCalls
+        if (event.getEntity() instanceof Item && protectedEntities.contains(event.getEntity())) {
+            event.setCancelled(true);
+        }
     }
 
     private final Map<UUID, DebounceHandle<List<ItemStack>>> playerToSacrificeHandle = new HashMap<>();
@@ -365,42 +351,51 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         final Player player = event.getPlayer();
         final Item item = event.getItemDrop();
-        if (!inst.hasPermission(player, "aurora.sacrifice")) return;
+        if (!player.hasPermission("aurora.sacrifice")) return;
 
-        int taskId = server.getScheduler().scheduleSyncRepeatingTask(inst, () -> {
-            int id = getEntityTaskId(item);
+        protectedEntities.add(item);
+
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+        taskBuilder.setAction((times) -> {
+            SacrificialPitChecker checker = checkForPitAt(item.getLocation());
+            if (checker.isValid()) {
+                return true;
+            }
 
             if (item.isDead() || item.getTicksLived() > 40) {
-                if (id != -1) {
-                    removeEntity(item);
-                    server.getScheduler().cancelTask(id);
-                }
-            } else {
-                Location itemLoc = item.getLocation();
-
-                SacrificialPitChecker checker = checkForPitAt(itemLoc);
-                if (checker.isValid()) {
-                    PlayerSacrificeItemEvent sacrificeItemEvent = new PlayerSacrificeItemEvent(player, itemLoc, item.getItemStack());
-                    server.getPluginManager().callEvent(sacrificeItemEvent);
-                    if (sacrificeItemEvent.isCancelled()) return;
-
-                    checker.ignite();
-
-                    getOrCreateFireHandle(checker.getIdentifyingPoint(), checker).accept(1);
-                    getOrCreatePlayerHandle(player).accept(List.of(sacrificeItemEvent.getItemStack()));
-
-                    removeEntity(item);
-                    item.remove();
-                    server.getScheduler().cancelTask(id);
-                }
+                return true;
             }
-        }, 0, 1); // Start at 0 ticks and repeat every 1 ticks
-        addEntityTaskId(item, taskId);
+
+            return false;
+        });
+
+        taskBuilder.setFinishAction(() -> {
+            Location itemLoc = item.getLocation();
+
+            SacrificialPitChecker checker = checkForPitAt(itemLoc);
+            if (checker.isValid()) {
+                PlayerSacrificeItemEvent sacrificeItemEvent = new PlayerSacrificeItemEvent(player, itemLoc, item.getItemStack());
+                CommandBook.callEvent(sacrificeItemEvent);
+                if (sacrificeItemEvent.isCancelled()) return;
+
+                checker.ignite();
+
+                getOrCreateFireHandle(checker.getIdentifyingPoint(), checker).accept(1);
+                getOrCreatePlayerHandle(player).accept(List.of(sacrificeItemEvent.getItemStack()));
+
+                item.remove();
+            }
+
+            protectedEntities.remove(item);
+        });
+
+        taskBuilder.build();
     }
 
     @Override
     public void run() {
-        for (World world : server.getWorlds()) {
+        for (World world : CommandBook.server().getWorlds()) {
             for (LivingEntity entity : world.getEntitiesByClass(LivingEntity.class)) {
                 Location entityLoc = entity.getLocation();
                 if (isPointOfSacrifice(entityLoc)) {
@@ -456,13 +451,15 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
         session.addItems(getCalculatedLoot(player, -1, totalValue));
 
-        while (session.hasItems()) {
-            ItemStack remainder = pInventory.addItem(session.pollItem()).get(0);
+        session.pollItems((itemStack -> {
+            ItemStack remainder = pInventory.addItem(itemStack).get(0);
             if (remainder != null) {
                 session.addItem(remainder);
-                break;
+                return true;
             }
-        }
+
+            return false;
+        }));
 
         if (session.hasItems()) {
             ChatUtil.sendNotice(player, "The gods give you the divine touch!");
@@ -540,46 +537,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             ChatUtil.sendNotice(player, "That item has a value of: " +
                     ChatUtil.WHOLE_NUMBER_FORMATTER.format(shownValue) +
                     " in the sacrificial pit.");
-        }
-    }
-
-    // Sacrifice Session
-    private static class SacrificeSession extends PersistentSession {
-        public static final long MAX_AGE = TimeUnit.MINUTES.toMillis(30);
-
-        private List<ItemStack> queue = new ArrayList<>(); // technically a stack, but this performs better
-
-        protected SacrificeSession() {
-            super(MAX_AGE);
-        }
-
-        public Player getPlayer() {
-            CommandSender sender = super.getOwner();
-            return sender instanceof Player ? (Player) sender : null;
-        }
-
-        public void addItem(ItemStack itemStack) {
-            queue.add(itemStack);
-        }
-
-        public void addItems(List<ItemStack> itemStacks) {
-            queue.addAll(itemStacks);
-        }
-
-        public ItemStack pollItem() {
-            ItemStack result = queue.remove(queue.size() - 1);
-            if (queue.isEmpty()) {
-                queue = new ArrayList<>(); // free potentially large queue memory
-            }
-            return result;
-        }
-
-        public boolean hasItems() {
-            return !queue.isEmpty();
-        }
-
-        public int remaining() {
-            return queue.size();
         }
     }
 }
