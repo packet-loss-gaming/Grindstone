@@ -310,7 +310,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         });
 
         builder.setBounceAction((items) -> {
-            sacrifice(player, items);
+            // Clear out any items that were removed by the sacrifice item event
+            items.removeIf((i) -> i.getType().isAir());
+            if (!items.isEmpty()) {
+                sacrifice(player, items);
+            }
+
             playerToSacrificeHandle.remove(player.getUniqueId());
         });
 
@@ -508,9 +513,11 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             }
         }
 
-        ChatUtil.sendNotice(player, "You have been blessed with: ");
-        for (PrayerType prayerType : givenPrayers) {
-            ChatUtil.sendNotice(player, " - " + prayerType.getChatColor() + prayerType.getFormattedName());
+        if (!givenPrayers.isEmpty()) {
+            ChatUtil.sendNotice(player, "You have been blessed with: ");
+            for (PrayerType prayerType : givenPrayers) {
+                ChatUtil.sendNotice(player, " - " + prayerType.getChatColor() + prayerType.getFormattedName());
+            }
         }
 
         if (session.hasItems()) {
