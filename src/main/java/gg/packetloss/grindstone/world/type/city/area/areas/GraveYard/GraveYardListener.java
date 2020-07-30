@@ -280,8 +280,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
         if (ItemUtil.isItem(item, CustomItems.PHANTOM_GOLD)) {
             int amount = 50;
-
-            if (!parent.isRewardsArea(event.getPointOfSacrifice())) {
+            if (parent.isRewardsArea(event.getPointOfSacrifice())) {
                 amount = 100;
             }
             Player player = event.getPlayer();
