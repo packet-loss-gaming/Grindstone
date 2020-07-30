@@ -21,6 +21,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.ConfigurationNode;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.RandomizedSkullsComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
@@ -34,8 +35,10 @@ import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.PrayerType;
 import gg.packetloss.grindstone.state.player.NativeSerializerComponent;
-import gg.packetloss.grindstone.util.*;
-import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.task.DebounceHandle;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.*;
@@ -67,7 +70,7 @@ import static gg.packetloss.grindstone.sacrifice.SacrificeCommonality.*;
 @ComponentInformation(friendlyName = "Sacrifice", desc = "Sacrifice! Sacrifice! Sacrifice!")
 @Depend(components = {
         SessionComponent.class, PrayerComponent.class, AdminComponent.class, HighScoresComponent.class,
-        NativeSerializerComponent.class
+        NativeSerializerComponent.class, RandomizedSkullsComponent.class
 })
 public class SacrificeComponent extends BukkitComponent implements Listener, Runnable {
     private static SacrificeComponent inst;
@@ -82,6 +85,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     private HighScoresComponent highScores;
     @InjectComponent
     private NativeSerializerComponent nativeSerializer;
+    @InjectComponent
+    private RandomizedSkullsComponent randomizedSkulls;
 
     private LocalConfiguration config;
     private final List<Item> protectedEntities = new ArrayList<>();
@@ -200,12 +205,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.HOLY_COMBAT_POTION), RARE_4);
 
         registry.registerItem(() -> {
-            OfflinePlayer[] offlinePlayers = CommandBook.server().getOfflinePlayers();
-            if (offlinePlayers.length < 1) {
-                return new ItemStack(Material.PLAYER_HEAD);
-            }
-
-            return ItemUtil.makeSkull(CollectionUtil.getElement(offlinePlayers));
+            return randomizedSkulls.getRandomSkull().orElse(new ItemStack(Material.PLAYER_HEAD));
         }, RARE_5);
 
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION), RARE_6);

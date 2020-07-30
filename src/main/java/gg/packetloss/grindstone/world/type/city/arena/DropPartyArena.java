@@ -239,7 +239,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
             Collection<? extends Player> onlinePlayers = server.getOnlinePlayers();
             if (!onlinePlayers.isEmpty()) {
-                newDrops.add(ItemUtil.makeSkull(CollectionUtil.getElement(onlinePlayers)));
+                newDrops.add(ItemUtil.makeSkull(CollectionUtil.getElement(onlinePlayers).getPlayerProfile()));
             }
 
             int generatedSize = newDrops.size();

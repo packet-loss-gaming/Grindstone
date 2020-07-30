@@ -6,14 +6,15 @@
 
 package gg.packetloss.grindstone.util.item;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -56,11 +57,13 @@ public class ItemUtil {
             null, null, null, null
     };
 
+    public static ItemStack makeSkull(PlayerProfile playerProfile) {
+        // Require textures be provided, otherwise we have major performance issues
+        Validate.isTrue(playerProfile.hasTextures());
 
-    public static ItemStack makeSkull(OfflinePlayer offlinePlayer) {
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
-        skullMeta.setOwningPlayer(offlinePlayer);
+        skullMeta.setPlayerProfile(playerProfile);
         skull.setItemMeta(skullMeta);
         return skull;
     }
