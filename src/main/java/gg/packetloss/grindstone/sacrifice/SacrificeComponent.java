@@ -430,6 +430,27 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }
     }
 
+    private PrayerType getRandomSacrificePrayer() {
+        switch (ChanceUtil.getRandom(7)) {
+            case 1:
+                return PrayerType.DIGGYDIGGY;
+            case 2:
+                return PrayerType.HEALTH;
+            case 3:
+                return PrayerType.POWER;
+            case 4:
+                return PrayerType.SPEED;
+            case 5:
+                return PrayerType.ANTIFIRE;
+            case 6:
+                return PrayerType.NIGHTVISION;
+            case 7:
+                return PrayerType.DEADLYDEFENSE;
+            default:
+                return PrayerType.SMOKE;
+        }
+    }
+
     private void sacrifice(Player player, List<ItemStack> items) {
         PlayerInventory pInventory = player.getInventory();
 
@@ -466,51 +487,35 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             return false;
         }));
 
-        if (session.hasItems()) {
-            ChatUtil.sendNotice(player, "The gods give you the divine touch!");
-            ChatUtil.sendNotice(player, " - Punch a chest to fill it with items");
-        }
-
+        Set<PrayerType> givenPrayers = new HashSet<>();
         for (double i = totalValue; i > 0; i -= 500) {
             if (!ChanceUtil.getChance(5)) {
                 continue;
             }
 
-            PrayerType prayerType;
-            switch (ChanceUtil.getRandom(7)) {
-                case 1:
-                    prayerType = PrayerType.DIGGYDIGGY;
-                    break;
-                case 2:
-                    prayerType = PrayerType.HEALTH;
-                    break;
-                case 3:
-                    prayerType = PrayerType.POWER;
-                    break;
-                case 4:
-                    prayerType = PrayerType.SPEED;
-                    break;
-                case 5:
-                    prayerType = PrayerType.ANTIFIRE;
-                    break;
-                case 6:
-                    prayerType = PrayerType.NIGHTVISION;
-                    break;
-                case 7:
-                    prayerType = PrayerType.DEADLYDEFENSE;
-                    break;
-                default:
-                    prayerType = PrayerType.SMOKE;
+            PrayerType prayerType = getRandomSacrificePrayer();
+            if (givenPrayers.contains(prayerType)) {
+                continue;
             }
+
             try {
                 Prayer givenPrayer = PrayerComponent.constructPrayer(player, prayerType, TimeUnit.MINUTES.toMillis(60));
                 if (prayer.influencePlayer(player, givenPrayer)) {
-                    ChatUtil.sendNotice(player, "You feel as though you have been blessed with "
-                            + prayerType.toString().toLowerCase() + ".");
+                    givenPrayers.add(prayerType);
                 }
             } catch (UnsupportedPrayerException e) {
                 e.printStackTrace();
             }
+        }
+
+        ChatUtil.sendNotice(player, "You have been blessed with: ");
+        for (PrayerType prayerType : givenPrayers) {
+            ChatUtil.sendNotice(player, " - " + prayerType.getChatColor() + prayerType.getFormattedName());
+        }
+
+        if (session.hasItems()) {
+            ChatUtil.sendNotice(player, "The gods give you the divine touch!");
+            ChatUtil.sendNotice(player, " - Punch a chest to fill it with items");
         }
     }
 
