@@ -283,8 +283,20 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (parent.isRewardsArea(event.getPointOfSacrifice())) {
                 amount = 100;
             }
+
             Player player = event.getPlayer();
-            parent.economy.depositPlayer(player.getName(), amount * item.getAmount());
+
+            int totalAmount = amount * item.getAmount();
+            parent.economy.depositPlayer(player, totalAmount);
+
+            // Delay by a tick to prevent this message from appearing before the ancient fire ignites message
+            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                ChatUtil.sendNotice(
+                        player,
+                        "You receive " + ChatUtil.makeCountString(parent.economy.format(totalAmount), ".")
+                );
+            }, 1);
+
             event.setItemStack(null);
         } else if (ItemUtil.isItem(item, CustomItems.PHANTOM_HYMN)) {
             Player player = event.getPlayer();
