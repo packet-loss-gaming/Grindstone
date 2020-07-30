@@ -7,6 +7,8 @@
 package gg.packetloss.grindstone.prayer;
 
 import gg.packetloss.grindstone.prayer.PrayerFX.*;
+import gg.packetloss.grindstone.util.StringUtil;
+import org.bukkit.ChatColor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -97,13 +99,23 @@ public enum PrayerType {
     }
 
     public boolean isHoly() {
-
         return getValue() >= 2000;
     }
 
     public boolean isUnholy() {
+        return !isHoly();
+    }
 
-        return getValue() < 2000;
+    public String getFormattedName() {
+        return StringUtil.toUppercaseTitle(name());
+    }
+
+    public ChatColor getChatColor() {
+        if (isHoly()) {
+            return ChatColor.BLUE;
+        } else {
+            return ChatColor.RED;
+        }
     }
 
     public static PrayerType getId(final int id) {

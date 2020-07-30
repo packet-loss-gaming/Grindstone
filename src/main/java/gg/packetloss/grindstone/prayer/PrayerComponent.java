@@ -252,8 +252,8 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
                             }
                         }
                         if (quantity > 0) sb.append(ChatColor.GRAY).append(", ");
-                        sb.append(prayer.isHoly() ? ChatColor.BLUE : ChatColor.RED);
-                        sb.append(prayer.toString().toLowerCase());
+                        sb.append(prayer.getChatColor());
+                        sb.append(prayer.getFormattedName());
                         sb.append(ChatColor.DARK_GRAY).append(" (");
                         sb.append(ChatColor.DARK_AQUA).append(prayer.getLevelCost());
                         sb.append(ChatColor.DARK_GRAY).append(")");

@@ -55,8 +55,7 @@ public class StringUtil {
                 continue;
             }
 
-            // If we are preceded by whitespace, use a title case letter
-            // otherwise, use a lower case letter.
+            // Convert the character to title case
             builder.append(Character.toUpperCase(letter));
         }
 
