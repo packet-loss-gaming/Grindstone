@@ -668,6 +668,53 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
     }
 
+    /**
+     * This is called to handle the default death logic given a previously called {@link PlayerGraveProtectItemsEvent}.
+     *
+     * This method will:
+     * - Create a player state if a gem of life is used, and the {@link GemOfLifeUsageEvent} event isn't cancelled.
+     * - Create a grave and call a {@link PlayerDeathDropRedirectEvent} if a gem of life isn't used,
+     *   or a {@link GemOfLifeUsageEvent} was cancelled.
+     *
+     * @param event the respective grave protect items event
+     *
+     * @throws IOException upon failure to write the player state to disk for a gem of life
+     * @throws ConflictingPlayerStateException upon failure to create a player state because of a state conflict
+     */
+    private void runDefaultDeathLogic(PlayerGraveProtectItemsEvent event) throws IOException, ConflictingPlayerStateException {
+        Player player = event.getPlayer();
+
+        if (event.isUsingGemOfLife()) {
+            GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
+            server.getPluginManager().callEvent(aEvent);
+            if (!aEvent.isCancelled()) {
+                parent.playerState.pushState(PlayerStateKind.GRAVE_YARD, player);
+                return;
+            }
+        }
+
+        // Create final drops array
+        ItemStack[] finalDrops = Arrays.stream(event.getDrops())
+                .filter(Objects::nonNull)
+                .map(ItemStack::clone)
+                .toArray(ItemStack[]::new);
+
+        Location graveLocation = parent.makeGrave(player.getName(), finalDrops);
+        CommandBook.callEvent(new PlayerDeathDropRedirectEvent(player, graveLocation));
+    }
+
+    /**
+     * This is called when the death is considered handled by the default death implementation
+     * either via a gem of life, or a grave.
+     *
+     * @param event the respective death event
+     */
+    private void acceptDeathItemsHandled(PlayerDeathEvent event) {
+        // Remove drops from ground, and drop no XP
+        event.getDrops().clear();
+        event.setDroppedExp(0);
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerDeath(PlayerDeathEvent event) { // Handles Death System
         Player player = event.getEntity();
@@ -701,31 +748,23 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             return;
         }
 
-        // Remove drops from ground, and drop no XP
-        drops.clear();
-        event.setDroppedExp(0);
+        try {
+            runDefaultDeathLogic(protectItemsEvent);
+            acceptDeathItemsHandled(event);
+        } catch (IOException | ConflictingPlayerStateException e) {
+            e.printStackTrace();
+        } catch (Throwable t) {
+            t.printStackTrace();
 
-        if (protectItemsEvent.isUsingGemOfLife()) {
-            GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
-            server.getPluginManager().callEvent(aEvent);
-            if (!aEvent.isCancelled()) {
-                try {
-                    parent.playerState.pushState(PlayerStateKind.GRAVE_YARD, player);
-                    return;
-                } catch (IOException | ConflictingPlayerStateException e) {
-                    e.printStackTrace();
-                }
+            // Attempt to fallback to a player state protection, something likely went wrong with
+            // grave generation.
+            try {
+                parent.playerState.pushState(PlayerStateKind.GRAVE_YARD, player);
+                acceptDeathItemsHandled(event);
+            } catch (IOException | ConflictingPlayerStateException e) {
+                e.printStackTrace();
             }
         }
-
-        // Create final drops array
-        ItemStack[] finalDrops = Arrays.stream(protectItemsEvent.getDrops())
-                .filter(Objects::nonNull)
-                .map(ItemStack::clone)
-                .toArray(ItemStack[]::new);
-
-        Location graveLocation = parent.makeGrave(player.getName(), finalDrops);
-        CommandBook.callEvent(new PlayerDeathDropRedirectEvent(player, graveLocation));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

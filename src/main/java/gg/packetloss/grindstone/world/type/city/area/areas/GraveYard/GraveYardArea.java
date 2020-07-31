@@ -925,6 +925,12 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             graveLocation = makeGrave(playerName, itemQueue, false);
         }
 
+        // Validate that some grave was made. If one wasn't something is very wrong,
+        // bail out and trigger fallback code.
+        if (graveLocation == null) {
+            throw new IllegalStateException("No grave found!");
+        }
+
         // Drop items that couldn't be placed into a grave
         dropOverflow(playerName, graveLocation, itemQueue);
 
