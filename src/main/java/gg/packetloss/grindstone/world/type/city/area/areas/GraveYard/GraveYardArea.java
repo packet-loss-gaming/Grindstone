@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.world.type.city.area.areas.GraveYard;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector2;
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -60,6 +59,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -199,55 +199,83 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         );
     }
 
-    private void regenParkour(ProtectedRegion region, int initialZ) {
+    private CompletableFuture<Void> clearExistingBlocks(ProtectedRegion region) {
         // Clear any lingering blocks, note that we may miss a block currently despawned.
         // This case is not really worth worrying about though, as it won't majorly affect
         // the outcome.
-        RegionWalker.walk(region, (x, y, z) -> {
-            Block block = getWorld().getBlockAt(x, y, z);
-            if (block.getType() == Material.CRACKED_STONE_BRICKS) {
-                block.setType(Material.AIR);
+        List<CompletableFuture<Void>> chunkCleaningJobs = new ArrayList<>();
+        RegionWalker.walkChunks(region, (chunkX, chunkZ) -> {
+            CompletableFuture<Void> future = new CompletableFuture<>();
+            chunkCleaningJobs.add(future);
+
+            getWorld().getChunkAtAsync(chunkX, chunkZ).thenAccept((chunk) -> {
+                RegionWalker.walkInChunk(region, chunkX, chunkZ, (x, y, z) -> {
+                    Block block = getWorld().getBlockAt(x, y, z);
+                    if (block.getType() == Material.CRACKED_STONE_BRICKS) {
+                        block.setType(Material.AIR);
+                    }
+                });
+
+                future.complete(null);
+            });
+        });
+
+        return CompletableFuture.allOf(chunkCleaningJobs.toArray(new CompletableFuture[0]));
+    }
+
+    private void generateNextParkourBlock(ProtectedRegion region, int lastX, int lastZ) {
+        int zAdjustment = 0;
+
+        if (ChanceUtil.getChance(12)) {
+            lastX -= 5;
+        } else {
+            lastX -= ChanceUtil.getRangedRandom(2, 3);
+
+            zAdjustment = ChanceUtil.getRandom(2);
+            if (ChanceUtil.getChance(2)) {
+                zAdjustment = -zAdjustment;
+            }
+        }
+
+        // We have two possible blocks this could be, a z increased block and a z decreased block
+        // a z increase, then revert to the z decrease if that block is not air.
+        int newX = lastX;
+
+        Location trialA = new Location(world, lastX, 51, lastZ + zAdjustment);
+        Location trialB = new Location(world, lastX, 51, lastZ - zAdjustment);
+
+        CompletableFuture<Block> targetBlockFuture = world.getChunkAtAsync(trialA).thenCompose((ignoredA) -> {
+            if (trialA.getBlock().getType().isAir()) {
+                return CompletableFuture.completedFuture(trialA.getBlock());
+            } else {
+                return world.getChunkAtAsync(trialB).thenApply((ignoredB) -> trialB.getBlock());
             }
         });
 
-        // Add 1 because the starting area isn't included in the region, so we could get impossible jumps
-        int maxX = region.getMaximumPoint().getBlockX() + 1;
-        int minX = region.getMinimumPoint().getBlockX();
-
-        int lastZ = initialZ;
-
-        for (int x = maxX; x > minX;) {
-            int zAdjustment = 0;
-
-            if (ChanceUtil.getChance(12)) {
-                x -= 5;
-            } else {
-                x -= ChanceUtil.getRangedRandom(2, 3);
-
-                zAdjustment = ChanceUtil.getRandom(2);
-                if (ChanceUtil.getChance(2)) {
-                    zAdjustment = -zAdjustment;
-                }
-            }
-
-            // Try our random zAdjustment, if that fails, try inverting it
-            Block targetBlock = world.getBlockAt(x, 51, lastZ + zAdjustment);
-            if (!targetBlock.getType().isAir()) {
-                targetBlock = world.getBlockAt(x, 51, lastZ - zAdjustment);
-            }
-
+        targetBlockFuture.thenAccept((targetBlock) -> {
             if (!region.contains(targetBlock.getX(), targetBlock.getY(), targetBlock.getZ())) {
-                break;
+                return;
             }
 
             if (!targetBlock.getType().isAir()) {
-                break;
+                return;
             }
 
             targetBlock.setType(Material.CRACKED_STONE_BRICKS);
 
-            lastZ = targetBlock.getZ();
-        }
+            int minX = region.getMinimumPoint().getBlockX();
+            if (newX > minX) {
+                generateNextParkourBlock(region, newX, targetBlock.getZ());
+            }
+        });
+    }
+
+    private void regenParkour(ProtectedRegion region, int initialZ) {
+        CompletableFuture<Void> blocksClearedFuture = clearExistingBlocks(region);
+        blocksClearedFuture.thenAccept((ignored) -> {
+            // Add 1 because the starting area isn't included in the region, so we could get impossible jumps
+            generateNextParkourBlock(region, region.getMaximumPoint().getBlockX() + 1, initialZ);
+        });
     }
 
     private void regenParkour() {
@@ -903,38 +931,38 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         return graveLocation;
     }
 
+    private void findHeadStones(List<BlockVector2> chunkList) {
+        if (chunkList.isEmpty()) {
+            return;
+        }
+
+        BlockVector2 chunkCoords = chunkList.remove(chunkList.size() - 1);
+        try {
+            getWorld().getChunkAtAsync(chunkCoords.getX(), chunkCoords.getZ()).thenAccept((chunk) -> {
+                for (BlockState aSign : chunk.getTileEntities()) {
+                    if (!(aSign instanceof Sign)) {
+                        continue;
+                    }
+
+                    checkHeadStone((Sign) aSign);
+                }
+
+                findHeadStones(chunkList);
+            });
+        } catch (NullPointerException ex) {
+            log.warning("Failed to get head stones for Chunk: " + chunkCoords.getX() + ", " + chunkCoords.getZ() + ".");
+        }
+    }
+
     private void findHeadStones() {
         headStones.clear();
         final List<BlockVector2> chunkList = new ArrayList<>();
-        BlockVector3 min = getRegion().getMinimumPoint();
-        BlockVector3 max = getRegion().getMaximumPoint();
-        final int minX = min.getBlockX();
-        final int minZ = min.getBlockZ();
-        final int maxX = max.getBlockX();
-        final int maxZ = max.getBlockZ();
 
-        for (int x = minX; x <= maxX; x += 16) {
-            for (int z = minZ; z <= maxZ; z += 16) {
-                BlockVector2 chunkCoords = BlockVector2.at(x >> 4, z >> 4);
-                if (!chunkList.contains(chunkCoords)) chunkList.add(chunkCoords);
-            }
-        }
+        RegionWalker.walkChunks(getRegion(), (x, z) -> {
+            chunkList.add(BlockVector2.at(x, z));
+        });
 
-        for (int i = 0; i < chunkList.size(); ++i) {
-            BlockVector2 chunkCoords = chunkList.get(i);
-
-            try {
-                server.getScheduler().runTaskLater(inst, () -> {
-                    for (BlockState aSign : world.getChunkAt(chunkCoords.getX(), chunkCoords.getZ()).getTileEntities()) {
-                        if (!(aSign instanceof Sign)) continue;
-                        checkHeadStone((Sign) aSign);
-                    }
-                }, i);
-            } catch (NullPointerException ex) {
-                log.warning("Failed to get head stones for Chunk: " + chunkCoords.getX() + ", " + chunkCoords.getZ() + ".");
-                return;
-            }
-        }
+        findHeadStones(chunkList);
     }
 
     private boolean checkHeadStone(Sign sign) {
