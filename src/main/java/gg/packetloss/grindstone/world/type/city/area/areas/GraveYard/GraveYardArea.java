@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.world.type.city.area.areas.GraveYard;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -36,6 +35,7 @@ import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Chunk;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -931,45 +931,31 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         return graveLocation;
     }
 
-    private void findHeadStones(List<BlockVector2> chunkList) {
-        if (chunkList.isEmpty()) {
+    private void tryAddHeadstone(Sign sign) {
+        Location l = sign.getLocation();
+        if ((l.getBlockY() != 81 && l.getBlockY() != 82) || !contains(l)) {
             return;
         }
 
-        BlockVector2 chunkCoords = chunkList.remove(chunkList.size() - 1);
-        try {
-            getWorld().getChunkAtAsync(chunkCoords.getX(), chunkCoords.getZ()).thenAccept((chunk) -> {
-                for (BlockState aSign : chunk.getTileEntities()) {
-                    if (!(aSign instanceof Sign)) {
-                        continue;
-                    }
+        headStones.add(sign.getLocation());
+    }
 
-                    checkHeadStone((Sign) aSign);
-                }
+    private void processHeadstonesInChunk(Chunk chunk) {
+        for (BlockState aSign : chunk.getTileEntities()) {
+            if (!(aSign instanceof Sign)) {
+                continue;
+            }
 
-                findHeadStones(chunkList);
-            });
-        } catch (NullPointerException ex) {
-            log.warning("Failed to get head stones for Chunk: " + chunkCoords.getX() + ", " + chunkCoords.getZ() + ".");
+            tryAddHeadstone((Sign) aSign);
         }
     }
 
     private void findHeadStones() {
         headStones.clear();
-        final List<BlockVector2> chunkList = new ArrayList<>();
 
         RegionWalker.walkChunks(getRegion(), (x, z) -> {
-            chunkList.add(BlockVector2.at(x, z));
+            getWorld().getChunkAtAsyncUrgently(x, z).thenAccept(this::processHeadstonesInChunk);
         });
-
-        findHeadStones(chunkList);
-    }
-
-    private boolean checkHeadStone(Sign sign) {
-        Location l = sign.getLocation();
-        if ((l.getBlockY() != 81 && l.getBlockY() != 82) || !contains(l)) return false;
-        headStones.add(sign.getLocation());
-        return true;
     }
 
     private void findPressurePlateLockLevers() {
