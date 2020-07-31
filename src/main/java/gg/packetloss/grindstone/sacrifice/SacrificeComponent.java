@@ -139,6 +139,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         @Setting("sacrificial-debounce-seconds")
         public int debounceSeconds = 5;
 
+        @Setting("sacrificial-value.min-multiplier")
+        public double valueMinMultiplier = .9;
+
+        @Setting("sacrificial-value.max-multiplier")
+        public double valueMaxMultiplier = 1.1;
+
         @Setting("sacrificial-prayer-cost")
         public double costPerPrayer = 1200;
     }
@@ -479,6 +485,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             ChatUtil.sendError(player, "The gods reject your offer.");
             return;
         }
+
+        totalValue *= ChanceUtil.getRangedRandom(config.valueMinMultiplier, config.valueMaxMultiplier);
 
         highScores.update(player, ScoreTypes.SACRIFICED_VALUE, (int) Math.ceil(totalValue));
 
