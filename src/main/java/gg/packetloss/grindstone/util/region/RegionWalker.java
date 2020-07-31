@@ -14,6 +14,8 @@ import gg.packetloss.grindstone.util.functional.TriPredicate;
 import org.apache.logging.log4j.util.BiConsumer;
 import org.apache.logging.log4j.util.TriConsumer;
 
+import java.util.function.BiPredicate;
+
 public class RegionWalker {
     private static void testWalkInBounds(int minX, int minY, int minZ, int maxX, int maxY, int maxZ,
                                          TriPredicate<Integer, Integer, Integer> op) {
@@ -62,7 +64,32 @@ public class RegionWalker {
     }
 
     public static void walkChunks(Region region, BiConsumer<Integer, Integer> op) {
-        walk(region, (x, y, z) -> op.accept(x >> 4, z >> 4));
+        testWalkChunks(region, (x, z) -> {
+            op.accept(x, z);
+            return false;
+        });
+    }
+
+    public static void testWalkChunks(ProtectedRegion region, BiPredicate<Integer, Integer> op) {
+        testWalkChunks(RegionUtil.convert(region).orElseThrow(), op);
+    }
+
+    public static void testWalkChunks(Region region, BiPredicate<Integer, Integer> op) {
+        final BlockVector3 min = region.getMinimumPoint();
+        final BlockVector3 max = region.getMaximumPoint();
+
+        int minX = min.getBlockX();
+        int minZ = min.getBlockZ();
+        int maxX = max.getBlockX();
+        int maxZ = max.getBlockZ();
+
+        for (int x = minX; x <= maxX; x += 16) {
+            for (int z = minZ; z <= maxZ; z += 16) {
+                if (op.test(x >> 4, z >> 4)) {
+                    return;
+                }
+            }
+        }
     }
 
     public static void walkInChunk(ProtectedRegion region, int chunkX, int chunkZ,
@@ -86,10 +113,10 @@ public class RegionWalker {
         final BlockVector3 min = region.getMinimumPoint();
         final BlockVector3 max = region.getMaximumPoint();
 
-        int chunkMinX = Math.min(chunkX * 16, chunkX * 16 + 16);
-        int chunkMaxX = Math.max(chunkX * 16, chunkX * 16 + 16);
-        int chunkMinZ = Math.min(chunkZ * 16, chunkZ * 16 + 16);
-        int chunkMaxZ = Math.max(chunkZ * 16, chunkZ * 16 + 16);
+        int chunkMinX = Math.min(chunkX << 4, (chunkX << 4) + 16);
+        int chunkMaxX = Math.max(chunkX << 4, (chunkX << 4) + 16);
+        int chunkMinZ = Math.min(chunkZ << 4, (chunkZ << 4) + 16);
+        int chunkMaxZ = Math.max(chunkZ << 4, (chunkZ << 4) + 16);
 
         int minX = Math.max(min.getBlockX(), chunkMinX);
         int minY = min.getBlockY();
