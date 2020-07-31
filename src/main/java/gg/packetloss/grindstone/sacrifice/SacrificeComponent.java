@@ -7,12 +7,8 @@
 package gg.packetloss.grindstone.sacrifice;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.session.SessionComponent;
-import com.sk89q.commandbook.util.entity.player.PlayerUtil;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandException;
-import com.sk89q.minecraft.util.commands.NestedCommand;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -104,8 +100,14 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         populateRegistry();
 
+        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
+        registrar.registerTopLevelCommands((commandManager, registration) -> {
+            registrar.registerAsSubCommand("sacrifice", "Sacrifice Commands", commandManager, (innerCommandManager, innerRegistration) -> {
+                innerRegistration.register(innerCommandManager, SacrificeCommandsRegistration.builder(), new SacrificeCommands(this));
+            });
+        });
+
         CommandBook.registerEvents(this);
-        registerCommands(Commands.class);
         CommandBook.server().getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 20);
     }
 
@@ -116,7 +118,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         configure(config);
     }
 
-    private static class LocalConfiguration extends ConfigurationBase {
+    protected static class LocalConfiguration extends ConfigurationBase {
         private Material sacrificialBlockMaterial = null;
 
         @Override
@@ -228,6 +230,14 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_BOOTS), RARE_8);
 
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.PHANTOM_CLOCK), UBER_RARE);
+    }
+
+    public double getValue(ItemStack itemStack) {
+        return registry.getValue(itemStack);
+    }
+
+    protected LocalConfiguration getConfig() {
+        return config;
     }
 
     /**
@@ -534,40 +544,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         if (session.hasItems()) {
             ChatUtil.sendNotice(player, "The gods give you the divine touch!");
             ChatUtil.sendNotice(player, " - Punch a chest to fill it with items");
-        }
-    }
-
-    public class Commands {
-
-        @Command(aliases = {"sacrifice"}, desc = "Permissions Commands")
-        @NestedCommand({SacrificeCommands.class})
-        public void sacrificeCommands(CommandContext args, CommandSender sender) throws CommandException {
-
-        }
-    }
-
-    public class SacrificeCommands {
-        @Command(aliases = {"value"}, desc = "Value an item", flags = "", min = 0, max = 0)
-        public void userGroupSetCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            Player player = PlayerUtil.checkPlayer(sender);
-
-            ItemStack questioned = player.getInventory().getItemInHand();
-
-            // Check value & validity
-            double value = registry.getValue(questioned);
-            if (value == 0) {
-                throw new CommandException("You can't sacrifice that!");
-            }
-
-            // Mask the value so it doesn't just show the market price and print it
-            int shownValue = (int) Math.round(value * ScoreTypes.SACRIFICED_VALUE.getScalingConstant());
-            int minShownValue = (int) (shownValue * config.valueMinMultiplier);
-            int maxShownValue = (int) (shownValue * config.valueMaxMultiplier);
-            ChatUtil.sendNotice(player, "This has a sacrificial value of: " +
-                    ChatColor.WHITE + ChatUtil.WHOLE_NUMBER_FORMATTER.format(minShownValue) +
-                    ChatColor.YELLOW + " - " +
-                    ChatColor.WHITE + ChatUtil.WHOLE_NUMBER_FORMATTER.format(maxShownValue));
         }
     }
 }
