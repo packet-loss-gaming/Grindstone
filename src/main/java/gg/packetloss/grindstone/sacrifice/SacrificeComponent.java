@@ -488,7 +488,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         totalValue *= ChanceUtil.getRangedRandom(config.valueMinMultiplier, config.valueMaxMultiplier);
 
-        highScores.update(player, ScoreTypes.SACRIFICED_VALUE, (int) Math.ceil(totalValue));
+        highScores.update(player, ScoreTypes.SACRIFICED_VALUE, Math.round(totalValue));
 
         SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
         session.addItems(getCalculatedLoot(new SacrificeInformation(player, totalValue)));
@@ -561,10 +561,13 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             }
 
             // Mask the value so it doesn't just show the market price and print it
-            int shownValue = (int) Math.round(value * 60.243);
-            ChatUtil.sendNotice(player, "That item has a value of: " +
-                    ChatUtil.WHOLE_NUMBER_FORMATTER.format(shownValue) +
-                    " in the sacrificial pit.");
+            int shownValue = (int) Math.round(value * ScoreTypes.SACRIFICED_VALUE.getScalingConstant());
+            int minShownValue = (int) (shownValue * config.valueMinMultiplier);
+            int maxShownValue = (int) (shownValue * config.valueMaxMultiplier);
+            ChatUtil.sendNotice(player, "This has a sacrificial value of: " +
+                    ChatColor.WHITE + ChatUtil.WHOLE_NUMBER_FORMATTER.format(minShownValue) +
+                    ChatColor.YELLOW + " - " +
+                    ChatColor.WHITE + ChatUtil.WHOLE_NUMBER_FORMATTER.format(maxShownValue));
         }
     }
 }

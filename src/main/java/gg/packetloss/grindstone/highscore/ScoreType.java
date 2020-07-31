@@ -6,12 +6,15 @@
 
 package gg.packetloss.grindstone.highscore;
 
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 
 public class ScoreType {
-    private int id;
-    private boolean incremental;
-    private Order order;
+    private final DecimalFormat DEFAULT_FORMATTER = new DecimalFormat("#,###");
+
+    private final int id;
+    private final boolean incremental;
+    private final Order order;
 
     protected ScoreType(int id, boolean incremental, Order order) {
         this.id = id;
@@ -31,9 +34,12 @@ public class ScoreType {
         return order;
     }
 
+    protected final String format(BigInteger integer) {
+        return DEFAULT_FORMATTER.format(integer);
+    }
+
     public String format(long score) {
-        DecimalFormat df = new DecimalFormat("#,###");
-        return df.format(score);
+        return format(BigInteger.valueOf(score));
     }
 
     public enum Order {
