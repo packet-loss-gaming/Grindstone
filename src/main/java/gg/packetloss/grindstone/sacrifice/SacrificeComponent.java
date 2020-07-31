@@ -138,6 +138,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         @Setting("sacrificial-debounce-seconds")
         public int debounceSeconds = 5;
+
+        @Setting("sacrificial-prayer-cost")
+        public double costPerPrayer = 1200;
     }
 
     private void populateRegistry() {
@@ -493,7 +496,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }));
 
         Set<PrayerType> givenPrayers = new HashSet<>();
-        for (double i = totalValue; i > 0; i -= 500) {
+        for (double i = totalValue; i > 0; i -= config.costPerPrayer) {
             if (!ChanceUtil.getChance(5)) {
                 continue;
             }
