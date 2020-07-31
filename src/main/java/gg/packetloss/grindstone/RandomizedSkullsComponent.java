@@ -25,14 +25,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @ComponentInformation(friendlyName = "Randomized Skulls", desc = "Get a random subset of skulls for players")
 public class RandomizedSkullsComponent extends BukkitComponent implements Runnable {
     private final ReadWriteLock randomizedProfilesLock = new ReentrantReadWriteLock();
+    private final AtomicInteger timesUsed = new AtomicInteger(0);
+    private final AtomicBoolean beingUpdated = new AtomicBoolean(false);
     private List<PlayerProfile> randomizedProfiles = List.of();
-    private AtomicBoolean used = new AtomicBoolean(false);
 
     private LocalConfiguration config;
 
@@ -45,8 +47,8 @@ public class RandomizedSkullsComponent extends BukkitComponent implements Runnab
         CommandBook.server().getScheduler().runTaskTimer(
                 CommandBook.inst(),
                 this,
-                TimeUtil.getTicksTillHour(),
-                TimeUtil.convertHoursToTicks(1)
+                TimeUtil.convertSecondsToTicks(config.updateFrequency),
+                TimeUtil.convertSecondsToTicks(config.updateFrequency)
         );
     }
 
@@ -59,15 +61,24 @@ public class RandomizedSkullsComponent extends BukkitComponent implements Runnab
     private static class LocalConfiguration extends ConfigurationBase {
         @Setting("number-players")
         public int numberOfPlayers = 12;
+        @Setting("number-before-update")
+        public int numberBeforeUpdate = 8;
+        @Setting("update-check-frequency")
+        public int updateFrequency = 60;
     }
 
     @Override
     public void run() {
         // Only update if someone has seen these skulls
-        if (!used.get()) {
+        if (timesUsed.get() < config.numberBeforeUpdate) {
             return;
         }
 
+        if (beingUpdated.get()) {
+            return;
+        }
+
+        beingUpdated.set(true);
         List<PlayerProfile> targetPlayers = getRandomSetOfPlayers();
 
         CommandBook.server().getScheduler().runTaskAsynchronously(
@@ -102,6 +113,8 @@ public class RandomizedSkullsComponent extends BukkitComponent implements Runnab
 
         try {
             randomizedProfiles = playerProfiles;
+            timesUsed.set(0);
+            beingUpdated.set(false);
         } finally {
             randomizedProfilesLock.writeLock().unlock();
         }
@@ -111,8 +124,8 @@ public class RandomizedSkullsComponent extends BukkitComponent implements Runnab
         randomizedProfilesLock.readLock().lock();
 
         try {
-            if (!used.get()) {
-                used.set(true);
+            if (!beingUpdated.get()) {
+                timesUsed.getAndIncrement();
             }
 
             return randomizedProfiles;
