@@ -380,6 +380,10 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 }
 
                 if (ChanceUtil.getChance(100)) {
+                    drops.add(CustomItemCenter.build(CustomItems.RED_FEATHER));
+                }
+
+                if (ChanceUtil.getChance(100)) {
                     drops.add(CustomItemCenter.build(CustomItems.CALMING_CRYSTAL));
                 }
 
