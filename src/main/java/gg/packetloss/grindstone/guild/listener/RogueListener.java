@@ -517,6 +517,10 @@ public class RogueListener implements Listener {
                 }
             }, 1);
         } else if (event.getClickType() == ClickType.RIGHT) {
+            if (event.isInteractive()) {
+                return;
+            }
+
             if (state.canGrenade()) {
                 grenade(player, state);
             }

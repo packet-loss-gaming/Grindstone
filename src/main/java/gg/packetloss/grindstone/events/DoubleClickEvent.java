@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.events;
 
 import gg.packetloss.grindstone.click.ClickType;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -41,6 +42,14 @@ public class DoubleClickEvent extends PlayerEvent {
 
     public BlockFace getAssociatedBlockFace() {
         return associatedBlockFace;
+    }
+
+    public boolean isInteractive() {
+        if (clickType != ClickType.RIGHT || associatedBlock == null) {
+            return false;
+        }
+
+        return EnvironmentUtil.isMaybeInteractiveBlock(associatedBlock, associatedBlockFace);
     }
 
     @Override
