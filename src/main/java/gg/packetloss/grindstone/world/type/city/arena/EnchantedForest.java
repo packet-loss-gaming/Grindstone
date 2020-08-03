@@ -127,7 +127,12 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                 continue;
             }
 
-            if (rabbit.getLocation().add(0, -1, 0).getBlock().getType() == Material.GRASS) {
+            Location loc = rabbit.getLocation();
+            if (loc.add(0, -1, 0).getBlock().getType() == Material.GRASS_BLOCK) {
+                continue;
+            }
+
+            if (loc.add(0, -2, 0).getBlock().getType() == Material.GRASS_BLOCK) {
                 continue;
             }
 
