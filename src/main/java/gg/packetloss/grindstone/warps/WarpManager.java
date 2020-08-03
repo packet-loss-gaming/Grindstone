@@ -83,6 +83,9 @@ public class WarpManager {
     }
 
     public void setPlayerHomeAndNotify(Player player, Location loc) {
+        // Set this in an attempt to fix minecraft game messages about the bed not being found.
+        player.setBedSpawnLocation(loc);
+
         boolean isUpdate = warpData.setWarp(getHomeNameFor(player), loc).isPresent();
         warpData.save();
 
