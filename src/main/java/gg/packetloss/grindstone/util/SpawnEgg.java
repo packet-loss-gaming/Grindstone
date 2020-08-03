@@ -41,6 +41,13 @@ public enum SpawnEgg {
     private static final Map<EntityType, SpawnEgg> ENTITY_TYPE_TO_SPAWN_EGG = new EnumMap<>(EntityType.class);
     private static final Map<Material, SpawnEgg> MATERIAL_TO_SPAWN_EGG = new HashMap<>();
 
+    static {
+        for (SpawnEgg value : values()) {
+            ENTITY_TYPE_TO_SPAWN_EGG.put(value.getEntityType(), value);
+            MATERIAL_TO_SPAWN_EGG.put(value.getMaterial(), value);
+        }
+    }
+
     private final EntityType entityType;
     private final Material itemType;
 
