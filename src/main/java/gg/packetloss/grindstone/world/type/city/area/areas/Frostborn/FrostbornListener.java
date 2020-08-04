@@ -303,9 +303,12 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             }
 
             String deathMessage;
-            switch (ChanceUtil.getRandom(2)) {
+            switch (ChanceUtil.getRandom(3)) {
                 case 1:
                     deathMessage = " exploded from frosty joy";
+                    break;
+                case 2:
+                    deathMessage = " lost their cool";
                     break;
                 default:
                     deathMessage = " lost a snowball fight";
