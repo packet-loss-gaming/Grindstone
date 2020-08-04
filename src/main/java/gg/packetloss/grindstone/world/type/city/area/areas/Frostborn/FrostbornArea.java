@@ -152,7 +152,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         }
 
         if (!isBossSpawned()) {
-            if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60 * 3) {
+            if (lastDeath == 0 || System.currentTimeMillis() - lastDeath >= 1000 * 60) {
                 spawnBoss();
                 sendPlayersToGate();
                 thawEntrance();
