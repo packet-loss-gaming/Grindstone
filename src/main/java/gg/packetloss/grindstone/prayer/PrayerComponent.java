@@ -43,6 +43,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
     @Override
     public void enable() {
+        registerCommands(Commands.class);
         CommandBook.server().getScheduler().scheduleSyncRepeatingTask(
             CommandBook.inst(),
             this,
