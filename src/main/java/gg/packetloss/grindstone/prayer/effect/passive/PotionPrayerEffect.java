@@ -25,19 +25,23 @@ public class PotionPrayerEffect implements PassivePrayerEffect {
     }
 
     private boolean shouldReapply(Player player) {
-        for (PotionEffect potionEffect : player.getActivePotionEffects()) {
-            // Re-add potion effects that are about to expire
-            if (potionEffect.getDuration() < REAPPLY_THRESHOLD) {
-                return true;
-            }
-
-            // They already have it and it's not about to expire
-            if (potionEffect.getType() == desiredEffectType) {
-                return false;
-            }
+        PotionEffect potionEffect = player.getPotionEffect(desiredEffectType);
+        if (potionEffect == null) {
+            return true;
         }
 
-        return true;
+        // Re-add potion effects that are about to expire
+        if (potionEffect.getDuration() < REAPPLY_THRESHOLD) {
+            return true;
+        }
+
+        // This version of the potion is better
+        if (potionEffect.getAmplifier() < amplifier) {
+            return true;
+        }
+
+        // They already have it and it's not about to expire
+        return false;
     }
 
     @Override
