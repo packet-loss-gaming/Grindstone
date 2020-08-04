@@ -302,6 +302,9 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
                 EntityUtil.heal(parent.boss, parent.boss.getMaxHealth() / 3);
             }
 
+            // Allow players to keep their experience
+            event.setKeepLevel(true);
+
             String deathMessage;
             switch (ChanceUtil.getRandom(3)) {
                 case 1:
