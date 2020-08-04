@@ -12,7 +12,7 @@ import gg.packetloss.grindstone.EggComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.egg.EggHatchEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
-import gg.packetloss.grindstone.prayer.PrayerFX.ButterFingersFX;
+import gg.packetloss.grindstone.prayer.effect.passive.ButterFingersEffect;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
@@ -215,7 +215,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     ChatUtil.sendWarning(player, "You cut your hand on the poisonous bark.");
                     break;
                 case 3:
-                    new ButterFingersFX().add(player);
+                    new ButterFingersEffect().trigger(player);
                     ChatUtil.sendNotice(player, "The fairies throws your stuff all over the place");
                     break;
                 case 4:

@@ -9,7 +9,7 @@ package gg.packetloss.grindstone.world.type.city.arena;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.PrayerTriggerEvent;
 import gg.packetloss.grindstone.events.entity.EntitySpawnBlockedEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
@@ -185,9 +185,9 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPrayerApplication(PrayerApplicationEvent event) {
+    public void onPrayerApplication(PrayerTriggerEvent event) {
 
-        if (event.getCause().getEffect().getType().isHoly() && contains(event.getPlayer())) {
+        if (event.getPrayer().isHoly() && contains(event.getPlayer())) {
             event.setCancelled(true);
         }
     }

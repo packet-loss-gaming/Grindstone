@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.city.combat;
 
+import com.google.common.collect.ImmutableList;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
@@ -22,10 +23,8 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackPreDamageEvent;
-import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
-import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
-import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.prayer.PrayerEffects;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
@@ -114,20 +113,17 @@ public class PvPComponent extends BukkitComponent implements Listener {
         PvPSession session = sessions.getSession(PvPSession.class, player);
 
         if (session.punishNextLogin()) {
-            try {
-                Prayer[] targetPrayers = new Prayer[]{
-                        PrayerComponent.constructPrayer(player, PrayerType.GLASSBOX, 1000 * 60 * 3),
-                        PrayerComponent.constructPrayer(player, PrayerType.STARVATION, 1000 * 60 * 3),
-                };
+            PrayerComponent.constructPrayer(
+                player,
+                false,
+                ImmutableList.of(PrayerEffects.GLASS_BOX, PrayerEffects.STARVATION),
+                1000 * 60 * 3
+            );
 
-                prayers.influencePlayer(player, targetPrayers);
-
-                server.getScheduler().runTaskLater(inst,
-                        () -> ChatUtil.sendWarning(player,
-                                "You ran from a fight, the Giant Chicken does not approve!"), 1
-                );
-            } catch (UnsupportedPrayerException ignored) {
-            }
+            server.getScheduler().runTaskLater(inst,
+                    () -> ChatUtil.sendWarning(player,
+                            "You ran from a fight, the Giant Chicken does not approve!"), 1
+            );
         }
         session.wasKicked(false);
     }

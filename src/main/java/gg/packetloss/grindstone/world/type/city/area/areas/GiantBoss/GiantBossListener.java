@@ -8,7 +8,7 @@ package gg.packetloss.grindstone.world.type.city.area.areas.GiantBoss;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.PrayerTriggerEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
@@ -99,8 +99,8 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPrayerApplication(PrayerApplicationEvent event) {
-        if (parent.contains(event.getPlayer()) && event.getCause().getEffect().getType().isHoly()) event.setCancelled(true);
+    public void onPrayerApplication(PrayerTriggerEvent event) {
+        if (parent.contains(event.getPlayer()) && event.getPrayer().isHoly()) event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)

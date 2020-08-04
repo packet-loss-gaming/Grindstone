@@ -7,7 +7,7 @@
 package gg.packetloss.grindstone.world.type.city.area.areas.CursedMine;
 
 import gg.packetloss.grindstone.events.PlayerGraveProtectItemsEvent;
-import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.PrayerTriggerEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
@@ -232,10 +232,10 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPrayerApplication(PrayerApplicationEvent event) {
+    public void onPrayerApplication(PrayerTriggerEvent event) {
         Player player = event.getPlayer();
 
-        if (event.getCause().getEffect().getType().isHoly() && parent.contains(player)) {
+        if (event.getPrayer().isHoly() && parent.contains(player)) {
             event.setCancelled(true);
         }
     }

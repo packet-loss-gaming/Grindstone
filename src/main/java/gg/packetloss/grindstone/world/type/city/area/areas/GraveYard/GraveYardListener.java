@@ -10,7 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
 import gg.packetloss.grindstone.events.PlayerGraveProtectItemsEvent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
-import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.PrayerTriggerEvent;
 import gg.packetloss.grindstone.events.apocalypse.*;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.custom.item.RepairItemEvent;
@@ -81,7 +81,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPrayerApplication(PrayerApplicationEvent event) {
+    public void onPrayerApplication(PrayerTriggerEvent event) {
         if (parent.isHostileTempleArea(event.getPlayer().getLocation())) event.setCancelled(true);
     }
 

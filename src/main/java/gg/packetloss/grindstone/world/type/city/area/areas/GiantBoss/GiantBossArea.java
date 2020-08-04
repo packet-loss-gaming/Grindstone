@@ -16,13 +16,12 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
-import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.optimization.OptimizedZombieFactory;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
-import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.prayer.Prayers;
 import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
@@ -653,11 +652,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                     ChatUtil.sendWarning(getAudiblePlayers(), "May those who appose me die a death like no other...");
                     getContainedParticipants().stream().filter(boss::hasLineOfSight).forEach(player -> {
                         ChatUtil.sendWarning(getAudiblePlayers(), "Perish " + player.getName() + "!");
-                        try {
-                            prayer.influencePlayer(player, PrayerComponent.constructPrayer(player, PrayerType.DOOM, 120000));
-                        } catch (UnsupportedPrayerException e) {
-                            e.printStackTrace();
-                        }
+                        PrayerComponent.constructPrayer(player, Prayers.DOOM, 120000);
                     });
                 }, 20 * 7);
                 break;

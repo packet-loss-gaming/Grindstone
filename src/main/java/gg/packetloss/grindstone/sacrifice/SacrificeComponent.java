@@ -22,14 +22,12 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
-import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.prayer.Prayer;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
-import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.prayer.Prayers;
 import gg.packetloss.grindstone.state.player.NativeSerializerComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -454,24 +452,24 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }
     }
 
-    private PrayerType getRandomSacrificePrayer() {
+    private Prayers getRandomSacrificePrayer() {
         switch (ChanceUtil.getRandom(7)) {
             case 1:
-                return PrayerType.DIGGYDIGGY;
+                return Prayers.DIGGYDIGGY;
             case 2:
-                return PrayerType.HEALTH;
+                return Prayers.HEALTH;
             case 3:
-                return PrayerType.POWER;
+                return Prayers.POWER;
             case 4:
-                return PrayerType.SPEED;
+                return Prayers.SPEED;
             case 5:
-                return PrayerType.ANTIFIRE;
+                return Prayers.ANTIFIRE;
             case 6:
-                return PrayerType.NIGHTVISION;
+                return Prayers.NIGHT_VISION;
             case 7:
-                return PrayerType.DEADLYDEFENSE;
+                return Prayers.DEADLYDEFENSE;
             default:
-                return PrayerType.SMOKE;
+                return Prayers.SMOKE;
         }
     }
 
@@ -513,30 +511,24 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             return false;
         }));
 
-        Set<PrayerType> givenPrayers = new HashSet<>();
+        Set<Prayers> givenPrayers = new HashSet<>();
         for (double i = totalValue; i > 0; i -= config.costPerPrayer) {
             if (!ChanceUtil.getChance(5)) {
                 continue;
             }
 
-            PrayerType prayerType = getRandomSacrificePrayer();
-            if (givenPrayers.contains(prayerType)) {
+            Prayers prayer = getRandomSacrificePrayer();
+            if (givenPrayers.contains(prayer)) {
                 continue;
             }
 
-            try {
-                Prayer givenPrayer = PrayerComponent.constructPrayer(player, prayerType, TimeUnit.MINUTES.toMillis(60));
-                if (prayer.influencePlayer(player, givenPrayer)) {
-                    givenPrayers.add(prayerType);
-                }
-            } catch (UnsupportedPrayerException e) {
-                e.printStackTrace();
-            }
+            givenPrayers.add(prayer);
+            PrayerComponent.constructPrayer(player, prayer, TimeUnit.MINUTES.toMillis(60));
         }
 
         if (!givenPrayers.isEmpty()) {
             ChatUtil.sendNotice(player, "You have been blessed with: ");
-            for (PrayerType prayerType : givenPrayers) {
+            for (Prayers prayerType : givenPrayers) {
                 ChatUtil.sendNotice(player, " - " + prayerType.getChatColor() + prayerType.getFormattedName());
             }
         }

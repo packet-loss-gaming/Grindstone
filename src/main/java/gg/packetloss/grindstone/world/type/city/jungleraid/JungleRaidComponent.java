@@ -694,7 +694,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         player.getActivePotionEffects().clear();
 
-        prayerComponent.uninfluencePlayer(player);
+        prayerComponent.clearPrayers(player);
         maybeDisableGuild(player);
     }
 
@@ -1745,7 +1745,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             Player player = event.getPlayer();
 
             gameState.removePlayer(player);
-            prayerComponent.uninfluencePlayer(player);
+            prayerComponent.clearPrayers(player);
             player.getActivePotionEffects().clear();
 
             player.teleport(lobbyExitLocation);

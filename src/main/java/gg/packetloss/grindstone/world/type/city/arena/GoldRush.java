@@ -9,7 +9,7 @@ package gg.packetloss.grindstone.world.type.city.arena;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.events.PrayerTriggerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.guild.GuildComponent;
@@ -535,9 +535,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPrayerApplication(PrayerApplicationEvent event) {
+    public void onPrayerApplication(PrayerTriggerEvent event) {
 
-        if (event.getCause().getEffect().getType().isHoly() && players.contains(event.getPlayer().getName())) {
+        if (event.getPrayer().isHoly() && players.contains(event.getPlayer().getName())) {
             event.setCancelled(true);
         }
     }

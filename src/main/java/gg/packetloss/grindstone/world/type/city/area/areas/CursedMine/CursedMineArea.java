@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.city.area.areas.CursedMine;
 
+import com.google.common.collect.ImmutableList;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
@@ -16,11 +17,10 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.exceptions.UnsupportedPrayerException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
-import gg.packetloss.grindstone.prayer.PrayerFX.InventoryFX;
-import gg.packetloss.grindstone.prayer.PrayerType;
+import gg.packetloss.grindstone.prayer.Prayers;
+import gg.packetloss.grindstone.prayer.effect.passive.InventoryEffect;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
@@ -397,202 +397,183 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
     }
 
     protected void ghost(final Player player, Material blockType) {
-
-        try {
-            if (ChanceUtil.getChance(player.getLocation().getBlockY())) {
-                if (ChanceUtil.getChance(2)) {
-                    switch (ChanceUtil.getRandom(6)) {
-                        case 1:
-                            ChatUtil.sendNotice(player, "Caspher the friendly ghost drops some bread.");
+        if (ChanceUtil.getChance(player.getLocation().getBlockY())) {
+            if (ChanceUtil.getChance(2)) {
+                switch (ChanceUtil.getRandom(6)) {
+                    case 1:
+                        ChatUtil.sendNotice(player, "Caspher the friendly ghost drops some bread.");
+                        player.getWorld().dropItemNaturally(player.getLocation(),
+                                new ItemStack(Material.BREAD, ChanceUtil.getRandom(16)));
+                        break;
+                    case 2:
+                        ChatUtil.sendNotice(player, "COOKIE gives you a cookie.");
+                        player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.COOKIE));
+                        break;
+                    case 3:
+                        ChatUtil.sendNotice(player, "Caspher the friendly ghost appears.");
+                        for (int i = 0; i < 8; i++) {
                             player.getWorld().dropItemNaturally(player.getLocation(),
-                                    new ItemStack(Material.BREAD, ChanceUtil.getRandom(16)));
-                            break;
-                        case 2:
-                            ChatUtil.sendNotice(player, "COOKIE gives you a cookie.");
-                            player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.COOKIE));
-                            break;
-                        case 3:
-                            ChatUtil.sendNotice(player, "Caspher the friendly ghost appears.");
-                            for (int i = 0; i < 8; i++) {
-                                player.getWorld().dropItemNaturally(player.getLocation(),
-                                        new ItemStack(Material.IRON_INGOT, ChanceUtil.getRandom(64)));
-                                player.getWorld().dropItemNaturally(player.getLocation(),
-                                        new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandom(64)));
-                                player.getWorld().dropItemNaturally(player.getLocation(),
-                                        new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(64)));
-                            }
-                            break;
-                        case 4:
-                            ChatUtil.sendNotice(player, "John gives you a new jacket.");
-                            player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.LEATHER_CHESTPLATE));
-                            break;
-                        case 5:
-                            ChatUtil.sendNotice(player, "Tim teleports items to you.");
-                            getContained(Item.class).forEach(i -> i.teleport(player));
+                                    new ItemStack(Material.IRON_INGOT, ChanceUtil.getRandom(64)));
+                            player.getWorld().dropItemNaturally(player.getLocation(),
+                                    new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandom(64)));
+                            player.getWorld().dropItemNaturally(player.getLocation(),
+                                    new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(64)));
+                        }
+                        break;
+                    case 4:
+                        ChatUtil.sendNotice(player, "John gives you a new jacket.");
+                        player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.LEATHER_CHESTPLATE));
+                        break;
+                    case 5:
+                        ChatUtil.sendNotice(player, "Tim teleports items to you.");
+                        getContained(Item.class).forEach(i -> i.teleport(player));
 
-                            // Add in some extra drops just in case the loot wasn't very juicy
-                            player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.IRON_INGOT, ChanceUtil.getRandom(64)));
-                            player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandom(64)));
-                            player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(64)));
-                            break;
-                        case 6:
-                            ChatUtil.sendNotice(player, "Dan gives you a sparkling touch.");
+                        // Add in some extra drops just in case the loot wasn't very juicy
+                        player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.IRON_INGOT, ChanceUtil.getRandom(64)));
+                        player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandom(64)));
+                        player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(64)));
+                        break;
+                    case 6:
+                        ChatUtil.sendNotice(player, "Dan gives you a sparkling touch.");
 
-                            Material type;
-                            switch (ChanceUtil.getRandom(3)) {
-                                case 1:
-                                    type = Material.IRON_INGOT;
-                                    break;
-                                case 2:
-                                    type = Material.GOLD_INGOT;
-                                    break;
-                                case 3:
-                                    type = Material.DIAMOND;
-                                    break;
-                                default:
-                                    type = Material.REDSTONE;
-                                    break;
-                            }
-
-                            prayer.influencePlayer(player,
-                                    PrayerComponent.constructPrayer(player, new InventoryFX(type, 64), 5000));
-                            break;
-                        default:
-                            break;
-                    }
-                } else {
-                    if (ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(2)) {
-                        ChatUtil.sendNotice(player, ChatColor.AQUA, "Your armour blocks an incoming ghost attack.");
-                        return;
-                    }
-
-                    Location modifiedLoc = null;
-
-                    switch (ChanceUtil.getRandom(11)) {
-                        case 1:
-                            if (ChanceUtil.getChance(4)) {
-                                if (blockType == Material.DIAMOND_ORE) {
-                                    addToHitList(player);
-                                    ChatUtil.sendWarning(player, "You ignite fumes in the air!");
-                                    EditSession ess = WorldEditBridge.getSystemEditSessionFor(getWorld());
-                                    try {
-                                        ess.fillXZ(toBlockVec3(player.getLocation()), BlockTypes.FIRE.getDefaultState(), 20, 20, true);
-                                        ess.flushSession();
-                                    } catch (MaxChangedBlocksException ignored) {
-
-                                    }
-                                    for (int i = ChanceUtil.getRandom(24) + 20; i > 0; --i) {
-                                        final boolean untele = i == 11;
-                                        server.getScheduler().runTaskLater(inst, () -> {
-                                            if (untele) {
-                                                revertPlayerBlocks(player);
-                                                removeFromHitList(player);
-                                            }
-
-                                            if (!contains(player)) return;
-
-                                            Location l = LocationUtil.findRandomLoc(player.getLocation().getBlock(), 3, true, false);
-                                            ExplosionStateFactory.createExplosion(l, 3, true, false);
-                                        }, 12 * i);
-                                    }
-                                } else {
-                                    addToHitList(player);
-                                    player.chat("Who's a good ghost?!?!");
-                                    server.getScheduler().runTaskLater(inst, () -> {
-                                        player.chat("Don't hurt me!!!");
-                                        server.getScheduler().runTaskLater(inst, () -> {
-                                            player.chat("Nooooooooooo!!!");
-
-                                            try {
-                                                prayer.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                                        PrayerType.CANNON, TimeUnit.MINUTES.toMillis(2)));
-                                            } catch (UnsupportedPrayerException ex) {
-                                                ex.printStackTrace();
-                                            }
-                                        }, 20);
-                                    }, 20);
-                                }
+                        Material type;
+                        switch (ChanceUtil.getRandom(3)) {
+                            case 1:
+                                type = Material.IRON_INGOT;
                                 break;
-                            }
-                        case 2:
-                            ChatUtil.sendWarning(player, "You find yourself falling from the sky...");
-                            addToHitList(player);
-                            modifiedLoc = new Location(player.getWorld(), player.getLocation().getX(), 350, player.getLocation().getZ());
-                            break;
-                        case 3:
-                            ChatUtil.sendWarning(player, "George plays with fire, sadly too close to you.");
-                            prayer.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                    PrayerType.FIRE, TimeUnit.SECONDS.toMillis(45)));
-                            break;
-                        case 4:
-                            ChatUtil.sendWarning(player, "Simon says pick up sticks.");
-                            for (int i = 0; i < player.getInventory().getContents().length * 1.5; i++) {
-                                player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.STICK, 64));
-                            }
-                            break;
-                        case 5:
-                            ChatUtil.sendWarning(player, "Ben dumps out your backpack.");
-                            prayer.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                    PrayerType.BUTTERFINGERS, TimeUnit.SECONDS.toMillis(10)));
-                            break;
-                        case 6:
-                            ChatUtil.sendWarning(player, "Merlin attacks with a mighty rage!");
-                            prayer.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                    PrayerType.MERLIN, TimeUnit.SECONDS.toMillis(20)));
-                            break;
-                        case 7:
-                            ChatUtil.sendWarning(player, "Dave tells everyone that your mining!");
-                            Bukkit.broadcastMessage(ChatColor.GOLD + "The player: "
-                                    + player.getDisplayName() + " is mining in the cursed mine!!!");
-                            break;
-                        case 8:
-                            ChatUtil.sendWarning(player, "Dave likes your food.");
-                            addToHitList(player);
-                            prayer.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                    PrayerType.STARVATION, TimeUnit.MINUTES.toMillis(15)));
-                            break;
-                        case 9:
-                            ChatUtil.sendWarning(player, "Hallow declares war on YOU!");
-                            for (int i = 0; i < ChanceUtil.getRangedRandom(10, 30); i++) {
-                                Blaze blaze = getWorld().spawn(player.getLocation(), Blaze.class);
-                                blaze.setTarget(player);
-                                blaze.setRemoveWhenFarAway(true);
-                            }
-                            break;
-                        case 10:
-                            ChatUtil.sendWarning(player, "A legion of hell hounds appears!");
-                            for (int i = 0; i < ChanceUtil.getRangedRandom(10, 30); i++) {
-                                Wolf wolf = getWorld().spawn(player.getLocation(), Wolf.class);
-                                wolf.setTarget(player);
-                                wolf.setRemoveWhenFarAway(true);
-                            }
-                            break;
-                        case 11:
-                            if (blockType == Material.EMERALD_ORE) {
-                                ChatUtil.sendNotice(player, "Dave got a chemistry set!");
-                                addToHitList(player);
-                                prayer.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                        PrayerType.DEADLYPOTION, TimeUnit.MINUTES.toMillis(30)));
-                            } else {
-                                ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
-                                addToHitList(player);
-                                prayer.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                        PrayerType.SLAP, TimeUnit.MINUTES.toMillis(30)));
-                                prayer.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                        PrayerType.BUTTERFINGERS, TimeUnit.MINUTES.toMillis(30)));
-                                prayer.influencePlayer(player, PrayerComponent.constructPrayer(player,
-                                        PrayerType.FIRE, TimeUnit.MINUTES.toMillis(30)));
-                            }
-                            break;
-                        default:
-                            break;
-                    }
+                            case 2:
+                                type = Material.GOLD_INGOT;
+                                break;
+                            case 3:
+                                type = Material.DIAMOND;
+                                break;
+                            default:
+                                type = Material.REDSTONE;
+                                break;
+                        }
 
-                    if (modifiedLoc != null) player.teleport(modifiedLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                        PrayerComponent.constructPrayer(player, true, ImmutableList.of(new InventoryEffect(type, 64)), 5000);
+                        break;
+                    default:
+                        break;
                 }
+            } else {
+                if (ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(2)) {
+                    ChatUtil.sendNotice(player, ChatColor.AQUA, "Your armour blocks an incoming ghost attack.");
+                    return;
+                }
+
+                Location modifiedLoc = null;
+
+                switch (ChanceUtil.getRandom(11)) {
+                    case 1:
+                        if (ChanceUtil.getChance(4)) {
+                            if (blockType == Material.DIAMOND_ORE) {
+                                addToHitList(player);
+                                ChatUtil.sendWarning(player, "You ignite fumes in the air!");
+                                EditSession ess = WorldEditBridge.getSystemEditSessionFor(getWorld());
+                                try {
+                                    ess.fillXZ(toBlockVec3(player.getLocation()), BlockTypes.FIRE.getDefaultState(), 20, 20, true);
+                                    ess.flushSession();
+                                } catch (MaxChangedBlocksException ignored) {
+
+                                }
+                                for (int i = ChanceUtil.getRandom(24) + 20; i > 0; --i) {
+                                    final boolean untele = i == 11;
+                                    server.getScheduler().runTaskLater(inst, () -> {
+                                        if (untele) {
+                                            revertPlayerBlocks(player);
+                                            removeFromHitList(player);
+                                        }
+
+                                        if (!contains(player)) return;
+
+                                        Location l = LocationUtil.findRandomLoc(player.getLocation().getBlock(), 3, true, false);
+                                        ExplosionStateFactory.createExplosion(l, 3, true, false);
+                                    }, 12 * i);
+                                }
+                            } else {
+                                addToHitList(player);
+                                player.chat("Who's a good ghost?!?!");
+                                server.getScheduler().runTaskLater(inst, () -> {
+                                    player.chat("Don't hurt me!!!");
+                                    server.getScheduler().runTaskLater(inst, () -> {
+                                        player.chat("Nooooooooooo!!!");
+
+                                        PrayerComponent.constructPrayer(player, Prayers.CANNON, TimeUnit.MINUTES.toMillis(2));
+                                    }, 20);
+                                }, 20);
+                            }
+                            break;
+                        }
+                    case 2:
+                        ChatUtil.sendWarning(player, "You find yourself falling from the sky...");
+                        addToHitList(player);
+                        modifiedLoc = new Location(player.getWorld(), player.getLocation().getX(), 350, player.getLocation().getZ());
+                        break;
+                    case 3:
+                        ChatUtil.sendWarning(player, "George plays with fire, sadly too close to you.");
+                        PrayerComponent.constructPrayer(player, Prayers.FIRE, TimeUnit.SECONDS.toMillis(45));
+                        break;
+                    case 4:
+                        ChatUtil.sendWarning(player, "Simon says pick up sticks.");
+                        for (int i = 0; i < player.getInventory().getContents().length * 1.5; i++) {
+                            player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.STICK, 64));
+                        }
+                        break;
+                    case 5:
+                        ChatUtil.sendWarning(player, "Ben dumps out your backpack.");
+                        PrayerComponent.constructPrayer(player, Prayers.BUTTER_FINGERS, TimeUnit.SECONDS.toMillis(10));
+                        break;
+                    case 6:
+                        ChatUtil.sendWarning(player, "Merlin attacks with a mighty rage!");
+                        PrayerComponent.constructPrayer(player, Prayers.MERLIN, TimeUnit.SECONDS.toMillis(20));
+                        break;
+                    case 7:
+                        ChatUtil.sendWarning(player, "Dave tells everyone that your mining!");
+                        Bukkit.broadcastMessage(ChatColor.GOLD + "The player: "
+                                + player.getDisplayName() + " is mining in the cursed mine!!!");
+                        break;
+                    case 8:
+                        ChatUtil.sendWarning(player, "Dave likes your food.");
+                        addToHitList(player);
+                        PrayerComponent.constructPrayer(player, Prayers.STARVATION, TimeUnit.MINUTES.toMillis(15));
+                        break;
+                    case 9:
+                        ChatUtil.sendWarning(player, "Hallow declares war on YOU!");
+                        for (int i = 0; i < ChanceUtil.getRangedRandom(10, 30); i++) {
+                            Blaze blaze = getWorld().spawn(player.getLocation(), Blaze.class);
+                            blaze.setTarget(player);
+                            blaze.setRemoveWhenFarAway(true);
+                        }
+                        break;
+                    case 10:
+                        ChatUtil.sendWarning(player, "A legion of hell hounds appears!");
+                        for (int i = 0; i < ChanceUtil.getRangedRandom(10, 30); i++) {
+                            Wolf wolf = getWorld().spawn(player.getLocation(), Wolf.class);
+                            wolf.setTarget(player);
+                            wolf.setRemoveWhenFarAway(true);
+                        }
+                        break;
+                    case 11:
+                        if (blockType == Material.EMERALD_ORE) {
+                            ChatUtil.sendNotice(player, "Dave got a chemistry set!");
+                            addToHitList(player);
+                            PrayerComponent.constructPrayer(player, Prayers.DEADLY_POTION, TimeUnit.MINUTES.toMillis(30));
+                        } else {
+                            ChatUtil.sendWarning(player, "Dave says hi, that's not good.");
+                            addToHitList(player);
+                            PrayerComponent.constructPrayer(player, Prayers.SLAP, TimeUnit.MINUTES.toMillis(30));
+                            PrayerComponent.constructPrayer(player, Prayers.BUTTER_FINGERS, TimeUnit.MINUTES.toMillis(30));
+                            PrayerComponent.constructPrayer(player, Prayers.FIRE, TimeUnit.MINUTES.toMillis(30));
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+                if (modifiedLoc != null) player.teleport(modifiedLoc, PlayerTeleportEvent.TeleportCause.UNKNOWN);
             }
-        } catch (UnsupportedPrayerException ex) {
-            ex.printStackTrace();
         }
     }
 }
