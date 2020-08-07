@@ -189,7 +189,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         if (hasPrayers(player)) {
-            long count = getPrayers(player).stream().filter(Prayer::isHoly).count();
+            long count = getPrayers(player).stream().filter(Prayer::isUnholy).count();
 
             if (count > 1) {
                 ChatUtil.sendNotice(player, ChatColor.GOLD, "The curses have been lifted!");

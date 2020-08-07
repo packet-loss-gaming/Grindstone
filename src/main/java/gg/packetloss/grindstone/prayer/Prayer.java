@@ -35,6 +35,10 @@ public class Prayer {
         return isHoly;
     }
 
+    public boolean isUnholy() {
+        return !isHoly;
+    }
+
     public long getStartTime() {
         return startTime;
     }
