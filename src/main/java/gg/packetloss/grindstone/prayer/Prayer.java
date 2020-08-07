@@ -47,6 +47,10 @@ public class Prayer {
         this.maxDuration = maxDuration;
     }
 
+    public boolean hasExpired() {
+        return System.currentTimeMillis() - getStartTime() > getMaxDuration();
+    }
+
     public ImmutableList<PassivePrayerEffect> getPassiveEffects() {
         return (ImmutableList) effects.get(PrayerEffectTrigger.PASSIVE);
     }

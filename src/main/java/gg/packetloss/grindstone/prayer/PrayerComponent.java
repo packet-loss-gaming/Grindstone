@@ -44,6 +44,7 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
     @Override
     public void enable() {
         registerCommands(Commands.class);
+
         CommandBook.server().getScheduler().scheduleSyncRepeatingTask(
             CommandBook.inst(),
             this,
@@ -52,8 +53,49 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
         );
     }
 
+    private static ImmutableList<Prayer> updatePrayers(UUID playerID, ImmutableList<Prayer> existingPrayers) {
+        boolean changed = false;
+        for (Prayer prayer : existingPrayers) {
+            if (prayer.hasExpired()) {
+                changed = true;
+                break;
+            }
+        }
+
+        if (!changed) {
+            return existingPrayers;
+        }
+
+        ImmutableList.Builder<Prayer> newPrayersBuilder = ImmutableList.builder();
+        for (Prayer prayer : existingPrayers) {
+            if (prayer.hasExpired()) {
+                continue;
+            }
+
+            newPrayersBuilder.add(prayer);
+        }
+
+        ImmutableList<Prayer> newPrayers = newPrayersBuilder.build();
+
+        if (newPrayers.isEmpty()) {
+            prayers.remove(playerID);
+        } else {
+            prayers.put(playerID, newPrayers);
+        }
+
+        return newPrayers;
+    }
+
+
     public static ImmutableList<Prayer> getPrayers(Player player) {
-        return prayers.getOrDefault(player.getUniqueId(), ImmutableList.of());
+        UUID playerID = player.getUniqueId();
+
+        ImmutableList<Prayer> activePrayers = prayers.get(playerID);
+        if (activePrayers != null) {
+            return updatePrayers(playerID, activePrayers);
+        }
+
+        return ImmutableList.of();
     }
 
     public static boolean hasPrayers(Player player) {
