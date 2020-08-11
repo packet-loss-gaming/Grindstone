@@ -251,16 +251,16 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 return;
             }
 
-            double rageChange = .5;
+            double rageMultiplier = .5;
 
             if (attacker instanceof Player) {
                 if (ItemUtil.hasItem((Player) attacker, CustomItems.CALMING_CRYSTAL)) {
-                    rageChange *= .25;
+                    rageMultiplier *= .25;
                 }
 
                 ItemStack held = ((Player) attacker).getInventory().getItemInMainHand();
                 if (ItemUtil.isItem(held, CustomItems.PATIENT_X_THERAPY_NOTES)) {
-                    rageChange = -5;
+                    rageMultiplier = -5;
 
                     ItemUtil.removeItemOfName(
                             (Player) attacker,
@@ -269,7 +269,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                             false
                     );
                 } else if (held.getType() == Material.BLAZE_ROD) {
-                    rageChange += 2;
+                    rageMultiplier += 2;
                 }
             }
 
@@ -278,7 +278,9 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                         .sendProjectilesFromEntity(parent.boss, 12, .5F, Snowball.class);
             }
 
-            parent.modifyDifficulty(rageChange);
+            int rageUnits = (int) (event.getDamage() / 50) + 1;
+
+            parent.modifyDifficulty(rageMultiplier * rageUnits);
             parent.teleportRandom(true);
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
