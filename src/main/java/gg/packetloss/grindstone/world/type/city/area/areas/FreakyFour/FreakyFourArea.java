@@ -203,7 +203,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         // Handle vitals
         charlotte.setMaxHealth(config.charlotteHP);
         charlotte.setHealth(config.charlotteHP);
-        charlotte.setRemoveWhenFarAway(true);
+        charlotte.setRemoveWhenFarAway(false);
 
         try {
             AttributeBook.setAttribute(charlotte, AttributeBook.Attribute.FOLLOW_RANGE, 50);
@@ -284,7 +284,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         frimus = getWorld().spawn(getCentralLoc(frimus_RG), Blaze.class);
 
         // Handle vitals
-        frimus.setRemoveWhenFarAway(true);
+        frimus.setRemoveWhenFarAway(false);
         frimus.setMaxHealth(config.frimusHP);
         frimus.setHealth(config.frimusHP);
 
@@ -333,7 +333,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         // Handle vitals
         daBomb.setMaxHealth(config.daBombHP);
         daBomb.setHealth(config.daBombHP);
-        daBomb.setRemoveWhenFarAway(true);
+        daBomb.setRemoveWhenFarAway(false);
 
         try {
             AttributeBook.setAttribute(daBomb, AttributeBook.Attribute.FOLLOW_RANGE, 50);
@@ -361,7 +361,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         // Handle vitals
         snipee.setMaxHealth(config.snipeeHP);
         snipee.setHealth(config.snipeeHP);
-        snipee.setRemoveWhenFarAway(true);
+        snipee.setRemoveWhenFarAway(false);
 
         try {
             AttributeBook.setAttribute(snipee, AttributeBook.Attribute.MOVEMENT_SPEED, 0.15);

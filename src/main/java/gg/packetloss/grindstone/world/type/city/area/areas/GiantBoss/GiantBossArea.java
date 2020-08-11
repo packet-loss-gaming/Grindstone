@@ -258,7 +258,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         boss = HBGiant.spawn(getBossSpawnLocation());
         boss.setMaxHealth(maxHealth);
         boss.setHealth(currentHealth);
-        boss.setRemoveWhenFarAway(true);
+        boss.setRemoveWhenFarAway(false);
 
         try {
             AttributeBook.setAttribute(boss, AttributeBook.Attribute.KNOCKBACK_RESISTANCE, 1);
