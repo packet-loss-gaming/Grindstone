@@ -328,6 +328,15 @@ public class PatientXListener extends AreaListener<PatientXArea> {
     }
 
     @EventHandler
+    public void onEntityTransform(EntityTransformEvent event) {
+        // Stop Patient X from becoming a drowned zombie
+        if (event.getEntity() == parent.boss) {
+            event.setCancelled(true);
+            parent.teleportRandom();
+        }
+    }
+
+    @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
 
         if (parent.contains(event.getEntity())) {
