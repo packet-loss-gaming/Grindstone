@@ -62,6 +62,8 @@ public enum CustomItems {
     SHADOW_BOW(ChatColor.DARK_RED, "Shadow Bow"),
 
     // Red Items
+    RED_SWORD(ChatColor.DARK_RED, "Red Sword"),
+    RED_BOW(ChatColor.DARK_RED, "Red Bow"),
     RED_FEATHER(ChatColor.DARK_RED, "Red Feather"),
 
     // God Weapons

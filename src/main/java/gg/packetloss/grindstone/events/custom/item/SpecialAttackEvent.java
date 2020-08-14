@@ -29,7 +29,7 @@ public class SpecialAttackEvent extends PlayerEvent implements Cancellable {
 
         this.context = context;
         this.spec = spec;
-        this.coolDown = context.getDelay() + spec.getCoolDown();
+        this.coolDown = spec.getCoolDown(context);
 
         if (owner.hasPermission("aurora.tome.legends")) {
             this.coolDown *= .9;

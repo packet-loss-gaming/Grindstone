@@ -194,6 +194,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
             wepSys.add(WeaponType.RANGED, CustomItems.MASTER_BOW, handle(new MasterBowImpl()));
             wepSys.add(WeaponType.RANGED, CustomItems.FEAR_BOW, handle(new FearBowImpl()));
             wepSys.add(WeaponType.RANGED, CustomItems.UNLEASHED_BOW, handle(new UnleashedBowImpl()));
+            wepSys.add(WeaponType.RANGED, CustomItems.RED_BOW, handle(new RedBowImpl()));
 
             wepSys.add(WeaponType.MELEE, CustomItems.MASTER_SWORD, handle(new MasterSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.MASTER_SHORT_SWORD, handle(new MasterSwordImpl()));
@@ -201,6 +202,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
             wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SHORT_SWORD, handle(new FearSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SHORT_SWORD, handle(new UnleashedSwordImpl()));
+            wepSys.add(WeaponType.MELEE, CustomItems.RED_SWORD, handle(new RedSwordImpl()));
         }, 1);
     }
 
@@ -251,7 +253,6 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         handle(new ImbuedCrystalImpl(goldCondenser));
         handle(new MadMilkImpl());
         handle(new MagicBucketImpl());
-        handle(new MasterBowImpl());
         handle(new NecrosArmorImpl());
         handle(new NectricArmorImpl());
         handle(new PhantomPotionImpl());

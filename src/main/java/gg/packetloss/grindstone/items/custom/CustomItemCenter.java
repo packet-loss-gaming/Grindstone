@@ -352,14 +352,22 @@ public class CustomItemCenter {
 
         // Shadow Items
         CustomWeapon shadowSword = new CustomWeapon(SHADOW_SWORD, Material.DIAMOND_SWORD, 5);
-        fearBow.addUse("Slows your opponent with every hit.");
+        shadowSword.addUse("Slows your opponent with every hit.");
         addItem(shadowSword);
 
         CustomWeapon shadowBow = new CustomWeapon(SHADOW_BOW, Material.BOW, 5);
-        fearBow.addUse("Slows your opponent with every hit.");
+        shadowBow.addUse("Slows your opponent with every hit.");
         addItem(shadowBow);
 
         // Red Items
+        CustomWeapon redSword = new CustomWeapon(RED_SWORD, Material.DIAMOND_SWORD, 1.75);
+        redSword.addUse("Global Effects.");
+        addItem(redSword);
+
+        CustomWeapon redBow = new CustomWeapon(RED_BOW, Material.BOW, 1.75);
+        redBow.addUse("Global Effects.");
+        addItem(redBow);
+
         CustomItem redFeather = new CustomItem(RED_FEATHER, Material.FEATHER);
         redFeather.addSource(ItemSource.MARKET);
         redFeather.addUse("Consumes redstone to prevent up to 100% damage, " +

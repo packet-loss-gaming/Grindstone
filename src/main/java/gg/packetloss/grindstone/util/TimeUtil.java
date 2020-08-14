@@ -11,6 +11,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class TimeUtil {
@@ -87,6 +88,10 @@ public class TimeUtil {
 
     public static long convertHoursToTicks(int hours) {
         return convertMinutesToTicks(hours * 60);
+    }
+
+    public static long convertTicksToMills(int ticks) {
+        return ticks * (TimeUnit.SECONDS.toMillis(1) / 20);
     }
 
     public static int getNextHour(Predicate<Integer> test) {
