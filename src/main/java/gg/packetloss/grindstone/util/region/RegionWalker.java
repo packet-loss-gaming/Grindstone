@@ -10,10 +10,10 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.RegionUtil;
+import gg.packetloss.grindstone.util.functional.TriConsumer;
 import gg.packetloss.grindstone.util.functional.TriPredicate;
-import org.apache.logging.log4j.util.BiConsumer;
-import org.apache.logging.log4j.util.TriConsumer;
 
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 
 public class RegionWalker {

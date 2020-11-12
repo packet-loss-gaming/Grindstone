@@ -60,10 +60,10 @@ dependencies {
     compileOnly group: 'gg.packetloss', name: 'pitfall', version: '2.1.2'
 
     implementation group: 'gg.packetloss', name: 'open-boss', version: '1.2'
-    implementation group: 'gg.packetloss', name: 'hackbook', version: '1.16.1.0'
-    implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.16.1.0'
+    implementation group: 'gg.packetloss', name: 'hackbook', version: '1.16.4.1'
+    implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.16.4.0'
 
-    compileOnly group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.16.1-R0.1-SNAPSHOT'
+    compileOnly group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.16.4-R0.1-SNAPSHOT'
 
     compileOnly group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '7.2.0-SNAPSHOT'
     compileOnly group: 'com.sk89q.worldguard', name: 'worldguard-legacy', version: '7.0.0-SNAPSHOT'
