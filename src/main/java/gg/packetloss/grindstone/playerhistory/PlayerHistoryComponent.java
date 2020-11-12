@@ -47,6 +47,34 @@ public class PlayerHistoryComponent extends BukkitComponent implements Listener 
         });
     }
 
+    private void unloadHistory(UUID playerID) {
+        PlayerHistory history = playerHistory.get(playerID);
+        if (history != null && history.decrement()) {
+            playerHistory.remove(playerID);
+        }
+    }
+
+    private void loadHistory(UUID playerID) {
+        PlayerHistory history = getHistory(playerID);
+
+        // History already loaded
+        if (history.increment()) {
+            return;
+        }
+
+        try {
+            Optional<Long> optOnlineTime = MySQLHandle.getOnlineTime(playerID);
+            if (optOnlineTime.isPresent()) {
+                history.loadExistingPlayer(optOnlineTime.get());
+            } else {
+                history.loadNewPlayer();
+            }
+        } catch (SQLException e) {
+            unloadHistory(playerID);
+            throw new RuntimeException("History failed to load.", e);
+        }
+    }
+
     public CompletableFuture<Long> getTimePlayed(Player player) {
         UUID playerID = player.getUniqueId();
         return getHistory(playerID).getPlayTime();
@@ -54,24 +82,11 @@ public class PlayerHistoryComponent extends BukkitComponent implements Listener 
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(AsyncPlayerPreLoginEvent event) {
-        UUID playerID = event.getUniqueId();
-        try {
-            // Players can sometimes join before they've fully disconnected
-            playerHistory.remove(playerID);
-
-            Optional<Long> optOnlineTime = MySQLHandle.getOnlineTime(playerID);
-            if (optOnlineTime.isPresent()) {
-                getHistory(playerID).loadExistingPlayer(optOnlineTime.get());
-            } else {
-                getHistory(playerID).loadNewPlayer();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        loadHistory(event.getUniqueId());
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        playerHistory.remove(event.getPlayer().getUniqueId());
+        unloadHistory(event.getPlayer().getUniqueId());
     }
 }

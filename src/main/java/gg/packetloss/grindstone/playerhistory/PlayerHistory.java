@@ -14,6 +14,8 @@ class PlayerHistory {
     private CompletableFuture<Long> playTimeFuture = new CompletableFuture<>();
     private long playTime;
 
+    private int logins = 0;
+
     public void loadExistingPlayer(long playTime) {
         setPlayTime(playTime);
     }
@@ -43,5 +45,23 @@ class PlayerHistory {
         }
 
         return CompletableFuture.completedFuture(getPlayTimeInternal());
+    }
+
+    protected synchronized void abandonJobs() {
+        if (playTimeFuture != null) {
+            playTimeFuture.completeExceptionally(new RuntimeException("Job interrupted."));
+        }
+    }
+
+    protected synchronized boolean increment() {
+        return ++logins > 1;
+    }
+
+    protected synchronized boolean decrement() {
+        if (--logins < 1) {
+            abandonJobs();
+            return true;
+        }
+        return false;
     }
 }
