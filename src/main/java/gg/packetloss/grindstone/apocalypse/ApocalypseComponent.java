@@ -665,10 +665,10 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 continue;
             }
 
-            HashMap<LivingEntity, List<Zombie>> targetZombies = new HashMap<>();
+            HashMap<Player, List<Zombie>> targetZombies = new HashMap<>();
             for (Zombie zombie : world.getEntitiesByClass(Zombie.class)) {
                 LivingEntity target = zombie.getTarget();
-                if (target == null || !target.isValid()) {
+                if (!(target instanceof Player) || !target.isValid()) {
                     continue;
                 }
 
@@ -681,7 +681,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                     continue;
                 }
 
-                targetZombies.compute(target, (ignored, values) -> {
+                targetZombies.compute((Player) target, (ignored, values) -> {
                     if (values == null) {
                         values = new ArrayList<>();
                     }
@@ -702,16 +702,28 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
                 Location replacementLoc = zombies.get(numZombies / 2).getLocation();
 
+                ApocalypseOverflowEvent overflowEvent = new ApocalypseOverflowEvent(target, replacementLoc);
+                CommandBook.callEvent(overflowEvent);
+                if (overflowEvent.isCancelled()) {
+                    return;
+                }
+
                 // Kill zombies and spawn merciless zombies
                 double[] health = {0}; // hack for lambda capture
                 ApocalypseHelper.suppressDrops(() -> {
                     for (Zombie zombie : zombies) {
+                        if (!ChanceUtil.getChance(overflowEvent.getKillChance())) {
+                            continue;
+                        }
+
                         health[0] += zombie.getHealth();
                         zombie.setHealth(0);
                     }
                 });
 
-                makeMercilessMiniboss(replacementLoc, health[0]);
+                if (overflowEvent.shouldSpawnMerciless()) {
+                    makeMercilessMiniboss(overflowEvent.getLocation(), health[0]);
+                }
             });
         }
     }
