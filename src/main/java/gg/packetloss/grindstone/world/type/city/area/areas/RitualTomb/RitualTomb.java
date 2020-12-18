@@ -187,8 +187,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
 
     private Collection<Vex> fillDemons() {
         Collection<Vex> demons = getContained(Vex.class);
-        int current = demons.size();
-        for (int i = current; i < getNumberOfDemonsActive(); ++i) {
+        for (int i = demons.size(), target = getNumberOfDemonsActive(); i < target; ++i) {
             demons.add(world.spawn(getRandomRitualTombPoint(), Vex.class));
         }
         return demons;
