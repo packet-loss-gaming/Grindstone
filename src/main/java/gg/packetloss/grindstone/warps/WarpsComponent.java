@@ -92,6 +92,10 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         return getBedLocation(player).orElse(spawnLoc);
     }
 
+    public Optional<Location> getWarp(WarpQualifiedName warpName) {
+        return warpManager.getExactWarp(warpName).map(WarpPoint::getSafeLocation);
+    }
+
     // FIXME: Priority set as workaround for Multiverse-Core#1977
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerRespawn(PlayerRespawnEvent event) {

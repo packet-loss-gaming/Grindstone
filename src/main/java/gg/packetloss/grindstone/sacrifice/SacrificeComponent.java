@@ -22,6 +22,7 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
+import gg.packetloss.grindstone.events.PlayerSacrificeRewardEvent;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -495,6 +496,12 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }
 
         totalValue *= ChanceUtil.getRangedRandom(config.valueMinMultiplier, config.valueMaxMultiplier);
+
+        PlayerSacrificeRewardEvent event = new PlayerSacrificeRewardEvent(player, totalValue);
+        CommandBook.callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
 
         highScores.update(player, ScoreTypes.SACRIFICED_VALUE, Math.round(totalValue));
 

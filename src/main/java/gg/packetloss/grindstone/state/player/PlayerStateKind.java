@@ -19,6 +19,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     SHNUGGLES_PRIME(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     GRAVE_YARD(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     PATIENT_X(new BossSafeRespawnPlayerStateTypeConfigImpl()),
+    RITUAL_TOMB(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     MIRAGE_ARENA(new WalkInPvPSafeRespawnPlayerStateTypeConfigImpl()),
     SAND_ARENA(new WalkInPvPSafeRespawnPlayerStateTypeConfigImpl()),
     MOB_ARENA_COMPATIBILITY(new GuildControlledTempPlayerStateTypeConfigImpl()),
@@ -37,6 +38,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     GRAVE_YARD_NORTH_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     PATIENT_X_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     JUNGLE_RAID_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
+    RITUAL_TOMB_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     SKY_WARS_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl());
 
     private final PlayerStateTypeConfigImpl config;
