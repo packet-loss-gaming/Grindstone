@@ -208,12 +208,6 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     }
 
     private void updateDemons() {
-        if (demonsCurrent == 0) {
-            resetRitual();
-            ChatUtil.sendNotice(getAudiblePlayers(), "You win! Loot coming soon (tm)");
-            return;
-        }
-
         seekDemonsOn(fillDemons(), findHighPriorityTarget());
     }
 
@@ -241,7 +235,10 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     }
 
     public void demonKilled() {
-        --demonsCurrent;
+        if (--demonsCurrent == 0) {
+            resetRitual();
+            ChatUtil.sendNotice(getAudiblePlayers(), "You win! Loot coming soon (tm)");
+        }
     }
 
     public Location getRandomRitualTombPoint() {
