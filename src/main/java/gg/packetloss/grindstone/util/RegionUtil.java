@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RegionUtil {
-    public static Location getCenterAt(World world, int y, ProtectedRegion region) {
+    public static Location getCenterAt(World world, double y, ProtectedRegion region) {
         Region rg = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint().add(1, 1, 1));
         Vector3 center = rg.getCenter();
         return new Location(world, center.getX(), y, center.getZ());

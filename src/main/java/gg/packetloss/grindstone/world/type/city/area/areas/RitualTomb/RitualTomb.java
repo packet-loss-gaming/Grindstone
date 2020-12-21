@@ -17,10 +17,7 @@ import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
-import gg.packetloss.grindstone.util.BossBarUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.util.RomanNumeralUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
@@ -240,23 +237,45 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
         }
     }
 
+    private int getFloorLevel() {
+        return floorRegion.getMaximumPoint().getY();
+    }
+
     public Location getRandomRitualTombPoint() {
+        Location midPoint = RegionUtil.getCenter(world, floorRegion);
         return LocationUtil.pickLocation(
             world,
-            floorRegion.getMaximumPoint().getY() + 1,
+            getFloorLevel() + 1,
             new RegionChecker(region) {
-                @Override
-                public Boolean evaluate(BlockVector3 vector) {
+                private boolean canStandOnBlock(BlockVector3 vector) {
                     Block upper = world.getBlockAt(vector.getBlockX(), vector.getBlockY(), vector.getBlockZ());
                     Block lower = world.getBlockAt(vector.getBlockX(), vector.getBlockY() - 1, vector.getBlockZ());
                     return !upper.getType().isSolid() && lower.getType().isSolid();
                 }
+
+                private boolean isNotTooCloseToMid(BlockVector3 vector) {
+                    Location vectorAsLoc = new Location(world, vector.getX(), vector.getY(), vector.getZ());
+                    return !LocationUtil.isWithin2DDistance(midPoint, vectorAsLoc, 4);
+                }
+
+                @Override
+                public Boolean evaluate(BlockVector3 vector) {
+                    return canStandOnBlock(vector) && isNotTooCloseToMid(vector);
+                }
             }
-        );
+        ).add(0.5, 0, 0.5);
     }
 
-    public void teleportToRitualTomb(Player player) {
-        player.teleport(getRandomRitualTombPoint(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+    public void teleportToRitualTomb(Player player, boolean asSpectator) {
+        Location spawnPoint = getRandomRitualTombPoint();
+        if (asSpectator) {
+            spawnPoint.add(0, 3, 0);
+        }
+
+        Location pointOfInterest = RegionUtil.getCenterAt(world, getFloorLevel(), floorRegion);
+        spawnPoint.setDirection(VectorUtil.createDirectionalVector(spawnPoint, pointOfInterest));
+
+        player.teleport(spawnPoint, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
     public void tryTeleportToRitualTomb(Player player) {
@@ -276,7 +295,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
             return;
         }
 
-        teleportToRitualTomb(player);
+        teleportToRitualTomb(player, false);
     }
 
     public Location getRitualSiteLoc() {

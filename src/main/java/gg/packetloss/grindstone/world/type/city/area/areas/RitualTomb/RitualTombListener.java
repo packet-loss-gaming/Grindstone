@@ -156,6 +156,6 @@ public class RitualTombListener extends AreaListener<RitualTomb> {
         }
 
         Player player = event.getPlayer();
-        parent.teleportToRitualTomb(player);
+        parent.teleportToRitualTomb(player, true);
     }
 }
