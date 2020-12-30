@@ -353,7 +353,14 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
 
         for (Player player : getContainedParticipants()) {
-            if (isEvilMode(player.getEyeLocation().getBlock())) {
+            Location playerLoc = player.getEyeLocation();
+
+            // Make sure players aren't flying in hostile temple areas
+            if (player.isFlying() && isHostileTempleArea(playerLoc)) {
+                player.setFlying(false);
+            }
+
+            if (isEvilMode(playerLoc.getBlock())) {
                 fogPlayer(player);
                 localSpawn(player);
 
@@ -535,7 +542,15 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             return;
         }
 
-        if (!ChanceUtil.getChance(3)) return;
+        // Don't spawn zombies if the player is flying, run() combined with the FlightBlockingListener
+        // should ensure we don't have flying players in the temple, so this is fine.
+        if (player.isFlying()) {
+            return;
+        }
+
+        if (!ChanceUtil.getChance(3)) {
+            return;
+        }
 
         // Don't spawn zombies on players doing parkour
         for (ProtectedRegion generatedParkour : parkourGen) {
