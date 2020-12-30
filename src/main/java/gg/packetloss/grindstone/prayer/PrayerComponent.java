@@ -130,6 +130,10 @@ public class PrayerComponent extends BukkitComponent implements Listener, Runnab
 
     public void clearPrayers(Player player) {
         List<Prayer> existingPrayers = prayers.remove(player.getUniqueId());
+        if (existingPrayers == null) {
+            return;
+        }
+
         existingPrayers.forEach(prayer -> {
             for (PassivePrayerEffect passiveEffect : prayer.getPassiveEffects()) {
                 passiveEffect.strip(player);
