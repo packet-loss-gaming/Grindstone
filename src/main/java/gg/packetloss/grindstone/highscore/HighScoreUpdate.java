@@ -6,6 +6,8 @@
 
 package gg.packetloss.grindstone.highscore;
 
+import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
+
 import java.util.UUID;
 
 public class HighScoreUpdate {

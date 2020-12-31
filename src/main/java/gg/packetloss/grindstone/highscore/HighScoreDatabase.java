@@ -6,10 +6,13 @@
 
 package gg.packetloss.grindstone.highscore;
 
+import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
+
 import java.util.List;
 import java.util.Optional;
 
 public interface HighScoreDatabase {
+    boolean deleteAllScores(ScoreType scoreType);
     void batchProcess(List<HighScoreUpdate> scoresToUpdate);
 
     Optional<List<ScoreEntry>> getTop(ScoreType scoreType, int amt);

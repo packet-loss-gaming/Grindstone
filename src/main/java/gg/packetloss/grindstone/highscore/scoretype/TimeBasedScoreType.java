@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.highscore;
+package gg.packetloss.grindstone.highscore.scoretype;
 
 import com.google.common.base.Joiner;
 
@@ -14,11 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-class TimeBasedScoreType extends ScoreType {
+class TimeBasedScoreType extends BasicScoreType {
     private static final DecimalFormat FINE_TIME_FORMATTER = new DecimalFormat("0.000");
 
-    protected TimeBasedScoreType(int id, boolean incremental, Order order) {
-        super(id, incremental, order);
+    protected TimeBasedScoreType(int id, boolean gobletEnabled, boolean incremental, Order order) {
+        super(id, gobletEnabled, incremental, order);
     }
 
     @Override

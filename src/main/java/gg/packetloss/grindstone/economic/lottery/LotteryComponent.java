@@ -50,7 +50,7 @@ import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Lottery", desc = "Can you win it big?")
-@Depend(plugins = {"Vault"}, components = {DataBaseComponent.class})
+@Depend(plugins = {"Vault"}, components = {ChatBridgeComponent.class, DataBaseComponent.class})
 public class LotteryComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();

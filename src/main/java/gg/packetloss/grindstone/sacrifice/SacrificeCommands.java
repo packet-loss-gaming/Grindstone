@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.sacrifice;
 
-import gg.packetloss.grindstone.highscore.ScoreTypes;
+import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
 import gg.packetloss.grindstone.util.ChatUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;

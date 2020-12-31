@@ -57,8 +57,6 @@ public class TimeUtil {
      */
     public static long getTicksTill(int hour, int dayofweek) {
         Calendar localCalendar = Calendar.getInstance();
-        long returnValue;
-
         localCalendar.add(Calendar.MINUTE, 60 - localCalendar.get(Calendar.MINUTE));
 
         while (localCalendar.get(Calendar.HOUR_OF_DAY) != hour) {
@@ -71,11 +69,28 @@ public class TimeUtil {
             }
         }
 
-        returnValue = localCalendar.getTimeInMillis() - calendar.getTimeInMillis();
-        returnValue /= 1000; // To seconds
-        returnValue *= 20; // To Ticks
+        return convertMillsToTicks(localCalendar.getTimeInMillis() - calendar.getTimeInMillis());
+    }
 
-        return returnValue;
+    /**
+     * Gets the ticks till a given base 24 hour on a day of the week
+     *
+     * @return the number of ticks till the given time
+     */
+    public static long getTicksTillNextMonth() {
+        Calendar localCalendar = Calendar.getInstance();
+
+        localCalendar.clear();
+        localCalendar.set(Calendar.YEAR, calendar.get(Calendar.YEAR));
+        // Yes this works when crossing the new year (surprisingly)
+        localCalendar.set(Calendar.MONTH, calendar.get(Calendar.MONTH) + 1);
+        localCalendar.set(Calendar.DAY_OF_MONTH, 1);
+
+        return convertMillsToTicks(localCalendar.getTimeInMillis() - calendar.getTimeInMillis());
+    }
+
+    public static long convertMillsToTicks(long mills) {
+        return convertSecondsToTicks((int) (mills / TimeUnit.SECONDS.toMillis(1)));
     }
 
     public static long convertSecondsToTicks(int seconds) {

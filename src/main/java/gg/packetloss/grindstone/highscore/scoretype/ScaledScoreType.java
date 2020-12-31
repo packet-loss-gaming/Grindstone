@@ -4,15 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.highscore;
+package gg.packetloss.grindstone.highscore.scoretype;
 
 import java.math.BigDecimal;
 
-public class ScaledScoreType extends ScoreType {
+public class ScaledScoreType extends BasicScoreType {
     private final double scalingConstant;
 
-    protected ScaledScoreType(int id, boolean incremental, Order order, double scalingConstant) {
-        super(id, incremental, order);
+    protected ScaledScoreType(int id, boolean requirements, boolean incremental, Order order, double scalingConstant) {
+        super(id, requirements, incremental, order);
         this.scalingConstant = scalingConstant;
     }
 

@@ -6,37 +6,51 @@
 
 package gg.packetloss.grindstone.highscore;
 
+import com.google.common.collect.Lists;
+import com.google.gson.reflect.TypeToken;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
+import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.highscore.mysql.MySQLHighScoresDatabase;
+import gg.packetloss.grindstone.highscore.scoretype.GobletScoreType;
+import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
+import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.CollectionUtil;
+import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.chat.ChatConstants;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
+import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.StringUtil.toTitleCase;
 import static gg.packetloss.grindstone.util.StringUtil.toUppercaseTitle;
 
 @ComponentInformation(friendlyName = "High Scores Component", desc = "High Scores")
+@Depend(components = {ChatBridgeComponent.class, DataBaseComponent.class})
 public class HighScoresComponent extends BukkitComponent {
 
     private static final CommandBook inst = CommandBook.inst();
@@ -44,6 +58,8 @@ public class HighScoresComponent extends BukkitComponent {
     private static final Server server = CommandBook.server();
 
     private static final Map<String, ScoreType> nameToScoreType = new HashMap<>();
+    private static final Map<Integer, ScoreType> idToScoreType = new HashMap<>();
+    private static final Map<Integer, String> idToName = new HashMap<>();
 
     static {
         for (Field field : ScoreTypes.class.getFields()) {
@@ -52,6 +68,8 @@ public class HighScoresComponent extends BukkitComponent {
                 if (result instanceof ScoreType) {
                     String processedFieldName = field.getName().toLowerCase();
                     nameToScoreType.put(processedFieldName, (ScoreType) result);
+                    idToScoreType.put(((ScoreType) result).getId(), (ScoreType) result);
+                    idToName.put(((ScoreType) result).getId(), processedFieldName);
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -61,14 +79,29 @@ public class HighScoresComponent extends BukkitComponent {
 
     @InjectComponent
     private AdminComponent adminComponent;
+    @InjectComponent
+    private ChatBridgeComponent chatBridge;
 
     private Lock highScoreLock = new ReentrantLock();
     private List<HighScoreUpdate> highScoreUpdates = new ArrayList<>();
 
     private HighScoreDatabase database = new MySQLHighScoresDatabase();
 
+    private GobletScoreType gobletScoreType;
+    private GobletState gobletState = new GobletState();
+    private SingleFileFilesystemStateHelper<GobletState> stateHelper;
+
     @Override
     public void enable() {
+        try {
+            stateHelper = new SingleFileFilesystemStateHelper<>("goblet-high-score.json", new TypeToken<>() { });
+            stateHelper.load().ifPresent(loadedState -> gobletState = loadedState);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        checkGobletForUpdate();
+
         registerCommands(Commands.class);
 
         server.getScheduler().runTaskTimerAsynchronously(inst, () -> {
@@ -86,6 +119,76 @@ public class HighScoresComponent extends BukkitComponent {
         }, 25, 20);
     }
 
+    private ScoreType getNewGobletScoreType() {
+        do {
+            ScoreType scoreType = CollectionUtil.getElement(idToScoreType.values());
+
+            // Don't allow the same thing twice in a row
+            if (gobletScoreType != null && gobletScoreType.isGobletEquivalent(scoreType)) {
+                continue;
+            }
+
+            if (scoreType.isEnabledForGoblet()) {
+                return scoreType;
+            }
+        } while (true);
+    }
+
+    private void loadGobletScoreType() {
+        gobletScoreType = gobletState.loadScoreType(idToScoreType);
+    }
+
+    private void addGobletWinner(OfflinePlayer player) {
+        gobletState.addWinner(player.getUniqueId());
+
+        String winMessage = ChatColor.YELLOW + player.getName() + " has won the " + getGobletName() + "!";
+        Bukkit.broadcastMessage(winMessage);
+        chatBridge.broadcast(ChatColor.stripColor(winMessage));
+    }
+
+    private void refreshStaleGoblet() {
+        try {
+
+            if (gobletState.wasActive()) {
+                // Initialize the goblet score type in case we just started the server
+                loadGobletScoreType();
+
+                // Get the winner if the goblet if there was one
+                Optional<ScoreEntry> optWinner = getBest(gobletScoreType);
+
+                // Clear the goblet table, stop processing if we fail to clear the scores
+                if (!deleteAllScores(gobletScoreType)) {
+                    return;
+                }
+
+                // Scores are cleared, award a winner, start a new score type, and save.
+                // It's important that this is called before the score type is reloaded.
+                optWinner.ifPresent((scoreEntry -> {
+                    addGobletWinner(scoreEntry.getPlayer());
+                }));
+            }
+
+            gobletState.setScoreType(getNewGobletScoreType());
+            stateHelper.save(gobletState);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void checkGobletForUpdate() {
+        if (gobletState.isStale()) {
+            refreshStaleGoblet();
+        }
+
+        loadGobletScoreType();
+
+        server.getScheduler().runTaskLater(
+            CommandBook.inst(),
+            this::checkGobletForUpdate,
+            TimeUtil.getTicksTillNextMonth()
+        );
+    }
+
     private void queueUpdate(HighScoreUpdate update) {
         highScoreLock.lock();
         try {
@@ -95,6 +198,10 @@ public class HighScoresComponent extends BukkitComponent {
         }
     }
 
+    private boolean isCurrentGoblet(ScoreType scoreType) {
+        return scoreType.isGobletEquivalent(gobletScoreType);
+    }
+
     public void update(Player player, ScoreType scoreType, long value) {
         // Disqualify any high score gains in admin mode
         if (adminComponent.isAdmin(player)) {
@@ -102,10 +209,17 @@ public class HighScoresComponent extends BukkitComponent {
         }
 
         queueUpdate(new HighScoreUpdate(player.getUniqueId(), scoreType, value));
+        if (isCurrentGoblet(scoreType)) {
+            queueUpdate(new HighScoreUpdate(player.getUniqueId(), gobletScoreType, value));
+        }
+    }
+
+    private boolean deleteAllScores(ScoreType scoreType) {
+        return database.deleteAllScores(scoreType);
     }
 
     public Optional<ScoreEntry> getBest(ScoreType scoreType) {
-        List<ScoreEntry> scores = database.getTop(scoreType, 1).get();
+        List<ScoreEntry> scores = database.getTop(scoreType, 1).orElse(List.of());
         if (scores.isEmpty()) {
             return Optional.empty();
         }
@@ -141,6 +255,21 @@ public class HighScoresComponent extends BukkitComponent {
         );
     }
 
+    private String getGobletName() {
+        String baseName = gobletScoreType.getGobletName().orElseGet(() -> {
+            return idToName.get(gobletScoreType.getBaseScoreType().getId());
+        });
+        return baseName + "_goblet";
+    }
+
+    private ScoreType getScoreTypeFromString(String scoreTypeName) {
+        if (scoreTypeName.equals(getGobletName())) {
+            return gobletScoreType;
+        }
+
+        return nameToScoreType.get(scoreTypeName);
+    }
+
     public class Commands {
         @Command(aliases = {"highscores", "highscore"},
                 usage = "<scope type>", desc = "View high scores",
@@ -149,7 +278,7 @@ public class HighScoresComponent extends BukkitComponent {
             String scoreTypeString = args.argsLength() == 0 ? ""
                     : args.getJoinedStrings(0).toLowerCase().replaceAll(" ", "_");
 
-            ScoreType scoreType = nameToScoreType.get(scoreTypeString);
+            ScoreType scoreType = getScoreTypeFromString(scoreTypeString);
             if (scoreType != null) {
                 ChatUtil.sendNotice(sender, ChatColor.GOLD + toTitleCase(scoreTypeString));
 
@@ -158,8 +287,9 @@ public class HighScoresComponent extends BukkitComponent {
                     sender.sendMessage(createScoreLine(i + 1, scores.get(i), scoreType).build());
                 }
             } else {
-                List<String> tables = nameToScoreType.keySet().stream()
-                        .sorted().collect(Collectors.toList());
+                List<String> tables = Lists.newArrayList(nameToScoreType.keySet());
+                tables.add(getGobletName());
+                tables.sort(Comparator.naturalOrder());
 
                 new TextComponentChatPaginator<String>(ChatColor.GOLD, "High Score Tables") {
                     @Override
