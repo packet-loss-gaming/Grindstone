@@ -273,20 +273,26 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         });
     }
 
+    private int getPhantomValueOfItem(ItemStack item, Location pointOfSacrifice) {
+        if (ItemUtil.isItem(item, CustomItems.PHANTOM_GOLD)) {
+            return parent.isRewardsArea(pointOfSacrifice) ? 100 : 50;
+        }
+        if (ItemUtil.isItem(item, CustomItems.PHANTOM_DIAMOND)) {
+            return parent.isRewardsArea(pointOfSacrifice) ? 18000 : 15000;
+        }
+        return 0;
+    }
+
     @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSacrifice(PlayerSacrificeItemEvent event) {
         ItemStack item = event.getItemStack();
 
-        if (ItemUtil.isItem(item, CustomItems.PHANTOM_GOLD)) {
-            int amount = 50;
-            if (parent.isRewardsArea(event.getPointOfSacrifice())) {
-                amount = 100;
-            }
-
+        int phantomValue = getPhantomValueOfItem(item, event.getPointOfSacrifice());
+        if (phantomValue > 0) {
             Player player = event.getPlayer();
 
-            int totalAmount = amount * item.getAmount();
+            int totalAmount = phantomValue * item.getAmount();
             parent.economy.depositPlayer(player, totalAmount);
 
             // Delay by a tick to prevent this message from appearing before the ancient fire ignites message

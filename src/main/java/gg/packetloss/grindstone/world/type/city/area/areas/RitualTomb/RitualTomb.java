@@ -14,12 +14,23 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.bukkittext.Text;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.custom.ItemFamily;
+import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
+import gg.packetloss.grindstone.sacrifice.SacrificeInformation;
+import gg.packetloss.grindstone.sacrifice.SacrificeResult;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
+import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
+import gg.packetloss.grindstone.util.dropttable.MassBossDropTable;
+import gg.packetloss.grindstone.util.dropttable.MassBossKillInfo;
+import gg.packetloss.grindstone.util.dropttable.MassBossPlayerKillInfo;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.warps.WarpQualifiedName;
@@ -40,10 +51,9 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vex;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @ComponentInformation(friendlyName = "Ritual Tomb", desc = "The demons of Hallow")
 @Depend(components = {ManagedWorldComponent.class, PlayerStateComponent.class,
@@ -64,6 +74,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     protected ProtectedRegion floorRegion;
     protected Location ritualFireLoc;
 
+    protected MassBossDropTable dropTable = new MassBossDropTable();
     protected BossBar healthBar = Bukkit.createBossBar("Ritual of Hallow - I", BarColor.PURPLE, BarStyle.SEGMENTED_6);
 
     private int demonsTotal;
@@ -71,6 +82,8 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     private boolean demonsCanKill;
 
     private double ritualValue = 0;
+    private Map<UUID, Double> individualRitualValue = new HashMap<>();
+    private Map<UUID, Integer> individualDemonKills = new HashMap<>();
 
     @Override
     public void setUp() {
@@ -92,6 +105,8 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
 
         CommandBook.registerEvents(new FlightBlockingListener(this::contains));
 
+        setupDropTable();
+
         spectator.registerSpectatedRegion(PlayerStateKind.RITUAL_TOMB_SPECTATOR, region);
         spectator.registerSpectatorSkull(
             PlayerStateKind.RITUAL_TOMB_SPECTATOR,
@@ -103,6 +118,58 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     @Override
     public void disable() {
         resetRitual();
+    }
+
+    private static ItemPointTranslator diamondLoot = new ItemPointTranslator();
+
+    static {
+        diamondLoot.addMapping(CustomItemCenter.build(CustomItems.PHANTOM_DIAMOND), 750);
+        diamondLoot.addMapping(new ItemStack(Material.DIAMOND_BLOCK), 9);
+        diamondLoot.addMapping(new ItemStack(Material.DIAMOND), 1);
+    }
+
+    private void setupDropTable() {
+        dropTable.registerCustomPlayerDrop((info, consumer) -> {
+            Player player = info.getPlayer();
+
+            // Sacrificed Loot
+            double individualValue = individualRitualValue.get(player.getUniqueId());
+            if (individualValue > 0) {
+                // Roll two multiplied sacrifices with limited quantity
+                SacrificeComponent.getCalculatedLoot(new SacrificeInformation(
+                    player, 5, individualValue * 50
+                )).forEach(consumer);
+                SacrificeComponent.getCalculatedLoot(new SacrificeInformation(
+                    player, 5, individualValue * 10
+                )).forEach(consumer);
+
+                SacrificeResult finalPersonal = SacrificeComponent.getCalculatedLoot(new SacrificeInformation(
+                    player, 10, individualValue
+                ));
+                finalPersonal.forEach(consumer);
+
+                // Update individual value with the remainder in value as points
+                individualValue = finalPersonal.getRemainingValue();
+            }
+
+            int numPlayers = info.getKillInfo().getPlayers().size();
+            SacrificeComponent.getCalculatedLoot(new SacrificeInformation(
+                server.getConsoleSender(), 10, ritualValue / numPlayers
+            )).forEach(consumer);
+
+            // Diamond Loot
+            int individualKills = individualDemonKills.get(player.getUniqueId());
+            diamondLoot.streamValue((int) ((individualKills + individualValue) / 30), consumer);
+        });
+
+        // Chance modified drops
+        NumericPipeline.Builder<MassBossPlayerKillInfo> modifiedChance = NumericPipeline.builder();
+        modifiedChance.accept((info, chance) -> chance / getRitualLevel());
+
+        // Red Items
+        dropTable.registerPlayerDrop(modifiedChance.build(15000), () -> CustomItemCenter.build(CustomItems.RED_FEATHER));
+        dropTable.registerPlayerDrop(modifiedChance.build(15000), () -> CustomItemCenter.build(CustomItems.RED_SWORD));
+        dropTable.registerPlayerDrop(modifiedChance.build(15000), () -> CustomItemCenter.build(CustomItems.RED_BOW));
     }
 
     @Override
@@ -142,6 +209,8 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
 
     private void setDefaults() {
         ritualValue = 0;
+        individualRitualValue.clear();
+        individualDemonKills.clear();
         demonsTotal = demonsCurrent = config.ritualDemonsStartingAmount;
         demonsCanKill = false;
     }
@@ -207,9 +276,10 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
         seekDemonsOn(fillDemons(), findHighPriorityTarget());
     }
 
-    public void increaseRitualValue(double amount) {
+    public void increaseRitualValue(Player player, double amount) {
         int oldLevel = getRitualLevel();
         ritualValue += amount;
+        individualRitualValue.merge(player.getUniqueId(), amount, Double::sum);
         int newLevel = getRitualLevel();
 
         if (newLevel == oldLevel) {
@@ -230,10 +300,16 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
         healthBar.setTitle("Ritual of Hallow - " + RomanNumeralUtil.toRoman(getRitualLevel()));
     }
 
-    public void demonKilled() {
-        if (--demonsCurrent == 0) {
+    public void demonKilled(Player killer) {
+        individualDemonKills.merge(killer.getUniqueId(), 1, Integer::sum);
+        if (--demonsCurrent == 0 || ItemUtil.isHoldingItemInFamily(killer, ItemFamily.PWNG)) {
+            List<Player> players = getContainedParticipants();
+
+            players.forEach(this::teleportToRitualSite);
+            Location dropLoc = ritualFireLoc.clone().add(0.5, .75, 0.5);
+            new BoundDropSpawner(() -> dropLoc).provide(dropTable, new MassBossKillInfo(players));
+
             resetRitual();
-            ChatUtil.sendNotice(getAudiblePlayers(), "You win! Loot coming soon (tm)");
         }
     }
 

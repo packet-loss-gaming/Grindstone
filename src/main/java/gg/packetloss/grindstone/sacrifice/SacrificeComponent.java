@@ -250,10 +250,10 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
      */
     @Deprecated
     public static List<ItemStack> getCalculatedLoot(CommandSender sender, int max, double value) {
-        return getCalculatedLoot(new SacrificeInformation(sender, max, value));
+        return getCalculatedLoot(new SacrificeInformation(sender, max, value)).getItemStacks();
     }
 
-    public static List<ItemStack> getCalculatedLoot(SacrificeInformation sacrificeInformation) {
+    public static SacrificeResult getCalculatedLoot(SacrificeInformation sacrificeInformation) {
         return inst.registry.getCalculatedLoot(sacrificeInformation);
     }
 

@@ -56,9 +56,10 @@ public class RitualTombListener extends AreaListener<RitualTomb> {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerSacrificeReward(PlayerSacrificeRewardEvent event) {
-        if (parent.contains(event.getPlayer())) {
+        Player player = event.getPlayer();
+        if (parent.contains(player)) {
             event.setCancelled(true);
-            parent.increaseRitualValue(event.getValue());
+            parent.increaseRitualValue(player, event.getValue());
         }
     }
 
@@ -101,8 +102,9 @@ public class RitualTombListener extends AreaListener<RitualTomb> {
             return;
         }
 
-        if (entity.getKiller() != null && entity instanceof Vex) {
-            parent.demonKilled();
+        Player killer = entity.getKiller();
+        if (killer != null && entity instanceof Vex) {
+            parent.demonKilled(killer);
         }
     }
 

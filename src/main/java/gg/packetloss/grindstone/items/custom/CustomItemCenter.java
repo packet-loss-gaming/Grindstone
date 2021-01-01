@@ -361,14 +361,19 @@ public class CustomItemCenter {
 
         // Red Items
         CustomWeapon redSword = new CustomWeapon(RED_SWORD, Material.DIAMOND_SWORD, 1.75);
+        redSword.addSource(ItemSource.RITUAL_TOMB);
+        redSword.addSource(ItemSource.MARKET);
         redSword.addUse("Global Effects.");
         addItem(redSword);
 
         CustomWeapon redBow = new CustomWeapon(RED_BOW, Material.BOW, 1.75);
+        redBow.addSource(ItemSource.RITUAL_TOMB);
+        redBow.addSource(ItemSource.MARKET);
         redBow.addUse("Global Effects.");
         addItem(redBow);
 
         CustomItem redFeather = new CustomItem(RED_FEATHER, Material.FEATHER);
+        redFeather.addSource(ItemSource.RITUAL_TOMB);
         redFeather.addSource(ItemSource.MARKET);
         redFeather.addUse("Consumes redstone to prevent up to 100% damage, " +
                 "but has a cool down based on the amount of damage taken.");
@@ -537,6 +542,12 @@ public class CustomItemCenter {
         phantomGold.addUse("When sacrificed gives 50 Skrin, or 100 Skrin " +
                 "if sacrificed in the Grave Yard rewards room.");
         addItem(phantomGold);
+
+        CustomItem phantomDiamond = new CustomItem(PHANTOM_DIAMOND, Material.DIAMOND);
+        phantomDiamond.addSource(ItemSource.RITUAL_TOMB);
+        phantomDiamond.addUse("When sacrificed gives 15,000 Skrin, or 17,500 Skrin " +
+            "if sacrificed in the Grave Yard rewards room.");
+        addItem(phantomDiamond);
 
         CustomItem phantomClock = new CustomItem(PHANTOM_CLOCK, Material.CLOCK);
         phantomClock.addSource(ItemSource.GRAVE_YARD);

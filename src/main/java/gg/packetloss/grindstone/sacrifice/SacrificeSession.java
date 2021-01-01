@@ -124,9 +124,9 @@ class SacrificeSession extends PersistentSession {
         }
     }
 
-    public void addItems(List<ItemStack> itemStacks) {
+    public void addItems(Iterable<ItemStack> itemStacks) {
         lazyLoad((queue) -> {
-            queue.addAll(itemStacks);
+            itemStacks.forEach(queue::add);
             size = queue.size();
         });
     }

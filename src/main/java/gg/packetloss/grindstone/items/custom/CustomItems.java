@@ -95,6 +95,7 @@ public enum CustomItems {
 
     // Phantom Items
     PHANTOM_GOLD(ChatColor.GOLD, "Phantom Gold"),
+    PHANTOM_DIAMOND(ChatColor.GOLD, "Phantom Diamond"),
     PHANTOM_CLOCK(ChatColor.DARK_RED, "Phantom Clock"),
     PHANTOM_HYMN(ChatColor.DARK_RED, "Phantom Hymn"),
     PHANTOM_POTION(ChatColor.DARK_RED, "Phantom Potion"),

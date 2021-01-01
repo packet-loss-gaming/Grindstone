@@ -96,7 +96,7 @@ class SacrificialRegistry {
 
     private static final int MINIMUM_REMOVAL_VALUE = 9;
 
-    public List<ItemStack> getCalculatedLoot(SacrificeInformation sacrificeInformation) {
+    public SacrificeResult getCalculatedLoot(SacrificeInformation sacrificeInformation) {
         List<ItemStack> loot = new ArrayList<>();
 
         int baseChance = (sacrificeInformation.hasSacrificeTome() ? 100 : 125) - sacrificeInformation.getModifier();
@@ -127,7 +127,8 @@ class SacrificialRegistry {
                 remainingItems--;
             }
         }
-        return loot;
+
+        return new SacrificeResult(loot, remainingValue, remainingItems);
     }
 
     private static class ChancedEntry {
