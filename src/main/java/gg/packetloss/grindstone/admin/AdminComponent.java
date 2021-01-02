@@ -351,7 +351,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         @Command(aliases = {"admin", "alivemin"},
                 usage = "", desc = "Enter Admin Mode",
-                flags = "", min = 0, max = 0)
+                flags = "f", min = 0, max = 0)
         public void adminModeCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player player = PlayerUtil.checkPlayer(sender);
 
@@ -363,6 +363,16 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 throw new CommandException("You were already in admin mode!");
             }
 
+            try {
+                if (!args.hasFlag('f') && stateComponent.hasTempKind(player)) {
+                    throw new CommandException("You've got a temporary state applied! " +
+                        "\nEntering admin mode will /likely/ result in item loss! " +
+                        "\nUse \"/admin -f\" to ignore this warning and continue anyways.");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             if (admin(player)) {
                 ChatUtil.sendNotice(sender, "You have entered admin mode.");
             } else {
@@ -372,7 +382,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         @Command(aliases = {"deadmin"},
                 usage = "", desc = "Leave Admin Mode",
-                flags = "k", min = 0, max = 0)
+                flags = "f", min = 0, max = 0)
         public void deadminModeCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             Player player = PlayerUtil.checkPlayer(sender);
@@ -381,9 +391,20 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 throw new CommandException("You were not in admin mode!");
             }
 
-            if (!args.hasFlag('k') && !stateComponent.hasValidStoredState(PlayerStateKind.ADMIN, player)) {
-                throw new CommandException("Your inventory is not loaded! \nLeaving admin mode will result in item loss! " +
-                  "\nUse \"/deadmin -k\" to ignore this warning and continue anyways.");
+            if (!args.hasFlag('f') && !stateComponent.hasValidStoredState(PlayerStateKind.ADMIN, player)) {
+                throw new CommandException("Your inventory is not loaded! " +
+                    "\nLeaving admin mode will result in item loss! " +
+                    "\nUse \"/deadmin -f\" to ignore this warning and continue anyways.");
+            }
+
+            try {
+                if (!args.hasFlag('f') && stateComponent.hasTempKind(player)) {
+                    throw new CommandException("You've got a temporary state applied! " +
+                        "\nLeaving admin mode will /likely/ result in item loss! " +
+                        "\nUse \"/deadmin -f\" to ignore this warning and continue anyways.");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
             if (deadmin(player)) {
