@@ -389,9 +389,13 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             for (LivingEntity e : getContained(LivingEntity.class)) {
                 // Auto break stuff
                 Location belowLoc = e.getLocation().add(0, -1, 0);
+                if (!isHostileTempleArea(belowLoc)) {
+                    continue;
+                }
+
                 if (!(e instanceof Player)) {
                     breakBlocks(e, belowLoc);
-                } else if (isHostileTempleArea(belowLoc) && isParticipant((Player) e)) {
+                } else if (isParticipant((Player) e)) {
                     server.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         breakBlocks(e, belowLoc);
                     }, 5);
