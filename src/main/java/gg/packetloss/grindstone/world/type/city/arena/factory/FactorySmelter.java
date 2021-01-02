@@ -11,6 +11,7 @@ import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
+import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -40,9 +41,9 @@ public class FactorySmelter extends FactoryMech {
     );
 
     public FactorySmelter(World world, ProtectedRegion region, YAMLProcessor processor,
-                          ProtectedRegion lavaSupply, ProtectedRegion lavaZone) {
+                          ProtectedRegion[] lavaChannels, ProtectedRegion lavaZone) {
         super(world, region, processor, "ores-" + count++);
-        this.lavaSupply = new LavaSupply(world, lavaSupply, lavaZone);
+        this.lavaSupply = new LavaSupply(world, lavaChannels, lavaZone);
     }
 
     @Override
@@ -54,28 +55,14 @@ public class FactorySmelter extends FactoryMech {
     public List<ItemStack> process() {
         Collection<Player> playerList = getContained(1, Player.class);
 
-        Collection<Item> lavaContained = lavaSupply.getContained(Item.class);
-        if (lavaContained.size() > 0) ChatUtil.sendNotice(playerList, "Adding lava...");
-        int totalLava = items.getOrDefault(Material.LAVA_BUCKET, 0);
-        for (Item e : lavaContained) {
-            // Find items and destroy those unwanted
-            ItemStack workingStack = e.getItemStack();
-
-            // Add the item to the list
-            if (workingStack.getType().equals(Material.LAVA_BUCKET)) {
-                int total = workingStack.getAmount();
-                if (items.containsKey(workingStack.getType())) {
-                    total += items.get(workingStack.getType());
-                }
-                items.put(workingStack.getType(), totalLava = total);
+        if (!playerList.isEmpty()) {
+            if (ChanceUtil.getChance(5)) {
+                lavaSupply.checkDamage();
             }
-            e.remove();
-        }
-        int lavaRemainder = lavaSupply.addLava(totalLava);
-        if (lavaRemainder < 1) {
-            items.remove(Material.LAVA_BUCKET);
-        } else {
-            items.put(Material.LAVA_BUCKET, lavaRemainder);
+
+            if (lavaSupply.tryAddLava()) {
+                ChatUtil.sendNotice(playerList, "Adding lava...");
+            }
         }
 
         Collection<Item> contained = getContained(Item.class);
@@ -96,7 +83,7 @@ public class FactorySmelter extends FactoryMech {
             e.remove();
         }
 
-        if (!contained.isEmpty() || !lavaContained.isEmpty()) {
+        if (!contained.isEmpty()) {
             save(); // Update save for new Iron & Gold values
         }
 

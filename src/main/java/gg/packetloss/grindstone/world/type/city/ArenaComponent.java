@@ -246,9 +246,12 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                         mechs.add(new FactoryBrewer(world, er, processor));
                     }
                     ProtectedRegion furnace = mgr.getRegion(region + "-hopper-1");
-                    ProtectedRegion lava = mgr.getRegion(region + "-lava-input");
+                    ProtectedRegion[] lavaChannels = {
+                        mgr.getRegion(region + "-lava-channel-1"),
+                        mgr.getRegion(region + "-lava-channel-2")
+                    };
                     ProtectedRegion lavaZ = mgr.getRegion(region + "-lava");
-                    mechs.add(new FactorySmelter(world, furnace, processor, lava, lavaZ));
+                    mechs.add(new FactorySmelter(world, furnace, processor, lavaChannels, lavaZ));
                     arenas.add(new FactoryFloor(world, PRs, mechs, processor));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {

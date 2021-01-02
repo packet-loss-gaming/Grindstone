@@ -24,11 +24,14 @@ import gg.packetloss.grindstone.world.type.city.arena.ArenaType;
 import gg.packetloss.grindstone.world.type.city.arena.GenericArena;
 import gg.packetloss.grindstone.world.type.city.arena.PersistentArena;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.inventory.ItemStack;
@@ -163,6 +166,18 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     @Override
     public void disable() {
         mechs.clear();
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Block placedBlock = event.getBlockPlaced();
+        if (!contains(placedBlock)) {
+            return;
+        }
+
+        if (event.getBlockPlaced().getType() != Material.IRON_BLOCK) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
