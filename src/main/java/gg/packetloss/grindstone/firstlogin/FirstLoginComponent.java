@@ -174,18 +174,20 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onApocalypseSpawn(ApocalypseOverflowEvent event) {
-        Player player = event.getPlayer();
+        if (event.getSpawnKind() == ApocalypseOverflowEvent.SpawnKind.NONE) {
+            return;
+        }
 
+        Player player = event.getPlayer();
         if (!isNewerPlayer(player)) {
             return;
         }
 
         event.setKillChance(3);
-        event.setSpawnMerciless(false);
+        event.setSpawnKind(ApocalypseOverflowEvent.SpawnKind.NONE);
 
         ChatUtil.sendNotice(player, ChatColor.GOLD, "[Friendly Spirit] I've protected you from a great evil!");
         ChatUtil.sendNotice(player, ChatColor.GOLD, "[Friendly Spirit] Try to keep the number of zombies down!");
-        ChatUtil.sendNotice(player, ChatColor.GOLD, "Merciless Zombie spawn prevented.");
     }
 
     private void applyNewPlayerBuffs(Player player) {

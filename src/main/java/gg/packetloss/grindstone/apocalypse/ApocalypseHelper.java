@@ -47,6 +47,10 @@ public class ApocalypseHelper {
             return true;
         }
 
+        if (customName.equals(ZombieExecutioner.BOUND_NAME)) {
+            return true;
+        }
+
         return false;
     }
 

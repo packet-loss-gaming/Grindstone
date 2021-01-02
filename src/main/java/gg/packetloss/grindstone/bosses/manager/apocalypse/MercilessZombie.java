@@ -127,6 +127,10 @@ public class MercilessZombie {
             return true;
         }
 
+        if (customName.equals(ZombieExecutioner.BOUND_NAME)) {
+            return true;
+        }
+
         return false;
     }
 

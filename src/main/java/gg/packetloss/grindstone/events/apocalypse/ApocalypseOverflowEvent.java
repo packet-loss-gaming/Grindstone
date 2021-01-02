@@ -18,11 +18,12 @@ public class ApocalypseOverflowEvent extends PlayerEvent implements ApocalypseEv
     private boolean cancelled = false;
     private Location spawnLocation;
     private int killChance = 1;
-    private boolean spawnMerciless = true;
+    private SpawnKind spawnKind;
 
-    public ApocalypseOverflowEvent(final Player player, Location spawnLocation) {
+    public ApocalypseOverflowEvent(final Player player, Location spawnLocation, boolean spawnMerciless) {
         super(player);
         this.spawnLocation = spawnLocation;
+        this.spawnKind = spawnMerciless ? SpawnKind.MERCILESS : SpawnKind.EXECUTIONER;
     }
 
     /**
@@ -52,12 +53,12 @@ public class ApocalypseOverflowEvent extends PlayerEvent implements ApocalypseEv
         this.killChance = killChance;
     }
 
-    public boolean shouldSpawnMerciless() {
-        return spawnMerciless;
+    public SpawnKind getSpawnKind() {
+        return spawnKind;
     }
 
-    public void setSpawnMerciless(boolean spawnMerciless) {
-        this.spawnMerciless = spawnMerciless;
+    public void setSpawnKind(SpawnKind spawnKind) {
+        this.spawnKind = spawnKind;
     }
 
     @Override
@@ -77,5 +78,11 @@ public class ApocalypseOverflowEvent extends PlayerEvent implements ApocalypseEv
 
     public static HandlerList getHandlerList() {
         return handlers;
+    }
+
+    public enum SpawnKind {
+        MERCILESS,
+        EXECUTIONER,
+        NONE
     }
 }

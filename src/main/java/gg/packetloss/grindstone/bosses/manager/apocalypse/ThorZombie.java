@@ -118,7 +118,7 @@ public class ThorZombie {
             public InstructionResult<GenericDetail, DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 final Entity toHit = BukkitUtil.getBukkitEntity(entity);
-                toHit.setVelocity(boss.getLocation().getDirection().multiply(2));
+                toHit.setVelocity(boss.getLocation().getDirection().multiply(2).setY(.2));
 
                 server.getScheduler().runTaskLater(inst, () -> {
                     final Location targetLocation = toHit.getLocation();

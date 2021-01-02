@@ -101,6 +101,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private ThorZombie thorBossManager;
     private ZapperZombie zapperBossManager;
     private MercilessZombie mercilessBossManager;
+    private ZombieExecutioner executionerBossManager;
     private StickyZombie stickyBossManager;
     private ChuckerZombie chuckerBossManager;
 
@@ -110,6 +111,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         thorBossManager = new ThorZombie();
         zapperBossManager = new ZapperZombie();
         mercilessBossManager = new MercilessZombie();
+        executionerBossManager = new ZombieExecutioner();
         stickyBossManager = new StickyZombie();
         chuckerBossManager = new ChuckerZombie();
 
@@ -135,6 +137,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public int stickyBossChance = 60;
         @Setting("boss-chance.chucker")
         public int chuckerBossChance = 60;
+        @Setting("boss-chance.merciless-zombie")
+        public int mercilessZombieSpawnChance = 10;
         @Setting("merciless-zombie-requirement")
         public int mercilessZombieRequirement = 100;
         @Setting("baby-chance")
@@ -659,6 +663,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         EntityUtil.extendHeal(entity, totalHealth, MercilessZombie.MAX_ACHIEVABLE_HEALTH);
     }
 
+    private void makeZombieExecutionerMiniboss(Location location) {
+        Zombie entity = spawnBase(location, new ZombieSpawnConfig());
+        executionerBossManager.bind(entity);
+    }
+
     private void upgradeToMerciless() {
         for (World world : server.getWorlds()) {
             if (!hasThunderstorm(world)) {
@@ -702,7 +711,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
                 Location replacementLoc = zombies.get(numZombies / 2).getLocation();
 
-                ApocalypseOverflowEvent overflowEvent = new ApocalypseOverflowEvent(target, replacementLoc);
+                ApocalypseOverflowEvent overflowEvent = new ApocalypseOverflowEvent(
+                    target,
+                    replacementLoc,
+                    ChanceUtil.getChance(config.mercilessZombieSpawnChance)
+                );
                 CommandBook.callEvent(overflowEvent);
                 if (overflowEvent.isCancelled()) {
                     return;
@@ -721,8 +734,15 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                     }
                 });
 
-                if (overflowEvent.shouldSpawnMerciless()) {
-                    makeMercilessMiniboss(overflowEvent.getLocation(), health[0]);
+                switch (overflowEvent.getSpawnKind()) {
+                    case MERCILESS:
+                        makeMercilessMiniboss(overflowEvent.getLocation(), health[0]);
+                        break;
+                    case EXECUTIONER:
+                        makeZombieExecutionerMiniboss(overflowEvent.getLocation());
+                        break;
+                    case NONE:
+                        break;
                 }
             });
         }
