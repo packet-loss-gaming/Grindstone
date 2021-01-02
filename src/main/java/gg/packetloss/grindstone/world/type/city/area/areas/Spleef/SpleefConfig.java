@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.world.type.city.area.areas.Spleef;
 
 import com.zachsthings.libcomponents.config.ConfigurationBase;
+import com.zachsthings.libcomponents.config.Setting;
 
 import java.util.Set;
 
@@ -19,4 +20,12 @@ public class SpleefConfig extends ConfigurationBase {
             "glacies-mare-district-spleef-small-3",
             "glacies-mare-district-spleef-small-4"
     );
+    @Setting("anti-camper.ticks-before-activation")
+    public int antiCampTicksBeforeActive = 10;
+    @Setting("anti-camper.ticks-before-warning")
+    public int antiCampTicksBeforeWarning = 4;
+    @Setting("anti-camper.shovel-idle-seconds")
+    public int antiCampShovelIdleSeconds = 10;
+    @Setting("anti-camper.shovel-idle-warn-seconds")
+    public int antiCampShovelIdleWarnSeconds = 8;
 }

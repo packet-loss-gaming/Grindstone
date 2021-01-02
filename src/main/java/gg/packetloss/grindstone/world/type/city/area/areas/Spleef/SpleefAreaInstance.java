@@ -11,8 +11,10 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
+import gg.packetloss.grindstone.util.region.RegionWalker;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -22,6 +24,7 @@ import org.bukkit.entity.Player;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class SpleefAreaInstance {
@@ -150,6 +153,49 @@ public class SpleefAreaInstance {
         }
     }
 
+    private boolean shouldDoCamperTick() {
+        return innerTick % 4 == 0;
+    }
+
+    public void punishCampers(Collection<Player> players) {
+        long currentTime = System.currentTimeMillis();
+        for (Player player : players) {
+            long timeDiff = currentTime - component.lastBlockBreak.getOrDefault(player.getUniqueId(), 0L);
+
+            boolean shouldPunishPlayer = timeDiff <= TimeUnit.SECONDS.toMillis(component.config.antiCampShovelIdleSeconds) && activeTicks >= component.config.antiCampTicksBeforeActive;
+            boolean shouldWarnPlayer = timeDiff > TimeUnit.SECONDS.toMillis(component.config.antiCampShovelIdleWarnSeconds) && activeTicks >= component.config.antiCampTicksBeforeWarning;
+
+            if (!shouldPunishPlayer && shouldWarnPlayer) {
+                ChatUtil.sendWarning(player, "Break some snow soon, or you'll be accused of being a camper!");
+                continue;
+            }
+
+            if (!shouldPunishPlayer) {
+                continue;
+            }
+
+            Location pLoc = player.getLocation();
+            CuboidRegion rg = new CuboidRegion(
+                BlockVector3.at(
+                    pLoc.getBlockX() - 1,
+                    floorRegion.getMinimumPoint().getBlockY(),
+                    pLoc.getBlockZ() - 1
+                ),
+                BlockVector3.at(
+                    pLoc.getBlockX() + 1,
+                    floorRegion.getMaximumPoint().getBlockY(),
+                    pLoc.getBlockZ() + 1
+                )
+            );
+
+            RegionWalker.walk(rg, (x, y, z) -> {
+                tryChangeBlockAt(x, y, z, Material.SNOW_BLOCK, Material.AIR);
+            });
+
+            ChatUtil.sendWarning(player, "Stop camping without marshmallows. It's wrong.");
+        }
+    }
+
     private Collection<Player> getParticipants() {
         return LocationUtil.getPlayersStandingOnRegion(world, floorRegion, true);
     }
@@ -171,6 +217,10 @@ public class SpleefAreaInstance {
             updateActiveTick(players);
             restoreFloor(players);
             buildWalls();
+        }
+
+        if (shouldDoCamperTick()) {
+            punishCampers(players);
         }
 
         return players;

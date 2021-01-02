@@ -54,6 +54,8 @@ public class SpleefListener implements Listener {
             heldTool.setDurability((short) 0);
             player.getInventory().setItemInMainHand(heldTool);
         }
+
+        parent.lastBlockBreak.put(player.getUniqueId(), System.currentTimeMillis());
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)

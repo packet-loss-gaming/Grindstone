@@ -27,9 +27,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
@@ -49,6 +47,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
     protected PlayerStateComponent playerState;
 
     protected List<SpleefAreaInstance> spleefInstances = new ArrayList<>();
+    protected Map<UUID, Long> lastBlockBreak = new HashMap<>();
 
     private void reloadConfig() {
         World world = server.getWorlds().get(0);
@@ -115,6 +114,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
     private void removePlayer(Player player) {
         try {
             playerState.popState(PlayerStateKind.SPLEEF, player);
+            lastBlockBreak.remove(player.getUniqueId());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
