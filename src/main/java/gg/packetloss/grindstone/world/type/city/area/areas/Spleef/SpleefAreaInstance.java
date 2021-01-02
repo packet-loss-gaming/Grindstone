@@ -177,7 +177,7 @@ public class SpleefAreaInstance {
             long timeDiff = currentTime - component.lastBlockBreak.getOrDefault(playerId, 0L);
 
             long timeToPunish = TimeUnit.SECONDS.toMillis(component.config.antiCampShovelIdleSeconds);
-            boolean shouldPunishPlayer = timeDiff <= timeToPunish && punishmentsActive;
+            boolean shouldPunishPlayer = timeDiff > timeToPunish && punishmentsActive;
 
             long timeToWarn = TimeUnit.SECONDS.toMillis(component.config.antiCampShovelIdleWarnSeconds);
             boolean alreadyWarned = component.warnedPlayers.contains(playerId);
