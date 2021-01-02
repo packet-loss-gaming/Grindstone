@@ -46,6 +46,11 @@ public class FactorySmelter extends FactoryMech {
     }
 
     @Override
+    public String getName() {
+        return "Smelter - I";
+    }
+
+    @Override
     public List<ItemStack> process() {
         Collection<Player> playerList = getContained(1, Player.class);
 
@@ -74,7 +79,7 @@ public class FactorySmelter extends FactoryMech {
         }
 
         Collection<Item> contained = getContained(Item.class);
-        if (!contained.isEmpty()) ChatUtil.sendNotice(playerList, "Processing...");
+        if (!contained.isEmpty()) ChatUtil.sendNotice(playerList, "[" + getName() + "] Processing...");
         for (Item e : contained) {
             // Find items and destroy those unwanted
             ItemStack workingStack = e.getItemStack();

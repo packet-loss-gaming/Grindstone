@@ -30,6 +30,8 @@ public abstract class FactoryMech extends AbstractRegionedArena {
         this.data = data;
     }
 
+    public abstract String getName();
+
     public abstract List<ItemStack> process();
 
     public void load() {

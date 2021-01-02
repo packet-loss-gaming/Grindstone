@@ -13,6 +13,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.RomanNumeralUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -37,8 +38,11 @@ public class FactoryBrewer extends FactoryMech {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    private int id;
+
     public FactoryBrewer(World world, ProtectedRegion region, YAMLProcessor processor) {
         super(world, region, processor, "pot-ingredients-" + count++);
+        id = count;
     }
 
     private static final Set<Material> wanted = Set.of(
@@ -64,13 +68,18 @@ public class FactoryBrewer extends FactoryMech {
     );
 
     @Override
+    public String getName() {
+        return "Brewing Vat - " + RomanNumeralUtil.toRoman(id);
+    }
+
+    @Override
     public List<ItemStack> process() {
 
         Collection<Player> playerList = getContained(1, Player.class);
 
         Collection<Entity> contained = getContained(Entity.class);
         if (!contained.isEmpty()) {
-            ChatUtil.sendNotice(playerList, "Processing...");
+            ChatUtil.sendNotice(playerList, "[" + getName() + "] Processing...");
 
             for (Entity e : contained) {
 
