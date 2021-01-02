@@ -550,6 +550,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             case 6: {
                 ChatUtil.sendWarning(audiblePlayers, "I think I need to turn up the heat...");
 
+                Map<UUID, Location> playerLastLoc = new HashMap<>();
                 IntegratedRunnable integratedRunnable = new IntegratedRunnable() {
                     @Override
                     public boolean run(int times) {
@@ -569,9 +570,11 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                             EntityUtil.forceDamage(player, 3);
                         }
 
-                        List<Block> blocks = new ArrayList<>();
+                        Map<UUID, Location> playerNewLoc = new HashMap<>();
                         for (Player player : getContainedParticipants()) {
-                            Block block = player.getLocation().getBlock();
+                            Location playerLoc = player.getLocation();
+
+                            Block block = playerLoc.getBlock();
                             if (block.getType() != Material.AIR) {
                                 continue;
                             }
@@ -581,11 +584,40 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                                 block = block.getRelative(BlockFace.DOWN);
                             }
 
-                            blocks.add(block);
+                            playerLoc.setY(block.getY());
+                            playerNewLoc.put(player.getUniqueId(), playerLoc);
                         }
 
                         server.getScheduler().runTaskLater(inst, () -> {
-                            blocks.forEach(b -> b.setType(Material.FIRE));
+                            playerNewLoc.forEach((playerId, newLoc) -> {
+                                Location lastLoc = playerLastLoc.get(playerId);
+                                playerLastLoc.put(playerId, newLoc);
+
+                                // No last block just set the new block
+                                if (lastLoc == null) {
+                                    newLoc.getBlock().setType(Material.FIRE);
+                                    return;
+                                }
+
+                                // Create a ray trace from the last block to the current block
+                                SimpleRayTrace trace = new SimpleRayTrace(
+                                    lastLoc,
+                                    VectorUtil.createDirectionalVector(lastLoc, newLoc),
+                                    (int) (lastLoc.distance(newLoc) + 1)
+                                );
+
+                                // Light everything in that path on fire
+                                while (trace.hasNext()) {
+                                    Block block = trace.next().getBlock();
+
+                                    // This really shouldn't happen often (ever) but let's be careful
+                                    if (block.getType() != Material.AIR && block.getType() != Material.FIRE) {
+                                        break;
+                                    }
+
+                                    block.setType(Material.FIRE);
+                                }
+                            });
                         }, 10);
 
                         return true;
