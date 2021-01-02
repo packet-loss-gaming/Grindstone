@@ -84,9 +84,9 @@ public class RitualTombListener extends AreaListener<RitualTomb> {
         Entity attacker = event.getDamager();
         if (attacker instanceof Vex && defender instanceof Player) {
             int playerHealth = (int) Math.floor(((Player) defender).getHealth());
+            int damage = ChanceUtil.getRandomNTimes(parent.getRitualLevel(), 3);
 
-            int damage = ChanceUtil.getRandomNTimes(Math.min(playerHealth - 1, parent.getRitualLevel()), 3);
-            if (damage < 1 && !parent.areDemonsLethal()) {
+            if (playerHealth - damage < 1 && !parent.areDemonsLethal()) {
                 return;
             }
 
