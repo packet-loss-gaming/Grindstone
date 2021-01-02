@@ -133,7 +133,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
             Player player = info.getPlayer();
 
             // Sacrificed Loot
-            double individualValue = individualRitualValue.get(player.getUniqueId());
+            double individualValue = individualRitualValue.getOrDefault(player.getUniqueId(), 0d);
             if (individualValue > 0) {
                 // Roll two multiplied sacrifices with limited quantity
                 SacrificeComponent.getCalculatedLoot(new SacrificeInformation(
@@ -158,7 +158,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
             )).forEach(consumer);
 
             // Diamond Loot
-            int individualKills = individualDemonKills.get(player.getUniqueId());
+            int individualKills = individualDemonKills.getOrDefault(player.getUniqueId(), 0);
             diamondLoot.streamValue((int) ((individualKills + individualValue) / 30), consumer);
         });
 
