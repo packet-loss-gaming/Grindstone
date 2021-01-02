@@ -48,6 +48,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
 
     protected List<SpleefAreaInstance> spleefInstances = new ArrayList<>();
     protected Map<UUID, Long> lastBlockBreak = new HashMap<>();
+    protected Set<UUID> warnedPlayers = new HashSet<>();
 
     private void reloadConfig() {
         World world = server.getWorlds().get(0);
@@ -114,7 +115,10 @@ public class SpleefArea extends BukkitComponent implements Runnable {
     private void removePlayer(Player player) {
         try {
             playerState.popState(PlayerStateKind.SPLEEF, player);
-            lastBlockBreak.remove(player.getUniqueId());
+
+            UUID playerId = player.getUniqueId();
+            warnedPlayers.remove(playerId);
+            lastBlockBreak.remove(playerId);
         } catch (IOException ex) {
             ex.printStackTrace();
         }

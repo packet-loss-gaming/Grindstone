@@ -22,6 +22,7 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public class SpleefListener implements Listener {
@@ -55,7 +56,10 @@ public class SpleefListener implements Listener {
             player.getInventory().setItemInMainHand(heldTool);
         }
 
-        parent.lastBlockBreak.put(player.getUniqueId(), System.currentTimeMillis());
+        // Update info for the anti-camping system
+        UUID playerId = player.getUniqueId();
+        parent.lastBlockBreak.put(playerId, System.currentTimeMillis());
+        parent.warnedPlayers.remove(playerId);
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
