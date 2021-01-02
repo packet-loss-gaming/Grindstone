@@ -140,7 +140,16 @@ public class SpleefAreaInstance {
         Material toMat = shouldBuildWalls() ? Material.ICE : Material.AIR;
         Material fromMat = toMat == Material.ICE ? Material.AIR : Material.ICE;
 
-        for (int y = minY; y < maxY; ++y) {
+        for (int y = minY, yIncrease = 0; y < maxY; ++y, ++yIncrease) {
+            if (yIncrease > 2) {
+                if (toMat == Material.ICE) {
+                    toMat = Material.BARRIER;
+                }
+                if (fromMat == Material.ICE) {
+                    fromMat = Material.BARRIER;
+                }
+            }
+
             for (int x = minX; x < maxX; ++x) {
                 tryChangeBlockAt(x, y, minZ, fromMat, toMat);
                 tryChangeBlockAt(x, y, maxZ, fromMat, toMat);
