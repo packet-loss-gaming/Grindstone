@@ -446,8 +446,15 @@ public class NinjaListener implements Listener {
             nextIsGrappleable = isGrappleable(nextBlock.getType());
         }
 
-        player.setVelocity(vel);
         player.setFallDistance(0F);
+
+        // As of 1.16.4, delaying by a tick significantly improves the reliability of the grapple velocity
+        // adjustment. In particularly, this works around a problem where the player sort of "twitches"
+        // and just ends up standing next to a block with no upward velocity -- perhaps the client is
+        // "fighting back" since we clicked on a block?
+        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            player.setVelocity(vel);
+        }, 1);
 
         state.grapple(Math.max(i, 3) * 200);
     }
