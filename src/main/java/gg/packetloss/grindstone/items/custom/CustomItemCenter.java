@@ -778,6 +778,12 @@ public class CustomItemCenter {
         addItem(blackPartyBox);
 
         // Miscellaneous
+        CustomItem executionerAxe = new CustomItem(EXECUTIONER_AXE, Material.GOLDEN_AXE);
+        executionerAxe.addSource(ItemSource.APOCALYPSE);
+        executionerAxe.addSource(ItemSource.MARKET);
+        executionerAxe.addUse("Deals damage based on the number of zombies around.");
+        addItem(executionerAxe);
+
         CustomItem madMilk = new CustomItem(MAD_MILK, Material.MILK_BUCKET);
         madMilk.addSource(ItemSource.MARKET);
         madMilk.addUse("If thrown into a brewing vat at the factory, a melt down will occur in which all undead creatures die.");

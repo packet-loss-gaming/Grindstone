@@ -13,6 +13,8 @@ import gg.packetloss.grindstone.bosses.detail.BossBarDetail;
 import gg.packetloss.grindstone.bosses.impl.BossBarRebindableBoss;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
 import gg.packetloss.grindstone.bosses.manager.apocalypse.instruction.ApocalypseDropTableInstruction;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
@@ -100,6 +102,8 @@ public class ZombieExecutioner {
                 }
             }
         );
+
+        dropTable.registerTakeAllDrop(1000, () -> CustomItemCenter.build(CustomItems.EXECUTIONER_AXE));
     }
 
     private void setupAssassinZombie() {

@@ -249,6 +249,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         handle(new ApocalypticCamouflageArmorImpl());
         handle(new BatBowImpl());
         handle(new ChickenBowImpl());
+        handle(new ExecutionerAxeImpl());
         handle(new GodFishImpl());
         handle(new ImbuedCrystalImpl(goldCondenser));
         handle(new MadMilkImpl());
