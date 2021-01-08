@@ -24,8 +24,11 @@ import java.util.function.Predicate;
 
 public class LocationUtil {
 
-    public static double distanceSquared2D(Location a, Location b) {
+    public static double distanceSquared2D(BlockVector3 a, BlockVector3 b) {
+        return Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getZ() - b.getZ(), 2);
+    }
 
+    public static double distanceSquared2D(Location a, Location b) {
         return Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getZ() - b.getZ(), 2);
     }
 
@@ -463,6 +466,10 @@ public class LocationUtil {
             if (predicate.test(searchBlock.getRelative(blockFace).getType())) return true;
         }
         return false;
+    }
+
+    public static boolean isChunkLoadedAt(World world, BlockVector3 position) {
+        return world.isChunkLoaded(position.getBlockX() >> 4, position.getBlockZ() >> 4);
     }
 
     public static boolean isChunkLoadedAt(Location loc) {

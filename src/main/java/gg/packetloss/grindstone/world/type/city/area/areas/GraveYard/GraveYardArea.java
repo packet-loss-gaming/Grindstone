@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.world.type.city.area.areas.GraveYard;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -15,6 +16,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
+import gg.packetloss.grindstone.events.graveyard.PlayerDisturbGraveEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
@@ -26,6 +28,7 @@ import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -65,6 +68,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
+import static gg.packetloss.grindstone.util.EnvironmentUtil.isNightTime;
 import static org.bukkit.block.data.type.Chest.Type;
 
 @ComponentInformation(friendlyName = "Grave Yard", desc = "The home of the undead")
@@ -120,7 +125,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     protected int rewardsRoomOccupiedTicks = 0;
 
     // Head Stones
-    protected List<Location> headStones = new ArrayList<>();
+    protected List<BlockVector3> headStones = new ArrayList<>();
 
     // Reward Chest
     protected List<Location> rewardChest = new ArrayList<>();
@@ -355,19 +360,19 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         for (Player player : getContainedParticipants()) {
             Location playerLoc = player.getEyeLocation();
 
-            // Make sure players aren't flying in hostile temple areas
-            if (player.isFlying() && isHostileTempleArea(playerLoc)) {
-                player.setFlying(false);
-            }
-
-            if (isEvilMode(playerLoc.getBlock())) {
+            if (isHostileTempleArea(playerLoc)) {
                 fogPlayer(player);
-                localSpawn(player);
+
+                if (player.isFlying()) {
+                    player.setFlying(false);
+                }
 
                 if (contains(rewards, player)) {
                     playersInRewardsRoom.add(player);
                 }
             }
+
+            trySpawnZombies(player);
         }
 
         if (playersInRewardsRoom.isEmpty()) {
@@ -435,17 +440,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 .collect(Collectors.toList());
     }
 
-    private boolean isEvilSurface() {
-        return EnvironmentUtil.isNightTime(getWorld().getTime()) || getWorld().hasStorm();
-    }
-
-    private boolean isEvilMode(Block block) {
-        // Weather/Day Check
-        //noinspection SimplifiableIfStatement
-        if (isEvilSurface()) return true;
-        return isHostileTempleArea(block.getLocation()) || block.getLightLevel() == 0;
-    }
-
     private boolean isInTemplateArea(Location location) {
         if (LocationUtil.isInRegion(getWorld(), temple, location)) {
             return true;
@@ -488,71 +482,64 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         return true;
     }
 
-    private void localSpawn(Player player) {
-        Location playerLoc = player.getLocation();
-        if (isRewardsArea(playerLoc)) {
-            // Redirect local spawns to be rewards room spawns
-            Location spawnPoint = new Location(world, -130.5, 41, -685);
+    private void spawnGuardianZombies() {
+        // Redirect local spawns to be rewards room spawns
+        Location spawnPoint = new Location(world, -130.5, 41, -685);
 
-            for (int i = ChanceUtil.getRandom(rewardsRoomOccupiedTicks / 10); i > 0; --i) {
-                Zombie zombie = spawn(spawnPoint, Zombie.class, "Guardian Zombie");
-                zombie.setCanPickupItems(false);
+        for (int i = ChanceUtil.getRandom(rewardsRoomOccupiedTicks / 10); i > 0; --i) {
+            Zombie zombie = spawn(spawnPoint, Zombie.class, "Guardian Zombie");
+            zombie.setCanPickupItems(false);
 
-                EntityEquipment equipment = zombie.getEquipment();
-                equipment.setItemInHand(new ItemStack(Material.DIAMOND_SWORD));
-                equipment.setArmorContents(new ItemStack[]{
-                        CustomItemCenter.build(CustomItems.ANCIENT_BOOTS),
-                        CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS),
-                        CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE),
-                        CustomItemCenter.build(CustomItems.ANCIENT_HELMET)
-                });
+            EntityEquipment equipment = zombie.getEquipment();
+            equipment.setItemInHand(new ItemStack(Material.DIAMOND_SWORD));
+            equipment.setArmorContents(new ItemStack[]{
+                CustomItemCenter.build(CustomItems.ANCIENT_BOOTS),
+                CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS),
+                CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE),
+                CustomItemCenter.build(CustomItems.ANCIENT_HELMET)
+            });
 
-                // Drop Chances
-                equipment.setItemInHandDropChance(0);
-                equipment.setHelmetDropChance(0);
-                equipment.setChestplateDropChance(0);
-                equipment.setLeggingsDropChance(0);
-                equipment.setBootsDropChance(0);
-            }
-            return;
-        } else if (isTorchArea(playerLoc)) {
-            if (!ChanceUtil.getChance(5) && getContained(torchArea, Zombie.class).size() >= 10) {
-                return;
-            }
+            // Drop Chances
+            equipment.setItemInHandDropChance(0);
+            equipment.setHelmetDropChance(0);
+            equipment.setChestplateDropChance(0);
+            equipment.setLeggingsDropChance(0);
+            equipment.setBootsDropChance(0);
+        }
+    }
 
-            // Redirect local spawns to be the end of the hall way
-            Location spawnPoint = new Location(world, -223, 56, -755);
-
-            for (int i = ChanceUtil.getRangedRandom(2, 5); i > 0; --i) {
-                Zombie z = spawnAndArm(
-                        spawnPoint.clone().add(
-                                ChanceUtil.getRangedRandom(-2, 2),
-                                0,
-                                0
-                        ),
-                        Zombie.class,
-                        true
-                );
-
-                z.setTarget(player);
-                z.setHealth(10);
-
-                try {
-                    AttributeBook.setAttribute(z, AttributeBook.Attribute.ATTACK_KNOCKBACK, 10);
-                } catch (UnsupportedFeatureException e) {
-                    e.printStackTrace();
-                }
-            }
+    private void spawnHallZombies(Player player) {
+        if (!ChanceUtil.getChance(5) && getContained(torchArea, Zombie.class).size() >= 10) {
             return;
         }
 
-        // Don't spawn zombies if the player is flying, run() combined with the FlightBlockingListener
-        // should ensure we don't have flying players in the temple, so this is fine.
-        if (player.isFlying()) {
-            return;
-        }
+        // Redirect local spawns to be the end of the hall way
+        Location spawnPoint = new Location(world, -223, 56, -755);
 
-        if (!ChanceUtil.getChance(3)) {
+        for (int i = ChanceUtil.getRangedRandom(2, 5); i > 0; --i) {
+            Zombie z = spawnAndArm(
+                spawnPoint.clone().add(
+                    ChanceUtil.getRangedRandom(-2, 2),
+                    0,
+                    0
+                ),
+                Zombie.class,
+                true
+            );
+
+            z.setTarget(player);
+            z.setHealth(10);
+
+            try {
+                AttributeBook.setAttribute(z, AttributeBook.Attribute.ATTACK_KNOCKBACK, 10);
+            } catch (UnsupportedFeatureException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void spawnNearbyZombies(Player player) {
+        if (!ChanceUtil.getChance(config.hostileTempleSpawnChance)) {
             return;
         }
 
@@ -563,7 +550,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             }
         }
 
-        Block playerBlock = playerLoc.getBlock();
+        Block playerBlock = player.getLocation().getBlock();
 
         for (int i = ChanceUtil.getRandom(16 - playerBlock.getLightLevel()); i > 0; --i) {
             Location ls = LocationUtil.findRandomLoc(playerBlock, 8, true, false);
@@ -575,6 +562,60 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             }
 
             spawnAndArm(ls, Zombie.class, true);
+        }
+    }
+
+    private void spawnZombiesAtNearbyGraves(Player player) {
+        double radiusSq = Math.pow(config.nightSpawnGraveRadius, 2);
+        BlockVector3 playerLoc = WorldEditBridge.toBlockVec3(player.getLocation());
+
+        List<BlockVector3> disturbedGraves = new ArrayList<>();
+        List<BlockVector3> consideredGraves = new ArrayList<>();
+        for (BlockVector3 headstoneLoc : headStones) {
+            if (LocationUtil.distanceSquared2D(headstoneLoc, playerLoc) > radiusSq) {
+                continue;
+            }
+
+            consideredGraves.add(headstoneLoc);
+            if (!ChanceUtil.getChance(config.nightSpawnGraveSpawnChance)) {
+                continue;
+            }
+
+            disturbedGraves.add(headstoneLoc);
+        }
+
+        PlayerDisturbGraveEvent event = new PlayerDisturbGraveEvent(player, consideredGraves, disturbedGraves);
+        if (event.isCancelled()) {
+            return;
+        }
+
+        for (BlockVector3 disturbedGrave : disturbedGraves) {
+            spawnAndArm(WorldEditBridge.toLocation(getWorld(), disturbedGrave), Zombie.class, false);
+        }
+    }
+
+    private boolean isPeacefulNight() {
+        return isNightTime(getWorld().getTime()) && !hasThunderstorm(getWorld());
+    }
+
+    private void trySpawnZombies(Player player) {
+        Location playerLoc = player.getLocation();
+        if (isRewardsArea(playerLoc)) {
+            spawnGuardianZombies();
+        } else if (isTorchArea(playerLoc)) {
+            spawnHallZombies(player);
+        } else {
+            // Don't spawn zombies if the player is flying, run() combined with the FlightBlockingListener
+            // should ensure we don't have flying players in the temple, so this is fine.
+            if (player.isFlying()) {
+                return;
+            }
+
+            if (isHostileTempleArea(playerLoc)) {
+                spawnNearbyZombies(player);
+            } else if (isPeacefulNight()) {
+                spawnZombiesAtNearbyGraves(player);
+            }
         }
     }
 
@@ -873,8 +914,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     private boolean makeGrave(String playerName, ArrayDeque<ItemStack> itemStacks,
-                              Location location, boolean dateChecking) {
-        BlockState blockState = location.getBlock().getState();
+                              BlockVector3 headstonePos, boolean dateChecking) {
+        BlockState blockState = getWorld().getBlockAt(
+            headstonePos.getX(), headstonePos.getY(), headstonePos.getZ()
+        ).getState();
 
         // Check sign validity
         if (!(blockState instanceof Sign)) {
@@ -908,9 +951,11 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     private Location makeGrave(String playerName, ArrayDeque<ItemStack> itemStacks, boolean dateChecking) {
-        return CollectionUtil.randomIterateFor(headStones, (headStone) -> {
+        BlockVector3 gravePosition = CollectionUtil.randomIterateFor(headStones, (headStone) -> {
             return makeGrave(playerName, itemStacks, headStone, dateChecking);
         });
+
+        return gravePosition == null ? null : WorldEditBridge.toLocation(getWorld(), gravePosition);
     }
 
     private void dropOverflow(String playerName, Location location, ArrayDeque<ItemStack> itemStacks) {
@@ -962,7 +1007,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             return;
         }
 
-        headStones.add(sign.getLocation());
+        headStones.add(WorldEditBridge.toBlockVec3(sign.getLocation()));
     }
 
     private void processHeadstonesInChunk(Chunk chunk) {
@@ -1228,7 +1273,28 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 || ItemUtil.hasItem(player, CustomItems.GEM_OF_DARKNESS)) {
             return;
         }
-        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 6, 1), true);
+
+        // Refresh blindness potion
+        player.removePotionEffect(PotionEffectType.BLINDNESS);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 6, 1));
+    }
+
+    public Location getRandomHeadstone() {
+        Location dest = WorldEditBridge.toLocation(
+            getWorld(),
+            CollectionUtil.getElement(headStones)
+        );
+
+        return LocationUtil.findFreePosition(dest);
+    }
+
+    public Location getRandomHeadstoneOrSpawn() {
+        Location dest = getRandomHeadstone();
+        if (dest == null) {
+            return getWorld().getSpawnLocation();
+        }
+
+        return dest;
     }
 
     private boolean setupEconomy() {
