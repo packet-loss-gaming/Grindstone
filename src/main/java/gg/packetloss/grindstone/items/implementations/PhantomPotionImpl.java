@@ -64,6 +64,7 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
                 }
             } else {
                 ChatUtil.sendError(player, "No drop locations are known to the potion.");
+                event.setCancelled(true);
             }
         }
     }
