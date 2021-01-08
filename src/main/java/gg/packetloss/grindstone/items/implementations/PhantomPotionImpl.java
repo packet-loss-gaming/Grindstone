@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
-import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
+import gg.packetloss.grindstone.events.graveyard.PlayerCreateGraveEvent;
 import gg.packetloss.grindstone.events.graveyard.PlayerDisturbGraveEvent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
@@ -25,6 +25,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -32,9 +33,9 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
     private Set<UUID> affectedPlayers = new HashSet<>();
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerDeathDropRedirectEvent(PlayerDeathDropRedirectEvent event) {
+    public void onPlayerDeathDropRedirectEvent(PlayerCreateGraveEvent event) {
         Player player = event.getPlayer();
-        getSession(player).addDeathDropLocation(event.getDropLocation());
+        getSession(player).addGraveLocation(event.getGraveLocation());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -43,27 +44,30 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
         ItemStack stack = event.getItem();
 
         if (ItemUtil.isItem(stack, CustomItems.PHANTOM_POTION)) {
-            Location lastLoc = getSession(player).getRecentDeathDropPoint();
-            if (lastLoc != null) {
-                // Protect the player for 30 seconds
-                UUID playerID = player.getUniqueId();
-                affectedPlayers.add(playerID);
-                server.getScheduler().runTaskLater(
-                        inst,
-                        () -> affectedPlayers.remove(playerID),
-                        20 * 30
-                );
+            Optional<Location> optLastLoc = getSession(player).getRecentGrave();
+            if (optLastLoc.isEmpty()) {
+                ChatUtil.sendError(player, "The phantoms find no recent grave bearing your name.");
+                event.setCancelled(true);
+                return;
+            }
 
-                if (!player.teleport(lastLoc)) {
-                    ChatUtil.sendError(player, "Location Information: X: "
-                                    + lastLoc.getBlockX() + ", Y: "
-                                    + lastLoc.getBlockY() + ", Z: "
-                                    + lastLoc.getBlockZ() + " in "
-                                    + lastLoc.getWorld().getName() + '.'
-                    );
-                }
-            } else {
-                ChatUtil.sendError(player, "No drop locations are known to the potion.");
+            // Protect the player for 30 seconds
+            UUID playerID = player.getUniqueId();
+            affectedPlayers.add(playerID);
+            server.getScheduler().runTaskLater(
+                    inst,
+                    () -> affectedPlayers.remove(playerID),
+                    20 * 30
+            );
+
+            Location lastLoc = optLastLoc.get();
+            if (!player.teleport(lastLoc)) {
+                ChatUtil.sendError(player, "Location Information: X: "
+                                + lastLoc.getBlockX() + ", Y: "
+                                + lastLoc.getBlockY() + ", Z: "
+                                + lastLoc.getBlockZ() + " in "
+                                + lastLoc.getWorld().getName() + '.'
+                );
             }
         }
     }

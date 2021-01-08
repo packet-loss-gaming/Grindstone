@@ -4,31 +4,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.events;
+package gg.packetloss.grindstone.events.graveyard;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
-public class PlayerDeathDropRedirectEvent extends PlayerEvent {
+public class PlayerCreateGraveEvent extends PlayerEvent {
     private static final HandlerList handlers = new HandlerList();
 
     private final Location deathLocation;
-    private Location dropLocation;
+    private final Location graveLocation;
 
-    public PlayerDeathDropRedirectEvent(Player who, Location dropLocation) {
+    public PlayerCreateGraveEvent(Player who, Location graveLocation) {
         super(who);
         this.deathLocation = who.getLocation();
-        this.dropLocation = dropLocation;
+        this.graveLocation = graveLocation;
     }
 
     public Location getDeathLocation() {
         return deathLocation.clone();
     }
 
-    public Location getDropLocation() {
-        return dropLocation.clone();
+    public Location getGraveLocation() {
+        return graveLocation.clone();
     }
 
     @Override

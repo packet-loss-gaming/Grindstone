@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.world.type.city.area.areas.GraveYard;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
-import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
 import gg.packetloss.grindstone.events.PlayerGraveProtectItemsEvent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
 import gg.packetloss.grindstone.events.PrayerTriggerEvent;
@@ -17,6 +16,7 @@ import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.custom.item.RepairItemEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.environment.CreepSpeakEvent;
+import gg.packetloss.grindstone.events.graveyard.PlayerCreateGraveEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowerUseEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
@@ -680,7 +680,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
      *
      * This method will:
      * - Create a player state if a gem of life is used, and the {@link GemOfLifeUsageEvent} event isn't cancelled.
-     * - Create a grave and call a {@link PlayerDeathDropRedirectEvent} if a gem of life isn't used,
+     * - Create a grave and call a {@link PlayerCreateGraveEvent} if a gem of life isn't used,
      *   or a {@link GemOfLifeUsageEvent} was cancelled.
      *
      * @param event the respective grave protect items event
@@ -707,7 +707,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 .toArray(ItemStack[]::new);
 
         Location graveLocation = parent.makeGrave(player.getName(), finalDrops);
-        CommandBook.callEvent(new PlayerDeathDropRedirectEvent(player, graveLocation));
+        CommandBook.callEvent(new PlayerCreateGraveEvent(player, graveLocation));
     }
 
     /**
