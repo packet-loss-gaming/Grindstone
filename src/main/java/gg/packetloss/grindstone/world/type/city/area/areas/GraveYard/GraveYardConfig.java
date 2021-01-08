@@ -18,4 +18,10 @@ public class GraveYardConfig extends ConfigurationBase {
     public int apocalypseNumZombiesMax = 6;
     @Setting("apocalypse.chance-of-removal")
     public int apocalypseChanceOfPurge = 5;
+    @Setting("hostile-temple.spawn-chance")
+    public int hostileTempleSpawnChance = 3;
+    @Setting("night-spawn.grave-radius")
+    public int nightSpawnGraveRadius = 15;
+    @Setting("night-spawn.grave-spawn-chance")
+    public int nightSpawnGraveSpawnChance = 6;
 }

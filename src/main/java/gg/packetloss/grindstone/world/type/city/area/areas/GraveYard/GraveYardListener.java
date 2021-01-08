@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.world.type.city.area.areas.GraveYard;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.math.BlockVector3;
 import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
 import gg.packetloss.grindstone.events.PlayerGraveProtectItemsEvent;
 import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
@@ -28,6 +29,7 @@ import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
@@ -99,20 +101,21 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
     @EventHandler
     public void onApocalypsePreSpawn(ApocalypsePreSpawnEvent event) {
-        if (parent.getWorld() != event.getInitialLightningStrikePoint().getWorld()) {
+        World graveWorld = parent.getWorld();
+        if (graveWorld != event.getInitialLightningStrikePoint().getWorld()) {
             return;
         }
 
-        for (Location headStone : parent.headStones) {
+        for (BlockVector3 headStone : parent.headStones) {
             if (!ChanceUtil.getChance(parent.getConfig().apocalypseChanceOfGraveSpawn)) {
                 continue;
             }
 
-            if (!headStone.isChunkLoaded()) {
+            if (!LocationUtil.isChunkLoadedAt(graveWorld, headStone)) {
                 continue;
             }
 
-            event.getLightningStrikePoints().add(headStone.clone());
+            event.getLightningStrikePoints().add(WorldEditBridge.toLocation(graveWorld, headStone));
         }
     }
 
@@ -516,7 +519,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         final Player player = event.getPlayer();
         server.getScheduler().runTaskLater(inst, () -> {
             if (parent.isHostileTempleArea(player.getLocation()) && !parent.admin.isAdmin(player)) {
-                player.teleport(CollectionUtil.getElement(parent.headStones));
+                player.teleport(parent.getRandomHeadstoneOrSpawn());
                 ChatUtil.sendWarning(player, "You feel dazed and confused as you wake up near a head stone.");
             }
         }, 1);
@@ -534,12 +537,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
         if (parent.isHostileTempleArea(event.getFrom()) && event.getCause().equals(PlayerTeleportEvent.TeleportCause.NETHER_PORTAL)) {
-            Location tg = CollectionUtil.getElement(parent.headStones);
-            tg = LocationUtil.findFreePosition(tg);
-            if (tg == null) tg = parent.getWorld().getSpawnLocation();
-
             event.setCancelled(true);
-            event.getPlayer().teleport(tg, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+            event.getPlayer().teleport(parent.getRandomHeadstoneOrSpawn(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }
     }
 
@@ -551,10 +550,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             if (parent.contains(event.getFrom())) {
                 event.setCancelled(true);
             } else {
-                Location tg = CollectionUtil.getElement(parent.headStones);
-                tg = LocationUtil.findFreePosition(tg);
-                if (tg == null) tg = parent.getWorld().getSpawnLocation();
-                event.setTo(tg);
+                event.setTo(parent.getRandomHeadstoneOrSpawn());
             }
             ChatUtil.sendWarning(event.getPlayer(), "It would seem your teleport has failed to penetrate the temple.");
         }

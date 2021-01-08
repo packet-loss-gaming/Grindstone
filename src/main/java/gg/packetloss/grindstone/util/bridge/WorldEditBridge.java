@@ -51,6 +51,10 @@ public class WorldEditBridge {
         }
     }
 
+    public static Location toLocation(World world, BlockVector3 position) {
+        return new Location(world, position.getX(), position.getY(), position.getZ());
+    }
+
     public static BlockVector3 toBlockVec3(Location location) {
         return BlockVector3.at(location.getX(), location.getY(), location.getZ());
     }
