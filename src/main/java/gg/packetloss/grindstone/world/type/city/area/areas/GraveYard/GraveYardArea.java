@@ -121,6 +121,9 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             Material.CRACKED_STONE_BRICKS
     );
 
+    // Disturbance factor for increasing hostility in the grave yard during the night
+    private Map<UUID, Integer> disturbanceFactor = new HashMap<>();
+
     // Ticks of active grave yard rewards room
     protected int rewardsRoomOccupiedTicks = 0;
 
@@ -339,6 +342,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     @Override
     public void run() {
         restoreBlocks();
+        decayDisturbance();
+
         if (isEmpty()) {
             handleEmptyRewardsRoom();
             return;
@@ -565,10 +570,44 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
     }
 
+    public void decayDisturbance() {
+        Iterator<Map.Entry<UUID, Integer>> it = disturbanceFactor.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<UUID, Integer> entry = it.next();
+            entry.setValue(entry.getValue() - 1);
+
+            if (entry.getValue() < 0) {
+                it.remove();
+            }
+        }
+    }
+
+    public int getChanceOfDisturbance(Player player) {
+        int currentDisturbanceFactor = disturbanceFactor.getOrDefault(player.getUniqueId(), 0);
+        return Math.max(
+            config.nightSpawnGraveSpawnChanceMax - currentDisturbanceFactor,
+            config.nightSpawnGraveSpawnChanceMin
+        );
+    }
+
+    public void increaseChanceOfDisturbance(Player player, int amount) {
+        disturbanceFactor.merge(player.getUniqueId(), amount, (a, b) -> {
+            // This is either the disturbance number that results in the the minimum chance on the next run or,
+            // the existing amount plus the new amount.
+            //
+            // To be clear, the 1 is necessary to overcome to the decay, similar to how we add by 2 rather
+            // than 1 to overcome the decay.
+            return Math.min(config.nightSpawnGraveSpawnChanceMax - config.nightSpawnGraveSpawnChanceMin + 1, a + b);
+        });
+    }
+
     private void spawnZombiesAtNearbyGraves(Player player) {
+        // Compute constant variables
+        int chanceOfDisturbance = getChanceOfDisturbance(player);
         double radiusSq = Math.pow(config.nightSpawnGraveRadius, 2);
         BlockVector3 playerLoc = WorldEditBridge.toBlockVec3(player.getLocation());
 
+        // Find all the graves
         List<BlockVector3> disturbedGraves = new ArrayList<>();
         List<BlockVector3> consideredGraves = new ArrayList<>();
         for (BlockVector3 headstoneLoc : headStones) {
@@ -577,13 +616,20 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             }
 
             consideredGraves.add(headstoneLoc);
-            if (!ChanceUtil.getChance(config.nightSpawnGraveSpawnChance)) {
+            if (!ChanceUtil.getChance(chanceOfDisturbance)) {
                 continue;
             }
 
             disturbedGraves.add(headstoneLoc);
         }
 
+        // Increase the chance of disturbance as the player remained near graves
+        if (!consideredGraves.isEmpty()) {
+            // Increase by 2 to overcome decay
+            increaseChanceOfDisturbance(player, 2);
+        }
+
+        // Call the event
         PlayerDisturbGraveEvent event = new PlayerDisturbGraveEvent(player, consideredGraves, disturbedGraves);
         CommandBook.callEvent(event);
         if (event.isCancelled()) {

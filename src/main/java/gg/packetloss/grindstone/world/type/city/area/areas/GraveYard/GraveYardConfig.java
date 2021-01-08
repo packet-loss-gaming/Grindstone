@@ -22,6 +22,8 @@ public class GraveYardConfig extends ConfigurationBase {
     public int hostileTempleSpawnChance = 3;
     @Setting("night-spawn.grave-radius")
     public int nightSpawnGraveRadius = 15;
-    @Setting("night-spawn.grave-spawn-chance")
-    public int nightSpawnGraveSpawnChance = 6;
+    @Setting("night-spawn.grave-spawn-chance.max")
+    public int nightSpawnGraveSpawnChanceMax = 20;
+    @Setting("night-spawn.grave-spawn-chance.min")
+    public int nightSpawnGraveSpawnChanceMin = 12;
 }
