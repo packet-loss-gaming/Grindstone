@@ -591,7 +591,12 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
 
         for (BlockVector3 disturbedGrave : disturbedGraves) {
-            spawnAndArm(WorldEditBridge.toLocation(getWorld(), disturbedGrave), Zombie.class, false);
+            Location spawnLoc = LocationUtil.findFreePosition(
+                WorldEditBridge.toLocation(getWorld(), disturbedGrave),
+                true
+            );
+
+            spawnAndArm(spawnLoc, Zombie.class, false);
         }
     }
 
@@ -1286,7 +1291,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             CollectionUtil.getElement(headStones)
         );
 
-        return LocationUtil.findFreePosition(dest);
+        return LocationUtil.findFreePosition(dest, true);
     }
 
     public Location getRandomHeadstoneOrSpawn() {
