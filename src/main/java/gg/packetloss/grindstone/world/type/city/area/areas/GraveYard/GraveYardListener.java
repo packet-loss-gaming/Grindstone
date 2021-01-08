@@ -463,8 +463,9 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
+        Player player = event.getPlayer();
 
-        if (parent.contains(block) && !parent.admin.isAdmin(event.getPlayer())) {
+        if (parent.contains(block) && player.getGameMode() != GameMode.CREATIVE) {
             event.setCancelled(true);
 
             if (!GraveYardArea.BREAKABLE.contains(block.getType())) {
@@ -491,7 +492,10 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (parent.contains(event.getBlock()) && !parent.admin.isAdmin(event.getPlayer())) {
+        Block block = event.getBlock();
+        Player player = event.getPlayer();
+
+        if (parent.contains(block) && player.getGameMode() != GameMode.CREATIVE) {
             event.setCancelled(true);
         }
     }
