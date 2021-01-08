@@ -82,7 +82,7 @@ public class LocationUtil {
             return false;
         }
 
-        return !type.isSolid();
+        return !EnvironmentUtil.isSolidBlock(type);
     }
 
     private static boolean isOkayStandingBlock(Block block) {
@@ -92,7 +92,7 @@ public class LocationUtil {
         }
 
         // If we're standing on a solid block, we're fine
-        if (type.isSolid()) {
+        if (EnvironmentUtil.isSolidBlock(type)) {
             return true;
         }
 

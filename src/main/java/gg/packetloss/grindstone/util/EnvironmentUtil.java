@@ -506,6 +506,22 @@ public class EnvironmentUtil {
         return isNaturalTerrainBlock(block.getType());
     }
 
+    public static boolean isSolidBlock(Material material) {
+        if (!material.isSolid()) {
+            return false;
+        }
+
+        if (isSign(material)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean isSolidBlock(Block block) {
+        return isSolidBlock(block.getType());
+    }
+
     private static final Set<Biome> FROZEN_BIOMES = Set.of(
             Biome.DEEP_FROZEN_OCEAN, Biome.FROZEN_OCEAN, Biome.FROZEN_RIVER,
             Biome.SNOWY_BEACH, Biome.SNOWY_MOUNTAINS, Biome.SNOWY_TAIGA,
