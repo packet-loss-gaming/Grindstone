@@ -47,10 +47,15 @@ public class RitualTombListener extends AreaListener<RitualTomb> {
 
     @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
+        Location from = event.getFrom();
         Location to = event.getTo();
 
         if (parent.contains(to) && !event.getCause().equals(PlayerTeleportEvent.TeleportCause.UNKNOWN)) {
             event.setTo(parent.getRitualSiteLoc().clone());
+        } else if (parent.contains(from) && !parent.contains(to)) {
+            // Update the target information so that they're not targeting a dead player
+            // this prevents them from running out of the area
+            parent.updateDemons();
         }
     }
 
@@ -129,6 +134,10 @@ public class RitualTombListener extends AreaListener<RitualTomb> {
         if (!parent.contains(player)) {
             return;
         }
+
+        // Update the target information so that they're not targeting a dead player
+        // this prevents them from running out of the area
+        parent.updateDemons();
 
         try {
             parent.playerState.pushState(PlayerStateKind.RITUAL_TOMB, player);

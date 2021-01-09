@@ -186,7 +186,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
             return;
         }
 
-        updateDemons();
+        updateDemonsInternal();
     }
 
     public void cleanupDemons() {
@@ -293,8 +293,16 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
         demons.forEach(d -> d.setTarget(player));
     }
 
-    private void updateDemons() {
+    private void updateDemonsInternal() {
         seekDemonsOn(fillDemons(), findHighPriorityTarget());
+    }
+
+    protected void updateDemons() {
+        if (!isRitualActive()) {
+            return;
+        }
+
+        updateDemonsInternal();
     }
 
     public void increaseRitualValue(Player player, double amount) {
