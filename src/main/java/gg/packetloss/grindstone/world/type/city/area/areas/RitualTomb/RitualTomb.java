@@ -48,7 +48,6 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vex;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -275,7 +274,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
 
     private Player findHighPriorityTarget() {
         List<Player> players = getContainedParticipants();
-        players.sort(Comparator.comparing(LivingEntity::getHealth));
+        players.sort(Comparator.comparing((e) -> e.getHealth() / e.getMaxHealth()));
 
         Player target = players.get(players.size() - 1);
 
