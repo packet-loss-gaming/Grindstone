@@ -996,9 +996,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         labelGrave(signState, playerName);
         updateGrave(chest, itemStacks);
 
-        log.info("Made a Grave for: " + playerName + " at: "
-                + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ());
-
         return true;
     }
 
