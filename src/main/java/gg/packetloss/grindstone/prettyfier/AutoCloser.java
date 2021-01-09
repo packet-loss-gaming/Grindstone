@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.prettyfier;
 
+import com.google.common.collect.Lists;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.task.DebounceHandle;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
@@ -26,7 +27,7 @@ public class AutoCloser implements Prettyfier, Listener {
 
     @Override
     public void forceFinish() {
-        pendingCloses.values().forEach(DebounceHandle::bounceNow);
+        Lists.newArrayList(pendingCloses.values()).forEach(DebounceHandle::bounceNow);
     }
 
     private Block getClosableBlock(PlayerInteractEvent event) {
