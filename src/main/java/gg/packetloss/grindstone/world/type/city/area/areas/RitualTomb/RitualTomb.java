@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.city.area.areas.RitualTomb;
 
+import com.destroystokyo.paper.Title;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -259,12 +260,32 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
         return demons;
     }
 
+    private void announceDemonsLethal(Player target) {
+        String targetName = target.getDisplayName().toUpperCase();
+        for (Player player : getAudiblePlayers()) {
+            player.sendTitle(Title.builder()
+                .title(Text.of(ChatColor.DARK_RED, "YOUR DEATH IS NEAR").build())
+                .subtitle(Text.of(ChatColor.DARK_RED, targetName + " SHALL BE FIRST").build())
+                .fadeIn(10)
+                .stay(20 * 3)
+                .fadeOut(10)
+                .build());
+        }
+    }
+
     private Player findHighPriorityTarget() {
         List<Player> players = getContainedParticipants();
         players.sort(Comparator.comparing(LivingEntity::getHealth));
 
         Player target = players.get(players.size() - 1);
+
+        boolean demonsCouldKill = demonsCanKill;
         demonsCanKill = target.getHealth() < target.getMaxHealth() / 2;
+
+        if (demonsCanKill && !demonsCouldKill) {
+            announceDemonsLethal(target);
+        }
+
         return target;
     }
 
