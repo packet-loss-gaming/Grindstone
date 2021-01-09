@@ -297,7 +297,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     }
 
     protected void updateDemons() {
-        if (!isRitualActive()) {
+        if (!isRitualActive() || isEmpty()) {
             return;
         }
 
