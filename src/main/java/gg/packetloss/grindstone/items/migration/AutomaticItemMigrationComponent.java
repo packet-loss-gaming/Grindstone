@@ -10,8 +10,13 @@ import com.destroystokyo.paper.loottable.LootableInventory;
 import com.google.gson.reflect.TypeToken;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.items.migration.migrations.CustomItemModelMigration;
+import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import org.bukkit.Chunk;
 import org.bukkit.block.BlockState;
@@ -21,6 +26,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -32,7 +38,13 @@ import org.bukkit.inventory.InventoryHolder;
 import java.io.IOException;
 
 @ComponentInformation(friendlyName = "Automatic Item Migration", desc = "Automatic Item Updates")
+@Depend(components = {AdminComponent.class, PlayerStateComponent.class})
 public class AutomaticItemMigrationComponent extends BukkitComponent implements Listener {
+    @InjectComponent
+    private AdminComponent admin;
+    @InjectComponent
+    private PlayerStateComponent playerState;
+
     private static final MigrationManager manager = new MigrationManager();
 
     static {
@@ -145,13 +157,7 @@ public class AutomaticItemMigrationComponent extends BukkitComponent implements 
             return;
         }
 
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-            if (!chunk.isLoaded()) {
-                return;
-            }
-
-            processChunk(chunk);
-        }, 1);
+        processChunk(chunk);
     }
 
     private void processPlayer(Player player) {
@@ -161,8 +167,36 @@ public class AutomaticItemMigrationComponent extends BukkitComponent implements 
         state.markPlayerProcessed(player);
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerLogin(PlayerJoinEvent event) {
+    private boolean hasTempKind(Player player) {
+        try {
+            return playerState.hasTempKind(player) || admin.isAdmin(player);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        if (state.isPlayerProcessed(player)) {
+            return;
+        }
+
+        // Wait for the PlayerStatePopEvent
+        if (hasTempKind(player)) {
+            return;
+        }
+
+        processPlayer(player);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerStatePop(PlayerStatePopEvent event) {
+        if (!event.getKind().isTemporary()) {
+            return;
+        }
+
         Player player = event.getPlayer();
         if (state.isPlayerProcessed(player)) {
             return;
