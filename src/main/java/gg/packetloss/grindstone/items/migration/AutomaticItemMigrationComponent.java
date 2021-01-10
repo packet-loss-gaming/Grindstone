@@ -193,11 +193,14 @@ public class AutomaticItemMigrationComponent extends BukkitComponent implements 
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerStatePop(PlayerStatePopEvent event) {
-        if (!event.getKind().isTemporary()) {
+        Player player = event.getPlayer();
+
+        // Check this way to factor in admin mode, even though we otherwise could just
+        // check to see if the popped kind is a temp kind
+        if (hasTempKind(player)) {
             return;
         }
 
-        Player player = event.getPlayer();
         if (state.isPlayerProcessed(player)) {
             return;
         }
