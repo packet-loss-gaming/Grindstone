@@ -218,6 +218,10 @@ public enum CustomItems {
         return namespaceName;
     }
 
+    public int getModelId() {
+        return CustomItemCenter.getModelId(this);
+    }
+
     public static String computeNamespaceName(String name) {
         return "grindstone:" + name.toLowerCase().replaceAll("'s", "").replaceAll(" ", "_");
     }

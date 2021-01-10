@@ -7,10 +7,6 @@
 package gg.packetloss.grindstone.items;
 
 import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
@@ -31,11 +27,11 @@ import gg.packetloss.grindstone.items.flight.FlightItemsComponent;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
 import gg.packetloss.grindstone.items.implementations.combotools.*;
-import gg.packetloss.grindstone.items.migration.MigrationManager;
-import gg.packetloss.grindstone.items.migration.migrations.FearSwordMigration;
-import gg.packetloss.grindstone.items.migration.migrations.GodSwordMigration;
-import gg.packetloss.grindstone.items.migration.migrations.MasterSwordMigration;
-import gg.packetloss.grindstone.items.migration.migrations.UnleashedSwordMigration;
+import gg.packetloss.grindstone.items.legacymigration.MigrationManager;
+import gg.packetloss.grindstone.items.legacymigration.migrations.FearSwordMigration;
+import gg.packetloss.grindstone.items.legacymigration.migrations.GodSwordMigration;
+import gg.packetloss.grindstone.items.legacymigration.migrations.MasterSwordMigration;
+import gg.packetloss.grindstone.items.legacymigration.migrations.UnleashedSwordMigration;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
@@ -56,10 +52,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 
@@ -135,30 +127,11 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
     private MigrationManager migrationManager = new MigrationManager();
 
-    private JsonObject buildItemManifest() {
-        JsonArray itemNames = new JsonArray();
-        for (CustomItems item : CustomItems.values()) {
-            itemNames.add(new JsonPrimitive(item.getSnakecaseName()));
-        }
-        JsonObject manifest = new JsonObject();
-        manifest.add("names", itemNames);
-        return manifest;
-    }
-
-    private void writeItemManifest() {
-        String manifestFile = inst.getDataFolder().getPath() + "/item_manifest.json";
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(manifestFile))) {
-            writer.write(new Gson().toJson(buildItemManifest()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void enable() {
-
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+
         loadResources();
         registerSpecWeapons();
         registerTools();
@@ -167,8 +140,6 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         registerGuildOaths();
         registerGeneral();
         registerMigrations();
-
-        writeItemManifest();
     }
 
     private <T extends Listener> T handle(T component) {

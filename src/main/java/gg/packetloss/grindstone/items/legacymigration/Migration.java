@@ -4,12 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.items.migration;
+package gg.packetloss.grindstone.items.legacymigration;
 
 import org.bukkit.inventory.ItemStack;
 
-import java.util.function.Function;
+import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
-public interface Migration extends Predicate<ItemStack>, Function<ItemStack, ItemStack> {
+public interface Migration extends Predicate<ItemStack>, BiFunction<ItemStack, String, ItemStack> {
+    Set<String> getValidOptions();
 }

@@ -6,7 +6,10 @@
 
 package gg.packetloss.grindstone.items.custom;
 
+import com.google.gson.reflect.TypeToken;
 import gg.packetloss.grindstone.items.implementations.MagicBucketImpl;
+import gg.packetloss.grindstone.util.item.ItemNameCalculator;
+import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -14,12 +17,44 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Optional;
 
 import static gg.packetloss.grindstone.items.custom.CustomItems.*;
 
 public class CustomItemCenter {
+    public static final int REVISION = 0;
+
+    private static CustomItemModelState modelState = new CustomItemModelState();
+    private static SingleFileFilesystemStateHelper<CustomItemModelState> modelStateHelper;
+
+    static  {
+        try {
+            modelStateHelper = new SingleFileFilesystemStateHelper<>("custom-item-models.json", new TypeToken<>() { });
+            modelStateHelper.load().ifPresent(loadedState -> modelState = loadedState);
+
+            if (modelState.update()) {
+                modelStateHelper.save(modelState);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * This should really only be used for migrating items
+     */
+    @Deprecated
+    public static Optional<Integer> getModelId(ItemStack item) {
+        return ItemNameCalculator.computeItemName(item).map(name -> modelState.itemNameToModelId.get(name));
+    }
+
+    public static int getModelId(CustomItems item) {
+        return modelState.itemToModelId.get(item);
+    }
+
     private static HashMap<CustomItems, CustomItem> items = new HashMap<>();
 
     private static void addItem(CustomItem item) {

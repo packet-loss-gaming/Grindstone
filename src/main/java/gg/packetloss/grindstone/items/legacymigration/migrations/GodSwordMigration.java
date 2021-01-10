@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.items.migration.migrations;
+package gg.packetloss.grindstone.items.legacymigration.migrations;
 
 import com.google.common.collect.Sets;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.items.migration.Migration;
+import gg.packetloss.grindstone.items.legacymigration.Migration;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.inventory.ItemStack;
 

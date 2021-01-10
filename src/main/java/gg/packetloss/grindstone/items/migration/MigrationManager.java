@@ -6,39 +6,37 @@
 
 package gg.packetloss.grindstone.items.migration;
 
-import com.google.common.collect.Sets;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class MigrationManager {
-    private List<Migration> migrations = new ArrayList<>();
+    private final List<Migration> migrations = new ArrayList<>();
 
     public void add(Migration migration) {
         migrations.add(migration);
     }
 
-    public Set<String> getUpgradeOptions(ItemStack item) {
-        for (Migration migration : migrations) {
-            if (migration.test(item)) {
-                return migration.getValidOptions();
-            }
+    public Optional<ItemStack> applyUpdates(ItemStack itemStack) {
+        if (!ItemUtil.isAuthenticCustomItem(itemStack)) {
+            return Optional.empty();
         }
-        return Sets.newHashSet();
-    }
 
-    public Optional<ItemStack> upgradeItem(ItemStack item, String option) {
+        boolean updated = false;
         for (Migration migration : migrations) {
-            if (migration.test(item)) {
-                if (migration.getValidOptions().contains(option.toLowerCase())) {
-                    return Optional.of(migration.apply(item, option));
-                }
-                return Optional.empty();
+            if (migration.test(itemStack)) {
+                itemStack = migration.apply(itemStack);
+                updated = true;
             }
         }
-        return Optional.empty();
+
+        if (updated) {
+            return Optional.of(itemStack);
+        } else {
+            return Optional.empty();
+        }
     }
 }
