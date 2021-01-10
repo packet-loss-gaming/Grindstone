@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.economic.store;
 
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -69,22 +70,12 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return rounded(sellPrice);
     }
 
-    private Optional<Double> computePercentageSale(ItemStack stack) {
-        double percentageSale = 1;
-
-        ItemMeta stackMeta = stack.getItemMeta();
-        if (stackMeta instanceof Damageable && ((Damageable) stackMeta).hasDamage()) {
-            if (stack.getAmount() > 1) {
-                return Optional.empty();
-            }
-            percentageSale = 1 - ((double) ((Damageable) stackMeta).getDamage() / (double) stack.getType().getMaxDurability());
-        }
-
-        return Optional.of(percentageSale);
+    private Optional<Float> computePercentageSale(ItemStack stack) {
+        return ItemUtil.getRemainingDurability(stack).or(() -> Optional.of(1f));
     }
 
     public Optional<Double> getValueForStack(ItemStack stack) {
-        Optional<Double> optPercentageSale = computePercentageSale(stack);
+        Optional<Float> optPercentageSale = computePercentageSale(stack);
         if (optPercentageSale.isEmpty()) {
             return Optional.empty();
         }
@@ -93,7 +84,7 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
     }
 
     public Optional<Double> getSellUnitPriceForStack(ItemStack stack) {
-        Optional<Double> optPercentageSale = computePercentageSale(stack);
+        Optional<Float> optPercentageSale = computePercentageSale(stack);
         if (optPercentageSale.isEmpty()) {
             return Optional.empty();
         }

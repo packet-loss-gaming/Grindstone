@@ -6,56 +6,44 @@
 
 package gg.packetloss.grindstone.world.type.city.arena.factory;
 
-import com.sk89q.util.yaml.YAMLNode;
-import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.world.type.city.arena.AbstractRegionedArena;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class FactoryMech extends AbstractRegionedArena {
+    protected boolean dirty = false;
 
-    protected Map<Material, Integer> items = new ConcurrentHashMap<>();
-    protected YAMLProcessor processor;
-    protected String data;
-
-    public FactoryMech(World world, ProtectedRegion region, YAMLProcessor processor, String data) {
+    public FactoryMech(World world, ProtectedRegion region) {
         super(world, region);
-        this.processor = processor;
-        this.data = data;
     }
 
     public abstract String getName();
 
-    public abstract List<ItemStack> process();
+    public abstract void consume();
 
-    public void load() {
-        try {
-            processor.load();
-            Map<String, YAMLNode> nodes = processor.getNodes(data);
-            if (nodes != null) {
-                for (Map.Entry<String, YAMLNode> entry : nodes.entrySet()) {
-                    YAMLNode node = entry.getValue();
-                    items.put(Material.matchMaterial(entry.getKey()), node.getInt("amt"));
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
+    public abstract List<ItemStack> produceUpTo(int amount);
+
+    public abstract void load();
+
+    protected abstract void saveImpl();
 
     public void save() {
-        processor.removeProperty(data);
-        for (Map.Entry<Material, Integer> entry : items.entrySet()) {
-            String nodeKey = entry.getKey().getKey().toString();
-            YAMLNode node = processor.addNode(data + '.' + nodeKey);
-            node.setProperty("amt", entry.getValue());
+        if (!dirty) {
+            return;
         }
-        processor.save();
+
+        dirty = false;
+        saveImpl();
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void markDirty() {
+        dirty = true;
     }
 }

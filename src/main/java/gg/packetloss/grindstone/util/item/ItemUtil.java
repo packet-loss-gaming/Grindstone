@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -544,5 +545,23 @@ public class ItemUtil {
         }
 
         return stack;
+    }
+
+    public static Optional<Float> getRemainingDurability(ItemStack stack) {
+        ItemMeta stackMeta = stack.getItemMeta();
+        if (stackMeta instanceof Damageable) {
+            if (stack.getAmount() > 1) {
+                throw new IllegalStateException("Damageable item was stacked");
+            }
+
+            if (!((Damageable) stackMeta).hasDamage()) {
+                return Optional.of(1f);
+            }
+
+            double percentUsed = ((double) ((Damageable) stackMeta).getDamage() / stack.getType().getMaxDurability());
+            return Optional.of((float) (1 - percentUsed));
+        }
+
+        return Optional.empty();
     }
 }

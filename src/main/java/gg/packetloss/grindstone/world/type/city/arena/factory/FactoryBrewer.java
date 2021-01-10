@@ -15,6 +15,8 @@ import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.RomanNumeralUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.world.type.city.arena.factory.FactoryFloor;
+import gg.packetloss.grindstone.world.type.city.arena.factory.FactoryMech;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -38,10 +40,10 @@ public class FactoryBrewer extends FactoryMech {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
-    private int id;
+    private final int id;
 
     public FactoryBrewer(World world, ProtectedRegion region, YAMLProcessor processor) {
-        super(world, region, processor, "pot-ingredients-" + count++);
+        super(world, region, processor);
         id = count;
     }
 
@@ -73,8 +75,7 @@ public class FactoryBrewer extends FactoryMech {
     }
 
     @Override
-    public List<ItemStack> process() {
-
+    public void consume() {
         Collection<Player> playerList = getContained(1, Player.class);
 
         Collection<Entity> contained = getContained(Entity.class);
@@ -82,7 +83,6 @@ public class FactoryBrewer extends FactoryMech {
             ChatUtil.sendNotice(playerList, "[" + getName() + "] Processing...");
 
             for (Entity e : contained) {
-
                 // Kill contained living entities
                 if (e instanceof LivingEntity) {
                     ((LivingEntity) e).setHealth(0);
@@ -91,7 +91,6 @@ public class FactoryBrewer extends FactoryMech {
 
                 // Find items and destroy those unwanted
                 if (e instanceof Item) {
-
                     ItemStack workingStack = ((Item) e).getItemStack();
 
                     // Add the item to the list
@@ -109,9 +108,12 @@ public class FactoryBrewer extends FactoryMech {
                 }
                 e.remove();
             }
-            save(); // Update save for new Potion resource values
+            markDirty(); // Update save for new Potion resource values
         }
+    }
 
+    @Override
+    public List<ItemStack> produceUpTo(int amount) {
         // Check these to avoid doing more calculations than need be
         int bottles = items.getOrDefault(Material.GLASS_BOTTLE, 0);
         int max = items.getOrDefault(Material.NETHER_WART, 0);
@@ -211,7 +213,7 @@ public class FactoryBrewer extends FactoryMech {
         // This is confusing, essentially we are dividing the bottle count into three pieces
         // That allows us to figure out how many potion sets can be made
         // We will later expand the potion sets again
-        max = (int) Math.min(max, Math.floor(bottles / 3));
+        max = Math.min(max, bottles / 3);
 
         if (max <= 0) return new ArrayList<>();
 
@@ -238,11 +240,21 @@ public class FactoryBrewer extends FactoryMech {
 
         // Tell the player what we are making
         ChatUtil.sendNotice(playerList, "Brewing: " + max + " " + target.getEffectType().getName() + " "
-                + (upgraded ? "II" : "I") + (splash ? " splash" : "") + " potions.");
+            + (upgraded ? "II" : "I") + (splash ? " splash" : "") + " potions.");
         // Return the product for the que
         List<ItemStack> product = new ArrayList<>();
         for (int i = 0; i < max; i++) product.add(potion.clone());
         return product;
+    }
+
+    @Override
+    public void load() {
+
+    }
+
+    @Override
+    protected void saveImpl() {
+
     }
 
     /**

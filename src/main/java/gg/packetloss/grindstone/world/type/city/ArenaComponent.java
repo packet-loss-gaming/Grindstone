@@ -38,7 +38,7 @@ import gg.packetloss.grindstone.world.type.city.arena.*;
 import gg.packetloss.grindstone.world.type.city.arena.factory.FactoryBrewer;
 import gg.packetloss.grindstone.world.type.city.arena.factory.FactoryFloor;
 import gg.packetloss.grindstone.world.type.city.arena.factory.FactoryMech;
-import gg.packetloss.grindstone.world.type.city.arena.factory.FactorySmelter;
+import gg.packetloss.grindstone.world.type.city.arena.factory.smelting.FactorySmelter;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -251,7 +251,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                         mgr.getRegion(region + "-lava-channel-2")
                     };
                     ProtectedRegion lavaZ = mgr.getRegion(region + "-lava");
-                    mechs.add(new FactorySmelter(world, furnace, processor, lavaChannels, lavaZ));
+                    mechs.add(new FactorySmelter(world, furnace, lavaChannels, lavaZ));
                     arenas.add(new FactoryFloor(world, PRs, mechs, processor));
                     if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
                 } catch (Exception e) {

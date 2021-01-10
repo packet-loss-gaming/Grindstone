@@ -15,18 +15,12 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.events.entity.EntitySpawnBlockedEvent;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.DamageUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.util.RegionUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.itemstack.StackSerializer;
 import gg.packetloss.grindstone.world.type.city.arena.ArenaType;
 import gg.packetloss.grindstone.world.type.city.arena.GenericArena;
 import gg.packetloss.grindstone.world.type.city.arena.PersistentArena;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -53,9 +47,8 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
 
     private YAMLProcessor processor;
     private List<FactoryMech> mechs;
-    private ArrayDeque<ItemStack> que = new ArrayDeque<>();
     private long nextMobSpawn = 0L;
-    private boolean queueDirty = false;
+    private boolean floorDirty = false;
 
     public FactoryFloor(World world, ProtectedRegion[] regions, List<FactoryMech> mechs, YAMLProcessor processor) {
         super(world, regions[0], regions[1], Arrays.copyOfRange(regions, 2, 4), Arrays.copyOfRange(regions, 4, 6));
@@ -67,11 +60,13 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         factInst = this;
+
+        CommandBook.server().getScheduler().runTaskTimer(CommandBook.inst(), (Runnable) this::produce, 10, 10);
     }
 
     public void madMilk() {
         nextMobSpawn = Math.max(nextMobSpawn, System.currentTimeMillis()) + TimeUnit.MINUTES.toMillis(40);
-        writePrime();
+        floorDirty = true;
     }
 
     public void throwPotions() {
@@ -132,10 +127,30 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
         item.setVelocity(new Vector());
     }
 
+    private int getMechProduction() {
+        boolean hexa = ModifierComponent.getModifierCenter().isActive(ModifierType.HEXA_FACTORY_SPEED);
+        int max = getContained(Player.class).size() * (hexa ? 18 : 3);
+        return ChanceUtil.getRangedRandom(max / 3, max);
+    }
+
+    public void produce() {
+        int[] mechProduction = { getMechProduction() };
+
+        CollectionUtil.randomIterateFor(mechs, (mech) -> {
+            List<ItemStack> products = mech.produceUpTo(mechProduction[0]);
+            for (ItemStack product : products) {
+                produce(product);
+            }
+
+            mechProduction[0] -= products.size();
+            return mechProduction[0] == 0;
+        });
+    }
+
     @Override
     public void run() {
-        if (queueDirty) {
-            writePrime();
+        if (isDirty()) {
+            writeData(true);
         }
 
         if (isEmpty()) return;
@@ -146,20 +161,8 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
             throwPotions();
         }
 
-        int queueSize = que.size();
-        for (FactoryMech mech : Collections.synchronizedList(mechs)) que.addAll(mech.process());
-        if (queueSize != que.size()) {
-            queueDirty = true;
-        }
-
-        if (que.isEmpty()) return;
-        boolean hexa = ModifierComponent.getModifierCenter().isActive(ModifierType.HEXA_FACTORY_SPEED);
-        int max = getContained(Player.class).size() * (hexa ? 54 : 9);
-        for (int i = Math.min(que.size(), ChanceUtil.getRangedRandom(max / 3, max)); i > 0; --i) {
-            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                produce(que.poll());
-                queueDirty = true;
-            }, i * 10 + ChanceUtil.getRandom(10));
+        for (FactoryMech mech : mechs) {
+            mech.consume();
         }
     }
 
@@ -172,6 +175,10 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
     public void onBlockPlace(BlockPlaceEvent event) {
         Block placedBlock = event.getBlockPlaced();
         if (!contains(placedBlock)) {
+            return;
+        }
+
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE) {
             return;
         }
 
@@ -231,21 +238,19 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
 
     public void writePrime() {
         processor.setProperty("mob-delay-timer", nextMobSpawn);
-        processor.removeProperty("products");
-        int counter = 0;
-        for (ItemStack stack : que) {
-            YAMLNode node = processor.addNode("products." + counter++);
-            node.setProperty("stack-data", StackSerializer.getMap(stack));
-        }
         processor.save();
 
-        queueDirty = false;
+        floorDirty = false;
     }
 
     public void writeAreas() {
         for (FactoryMech mech : mechs) {
             mech.save();
         }
+    }
+
+    public boolean isDirty() {
+        return floorDirty || mechs.stream().anyMatch(FactoryMech::isDirty);
     }
 
     @Override
