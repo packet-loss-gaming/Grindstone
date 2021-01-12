@@ -53,6 +53,9 @@ public class DeathLoggerComponent extends BukkitComponent implements Listener {
         unloadLogger();
     }
 
+    // 3 MB
+    private static long LOG_SIZE = 1000000 * 3;
+
     private void loadLogger() {
         try {
             deathLogger.setUseParentHandlers(false);
@@ -62,7 +65,9 @@ public class DeathLoggerComponent extends BukkitComponent implements Listener {
             Path filePath = deathLogDir.resolve("player-deaths.txt");
 
             // This block configure the logger with handler and formatter
-            FileHandler handler = new FileHandler(filePath.toAbsolutePath().toString(), true);
+            FileHandler handler = new FileHandler(
+                filePath.toAbsolutePath().toString(), LOG_SIZE, 3, true
+            );
             handler.setFormatter(new java.util.logging.Formatter() {
 
                 @Override
