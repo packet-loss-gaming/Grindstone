@@ -543,6 +543,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
     }
 
+    private boolean isPitTrap(Location loc) {
+        return loc.getBlockY() < 80 && loc.getBlock().getLightLevel() == 0;
+    }
+
     private void spawnNearbyZombies(Player player) {
         if (!ChanceUtil.getChance(config.hostileTempleSpawnChance)) {
             return;
@@ -663,7 +667,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 return;
             }
 
-            if (isHostileTempleArea(playerLoc)) {
+            if (isHostileTempleArea(playerLoc) || isPitTrap(playerLoc)) {
                 spawnNearbyZombies(player);
             } else if (isPeacefulNight()) {
                 spawnZombiesAtNearbyGraves(player);
