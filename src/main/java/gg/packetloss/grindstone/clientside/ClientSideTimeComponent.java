@@ -14,6 +14,7 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -27,7 +28,6 @@ import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Client Side Time Manager", desc = "Turn off the night!")
 public class ClientSideTimeComponent extends BukkitComponent implements Listener {
-    private static final long START_NIGHT = 12 * 1000;
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -46,10 +46,10 @@ public class ClientSideTimeComponent extends BukkitComponent implements Listener
     }
 
     private void applyToPlayer(Player player) {
-        if (player.getWorld().getTime() < START_NIGHT) {
+        if (EnvironmentUtil.isDayTime(player.getWorld().getTime())) {
             player.setPlayerTime(0, true);
         } else {
-            player.setPlayerTime(START_NIGHT, true);
+            player.setPlayerTime(EnvironmentUtil.getNightStartTime(), true);
         }
     }
 

@@ -23,30 +23,24 @@ import java.util.List;
 import java.util.Set;
 
 public class EnvironmentUtil {
+    private static final long START_NIGHT = 12 * 1000;
+
+    public static long getNightStartTime() {
+        return START_NIGHT;
+    }
 
     public static boolean isNightTime(long time) {
-
         return !isDayTime(time);
     }
 
     public static boolean isDayTime(long time) {
-
-        if (time < 0) {
-            time += 24000;
-        }
-
-        return time >= 0L && time <= 13000L;
+        return time < START_NIGHT;
     }
 
     public static boolean isServerTimeOdd(long time) {
-
         long t = time % 2;
         if (t < 0) t += 2;
         return (t == 1);
-    }
-
-    public static boolean isMidnight(long time) {
-        return time == ((0 - 8 + 24) * 1000);
     }
 
     public static boolean hasThunderstorm(World world) {
