@@ -39,8 +39,15 @@ public class AutoCloser implements Prettyfier, Listener {
         if (!EnvironmentUtil.isClosable(clicked)) {
             return null;
         }
+
         Block lowerBlock = clicked.getRelative(BlockFace.DOWN);
-        if (EnvironmentUtil.isClosable(lowerBlock)) {
+        if (EnvironmentUtil.isTrapdoorBlock(clicked)) {
+            // If the block immediately below isn't a ladder, leave this trapdoor alone. Their uses are
+            // versatile enough there's a fair chance this is a decoration, or otherwise shouldn't be closed
+            if (!EnvironmentUtil.isLadder(lowerBlock)) {
+                return null;
+            }
+        } else if (EnvironmentUtil.isClosable(lowerBlock)) {
             clicked = lowerBlock;
         }
 

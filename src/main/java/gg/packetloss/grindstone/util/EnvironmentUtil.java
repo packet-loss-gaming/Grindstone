@@ -218,10 +218,33 @@ public class EnvironmentUtil {
         return isChest(block.getType());
     }
 
+    private static final Set<Material> TRAPDOOR_BLOCKS;
+
+    static {
+        List<Material> newTrapdoorBlocks = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            String name = material.name();
+            if (name.endsWith("_TRAPDOOR")) {
+                newTrapdoorBlocks.add(material);
+            }
+        }
+
+        TRAPDOOR_BLOCKS = Set.copyOf(newTrapdoorBlocks);
+    }
+
+    public static boolean isTrapdoorBlock(Material type) {
+        return TRAPDOOR_BLOCKS.contains(type);
+    }
+
+    public static boolean isTrapdoorBlock(Block block) {
+        return isTrapdoorBlock(block.getType());
+    }
+
     private static final Set<Material> CLOSEABLE_BLOCKS;
 
     static {
-        List<Material> newInteractiveBlocks = new ArrayList<>();
+        List<Material> newClosableBlocks = new ArrayList<>();
 
         for (Material material : Material.values()) {
             String name = material.name();
@@ -230,15 +253,15 @@ public class EnvironmentUtil {
                     continue;
                 }
 
-                newInteractiveBlocks.add(material);
-            } else if (name.endsWith("_TRAPDOOR")) {
-                newInteractiveBlocks.add(material);
+                newClosableBlocks.add(material);
             } else if (name.endsWith("_FENCE_GATE")) {
-                newInteractiveBlocks.add(material);
+                newClosableBlocks.add(material);
             }
         }
 
-        CLOSEABLE_BLOCKS = Set.copyOf(newInteractiveBlocks);
+        newClosableBlocks.addAll(TRAPDOOR_BLOCKS);
+
+        CLOSEABLE_BLOCKS = Set.copyOf(newClosableBlocks);
     }
 
     public static boolean isClosable(Material type) {
@@ -247,6 +270,14 @@ public class EnvironmentUtil {
 
     public static boolean isClosable(Block block) {
         return isClosable(block.getType());
+    }
+
+    public static boolean isLadder(Material type) {
+        return type == Material.LADDER;
+    }
+
+    public static boolean isLadder(Block block) {
+        return isLadder(block.getType());
     }
 
     private static final Set<Material> INTERACTIVE_BLOCKS;
