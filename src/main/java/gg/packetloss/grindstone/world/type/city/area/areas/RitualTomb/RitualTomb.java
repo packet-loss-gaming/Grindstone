@@ -297,7 +297,14 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     }
 
     protected void updateDemons() {
-        if (!isRitualActive() || isEmpty()) {
+        if (!isRitualActive()) {
+            return;
+        }
+
+        // This is important so we ensure that any demons (Vex) don't follow players out of the arena
+        // if they exit by warping somewhere nearby
+        if (isEmpty()) {
+            cleanupDemons();
             return;
         }
 
