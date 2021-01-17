@@ -17,15 +17,16 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
+import gg.packetloss.grindstone.util.functional.TriFunction;
 import gg.packetloss.grindstone.util.task.DebounceHandle;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Chunk;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Problem Detector", desc = "Problem detection system.")
@@ -61,6 +62,8 @@ public class ProblemDetectionComponent extends BukkitComponent {
         public int chunkCheckIntervalTicks = 20;
         @Setting("chunk-watcher.min-activity-level")
         public int chunkActivityLevel = 3;
+        @Setting("chunk-watcher.report-empty-loads")
+        public boolean reportEmptyLoads = true;
     }
 
     private class TickMonitor implements Listener {
@@ -80,13 +83,15 @@ public class ProblemDetectionComponent extends BukkitComponent {
 
     private class ChunkMonitor implements Listener {
         private final Map<String, Map<BlockVector2, Integer>> worldChunkActivityMapping = new HashMap<>();
+        private final Map<String, Map<BlockVector2, Integer>> emptyLoadMapping = new HashMap<>();
 
         public ChunkMonitor() {
             scheduleNextCheck();
         }
 
-        private void scheduleNextCheck() {
-            var worldActivityIterator = worldChunkActivityMapping.entrySet().iterator();
+        private void checkIterate(Map<String, Map<BlockVector2, Integer>> chunkData,
+                                  TriFunction<String, BlockVector2, Integer, Optional<String>> op) {
+            var worldActivityIterator = chunkData.entrySet().iterator();
             while (worldActivityIterator.hasNext()) {
                 Map.Entry<String, Map<BlockVector2, Integer>> worldChunkActivity = worldActivityIterator.next();
 
@@ -100,20 +105,42 @@ public class ProblemDetectionComponent extends BukkitComponent {
                 }
 
                 // Check the chunks of this world for problems
+                List<String> messages = new ArrayList<>();
                 for (Map.Entry<BlockVector2, Integer> entry : worldActivityMap.entrySet()) {
-                    int activityLevel = entry.getValue();
-                    if (activityLevel < config.chunkActivityLevel) {
-                        continue;
-                    }
+                    op.accept(world, entry.getKey(), entry.getValue()).ifPresent(messages::add);
+                }
 
-                    BlockVector2 pos = entry.getKey();
-                    chatBridge.modBroadcast("Chunk thrashing: " + activityLevel +
-                        " (World: " + world + "; " + pos.getBlockX() + ", " + pos.getBlockZ() + ")!");
+                // Report any found problems as one message
+                if (!messages.isEmpty()) {
+                    chatBridge.modBroadcast(StringUtils.join(messages, "\n"));
                 }
 
                 // Reset the data on this world
                 worldActivityMap.clear();
             }
+        }
+
+        private void checkChunkThrashing() {
+            checkIterate(worldChunkActivityMapping, (world, pos, activityLevel) -> {
+                if (activityLevel < config.chunkActivityLevel) {
+                    return Optional.empty();
+                }
+
+                return Optional.of("Chunk thrashing: " + activityLevel +
+                    " (World: " + world + "; " + pos.getBlockX() + ", " + pos.getBlockZ() + ")!");
+            });
+        }
+
+        private void checkEmptyLoads() {
+            checkIterate(emptyLoadMapping, (world, pos, activityLevel) -> {
+                return Optional.of("Chunk loaded with no players present " + activityLevel + " times" +
+                    " (World: " + world + "; " + pos.getBlockX() + ", " + pos.getBlockZ() + ")!");
+            });
+        }
+
+        private void scheduleNextCheck() {
+            checkChunkThrashing();
+            checkEmptyLoads();
 
             CommandBook.server().getScheduler().runTaskLater(
                 CommandBook.inst(),
@@ -130,9 +157,48 @@ public class ProblemDetectionComponent extends BukkitComponent {
             mapping.merge(WorldEditBridge.toBlockVec2(chunk), 1, Integer::sum);
         }
 
+
+        private void registerEmptyLoad(Chunk chunk) {
+            Map<BlockVector2, Integer> mapping = emptyLoadMapping.computeIfAbsent(chunk.getWorld().getName(), (ignored) -> {
+                return new HashMap<>();
+            });
+
+            mapping.merge(WorldEditBridge.toBlockVec2(chunk), 1, Integer::sum);
+
+        }
+
+        private boolean isReportableEmptyLoad() {
+            if (!config.reportEmptyLoads) {
+                return false;
+            }
+
+            if (!CommandBook.server().getOnlinePlayers().isEmpty()) {
+                return false;
+            }
+
+            return true;
+        }
+
+        private void tryRegisterEmptyLoad(Chunk chunk) {
+            if (!isReportableEmptyLoad()) {
+                return;
+            }
+
+            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                if (!isReportableEmptyLoad()) {
+                    return;
+                }
+
+                registerEmptyLoad(chunk);
+            }, 20);
+        }
+
         @EventHandler
         public void onServerTick(ChunkLoadEvent event) {
-            registerChunkActivity(event.getChunk());
+            Chunk chunk = event.getChunk();
+
+            registerChunkActivity(chunk);
+            tryRegisterEmptyLoad(chunk);
         }
 
         @EventHandler
