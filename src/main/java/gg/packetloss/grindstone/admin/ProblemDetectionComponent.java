@@ -62,8 +62,6 @@ public class ProblemDetectionComponent extends BukkitComponent {
         public int chunkCheckIntervalTicks = 20;
         @Setting("chunk-watcher.min-activity-level")
         public int chunkActivityLevel = 3;
-        @Setting("chunk-watcher.report-empty-loads")
-        public boolean reportEmptyLoads = true;
     }
 
     private class TickMonitor implements Listener {
@@ -83,7 +81,6 @@ public class ProblemDetectionComponent extends BukkitComponent {
 
     private class ChunkMonitor implements Listener {
         private final Map<String, Map<BlockVector2, Integer>> worldChunkActivityMapping = new HashMap<>();
-        private final Map<String, Map<BlockVector2, Integer>> emptyLoadMapping = new HashMap<>();
 
         public ChunkMonitor() {
             scheduleNextCheck();
@@ -131,16 +128,8 @@ public class ProblemDetectionComponent extends BukkitComponent {
             });
         }
 
-        private void checkEmptyLoads() {
-            checkIterate(emptyLoadMapping, (world, pos, activityLevel) -> {
-                return Optional.of("Chunk loaded with no players present " + activityLevel + " times" +
-                    " (World: " + world + "; " + pos.getBlockX() + ", " + pos.getBlockZ() + ")!");
-            });
-        }
-
         private void scheduleNextCheck() {
             checkChunkThrashing();
-            checkEmptyLoads();
 
             CommandBook.server().getScheduler().runTaskLater(
                 CommandBook.inst(),
@@ -157,48 +146,11 @@ public class ProblemDetectionComponent extends BukkitComponent {
             mapping.merge(WorldEditBridge.toBlockVec2(chunk), 1, Integer::sum);
         }
 
-
-        private void registerEmptyLoad(Chunk chunk) {
-            Map<BlockVector2, Integer> mapping = emptyLoadMapping.computeIfAbsent(chunk.getWorld().getName(), (ignored) -> {
-                return new HashMap<>();
-            });
-
-            mapping.merge(WorldEditBridge.toBlockVec2(chunk), 1, Integer::sum);
-
-        }
-
-        private boolean isReportableEmptyLoad() {
-            if (!config.reportEmptyLoads) {
-                return false;
-            }
-
-            if (!CommandBook.server().getOnlinePlayers().isEmpty()) {
-                return false;
-            }
-
-            return true;
-        }
-
-        private void tryRegisterEmptyLoad(Chunk chunk) {
-            if (!isReportableEmptyLoad()) {
-                return;
-            }
-
-            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                if (!isReportableEmptyLoad()) {
-                    return;
-                }
-
-                registerEmptyLoad(chunk);
-            }, 20);
-        }
-
         @EventHandler
         public void onServerTick(ChunkLoadEvent event) {
             Chunk chunk = event.getChunk();
 
             registerChunkActivity(chunk);
-            tryRegisterEmptyLoad(chunk);
         }
 
         @EventHandler
