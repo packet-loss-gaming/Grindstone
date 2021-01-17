@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.items.migration;
 
 import com.sk89q.worldedit.math.BlockVector2;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -66,13 +67,13 @@ public class AutomaticMigrationState {
         if (chunkSet == null) {
             return false;
         }
-        return chunkSet.contains(BlockVector2.at(chunk.getX(), chunk.getZ()));
+        return chunkSet.contains(WorldEditBridge.toBlockVec2(chunk));
     }
 
     public void markChunkProcessed(Chunk chunk) {
         int worldId = getWorldId(chunk.getWorld());
 
         Set<BlockVector2> chunkSet = chunks.computeIfAbsent(worldId, (ignored) -> new HashSet<>());
-        chunkSet.add(BlockVector2.at(chunk.getX(), chunk.getZ()));
+        chunkSet.add(WorldEditBridge.toBlockVec2(chunk));
     }
 }

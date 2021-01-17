@@ -16,6 +16,7 @@ import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -69,6 +70,10 @@ public class WorldEditBridge {
 
     public static BlockVector2 toBlockVec2(Player player) {
         return toBlockVec2(player.getLocation());
+    }
+
+    public static BlockVector2 toBlockVec2(Chunk chunk) {
+        return BlockVector2.at(chunk.getX(), chunk.getZ());
     }
 
     public static BukkitPlayer wrap(Player player) {
