@@ -103,10 +103,16 @@ public class RandomizedSkullsComponent extends BukkitComponent implements Runnab
     }
 
     public void updatePlayersTo(List<PlayerProfile> playerProfiles) {
-        for (PlayerProfile profile : playerProfiles) {
-            profile.complete();
+        try {
+            for (PlayerProfile profile : playerProfiles) {
+                profile.complete();
 
-            Validate.isTrue(profile.hasTextures());
+                Validate.isTrue(profile.hasTextures());
+            }
+        } catch (Throwable t) {
+            // Sometimes Mojang's auth servers are unreliable which causes this to fail
+            t.printStackTrace();
+            return;
         }
 
         randomizedProfilesLock.writeLock().lock();
