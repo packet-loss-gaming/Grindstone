@@ -13,8 +13,8 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
-import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
@@ -43,7 +43,7 @@ import java.util.Optional;
 
 @ComponentInformation(friendlyName = "Freaky Four", desc = "The craziest bosses ever")
 @Depend(components = {
-        AdminComponent.class, PlayerStateComponent.class, SpectatorComponent.class, EconomyComponent.class,
+        AdminComponent.class, PlayerStateComponent.class, SpectatorComponent.class, WalletComponent.class,
         HighScoresComponent.class},
         plugins = {"WorldGuard"})
 public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
@@ -57,7 +57,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     @InjectComponent
     protected SpectatorComponent spectator;
     @InjectComponent
-    protected EconomyComponent economy;
+    protected WalletComponent wallet;
     @InjectComponent
     protected HighScoresComponent highScores;
 

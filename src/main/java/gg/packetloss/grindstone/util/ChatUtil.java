@@ -17,6 +17,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.Collection;
 
 public class ChatUtil {
@@ -36,15 +37,39 @@ public class ChatUtil {
         }
     }
 
-    public static void message(CommandSender sender, MessageType type, String message) {
-        if (sender == null) return;
-        sender.sendMessage(type.getColor() + message);
+    public static void message(CommandSender sender, MessageType type, Object... args) {
+        sender.sendMessage(Text.of(type.getColor(), Arrays.asList(args)).build());
     }
 
-    public static void message(Collection<? extends CommandSender> targets, MessageType type, String message) {
-        for (CommandSender target : targets) {
-            message(target, type, message);
+    public static void message(Iterable<CommandSender> senders, MessageType type, Object... args) {
+        var built = Text.of(type.getColor(), args).build();
+        for (CommandSender sender : senders) {
+            sender.sendMessage(built);
         }
+    }
+
+    public static void sendNotice(CommandSender sender, Object... args) {
+        message(sender, MessageType.NOTICE, args);
+    }
+
+    public static void sendNotice(Iterable<CommandSender> senders, Object... args) {
+        message(senders, MessageType.NOTICE, args);
+    }
+
+    public static void sendWarning(CommandSender sender, Object... args) {
+        message(sender, MessageType.WARNING, args);
+    }
+
+    public static void sendWarning(Iterable<CommandSender> senders, Object... args) {
+        message(senders, MessageType.WARNING, args);
+    }
+
+    public static void sendError(CommandSender sender, Object... args) {
+        message(sender, MessageType.ERROR, args);
+    }
+
+    public static void sendError(Iterable<CommandSender> senders, Object... args) {
+        message(senders, MessageType.ERROR, args);
     }
 
     public static void sendDebug(Text messageText) {
@@ -60,6 +85,33 @@ public class ChatUtil {
 
     public static void sendDebug(Object... objects) {
         sendDebug(Text.of(objects));
+    }
+
+    public static void sendStaggered(CommandSender sender, Iterable<Text> lines) {
+        int i = 0;
+
+        for (Text line : lines) {
+            if (i == 0) {
+                sender.sendMessage(line.build());
+            } else {
+                CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                    sender.sendMessage(line.build());
+                }, i * 20 * 3);
+            }
+
+            ++i;
+        }
+    }
+
+    public static void message(CommandSender sender, MessageType type, String message) {
+        if (sender == null) return;
+        sender.sendMessage(type.getColor() + message);
+    }
+
+    public static void message(Collection<? extends CommandSender> targets, MessageType type, String message) {
+        for (CommandSender target : targets) {
+            message(target, type, message);
+        }
     }
 
     public static void sendNotice(String playerName, String notice) {
@@ -83,22 +135,6 @@ public class ChatUtil {
 
     public static void sendNotice(Collection<? extends CommandSender> senders, ChatColor chatColor, String notice) {
         senders.forEach(s -> sendNotice(s, chatColor, notice));
-    }
-
-    public static void sendStaggered(CommandSender sender, Iterable<Text> lines) {
-        int i = 0;
-
-        for (Text line : lines) {
-            if (i == 0) {
-                sender.sendMessage(line.build());
-            } else {
-                CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                    sender.sendMessage(line.build());
-                }, i * 20 * 3);
-            }
-
-            ++i;
-        }
     }
 
     public static void sendError(CommandSender sender, String error) {

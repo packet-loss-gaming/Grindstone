@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.economic.store;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.ComponentCommandRegistrar;
-import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.commandbook.util.PaginatedResult;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
@@ -26,21 +25,24 @@ import gg.packetloss.grindstone.economic.store.command.MarketItemSetConverter;
 import gg.packetloss.grindstone.economic.store.mysql.MySQLItemStoreDatabase;
 import gg.packetloss.grindstone.economic.store.mysql.MySQLMarketTransactionDatabase;
 import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.economy.MarketPurchaseEvent;
 import gg.packetloss.grindstone.events.economy.MarketSellEvent;
 import gg.packetloss.grindstone.invgui.InventoryGUIComponent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.ErrorUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
-import net.milkbowl.vault.economy.Economy;
+import gg.packetloss.grindstone.util.task.promise.FailableTaskFuture;
+import gg.packetloss.grindstone.util.task.promise.TaskResult;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
@@ -51,7 +53,7 @@ import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemN
 import static gg.packetloss.grindstone.util.item.ItemNameCalculator.matchItem;
 
 @ComponentInformation(friendlyName = "Market", desc = "Buy and sell goods.")
-@Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, DataBaseComponent.class, SessionComponent.class})
+@Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, DataBaseComponent.class, WalletComponent.class})
 public class MarketComponent extends BukkitComponent {
     public static final int LOWER_MARKET_LOSS_THRESHOLD = 100000;
 
@@ -62,15 +64,14 @@ public class MarketComponent extends BukkitComponent {
     @InjectComponent
     private AdminComponent adminComponent;
     @InjectComponent
-    private SessionComponent sessions;
-    @InjectComponent
     private InventoryGUIComponent invGUI;
+    @InjectComponent
+    private WalletComponent wallet;
 
     private static ItemStoreDatabase itemDatabase;
     private static MarketTransactionDatabase transactionDatabase;
 
     private ProtectedRegion region = null;
-    private Economy econ;
 
     public void simulateMarket(int restockingRounds) {
         itemDatabase.updatePrices(restockingRounds);
@@ -84,9 +85,6 @@ public class MarketComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-        // Setup economy
-        setupEconomy();
-
         itemDatabase = new MySQLItemStoreDatabase();
         itemDatabase.load();
 
@@ -102,7 +100,7 @@ public class MarketComponent extends BukkitComponent {
             MarketItemSetConverter.register(commandManager, this);
 
             registrar.registerAsSubCommand("market", Set.of("mk"), "Admin Market", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, MarketCommandsRegistration.builder(), new MarketCommands(this, invGUI, econ));
+                innerRegistration.register(innerCommandManager, MarketCommandsRegistration.builder(), new MarketCommands(this, invGUI, wallet));
             });
         });
 
@@ -219,8 +217,7 @@ public class MarketComponent extends BukkitComponent {
 
             // Notification
             String noticeString = oldItem == null ? " added with a price of " : " is now ";
-            String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, econ.format(price), " ");
-            ChatUtil.sendNotice(sender, ChatColor.BLUE + itemName.toUpperCase() + ChatColor.YELLOW + noticeString + priceString + "!");
+            ChatUtil.sendNotice(sender, ChatColor.BLUE, itemName.toUpperCase(), ChatColor.YELLOW, noticeString, wallet.format(price), "!");
             if (disableBuy) {
                 ChatUtil.sendNotice(sender, " - It cannot be purchased.");
             }
@@ -310,9 +307,8 @@ public class MarketComponent extends BukkitComponent {
         return future;
     }
 
-    // FIXME: This method does too much, shouldn't have to deal with itemstacks here
-    public double buyItems(Player player, List<MarketTransactionLine> transactionLines) throws CommandException {
-        double totalPrice = 0;
+    private BigDecimal calculateTotalPriceAndVerifyStock(List<MarketTransactionLine> transactionLines) throws CommandException {
+        BigDecimal totalPrice = BigDecimal.ZERO;
 
         for (MarketTransactionLine transactionLine : transactionLines) {
             MarketItem item = transactionLine.getItem();
@@ -320,49 +316,63 @@ public class MarketComponent extends BukkitComponent {
 
             if (transactionLine.getAmount() > item.getStock()) {
                 throw new CommandException("You requested " +
-                        ChatUtil.WHOLE_NUMBER_FORMATTER.format(amount) + " however, only " +
-                        ChatUtil.WHOLE_NUMBER_FORMATTER.format(item.getStock()) + " are in stock.");
+                    ChatUtil.WHOLE_NUMBER_FORMATTER.format(amount) + " however, only " +
+                    ChatUtil.WHOLE_NUMBER_FORMATTER.format(item.getStock()) + " are in stock.");
             }
 
-            totalPrice += item.getPrice() * amount;
-        }
-
-        // Check funds
-        if (!econ.has(player, totalPrice)) {
-            throw new CommandException("You do not have enough money to purchase that item(s).");
-        }
-
-        // Charge the money
-        econ.withdrawPlayer(player, totalPrice);
-
-        // Update market stocks.
-        itemDatabase.adjustStocksForBuy(transactionLines);
-
-        CommandBook.callEvent(new MarketPurchaseEvent(player, transactionLines, totalPrice));
-
-        // Get the items and add them to the inventory
-        for (MarketTransactionLine transactionLine : transactionLines) {
-            ItemStack[] itemStacks = getItem(transactionLine);
-            for (ItemStack itemStack : itemStacks) {
-                if (player.getInventory().firstEmpty() == -1) {
-                    player.getWorld().dropItem(player.getLocation(), itemStack);
-                    continue;
-                }
-                player.getInventory().addItem(itemStack);
-            }
+            totalPrice = totalPrice.add(new BigDecimal(item.getPrice() * amount));
         }
 
         return totalPrice;
     }
 
-    public void sellItems(Player player, List<MarketTransactionLine> transactionLines, double payment) {
+    // FIXME: This method does too much, shouldn't have to deal with itemstacks here
+    public FailableTaskFuture<BigDecimal, String> buyItems(Player player, List<MarketTransactionLine> transactionLines) throws CommandException {
+        BigDecimal totalPrice = calculateTotalPriceAndVerifyStock(transactionLines);
+
+        return wallet.removeFromBalance(player, totalPrice).thenApplyFailableAsynchronously(
+            TaskResult::fromCondition,
+            (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
+        ).thenAcceptAsynchronously(
+            (ignored) -> {
+                // Update market stocks.
+                itemDatabase.adjustStocksForBuy(transactionLines);
+            },
+            (ignored) -> {
+                ChatUtil.sendError(player, "You do not have enough money to purchase that item(s).");
+            }
+        ).thenApplyFailable(
+            (ignored) -> {
+                CommandBook.callEvent(new MarketPurchaseEvent(player, transactionLines, totalPrice));
+
+                // Get the items and add them to the inventory
+                try {
+                    for (MarketTransactionLine transactionLine : transactionLines) {
+                        ItemStack[] itemStacks = getItem(transactionLine);
+                        for (ItemStack itemStack : itemStacks) {
+                            if (player.getInventory().firstEmpty() == -1) {
+                                player.getWorld().dropItem(player.getLocation(), itemStack);
+                                continue;
+                            }
+                            player.getInventory().addItem(itemStack);
+                        }
+                    }
+                    return TaskResult.of(totalPrice);
+                } catch (CommandException ex) {
+                    return TaskResult.failed(ex.getMessage());
+                }
+            }
+        );
+    }
+
+    public FailableTaskFuture<BigDecimal, Void> sellItems(Player player, List<MarketTransactionLine> transactionLines, BigDecimal payment) {
         // Update market stocks.
         itemDatabase.adjustStocksForSale(transactionLines);
 
         CommandBook.callEvent(new MarketSellEvent(player, transactionLines, payment));
 
         // Deposit the money
-        econ.depositPlayer(player, payment);
+        return wallet.addToBalance(player, payment);
     }
 
     public List<MarketItem> getItemListFor(CommandSender sender, String filter) {
@@ -390,15 +400,5 @@ public class MarketComponent extends BukkitComponent {
 
     public boolean isInArea(Location location) {
         return location.getWorld().getName().equals("City") && region != null && region.contains(toBlockVec3(location));
-    }
-
-    private boolean setupEconomy() {
-        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
-                .vault.economy.Economy.class);
-        if (economyProvider != null) {
-            econ = economyProvider.getProvider();
-        }
-
-        return (econ != null);
     }
 }

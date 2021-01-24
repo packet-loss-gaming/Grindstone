@@ -16,12 +16,15 @@ import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItem;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionBuilder;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.invgui.InventoryGUIComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.ErrorUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.item.inventory.InventoryConstants;
+import gg.packetloss.grindstone.util.task.promise.FailableTaskFuture;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -35,6 +38,7 @@ import org.enginehub.piston.annotation.param.Arg;
 import org.enginehub.piston.annotation.param.ArgFlag;
 import org.enginehub.piston.annotation.param.Switch;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import static gg.packetloss.grindstone.economic.store.MarketComponent.*;
@@ -43,12 +47,12 @@ import static gg.packetloss.grindstone.economic.store.MarketComponent.*;
 public class MarketCommands {
     private MarketComponent component;
     private InventoryGUIComponent invGUI;
-    private Economy economy;
+    private WalletComponent wallet;
 
-    public MarketCommands(MarketComponent component, InventoryGUIComponent invGUI, Economy economy) {
+    public MarketCommands(MarketComponent component, InventoryGUIComponent invGUI, WalletComponent wallet) {
         this.component = component;
         this.invGUI = invGUI;
-        this.economy = economy;
+        this.wallet = wallet;
     }
 
     @Command(name = "buy", desc = "Buy an item")
@@ -72,10 +76,14 @@ public class MarketCommands {
             transactionBuilder.add(item, amount);
         }
 
-        double totalPrice = component.buyItems(player, transactionBuilder.toTransactionLines());
-
-        String priceString = ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(totalPrice), "");
-        ChatUtil.sendNotice(player, "Item(s) purchased for " + priceString + "!");
+        component.buyItems(player, transactionBuilder.toTransactionLines()).thenAcceptAsynchronously(
+            (totalPrice) -> {
+                ChatUtil.sendNotice(player, "Item(s) purchased for ", wallet.format(totalPrice), "!");
+            },
+            (error) -> {
+                ChatUtil.sendError(player, error);
+            }
+        );
     }
 
     @Command(name = "sell", desc = "Sell items")
@@ -138,10 +146,13 @@ public class MarketCommands {
                         return;
                     }
 
-                    component.sellItems(player, transactionBuilder.toTransactionLines(), payment);
-
-                    String paymentString = ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(payment), "");
-                    ChatUtil.sendNotice(player, "Item(s) sold for: " + paymentString + "!");
+                    BigDecimal finalPayment = new BigDecimal(payment);
+                    component.sellItems(player, transactionBuilder.toTransactionLines(), finalPayment).thenAccept(
+                        (newBalance) -> {
+                            ChatUtil.sendNotice(player, "Item(s) sold for: ", wallet.format(finalPayment), "!");
+                        },
+                        (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
+                    );
                 });
             });
         });
@@ -262,10 +273,8 @@ public class MarketCommands {
 
         // Purchase Information
         if (item.displayBuyInfo()) {
-            String purchasePrice = ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(item.getPrice()), "");
-
             ChatUtil.sendNotice(sender, "When you buy it you pay:");
-            ChatUtil.sendNotice(sender, " - " + purchasePrice + " each.");
+            ChatUtil.sendNotice(sender, " - ", wallet.format(item.getPrice()), " each.");
         } else {
             ChatUtil.sendNotice(sender, ChatColor.GRAY, "This item cannot be purchased.");
         }
@@ -275,13 +284,11 @@ public class MarketCommands {
             double fullyRepairedPrice = item.getSellPrice();
             double sellPrice = stack == null ? fullyRepairedPrice : item.getSellUnitPriceForStack(stack).orElse(0d);
 
-            String sellPriceString = ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(sellPrice), "");
             ChatUtil.sendNotice(sender, "When you sell it you get:");
-            ChatUtil.sendNotice(sender, " - " + sellPriceString + " each.");
+            ChatUtil.sendNotice(sender, " - ", wallet.format(sellPrice), " each.");
 
             if (fullyRepairedPrice != sellPrice) {
-                String fullyRepairedPriceString = ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(fullyRepairedPrice), "");
-                ChatUtil.sendNotice(sender, " - " + fullyRepairedPriceString + " each when new.");
+                ChatUtil.sendNotice(sender, " - " + wallet.format(fullyRepairedPrice) + " each when new.");
             }
         } else {
             ChatUtil.sendNotice(sender, ChatColor.GRAY, "This item cannot be sold.");
@@ -291,9 +298,7 @@ public class MarketCommands {
         if (showExtra) {
             ChatUtil.sendNotice(sender, "Base price:");
             if (sender.hasPermission("aurora.admin.adminstore.truevalue")) {
-                String basePrice = ChatUtil.makeCountString(ChatColor.YELLOW, economy.format(item.getValue()), "");
-
-                ChatUtil.sendNotice(sender, " - " + basePrice + " each.");
+                ChatUtil.sendNotice(sender, " - " + wallet.format(item.getValue()) + " each.");
             } else {
                 ChatUtil.sendError(sender, " - permission denied.");
             }

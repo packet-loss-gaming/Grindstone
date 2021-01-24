@@ -21,11 +21,11 @@ import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.ErrorUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import gg.packetloss.grindstone.world.type.city.combat.PvMComponent;
-import net.milkbowl.vault.economy.Economy;
 import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -40,6 +40,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -298,13 +299,19 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             } else if (e.equals(parent.snipee)) {
                 parent.snipee = null;
                 Player killer = e.getKiller();
-                if (killer != null && parent.economy.isEnabled()) {
-                    Economy economyHandle = parent.economy.getHandle();
-
-                    double loot = economyHandle.getBalance(killer) * parent.getConfig().bankPercent;
-                    loot = Math.max(loot, parent.getConfig().minLoot);
-                    economyHandle.depositPlayer(killer, loot);
-                    ChatUtil.sendNotice(killer, "The boss drops " + ChatColor.WHITE + economyHandle.format(loot));
+                if (killer != null) {
+                    parent.wallet.getBalance(killer).thenAcceptAsynchronously(
+                        (balance) -> {
+                            BigDecimal loot = balance.multiply(new BigDecimal(parent.getConfig().bankPercent));
+                            parent.wallet.addToBalance(killer, loot).thenAcceptAsynchronously(
+                                (newBalance) -> {
+                                    ChatUtil.sendNotice(killer, "The boss drops ", parent.wallet.format(loot));
+                                },
+                                (ignored) -> { ErrorUtil.reportUnexpectedError(killer); }
+                            );
+                        },
+                        (ignored) -> { ErrorUtil.reportUnexpectedError(killer); }
+                    );
                     parent.highScores.update(killer, ScoreTypes.FREAKY_FOUR_KILLS, 1);
                 }
             }

@@ -17,6 +17,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.bukkittext.TextAction;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.pixieitems.broker.EconomyBroker;
 import gg.packetloss.grindstone.pixieitems.broker.VoidBroker;
 import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
@@ -63,7 +64,7 @@ import java.util.logging.Logger;
 import static gg.packetloss.grindstone.util.EnvironmentUtil.isChest;
 
 @ComponentInformation(friendlyName = "Item Sorter", desc = "A system of magical pixie item sorting.")
-@Depend(components = {SessionComponent.class, ManagedWorldComponent.class})
+@Depend(components = {SessionComponent.class, ManagedWorldComponent.class, WalletComponent.class})
 public class ItemSorterComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();

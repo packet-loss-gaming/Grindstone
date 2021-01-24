@@ -296,15 +296,15 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             Player player = event.getPlayer();
 
             int totalAmount = phantomValue * item.getAmount();
-            parent.economy.depositPlayer(player, totalAmount);
-
-            // Delay by a tick to prevent this message from appearing before the ancient fire ignites message
-            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                ChatUtil.sendNotice(
-                        player,
-                        "You receive " + ChatUtil.makeCountString(parent.economy.format(totalAmount), ".")
-                );
-            }, 1);
+            parent.wallet.addToBalance(player, totalAmount).thenAcceptAsynchronously(
+                (ignored) -> {
+                    // Delay by a tick to prevent this message from appearing before the ancient fire ignites message
+                    CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                        ChatUtil.sendNotice(player, "You receive ", parent.wallet.format(totalAmount), ".");
+                    }, 1);
+                },
+                (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
+            );
 
             event.setItemStack(null);
         } else if (ItemUtil.isItem(item, CustomItems.PHANTOM_HYMN)) {

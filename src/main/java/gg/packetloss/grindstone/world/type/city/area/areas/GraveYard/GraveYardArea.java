@@ -16,6 +16,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.graveyard.PlayerDisturbGraveEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
@@ -76,7 +77,7 @@ import static org.bukkit.block.data.type.Chest.Type;
 @Depend(components = {
         AdminComponent.class, PlayerStateComponent.class,
         SpectatorComponent.class, BlockStateComponent.class,
-        HighScoresComponent.class},
+        HighScoresComponent.class, WalletComponent.class},
         plugins = {"WorldGuard"})
 public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
@@ -96,9 +97,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     protected BlockStateComponent blockState;
     @InjectComponent
     protected HighScoresComponent highScores;
-
-    // Other
-    protected Economy economy;
+    @InjectComponent
+    protected WalletComponent wallet;
 
     // Temple regions
     protected ProtectedRegion temple, pressurePlateLockArea, torchArea, creepers, parkour, rewards, rewardsDoor;
@@ -179,8 +179,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         regenParkour();
         setRewardsDoor(Material.AIR);
-
-        setupEconomy();
 
         spawnBlockBreakerTask();
         spawnTorchToggleTask();
@@ -1348,13 +1346,5 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
 
         return dest;
-    }
-
-    private boolean setupEconomy() {
-        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(Economy.class);
-        if (economyProvider != null) {
-            economy = economyProvider.getProvider();
-        }
-        return (economy != null);
     }
 }

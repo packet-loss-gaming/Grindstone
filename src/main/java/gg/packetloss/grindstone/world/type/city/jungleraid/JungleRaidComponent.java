@@ -33,9 +33,9 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.bukkittext.Text;
-import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
@@ -75,7 +75,6 @@ import gg.packetloss.grindstone.world.type.city.minigame.Win;
 import gg.packetloss.grindstone.world.type.city.minigame.WinType;
 import gg.packetloss.hackbook.ModifierBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -103,6 +102,7 @@ import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -115,7 +115,10 @@ import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Jungle Raid", desc = "Warfare at it's best!")
-@Depend(components = {GuildComponent.class, PrayerComponent.class}, plugins = {"WorldEdit", "WorldGuard"})
+@Depend(
+    components = {GuildComponent.class, PrayerComponent.class, WalletComponent.class},
+    plugins = {"WorldEdit", "WorldGuard"}
+)
 public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
     private final CommandBook inst = CommandBook.inst();
@@ -159,7 +162,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     @InjectComponent
     SpectatorComponent spectatorComponent;
     @InjectComponent
-    EconomyComponent economyComponent;
+    WalletComponent walletComponent;
     @InjectComponent
     ChatBridgeComponent chatBridgeComponent;
 
@@ -378,10 +381,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private void rewardPlayer(Player player, boolean won) {
-        if (!economyComponent.isEnabled()) {
-            return;
-        }
-
         double adjustedPoints = 1.5 * gameState.get(player).getPoints();
         double amt = adjustedPoints * (won ? 1 : .5);
 
@@ -395,9 +394,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
         }
 
-        Economy economyHandle = economyComponent.getHandle();
-        economyHandle.depositPlayer(player, amt);
-        ChatUtil.sendNotice(player, "You received: " + economyHandle.format(amt) + '.');
+        BigDecimal finalAmt = new BigDecimal(amt);
+        walletComponent.addToBalance(player, finalAmt).thenAcceptAsynchronously(
+            (newBalance) -> {
+                ChatUtil.sendNotice(player, "You received: ", walletComponent.format(finalAmt), '.');
+            },
+            (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
+        );
     }
 
     public void died(Player player) {

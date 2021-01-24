@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.economic.lottery;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,8 +17,8 @@ public interface LotteryWinnerDatabase {
 
     boolean save();
 
-    void addWinner(UUID playerID, double amount);
-    void addCPUWin(double amount);
+    void addWinner(UUID playerID, BigDecimal amount);
+    void addCPUWin(BigDecimal amount);
 
     List<LotteryWinner> getRecentWinner(int limit);
 }
