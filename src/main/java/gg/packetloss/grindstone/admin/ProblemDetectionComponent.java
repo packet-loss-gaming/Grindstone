@@ -179,11 +179,23 @@ public class ProblemDetectionComponent extends BukkitComponent {
             Chunk chunk = event.getChunk();
 
             registerChunkActivity(chunk);
+
+            Map<BlockVector2, Integer> chunkMap = worldChunkActivityMapping.getOrDefault(chunk.getWorld().getName(), new HashMap<>());
+            if (chunkMap.getOrDefault(WorldEditBridge.toBlockVec2(chunk), 0) >= config.chunkActivityLevel) {
+                Thread.dumpStack();
+            }
         }
 
         @EventHandler
         public void onServerTick(ChunkUnloadEvent event) {
-            registerChunkActivity(event.getChunk());
+            Chunk chunk = event.getChunk();
+
+            registerChunkActivity(chunk);
+
+            Map<BlockVector2, Integer> chunkMap = worldChunkActivityMapping.getOrDefault(chunk.getWorld().getName(), new HashMap<>());
+            if (chunkMap.getOrDefault(WorldEditBridge.toBlockVec2(chunk), 0) >= config.chunkActivityLevel) {
+                Thread.dumpStack();
+            }
         }
     }
 }
