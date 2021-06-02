@@ -24,7 +24,7 @@ import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Grounder", desc = "GameMode enforcement to a new level.")
-@Depend(plugins = {"WorldEdit, Vault"}, components = {AdminComponent.class})
+@Depend(components = {AdminComponent.class})
 public class GrounderComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();

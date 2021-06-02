@@ -6,14 +6,15 @@
 
 package gg.packetloss.grindstone.util.item;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -23,10 +24,7 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class ItemUtil {
 
@@ -59,11 +57,13 @@ public class ItemUtil {
             null, null, null, null
     };
 
+    public static ItemStack makeSkull(PlayerProfile playerProfile) {
+        // Require textures be provided, otherwise we have major performance issues
+        Validate.isTrue(playerProfile.hasTextures());
 
-    public static ItemStack makeSkull(OfflinePlayer offlinePlayer) {
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
-        skullMeta.setOwningPlayer(offlinePlayer);
+        skullMeta.setPlayerProfile(playerProfile);
         skull.setItemMeta(skullMeta);
         return skull;
     }
@@ -220,14 +220,22 @@ public class ItemUtil {
         return count;
     }
 
-    private static final Set<Material> swords = Set.of(
-            Material.WOODEN_SWORD, Material.STONE_SWORD,
-            Material.IRON_SWORD, Material.GOLDEN_SWORD,
-            Material.DIAMOND_SWORD
-    );
+    private static final Set<Material> SWORDS;
+
+    static {
+        List<Material> newSwords = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_SWORD")) {
+                newSwords.add(material);
+            }
+        }
+
+        SWORDS = Set.copyOf(newSwords);
+    }
 
     public static boolean isSword(Material item) {
-        return swords.contains(item);
+        return SWORDS.contains(item);
     }
 
     public static boolean isSword(ItemStack stack) {
@@ -242,11 +250,19 @@ public class ItemUtil {
         return isBow(stack.getType());
     }
 
-    private static final Set<Material> AXES = Set.of(
-            Material.WOODEN_AXE, Material.STONE_AXE,
-            Material.IRON_AXE, Material.GOLDEN_AXE,
-            Material.DIAMOND_AXE
-    );
+    private static final Set<Material> AXES;
+
+    static {
+        List<Material> newAxes = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_AXE")) {
+                newAxes.add(material);
+            }
+        }
+
+        AXES = Set.copyOf(newAxes);
+    }
 
     public static boolean isAxe(Material type) {
         return AXES.contains(type);
@@ -256,11 +272,19 @@ public class ItemUtil {
         return isAxe(itemStack.getType());
     }
 
-    private static final Set<Material> PICKAXES = Set.of(
-            Material.WOODEN_PICKAXE, Material.STONE_PICKAXE,
-            Material.IRON_PICKAXE, Material.GOLDEN_PICKAXE,
-            Material.DIAMOND_PICKAXE
-    );
+    private static final Set<Material> PICKAXES;
+
+    static {
+        List<Material> newPickaxes = new ArrayList<>();
+
+        for (Material material : Material.values()) {
+            if (material.name().endsWith("_PICKAXE")) {
+                newPickaxes.add(material);
+            }
+        }
+
+        PICKAXES = Set.copyOf(newPickaxes);
+    }
 
     public static boolean isPickaxe(Material type) {
         return PICKAXES.contains(type);
@@ -278,21 +302,11 @@ public class ItemUtil {
         return isTool(stack.getType());
     }
 
-    private static final Set<Material> INGOTS = Set.of(
-            Material.IRON_INGOT, Material.GOLD_INGOT
-    );
-
-    public static boolean isIngot(Material type) {
-        return INGOTS.contains(type);
-    }
-
     public static boolean hasItem(Player player, CustomItems type) {
         return player.isValid() && findItemOfName(player.getInventory().getContents(), type.toString());
     }
 
-
     public static boolean isItem(ItemStack stack, CustomItems type) {
-
         return matchesFilter(stack, type.toString(), false);
     }
 
@@ -328,76 +342,57 @@ public class ItemUtil {
         return false;
     }
 
-    public static boolean hasAncientArmour(LivingEntity entity) {
+    private static int getNumOfPiecesWorn(LivingEntity entity, String namePrefix) {
+        if (!entity.isValid()) return 0;
 
-        if (!entity.isValid()) return false;
-
-        ItemStack[] armour;
         EntityEquipment equipment = entity.getEquipment();
-        if (equipment != null) armour = equipment.getArmorContents();
-        else return false;
-
-        boolean[] b = new boolean[]{false, false, false, false};
-
-        for (int i = 0; i < 4; i++) {
-            b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient");
+        if (equipment == null) {
+            return 0;
         }
-        return b[0] && b[1] && b[2] && b[3];
+
+        ItemStack[] armour = equipment.getArmorContents();
+
+        int numWorn = 0;
+        for (int i = 0; i < 4; i++) {
+            if (matchesFilter(armour[i], namePrefix)) {
+                ++numWorn;
+            }
+        }
+
+        return numWorn;
+    }
+
+    private static boolean hasArmour(LivingEntity entity, String namePrefix) {
+        return getNumOfPiecesWorn(entity, namePrefix) == 4;
+    }
+
+    public static boolean hasAncientArmour(LivingEntity entity) {
+        return hasArmour(entity, ChatColor.GOLD + "Ancient");
     }
 
     public static boolean hasAncientRoyalArmour(LivingEntity entity) {
-        if (!entity.isValid()) return false;
+        int numWorn = getNumOfPiecesWorn(entity, ChatColor.GOLD + "Ancient Royal");
 
-        ItemStack[] armour;
-        EntityEquipment equipment = entity.getEquipment();
-        if (equipment != null) armour = equipment.getArmorContents();
-        else return false;
-
-        boolean[] b = new boolean[]{false, false, false, false};
-
-        b[0] = ItemUtil.isItem(armour[0], CustomItems.ANCIENT_CROWN) ||
-               ItemUtil.isItem(armour[0], CustomItems.ANCIENT_ROYAL_HELMET);
-
-        for (int i = 1; i < 4; i++) {
-            b[i] = matchesFilter(armour[i], ChatColor.GOLD + "Ancient Royal");
+        // Check to see if there's an ancient crown in the mix
+        if (numWorn == 3) {
+            if (ItemUtil.isItem(entity.getEquipment().getHelmet(), CustomItems.ANCIENT_CROWN)) {
+                ++numWorn;
+            }
         }
 
-        return b[0] && b[1] && b[2] && b[3];
-
+        return numWorn == 4;
     }
 
     public static boolean hasNecrosArmour(LivingEntity entity) {
-
-        if (!entity.isValid()) return false;
-
-        ItemStack[] armour;
-        EntityEquipment equipment = entity.getEquipment();
-        if (equipment != null) armour = equipment.getArmorContents();
-        else return false;
-
-        boolean[] b = new boolean[]{false, false, false, false};
-
-        for (int i = 0; i < 4; i++) {
-            b[i] = matchesFilter(armour[i], ChatColor.DARK_RED + "Necros");
-        }
-        return b[0] && b[1] && b[2] && b[3];
+        return hasArmour(entity, ChatColor.DARK_RED + "Necros");
     }
 
     public static boolean hasNectricArmour(LivingEntity entity) {
+        return hasArmour(entity, ChatColor.DARK_RED + "Nectric");
+    }
 
-        if (!entity.isValid()) return false;
-
-        ItemStack[] armour;
-        EntityEquipment equipment = entity.getEquipment();
-        if (equipment != null) armour = equipment.getArmorContents();
-        else return false;
-
-        boolean[] b = new boolean[]{false, false, false, false};
-
-        for (int i = 0; i < 4; i++) {
-            b[i] = matchesFilter(armour[i], ChatColor.DARK_RED + "Nectric");
-        }
-        return b[0] && b[1] && b[2] && b[3];
+    public static boolean hasApocalypticCamouflage(LivingEntity entity) {
+        return hasArmour(entity, ChatColor.DARK_GREEN + "Apocalyptic Camouflage");
     }
 
     public static boolean isNamed(ItemStack stack) {

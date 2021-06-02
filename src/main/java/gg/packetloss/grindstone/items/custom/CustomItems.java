@@ -24,6 +24,12 @@ public enum CustomItems {
     ANCIENT_LEGGINGS(ChatColor.GOLD, "Ancient Leggings"),
     ANCIENT_BOOTS(ChatColor.GOLD, "Ancient Boots"),
 
+    // Apocalyptic Camouflage Armor
+    APOCALYPTIC_CAMOUFLAGE_HELMET(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Helmet"),
+    APOCALYPTIC_CAMOUFLAGE_CHESTPLATE(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Chestplate"),
+    APOCALYPTIC_CAMOUFLAGE_LEGGINGS(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Leggings"),
+    APOCALYPTIC_CAMOUFLAGE_BOOTS(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Boots"),
+
     // Nectric Armor
     NECTRIC_HELMET(ChatColor.DARK_RED, "Nectric Helmet"),
     NECTRIC_CHESTPLATE(ChatColor.DARK_RED, "Nectric Chestplate"),
@@ -56,6 +62,8 @@ public enum CustomItems {
     SHADOW_BOW(ChatColor.DARK_RED, "Shadow Bow"),
 
     // Red Items
+    RED_SWORD(ChatColor.DARK_RED, "Red Sword"),
+    RED_BOW(ChatColor.DARK_RED, "Red Bow"),
     RED_FEATHER(ChatColor.DARK_RED, "Red Feather"),
 
     // God Weapons
@@ -87,6 +95,7 @@ public enum CustomItems {
 
     // Phantom Items
     PHANTOM_GOLD(ChatColor.GOLD, "Phantom Gold"),
+    PHANTOM_DIAMOND(ChatColor.GOLD, "Phantom Diamond"),
     PHANTOM_CLOCK(ChatColor.DARK_RED, "Phantom Clock"),
     PHANTOM_HYMN(ChatColor.DARK_RED, "Phantom Hymn"),
     PHANTOM_POTION(ChatColor.DARK_RED, "Phantom Potion"),
@@ -147,6 +156,7 @@ public enum CustomItems {
     BLACK_PARTY_BOX(ItemFamily.PARTY_BOX, "Black"),
 
     // Miscellaneous
+    EXECUTIONER_AXE(ChatColor.GOLD, "Executioner's Axe"),
     MAD_MILK(ChatColor.DARK_AQUA, "Mad Milk"),
     GOD_FISH(ChatColor.BLUE, "God Fish"),
     OVERSEER_BOW(ChatColor.RED, "Overseer's Bow"),
@@ -206,6 +216,10 @@ public enum CustomItems {
 
     public String getNamespaceName() {
         return namespaceName;
+    }
+
+    public int getModelId() {
+        return CustomItemCenter.getModelId(this);
     }
 
     public static String computeNamespaceName(String name) {

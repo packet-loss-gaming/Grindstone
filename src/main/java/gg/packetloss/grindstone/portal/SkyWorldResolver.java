@@ -1,9 +1,15 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.portal;
 
-import gg.packetloss.grindstone.city.engine.SkyWorldCoreComponent;
-import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
-import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
 import gg.packetloss.grindstone.warps.WarpsComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
+import gg.packetloss.grindstone.world.type.sky.SkyWorldCoreComponent;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;

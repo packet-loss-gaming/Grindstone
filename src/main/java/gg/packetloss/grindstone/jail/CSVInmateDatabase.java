@@ -10,11 +10,10 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.ChatUtil;
 import com.sk89q.commandbook.util.entity.player.UUIDUtil;
+import gg.packetloss.grindstone.util.TimeUtil;
 import org.apache.commons.lang.Validate;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.bukkit.Bukkit;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -194,13 +193,9 @@ public class CSVInmateDatabase implements InmateDatabase {
         return UUIDInmate.get(ID);
     }
 
-    @Override
-    public void jail(Player player, String prisonName, CommandSender source, String reason, long end, boolean isMuted) {
-        jail(player.getUniqueId(), prisonName, source, reason, end, isMuted);
-    }
 
     @Override
-    public void jail(UUID ID, String prison, CommandSender source, String reason, long end, boolean mute) {
+    public void jail(UUID ID, String prison, String source, String reason, long end, boolean mute) {
         Validate.notNull(ID);
         Validate.notNull(prison);
         Validate.notNull(reason);
@@ -217,24 +212,25 @@ public class CSVInmateDatabase implements InmateDatabase {
 
         Inmate inmate = new Inmate(ID, prison, reason, start, end, mute);
         UUIDInmate.put(ID, inmate);
-        auditLogger.info(String.format("JAIL: %s jailed %s: %s", source == null ? "Plugin" : ChatUtil.toUniqueName(source), ID, reason.trim()));
+        auditLogger.info(String.format(
+                "JAIL: %s jailed %s (%s) %s: %s",
+                source,
+                ID, Bukkit.getOfflinePlayer(ID).getName(),
+                TimeUtil.getPrettyEndDate(end),
+                reason.trim()
+        ));
     }
 
     @Override
-    public boolean unjail(Player player, CommandSender source, String reason) {
-        return unjail(player.getUniqueId(), source, reason);
-    }
-
-    @Override
-    public boolean unjail(UUID ID, CommandSender source, String reason) {
+    public boolean unjail(UUID ID, String source, String reason) {
 
         Validate.notNull(ID);
 
         Inmate inmate = UUIDInmate.remove(ID);
         if (inmate != null) {
-            auditLogger.info(String.format("UNJAIL: %s unjailed %s: %s",
-                    source == null ? "Plugin" : ChatUtil.toUniqueName(source),
-                    inmate.getID(),
+            auditLogger.info(String.format("UNJAIL: %s unjailed %s (%s): %s",
+                    source,
+                    ID, Bukkit.getOfflinePlayer(ID).getName(),
                     reason.trim()));
             return true;
         }

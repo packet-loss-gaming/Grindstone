@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.util;
 
 import org.bukkit.Material;
@@ -34,6 +40,13 @@ public enum SpawnEgg {
 
     private static final Map<EntityType, SpawnEgg> ENTITY_TYPE_TO_SPAWN_EGG = new EnumMap<>(EntityType.class);
     private static final Map<Material, SpawnEgg> MATERIAL_TO_SPAWN_EGG = new HashMap<>();
+
+    static {
+        for (SpawnEgg value : values()) {
+            ENTITY_TYPE_TO_SPAWN_EGG.put(value.getEntityType(), value);
+            MATERIAL_TO_SPAWN_EGG.put(value.getMaterial(), value);
+        }
+    }
 
     private final EntityType entityType;
     private final Material itemType;

@@ -1,6 +1,12 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.betterweather;
 
-import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
@@ -13,13 +19,14 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
-import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
-import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
-import gg.packetloss.grindstone.managedworld.ManagedWorldMassQuery;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
+import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import gg.packetloss.grindstone.util.probability.WeightedPicker;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
+import gg.packetloss.grindstone.world.managed.ManagedWorldMassQuery;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -31,12 +38,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -53,11 +55,8 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
     @InjectComponent
     private ManagedWorldComponent managedWorld;
 
-    private Path statesDir;
-
-    private Gson gson = new Gson();
-
     private WeatherState weatherState = new WeatherState();
+    private SingleFileFilesystemStateHelper<WeatherState> stateHelper;
 
     private LocalConfiguration config;
 
@@ -66,12 +65,10 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
         config = configure(new LocalConfiguration());
 
         try {
-            Path baseDir = Path.of(inst.getDataFolder().getPath(), "state");
-            statesDir = Files.createDirectories(baseDir.resolve("states"));
-
-            loadWeatherState();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+            stateHelper = new SingleFileFilesystemStateHelper<>("weather.json", new TypeToken<>() { });
+            stateHelper.load().ifPresent(loadedState -> weatherState = loadedState);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         registerCommands(Commands.class);
@@ -118,36 +115,15 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
         public int thunderStormStormTypeWeight = 1;
     }
 
-    private Path getStateFile() {
-        return statesDir.resolve("weather.json");
-    }
-
-    private void loadWeatherState() {
-        Path stateFile = getStateFile();
-        if (!Files.exists(stateFile)) {
-            return;
-        }
-
-        try (BufferedReader reader = Files.newBufferedReader(stateFile)) {
-            weatherState = gson.fromJson(reader, WeatherState.class);
-        } catch (IOException e) {
-            log.warning("Failed to load previous weather state");
-            e.printStackTrace();
-        }
-    }
-
     private void saveWeatherState() {
         if (!weatherState.isDirty()) {
             return;
         }
 
-        Path stateFile = getStateFile();
-        try (BufferedWriter writer = Files.newBufferedWriter(
-                stateFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            writer.write(gson.toJson(weatherState));
+        try {
+            stateHelper.save(weatherState);
             weatherState.resetDirtyFlag();
         } catch (IOException e) {
-            log.warning("Failed to save previous weather state");
             e.printStackTrace();
         }
     }
@@ -248,9 +224,11 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
             // Calculate the new weather event and its time
             WeatherType newWeatherType = pickWeather();
 
+            // We need to calculate the offset based on the last weather event's time as
+            // we're setting the end of that event, and the start of this event.
             long offset = TimeUnit.MINUTES.toMillis(ChanceUtil.getRangedRandom(
-                    getMinDuration(newWeatherType),
-                    getMaxDuration(newWeatherType)
+                    getMinDuration(lastWeatherType),
+                    getMaxDuration(lastWeatherType)
             ));
             long newWeatherEventTime = lastWeatherEventTime + offset;
 

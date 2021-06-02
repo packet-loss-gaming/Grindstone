@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.guild.listener;
 
 import com.comphenix.protocol.PacketType;
@@ -8,7 +14,6 @@ import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.sk89q.commandbook.CommandBook;
 import fr.neatmonster.nocheatplus.checks.net.protocollib.ProtocolLibComponent;
 import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.click.ClickType;
 import gg.packetloss.grindstone.events.DoubleClickEvent;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
@@ -33,6 +38,7 @@ import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
+import gg.packetloss.grindstone.world.type.city.combat.PvPComponent;
 import org.bukkit.ChatColor;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
@@ -375,6 +381,15 @@ public class RogueListener implements Listener {
         return yawDiff <= 90 || yawDiff >= (360 - 90);
     }
 
+    private int getBoostDamage(int hits, boolean backstabbed) {
+        int boostDamage = 5 + (hits - 1);
+        if (backstabbed) {
+            boostDamage *= 3;
+        }
+
+        return Math.min(100, boostDamage);
+    }
+
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
 
@@ -407,18 +422,22 @@ public class RogueListener implements Listener {
                     boolean backstabbed = state.hasPower(RoguePower.BACKSTAB) &&
                                           isBackstab((Player) attacker, result.getDefender());
                     if (hits > 0 || backstabbed) {
-                        int boostDamage = 5 + (hits - 1);
-                        if (backstabbed) {
-                            boostDamage *= 3;
-                            ChatUtil.sendNotice(attacker, "Backstabbed!");
-                        }
-
-                        boostDamage = Math.min(100, boostDamage);
-
-                        if (state.getSettings().shouldShowBerserkerBuffs()) {
-                            ((Player) attacker).sendActionBar(ChatColor.RED + "Berserker Boost: +" + boostDamage);
-                        }
+                        int boostDamage = getBoostDamage(hits, backstabbed);
                         event.setDamage(event.getDamage() + boostDamage);
+
+                        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+                            if (event.isCancelled()) {
+                                return;
+                            }
+
+                            if (backstabbed) {
+                                ChatUtil.sendNotice(attacker, "Backstabbed!");
+                            }
+
+                            if (state.getSettings().shouldShowBerserkerBuffs()) {
+                                ((Player) attacker).sendActionBar(ChatColor.RED + "Berserker Boost: +" + boostDamage);
+                            }
+                        });
                     }
                 }
             }
@@ -549,6 +568,10 @@ public class RogueListener implements Listener {
                 }
             }, 1);
         } else if (event.getClickType() == ClickType.RIGHT) {
+            if (event.isInteractive()) {
+                return;
+            }
+
             if (state.canGrenade()) {
                 grenade(player, state);
             }

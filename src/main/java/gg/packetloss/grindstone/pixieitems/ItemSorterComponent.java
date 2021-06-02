@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.pixieitems;
 
 import com.google.common.collect.ImmutableSet;
@@ -11,21 +17,20 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.bukkittext.TextAction;
-import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
-import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.pixieitems.broker.EconomyBroker;
 import gg.packetloss.grindstone.pixieitems.broker.VoidBroker;
 import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
 import gg.packetloss.grindstone.pixieitems.manager.PixieNetworkManager;
 import gg.packetloss.grindstone.pixieitems.manager.ThreadedPixieNetworkManager;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
@@ -103,16 +108,37 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         return (economy != null);
     }
 
-    private boolean shouldConsider(Block block) {
-        if (!isChest(block)) {
-            return false;
-        }
-
+    private boolean shouldConsiderCommon(Block block) {
         if (!managedWorld.is(ManagedWorldIsQuery.ANY_BUIDABLE, block.getWorld())) {
             return false;
         }
 
         return true;
+    }
+
+    private boolean shouldConsiderAsSource(Block block) {
+        if (!isChest(block)) {
+            return false;
+        }
+
+        return shouldConsiderCommon(block);
+    }
+
+    private static final Set<Material> SINK_CONTAINERS = Set.of(
+            Material.CHEST, Material.TRAPPED_CHEST, Material.DISPENSER, Material.DROPPER, Material.SHULKER_BOX,
+            Material.BARREL
+    );
+
+    private boolean shouldConsiderAsSink(Block block) {
+        if (!SINK_CONTAINERS.contains(block.getType())) {
+            return false;
+        }
+
+        return shouldConsiderCommon(block);
+    }
+
+    private boolean shouldConsiderAsAny(Block block) {
+        return shouldConsiderAsSource(block) || shouldConsiderAsSink(block);
     }
 
     private Set<Inventory> swapInventories() {
@@ -154,31 +180,50 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
         Block block = event.getClickedBlock();
 
-        if (!shouldConsider(block)) {
-            return;
-        }
-
         // We should always have a network ID if a command action is set.
         int networkID = session.getCurrentNetwork().get().getID();
         PixieCommand command = session.getCurrentCommand();
         switch (command) {
             case ADD_SOURCE: {
-                manager.addSource(networkID, block).thenAccept((result) -> {
-                    if (result.isNew()) {
-                        ChatUtil.sendNotice(player, "Chest updated to source!");
-                    } else {
-                        ChatUtil.sendError(player, "Chest is already a source!");
+                if (!shouldConsiderAsSource(block)) {
+                    return;
+                }
+
+                manager.selectNetwork(networkID).thenAccept((optNetworkDetail) -> {
+                    if (optNetworkDetail.isEmpty()) {
+                        return;
                     }
-                }).exceptionally((ex) -> {
-                    ex.printStackTrace();
-                    ChatUtil.sendError(player, "An error occurred while attempting to create this source.");
-                    return null;
+
+                    PixieNetworkDetail networkDetail = optNetworkDetail.get();
+                    CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+                        Location origin = networkDetail.getOrigin();
+                        if (!LocationUtil.isWithin2DDistance(block.getLocation(), origin, 50)) {
+                            ChatUtil.sendError(player, "This block is too far away from the network creation point.");
+                            return;
+                        }
+
+                        manager.addSource(networkID, block).thenAccept((result) -> {
+                            if (result.isNew()) {
+                                ChatUtil.sendNotice(player, "Chest updated to source!");
+                            } else {
+                                ChatUtil.sendError(player, "Chest is already a source!");
+                            }
+                        }).exceptionally((ex) -> {
+                            ex.printStackTrace();
+                            ChatUtil.sendError(player, "An error occurred while attempting to create this source.");
+                            return null;
+                        });
+                    });
                 });
                 break;
             }
             case ADD_SINK: {
+                if (!shouldConsiderAsSink(block)) {
+                    return;
+                }
+
                 manager.addSink(networkID, block, session.getTargetSinkVariant()).thenAccept((result) -> {
-                    ChatUtil.sendNotice(player, "Chest updated to sink! Accepts:");
+                    ChatUtil.sendNotice(player, "Container updated to sink! Accepts:");
 
                     ImmutableSet<String> sinkItems = result.getItemNames();
                     if (sinkItems.isEmpty()) {
@@ -200,11 +245,19 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         session.performedAction();
     }
 
+    private boolean shouldConsiderChestExpansion(Block block) {
+        if (!isChest(block)) {
+            return false;
+        }
+
+        return shouldConsiderCommon(block);
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         Block block = event.getBlock();
 
-        if (!shouldConsider(block)) {
+        if (!shouldConsiderChestExpansion(block)) {
             return;
         }
 
@@ -215,11 +268,11 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
 
-        if (!shouldConsider(block)) {
+        if (!shouldConsiderAsAny(block)) {
             return;
         }
 
-        manager.removeChest(block.getLocation());
+        manager.removeContainer(block.getLocation());
     }
 
     private void processInventory(Inventory inventory) {
@@ -240,10 +293,10 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                 Chest leftChest = (Chest) doubleChest.getLeftSide();
                 Chest rightChest = (Chest) doubleChest.getRightSide();
 
-                optNetworkID = manager.getNetworkFromSourceChest(leftChest.getBlock(), rightChest.getBlock());
+                optNetworkID = manager.getNetworkFromSourceContainers(leftChest.getBlock(), rightChest.getBlock());
             } else if (holder instanceof Chest) { // Mule inventories count as chests for some reason
                 Chest chest = (Chest) holder;
-                optNetworkID = manager.getNetworkFromSourceChest(chest.getBlock());
+                optNetworkID = manager.getNetworkFromSourceContainers(chest.getBlock());
             } else {
                 return;
             }
@@ -265,7 +318,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
                     PixieNetworkDetail networkDetail = optNetworkDetail.get();
 
-                    OfflinePlayer player = Bukkit.getOfflinePlayer(networkDetail.getNamespace());
+                    OfflinePlayer player = GeneralPlayerUtil.findOfflinePlayer(networkDetail.getNamespace());
                     TransactionBroker broker = player != null ?  new EconomyBroker(economy, player) : new VoidBroker();
 
                     manager.sourceItems(broker, networkID, inventory);
@@ -329,7 +382,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             Player owner = PlayerUtil.checkPlayer(sender);
             String name = args.getString(0).toUpperCase();
 
-            manager.createNetwork(owner.getUniqueId(), name).thenAccept((optNetworkDetail) -> {
+            manager.createNetwork(owner.getUniqueId(), name, owner.getLocation()).thenAccept((optNetworkDetail) -> {
                 server.getScheduler().runTask(inst, () -> {
                     if (optNetworkDetail.isEmpty()) {
                         ChatUtil.sendError(sender, "Failed to create network!");
@@ -418,7 +471,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                 throw new CommandException("Valid modes are: overwrite, add, void");
             }
 
-            ChatUtil.sendNotice(sender, "Punch the chest you'd like to make a sink.");
+            ChatUtil.sendNotice(sender, "Punch the container you'd like to make a sink.");
         }
     }
 }

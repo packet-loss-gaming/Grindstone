@@ -6,9 +6,6 @@
 
 package gg.packetloss.grindstone.jail;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -53,18 +50,6 @@ public interface InmateDatabase extends Iterable<Inmate> {
     Inmate getInmate(UUID ID);
 
     /**
-     * Jails a player
-     *
-     * @param player
-     * @param prison
-     * @param source
-     * @param reason
-     * @param end
-     * @param mute
-     */
-    void jail(Player player, String prison, CommandSender source, String reason, long end, boolean mute);
-
-    /**
      * Jails a player by ID
      *
      * @param ID
@@ -74,16 +59,7 @@ public interface InmateDatabase extends Iterable<Inmate> {
      * @param end
      * @param mute
      */
-    void jail(UUID ID, String prison, CommandSender source, String reason, long end, boolean mute);
-
-    /**
-     * Unjails a player
-     *
-     * @param player
-     * @param source
-     * @param reason
-     */
-    boolean unjail(Player player, CommandSender source, String reason);
+    void jail(UUID ID, String prison, String source, String reason, long end, boolean mute);
 
     /**
      * Unjails a player by ID
@@ -92,7 +68,7 @@ public interface InmateDatabase extends Iterable<Inmate> {
      * @param source
      * @param reason
      */
-    boolean unjail(UUID ID, CommandSender source, String reason);
+    boolean unjail(UUID ID, String source, String reason);
 
     /**
      * Returns a list of inmates

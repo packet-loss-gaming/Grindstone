@@ -6,7 +6,10 @@
 
 package gg.packetloss.grindstone.items.custom;
 
+import com.google.gson.reflect.TypeToken;
 import gg.packetloss.grindstone.items.implementations.MagicBucketImpl;
+import gg.packetloss.grindstone.util.item.ItemNameCalculator;
+import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -14,12 +17,44 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Optional;
 
 import static gg.packetloss.grindstone.items.custom.CustomItems.*;
 
 public class CustomItemCenter {
+    public static final int REVISION = 0;
+
+    private static CustomItemModelState modelState = new CustomItemModelState();
+    private static SingleFileFilesystemStateHelper<CustomItemModelState> modelStateHelper;
+
+    static  {
+        try {
+            modelStateHelper = new SingleFileFilesystemStateHelper<>("custom-item-models.json", new TypeToken<>() { });
+            modelStateHelper.load().ifPresent(loadedState -> modelState = loadedState);
+
+            if (modelState.update()) {
+                modelStateHelper.save(modelState);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * This should really only be used for migrating items
+     */
+    @Deprecated
+    public static Optional<Integer> getModelId(ItemStack item) {
+        return ItemNameCalculator.computeItemName(item).map(name -> modelState.itemNameToModelId.get(name));
+    }
+
+    public static int getModelId(CustomItems item) {
+        return modelState.itemToModelId.get(item);
+    }
+
     private static HashMap<CustomItems, CustomItem> items = new HashMap<>();
 
     private static void addItem(CustomItem item) {
@@ -160,6 +195,31 @@ public class CustomItemCenter {
         ancientBoots.addUse("Set Effect: Ancient Armor");
         ancientBoots.addUse("Repaired when worn while attacking creatures or players");
         addItem(ancientBoots);
+
+        // Apocalyptic Camouflage
+        CustomEquipment apocalypticCamouflageHelmet = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_HELMET, Material.LEATHER_HELMET);
+        apocalypticCamouflageHelmet.addSource(ItemSource.APOCALYPSE);
+        apocalypticCamouflageHelmet.addSource(ItemSource.MARKET);
+        apocalypticCamouflageHelmet.addUse("Set Effect: Apocalyptic Camouflage");
+        addItem(apocalypticCamouflageHelmet);
+
+        CustomEquipment apocalypticCamouflageChestplate = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_CHESTPLATE, Material.LEATHER_CHESTPLATE);
+        apocalypticCamouflageChestplate.addSource(ItemSource.APOCALYPSE);
+        apocalypticCamouflageChestplate.addSource(ItemSource.MARKET);
+        apocalypticCamouflageChestplate.addUse("Set Effect: Apocalyptic Camouflage");
+        addItem(apocalypticCamouflageChestplate);
+
+        CustomEquipment apocalypticCamouflageLeggings = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_LEGGINGS, Material.LEATHER_LEGGINGS);
+        apocalypticCamouflageLeggings.addSource(ItemSource.APOCALYPSE);
+        apocalypticCamouflageLeggings.addSource(ItemSource.MARKET);
+        apocalypticCamouflageLeggings.addUse("Set Effect: Apocalyptic Camouflage");
+        addItem(apocalypticCamouflageLeggings);
+
+        CustomEquipment apocalypticCamouflageBoots = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_BOOTS, Material.LEATHER_BOOTS);
+        apocalypticCamouflageBoots.addSource(ItemSource.APOCALYPSE);
+        apocalypticCamouflageBoots.addSource(ItemSource.MARKET);
+        apocalypticCamouflageBoots.addUse("Set Effect: Apocalyptic Camouflage");
+        addItem(apocalypticCamouflageBoots);
 
         // Nectric Armor
         CustomEquipment nectricHelmet = new CustomEquipment(NECTRIC_HELMET, Material.DIAMOND_HELMET);
@@ -327,15 +387,28 @@ public class CustomItemCenter {
 
         // Shadow Items
         CustomWeapon shadowSword = new CustomWeapon(SHADOW_SWORD, Material.DIAMOND_SWORD, 5);
-        fearBow.addUse("Slows your opponent with every hit.");
+        shadowSword.addUse("Slows your opponent with every hit.");
         addItem(shadowSword);
 
         CustomWeapon shadowBow = new CustomWeapon(SHADOW_BOW, Material.BOW, 5);
-        fearBow.addUse("Slows your opponent with every hit.");
+        shadowBow.addUse("Slows your opponent with every hit.");
         addItem(shadowBow);
 
         // Red Items
+        CustomWeapon redSword = new CustomWeapon(RED_SWORD, Material.DIAMOND_SWORD, 1.75);
+        redSword.addSource(ItemSource.RITUAL_TOMB);
+        redSword.addSource(ItemSource.MARKET);
+        redSword.addUse("Global Effects.");
+        addItem(redSword);
+
+        CustomWeapon redBow = new CustomWeapon(RED_BOW, Material.BOW, 1.75);
+        redBow.addSource(ItemSource.RITUAL_TOMB);
+        redBow.addSource(ItemSource.MARKET);
+        redBow.addUse("Global Effects.");
+        addItem(redBow);
+
         CustomItem redFeather = new CustomItem(RED_FEATHER, Material.FEATHER);
+        redFeather.addSource(ItemSource.RITUAL_TOMB);
         redFeather.addSource(ItemSource.MARKET);
         redFeather.addUse("Consumes redstone to prevent up to 100% damage, " +
                 "but has a cool down based on the amount of damage taken.");
@@ -504,6 +577,12 @@ public class CustomItemCenter {
         phantomGold.addUse("When sacrificed gives 50 Skrin, or 100 Skrin " +
                 "if sacrificed in the Grave Yard rewards room.");
         addItem(phantomGold);
+
+        CustomItem phantomDiamond = new CustomItem(PHANTOM_DIAMOND, Material.DIAMOND);
+        phantomDiamond.addSource(ItemSource.RITUAL_TOMB);
+        phantomDiamond.addUse("When sacrificed gives 15,000 Skrin, or 17,500 Skrin " +
+            "if sacrificed in the Grave Yard rewards room.");
+        addItem(phantomDiamond);
 
         CustomItem phantomClock = new CustomItem(PHANTOM_CLOCK, Material.CLOCK);
         phantomClock.addSource(ItemSource.GRAVE_YARD);
@@ -734,6 +813,12 @@ public class CustomItemCenter {
         addItem(blackPartyBox);
 
         // Miscellaneous
+        CustomItem executionerAxe = new CustomItem(EXECUTIONER_AXE, Material.GOLDEN_AXE);
+        executionerAxe.addSource(ItemSource.APOCALYPSE);
+        executionerAxe.addSource(ItemSource.MARKET);
+        executionerAxe.addUse("Deals damage based on the number of zombies around.");
+        addItem(executionerAxe);
+
         CustomItem madMilk = new CustomItem(MAD_MILK, Material.MILK_BUCKET);
         madMilk.addSource(ItemSource.MARKET);
         madMilk.addUse("If thrown into a brewing vat at the factory, a melt down will occur in which all undead creatures die.");

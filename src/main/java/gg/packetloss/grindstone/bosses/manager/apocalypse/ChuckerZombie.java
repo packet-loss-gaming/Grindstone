@@ -8,10 +8,6 @@ package gg.packetloss.grindstone.bosses.manager.apocalypse;
 
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.OSBL.bukkit.entity.BukkitBoss;
-import com.skelril.OSBL.bukkit.util.BukkitUtil;
-import com.skelril.OSBL.entity.LocalControllable;
-import com.skelril.OSBL.instruction.*;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
@@ -21,6 +17,10 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.openboss.bukkit.entity.BukkitBoss;
+import gg.packetloss.openboss.bukkit.util.BukkitUtil;
+import gg.packetloss.openboss.entity.LocalControllable;
+import gg.packetloss.openboss.instruction.*;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
@@ -31,8 +31,6 @@ import org.bukkit.util.Vector;
 
 import java.util.List;
 import java.util.logging.Logger;
-
-import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 
 public class ChuckerZombie {
 
@@ -129,8 +127,8 @@ public class ChuckerZombie {
                 nearestPlayerVel.multiply(2);
                 nearestPlayerVel.setY(ChanceUtil.getRangedRandom(.4, .8));
 
-                for (Entity entity : boss.getNearbyEntities(4, 4, 4)) {
-                    if (checkEntity(entity) && ChanceUtil.getChance(5)) {
+                for (Entity entity : boss.getLocation().getNearbyEntitiesByType(Zombie.class, 4)) {
+                    if (ChanceUtil.getChance(5)) {
                         entity.setVelocity(nearestPlayerVel);
                     }
                 }

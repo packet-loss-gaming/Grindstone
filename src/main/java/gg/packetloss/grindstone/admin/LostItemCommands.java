@@ -1,5 +1,12 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.admin;
 
+import com.google.common.collect.Lists;
 import com.sk89q.commandbook.command.argument.SinglePlayerTarget;
 import com.sk89q.worldedit.command.util.CommandPermissions;
 import com.sk89q.worldedit.command.util.CommandPermissionsConditionGenerator;
@@ -10,6 +17,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -17,7 +25,7 @@ import org.enginehub.piston.annotation.Command;
 import org.enginehub.piston.annotation.CommandContainer;
 import org.enginehub.piston.annotation.param.Arg;
 
-import java.util.List;
+import java.util.*;
 
 @CommandContainer(superTypes = CommandPermissionsConditionGenerator.Registration.class)
 public class LostItemCommands {
@@ -77,5 +85,51 @@ public class LostItemCommands {
         items.forEach((item) -> {
             giveItem(sender, targetPlayer, item, count);
         });
+    }
+
+    @Command(name = "/itemhash", desc = "Custom Item item hash command")
+    @CommandPermissions({"aurora.itemhash"})
+    public void hashCmd(CommandSender sender,
+                        @Arg(desc = "items", def = "") CustomItemBundle customItems) {
+        if (customItems == null) {
+            Map<Material, List<CustomItems>> grouped = new HashMap<>();
+            for (CustomItems item : CustomItems.values()) {
+                List<CustomItems> items = grouped.computeIfAbsent(
+                    CustomItemCenter.get(item).getBaseType(),
+                    (ignored) -> new ArrayList<>()
+                );
+                items.add(item);
+            }
+
+            for (List<CustomItems> value : grouped.values()) {
+                value.sort(Comparator.comparing(CustomItems::getModelId));
+            }
+
+            List<Map.Entry<Material, List<CustomItems>>> sortedByKey = Lists.newArrayList(grouped.entrySet());
+            sortedByKey.sort(Comparator.comparing((e) -> e.getKey().name()));
+
+            for (Map.Entry<Material, List<CustomItems>> materialListEntry : sortedByKey) {
+                sender.sendMessage(materialListEntry.getKey().toString());
+
+                for (CustomItems item : materialListEntry.getValue()) {
+                    sender.sendMessage(Text.of(
+                        " - ", item.getColoredName(),
+                        ChatColor.YELLOW, ": ", ChatColor.BLUE, item.getModelId()
+                    ).build());
+                }
+            }
+            return;
+        }
+
+        // Map all to verify via exceptions first
+        List<CustomItems> items = customItems.getItems();
+
+        // Print hashes of items
+        for (CustomItems item : items) {
+            sender.sendMessage(Text.of(
+                item.getColoredName(),
+                ChatColor.YELLOW, ": ", ChatColor.BLUE, item.getModelId()
+            ).build());
+        }
     }
 }

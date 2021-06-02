@@ -7,16 +7,17 @@
 package gg.packetloss.grindstone.items.implementations.combotools;
 
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.support.RadialExecutor;
-import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-public class RadialShovel extends ComboShovel {
+public class RadialShovel extends AbstractItemFeatureImpl {
     private static RadialExecutor executor = new RadialExecutor(CustomItems.RADIAL_SHOVEL) {
         @Override
-        public boolean accepts(Material material) {
-            return acceptedMaterials.contains(material);
+        public boolean accepts(Block block) {
+            return ComboUtil.isBreakableWithShovel(block);
         }
     };
 

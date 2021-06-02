@@ -6,6 +6,8 @@
 
 package gg.packetloss.grindstone.economic.store;
 
+import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +40,8 @@ public interface ItemStoreDatabase {
     /**
      * Change the stock of an item
      */
-    void adjustStocks(Map<String, Integer> adjustments);
+    void adjustStocksForBuy(List<MarketTransactionLine> transactionLines);
+    void adjustStocksForSale(List<MarketTransactionLine> transactionLines);
 
     /**
      * Gets the item that was requested

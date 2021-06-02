@@ -6,10 +6,7 @@
 
 package gg.packetloss.grindstone.items;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
@@ -30,11 +27,11 @@ import gg.packetloss.grindstone.items.flight.FlightItemsComponent;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.*;
 import gg.packetloss.grindstone.items.implementations.combotools.*;
-import gg.packetloss.grindstone.items.migration.MigrationManager;
-import gg.packetloss.grindstone.items.migration.migrations.FearSwordMigration;
-import gg.packetloss.grindstone.items.migration.migrations.GodSwordMigration;
-import gg.packetloss.grindstone.items.migration.migrations.MasterSwordMigration;
-import gg.packetloss.grindstone.items.migration.migrations.UnleashedSwordMigration;
+import gg.packetloss.grindstone.items.legacymigration.MigrationManager;
+import gg.packetloss.grindstone.items.legacymigration.migrations.FearSwordMigration;
+import gg.packetloss.grindstone.items.legacymigration.migrations.GodSwordMigration;
+import gg.packetloss.grindstone.items.legacymigration.migrations.MasterSwordMigration;
+import gg.packetloss.grindstone.items.legacymigration.migrations.UnleashedSwordMigration;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
@@ -44,19 +41,17 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 
@@ -94,6 +89,9 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     private static ItemCondenser summationCondenser = new ItemCondenser();
 
     static {
+        // Bone
+        summationCondenser.addSupport(new ItemStack(Material.BONE_MEAL, 9), new ItemStack(Material.BONE_BLOCK, 1));
+
         // Coal
         summationCondenser.addSupport(new ItemStack(Material.COAL, 9), new ItemStack(Material.COAL_BLOCK, 1));
 
@@ -117,6 +115,9 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         // Emerald
         summationCondenser.addSupport(new ItemStack(Material.EMERALD, 9), new ItemStack(Material.EMERALD_BLOCK, 1));
 
+        // Netherite
+        summationCondenser.addSupport(new ItemStack(Material.NETHERITE_INGOT, 9), new ItemStack(Material.NETHERITE_BLOCK, 1));
+
         // Slime
         summationCondenser.addSupport(new ItemStack(Material.SLIME_BALL, 9), new ItemStack(Material.SLIME_BLOCK, 1));
 
@@ -126,30 +127,11 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
     private MigrationManager migrationManager = new MigrationManager();
 
-    private JsonObject buildItemManifest() {
-        JsonArray itemNames = new JsonArray();
-        for (CustomItems item : CustomItems.values()) {
-            itemNames.add(new JsonPrimitive(item.getSnakecaseName()));
-        }
-        JsonObject manifest = new JsonObject();
-        manifest.add("names", itemNames);
-        return manifest;
-    }
-
-    private void writeItemManifest() {
-        String manifestFile = inst.getDataFolder().getPath() + "/item_manifest.json";
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(manifestFile))) {
-            writer.write(new Gson().toJson(buildItemManifest()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void enable() {
-
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
+
         loadResources();
         registerSpecWeapons();
         registerTools();
@@ -158,8 +140,6 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         registerGuildOaths();
         registerGeneral();
         registerMigrations();
-
-        writeItemManifest();
     }
 
     private <T extends Listener> T handle(T component) {
@@ -185,6 +165,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
             wepSys.add(WeaponType.RANGED, CustomItems.MASTER_BOW, handle(new MasterBowImpl()));
             wepSys.add(WeaponType.RANGED, CustomItems.FEAR_BOW, handle(new FearBowImpl()));
             wepSys.add(WeaponType.RANGED, CustomItems.UNLEASHED_BOW, handle(new UnleashedBowImpl()));
+            wepSys.add(WeaponType.RANGED, CustomItems.RED_BOW, handle(new RedBowImpl()));
 
             wepSys.add(WeaponType.MELEE, CustomItems.MASTER_SWORD, handle(new MasterSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.MASTER_SHORT_SWORD, handle(new MasterSwordImpl()));
@@ -192,6 +173,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
             wepSys.add(WeaponType.MELEE, CustomItems.FEAR_SHORT_SWORD, handle(new FearSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SHORT_SWORD, handle(new UnleashedSwordImpl()));
+            wepSys.add(WeaponType.MELEE, CustomItems.RED_SWORD, handle(new RedSwordImpl()));
         }, 1);
     }
 
@@ -235,13 +217,14 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     private void registerGeneral() {
         handle(new AncientArmorImpl());
         handle(new AncientCrownImpl(goldCondenser));
+        handle(new ApocalypticCamouflageArmorImpl());
         handle(new BatBowImpl());
         handle(new ChickenBowImpl());
+        handle(new ExecutionerAxeImpl());
         handle(new GodFishImpl());
         handle(new ImbuedCrystalImpl(goldCondenser));
         handle(new MadMilkImpl());
         handle(new MagicBucketImpl());
-        handle(new MasterBowImpl());
         handle(new NecrosArmorImpl());
         handle(new NectricArmorImpl());
         handle(new PhantomPotionImpl());
@@ -260,10 +243,10 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         registerCommands(MigrationCommands.class);
     }
 
-    private void updateResult(PrepareAnvilEvent event, ItemStack result) {
+    private void updateResult(PrepareResultEvent event, ItemStack result) {
         event.setResult(result);
 
-        event.getInventory().getViewers().forEach((entity) -> {
+        event.getViewers().forEach((entity) -> {
             if (entity instanceof Player) {
                 ((Player) entity).updateInventory();
             }
@@ -329,6 +312,33 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         newResult.setItemMeta(meta);
 
         updateResult(event, newResult);
+    }
+
+    @EventHandler
+    public void onPrepareResult(PrepareResultEvent event) {
+        // Handled in the onPrepareAnvil handler
+        if (event instanceof PrepareAnvilEvent) {
+            return;
+        }
+
+        for (ItemStack itemStack : event.getInventory().getContents()) {
+            if (ItemUtil.isAuthenticCustomItem(itemStack)) {
+                updateResult(event, null);
+                return;
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onCraftCustomItem(CraftItemEvent event) {
+        HumanEntity crafter = event.getWhoClicked();
+        for (ItemStack itemStack : event.getInventory().getMatrix()) {
+            if (ItemUtil.isAuthenticCustomItem(itemStack)) {
+                ChatUtil.sendError(crafter, "You cannot use custom items as part of a crafting recipe.");
+                event.setCancelled(true);
+                return;
+            }
+        }
     }
 
     public class MigrationCommands {

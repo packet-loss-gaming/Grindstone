@@ -1,12 +1,18 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.playerhistory;
 
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.city.engine.CityCoreComponent;
-import gg.packetloss.grindstone.city.engine.RangeCoreComponent;
 import gg.packetloss.grindstone.data.MySQLHandle;
+import gg.packetloss.grindstone.world.type.city.CityCoreComponent;
+import gg.packetloss.grindstone.world.type.range.RangeCoreComponent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -41,6 +47,34 @@ public class PlayerHistoryComponent extends BukkitComponent implements Listener 
         });
     }
 
+    private void unloadHistory(UUID playerID) {
+        PlayerHistory history = playerHistory.get(playerID);
+        if (history != null && history.decrement()) {
+            playerHistory.remove(playerID);
+        }
+    }
+
+    private void loadHistory(UUID playerID) {
+        PlayerHistory history = getHistory(playerID);
+
+        // History already loaded
+        if (history.increment()) {
+            return;
+        }
+
+        try {
+            Optional<Long> optOnlineTime = MySQLHandle.getOnlineTime(playerID);
+            if (optOnlineTime.isPresent()) {
+                history.loadExistingPlayer(optOnlineTime.get());
+            } else {
+                history.loadNewPlayer();
+            }
+        } catch (SQLException e) {
+            unloadHistory(playerID);
+            throw new RuntimeException("History failed to load.", e);
+        }
+    }
+
     public CompletableFuture<Long> getTimePlayed(Player player) {
         UUID playerID = player.getUniqueId();
         return getHistory(playerID).getPlayTime();
@@ -48,21 +82,11 @@ public class PlayerHistoryComponent extends BukkitComponent implements Listener 
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(AsyncPlayerPreLoginEvent event) {
-        UUID playerID = event.getUniqueId();
-        try {
-            Optional<Long> optOnlineTime = MySQLHandle.getOnlineTime(playerID);
-            if (optOnlineTime.isPresent()) {
-                getHistory(playerID).loadExistingPlayer(optOnlineTime.get());
-            } else {
-                getHistory(playerID).loadNewPlayer();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        loadHistory(event.getUniqueId());
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        playerHistory.remove(event.getPlayer().getUniqueId());
+        unloadHistory(event.getPlayer().getUniqueId());
     }
 }

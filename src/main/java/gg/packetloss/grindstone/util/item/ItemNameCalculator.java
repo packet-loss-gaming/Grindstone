@@ -1,8 +1,15 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.util.item;
 
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.macro.ExpansionReplacementMacro;
 import gg.packetloss.grindstone.util.macro.MacroExpander;
+import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -90,6 +97,11 @@ public class ItemNameCalculator {
         return Optional.of(stack.getType().getKey().toString());
     }
 
+    public static String getUnqualifiedName(String qualifiedName) {
+        Validate.isTrue(qualifiedName.contains(":"));
+        return qualifiedName.split(":")[1];
+    }
+
     public static Optional<String> computeBlockName(Block block) {
         return Optional.of(block.getType().getKey().toString());
     }
@@ -119,7 +131,7 @@ public class ItemNameCalculator {
             ARMOR_MACRO
     ));
 
-    public static List<String> expandNameMacros(String baseName) {
+    public static Set<String> expandNameMacros(String baseName) {
         return ITEM_NAME_MACRO_EXPANDER.expand(baseName);
     }
 }

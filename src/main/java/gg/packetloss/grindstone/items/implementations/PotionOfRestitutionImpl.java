@@ -43,6 +43,7 @@ public class PotionOfRestitutionImpl extends AbstractItemFeatureImpl {
                 }
             } else {
                 ChatUtil.sendError(player, "No previous death points are known the the potion.");
+                event.setCancelled(true);
             }
         }
     }

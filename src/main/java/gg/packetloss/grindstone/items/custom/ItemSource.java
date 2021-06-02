@@ -26,7 +26,8 @@ public enum ItemSource {
     GOLD_RUSH("Gold Rush"),
     GRAVE_YARD("Grave Yard"),
     FROSTBORN("Frostborn"),
-    APOCALYPSE("Apocalypse");
+    APOCALYPSE("Apocalypse"),
+    RITUAL_TOMB("Ritual Tomb");
 
     private String friendlyName;
     private ItemSource[] subSources;

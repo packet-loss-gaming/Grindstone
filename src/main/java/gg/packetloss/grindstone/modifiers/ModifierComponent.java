@@ -11,7 +11,9 @@ import com.sk89q.commandbook.util.ChatUtil;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.database.IOUtil;
 import org.bukkit.Bukkit;
@@ -34,6 +36,9 @@ public class ModifierComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
+
+    @InjectComponent
+    ChatBridgeComponent chatBridge;
 
     private final static int interval = 20 * 60 * 5;
     private static Modifier modifierCenter;
@@ -90,7 +95,10 @@ public class ModifierComponent extends BukkitComponent implements Listener {
             String friendlyTime = ChatUtil.getFriendlyTime(System.currentTimeMillis() + modifierCenter.status(modifierType));
             String change = wasOn ? " extended" : " enabled";
             String by = args.argsLength() > 2 ? " by " + args.getString(2) : "";
-            Bukkit.broadcastMessage(ChatColor.GOLD + modifierType.fname() + change + by + " till " + friendlyTime + "!");
+            String rawMessage = modifierType.fname() + change + by + " till " + friendlyTime + "!";
+
+            Bukkit.broadcastMessage(ChatColor.GOLD + rawMessage);
+            chatBridge.broadcast(rawMessage);
         }
     }
 

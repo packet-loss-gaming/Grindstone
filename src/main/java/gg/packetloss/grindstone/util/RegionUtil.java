@@ -30,14 +30,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RegionUtil {
-    public static Location getCenterAt(World world, int y, ProtectedRegion region) {
-        Region rg = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint());
+    public static Location getCenterAt(World world, double y, ProtectedRegion region) {
+        Region rg = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint().add(1, 1, 1));
         Vector3 center = rg.getCenter();
         return new Location(world, center.getX(), y, center.getZ());
     }
 
     public static Location getCenter(World world, ProtectedRegion region) {
-        Region rg = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint());
+        Region rg = new CuboidRegion(region.getMinimumPoint(), region.getMaximumPoint().add(1, 1, 1));
         Vector3 center = rg.getCenter();
         return new Location(world, center.getX(), center.getY(), center.getZ());
     }
@@ -99,20 +99,39 @@ public class RegionUtil {
         return Optional.of(total);
     }
 
-    public static Optional<Integer> countChunks(Region region) {
+    public static Optional<Integer> getXWidth(Region region) {
         if (region instanceof CuboidRegion) {
             BlockVector3 min = region.getMinimumPoint();
             BlockVector3 max = region.getMaximumPoint();
 
             int minX = min.getBlockX();
-            int minZ = min.getBlockZ();
             int maxX = max.getBlockX();
+
+            return Optional.of(Math.abs(maxX - minX) + 1);
+
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<Integer> getZWidth(Region region) {
+        if (region instanceof CuboidRegion) {
+            BlockVector3 min = region.getMinimumPoint();
+            BlockVector3 max = region.getMaximumPoint();
+
+            int minZ = min.getBlockZ();
             int maxZ = max.getBlockZ();
 
-            int length = (maxX - minX) + 1;
-            int width = (maxZ - minZ) + 1;
+            return Optional.of(Math.abs(maxZ - minZ) + 1);
+        }
+        return Optional.empty();
+    }
 
-            return Optional.of((length * width) / (16 * 16));
+    public static Optional<Integer> countChunks(Region region) {
+        if (region instanceof CuboidRegion) {
+            int xWidth = getXWidth(region).orElseThrow();
+            int zWidth = getZWidth(region).orElseThrow();
+
+            return Optional.of((xWidth * zWidth) / (16 * 16));
         }
         return Optional.empty();
     }

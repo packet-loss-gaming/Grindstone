@@ -1,12 +1,12 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.bosses.manager.apocalypse;
 
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.OSBL.bukkit.entity.BukkitBoss;
-import com.skelril.OSBL.bukkit.util.BukkitUtil;
-import com.skelril.OSBL.entity.LocalControllable;
-import com.skelril.OSBL.entity.LocalEntity;
-import com.skelril.OSBL.instruction.*;
-import com.skelril.OSBL.util.AttackDamage;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.bosses.manager.apocalypse.instruction.ApocalypseDropTableInstruction;
@@ -15,6 +15,12 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.openboss.bukkit.entity.BukkitBoss;
+import gg.packetloss.openboss.bukkit.util.BukkitUtil;
+import gg.packetloss.openboss.entity.LocalControllable;
+import gg.packetloss.openboss.entity.LocalEntity;
+import gg.packetloss.openboss.instruction.*;
+import gg.packetloss.openboss.util.AttackDamage;
 import org.bukkit.Server;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;

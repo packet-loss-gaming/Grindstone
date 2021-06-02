@@ -13,16 +13,33 @@ import org.bukkit.event.HandlerList;
 public class ApocalypseLightningStrikeSpawnEvent extends Event implements ApocalypseEvent {
     private static final HandlerList handlers = new HandlerList();
 
+    private final Location triggeringLocation;
     private final Location location;
+    private int numZombies;
+
     private boolean cancelled = false;
 
-    public ApocalypseLightningStrikeSpawnEvent(Location location) {
+    public ApocalypseLightningStrikeSpawnEvent(Location triggeringLocation, Location location, int numZombies) {
+        this.triggeringLocation = triggeringLocation;
         this.location = location;
+        this.numZombies = numZombies;
+    }
+
+    public Location getTriggeringLocation() {
+        return triggeringLocation.clone();
     }
 
     @Override
     public Location getLocation() {
-        return location;
+        return location.clone();
+    }
+
+    public int getNumberOfZombies() {
+        return numZombies;
+    }
+
+    public void setNumberOfZombies(int numZombies) {
+        this.numZombies = numZombies;
     }
 
     @Override

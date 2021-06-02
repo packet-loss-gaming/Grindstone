@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.sacrifice;
 
 import gg.packetloss.grindstone.economic.store.MarketComponent;
@@ -6,7 +12,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.SpawnEgg;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
-import org.bukkit.command.CommandSender;
+import org.apache.commons.lang.Validate;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -17,9 +23,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 class SacrificialRegistry {
-    private Set<String> registeredStacks = new HashSet<>();
-    private List<Supplier<ItemStack>> junk = new ArrayList<>();
-    private List<ChancedEntry> valuable = new ArrayList<>();
+    private final Set<String> registeredStacks = new HashSet<>();
+    private final List<Supplier<ItemStack>> junk = new ArrayList<>();
+    private final List<ChancedEntry> valuable = new ArrayList<>();
 
     private long lastLookupUpdate;
     private MarketItemLookupInstance lookupInstance;
@@ -32,28 +38,32 @@ class SacrificialRegistry {
             return;
         }
 
+        if (!valuable.isEmpty()) {
+            SacrificeCommonality precedingCommonality = valuable.get(valuable.size() - 1).commonality;
+            Validate.isTrue(precedingCommonality.getAdditionalChance() <= commonality.getAdditionalChance());
+        }
+
         valuable.add(new ChancedEntry(dropSupplier, commonality));
     }
 
-    private int calculateModifier(double value) {
-        return (int) (Math.sqrt(value) * 1.5);
+    private boolean getChance(SacrificeInformation sacrificeInformation, double rarityL) {
+        int baseChance = (int) (sacrificeInformation.hasSacrificeTome() ? rarityL * 100 : rarityL * 200);
+
+        return ChanceUtil.getChance(Math.max(1, baseChance - sacrificeInformation.getModifier()));
     }
 
-    private boolean getChance(CommandSender sender, int modifier, double rarityL) {
-        boolean hasEfficiency = sender.hasPermission("aurora.sacrifice.efficiency");
-        int baseChance = (int) (hasEfficiency ? rarityL * 100 : rarityL * 200);
-
-        return ChanceUtil.getChance(Math.max(1, baseChance - modifier));
-    }
-
-    private ItemStack getValuableItem(CommandSender sender, int modifier) {
+    private ItemStack getValuableItem(SacrificeInformation sacrificeInformation) {
+        int position = valuable.size();
         do {
-            ChancedEntry supplier = CollectionUtil.getElement(valuable);
+            // Update the position with a strong biased towards higher value items
+            position = Math.max(0, position - ChanceUtil.getRandomNTimes(valuable.size(), 3));
+
+            ChancedEntry supplier = valuable.get(position);
             if (supplier.commonality == SacrificeCommonality.NORMAL) {
                 return supplier.dropSupplier.get();
             }
 
-            if (getChance(sender, modifier, supplier.commonality.getAdditionalChance())) {
+            if (getChance(sacrificeInformation, supplier.commonality.getAdditionalChance())) {
                 return supplier.dropSupplier.get();
             }
         } while (true);
@@ -72,10 +82,10 @@ class SacrificialRegistry {
         return lookupInstance;
     }
 
-    private double getValue(MarketItemLookupInstance lookupInstance, ItemStack itemStack) {
+    protected double getValue(MarketItemLookupInstance lookupInstance, ItemStack itemStack) {
         // FIXME: These can be added back to the market now
         if (SpawnEgg.fromMaterial(itemStack.getType()) != null) {
-            return 12.5;
+            return 12.5 * itemStack.getAmount();
         }
         return lookupInstance.checkCurrentValue(itemStack).orElse(0d);
     }
@@ -86,39 +96,39 @@ class SacrificialRegistry {
 
     private static final int MINIMUM_REMOVAL_VALUE = 9;
 
-    public List<ItemStack> getCalculatedLoot(CommandSender sender, int max, double value) {
+    public SacrificeResult getCalculatedLoot(SacrificeInformation sacrificeInformation) {
         List<ItemStack> loot = new ArrayList<>();
 
-        // Calculate the modifier
-        int baseChance = sender.hasPermission("aurora.tome.sacrifice") ? 100 : 125;
-        int modifier = calculateModifier(value);
+        int baseChance = (sacrificeInformation.hasSacrificeTome() ? 100 : 125) - sacrificeInformation.getModifier();
 
-        value *= .9;
+        int remainingItems = sacrificeInformation.getMaxItems();
+        double remainingValue = sacrificeInformation.getValue();
 
         MarketItemLookupInstance lookupInstance = getLookupInstance();
 
-        while (value > 0 && (max == -1 || max > 0)) {
+        while (remainingValue > 0 && (remainingItems == -1 || remainingItems > 0)) {
             ItemStack itemStack;
 
-            if (ChanceUtil.getChance(Math.max(1, baseChance - modifier))) {
-                itemStack = getValuableItem(sender, modifier);
-            } else if (sender.hasPermission("aurora.tome.cleanly")) {
-                value -= MINIMUM_REMOVAL_VALUE;
+            if (ChanceUtil.getChance(Math.max(1, baseChance))) {
+                itemStack = getValuableItem(sacrificeInformation);
+            } else if (sacrificeInformation.hasCleanlyTome()) {
+                remainingValue -= MINIMUM_REMOVAL_VALUE;
                 continue;
             } else {
                 itemStack = getJunkStack();
             }
 
             if (itemStack != null) {
-                value -= Math.max(MINIMUM_REMOVAL_VALUE, getValue(lookupInstance, itemStack));
+                remainingValue -= Math.max(MINIMUM_REMOVAL_VALUE, getValue(lookupInstance, itemStack));
                 loot.add(itemStack);
             }
 
-            if (max != -1) {
-                max--;
+            if (remainingItems != -1) {
+                remainingItems--;
             }
         }
-        return loot;
+
+        return new SacrificeResult(loot, remainingValue, remainingItems);
     }
 
     private static class ChancedEntry {

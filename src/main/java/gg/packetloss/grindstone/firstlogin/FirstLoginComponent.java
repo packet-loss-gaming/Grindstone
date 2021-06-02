@@ -19,17 +19,19 @@ import gg.packetloss.grindstone.buff.Buff;
 import gg.packetloss.grindstone.buff.BuffComponent;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.events.PortalRecordEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseOverflowEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.managedworld.ManagedWorldComponent;
-import gg.packetloss.grindstone.managedworld.ManagedWorldGetQuery;
-import gg.packetloss.grindstone.managedworld.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.playerhistory.PlayerHistoryComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.parser.HelpTextParser;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
+import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
+import gg.packetloss.grindstone.world.managed.ManagedWorldTimeContext;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -109,8 +111,8 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         public int welcomeProtectionHours = 24;
     }
 
-    public Location getNewPlayerStartingLocation(Player player) {
-        return managedWorld.get(ManagedWorldGetQuery.LATEST_RANGE).getSpawnLocation();
+    public Location getNewPlayerStartingLocation(Player player, ManagedWorldTimeContext timeContext) {
+        return managedWorld.get(ManagedWorldGetQuery.RANGE_OVERWORLD, timeContext).getSpawnLocation();
     }
 
     public Location getSafeRoomLocation() {
@@ -170,11 +172,31 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onApocalypseSpawn(ApocalypseOverflowEvent event) {
+        if (event.getSpawnKind() == ApocalypseOverflowEvent.SpawnKind.NONE) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        if (!isNewerPlayer(player)) {
+            return;
+        }
+
+        event.setKillChance(3);
+        event.setSpawnKind(ApocalypseOverflowEvent.SpawnKind.NONE);
+
+        ChatUtil.sendNotice(player, ChatColor.GOLD, "[Friendly Spirit] I've protected you from a great evil!");
+        ChatUtil.sendNotice(player, ChatColor.GOLD, "[Friendly Spirit] Try to keep the number of zombies down!");
+    }
+
     private void applyNewPlayerBuffs(Player player) {
         buffs.notifyFillToLevel(Buff.APOCALYPSE_DAMAGE_BOOST, player, 20);
         buffs.notifyFillToLevel(Buff.APOCALYPSE_MAGIC_SHIELD, player, 20);
         buffs.notifyFillToLevel(Buff.APOCALYPSE_LIFE_LEACH, player, 3);
+        buffs.notifyFillToLevel(Buff.APOCALYPSE_OVERLORD, player, 1);
 
+        ChatUtil.sendNotice(player, ChatColor.GOLD, "[Friendly Spirit] Here, have some of my strength new one!");
         ChatUtil.sendNotice(player, ChatColor.GOLD, "New player assistance applied.");
     }
 
@@ -252,7 +274,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         if (isInSafeRoom(event.getFrom())) {
             event.setCancelled(true);
             event.getPlayer().teleport(
-                    getNewPlayerStartingLocation(event.getPlayer()),
+                    getNewPlayerStartingLocation(event.getPlayer(), ManagedWorldTimeContext.LATEST),
                     PlayerTeleportEvent.TeleportCause.NETHER_PORTAL
             );
         }

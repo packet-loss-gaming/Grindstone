@@ -1,7 +1,14 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.click;
 
 public class ClickRecord {
     private static final long MILLS_FOR_DOUBLE_CLICK = 500;
+    private static final long MILLS_FOR_BUGGED_RIGHT_CLICK = 10;
 
     // Exposed to allow scheduling past the double click delay
     public static final int TICKS_FOR_DOUBLE_CLICK = (int) MILLS_FOR_DOUBLE_CLICK / 50;
@@ -11,9 +18,15 @@ public class ClickRecord {
     private long lastInteraction = 0;
 
     private boolean isDoubleClick(long currentClickTime, ClickType clickType) {
-        boolean isDoubleClick = currentClickTime - lastClickOfType[clickType.ordinal()] < MILLS_FOR_DOUBLE_CLICK;
+        long clickTimeDiff = currentClickTime - lastClickOfType[clickType.ordinal()];
+
+        // Abort if this looks like a bugged mouse/same instant click
+        if (clickTimeDiff < MILLS_FOR_BUGGED_RIGHT_CLICK) {
+            return false;
+        }
+
         lastClickOfType[clickType.ordinal()] = currentClickTime;
-        return isDoubleClick;
+        return clickTimeDiff < MILLS_FOR_DOUBLE_CLICK;
     }
 
     public boolean isDoubleLeftClick() {

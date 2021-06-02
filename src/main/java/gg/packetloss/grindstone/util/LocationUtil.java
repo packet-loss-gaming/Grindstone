@@ -15,6 +15,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -23,9 +24,20 @@ import java.util.function.Predicate;
 
 public class LocationUtil {
 
-    public static double distanceSquared2D(Location a, Location b) {
-
+    public static double distanceSquared2D(BlockVector3 a, BlockVector3 b) {
         return Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getZ() - b.getZ(), 2);
+    }
+
+    public static double distanceSquared2D(Location a, Location b) {
+        return Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getZ() - b.getZ(), 2);
+    }
+
+    public static boolean isWithin2DDistance(Location a, Location b, int distance) {
+        if (!a.getWorld().equals(b.getWorld())) {
+            return false;
+        }
+
+        return distanceSquared2D(a, b) <= Math.pow(distance, 2);
     }
 
     public static Location grandBank(World world) {
@@ -70,7 +82,7 @@ public class LocationUtil {
             return false;
         }
 
-        return !type.isSolid();
+        return !EnvironmentUtil.isSolidBlock(type);
     }
 
     private static boolean isOkayStandingBlock(Block block) {
@@ -80,7 +92,7 @@ public class LocationUtil {
         }
 
         // If we're standing on a solid block, we're fine
-        if (type.isSolid()) {
+        if (EnvironmentUtil.isSolidBlock(type)) {
             return true;
         }
 
@@ -228,13 +240,9 @@ public class LocationUtil {
 
     public static List<Player> getPlayersStandingOnRegion(World world, ProtectedRegion region,
                                                           boolean includeInRegion) {
-
         List<Player> playerList = new ArrayList<>();
         for (Player player : world.getPlayers()) {
-            Location loc = player.getLocation();
-            BlockVector3 vec = BlockVector3.at(loc.getX(), loc.getY(), loc.getZ());
-
-            if (region.contains(vec.add(0, -1, 0)) || region.contains(vec.add(0, -2, 0))) {
+            if (isStandingOn(world, region, player)) {
                 playerList.add(player);
             }
 
@@ -242,31 +250,55 @@ public class LocationUtil {
                 continue;
             }
 
-            if (region.contains(vec) || region.contains(vec.add(0, 1, 0))) {
+            if (isStandingIn(world, region, player)) {
                 playerList.add(player);
             }
         }
+
         return playerList;
     }
 
-    public static boolean isBelowPlayer(World world, ProtectedRegion region) {
-
-        for (Player player : world.getPlayers()) {
-            Block block = player.getLocation().getBlock();
-            if (region.contains(block.getX(), block.getY() - 1, block.getZ())
-                    || region.contains(block.getX(), block.getY() - 2, block.getZ())) {
-                return true;
-            }
+    public static boolean isImmediatelyAbove(World world, ProtectedRegion region, Location location) {
+        if (!world.equals(location.getWorld())) {
+            return false;
         }
+
+        return region.contains(location.getBlockX(), location.getBlockY() - 1, location.getBlockZ());
+    }
+
+    public static boolean isStandingOn(World world, ProtectedRegion region, Entity entity) {
+        if (!world.equals(entity.getWorld())) {
+            return false;
+        }
+
+        Location entityLoc = entity.getLocation();
+        if (region.contains(entityLoc.getBlockX(), entityLoc.getBlockY() - 1, entityLoc.getBlockZ())) {
+            return true;
+        }
+        if (region.contains(entityLoc.getBlockX(), entityLoc.getBlockY() - 2, entityLoc.getBlockZ())) {
+            return true;
+        }
+
         return false;
     }
 
-    public static boolean isBelowPlayer(World world, ProtectedRegion region, Player player) {
+    public static boolean isStandingIn(World world, ProtectedRegion region, Entity entity) {
+        if (!world.equals(entity.getWorld())) {
+            return false;
+        }
 
-        Block block = player.getLocation().getBlock();
-        return (region.contains(block.getX(), block.getY() - 1, block.getZ())
-                || region.contains(block.getX(), block.getY() - 2, block.getZ()))
-                && world.equals(player.getWorld());
+        Location entityLoc = entity.getLocation();
+        if (region.contains(entityLoc.getBlockX(), entityLoc.getBlockY(), entityLoc.getBlockZ())) {
+            return true;
+        }
+        if (entity instanceof LivingEntity) {
+            Location eyeLoc = ((LivingEntity) entity).getEyeLocation();
+            if (region.contains(eyeLoc.getBlockX(), eyeLoc.getBlockY(), eyeLoc.getBlockZ())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static boolean isCloseToPlayer(Block block, int distance) {
@@ -434,6 +466,10 @@ public class LocationUtil {
             if (predicate.test(searchBlock.getRelative(blockFace).getType())) return true;
         }
         return false;
+    }
+
+    public static boolean isChunkLoadedAt(World world, BlockVector3 position) {
+        return world.isChunkLoaded(position.getBlockX() >> 4, position.getBlockZ() >> 4);
     }
 
     public static boolean isChunkLoadedAt(Location loc) {

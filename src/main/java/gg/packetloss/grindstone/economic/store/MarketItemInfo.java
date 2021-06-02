@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.economic.store;
 
+import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -35,7 +36,7 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
     }
 
     public String getUnqualifiedName() {
-        return name.split(":")[1];
+        return ItemNameCalculator.getUnqualifiedName(name);
     }
 
     public String getDisplayName() {
@@ -43,7 +44,7 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
     }
 
     public String getLookupName() {
-        return getDisplayName();
+        return getUnqualifiedName().toUpperCase();
     }
 
     public void setValue(double value) {
@@ -88,7 +89,7 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
             return Optional.empty();
         }
 
-        return Optional.of(optPercentageSale.get() * getValue());
+        return Optional.of(optPercentageSale.get() * getValue() * stack.getAmount());
     }
 
     public Optional<Double> getSellUnitPriceForStack(ItemStack stack) {

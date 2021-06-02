@@ -7,16 +7,17 @@
 package gg.packetloss.grindstone.items.implementations.combotools;
 
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.implementations.support.LinearDestructionExecutor;
-import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-public class LinearAxe extends ComboAxe {
+public class LinearAxe extends AbstractItemFeatureImpl {
     private static LinearDestructionExecutor executor = new LinearDestructionExecutor(CustomItems.LINEAR_AXE) {
         @Override
-        public boolean accepts(Material material) {
-            return ComboAxe.accepts(material);
+        public boolean accepts(Block block) {
+            return ComboUtil.isBreakableWithAxe(block);
         }
     };
 

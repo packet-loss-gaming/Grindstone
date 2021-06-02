@@ -34,22 +34,18 @@ public class CustomItemSession extends PersistentSession {
         return !specMap.containsKey(type) || System.currentTimeMillis() - specMap.get(type) >= 0;
     }
 
-    private void saveLocation(LinkedList<Location> locations, Location newLoc) {
-        Location prevLoc = locations.peek();
+    public void addDeathPoint(Location deathPoint) {
+        Location prevLoc = recentDropLocations.peek();
         if (prevLoc != null &&
-                prevLoc.getWorld().equals(newLoc.getWorld()) &&
-                prevLoc.distanceSquared(newLoc) < Math.pow(5, 2)) {
+            prevLoc.getWorld().equals(deathPoint.getWorld()) &&
+            prevLoc.distanceSquared(deathPoint) < Math.pow(5, 2)) {
             return;
         }
 
-        locations.add(0, newLoc.clone());
-        while (locations.size() > 5) {
-            locations.pollLast();
+        recentDropLocations.add(0, deathPoint.clone());
+        while (recentDropLocations.size() > 5) {
+            recentDropLocations.pollLast();
         }
-    }
-
-    public void addDeathPoint(Location deathPoint) {
-        saveLocation(recentDeathLocations, deathPoint);
     }
 
     public Location getRecentDeathPoint() {
@@ -57,7 +53,10 @@ public class CustomItemSession extends PersistentSession {
     }
 
     public void addDeathDropLocation(Location dropPoint) {
-        saveLocation(recentDropLocations, dropPoint);
+        recentDropLocations.add(0, dropPoint.clone());
+        while (recentDropLocations.size() > 5) {
+            recentDropLocations.pollLast();
+        }
     }
 
     public Location getRecentDeathDropPoint() {

@@ -1,6 +1,13 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.events;
 
 import gg.packetloss.grindstone.click.ClickType;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -35,6 +42,14 @@ public class DoubleClickEvent extends PlayerEvent {
 
     public BlockFace getAssociatedBlockFace() {
         return associatedBlockFace;
+    }
+
+    public boolean isInteractive() {
+        if (clickType != ClickType.RIGHT || associatedBlock == null) {
+            return false;
+        }
+
+        return EnvironmentUtil.isMaybeInteractiveBlock(associatedBlock, associatedBlockFace);
     }
 
     @Override

@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.pixieitems.manager;
 
 import gg.packetloss.grindstone.pixieitems.PixieSinkVariant;
@@ -14,7 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public interface PixieNetworkManager {
-    CompletableFuture<Optional<PixieNetworkDetail>> createNetwork(UUID namespace, String name);
+    CompletableFuture<Optional<PixieNetworkDetail>> createNetwork(UUID namespace, String name, Location origin);
     CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(UUID namespace, String name);
     CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(int networkID);
     CompletableFuture<List<PixieNetworkDetail>> selectNetworks(UUID namespace);
@@ -24,9 +30,9 @@ public interface PixieNetworkManager {
 
     boolean maybeExpandChest(Block block);
 
-    CompletableFuture<Void> removeChest(Location... locations);
+    CompletableFuture<Void> removeContainer(Location... locations);
 
-    Optional<Integer> getNetworkFromSourceChest(Block... blocks);
+    Optional<Integer> getNetworkFromSourceContainers(Block... blocks);
 
     void sourceItems(TransactionBroker broker, int networkID, Inventory inventory);
 

@@ -121,6 +121,7 @@ public class CustomItem {
         lore.addAll(this.lore);
         if (!lore.isEmpty()) meta.setLore(lore);
         meta.setDisplayName(item.toString());
+        meta.setCustomModelData(item.getModelId());
         itemStack.setItemMeta(meta);
         return itemStack;
     }

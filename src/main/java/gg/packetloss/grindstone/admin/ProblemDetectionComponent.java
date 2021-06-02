@@ -6,82 +6,156 @@
 
 package gg.packetloss.grindstone.admin;
 
+import com.destroystokyo.paper.event.server.ServerTickEndEvent;
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.math.BlockVector2;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import org.bukkit.ChatColor;
-import org.bukkit.Server;
+import com.zachsthings.libcomponents.config.ConfigurationBase;
+import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
+import gg.packetloss.grindstone.util.functional.TriFunction;
+import gg.packetloss.grindstone.util.task.DebounceHandle;
+import org.apache.commons.lang.StringUtils;
+import org.bukkit.Chunk;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 
-import java.text.DecimalFormat;
-import java.util.logging.Logger;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Problem Detector", desc = "Problem detection system.")
-public class ProblemDetectionComponent extends BukkitComponent implements Runnable {
+@Depend(components = ChatBridgeComponent.class)
+public class ProblemDetectionComponent extends BukkitComponent {
+    @InjectComponent
+    private ChatBridgeComponent chatBridge;
 
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
+    private LocalConfiguration config;
 
-    private final DecimalFormat format = new DecimalFormat("#.#");
-
-    private long lastTickWarning = 0, lastMemoryWarning = 0;
-    private long lastTick = 0;
-    private double averageError = 0;
+    private DebounceHandle<Long> serverLagDebounce;
 
     @Override
     public void enable() {
+        config = configure(new LocalConfiguration());
 
-        //server.getScheduler().runTaskTimer(inst, this, 20, 20);
+        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            CommandBook.registerEvents(new TickMonitor());
+            CommandBook.registerEvents(new ChunkMonitor());
+        }, 20 * 5);
     }
 
     @Override
-    public void run() {
+    public void reload() {
+        super.reload();
+        configure(config);
+    }
 
-        try {
-            checkMemory();
-        } catch (Exception ex) {
-            if (lastMemoryWarning == 0 || System.currentTimeMillis() - lastMemoryWarning > 1000) {
-                System.gc();
-                server.broadcastMessage(ChatColor.RED + "[WARNING] " + ex.getMessage());
-                lastMemoryWarning = System.currentTimeMillis();
-            }
-        }
+    private static class LocalConfiguration extends ConfigurationBase {
+        @Setting("tick-watcher.min-report-ms")
+        public long minFallback = 500;
+        @Setting("chunk-watcher.check-interval-ticks")
+        public int chunkCheckIntervalTicks = 20;
+        @Setting("chunk-watcher.min-activity-level")
+        public int chunkActivityLevel = 3;
+    }
 
-        try {
-            checkTicks();
-        } catch (Exception ex) {
-            if (lastTickWarning == 0 || System.currentTimeMillis() - lastTickWarning > 1000) {
-                server.broadcastMessage(ChatColor.RED + "[WARNING] " + ex.getMessage());
-                lastTickWarning = System.currentTimeMillis();
+    private class TickMonitor implements Listener {
+        @EventHandler
+        public void onServerTick(ServerTickEndEvent event) {
+            long timeRemaining = event.getTimeRemaining();
+            if (timeRemaining < 0) {
+                long millsLost = TimeUnit.NANOSECONDS.toMillis(Math.abs(timeRemaining));
+                if (millsLost < config.minFallback) {
+                    return;
+                }
+
+                chatBridge.modBroadcast("Server fell behind (by " + millsLost + " ms)!");
             }
         }
     }
 
-    public void checkTicks() throws Exception {
+    private class ChunkMonitor implements Listener {
+        private final Map<String, Map<BlockVector2, Integer>> worldChunkActivityMapping = new HashMap<>();
 
-        if (lastTick == 0) {
-            lastTick = System.currentTimeMillis();
-            return;
+        public ChunkMonitor() {
+            scheduleNextCheck();
         }
-        long elapsedTime = System.currentTimeMillis() - lastTick;
 
-        double error = (1000 - elapsedTime) * -1;
+        private void checkIterate(Map<String, Map<BlockVector2, Integer>> chunkData,
+                                  TriFunction<String, BlockVector2, Integer, Optional<String>> op) {
+            var worldActivityIterator = chunkData.entrySet().iterator();
+            while (worldActivityIterator.hasNext()) {
+                Map.Entry<String, Map<BlockVector2, Integer>> worldChunkActivity = worldActivityIterator.next();
 
-        averageError = (error + averageError) / 2;
-        lastTick = System.currentTimeMillis();
+                String world = worldChunkActivity.getKey();
+                Map<BlockVector2, Integer> worldActivityMap = worldChunkActivity.getValue();
 
-        if (averageError < 50) return;
+                // If there's been no activity since last check, drop the world
+                if (worldActivityMap.isEmpty()) {
+                    worldActivityIterator.remove();
+                    continue;
+                }
 
-        throw new Exception("Slow clock rate, Current error: " + format.format(error) +
-                ", AVG error: " + format.format(averageError) + "!");
-    }
+                // Check the chunks of this world for problems
+                List<String> messages = new ArrayList<>();
+                for (Map.Entry<BlockVector2, Integer> entry : worldActivityMap.entrySet()) {
+                    op.accept(world, entry.getKey(), entry.getValue()).ifPresent(messages::add);
+                }
 
-    public void checkMemory() throws Exception {
+                // Report any found problems as one message
+                if (!messages.isEmpty()) {
+                    chatBridge.modBroadcast(StringUtils.join(messages, "\n"));
+                }
 
-        double memory = Math.floor(Runtime.getRuntime().freeMemory() / 1024.0 / 1024.0);
+                // Reset the data on this world
+                worldActivityMap.clear();
+            }
+        }
 
-        if (memory < 70) {
-            throw new Exception("Low RAM: " + memory + " MB!");
+        private void checkChunkThrashing() {
+            checkIterate(worldChunkActivityMapping, (world, pos, activityLevel) -> {
+                if (activityLevel < config.chunkActivityLevel) {
+                    return Optional.empty();
+                }
+
+                return Optional.of("Chunk thrashing: " + activityLevel +
+                    " (World: " + world + "; " + pos.getBlockX() + ", " + pos.getBlockZ() + ")!");
+            });
+        }
+
+        private void scheduleNextCheck() {
+            checkChunkThrashing();
+
+            CommandBook.server().getScheduler().runTaskLater(
+                CommandBook.inst(),
+                this::scheduleNextCheck,
+                config.chunkCheckIntervalTicks
+            );
+        }
+
+        private void registerChunkActivity(Chunk chunk) {
+            Map<BlockVector2, Integer> mapping = worldChunkActivityMapping.computeIfAbsent(chunk.getWorld().getName(), (ignored) -> {
+                return new HashMap<>();
+            });
+
+            mapping.merge(WorldEditBridge.toBlockVec2(chunk), 1, Integer::sum);
+        }
+
+        @EventHandler
+        public void onServerTick(ChunkLoadEvent event) {
+            Chunk chunk = event.getChunk();
+
+            registerChunkActivity(chunk);
+        }
+
+        @EventHandler
+        public void onServerTick(ChunkUnloadEvent event) {
+            registerChunkActivity(event.getChunk());
         }
     }
 }

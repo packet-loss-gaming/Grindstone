@@ -1,12 +1,15 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.click;
 
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.DoubleClickEvent;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -83,18 +86,6 @@ public class ClickComponent extends BukkitComponent implements Listener {
                 }
                 break;
             case RIGHT_CLICK_BLOCK:
-                Block clicked = event.getClickedBlock();
-                if (clicked != null) {
-                    BlockFace face = event.getBlockFace();
-
-                    // Do not record these as double clicks, the player is more than likely just trying
-                    // to get through a door or something.
-                    if (EnvironmentUtil.isMaybeInteractiveBlock(clicked, face)) {
-                        clickRecord.recordInteraction();
-                        return;
-                    }
-                }
-
                 if (clickRecord.isDoubleRightClick()) {
                     callEvent(new DoubleClickEvent(
                             player, ClickType.RIGHT, event.getClickedBlock(), event.getBlockFace()

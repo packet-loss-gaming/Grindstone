@@ -1,10 +1,14 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.apocalypse;
 
 import gg.packetloss.grindstone.bosses.manager.apocalypse.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Zombie;
-
-import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 
 public class ApocalypseHelper {
     private ApocalypseHelper() { }
@@ -20,10 +24,6 @@ public class ApocalypseHelper {
 
         String customName = e.getCustomName();
         if (customName.equals("Apocalyptic Zombie")) {
-            return true;
-        }
-
-        if (customName.equals("Grave Zombie") && hasThunderstorm(e.getWorld())) {
             return true;
         }
 
@@ -44,6 +44,10 @@ public class ApocalypseHelper {
         }
 
         if (customName.equals(ChuckerZombie.BOUND_NAME)) {
+            return true;
+        }
+
+        if (customName.equals(ZombieExecutioner.BOUND_NAME)) {
             return true;
         }
 

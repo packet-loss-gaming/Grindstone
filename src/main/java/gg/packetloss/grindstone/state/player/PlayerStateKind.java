@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.state.player;
 
 import gg.packetloss.grindstone.state.player.attribute.TypedPlayerStateAttribute;
@@ -13,10 +19,12 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     SHNUGGLES_PRIME(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     GRAVE_YARD(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     PATIENT_X(new BossSafeRespawnPlayerStateTypeConfigImpl()),
+    RITUAL_TOMB(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     MIRAGE_ARENA(new WalkInPvPSafeRespawnPlayerStateTypeConfigImpl()),
     SAND_ARENA(new WalkInPvPSafeRespawnPlayerStateTypeConfigImpl()),
-    PUZZLE_PRISON(new WalkInNoGuildPlayerStateTypeConfigImpl()),
-    GOLD_RUSH(new WalkInNoGuildPlayerStateTypeConfigImpl()),
+    MOB_ARENA_COMPATIBILITY(new GuildControlledTempPlayerStateTypeConfigImpl()),
+    PUZZLE_PRISON(new GuildControlledTempPlayerStateTypeConfigImpl()),
+    GOLD_RUSH(new GuildControlledTempPlayerStateTypeConfigImpl()),
     JUNGLE_RAID(new TempPlayerStateTypeConfigImpl()),
     SKY_WARS(new TempPlayerStateTypeConfigImpl()),
     SPLEEF(new TempPlayerStateTypeConfigImpl()),
@@ -30,6 +38,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     GRAVE_YARD_NORTH_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     PATIENT_X_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     JUNGLE_RAID_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
+    RITUAL_TOMB_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl()),
     SKY_WARS_SPECTATOR(new SpectatorPlayerStateTypeConfigImpl());
 
     private final PlayerStateTypeConfigImpl config;

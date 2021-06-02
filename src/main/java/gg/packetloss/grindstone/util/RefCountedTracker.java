@@ -12,17 +12,35 @@ import java.util.Map;
 public class RefCountedTracker<T> {
     private Map<T, Integer> counter = new HashMap<>();
 
-    public void increment(T key) {
-        counter.putIfAbsent(key, 0);
-        counter.put(key, counter.get(key) + 1);
+    /**
+     *
+     * @param key
+     * @return true if added
+     */
+    public boolean increment(T key) {
+        int newValue = counter.compute(key, (ignored, values) -> {
+            if (values == null) {
+                values = 0;
+            }
+            return values + 1;
+        });
+
+        return newValue == 1;
     }
 
-    public void decrement(T key) {
+    /**
+     *
+     * @param key
+     * @return true if removed
+     */
+    public boolean decrement(T key) {
         int count = counter.get(key) - 1;
         if (count == 0) {
             counter.remove(key);
+            return true;
         } else {
             counter.put(key, count);
+            return false;
         }
     }
 

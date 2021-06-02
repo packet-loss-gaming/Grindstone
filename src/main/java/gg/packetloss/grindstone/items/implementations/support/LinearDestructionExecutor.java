@@ -36,7 +36,7 @@ public abstract class LinearDestructionExecutor {
         this.itemType = itemType;
     }
 
-    public abstract boolean accepts(Material material);
+    public abstract boolean accepts(Block target);
 
     public void process(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) {
@@ -116,12 +116,12 @@ public abstract class LinearDestructionExecutor {
             return;
         }
 
-        final Material initialType = curTarget.getType();
-
-        if (!accepts(curTarget.getType())) return;
+        if (!accepts(curTarget)) return;
 
         event.setCancelled(true);
         // callEvent(new RapidBlockBreakEvent(player));
+
+        final Material initialType = curTarget.getType();
 
         ItemStack item = player.getInventory().getItemInMainHand();
         short degradation = 0;

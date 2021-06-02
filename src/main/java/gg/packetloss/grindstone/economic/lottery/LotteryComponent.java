@@ -7,16 +7,19 @@
 package gg.packetloss.grindstone.economic.lottery;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.entity.player.PlayerUtil;
-import com.sk89q.minecraft.util.commands.*;
+import com.sk89q.commandbook.ComponentCommandRegistrar;
+import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryTicketDatabase;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
+import gg.packetloss.grindstone.events.economy.MarketPurchaseEvent;
 import gg.packetloss.grindstone.exceptions.NotFoundException;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -33,6 +36,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
@@ -46,17 +50,19 @@ import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Lottery", desc = "Can you win it big?")
-@Depend(plugins = {"Vault"}, components = {DataBaseComponent.class})
+@Depend(plugins = {"Vault"}, components = {ChatBridgeComponent.class, DataBaseComponent.class})
 public class LotteryComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
 
+    @InjectComponent
+    private ChatBridgeComponent chatBridge;
+
     private LocalConfiguration config;
 
-    private static String LOTTERY_BANK_ACCOUNT = "Lottery";
-    private static double MIN_WINNING;
+    private static final String LOTTERY_BANK_ACCOUNT = "Lottery";
     private List<Player> recentList = new ArrayList<>();
     private LotteryTicketDatabase lotteryTicketDatabase;
     private LotteryWinnerDatabase lotteryWinnerDatabase;
@@ -64,11 +70,19 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
     @Override
     public void enable() {
+        config = configure(new LocalConfiguration());
+
+        setupEconomy();
+
+        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
+        registrar.registerTopLevelCommands((commandManager, registration) -> {
+            registrar.registerAsSubCommand("lottery", "Lottery", commandManager, (innerCommandManager, innerRegistration) -> {
+                innerRegistration.register(innerCommandManager, LotteryCommandsRegistration.builder(), new LotteryCommands(this, economy));
+            });
+        });
+
         // FIXME: Work around for database load order issue.
         server.getScheduler().runTaskLater(inst, () -> {
-            config = configure(new LocalConfiguration());
-            MIN_WINNING = config.maxPerLotto * config.ticketPrice * 1.25;
-
             lotteryTicketDatabase = new MySQLLotteryTicketDatabase();
             lotteryTicketDatabase.load();
             lotteryWinnerDatabase = new MySQLLotteryWinnerDatabase();
@@ -76,9 +90,6 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
             //noinspection AccessStaticViaInstance
             inst.registerEvents(this);
-            registerCommands(Commands.class);
-
-            setupEconomy();
 
             long ticks = TimeUtil.getTicksTill(17, 6);
             server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24 * 7);
@@ -115,67 +126,11 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         public int cpuPlayers = 20;
     }
 
-    public class Commands {
-
-        @Command(aliases = {"lottery", "lotto"}, desc = "Lottery Commands")
-        @NestedCommand({NestedCommands.class})
-        public void lotteryCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-        }
-    }
-
-    public class NestedCommands {
-
-        @Command(aliases = {"buy"},
-                usage = "[amount]", desc = "Buy Lottery Tickets.",
-                flags = "", min = 0, max = 1)
-        @CommandPermissions({"aurora.lottery.ticket.buy.command"})
-        public void lotteryBuyCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            buyTickets(PlayerUtil.checkPlayer(sender), args.argsLength() > 0 ? args.getInteger(0) : 1);
-        }
-
-        @Command(aliases = {"draw"},
-                usage = "", desc = "Trigger the lottery draw.",
-                flags = "", min = 0, max = 0)
-        @CommandPermissions({"aurora.lottery.draw"})
-        public void lotteryDrawCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            ChatUtil.sendNotice(sender, "Lottery draw in progress.");
-            completeLottery();
-        }
-
-        @Command(aliases = {"pot", "value"},
-                usage = "", desc = "View the lottery pot size.",
-                flags = "b", min = 0, max = 0)
-        @CommandPermissions({"aurora.lottery.pot"})
-        public void lotteryPotCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            List<CommandSender> que = new ArrayList<>();
-
-            que.add(sender);
-            if (args.hasFlag('b') && sender.hasPermission("aurora.lottery.pot.broadcast")) {
-                que.addAll(server.getOnlinePlayers());
-            }
-
-            broadcastLottery(que);
-        }
-
-        @Command(aliases = {"recent", "last", "previous"},
-                usage = "", desc = "View the last lottery winner.",
-                flags = "", min = 0, max = 0)
-        @CommandPermissions({"aurora.lottery.last"})
-        public void lotteryLastCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            ChatUtil.sendNotice(sender, ChatColor.GRAY, "Lottery - Recent winners:");
-            List<LotteryWinner> winners = lotteryWinnerDatabase.getRecentWinner(config.recentLength);
-            short number = 0;
-            for (LotteryWinner winner : winners) {
-                number++;
-                ChatUtil.sendNotice(sender, "  " + ChatColor.GOLD + number + ". " + ChatColor.YELLOW
-                        + winner.getName() + ChatColor.GOLD + " - " + ChatColor.WHITE + economy.format(winner.getAmt()));
-            }
-        }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onMarketPurchase(MarketPurchaseEvent event) {
+        // Deposit into the lottery account
+        double lottery = event.getTotalCost() * .03;
+        economy.bankDeposit(LOTTERY_BANK_ACCOUNT, lottery);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -295,8 +250,10 @@ public class LotteryComponent extends BukkitComponent implements Listener {
     private void handleWinner(LotteryWinner winner) {
         economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
 
-        Bukkit.broadcastMessage(ChatColor.YELLOW + winner.getName() + " has won: " +
-                ChatUtil.makeCountString(economy.format(winner.getAmt()), " via the lottery!"));
+        String winMessage = ChatColor.YELLOW + winner.getName() + " has won: " +
+                ChatUtil.makeCountString(economy.format(winner.getAmt()), " via the lottery!");
+        Bukkit.broadcastMessage(winMessage);
+        chatBridge.broadcast(ChatColor.stripColor(winMessage));
 
         if (winner.isBot()) {
             lotteryWinnerDatabase.addCPUWin(winner.getAmt());
@@ -326,13 +283,16 @@ public class LotteryComponent extends BukkitComponent implements Listener {
     }
 
     public void broadcastLottery(Iterable<? extends CommandSender> senders) {
-
         for (CommandSender receiver : senders) {
             ChatUtil.sendNotice(receiver, "The lottery currently has: "
                     + ChatUtil.makeCountString(lotteryTicketDatabase.getTicketCount(), " tickets and is worth: ")
                     + ChatUtil.makeCountString(economy.format(getWinnerCash()),
                     "."));
         }
+    }
+
+    public List<LotteryWinner> getRecentWinner() {
+        return lotteryWinnerDatabase.getRecentWinner(config.recentLength);
     }
 
     public double getWinnerCash() {

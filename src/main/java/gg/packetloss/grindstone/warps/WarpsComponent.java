@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.warps;
 
 import com.sk89q.commandbook.CommandBook;
@@ -50,9 +56,9 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         CommandBook.registerEvents(this);
 
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        WarpPointConverter.register(registrar, this);
         registrar.registerTopLevelCommands((commandManager, registration) -> {
-            //  WarpPointConverter.register(commandManager, this);
+            WarpPointConverter.register(commandManager, this);
+
             registration.register(commandManager, WarpCommandsRegistration.builder(), new WarpCommands(this));
 
             registrar.registerAsSubCommand("warps", "Warp management", commandManager, (innerCommandManager, innerRegistration) -> {
@@ -84,6 +90,10 @@ public class WarpsComponent extends BukkitComponent implements Listener {
     public Location getRespawnLocation(Player player) {
         Location spawnLoc = player.getWorld().getSpawnLocation();
         return getBedLocation(player).orElse(spawnLoc);
+    }
+
+    public Optional<Location> getWarp(WarpQualifiedName warpName) {
+        return warpManager.getExactWarp(warpName).map(WarpPoint::getSafeLocation);
     }
 
     // FIXME: Priority set as workaround for Multiverse-Core#1977

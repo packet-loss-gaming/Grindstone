@@ -7,7 +7,7 @@
 package gg.packetloss.grindstone.jail;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.util.InputUtil;
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -16,16 +16,15 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import gg.packetloss.grindstone.events.PrayerApplicationEvent;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
+import gg.packetloss.grindstone.events.PrayerTriggerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.CollectionUtil;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Server;
+import gg.packetloss.grindstone.util.TimeUtil;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -36,20 +35,21 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.*;
 
 import java.io.File;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
 @ComponentInformation(friendlyName = "Jail", desc = "Jail System")
-@Depend(plugins = {"WorldEdit"}, components = {GuildComponent.class})
+@Depend(plugins = {"WorldEdit"}, components = {ChatBridgeComponent.class, GuildComponent.class})
 public class JailComponent extends BukkitComponent implements Listener, Runnable {
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
     private final Server server = CommandBook.server();
 
+    @InjectComponent
+    private ChatBridgeComponent chatBridge;
     @InjectComponent
     private GuildComponent guilds;
 
@@ -72,7 +72,16 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         jailCells = new CSVJailCellDatabase(jailDirectory);
         inmates.load();
         jailCells.load();
+
+        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
+        registrar.registerTopLevelCommands((commandManager, registration) -> {
+            PrisonIdentifierConverter.register(commandManager, this);
+
+            registration.register(commandManager, JailCommandsRegistration.builder(), new JailCommands(this));
+        });
+
         registerCommands(Commands.class);
+
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
         server.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 20 * 2);
@@ -124,18 +133,87 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
      * @return Jail cells
      */
     public JailCellDatabase getJailCellDatabase() {
-
         return jailCells;
     }
 
-    public void jail(UUID ID, long time) {
-
-        jail(ID, time, false);
+    public boolean isPrison(String prisonName) {
+        return jailCells.prisonExist(prisonName);
     }
 
-    public void jail(UUID ID, long time, boolean mute) {
+    public String getDefaultPrison() {
+        return config.defaultJail;
+    }
 
-        inmates.jail(ID, config.defaultJail, server.getConsoleSender(), "", System.currentTimeMillis() + time, mute);
+    public void broadcastJailing(CommandSender jailer, OfflinePlayer inmate, String reason) {
+        if (!config.broadcastJails) {
+            return;
+        }
+
+        String jailBroadcastMessage = jailer.getName() + " has jailed " + inmate.getName() +
+                (reason.isEmpty() ? "." : " - " + reason + ".");
+        ChatUtil.sendNotice(CommandBook.server().getOnlinePlayers(), jailBroadcastMessage);
+        chatBridge.broadcast(jailBroadcastMessage);
+    }
+
+    public void broadcastUnjailing(CommandSender liberator, OfflinePlayer inmate, String reason) {
+        if (!config.broadcastJails) {
+            return;
+        }
+
+        String unjailBroadcastMessage = liberator.getName() + " has unjailed " + inmate.getName() +
+                (reason.isEmpty() ? "." : " - " + reason + ".");
+        ChatUtil.sendNotice(server.getOnlinePlayers(), unjailBroadcastMessage);
+        chatBridge.broadcast(unjailBroadcastMessage);
+    }
+
+    public void jail(UUID ID, String source, String reason, long time, boolean mute) {
+        jail(ID, config.defaultJail, source, reason, System.currentTimeMillis() + time, mute);
+    }
+
+    public void jail(UUID ID, String prison, CommandSender source, String reason, long end, boolean mute) {
+        jail(ID, prison, source.getName(), reason, end, mute);
+    }
+
+    private String getDefaultReasonOrSpecified(String reason) {
+        if (reason.isBlank()) {
+            return  "unspecified reason";
+        } else {
+            return reason.trim().toLowerCase();
+        }
+    }
+
+    public void jail(UUID ID, String prison, String source, String reason, long end, boolean mute) {
+        reason = getDefaultReasonOrSpecified(reason);
+
+        inmates.jail(ID, prison, source, reason, end, mute);
+
+        chatBridge.modBroadcast(String.format(
+                "%s jailed %s %s: %s",
+                source,
+                Bukkit.getOfflinePlayer(ID).getName(),
+                TimeUtil.getPrettyEndDate(end),
+                reason
+        ));
+    }
+
+    public boolean unjail(UUID ID, CommandSender source, String reason) {
+        return unjail(ID, source.getName(), reason);
+    }
+
+    public boolean unjail(UUID ID, String source, String reason) {
+        reason = getDefaultReasonOrSpecified(reason);
+
+        boolean unjailed = inmates.unjail(ID, source, reason);
+        if (unjailed) {
+            chatBridge.modBroadcast(String.format(
+                    "%s unjailed %s: %s",
+                    source,
+                    Bukkit.getOfflinePlayer(ID).getName(),
+                    reason
+            ));
+        }
+
+        return unjailed;
     }
 
     public boolean checkSentence(Player player) {
@@ -146,7 +224,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
             if (inmate.getEnd() == 0L || inmate.getEnd() - System.currentTimeMillis() > 0) {
                 return true;
             }
-            inmates.unjail(player.getUniqueId(), null, "Temp-jail expired");
+            unjail(player.getUniqueId(), "Auto Warden", "Temp-jail expired");
             inmates.save();
         }
 
@@ -187,20 +265,9 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         String reason = inmate.getReason();
 
         StringBuilder builder = new StringBuilder();
+
         builder.append("Jailed ");
-
-        // Date
-        if (inmate.getEnd() != 0) {
-            builder.append("till: ");
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(inmate.getEnd());
-
-            builder.append(DateTimeFormatter.ofPattern("MMMM d yyyy 'at' h':'mma").format(calendar.toInstant()));
-        } else {
-            builder.append("indefinitely");
-        }
-
+        builder.append(TimeUtil.getPrettyEndDate(inmate.getEnd()));
         if (reason != null) {
             builder.append(" for: ").append(reason);
         }
@@ -311,7 +378,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPrayerApplication(PrayerApplicationEvent event) {
+    public void onPrayerApplication(PrayerTriggerEvent event) {
 
         if (isJailed(event.getPlayer())) {
             event.setCancelled(true);
@@ -326,109 +393,6 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     }
 
     public class Commands {
-
-        @Command(aliases = {"jail"}, usage = "[-t end] <target> [prison] [reason...]",
-                desc = "Jail a player", flags = "mset:o", min = 1, max = -1)
-        @CommandPermissions({"aurora.jail.jail"})
-        public void jailCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            Player inmate = null;
-            UUID inmateID = null;
-            String prisonName = args.argsLength() >= 2 ? args.getString(1) : config.defaultJail;
-            long endDate = args.hasFlag('t') ? InputUtil.TimeParser.matchFutureDate(args.getFlag('t')) : 0L;
-            String message = args.argsLength() >= 3 ? args.getJoinedStrings(2) : "";
-
-            final boolean hasExemptOverride = args.hasFlag('o') && inst.hasPermission(sender, "aurora.jail.exempt.override");
-
-            String inmateName = args.getString(0)
-                    .replace("\r", "")
-                    .replace("\n", "")
-                    .replace("\0", "")
-                    .replace("\b", "");
-
-            // Check if it's a player in the server right now
-            try {
-                // Exact mode matches names exactly
-                if (args.hasFlag('e')) {
-                    inmate = InputUtil.PlayerParser.matchPlayerExactly(sender, inmateName);
-                } else {
-                    inmate = InputUtil.PlayerParser.matchSinglePlayer(sender, inmateName);
-                }
-
-                inmateID = inmate.getUniqueId();
-
-                // They are offline
-            } catch (CommandException e) {
-                OfflinePlayer player = server.getOfflinePlayer(inmateName);
-                inmateID = player == null ? null : player.getUniqueId();
-            }
-
-            if (!hasExemptOverride) {
-                try {
-                    if (inst.hasPermission(inmate, "aurora.jail.exempt")) {
-                        if (inst.hasPermission(sender, "aurora.jail.exempt.override")) {
-                            throw new CommandException("That player is exempt from being jailed! (use -o flag to override this)");
-                        } else {
-                            throw new CommandException("That player is exempt from being jailed!");
-                        }
-                    }
-                } catch (NullPointerException npe) {
-                    if (inst.hasPermission(sender, "aurora.jail.exempt.override")) {
-                        throw new CommandException("That player is offline, and cannot be jailed! (use -o flag to override this)");
-                    } else {
-                        throw new CommandException("That player is offline, and cannot be jailed!");
-                    }
-                }
-            }
-
-            if (!jailCells.prisonExist(prisonName)) throw new CommandException("No such prison exists.");
-
-            if (inmateID == null) {
-                throw new CommandException("That player could not be jailed!");
-            }
-
-            // Jail the player
-            inmates.jail(inmateID, prisonName, sender, message, endDate, args.hasFlag('m'));
-
-            // Tell the sender of their success
-            ChatUtil.sendNotice(sender, "The player: " + inmateName + " has been jailed!");
-
-            if (!inmates.save()) {
-                throw new CommandException("Inmate database failed to save. See console.");
-            }
-
-            // Broadcast the Message
-            if (config.broadcastJails && !args.hasFlag('s')) {
-                ChatUtil.sendNotice(server.getOnlinePlayers(), sender.getName() + " has jailed "
-                        + inmateName + (message.isEmpty() ? "!" : " - " + message + "."));
-            }
-        }
-
-        @Command(aliases = {"unjail"}, usage = "<target> [reason...]", desc = "Unjail a player", min = 1, max = -1)
-        @CommandPermissions({"aurora.jail.unjail"})
-        public void unjailCmd(CommandContext args, CommandSender sender) throws CommandException {
-
-            String message = args.argsLength() >= 2 ? args.getJoinedStrings(1) : "";
-
-            String inmateName = args.getString(0)
-                    .replace("\r", "")
-                    .replace("\n", "")
-                    .replace("\0", "")
-                    .replace("\b", "");
-
-            UUID ID = CommandBook.server().getOfflinePlayer(inmateName).getUniqueId();
-
-            if (inmates.unjail(ID, sender, message)) {
-                ChatUtil.sendNotice(sender, inmateName + " unjailed.");
-
-                if (!inmates.save()) {
-                    throw new CommandException("Inmate database failed to save. See console.");
-                }
-            } else {
-                ChatUtil.sendError(sender, inmateName + " was not jailed.");
-            }
-        }
-
         @Command(aliases = {"cells"}, desc = "Jail Cell management")
         @NestedCommand({ManagementCommands.class})
         public void cellCmds(CommandContext args, CommandSender sender) throws CommandException {

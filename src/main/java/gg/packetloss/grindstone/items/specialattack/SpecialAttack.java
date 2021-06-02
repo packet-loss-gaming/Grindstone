@@ -50,7 +50,7 @@ public abstract class SpecialAttack {
         }
     }
 
-    public long getCoolDown() {
-        return 0;
+    public long getCoolDown(SpecType context) {
+        return context.getDelay();
     }
 }

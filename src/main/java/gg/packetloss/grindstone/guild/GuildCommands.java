@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.guild;
 
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -66,7 +72,7 @@ public class GuildCommands {
 
     @Command(name = "level", desc = "View level information")
     public void guildLevelCmd(Player player,
-                              @ArgFlag(name = 'p', desc = "Page of results to return", def = "1") int page) throws CommandException {
+                              @ArgFlag(name = 'p', desc = "Page of results to return", def = "0") int page) throws CommandException {
         Optional<GuildState> optState = component.getState(player);
         if (optState.isEmpty()) {
             throw new CommandException("You are not in a guild!");
@@ -74,6 +80,21 @@ public class GuildCommands {
 
         GuildState state = optState.get();
         state.sendLevelChart(player, page);
+    }
+
+    @Command(name = "teleport", desc = "Teleport to your guild base")
+    public void guildTeleportCmd(Player player) throws CommandException {
+        Optional<GuildState> optState = component.getState(player);
+        if (optState.isEmpty()) {
+            throw new CommandException("You are not in a guild!");
+        }
+
+        GuildState state = optState.get();
+        state.teleportToGuild().thenAccept((success) -> {
+            if (success) {
+                ChatUtil.sendNotice(player, "Teleported.");
+            }
+        });
     }
 
     @Command(name = "settings", desc = "View level information")

@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.util;
 
 public class StringUtil {
@@ -49,8 +55,7 @@ public class StringUtil {
                 continue;
             }
 
-            // If we are preceded by whitespace, use a title case letter
-            // otherwise, use a lower case letter.
+            // Convert the character to title case
             builder.append(Character.toUpperCase(letter));
         }
 

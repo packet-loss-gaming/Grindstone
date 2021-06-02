@@ -1,32 +1,48 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.guild.state;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.bukkittext.TextAction;
+import gg.packetloss.grindstone.events.guild.GuildGrantExpEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersDisableEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.guild.GuildLevel;
 import gg.packetloss.grindstone.guild.GuildType;
+import gg.packetloss.grindstone.guild.base.GuildBase;
 import gg.packetloss.grindstone.guild.powers.GuildPower;
 import gg.packetloss.grindstone.guild.setting.GuildSetting;
 import gg.packetloss.grindstone.guild.setting.GuildSettingUpdate;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
+import gg.packetloss.grindstone.util.task.DebounceHandle;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class GuildState {
-    private Player player;
-    private InternalGuildState state;
+    private final Player player;
+    private final InternalGuildState state;
+    private final GuildBase base;
 
-    public GuildState(Player player, InternalGuildState state) {
+    private DebounceHandle<Double> gainedExpDebounce;
+
+    public GuildState(Player player, InternalGuildState state, GuildBase base) {
         this.player = player;
         this.state = state;
+        this.base = base;
     }
 
     public boolean isEnabled() {
@@ -86,7 +102,7 @@ public class GuildState {
     }
 
     public void sendSettings(Player player) {
-        List<GuildSetting> settings = state.getSettings().getAll();
+        List<GuildSetting> settings = state.getSettings().getAllSorted();
         for (GuildSetting setting : settings) {
             Text text = Text.of(
                     ChatColor.YELLOW,
@@ -183,6 +199,57 @@ public class GuildState {
 
                 return levelText;
             }
-        }.display(player, levels, page);
+        }.display(player, levels, (provider) -> {
+            if (page < 1) {
+                // currentLevel - 1 is the level index of the current level, so this works out
+                return provider.getPageForIndex(currentLevel - 1);
+            }
+
+            return page;
+        });
+    }
+
+    private void lazySetupExpDebounce() {
+        if (gainedExpDebounce != null) {
+            return;
+        }
+
+        TaskBuilder.Debounce<Double> builder = TaskBuilder.debounce();
+        builder.setWaitTime(2); // 2 because delaying by 1 tick for the same action isn't that uncommon
+        builder.setInitialValue(0D);
+        builder.setUpdateFunction(Double::sum);
+        builder.setBounceAction((exp) -> {
+            player.sendMessage(Text.of(
+                    ChatColor.GOLD, "Guild Experience: +",
+                    Text.of(ChatColor.WHITE, new DecimalFormat("#.##").format(exp))
+            ).build());
+        });
+        builder.setExistingState(state.getExpNoticeDebounce());
+
+        gainedExpDebounce = builder.build();
+
+        // Update or set the shared state object
+        state.setExpNoticeDebounce(gainedExpDebounce.getState());
+    }
+
+    public boolean grantExp(double amount) {
+        if (isDisabled()) {
+            return false;
+        }
+
+        GuildGrantExpEvent event = new GuildGrantExpEvent(player, getType(), amount);
+        CommandBook.callEvent(event);
+
+        boolean success = !event.isCancelled();
+        if (success && state.getSettings().shouldPrintExpVerbose()) {
+            lazySetupExpDebounce();
+            gainedExpDebounce.accept(event.getGrantedExp());
+        }
+
+        return success;
+    }
+
+    public CompletableFuture<Boolean> teleportToGuild() {
+        return player.teleportAsync(base.getLocation());
     }
 }

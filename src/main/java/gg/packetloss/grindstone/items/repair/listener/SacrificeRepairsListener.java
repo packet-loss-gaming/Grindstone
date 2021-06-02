@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.items.repair.listener;
 
 import com.sk89q.commandbook.CommandBook;
@@ -6,6 +12,7 @@ import gg.packetloss.grindstone.events.custom.item.RepairItemEvent;
 import gg.packetloss.grindstone.items.repair.profile.RepairProfile;
 import gg.packetloss.grindstone.items.repair.profile.SacrificeItemRepairProfile;
 import gg.packetloss.grindstone.items.repair.profile.SacrificeRepairProfile;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.ItemPointTranslator;
 import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
@@ -24,6 +31,13 @@ public class SacrificeRepairsListener implements Listener {
         this.repairProfiles = repairProfiles;
     }
 
+    private void returnItemToPlayer(Player player, ItemStack item) {
+        ItemStack remainder = player.getInventory().addItem(item).get(0);
+        if (remainder != null) {
+            EntityUtil.spawnProtectedItem(remainder, player);
+        }
+    }
+
     private void handleSacrificeRepair(Player player, ItemStack item, SacrificeRepairProfile repairProfile) {
         RepairItemEvent repairEvent = new RepairItemEvent(player, item, repairProfile.getRepairPercentage());
         CommandBook.callEvent(repairEvent);
@@ -34,7 +48,7 @@ public class SacrificeRepairsListener implements Listener {
         int maxRepair = (int) (maxDurability * (1 - repairPercentage));
         item.setDurability((short) Math.min(item.getDurability(), maxRepair));
 
-        player.getInventory().addItem(item);
+        returnItemToPlayer(player, item);
         player.updateInventory();
     }
 
@@ -64,7 +78,7 @@ public class SacrificeRepairsListener implements Listener {
         }
 
         item.setDurability(remainingDurability);
-        player.getInventory().addItem(item);
+        returnItemToPlayer(player, item);
 
         // Set the new inventory value.
         int remainingValue = converter.assignValue(adapter, repairItemCount);

@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
@@ -21,6 +20,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
+import gg.packetloss.grindstone.world.type.city.combat.PvPComponent;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.entity.*;

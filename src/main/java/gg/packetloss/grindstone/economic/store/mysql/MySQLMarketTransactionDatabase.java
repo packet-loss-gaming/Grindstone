@@ -10,6 +10,7 @@ import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.data.MySQLPreparedStatement;
 import gg.packetloss.grindstone.economic.store.ItemTransaction;
 import gg.packetloss.grindstone.economic.store.MarketTransactionDatabase;
+import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
 import org.bukkit.entity.Player;
 
 import java.sql.Connection;
@@ -64,12 +65,16 @@ public class MySQLMarketTransactionDatabase implements MarketTransactionDatabase
         return true;
     }
 
-    @Override
-    public void logTransaction(Player player, String itemName, int amount) {
+    private void logTransactionCommon(Player player, MarketTransactionLine transactionLine, boolean purchase) {
+        String itemName = transactionLine.getItem().getName();
+        int amount = transactionLine.getAmount();
+
         try {
             int internalPlayerID = MySQLHandle.getPlayerInternalID(player.getUniqueId()).get();
-            int itemID = MySQLItemStoreDatabase.getItemID(itemName);
-            ItemTransactionStatement transaction = new ItemTransactionStatement(internalPlayerID, itemID, amount);
+            int itemID = MySQLItemStoreDatabase.getItemID(transactionLine.getItem().getName());
+            ItemTransactionStatement transaction = new ItemTransactionStatement(
+                    internalPlayerID, itemID, (purchase ? amount : -amount)
+            );
             try (Connection connection = MySQLHandle.getConnection()) {
                 transaction.setConnection(connection);
                 transaction.executeStatements();
@@ -77,6 +82,17 @@ public class MySQLMarketTransactionDatabase implements MarketTransactionDatabase
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void logPurchaseTransaction(Player player, MarketTransactionLine transactionLine) {
+        logTransactionCommon(player, transactionLine, true);
+    }
+
+    @Override
+    public void logSaleTransaction(Player player, MarketTransactionLine transactionLine) {
+        logTransactionCommon(player, transactionLine, false);
+
     }
 
     @Override

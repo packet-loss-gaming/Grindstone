@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.state.block;
 
 import org.bukkit.Bukkit;
@@ -8,6 +14,7 @@ import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class BlockStateRecordTranslator {
     private BlockStateRecordTranslator() { }
@@ -32,10 +39,13 @@ public class BlockStateRecordTranslator {
         return constructFrom((UUID) null, blockState);
     }
 
-    public static void restore(BlockStateRecord record) {
+    public static CompletableFuture<Boolean> restore(BlockStateRecord record) {
         World world = Bukkit.getWorld(record.getWorldName());
 
-        Block block = world.getBlockAt(record.getX(), record.getY(), record.getZ());
-        block.setBlockData(Bukkit.createBlockData(record.getBlockData()));
+        return world.getChunkAtAsync(record.getChunkX(), record.getChunkZ()).thenApply((chunk) -> {
+            Block block = world.getBlockAt(record.getX(), record.getY(), record.getZ());
+            block.setBlockData(Bukkit.createBlockData(record.getBlockData()));
+            return true;
+        });
     }
 }

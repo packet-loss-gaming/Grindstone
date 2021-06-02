@@ -10,11 +10,10 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.craftbook.mechanics.ic.ICManager;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.ic.ics.DelayedRepeater;
-import gg.packetloss.grindstone.ic.ics.GroupSentryGun;
-import gg.packetloss.grindstone.ic.ics.NinjaStarSpawner;
-import gg.packetloss.grindstone.ic.ics.RegionPortal;
+import gg.packetloss.grindstone.guild.GuildComponent;
+import gg.packetloss.grindstone.ic.ics.*;
 import org.bukkit.Server;
 
 import java.util.logging.Logger;
@@ -27,19 +26,18 @@ public class CustomICComponent extends BukkitComponent {
     private static final Logger log = inst.getLogger();
     private static final Server server = CommandBook.server();
 
+    @InjectComponent
+    private GuildComponent guild;
+
     private ICManager ICCore;
 
     @Override
     public void enable() {
-
-        server.getScheduler().runTaskLater(inst, () -> {
-            ICCore = ICManager.inst();
-            if (ICCore == null) {
-                log.warning("ICManager is null!");
-            }
-            registerICs();
-        }, 1);
-
+        ICCore = ICManager.inst();
+        if (ICCore == null) {
+            log.warning("ICManager is null!");
+        }
+        registerICs();
     }
 
     @SuppressWarnings("AccessStaticViaInstance")
@@ -49,5 +47,6 @@ public class CustomICComponent extends BukkitComponent {
         ICCore.registerIC("SK9001", "star spawner", new NinjaStarSpawner.Factory(server), ICCore.familySISO, ICCore.familyAISO);
         ICCore.registerIC("SK9002", "delay repeater", new DelayedRepeater.Factory(server), ICCore.familySISO, ICCore.familyAISO);
         ICCore.registerIC("SK9003", "region portal", new RegionPortal.Factory(server), ICCore.familySISO, ICCore.familyAISO);
+        ICCore.registerIC("SK9004", "guild detector", new GuildDetector.Factory(server, guild), ICCore.familySISO, ICCore.familyAISO);
     }
 }

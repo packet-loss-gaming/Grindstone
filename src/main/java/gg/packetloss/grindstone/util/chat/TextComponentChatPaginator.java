@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.util.chat;
 
 import gg.packetloss.bukkittext.Text;
@@ -10,12 +16,13 @@ import org.bukkit.command.CommandSender;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 public abstract class TextComponentChatPaginator<T> {
     private final ChatColor headerColor;
     private final String headerText;
 
-    protected static final int PER_PAGE = 9;
+    public static final int PER_PAGE = 9;
 
     public TextComponentChatPaginator(ChatColor headerColor, String headerText) {
         this.headerColor = headerColor;
@@ -24,8 +31,13 @@ public abstract class TextComponentChatPaginator<T> {
 
     public abstract Optional<String> getPagerCommand(int page);
 
+    public void display(CommandSender sender, List<T> collection, Function<PaginationProvider<T>, Integer> pageFunction) {
+        PaginationProvider<T> paginationProvider = new CollectionPaginationProvider<>(collection);
+        display(sender, paginationProvider, pageFunction.apply(paginationProvider));
+    }
+
     public void display(CommandSender sender, List<T> collection, int page) {
-        display(sender, new CollectionPaginationProvider<>(collection), page);
+        display(sender, collection, (ignored) -> page);
     }
 
     private Text buildPagerText(String token, int requestedPage, int currentPage) {

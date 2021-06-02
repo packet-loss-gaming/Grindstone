@@ -1,8 +1,13 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.guild.listener;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
-import gg.packetloss.grindstone.city.engine.combat.PvPComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.guild.*;
@@ -23,6 +28,7 @@ import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
+import gg.packetloss.grindstone.world.type.city.combat.PvPComponent;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
@@ -37,6 +43,8 @@ import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
 import java.util.List;
@@ -217,9 +225,12 @@ public class NinjaListener implements Listener {
             return true;
         });
         taskBuilder.setFinishAction(() -> {
-            if (arrow instanceof TippedArrow && state.hasPower(NinjaPower.POTION_ARROW_BOMBS)) {
+            PotionData basePotionData = arrow.getBasePotionData();
+
+            boolean isPotionArrow = basePotionData.getType() != PotionType.UNCRAFTABLE;
+            if (isPotionArrow && state.hasPower(NinjaPower.POTION_ARROW_BOMBS)) {
                 AreaEffectCloud effectCloud = arrow.getWorld().spawn(arrow.getLocation(), AreaEffectCloud.class);
-                effectCloud.setBasePotionData(((TippedArrow) arrow).getBasePotionData());
+                effectCloud.setBasePotionData(basePotionData);
                 effectCloud.setDuration(20 * 10);
                 effectCloud.setSource(arrow.getShooter());
             } else {
@@ -377,6 +388,10 @@ public class NinjaListener implements Listener {
         player.teleport(event.getTeleportLoc(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
+    private boolean isGrappleable(Material blockType) {
+        return blockType.isSolid() && blockType != Material.BARRIER;
+    }
+
     public void grapple(final Player player, NinjaState state, Block block, BlockFace clickedFace, double maxClimb) {
 
         NinjaGrappleEvent event = new NinjaGrappleEvent(player, maxClimb);
@@ -413,14 +428,14 @@ public class NinjaListener implements Listener {
         }
 
         Block nextBlock = block.getRelative(BlockFace.UP);
-        boolean nextBlockIsSolid = nextBlock.getType().isSolid();
+        boolean nextIsGrappleable = isGrappleable(nextBlock.getType());
 
         int i;
         Vector increment = new Vector(0, .1, 0);
-        for (i = 0; i < event.getMaxClimb() && (i < z || block.getType().isSolid() || nextBlockIsSolid); i++) {
+        for (i = 0; i < event.getMaxClimb() && (i < z || isGrappleable(block.getType()) || nextIsGrappleable); i++) {
 
             // Determine whether we need to add more velocity
-            double ctl = nextBlockIsSolid ? 1 : 0; // FIXME: reimplement this BlockType.centralTopLimit(block.getType(), block.getData());
+            double ctl = nextIsGrappleable ? 1 : 0; // FIXME: reimplement this BlockType.centralTopLimit(block.getType(), block.getData());
 
             if (EnvironmentUtil.isWater(block.getRelative(clickedFace))) {
                 ctl *= 2;
@@ -433,11 +448,18 @@ public class NinjaListener implements Listener {
             nextBlock = nextBlock.getRelative(BlockFace.UP);
 
             // Update boolean
-            nextBlockIsSolid = nextBlock.getType().isSolid();
+            nextIsGrappleable = isGrappleable(nextBlock.getType());
         }
 
-        player.setVelocity(vel);
         player.setFallDistance(0F);
+
+        // As of 1.16.4, delaying by a tick significantly improves the reliability of the grapple velocity
+        // adjustment. In particularly, this works around a problem where the player sort of "twitches"
+        // and just ends up standing next to a block with no upward velocity -- perhaps the client is
+        // "fighting back" since we clicked on a block?
+        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            player.setVelocity(vel);
+        }, 1);
 
         state.grapple(Math.max(i, 3) * 200);
     }

@@ -10,6 +10,7 @@ import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.data.MySQLPreparedStatement;
 import gg.packetloss.grindstone.economic.store.ItemStoreDatabase;
 import gg.packetloss.grindstone.economic.store.MarketItemInfo;
+import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
 import gg.packetloss.grindstone.util.ChanceUtil;
 
 import java.sql.Connection;
@@ -191,14 +192,16 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         queue.add(new ItemDeleteStatement(itemName));
     }
 
-    @Override
-    public void adjustStocks(Map<String, Integer> adjustments) {
+    private void adjustStocksCommon(List<MarketTransactionLine> transactionLines, boolean purchase) {
         try (Connection connection = MySQLHandle.getConnection()) {
             String updateSql = "UPDATE `market-items` SET `stock` = `stock` + ? WHERE `name` = ?";
             try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
-                for (Map.Entry<String, Integer> entry : adjustments.entrySet()) {
-                    updateStatement.setInt(1, entry.getValue());
-                    updateStatement.setString(2, entry.getKey());
+                for (MarketTransactionLine transactionLine : transactionLines) {
+                    String itemName = transactionLine.getItem().getName();
+                    int amount = transactionLine.getAmount();
+
+                    updateStatement.setInt(1, (purchase ? -amount : amount));
+                    updateStatement.setString(2, itemName);
 
                     updateStatement.addBatch();
                 }
@@ -208,6 +211,16 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void adjustStocksForBuy(List<MarketTransactionLine> transactionLines) {
+        adjustStocksCommon(transactionLines, true);
+    }
+
+    @Override
+    public void adjustStocksForSale(List<MarketTransactionLine> transactionLines) {
+        adjustStocksCommon(transactionLines, false);
     }
 
     public static int getItemID(String name) throws SQLException {
@@ -223,21 +236,6 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
             }
         }
         return -1;
-    }
-
-    public static String getItemName(int id) throws SQLException {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT `name` FROM `market-items` WHERE `id` = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, id);
-                try (ResultSet results = statement.executeQuery()) {
-                    if (results.next()) {
-                        return results.getString(1);
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     @Override

@@ -7,12 +7,6 @@
 package gg.packetloss.grindstone.bosses.manager.apocalypse;
 
 import com.sk89q.commandbook.CommandBook;
-import com.skelril.OSBL.bukkit.entity.BukkitBoss;
-import com.skelril.OSBL.bukkit.util.BukkitUtil;
-import com.skelril.OSBL.entity.LocalControllable;
-import com.skelril.OSBL.entity.LocalEntity;
-import com.skelril.OSBL.instruction.*;
-import com.skelril.OSBL.util.AttackDamage;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.bosses.impl.SimpleRebindableBoss;
 import gg.packetloss.grindstone.bosses.instruction.ExplosiveUnbind;
@@ -23,6 +17,12 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.openboss.bukkit.entity.BukkitBoss;
+import gg.packetloss.openboss.bukkit.util.BukkitUtil;
+import gg.packetloss.openboss.entity.LocalControllable;
+import gg.packetloss.openboss.entity.LocalEntity;
+import gg.packetloss.openboss.instruction.*;
+import gg.packetloss.openboss.util.AttackDamage;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -118,7 +118,7 @@ public class ThorZombie {
             public InstructionResult<GenericDetail, DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 final Entity toHit = BukkitUtil.getBukkitEntity(entity);
-                toHit.setVelocity(boss.getLocation().getDirection().multiply(2));
+                toHit.setVelocity(boss.getLocation().getDirection().multiply(2).setY(.2));
 
                 server.getScheduler().runTaskLater(inst, () -> {
                     final Location targetLocation = toHit.getLocation();

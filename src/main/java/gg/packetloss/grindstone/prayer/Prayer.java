@@ -6,66 +6,60 @@
 
 package gg.packetloss.grindstone.prayer;
 
-import gg.packetloss.grindstone.prayer.PrayerFX.AbstractEffect;
-import gg.packetloss.grindstone.prayer.PrayerFX.AbstractTriggeredEffect;
-import org.bukkit.entity.Player;
+import com.google.common.collect.ImmutableList;
 
-public class Prayer implements Comparable<Prayer> {
+import java.util.Map;
 
-    private final Player player;
-    private final AbstractEffect abstractEffect;
+public class Prayer {
+    private final boolean isHoly;
+    private final Map<PrayerEffectTrigger, ImmutableList<PrayerEffect>> effects;
     private final long startTime;
     private long maxDuration;
 
-
-    protected Prayer(Player player, AbstractEffect abstractEffect, long maxDuration) {
-
-        this.player = player;
-        this.abstractEffect = abstractEffect;
-        this.startTime = System.currentTimeMillis();
+    protected Prayer(boolean isHoly, Map<PrayerEffectTrigger, ImmutableList<PrayerEffect>> effects, long startTime, long maxDuration) {
+        this.isHoly = isHoly;
+        this.effects = effects;
+        this.startTime = startTime;
         this.maxDuration = maxDuration;
     }
 
-    public Player getPlayer() {
-
-        return player;
+    protected Prayer(boolean isHoly, Map<PrayerEffectTrigger, ImmutableList<PrayerEffect>> effects, long maxDuration) {
+        this(isHoly, effects, System.currentTimeMillis(), maxDuration);
     }
 
-    public AbstractEffect getEffect() {
+    protected Prayer(Prayers prayer, long maxDuration) {
+        this(prayer.isHoly(), prayer.getEffects(), System.currentTimeMillis(), maxDuration);
+    }
 
-        return abstractEffect;
+    public boolean isHoly() {
+        return isHoly;
+    }
+
+    public boolean isUnholy() {
+        return !isHoly;
     }
 
     public long getStartTime() {
-
         return startTime;
     }
 
     public long getMaxDuration() {
-
         return maxDuration;
     }
 
     public void setMaxDuration(long maxDuration) {
-
         this.maxDuration = maxDuration;
     }
 
-    public boolean hasTrigger() {
-
-        return abstractEffect instanceof AbstractTriggeredEffect;
+    public boolean hasExpired() {
+        return System.currentTimeMillis() - getStartTime() > getMaxDuration();
     }
 
-    public Class getTriggerClass() {
-
-        return hasTrigger() ? ((AbstractTriggeredEffect) abstractEffect).getTriggerClass() : null;
+    public ImmutableList<PassivePrayerEffect> getPassiveEffects() {
+        return (ImmutableList) effects.get(PrayerEffectTrigger.PASSIVE);
     }
 
-    @Override
-    public int compareTo(Prayer prayer) {
-
-        if (prayer == null) return 0;
-
-        return Integer.compare(this.getEffect().getType().getValue(), prayer.getEffect().getType().getValue());
+    public ImmutableList<InteractTriggeredPrayerEffect> getInteractiveEffects() {
+        return (ImmutableList) effects.get(PrayerEffectTrigger.INTERACT);
     }
 }

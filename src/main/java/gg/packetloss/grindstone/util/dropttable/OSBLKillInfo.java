@@ -1,7 +1,13 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.util.dropttable;
 
-import com.skelril.OSBL.bukkit.util.BukkitUtil;
-import com.skelril.OSBL.entity.LocalControllable;
+import gg.packetloss.openboss.bukkit.util.BukkitUtil;
+import gg.packetloss.openboss.entity.LocalControllable;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;

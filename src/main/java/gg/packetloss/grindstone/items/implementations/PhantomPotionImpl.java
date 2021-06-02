@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.items.implementations;
 
 import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
+import gg.packetloss.grindstone.events.graveyard.PlayerDisturbGraveEvent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -44,7 +45,7 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
         if (ItemUtil.isItem(stack, CustomItems.PHANTOM_POTION)) {
             Location lastLoc = getSession(player).getRecentDeathDropPoint();
             if (lastLoc != null) {
-                // Protect the player for 10 seconds from being targeted
+                // Protect the player for 30 seconds
                 UUID playerID = player.getUniqueId();
                 affectedPlayers.add(playerID);
                 server.getScheduler().runTaskLater(
@@ -63,7 +64,18 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
                 }
             } else {
                 ChatUtil.sendError(player, "No drop locations are known to the potion.");
+                event.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDisturbGraveEvent(PlayerDisturbGraveEvent event) {
+        Player player = event.getPlayer();
+        UUID playerID = player.getUniqueId();
+
+        if (affectedPlayers.contains(playerID)) {
+            event.setCancelled(true);
         }
     }
 

@@ -1,14 +1,23 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.state.block;
 
-import org.bukkit.util.Consumer;
+import org.apache.commons.lang.Validate;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class BlockStateCollection {
     private List<BlockStateRecord> blocks = new ArrayList<>();
+    private List<BlockStateRecord> inFlightBlocks = new ArrayList<>();
     private transient boolean dirty = false;
 
     public boolean isDirty() {
@@ -43,24 +52,34 @@ public class BlockStateCollection {
         dirty = true;
     }
 
-    public void popAll(Consumer<BlockStateRecord> consumer) {
+    private void pop(BlockStateRecord record, Function<BlockStateRecord, CompletableFuture<Boolean>> restoreOp) {
+        inFlightBlocks.add(record);
+        restoreOp.apply(record).thenAccept((result) -> {
+            Validate.isTrue(result);
+            inFlightBlocks.remove(record);
+
+            dirty = true;
+        });
+    }
+
+    public void popAll(Function<BlockStateRecord, CompletableFuture<Boolean>> restoreOp) {
         if (blocks.isEmpty()) {
             return;
         }
 
-        blocks.forEach(consumer::accept);
+        blocks.forEach((record) -> pop(record, restoreOp));
         blocks.clear();
 
         dirty = true;
     }
 
-    public void popWhere(Predicate<BlockStateRecord> predicate, Consumer<BlockStateRecord> consumer) {
+    public void popWhere(Predicate<BlockStateRecord> predicate, Function<BlockStateRecord, CompletableFuture<Boolean>> restoreOp) {
         Iterator<BlockStateRecord> it = blocks.iterator();
 
         while (it.hasNext()) {
             BlockStateRecord record = it.next();
             if (predicate.test(record)) {
-                consumer.accept(record);
+                pop(record, restoreOp);
                 it.remove();
 
                 dirty = true;

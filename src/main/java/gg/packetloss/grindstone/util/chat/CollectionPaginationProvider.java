@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package gg.packetloss.grindstone.util.chat;
 
 import java.util.List;
@@ -11,14 +17,31 @@ public class CollectionPaginationProvider<T> implements PaginationProvider<T> {
         this.items = items;
     }
 
-    @Override
-    public int getNumberOfPages() {
-        int pageCount = (items.size() / ITEMS_PER_PAGE);
-        if (items.size() % ITEMS_PER_PAGE != 0) {
+    // Returns true if we're not going to display the pager, but we are going to
+    // fil an extra row in its place.
+    public boolean isExtendedPageWithoutPager() {
+        return items.size() == ITEMS_PER_PAGE + 1;
+    }
+
+    private int getPageCount(int numItems) {
+        int pageCount = (numItems / ITEMS_PER_PAGE);
+        if (!isExtendedPageWithoutPager() && numItems % ITEMS_PER_PAGE != 0) {
             ++pageCount;
         }
 
         return pageCount;
+    }
+
+    @Override
+    public int getPageForIndex(int elementIndex) {
+        // Trick the page count algorithm into telling us what page this item is on
+        // by pretending this item's index is the number of items we need pages for
+        return getPageCount(elementIndex + 1);
+    }
+
+    @Override
+    public int getNumberOfPages() {
+        return getPageCount(items.size());
     }
 
     @Override
@@ -30,8 +53,7 @@ public class CollectionPaginationProvider<T> implements PaginationProvider<T> {
             consumer.accept(items.get(i));
         }
 
-        // If we're not going to display the pager, use an extra row
-        if (items.size() == ITEMS_PER_PAGE + 1) {
+        if (isExtendedPageWithoutPager()) {
             consumer.accept(items.get(ITEMS_PER_PAGE));
         }
     }

@@ -6,9 +6,9 @@
 
 package gg.packetloss.grindstone.items.implementations.support;
 
-import gg.packetloss.grindstone.prayer.Prayer;
+import com.google.common.collect.ImmutableList;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
-import gg.packetloss.grindstone.prayer.PrayerFX.NecrosisFX;
+import gg.packetloss.grindstone.prayer.effect.passive.NecrosisFX;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -35,10 +35,10 @@ public class Necrosis {
         this.hasArmor = hasArmor;
     }
 
-    private Prayer constructNecrosisPrayer(Player attacker, Player defender) {
+    private void applyNecrosisPrayer(Player attacker, Player defender) {
         NecrosisFX necrosis = new NecrosisFX(defender);
         int duration = ChanceUtil.getRangedRandom(3000, 6000);
-        return PrayerComponent.constructPrayer(attacker, necrosis, duration);
+        PrayerComponent.constructPrayer(attacker, false, ImmutableList.of(necrosis), duration);
     }
 
     private int getMaxUnits() {
@@ -62,7 +62,7 @@ public class Necrosis {
             return;
         }
 
-        prayers.influencePlayer(attacker, constructNecrosisPrayer(attacker, defender));
+        applyNecrosisPrayer(attacker, defender);
         defender.chat("Taste necrosis!");
     }
 

@@ -8,7 +8,9 @@ package gg.packetloss.grindstone.util;
 
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.EntityEffect;
+import org.bukkit.Location;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.ItemStack;
 
 public class EntityUtil {
     public static boolean nameMatches(Entity entity, String name) {
@@ -84,5 +86,38 @@ public class EntityUtil {
 
     public static boolean isHostileMobOrPlayer(Entity entity) {
         return isHostileMob(entity) || entity instanceof Player;
+    }
+
+    public static boolean willFollowOwner(Entity entity) {
+        if (entity instanceof Wolf) {
+            return true;
+        }
+
+        if (entity instanceof Cat) {
+            return true;
+        }
+
+        if (entity instanceof Parrot) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static void protectDrop(Item item, Player player) {
+        item.setOwner(player.getUniqueId());
+
+        // Prevent environmental shenanigans
+        item.setInvulnerable(true);
+        item.setCanMobPickup(false);
+    }
+
+    public static void spawnProtectedItem(ItemStack stack, Player player, Location destination) {
+        Item item = destination.getWorld().dropItem(destination, stack);
+        EntityUtil.protectDrop(item, player);
+    }
+
+    public static void spawnProtectedItem(ItemStack stack, Player player) {
+        spawnProtectedItem(stack, player, player.getLocation());
     }
 }
