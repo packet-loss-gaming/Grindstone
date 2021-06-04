@@ -23,6 +23,7 @@ import org.bukkit.event.Listener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "PvM", desc = "Skelril PvM management.")
@@ -47,18 +48,18 @@ public class PvMComponent extends BukkitComponent implements Listener {
         inst.registerEvents(this);
     }
 
-    public static void printHealth(Player player, LivingEntity target) {
+    public static void printHealth(Player player, LivingEntity target, Function<Double, Double> healthScale) {
         final int oldCurrent = (int) Math.ceil(target.getHealth());
 
         server.getScheduler().runTaskLater(inst, () -> {
 
-            int current = (int) Math.ceil(target.getHealth());
+            int current = (int) Math.ceil(healthScale.apply(target.getHealth()));
 
             if (oldCurrent == current) return;
 
             PvMSession session = sessions.getSession(PvMSession.class, player);
 
-            int max = (int) Math.ceil(target.getMaxHealth());
+            int max = (int) Math.ceil(healthScale.apply(target.getMaxHealth()));
 
             String message;
 
@@ -76,5 +77,9 @@ public class PvMComponent extends BukkitComponent implements Listener {
 
             ChatUtil.sendNotice(player, message);
         }, 1);
+    }
+
+    public static void printHealth(Player player, LivingEntity target) {
+        printHealth(player, target, (health) -> health);
     }
 }

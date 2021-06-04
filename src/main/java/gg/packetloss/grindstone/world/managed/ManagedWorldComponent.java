@@ -78,6 +78,20 @@ public class ManagedWorldComponent extends BukkitComponent {
 
     public List<World> getAll(ManagedWorldMassQuery query) {
         switch (query) {
+            case RANGE_WORLDS: {
+                List<World> worlds = new ArrayList<>();
+
+                for (String worldName : RANGE_WORLD_LIST.getOverworlds()) {
+                    getWorld(worldName).ifPresent(worlds::add);
+                }
+
+                for (String worldName : RANGE_WORLD_LIST.getNethers()) {
+                    getWorld(worldName).ifPresent(worlds::add);
+                }
+
+                return worlds;
+            }
+
             case RANGE_OVERWORLDS: {
                 List<World> worlds = new ArrayList<>();
 
