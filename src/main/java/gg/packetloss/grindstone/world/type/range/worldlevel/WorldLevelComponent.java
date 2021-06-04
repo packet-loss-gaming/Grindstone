@@ -15,6 +15,7 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
+import gg.packetloss.grindstone.PacketInterceptionComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.collection.FiniteCache;
@@ -34,16 +35,20 @@ import java.util.Map;
 import java.util.UUID;
 
 @ComponentInformation(friendlyName = "World Level", desc = "Operate the world level for range worlds.")
-@Depend(components = {ManagedWorldComponent.class})
+@Depend(components = {ManagedWorldComponent.class, PacketInterceptionComponent.class})
 public class WorldLevelComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private ManagedWorldComponent managedWorld;
+    @InjectComponent
+    private PacketInterceptionComponent packetInterceptor;
 
     private Map<UUID, Integer> playerWorldLevel = new HashMap<>();
     private FiniteCache<BlockVector2> recentChunks = new FiniteCache<>((int) (Bukkit.getServer().getMaxPlayers() * 1.5));
 
     private PlayerPlacedOresState state = new PlayerPlacedOresState();
     private SingleFileFilesystemStateHelper<PlayerPlacedOresState> stateHelper;
+
+    protected int sourceDamageLevel = 0;
 
     @Override
     public void enable() {
@@ -59,6 +64,8 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        packetInterceptor.addListener(new HeartPacketFilter(this));
     }
 
     @Override
@@ -156,5 +163,4 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
     protected boolean hasScaledHealth(Entity entity) {
         return entity instanceof Monster && entity.getCustomName() == null && isRangeWorld(entity.getWorld());
     }
-
 }

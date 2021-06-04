@@ -49,6 +49,13 @@ class MobListener implements Listener {
         genericMonster.bind((Monster) entity);
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onEntityDamageBegin(EntityDamageEvent event) {
+        // Reset whether or not damage was modified, if it was that will be set when we do the modification
+        // later in the combat cycle.
+        parent.sourceDamageLevel = 0;
+    }
+
     private static Set<EntityDamageEvent.DamageCause> IGNORED_DAMAGE = new HashSet<>();
 
     static {
@@ -133,6 +140,7 @@ class MobListener implements Listener {
 
         int level = parent.getWorldLevel(attacker);
         if (parent.hasScaledHealth(defender)) {
+            parent.sourceDamageLevel = level;
             event.setDamage(parent.scaleHealth(event.getDamage(), level, 100));
         }
 
