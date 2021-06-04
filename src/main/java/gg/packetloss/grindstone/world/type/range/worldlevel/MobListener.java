@@ -12,7 +12,6 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.world.type.city.combat.PvMComponent;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -35,15 +34,10 @@ class MobListener implements Listener {
         genericMonster = new GenericRangedWorldMonster(parent);
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMobSpawn(CreatureSpawnEvent event) {
         LivingEntity entity = event.getEntity();
         if (!parent.hasScaledHealth(entity)) {
-            return;
-        }
-
-        World world = entity.getWorld();
-        if (!parent.isRangeWorld(world)) {
             return;
         }
 
@@ -83,6 +77,10 @@ class MobListener implements Listener {
             if (onPlayerDamage((EntityDamageByEntityEvent) event)) {
                 return;
             }
+
+            if (onPlayerDamaged((EntityDamageByEntityEvent) event)) {
+                return;
+            }
         }
 
         // Make Skeletons & Zombies burn faster
@@ -111,14 +109,14 @@ class MobListener implements Listener {
         }
     }
 
-    private static EDBEExtractor<Player, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
+    private static EDBEExtractor<Player, LivingEntity, Projectile> DAMAGE_EXTRACTOR = new EDBEExtractor<>(
         Player.class,
         LivingEntity.class,
         Projectile.class
     );
 
     public boolean onPlayerDamage(EntityDamageByEntityEvent event) {
-        CombatantPair<Player, LivingEntity, Projectile> result = extractor.extractFrom(event);
+        CombatantPair<Player, LivingEntity, Projectile> result = DAMAGE_EXTRACTOR.extractFrom(event);
         if (result == null) {
             return false;
         }
@@ -142,14 +140,25 @@ class MobListener implements Listener {
         return true;
     }
 
+    private static EDBEExtractor<LivingEntity, Player, Projectile> DAMAGED_EXTRACTOR = new EDBEExtractor<>(
+        LivingEntity.class,
+        Player.class,
+        Projectile.class
+    );
+
+    public boolean onPlayerDamaged(EntityDamageByEntityEvent event) {
+        CombatantPair<LivingEntity, Player, Projectile> result = DAMAGED_EXTRACTOR.extractFrom(event);
+        if (result == null) {
+            return false;
+        }
+
+        // If the attacker doesn't have scaled health, return true to kill the damage processing.
+        return !parent.hasScaledHealth(result.getAttacker());
+    }
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onGuildCombatExpCalculation(GuildCalculateCombatExpEvent event) {
         Player player = event.getPlayer();
-        World world = player.getWorld();
-        if (!parent.isRangeWorld(world)) {
-            return;
-        }
-
         LivingEntity target = event.getTarget();
         if (!parent.hasScaledHealth(target)) {
             return;

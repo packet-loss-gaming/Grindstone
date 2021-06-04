@@ -154,7 +154,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
     }
 
     protected boolean hasScaledHealth(Entity entity) {
-        return entity instanceof Monster;
+        return entity instanceof Monster && entity.getCustomName() == null && isRangeWorld(entity.getWorld());
     }
 
 }

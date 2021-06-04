@@ -49,7 +49,7 @@ public class GenericRangedWorldMonster {
         @Override
         public boolean matchesBind(LocalEntity entity) {
             Entity boss = BukkitUtil.getBukkitEntity(entity);
-            return boss instanceof Monster && boss.getCustomName() == null && worldLevelComponent.isRangeWorld(boss.getWorld());
+            return worldLevelComponent.hasScaledHealth(boss);
         }
 
         @Override
