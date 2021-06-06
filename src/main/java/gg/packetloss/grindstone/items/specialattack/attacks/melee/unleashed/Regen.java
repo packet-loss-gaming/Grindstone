@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.items.specialattack.attacks.melee.unleashed;
 
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
+import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -22,7 +23,7 @@ public class Regen extends EntityAttack implements MeleeSpecial {
     @Override
     public void activate() {
 
-        owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) (target.getHealth() * 10), 2), true);
+        owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) (EntityUtil.getHealth(owner, target) * 10), 2), true);
 
         inform("You gain a healing aura.");
     }

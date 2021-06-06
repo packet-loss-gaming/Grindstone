@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.world.managed;
 
 public enum ManagedWorldMassQuery {
+    RANGE_WORLDS,
     RANGE_OVERWORLDS,
     ENVIRONMENTALLY_CONTROLLED
 }

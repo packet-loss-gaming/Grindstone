@@ -7,7 +7,7 @@
 package gg.packetloss.grindstone.events.guild;
 
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -15,13 +15,13 @@ import java.util.List;
 public class NinjaSmokeBombEvent extends NinjaPowerUseEvent {
     private int explosionPower;
     private int delay;
-    private List<Entity> entities;
+    private List<LivingEntity> entities;
     private Location originTeleportLoc;
     private Location teleportLoc;
     private Location targetLoc;
 
     public NinjaSmokeBombEvent(Player who, int explosionPower, int delay,
-                               List<Entity> entities, Location teleportLoc, Location targetLoc) {
+                               List<LivingEntity> entities, Location teleportLoc, Location targetLoc) {
         super(who);
         this.explosionPower = explosionPower;
         this.delay = delay;
@@ -50,7 +50,7 @@ public class NinjaSmokeBombEvent extends NinjaPowerUseEvent {
         this.delay = delay;
     }
 
-    public List<Entity> getEntities() {
+    public List<LivingEntity> getEntities() {
         return entities;
     }
 

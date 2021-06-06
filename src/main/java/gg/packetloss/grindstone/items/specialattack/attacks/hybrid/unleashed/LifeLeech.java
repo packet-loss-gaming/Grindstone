@@ -22,14 +22,14 @@ public class LifeLeech extends EntityAttack implements MeleeSpecial, RangedSpeci
 
     private double getAttemptedDamage() {
         double healthDiff = owner.getMaxHealth() - owner.getHealth();
-        return Math.min(target.getHealth(), Math.max(5, healthDiff / 2));
+        return Math.min(EntityUtil.getHealth(owner, target), Math.max(5, healthDiff / 2));
     }
 
     @Override
     public void activate() {
-        double health = target.getHealth();
+        double health = EntityUtil.getHealth(owner, target);
         SpecialAttackFactory.processDamage(owner, target, this, getAttemptedDamage());
-        double leachedHealth = Math.max(0, health - target.getHealth());
+        double leachedHealth = Math.max(0, health - EntityUtil.getHealth(owner, target));
 
         EntityUtil.heal(owner, leachedHealth);
         inform("You leach health from your opponent.");

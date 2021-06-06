@@ -6,13 +6,57 @@
 
 package gg.packetloss.grindstone.util;
 
+import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 
+import static gg.packetloss.grindstone.events.EntityHealthInContextEvent.HealthKind.CURRENT;
+import static gg.packetloss.grindstone.events.EntityHealthInContextEvent.HealthKind.MAX;
+
 public class EntityUtil {
+
+    public static double getHealth(Player context, LivingEntity entity) {
+        var event = new EntityHealthInContextEvent(context, entity, CURRENT);
+        CommandBook.callEvent(event);
+        return event.getValue();
+    }
+
+    public static double getMaxHealth(Player context, LivingEntity entity) {
+        var event = new EntityHealthInContextEvent(context, entity, MAX);
+        CommandBook.callEvent(event);
+        return event.getValue();
+    }
+
+    public static double getHealth(LivingEntity context, LivingEntity entity) {
+        if (context instanceof Player) {
+            return getHealth((Player) context, entity);
+        }
+        return entity.getHealth();
+    }
+
+    public static double getMaxHealth(LivingEntity context, LivingEntity entity) {
+        if (context instanceof Player) {
+            return getMaxHealth((Player) context, entity);
+        }
+        return entity.getMaxHealth();
+    }
+
+    public static double upscaleDamage(Player context, LivingEntity entity, double damageToEntity) {
+        var event = new EntityHealthInContextEvent(context, entity, damageToEntity, true);
+        CommandBook.callEvent(event);
+        return event.getValue();
+    }
+
+    public static double descaleDamage(Player context, LivingEntity entity, double damageToEntity) {
+        var event = new EntityHealthInContextEvent(context, entity, damageToEntity, false);
+        CommandBook.callEvent(event);
+        return event.getValue();
+    }
+
     public static boolean nameMatches(Entity entity, String name) {
         String customName = entity.getCustomName();
         return customName != null && customName.equals(name);
@@ -59,6 +103,18 @@ public class EntityUtil {
 
         ((LivingEntity) entity).setHealth(Math.max(cur - amt, 0));
         entity.playEffect(EntityEffect.HURT);
+    }
+
+    public static void forceDamage(Player context, LivingEntity entity, double amt) {
+        forceDamage(entity, upscaleDamage(context, entity, amt));
+    }
+
+    public static void forceDamage(LivingEntity context, LivingEntity entity, double amt) {
+        if (context instanceof Player) {
+            forceDamage((Player) context, entity, amt);
+            return;
+        }
+        forceDamage(entity, amt);
     }
 
     public static boolean isHostileMob(Entity entity) {

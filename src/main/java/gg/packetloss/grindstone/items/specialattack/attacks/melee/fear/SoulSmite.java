@@ -10,6 +10,7 @@ import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
@@ -34,7 +35,7 @@ public class SoulSmite extends EntityAttack implements MeleeSpecial {
     @Override
     public void activate() {
         inform(ChatColor.DARK_RED + "The fury of hallow flows through your sword!");
-        for (int i = Math.min(8, Math.max(2, (int) (target.getHealth() / 250))); i > 0; --i) {
+        for (int i = Math.min(8, Math.max(2, (int) (EntityUtil.getHealth(owner, target) / 250))); i > 0; --i) {
             server.getScheduler().runTaskLater(inst, () -> {
                 getSubSpec().activate();
             }, i * 15);

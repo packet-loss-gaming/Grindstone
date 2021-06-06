@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.items.specialattack.attacks.hybrid.unleashed;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.task.CountdownHandle;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
@@ -21,7 +22,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpecial {
-    private final int numRuns = (int) Math.max(3, Math.min(15, target.getHealth()));
+    private final int numRuns = (int) Math.max(3, Math.min(15, EntityUtil.getHealth(owner, target)));
 
     private double animationY = 0;
     private double runOffset = 0;

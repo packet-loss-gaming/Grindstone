@@ -15,6 +15,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.entity.LivingEntity;
@@ -52,13 +53,13 @@ public class PvMComponent extends BukkitComponent implements Listener {
 
         server.getScheduler().runTaskLater(inst, () -> {
 
-            int current = (int) Math.ceil(target.getHealth());
+            int current = (int) Math.ceil(EntityUtil.getHealth(player, target));
 
             if (oldCurrent == current) return;
 
             PvMSession session = sessions.getSession(PvMSession.class, player);
 
-            int max = (int) Math.ceil(target.getMaxHealth());
+            int max = (int) Math.ceil(EntityUtil.getMaxHealth(player, target));
 
             String message;
 

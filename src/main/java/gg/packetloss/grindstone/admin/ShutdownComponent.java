@@ -30,6 +30,8 @@ public class ShutdownComponent extends BukkitComponent {
     private final Logger log = inst.getLogger();
     private final Server server = CommandBook.server();
 
+    public static final String DEFAULT_DOWN_TIME = "30 seconds";
+
     @Override
     public void enable() {
         CommandBook.getComponentRegistrar().registerTopLevelCommands((commandManager, registration) -> {
