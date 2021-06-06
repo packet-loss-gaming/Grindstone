@@ -49,11 +49,24 @@ class MobListener implements Listener {
         genericMonster.bind((Monster) entity);
     }
 
+    private int previousSourceDamageLevel;
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityDamageBegin(EntityDamageEvent event) {
+        previousSourceDamageLevel = parent.sourceDamageLevel;
+
         // Reset whether or not damage was modified, if it was that will be set when we do the modification
         // later in the combat cycle.
         parent.sourceDamageLevel = 0;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onEntityDamageEnd(EntityDamageEvent event) {
+        if (event.isCancelled()) {
+            // Restore whatever the original value was before this even cycle started, this attack doesn't
+            // factor into particles.
+            parent.sourceDamageLevel = previousSourceDamageLevel;
+        }
     }
 
     private static Set<EntityDamageEvent.DamageCause> IGNORED_DAMAGE = new HashSet<>();
