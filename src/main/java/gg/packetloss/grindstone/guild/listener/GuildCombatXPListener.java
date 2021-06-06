@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.guild.listener;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.guild.GuildCalculateCombatExpEvent;
 import gg.packetloss.grindstone.guild.state.GuildState;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import org.bukkit.entity.Arrow;
@@ -51,8 +52,8 @@ public class GuildCombatXPListener implements Listener {
                 attacker,
                 defender,
                 guildState.getType(),
-                event.getFinalDamage(),
-                defender.getMaxHealth()
+                EntityUtil.descaleDamage(attacker, defender, event.getFinalDamage()),
+                EntityUtil.getMaxHealth(attacker, defender)
             );
             CommandBook.callEvent(expCalc);
             guildState.grantExp(expCalc.getCalculatedExp());

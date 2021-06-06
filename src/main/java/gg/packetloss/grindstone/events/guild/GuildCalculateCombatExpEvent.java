@@ -63,10 +63,6 @@ public class GuildCalculateCombatExpEvent extends PlayerEvent {
         return damageDealt;
     }
 
-    public void setDamageDealt(double damageDealt) {
-        this.damageDealt = damageDealt;
-    }
-
     public double getDamageCap() {
         return damageCap;
     }

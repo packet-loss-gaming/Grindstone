@@ -47,6 +47,7 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -269,7 +270,7 @@ public class NinjaListener implements Listener {
         }
     }
 
-    private List<Entity> refineSmokeBombTargets(Player player, List<Entity> entities) {
+    private List<LivingEntity> refineSmokeBombTargets(Player player, Collection<LivingEntity> entities) {
         return entities.stream().filter(e -> {
             if (e instanceof Player) {
                 return PvPComponent.allowsPvP(player, (Player) e);
@@ -279,7 +280,7 @@ public class NinjaListener implements Listener {
         }).sorted(new EntityDistanceComparator(player.getLocation())).collect(Collectors.toList());
     }
 
-    private Optional<Location> getSmokeBombOldLoc(Player player, List<Entity> entities) {
+    private Optional<Location> getSmokeBombOldLoc(Player player, List<LivingEntity> entities) {
         Entity targetEntity = null;
 
         for (Entity entity : entities) {
@@ -299,8 +300,8 @@ public class NinjaListener implements Listener {
 
     public void smokeBomb(final Player player, NinjaState state) {
 
-        List<Entity> entities = player.getNearbyEntities(4, 4, 4);
-        entities = refineSmokeBombTargets(player, entities);
+        Collection<LivingEntity> rawEntities = player.getLocation().getNearbyLivingEntities(4);
+        List<LivingEntity> entities = refineSmokeBombTargets(player, rawEntities);
 
         Optional<Location> optSmokeBombLoc = getSmokeBombOldLoc(player, entities);
         if (optSmokeBombLoc.isEmpty()) {
@@ -323,8 +324,8 @@ public class NinjaListener implements Listener {
 
         Location targetLoc = event.getTargetLoc();
         int totalHealed = 0;
-        for (Entity entity : entities) {
-            EntityUtil.forceDamage(entity, 1);
+        for (LivingEntity entity : entities) {
+            EntityUtil.forceDamage(player, entity, 1);
             totalHealed += 1;
 
             if (entity instanceof Player) {

@@ -455,10 +455,10 @@ public class RogueListener implements Listener {
                         }
                     }
 
-                    if (((LivingEntity) entity).getHealth() < 2) continue;
+                    if (EntityUtil.getHealth(shooter, (LivingEntity) entity) < 2) continue;
 
                     EntityUtil.heal(shooter, 1);
-                    EntityUtil.forceDamage(entity, 1);
+                    EntityUtil.forceDamage(shooter, (LivingEntity) entity, 1);
                 }
             } else {
                 if (shooter instanceof Player) {

@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.range.worldlevel;
 
-import gg.packetloss.grindstone.events.guild.GuildCalculateCombatExpEvent;
+import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -32,6 +32,22 @@ class MobListener implements Listener {
         this.parent = parent;
 
         genericMonster = new GenericRangedWorldMonster(parent);
+    }
+
+    @EventHandler
+    public void onEntityHealthInContextRequest(EntityHealthInContextEvent event) {
+        LivingEntity target = event.getTarget();
+        if (!parent.hasScaledHealth(target)) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        int level = parent.getWorldLevel(player);
+        if (event.getKind().isDescale()) {
+            event.setValue(parent.scaleHealth(event.getValue(), 100, level));
+        } else {
+            event.setValue(parent.scaleHealth(event.getValue(), level, 100));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -157,7 +173,7 @@ class MobListener implements Listener {
             event.setDamage(parent.scaleHealth(event.getDamage(), level, 100));
         }
 
-        PvMComponent.printHealth(attacker, defender, (health) -> parent.scaleHealth(health, 100, level));
+        PvMComponent.printHealth(attacker, defender);
         return true;
     }
 
@@ -175,19 +191,5 @@ class MobListener implements Listener {
 
         // If the attacker doesn't have scaled health, return true to kill the damage processing.
         return !parent.hasScaledHealth(result.getAttacker());
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onGuildCombatExpCalculation(GuildCalculateCombatExpEvent event) {
-        Player player = event.getPlayer();
-        LivingEntity target = event.getTarget();
-        if (!parent.hasScaledHealth(target)) {
-            return;
-        }
-
-        int level = parent.getWorldLevel(player);
-        // Normalize the damage for the experience calculation
-        event.setDamageDealt(parent.scaleHealth(event.getDamageDealt(), 100, level));
-        event.setDamageCap(parent.scaleHealth(event.getDamageCap(), 100, level));
     }
 }
