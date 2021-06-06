@@ -55,21 +55,18 @@ public class ProblemDetectionComponent extends BukkitComponent {
         }, 20 * 5);
 
         CommandBook.server().getScheduler().runTaskTimer(CommandBook.inst(), () -> {
-            if (numOfContiguousTimeChunks >= config.maxContiguousTimeChunks) {
-                shutdown.shutdown(null, 60, ShutdownComponent.DEFAULT_DOWN_TIME);
-                return;
-            }
-
             // If messages were sent we continue to have problems, increment the time chunks counter,
             // otherwise, reset the time chunks counter.
             if (wereMessagesSent) {
+                wereMessagesSent = false;
                 ++numOfContiguousTimeChunks;
             } else {
                 numOfContiguousTimeChunks = 0;
             }
 
-            // Update the flag so we don't always consider problems to have been reported
-            wereMessagesSent = false;
+            if (numOfContiguousTimeChunks >= config.maxContiguousTimeChunks) {
+                shutdown.shutdown(null, 60, ShutdownComponent.DEFAULT_DOWN_TIME);
+            }
         }, 0, TimeUtil.convertMinutesToTicks(15));
     }
 
