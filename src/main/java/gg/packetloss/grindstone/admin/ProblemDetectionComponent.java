@@ -16,6 +16,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
+import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.functional.TriFunction;
 import gg.packetloss.grindstone.util.task.DebounceHandle;
@@ -30,14 +31,19 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @ComponentInformation(friendlyName = "Problem Detector", desc = "Problem detection system.")
-@Depend(components = ChatBridgeComponent.class)
+@Depend(components = {ChatBridgeComponent.class, ShutdownComponent.class})
 public class ProblemDetectionComponent extends BukkitComponent {
     @InjectComponent
     private ChatBridgeComponent chatBridge;
+    @InjectComponent
+    private ShutdownComponent shutdown;
 
     private LocalConfiguration config;
 
     private DebounceHandle<Long> serverLagDebounce;
+
+    private int numOfContiguousTimeChunks = 0;
+    private boolean wereMessagesSent = false;
 
     @Override
     public void enable() {
@@ -47,6 +53,24 @@ public class ProblemDetectionComponent extends BukkitComponent {
             CommandBook.registerEvents(new TickMonitor());
             CommandBook.registerEvents(new ChunkMonitor());
         }, 20 * 5);
+
+        CommandBook.server().getScheduler().runTaskTimer(CommandBook.inst(), () -> {
+            if (numOfContiguousTimeChunks >= config.maxContiguousTimeChunks) {
+                shutdown.shutdown(null, 60, ShutdownComponent.DEFAULT_DOWN_TIME);
+                return;
+            }
+
+            // If messages were sent we continue to have problems, increment the time chunks counter,
+            // otherwise, reset the time chunks counter.
+            if (wereMessagesSent) {
+                ++numOfContiguousTimeChunks;
+            } else {
+                numOfContiguousTimeChunks = 0;
+            }
+
+            // Update the flag so we don't always consider problems to have been reported
+            wereMessagesSent = false;
+        }, 0, TimeUtil.convertMinutesToTicks(15));
     }
 
     @Override
@@ -62,6 +86,13 @@ public class ProblemDetectionComponent extends BukkitComponent {
         public int chunkCheckIntervalTicks = 20;
         @Setting("chunk-watcher.min-activity-level")
         public int chunkActivityLevel = 3;
+        @Setting("auto-shutdown.max-contiguos-time-chunks")
+        public int maxContiguousTimeChunks = 5;
+    }
+
+    private void reportProblemToMods(String problem) {
+        wereMessagesSent = true;
+        chatBridge.modBroadcast(problem);
     }
 
     private class TickMonitor implements Listener {
@@ -74,7 +105,7 @@ public class ProblemDetectionComponent extends BukkitComponent {
                     return;
                 }
 
-                chatBridge.modBroadcast("Server fell behind (by " + millsLost + " ms)!");
+                reportProblemToMods("Server fell behind (by " + millsLost + " ms)!");
             }
         }
     }
@@ -109,7 +140,7 @@ public class ProblemDetectionComponent extends BukkitComponent {
 
                 // Report any found problems as one message
                 if (!messages.isEmpty()) {
-                    chatBridge.modBroadcast(StringUtils.join(messages, "\n"));
+                    reportProblemToMods(StringUtils.join(messages, "\n"));
                 }
 
                 // Reset the data on this world

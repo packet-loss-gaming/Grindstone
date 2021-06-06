@@ -34,7 +34,7 @@ public class ShutdownCommands {
 
         String expectedDowntime = Joiner.on(' ').join(expectedDowntimeArgs);
         if (expectedDowntimeArgs.isEmpty()) {
-            expectedDowntime = "30 seconds";
+            expectedDowntime = ShutdownComponent.DEFAULT_DOWN_TIME;
         }
 
         component.shutdown(sender instanceof Player ? (Player) sender : null, delay, expectedDowntime);
