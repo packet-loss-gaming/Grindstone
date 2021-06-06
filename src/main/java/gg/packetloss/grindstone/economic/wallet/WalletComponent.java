@@ -42,7 +42,9 @@ public class WalletComponent extends BukkitComponent implements WalletProvider {
         // Register commands
         ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
         registrar.registerTopLevelCommands((commandManager, registration) -> {
-            registration.register(commandManager, WalletCommandsRegistration.builder(), new WalletCommands(this));
+            registrar.registerAsSubCommand("wallet", "Wallet commands", commandManager, (innerCommandManager, innerRegistration) -> {
+                innerRegistration.register(innerCommandManager, WalletCommandsRegistration.builder(), new WalletCommands(this));
+            });
         });
     }
 

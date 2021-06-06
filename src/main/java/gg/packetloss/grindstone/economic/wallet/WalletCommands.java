@@ -27,7 +27,7 @@ public class WalletCommands {
         this.component = component;
     }
 
-    @Command(name = "wallet", desc = "View balance.", aliases = {"money"})
+    @Command(name = "balance", desc = "View balance.")
     @CommandPermissions({"aurora.wallet.balance"})
     public void moneyCmd(Player player) {
         component.getBalance(player).thenAccept(
@@ -40,9 +40,9 @@ public class WalletCommands {
 
     @Command(name = "pay", desc = "Pay another player.")
     @CommandPermissions({"aurora.wallet.pay"})
-    public void lotteryDrawCmd(Player player,
-                               @Arg(desc = "target") OfflineSinglePlayerTarget target,
-                               @Arg(desc = "amount") double amount) {
+    public void moneyPayCmd(Player player,
+                            @Arg(desc = "target") OfflineSinglePlayerTarget target,
+                            @Arg(desc = "amount") double amount) {
 
         BigDecimal amountBigDec = new BigDecimal(amount);
         component.removeFromBalance(player, amountBigDec).thenApplyFailableAsynchronously(
@@ -58,6 +58,21 @@ public class WalletCommands {
         ).thenAcceptAsynchronously(
             (newBalance) -> {
                 ChatUtil.sendNotice(player, "Paid ", target.get().getName(), " ", component.format(amountBigDec), ".");
+            },
+            (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
+        );
+    }
+
+    @Command(name = "grant", desc = "Grant money to a player.")
+    @CommandPermissions({"aurora.wallet.admin.grant"})
+    public void moneyGrantCmd(Player player,
+                              @Arg(desc = "target") OfflineSinglePlayerTarget target,
+                              @Arg(desc = "amount") double amount) {
+
+        BigDecimal amountBigDec = new BigDecimal(amount);
+        component.addToBalance(target.get(), amountBigDec).thenAcceptAsynchronously(
+            (newBalance) -> {
+                ChatUtil.sendNotice(player, "Granted ", target.get().getName(), " ", component.format(amountBigDec), ".");
             },
             (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
         );
