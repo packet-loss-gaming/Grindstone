@@ -643,7 +643,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         };
 
         if (doAsync) {
-            server.getScheduler().runTaskAsynchronously(inst, run);
+            PluginTaskExecutor.submitAsync(run);
         } else {
             run.run();
         }

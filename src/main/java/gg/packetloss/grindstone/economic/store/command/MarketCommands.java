@@ -20,12 +20,11 @@ import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.invgui.InventoryGUIComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ErrorUtil;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.item.inventory.InventoryConstants;
-import gg.packetloss.grindstone.util.task.promise.FailableTaskFuture;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -100,7 +99,7 @@ public class MarketCommands {
             });
 
             // FIXME: This should probably be abstracted as some kind of payment calculator
-            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            PluginTaskExecutor.submitAsync(() -> {
                 MarketItemLookupInstance lookupInstance = getLookupInstanceFromStacksImmediately(items);
                 CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
                     MarketTransactionBuilder transactionBuilder = new MarketTransactionBuilder();

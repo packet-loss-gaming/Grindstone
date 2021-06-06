@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.pixieitems.manager;
 
 import com.destroystokyo.paper.ParticleBuilder;
 import com.google.common.collect.Lists;
-import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.pixieitems.BrokerTransaction;
 import gg.packetloss.grindstone.pixieitems.PixieSinkVariant;
 import gg.packetloss.grindstone.pixieitems.TransactionBroker;
@@ -16,6 +15,7 @@ import gg.packetloss.grindstone.pixieitems.db.*;
 import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieContainerDatabase;
 import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieNetworkDatabase;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.RefCountedTracker;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Chunk;
@@ -61,7 +61,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     public CompletableFuture<Optional<PixieNetworkDetail>> createNetwork(UUID namespace, String name, Location origin) {
         CompletableFuture<Optional<PixieNetworkDetail>> future = new CompletableFuture<>();
 
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             future.complete(networkDatabase.createNetwork(namespace, name, origin));
         });
 
@@ -72,7 +72,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     public CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(UUID namespace, String name) {
         CompletableFuture<Optional<PixieNetworkDetail>> future = new CompletableFuture<>();
 
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             future.complete(networkDatabase.selectNetwork(namespace, name));
         });
 
@@ -83,7 +83,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     public CompletableFuture<Optional<PixieNetworkDetail>> selectNetwork(int networkID) {
         CompletableFuture<Optional<PixieNetworkDetail>> future = new CompletableFuture<>();
 
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             future.complete(networkDatabase.selectNetwork(networkID));
         });
 
@@ -94,7 +94,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     public CompletableFuture<List<PixieNetworkDetail>> selectNetworks(UUID namespace) {
         CompletableFuture<List<PixieNetworkDetail>> future = new CompletableFuture<>();
 
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             future.complete(networkDatabase.selectNetworks(namespace));
         });
 
@@ -158,7 +158,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
 
         CompletableFuture<T> future = new CompletableFuture<>();
 
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             List<Integer> added = new ArrayList<>();
             List<Integer> removed = new ArrayList<>();
 
@@ -380,7 +380,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         Location existingBlockLoc = chestLocations.get(0);
         Location newBlockLoc = block.getLocation();
 
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             Optional<PixieChestDetail> optChestDetail = chestDatabase.getDetailsAtLocation(existingBlockLoc);
 
             if (optChestDetail.isEmpty()) {
@@ -543,7 +543,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     private CompletableFuture<Void> loadNetworks(List<Integer> networkIDs) {
         CompletableFuture<Void> future = new CompletableFuture<>();
 
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             Collection<PixieNetworkDefinition> networkDefinitions = chestDatabase.getChestsInNetworks(networkIDs).orElseThrow();
 
             List<CompletableFuture<Integer>> futures = new ArrayList<>();
@@ -600,7 +600,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
 
     @Override
     public void handleChunkLoad(Chunk chunk) {
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             Collection<Integer> networksInChunk = chestDatabase.getNetworksInChunk(chunk).orElseThrow();
 
             networkChunkRefCountLock.lock();
@@ -624,7 +624,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
 
     @Override
     public void handleChunkUnload(Chunk chunk) {
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             Collection<Integer> networksInChunk = chestDatabase.getNetworksInChunk(chunk).orElseThrow();
 
             networkChunkRefCountLock.lock();

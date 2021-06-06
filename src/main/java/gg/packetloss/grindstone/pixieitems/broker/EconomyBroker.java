@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.pixieitems.broker;
 
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.pixieitems.BrokerTransaction;
 import gg.packetloss.grindstone.pixieitems.TransactionBroker;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -49,7 +50,7 @@ public class EconomyBroker implements TransactionBroker {
             Player onlinePlayer = player.getPlayer();
             ChatUtil.sendNotice(
                     onlinePlayer,
-                    "The pixies charge you " + economy.format(cost) + " for their services."
+                    "The pixies charge you ", Text.of(economy.format(cost)), " for their services."
             );
         }
     }

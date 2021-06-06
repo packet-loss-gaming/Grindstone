@@ -13,6 +13,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.util.CollectionUtil;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.apache.commons.lang.Validate;
@@ -81,10 +82,7 @@ public class RandomizedSkullsComponent extends BukkitComponent implements Runnab
         beingUpdated.set(true);
         List<PlayerProfile> targetPlayers = getRandomSetOfPlayers();
 
-        CommandBook.server().getScheduler().runTaskAsynchronously(
-                CommandBook.inst(),
-                () -> updatePlayersTo(targetPlayers)
-        );
+        PluginTaskExecutor.submitAsync(() -> updatePlayersTo(targetPlayers));
     }
 
     private List<PlayerProfile> getRandomSetOfPlayers() {

@@ -33,6 +33,7 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ErrorUtil;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.task.promise.FailableTaskFuture;
@@ -182,7 +183,7 @@ public class MarketComponent extends BukkitComponent {
                 throw new CommandException("Cannot scale by 0.");
             }
 
-            server.getScheduler().runTaskAsynchronously(inst, () -> {
+            PluginTaskExecutor.submitAsync(() -> {
                 List<MarketItemInfo> items = itemDatabase.getItemList();
                 for (MarketItemInfo item : items) {
                     itemDatabase.addItem(sender.getName(), item.getName(),
@@ -250,7 +251,7 @@ public class MarketComponent extends BukkitComponent {
           usage = "[rounds]", flags = "", min = 0, max = 1)
         @CommandPermissions("aurora.admin.adminstore.simulate")
         public void simulateCmd(CommandContext args, CommandSender sender) throws CommandException {
-            server.getScheduler().runTaskAsynchronously(inst, () -> {
+            PluginTaskExecutor.submitAsync(() -> {
                 simulateMarket(Math.max(1, args.getInteger(0, 1)));
             });
         }
@@ -300,7 +301,7 @@ public class MarketComponent extends BukkitComponent {
 
         Set<String> names = computeItemNames(stacks);
 
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             future.complete(getLookupInstance(names));
         });
 

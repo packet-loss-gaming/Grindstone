@@ -15,10 +15,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.events.entity.EntitySpawnBlockedEvent;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.DamageUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
-import gg.packetloss.grindstone.util.RegionUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.itemstack.StackSerializer;
 import gg.packetloss.grindstone.world.type.city.arena.ArenaType;
 import gg.packetloss.grindstone.world.type.city.arena.GenericArena;
@@ -259,7 +256,7 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
             r.run();
             return;
         }
-        server.getScheduler().runTaskAsynchronously(inst, r);
+        PluginTaskExecutor.submitAsync(r);
     }
 
     @Override

@@ -36,6 +36,7 @@ import gg.packetloss.grindstone.guild.state.RogueState;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
@@ -138,7 +139,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
     private CompletableFuture<Optional<InternalGuildState>> constructGuildState(Player player) {
         CompletableFuture<Optional<InternalGuildState>> future = new CompletableFuture<>();
 
-        server.getScheduler().runTaskAsynchronously(inst, () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             future.complete(database.loadGuild(player.getUniqueId()));
         });
 
@@ -250,7 +251,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        server.getScheduler().runTaskAsynchronously(inst, () -> {
+        PluginTaskExecutor.submitAsync(() -> {
            update(player, internalState);
         });
 

@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.util.task.promise;
 
 import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -32,7 +33,7 @@ public class TaskFuture<T> {
 
     public static <U> TaskFuture<U> asyncTask(Supplier<U> supplier) {
         TaskFuture<U> taskFuture = new TaskFuture<>();
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             taskFuture.complete(supplier.get());
         });
         return taskFuture;
@@ -79,7 +80,7 @@ public class TaskFuture<T> {
     public <U> TaskFuture<U> thenApplyAsynchronously(Function<? super T, ? extends U> fn) {
         TaskFuture<U> taskFuture = new TaskFuture<>();
         underlying.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            PluginTaskExecutor.submitAsync(() -> {
                 taskFuture.complete(fn.apply(value));
             });
         });
@@ -90,7 +91,7 @@ public class TaskFuture<T> {
     public <U, L> FailableTaskFuture<U, L> thenApplyFailableAsynchronously(Function<? super T, TaskResult<U, L>> fn) {
         FailableTaskFuture<U, L> taskFuture = new FailableTaskFuture<>();
         underlying.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            PluginTaskExecutor.submitAsync(() -> {
                 taskFuture.complete(fn.apply(value));
             });
         });
@@ -113,7 +114,7 @@ public class TaskFuture<T> {
     public TaskFuture<Void> thenAcceptAsynchronously(Consumer<? super T> action) {
         TaskFuture<Void> taskFuture = new TaskFuture<>();
         underlying.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            PluginTaskExecutor.submitAsync(() -> {
                 action.accept(value);
                 taskFuture.complete(null);
             });
@@ -136,7 +137,7 @@ public class TaskFuture<T> {
     public <U> TaskFuture<U> thenComposeAsynchronously(Function<? super T, TaskFuture<U>> fn) {
         TaskFuture<U> taskFuture = new TaskFuture<>();
         underlying.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            PluginTaskExecutor.submitAsync(() -> {
                 fn.apply(value).underlying.thenAccept(taskFuture::complete);
             });
         });
@@ -165,7 +166,7 @@ public class TaskFuture<T> {
     public <U, L> FailableTaskFuture<U, L> thenComposeFailableAsynchronously(Function<? super T, FailableTaskFuture<U, L>> fn) {
         FailableTaskFuture<U, L> taskFuture = new FailableTaskFuture<>();
         underlying.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+            PluginTaskExecutor.submitAsync(() -> {
                 FailableTaskFuture<U, L> composedFuture = fn.apply(value);
 
                 composedFuture.underlyingSuccess.thenAccept(
@@ -191,10 +192,10 @@ public class TaskFuture<T> {
 
     public void thenFinallyAsynchronously(Runnable finallyHandler) {
         this.underlying.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), finallyHandler);
+            PluginTaskExecutor.submitAsync(finallyHandler);
         });
         this.underlyingParentFailure.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), finallyHandler);
+            PluginTaskExecutor.submitAsync(finallyHandler);
         });
     }
 }

@@ -6,15 +6,17 @@
 
 package gg.packetloss.grindstone.economic.wallet;
 
-import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import static gg.packetloss.grindstone.util.ChatUtil.TWO_DECIMAL_FORMATTER;
 
 class VaultCompatibilityLayer implements Economy {
     private WalletComponent wallet;
@@ -45,7 +47,8 @@ class VaultCompatibilityLayer implements Economy {
 
     @Override
     public String format(double v) {
-        return wallet.format(v).toString();
+        return ChatColor.WHITE + TWO_DECIMAL_FORMATTER.format(v) + " " +
+            (v == 1 ? currencyNameSingular() : currencyNamePlural());
     }
 
     @Override
@@ -86,7 +89,7 @@ class VaultCompatibilityLayer implements Economy {
     @Override
     public double getBalance(OfflinePlayer offlinePlayer) {
         try {
-            return wallet.getBalance(offlinePlayer).thenApply(
+            return wallet.getBalance(offlinePlayer).thenApplyAsynchronously(
                 BigDecimal::doubleValue,
                 (ignored) -> {}
             ).get();
@@ -133,7 +136,7 @@ class VaultCompatibilityLayer implements Economy {
     @Override
     public EconomyResponse withdrawPlayer(OfflinePlayer offlinePlayer, double v) {
         try {
-            return wallet.removeFromBalance(offlinePlayer, v).thenApply(
+            return wallet.removeFromBalance(offlinePlayer, v).thenApplyAsynchronously(
                 (succeeded) -> new EconomyResponse(v, getBalance(offlinePlayer), succeeded ? EconomyResponse.ResponseType.SUCCESS : EconomyResponse.ResponseType.FAILURE, ""),
                 (ignored) -> {}
             ).get();
@@ -160,7 +163,7 @@ class VaultCompatibilityLayer implements Economy {
     @Override
     public EconomyResponse depositPlayer(OfflinePlayer offlinePlayer, double v) {
         try {
-            return wallet.addToBalance(offlinePlayer, v).thenApply(
+            return wallet.addToBalance(offlinePlayer, v).thenApplyAsynchronously(
                 (newBalance) -> new EconomyResponse(v, newBalance.doubleValue(), EconomyResponse.ResponseType.SUCCESS, ""),
                 (ignored) -> {}
             ).get();

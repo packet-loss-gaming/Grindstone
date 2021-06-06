@@ -6,10 +6,10 @@
 
 package gg.packetloss.grindstone.economic.store;
 
-import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
 import gg.packetloss.grindstone.events.economy.MarketPurchaseEvent;
 import gg.packetloss.grindstone.events.economy.MarketSellEvent;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -25,7 +25,7 @@ public class MarketTransactionLogger implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMarketPurchase(MarketPurchaseEvent event) {
         Player player = event.getPlayer();
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             for (MarketTransactionLine transactionLine : event.getTransactionLines()) {
                 transactionDatabase.logPurchaseTransaction(player, transactionLine);
             }
@@ -36,7 +36,7 @@ public class MarketTransactionLogger implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMarketSale(MarketSellEvent event) {
         Player player = event.getPlayer();
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             for (MarketTransactionLine transactionLine : event.getTransactionLines()) {
                 transactionDatabase.logSaleTransaction(player, transactionLine);
             }
