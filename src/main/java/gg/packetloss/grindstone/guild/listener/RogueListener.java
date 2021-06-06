@@ -7,12 +7,10 @@
 package gg.packetloss.grindstone.guild.listener;
 
 import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLib;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.sk89q.commandbook.CommandBook;
-import fr.neatmonster.nocheatplus.checks.net.protocollib.ProtocolLibComponent;
 import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
 import gg.packetloss.grindstone.click.ClickType;
 import gg.packetloss.grindstone.events.DoubleClickEvent;
@@ -28,10 +26,7 @@ import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EntityDistanceComparator;
-import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -40,10 +35,8 @@ import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.city.combat.PvPComponent;
 import org.bukkit.ChatColor;
-import gg.packetloss.grindstone.util.task.TaskBuilder;
-import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
-import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -222,7 +215,6 @@ public class RogueListener implements Listener {
 
         normalBlip(player, modifier);
         sendRiptidePacket(player, ENABLE_RIPTIDE);
-        player.setVelocity(vel);
 
         TaskBuilder.Countdown task = TaskBuilder.countdown();
 
