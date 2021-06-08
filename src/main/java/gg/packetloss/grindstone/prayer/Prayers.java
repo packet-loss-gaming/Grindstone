@@ -100,7 +100,7 @@ public enum Prayers {
             new PotionPurgePrayerEffect(PotionEffectType.SLOW)
         )
     ),
-    NIGHT_VISION(30, true, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.NIGHT_VISION, 1))),
+    NIGHT_VISION(30, true, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.NIGHT_VISION, 1, 20 * 15))),
     FLASH(
         40,
         true,
