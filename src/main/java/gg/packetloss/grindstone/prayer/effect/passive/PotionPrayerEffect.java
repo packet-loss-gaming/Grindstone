@@ -12,16 +12,24 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class PotionPrayerEffect implements PassivePrayerEffect {
-    private static final int REAPPLY_THRESHOLD = 20 * 3;
+    private static final int DEFAULT_REAPPLY_THRESHOLD = 20 * 3;
     private static final int POTION_DURATION = 20 * 60;
+
+    private int REAPPLY_THRESHOLD;
 
     private final PotionEffectType desiredEffectType;
     private final int amplifier;
 
     public PotionPrayerEffect(PotionEffectType desiredEffectType, int amplifier) {
+        this(desiredEffectType, amplifier, DEFAULT_REAPPLY_THRESHOLD);
 
+
+    }
+    public PotionPrayerEffect(PotionEffectType desiredEffectType, int amplifier, int reapply_threshold) {
         this.desiredEffectType = desiredEffectType;
         this.amplifier = amplifier;
+
+        this.REAPPLY_THRESHOLD = reapply_threshold;
     }
 
     private boolean shouldReapply(Player player) {
