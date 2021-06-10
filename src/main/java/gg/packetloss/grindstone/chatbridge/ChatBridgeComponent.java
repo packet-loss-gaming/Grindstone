@@ -11,6 +11,7 @@ import com.zachsthings.libcomponents.AbstractComponent;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.ComponentManager;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.util.ChatUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -37,6 +38,11 @@ public class ChatBridgeComponent extends BukkitComponent {
     private void handleIncompatibleIntegration(String integrationName, Throwable t) {
         CommandBook.logger().warning(integrationName + " did not integrate properly.");
         t.printStackTrace();
+
+        // We failed to integrate with Telegram, add a sendDebug fallback to handle mod messages
+        // that may contain important information (e.g. from the problem reporting component)
+        // that would otherwise go nowhere.
+        modMessageConsumers.add(ChatUtil::sendDebug);
     }
 
     private AbstractComponent getTelegramBotComponent() {
