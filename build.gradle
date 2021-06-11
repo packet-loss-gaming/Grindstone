@@ -53,7 +53,7 @@ dependencies {
 
     implementation group: 'gg.packetloss', name: 'open-boss', version: '1.2'
     implementation group: 'gg.packetloss', name: 'hackbook', version: '1.16.4.1'
-    implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.16.4.0'
+    implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.16.4.1'
 
     compileOnly group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.16.4-R0.1-SNAPSHOT'
 

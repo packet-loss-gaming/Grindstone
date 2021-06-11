@@ -9,14 +9,11 @@ package gg.packetloss.grindstone.economic.wallet;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
-import static gg.packetloss.grindstone.util.ChatUtil.TWO_DECIMAL_FORMATTER;
 
 class VaultCompatibilityLayer implements Economy {
     private WalletComponent wallet;
@@ -47,8 +44,7 @@ class VaultCompatibilityLayer implements Economy {
 
     @Override
     public String format(double v) {
-        return ChatColor.WHITE + TWO_DECIMAL_FORMATTER.format(v) + " " +
-            (v == 1 ? currencyNameSingular() : currencyNamePlural());
+        return wallet.format(v).toString();
     }
 
     @Override
