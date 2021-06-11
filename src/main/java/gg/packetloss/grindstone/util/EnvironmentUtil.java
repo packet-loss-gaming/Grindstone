@@ -494,8 +494,11 @@ public class EnvironmentUtil {
     }
 
     public static boolean isLiquid(Material type) {
-
         return isWater(type) || isLava(type);
+    }
+
+    public static boolean isLiquid(Block block) {
+        return isLiquid(block.getType());
     }
 
     public static boolean isDangerous(Material type) {

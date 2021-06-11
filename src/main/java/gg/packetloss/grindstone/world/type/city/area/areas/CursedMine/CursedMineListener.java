@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.city.area.areas.CursedMine;
 
+import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
 import gg.packetloss.grindstone.events.PlayerGraveProtectItemsEvent;
 import gg.packetloss.grindstone.events.PrayerTriggerEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
@@ -21,6 +22,8 @@ import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.checker.NonSolidRegionChecker;
+import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
+import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
@@ -30,12 +33,17 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -45,6 +53,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import static gg.packetloss.grindstone.world.type.city.area.areas.CursedMine.CursedMineArea.AFFECTED_MATERIALS;
+import static org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK;
 
 public class CursedMineListener extends AreaListener<CursedMineArea> {
     public CursedMineListener(CursedMineArea parent) {
@@ -163,6 +172,8 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
             } catch (UnstorableBlockStateException e) {
                 e.printStackTrace();
             }
+        } else if (!parent.isOnHitList(player) && block.getType() == Material.FIRE) {
+            return;
         }
 
         event.setCancelled(true);
@@ -388,5 +399,49 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
 
         targetLocation.setDirection(VectorUtil.createDirectionalVector(targetLocation, pointOfInterest));
         player.teleport(targetLocation, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+    }
+
+    private static EDBEExtractor<Zombie, Player, Projectile> GHOST_ATTACK_EXTRACTOR = new EDBEExtractor<>(
+        Zombie.class,
+        Player.class,
+        Projectile.class
+    );
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
+        CombatantPair<Zombie, Player, Projectile> result = GHOST_ATTACK_EXTRACTOR.extractFrom(event);
+        if (result == null) {
+            return;
+        }
+
+        parent.tryTriggerHaunting(result.getAttacker(), result.getDefender());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPitfallTrigger(PitfallTriggerEvent event) {
+        Entity triggeringEntity = event.getEntity();
+        if (!(triggeringEntity instanceof Zombie)) {
+            return;
+        }
+
+        if (parent.isGhost((Zombie) triggeringEntity)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamageEntity(EntityDamageEvent event) {
+        if (event.getCause() == ENTITY_ATTACK) {
+            return;
+        }
+
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Zombie)) {
+            return;
+        }
+
+        if (parent.isGhost((Zombie) entity)) {
+            event.setCancelled(true);
+        }
     }
 }
