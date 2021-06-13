@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.warps;
 
+import gg.packetloss.grindstone.util.NamespaceConstants;
 import org.bukkit.Location;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public interface WarpDatabase {
     List<WarpPoint> getWarpsInNamespace(UUID namespace);
 
     default List<WarpPoint> getGlobalWarps() {
-        return getWarpsInNamespace(WarpQualifiedName.GLOBAL_UUID);
+        return getWarpsInNamespace(NamespaceConstants.GLOBAL);
     }
 
     Optional<WarpPoint> getWarp(WarpQualifiedName qualifiedName);

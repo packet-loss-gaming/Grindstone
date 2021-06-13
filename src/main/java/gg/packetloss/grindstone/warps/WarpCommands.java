@@ -46,18 +46,8 @@ public class WarpCommands {
             UUID warpNamespace = qualifiedName.getNamespace();
 
             // Check warp access, pretend it doesn't exist if permission is denied
-            if (((Player) sender).getUniqueId().equals(warpNamespace)) {
-                if (!sender.hasPermission("aurora.warp.access.self")) {
-                    throw new WarpNotFoundException();
-                }
-            } else if (qualifiedName.isGlobal()) {
-                if (!sender.hasPermission("aurora.warp.access.global")) {
-                    throw new WarpNotFoundException();
-                }
-            } else {
-                if (!sender.hasPermission("aurora.warp.access." + warpNamespace)) {
-                    throw new WarpNotFoundException();
-                }
+            if (!WarpPermissionCheck.hasAccessToNamespace(sender, warpNamespace)) {
+                throw new WarpNotFoundException();
             }
 
             // Check teleport access on targets

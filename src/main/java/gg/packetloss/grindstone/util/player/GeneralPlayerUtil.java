@@ -11,10 +11,12 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.NamespaceConstants;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.BlockFace;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Collections;
@@ -195,8 +197,12 @@ public class GeneralPlayerUtil {
         return null;
     }
 
-    public static UUID resolveMacroNamespace(String qualifier) {
-        if (qualifier.startsWith("#")) {
+    public static UUID resolveMacroNamespace(CommandSender context, String qualifier) {
+        if (qualifier.equals("@")) {
+            return NamespaceConstants.GLOBAL;
+        } else if (qualifier.equals("$") && context instanceof Player player) {
+            return player.getUniqueId();
+        } else if (qualifier.startsWith("#")) {
             String name = qualifier.substring(1);
 
             for (OfflinePlayer player : CommandBook.server().getOfflinePlayers()) {

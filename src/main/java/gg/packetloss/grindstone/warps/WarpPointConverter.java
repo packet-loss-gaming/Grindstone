@@ -61,7 +61,7 @@ public class WarpPointConverter implements ArgumentConverter<WarpPoint> {
                 return FailedConversion.from(new IllegalArgumentException(e.getMessage()));
             }
         } else if (parts.length == 2) {
-            optWarp = component.getWarpManager().lookupWarp(parts[0], parts[1]);
+            optWarp = component.getWarpManager().lookupWarp(sender, parts[0], parts[1]);
         } else {
             return FailedConversion.from(new IllegalArgumentException("Invalid warp format"));
         }
@@ -96,7 +96,7 @@ public class WarpPointConverter implements ArgumentConverter<WarpPoint> {
             return Arrays.stream(Bukkit.getServer().getOfflinePlayers())
                     .filter(p -> p.getName() != null)
                     .filter(p -> p.getName().toUpperCase().contains(nameFilter))
-                    .filter(p -> sender.hasPermission("aurora.warp.access." + p.getUniqueId()))
+                    .filter(p -> WarpPermissionCheck.hasAccessToNamespace(sender, p.getUniqueId()))
                     .map(p -> "#" + p.getName() + ":")
                     .collect(Collectors.toList());
         }
@@ -109,12 +109,12 @@ public class WarpPointConverter implements ArgumentConverter<WarpPoint> {
         String filterText = argument;
 
         if (parts.length == 2) {
-            UUID namespace = GeneralPlayerUtil.resolveMacroNamespace(parts[0]);
+            UUID namespace = GeneralPlayerUtil.resolveMacroNamespace(sender, parts[0]);
             if (namespace == null) {
                 return new ArrayList<>();
             }
 
-            if (!sender.hasPermission("aurora.warp.access." + namespace)) {
+            if (!WarpPermissionCheck.hasAccessToNamespace(sender, namespace)) {
                 return new ArrayList<>();
             }
 
