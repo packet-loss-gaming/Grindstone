@@ -31,18 +31,23 @@ public class ChatBridgeComponent extends BukkitComponent {
         CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), this::integrateWithTelegram, 1);
     }
 
+    private void registerDebugIntegration() {
+        // We failed to integrate with Telegram, add a sendDebug fallback to handle mod messages
+        // that may contain important information (e.g. from the problem reporting component)
+        // that would otherwise go nowhere.
+        modMessageConsumers.add(ChatUtil::sendDebug);
+    }
+
     private void handleIntegrationNotFound(String integrationName) {
         CommandBook.logger().info(integrationName + " was not found, not integrated.");
+        registerDebugIntegration();
     }
 
     private void handleIncompatibleIntegration(String integrationName, Throwable t) {
         CommandBook.logger().warning(integrationName + " did not integrate properly.");
         t.printStackTrace();
 
-        // We failed to integrate with Telegram, add a sendDebug fallback to handle mod messages
-        // that may contain important information (e.g. from the problem reporting component)
-        // that would otherwise go nowhere.
-        modMessageConsumers.add(ChatUtil::sendDebug);
+        registerDebugIntegration();
     }
 
     private AbstractComponent getTelegramBotComponent() {
