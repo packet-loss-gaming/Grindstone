@@ -94,8 +94,11 @@ tasks.withType(JavaCompile).configureEach {
 group = 'gg.packetloss'
 version = '1.0-SNAPSHOT'
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(16)
+    }
+}
 
 publishing {
     publications {
