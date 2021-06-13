@@ -698,6 +698,9 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
         ghostEntity.setMaxHealth(1);
         ghostEntity.setHealth(1);
 
+        // Make sure the ghost can't pickup items
+        ghostEntity.setCanPickupItems(false);
+
         // Modify the ghost to seek further, and chase faster than a normal zombie
         try {
             AttributeBook.setAttribute(ghostEntity, AttributeBook.Attribute.MOVEMENT_SPEED, 0.35);
