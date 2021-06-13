@@ -19,10 +19,10 @@ public class BlockWanderer {
     private int cardinalIndex;
     private BlockFace lastDirection;
     private int indexAdvancements = 0;
+    private boolean isBacktracking = false;
 
     private Block current;
     private Block best;
-
 
     public BlockWanderer(Location origin, BiPredicate<Block, Block> isBetter) {
         this.forward = ChanceUtil.getChance(2);
@@ -35,26 +35,40 @@ public class BlockWanderer {
         this.best = current;
     }
 
+    private int getNextIndex() {
+        int tmpIndex = (this.cardinalIndex + 1);
+        if (tmpIndex > 3) {
+            tmpIndex = 0;
+        }
+        return tmpIndex;
+    }
+
+    private int getPreviousIndex() {
+        int tmpIndex = (this.cardinalIndex - 1);
+        if (tmpIndex < 0) {
+            tmpIndex = 3;
+        }
+        return tmpIndex;
+    }
+
     private void nextDirection() {
         this.indexAdvancements++;
 
         // Advance in whatever way we're configured to do so
         if (this.forward) {
-            this.cardinalIndex = (this.cardinalIndex + 1);
-            if (this.cardinalIndex > 3) {
-                this.cardinalIndex = 0;
-            }
+            this.cardinalIndex = getNextIndex();
         } else {
-            this.cardinalIndex = (this.cardinalIndex - 1);
-            if (this.cardinalIndex < 0) {
-                this.cardinalIndex = 3;
-            }
+            this.cardinalIndex = getPreviousIndex();
         }
 
         // Skip directions if they cause us to immediately double back,
         // double back if we get stuck.
-        if (getDirection() == lastDirection.getOppositeFace() && indexAdvancements < 4) {
-            nextDirection();
+        if (getDirection() == lastDirection.getOppositeFace()) {
+            if (indexAdvancements < 4) {
+                nextDirection();
+            } else {
+                this.isBacktracking = true;
+            }
         }
     }
 
@@ -64,39 +78,80 @@ public class BlockWanderer {
 
     private void advanceTo(Block block) {
         this.current = block;
-        this.lastDirection = getDirection();
-        this.indexAdvancements = 0;
 
         if (isBetter.test(current, best)) {
             this.best = current;
         }
     }
 
+    private void markAdvancement() {
+        this.lastDirection = getDirection();
+        this.indexAdvancements = 0;
+    }
+
+    private boolean tryMoveDirection(BlockFace direction) {
+        Block next = current.getRelative(direction);
+
+        // If we've run off a cliff, don't go this way
+        if (!next.getRelative(BlockFace.DOWN).getType().isSolid()) {
+            if (next.getRelative(BlockFace.DOWN, 2).getType().isSolid()) {
+                advanceTo(next.getRelative(BlockFace.DOWN));
+                return true;
+            }
+            return false;
+        }
+
+        // If next is solid try and go up, if we can't do that, don't go this way
+        if (next.getType().isSolid()) {
+            if (!next.getRelative(BlockFace.UP).getType().isSolid()) {
+                advanceTo(next.getRelative(BlockFace.UP));
+                return true;
+            }
+            return false;
+        }
+
+        advanceTo(next);
+        return true;
+    }
+
+    private boolean tryRecovery(int directionIndex) {
+        BlockFace face = EnvironmentUtil.getCardinalBlockFaces()[directionIndex];
+
+        if (tryMoveDirection(face)) {
+            this.cardinalIndex = directionIndex;
+            markAdvancement();
+            return true;
+        }
+
+        return false;
+
+    }
+
+    private boolean tryRecoveryA() {
+        int direction = this.forward ? getNextIndex() : getPreviousIndex();
+        return tryRecovery(direction);
+    }
+
+    private boolean tryRecoveryB() {
+        int direction = this.forward ? getPreviousIndex() : getNextIndex();
+        return tryRecovery(direction);
+    }
+
     public Location walk() {
         for (int i = 0; i < 50; ++i) {
-            Block next = current.getRelative(getDirection());
-
-            // If we've run off a cliff, don't go this way
-            if (!next.getRelative(BlockFace.DOWN).getType().isSolid()) {
-                if (next.getRelative(BlockFace.DOWN, 2).getType().isSolid()) {
-                    advanceTo(next.getRelative(BlockFace.DOWN));
+            if (isBacktracking) {
+                if (tryRecoveryA() || tryRecoveryB()) {
+                    isBacktracking = false;
                     continue;
                 }
-                nextDirection();
+            }
+
+            if (tryMoveDirection(getDirection())) {
+                markAdvancement();
                 continue;
             }
 
-            // If next is solid try and go up, if we can't do that, don't go this way
-            if (next.getType().isSolid()) {
-                if (!next.getRelative(BlockFace.UP).getType().isSolid()) {
-                    advanceTo(next.getRelative(BlockFace.UP));
-                    continue;
-                }
-                nextDirection();
-                continue;
-            }
-
-            advanceTo(next);
+            nextDirection();
         }
 
         return best.getLocation();
