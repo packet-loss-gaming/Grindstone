@@ -44,6 +44,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -441,6 +442,23 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
         }
 
         if (parent.isGhost((Zombie) entity)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityTargetEntityEvent(EntityTargetLivingEntityEvent event) {
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Zombie)) {
+            return;
+        }
+
+        if (!parent.isGhost((Zombie) entity)) {
+            return;
+        }
+
+        Entity currentTarget = ((Zombie) entity).getTarget();
+        if (currentTarget != null && parent.contains(currentTarget)) {
             event.setCancelled(true);
         }
     }
