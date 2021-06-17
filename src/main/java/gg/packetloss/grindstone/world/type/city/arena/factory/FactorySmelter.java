@@ -13,6 +13,7 @@ import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -59,7 +60,7 @@ public class FactorySmelter extends FactoryMech {
         Material.RAW_GOLD_BLOCK, new Conversion(Material.RAW_GOLD, 9)
     );
 
-    private void processWantedItem(Collection<Player> audible, ItemStack stack) {
+    private void processWantedItem(Player thrower, Collection<Player> audible, ItemStack stack) {
         Material type = stack.getType();
         int quantity = stack.getAmount();
 
@@ -67,6 +68,10 @@ public class FactorySmelter extends FactoryMech {
         if (conversion != null) {
             type = conversion.newType;
             quantity *= conversion.multiplier;
+        }
+
+        if (thrower != null && thrower.hasPermission("aurora.tome.cursedsmelting")) {
+            quantity *= ChanceUtil.getRandom(3);
         }
 
         ChatUtil.sendNotice(audible, "Found: " + quantity + " " + type + ".");
@@ -91,11 +96,12 @@ public class FactorySmelter extends FactoryMech {
         if (!contained.isEmpty()) ChatUtil.sendNotice(playerList, "[" + getName() + "] Processing...");
         for (Item e : contained) {
             // Find items and destroy those unwanted
+            Player thrower = EntityUtil.getThrower(e);
             ItemStack workingStack = e.getItemStack();
 
             // Add the item to the list
             if (WANTED.contains(workingStack.getType())) {
-                processWantedItem(playerList, workingStack);
+                processWantedItem(thrower, playerList, workingStack);
             }
             e.remove();
         }

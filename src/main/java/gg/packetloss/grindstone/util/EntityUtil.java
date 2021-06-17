@@ -9,10 +9,13 @@ package gg.packetloss.grindstone.util;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.UUID;
 
 import static gg.packetloss.grindstone.events.EntityHealthInContextEvent.HealthKind.CURRENT;
 import static gg.packetloss.grindstone.events.EntityHealthInContextEvent.HealthKind.MAX;
@@ -175,5 +178,14 @@ public class EntityUtil {
 
     public static void spawnProtectedItem(ItemStack stack, Player player) {
         spawnProtectedItem(stack, player, player.getLocation());
+    }
+
+    public static Player getThrower(Item item) {
+        UUID throwerID = item.getThrower();
+        if (throwerID == null) {
+            return null;
+        }
+
+        return Bukkit.getPlayer(throwerID);
     }
 }

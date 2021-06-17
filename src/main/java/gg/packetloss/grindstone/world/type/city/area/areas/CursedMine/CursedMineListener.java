@@ -95,26 +95,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
         ItemStack itemInHand = player.getItemInHand();
 
         // Get the base drop
-        ItemStack stack = EnvironmentUtil.getOreDrop(blockType, hasSilkTouch(itemInHand));
-        assert stack != null;
-
-        // Apply cursed smelting transformations if not using a silk touch pickaxe
-        if (player.hasPermission("aurora.tome.cursedsmelting") && !hasSilkTouch(itemInHand)) {
-            switch (blockType) {
-                case GOLD_ORE:
-                    stack.setType(Material.GOLD_INGOT);
-                    break;
-                case IRON_ORE:
-                    stack.setType(Material.IRON_INGOT);
-                    break;
-            }
-        }
-
-        // Apply fortune if not an ore result
-        if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(stack.getType())) {
-            int modifier = ItemUtil.fortuneModifier(blockType, ItemUtil.fortuneLevel(itemInHand));
-            stack.setAmount(stack.getAmount() * modifier);
-        }
+        ItemStack stack = EnvironmentUtil.getOreDrop(blockType, itemInHand);
 
         // Distribute item stacks
         int numClones = ChanceUtil.getRandomNTimes(8, 3);

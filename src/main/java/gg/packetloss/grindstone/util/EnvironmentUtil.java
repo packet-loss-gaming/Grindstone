@@ -6,12 +6,14 @@
 
 package gg.packetloss.grindstone.util;
 
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
@@ -122,55 +124,58 @@ public class EnvironmentUtil {
         return ORES.contains(type);
     }
 
-    public static ItemStack getOreDrop(Block block, boolean hasSilkTouch) {
-        return getOreDrop(block.getType(), hasSilkTouch);
+    private static ItemStack getOreDrop(Material block) {
+        if (Tag.COAL_ORES.isTagged(block)) {
+            return new ItemStack(Material.COAL);
+        }
+        if (Tag.IRON_ORES.isTagged(block)) {
+            return new ItemStack(Material.RAW_IRON);
+        }
+        if (Tag.COPPER_ORES.isTagged(block)) {
+            return new ItemStack(Material.RAW_COPPER, ChanceUtil.getRangedRandom(2, 3));
+        }
+        if (Tag.LAPIS_ORES.isTagged(block)) {
+            return new Dye(DyeColor.BLUE).toItemStack(ChanceUtil.getRangedRandom(4, 9));
+        }
+        if (Tag.REDSTONE_ORES.isTagged(block)) {
+            return new ItemStack(Material.REDSTONE, ChanceUtil.getRangedRandom(4, 5));
+        }
+        if (Tag.GOLD_ORES.isTagged(block)) {
+            if (block == Material.NETHER_GOLD_ORE) {
+                return new ItemStack(Material.GOLD_NUGGET, ChanceUtil.getRangedRandom(2, 6));
+            }
+            return new ItemStack(Material.RAW_GOLD);
+        }
+        if (Tag.DIAMOND_ORES.isTagged(block)) {
+            return new ItemStack(Material.DIAMOND);
+        }
+        if (Tag.EMERALD_ORES.isTagged(block)) {
+            return new ItemStack(Material.EMERALD);
+        }
+        if (block == Material.NETHER_QUARTZ_ORE) {
+            return new ItemStack(Material.QUARTZ);
+        }
+
+        throw new UnsupportedOperationException("Unknown ore");
     }
 
-    public static ItemStack getOreDrop(Material block, boolean hasSilkTouch) {
-        if (!isOre(block)) {
-            return null;
-        } else if (hasSilkTouch) {
+    public static ItemStack getOreDrop(Material block, ItemStack tool) {
+        Validate.isTrue(isOre(block));
+
+        if (tool.containsEnchantment(Enchantment.SILK_TOUCH)) {
             return new ItemStack(block);
         } else {
-            if (Tag.COAL_ORES.isTagged(block)) {
-                return new ItemStack(Material.COAL);
-            }
-            if (Tag.IRON_ORES.isTagged(block)) {
-                return new ItemStack(Material.RAW_IRON);
-            }
-            if (Tag.COPPER_ORES.isTagged(block)) {
-                return new ItemStack(Material.RAW_COPPER, ChanceUtil.getRangedRandom(2, 3));
-            }
-            if (Tag.LAPIS_ORES.isTagged(block)) {
-                return new Dye(DyeColor.BLUE).toItemStack(ChanceUtil.getRangedRandom(4, 9));
-            }
-            if (Tag.REDSTONE_ORES.isTagged(block)) {
-                return new ItemStack(Material.REDSTONE, ChanceUtil.getRangedRandom(4, 5));
-            }
-            if (Tag.GOLD_ORES.isTagged(block)) {
-                if (block == Material.NETHER_GOLD_ORE) {
-                    return new ItemStack(Material.GOLD_NUGGET, ChanceUtil.getRangedRandom(2, 6));
-                }
-                return new ItemStack(Material.RAW_GOLD);
-            }
-            if (Tag.DIAMOND_ORES.isTagged(block)) {
-                return new ItemStack(Material.DIAMOND);
-            }
-            if (Tag.EMERALD_ORES.isTagged(block)) {
-                return new ItemStack(Material.EMERALD);
-            }
-            if (block == Material.NETHER_QUARTZ_ORE) {
-                return new ItemStack(Material.QUARTZ);
-            }
-
-            throw new UnsupportedOperationException("Unknown ore");
+            int fortuneModifier = ItemUtil.fortuneModifier(block, ItemUtil.fortuneLevel(tool));
+            ItemStack stack = getOreDrop(block);
+            stack.setAmount(stack.getAmount() * fortuneModifier);
+            return stack;
         }
     }
 
     static {
         // Do a runtime validation of the getOreDrop function to make sure it's setup correctly.
         for (Material ore : ORES) {
-            ItemStack result = getOreDrop(ore, false);
+            ItemStack result = getOreDrop(ore, new ItemStack(Material.DIAMOND_PICKAXE));
             Validate.notNull(result);
 
             Material resultType = result.getType();
