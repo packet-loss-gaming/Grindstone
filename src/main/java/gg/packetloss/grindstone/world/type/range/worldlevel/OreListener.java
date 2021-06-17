@@ -8,15 +8,14 @@ package gg.packetloss.grindstone.world.type.range.worldlevel;
 
 import gg.packetloss.grindstone.events.entity.item.DropClearPulseEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -73,15 +72,7 @@ public class OreListener implements Listener {
         return (int) Math.max(1, (level * 3));
     }
 
-    private void addPool(int level, final BlockState block, final int fortuneLevel, final boolean hasSilkTouch) {
-        final Location location = block.getLocation();
-        final World world = location.getWorld();
-
-        ItemStack generalDrop = EnvironmentUtil.getOreDrop(block.getType(), hasSilkTouch);
-        final int fortune = EnvironmentUtil.isOre(generalDrop.getType()) ? 0 : fortuneLevel;
-        final int times = ChanceUtil.getRandom(getOreMod(level));
-        final float vol = ((float) 1 / times);
-
+    private void addPool(Player player, Location destination, int times, ItemStack drop) {
         TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
         taskBuilder.setNumberOfRuns(times);
@@ -89,22 +80,35 @@ public class OreListener implements Listener {
         taskBuilder.setInterval(20);
         taskBuilder.setDelay(20);
 
+        World world = destination.getWorld();
+        float vol = ((float) 1 / times);
         taskBuilder.setAction((timesL) -> {
             if (nextDropTime != 0 && System.currentTimeMillis() < nextDropTime) {
                 return false;
             }
 
-            for (int i = 0; i < ItemUtil.fortuneModifier(block.getType(), fortune); i++) {
-                world.dropItem(location, EnvironmentUtil.getOreDrop(block.getType(), hasSilkTouch));
-            }
-            world.playSound(location, Sound.ENTITY_BLAZE_AMBIENT, Math.min(1, (((float) timesL / times) * .6F) + vol), 0);
+            EntityUtil.spawnProtectedItem(drop.clone(), player, destination);
+            world.playSound(destination, Sound.ENTITY_BLAZE_AMBIENT, Math.min(1, (((float) timesL / times) * .6F) + vol), 0);
             return true;
         });
         taskBuilder.setFinishAction(() -> {
-            world.playSound(location, Sound.ENTITY_BLAZE_DEATH, .2F, 0);
+            world.playSound(destination, Sound.ENTITY_BLAZE_DEATH, .2F, 0);
         });
 
         taskBuilder.build();
+    }
+
+    private void tryAddPool(Player player, BlockState block) {
+        int level = parent.getWorldLevel(player);
+        if (level < 2) {
+            return;
+        }
+
+        Location destination = block.getLocation().add(0.5, 0, .5);
+        int times = ChanceUtil.getRandom(getOreMod(level));
+        ItemStack drop = EnvironmentUtil.getOreDrop(block.getType(), player.getItemInHand());
+
+        addPool(player, destination, times, drop);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -115,13 +119,8 @@ public class OreListener implements Listener {
             return;
         }
 
-        int level = parent.getWorldLevel(player);
         if (isOreMultiplied(block)) {
-            ItemStack stack = player.getItemInHand();
-
-            if (level > 1) {
-                addPool(level, block, ItemUtil.fortuneLevel(stack), stack.containsEnchantment(Enchantment.SILK_TOUCH));
-            }
+            tryAddPool(player, block);
         } else if (EnvironmentUtil.isOre(block.getType())) {
             oresState.clearPlayerPlacement(block.getBlock());
         }

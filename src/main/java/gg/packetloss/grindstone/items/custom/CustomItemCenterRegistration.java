@@ -816,7 +816,7 @@ public class CustomItemCenterRegistration {
         CustomItem tomeOfCursedSmelting = new CustomItem(TOME_OF_CURSED_SMELTING, Material.BOOK);
         tomeOfCursedSmelting.addSource(ItemSource.CURSED_MINE);
         tomeOfCursedSmelting.addSource(ItemSource.MARKET);
-        tomeOfCursedSmelting.addUse("Consumable to permanently add a automatic smelting to cursed ores.");
+        tomeOfCursedSmelting.addUse("Consumable to permanently improve smelting results at the factory.");
         itemConsumer.accept(tomeOfCursedSmelting);
 
         CustomItem tomeOfPoison = new CustomItem(TOME_OF_POISON, Material.BOOK);
