@@ -18,12 +18,9 @@ import org.bukkit.inventory.ItemStack;
 public class MasterSwordImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
     @Override
     public SpecialAttack getSpecial(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
-        switch (ChanceUtil.getRandom(2)) {
-            case 1:
-                return new Curse(owner, usedItem, target);
-            case 2:
-                return new LifeLeech(owner, usedItem, target);
-        }
-        return null;
+        return ChanceUtil.supplyRandom(
+            () -> new Curse(owner, usedItem, target),
+            () -> new LifeLeech(owner, usedItem, target)
+        );
     }
 }

@@ -493,11 +493,11 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
         new Haunting(DAN, (player) -> {
             ChatUtil.sendNotice(player, "Dan gives you a sparkling touch.");
 
-            Material type = switch (ChanceUtil.getRandom(3)) {
-                case 1 -> Material.IRON_INGOT;
-                case 2 -> Material.GOLD_INGOT;
-                default -> Material.DIAMOND;
-            };
+            Material type = ChanceUtil.supplyRandom(
+                () -> Material.IRON_INGOT,
+                () -> Material.GOLD_INGOT,
+                () -> Material.DIAMOND
+            );
 
             PrayerComponent.constructPrayer(player, true, ImmutableList.of(new InventoryEffect(type, 64)), 5000);
         }),

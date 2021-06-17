@@ -22,20 +22,13 @@ import org.bukkit.inventory.ItemStack;
 public class UnleashedSwordImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
     @Override
     public SpecialAttack getSpecial(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
-        switch (ChanceUtil.getRandom(6)) {
-            case 1:
-                return new EvilFocus(owner, usedItem, target);
-            case 2:
-                return new HealingLight(owner, usedItem, target);
-            case 3:
-                return new Speed(owner, usedItem, target);
-            case 4:
-                return new Regen(owner, usedItem, target);
-            case 5:
-                return new DoomBlade(owner, usedItem, target);
-            case 6:
-                return new LifeLeech(owner, usedItem, target);
-        }
-        return null;
+        return ChanceUtil.supplyRandom(
+            () -> new EvilFocus(owner, usedItem, target),
+            () -> new HealingLight(owner, usedItem, target),
+            () -> new Speed(owner, usedItem, target),
+            () -> new Regen(owner, usedItem, target),
+            () -> new DoomBlade(owner, usedItem, target),
+            () -> new LifeLeech(owner, usedItem, target)
+        );
     }
 }

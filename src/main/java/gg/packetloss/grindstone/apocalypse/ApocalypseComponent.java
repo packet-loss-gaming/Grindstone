@@ -344,20 +344,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        switch (ChanceUtil.getRandom(4)) {
-            case 1:
-                buffComponent.notifyIncrease(Buff.APOCALYPSE_OVERLORD, player);
-                break;
-            case 2:
-                buffComponent.notifyIncrease(Buff.APOCALYPSE_MAGIC_SHIELD, player);
-                break;
-            case 3:
-                buffComponent.notifyIncrease(Buff.APOCALYPSE_DAMAGE_BOOST, player);
-                break;
-            case 4:
-                buffComponent.notifyIncrease(Buff.APOCALYPSE_LIFE_LEACH, player);
-                break;
-        }
+        ChanceUtil.doRandom(
+            () -> buffComponent.notifyIncrease(Buff.APOCALYPSE_OVERLORD, player),
+            () -> buffComponent.notifyIncrease(Buff.APOCALYPSE_MAGIC_SHIELD, player),
+            () -> buffComponent.notifyIncrease(Buff.APOCALYPSE_DAMAGE_BOOST, player),
+            () -> buffComponent.notifyIncrease(Buff.APOCALYPSE_LIFE_LEACH, player)
+        );
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -405,20 +397,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             }
 
             if (ChanceUtil.getChance(5000)) {
-                switch (ChanceUtil.getRandom(4)) {
-                    case 1:
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_HELMET));
-                        break;
-                    case 2:
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_CHESTPLATE));
-                        break;
-                    case 3:
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_LEGGINGS));
-                        break;
-                    default:
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_BOOTS));
-                        break;
-                }
+                event.getDrops().add(ChanceUtil.supplyRandom(
+                    () -> CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_HELMET),
+                    () -> CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_CHESTPLATE),
+                    () -> CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_LEGGINGS),
+                    () -> CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_BOOTS)
+                ));
             }
         }
     }

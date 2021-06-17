@@ -177,8 +177,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         if (ChanceUtil.getChance(256)) {
             final PlayerInventory pInv = player.getInventory();
-            switch (ChanceUtil.getRandom(5)) {
-                case 1:
+            ChanceUtil.doRandom(
+                () -> {
                     boolean hasAxe = true;
                     switch (pInv.getItemInHand().getType()) {
                         case DIAMOND_AXE:
@@ -196,12 +196,12 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                         default:
                             hasAxe = false;
                             ChatUtil.sendWarning(player, "The fairy couldn't find an axe and instead throws a rock" +
-                                    "at you.");
+                                "at you.");
                             player.damage(7);
                             player.setVelocity(new Vector(
-                                    random.nextDouble() * 2.0 - 1,
-                                    random.nextDouble() * 1,
-                                    random.nextDouble() * 2.0 - 1)
+                                random.nextDouble() * 2.0 - 1,
+                                random.nextDouble() * 1,
+                                random.nextDouble() * 2.0 - 1)
                             );
                     }
 
@@ -209,16 +209,16 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                         ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                         server.getScheduler().runTaskLater(inst, () -> player.getInventory().setItemInHand(null), 1);
                     }
-                    break;
-                case 2:
+                },
+                () -> {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * 60, 2), true);
                     ChatUtil.sendWarning(player, "You cut your hand on the poisonous bark.");
-                    break;
-                case 3:
+                },
+                () -> {
                     new ButterFingersEffect().trigger(player);
                     ChatUtil.sendNotice(player, "The fairies throws your stuff all over the place");
-                    break;
-                case 4:
+                },
+                () -> {
                     for (final Player aPlayer : getContained(Player.class)) {
                         ChatUtil.sendWarning(aPlayer, "The fairies turn rabid!");
                         IntegratedRunnable runnable = new IntegratedRunnable() {
@@ -241,13 +241,13 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                         TimedRunnable timedRunnable = new TimedRunnable(runnable, 1);
                         timedRunnable.setTask(server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 20));
                     }
-                    break;
-                case 5:
+                },
+                () -> {
                     ChatUtil.sendWarning(player, "The tooth fairy takes your teeth!");
                     noTeeth.add(player);
                     server.getScheduler().runTaskLater(inst, () -> noTeeth.remove(player), 20 * 60 * 2);
-                    break;
-            }
+                }
+            );
         }
     }
 

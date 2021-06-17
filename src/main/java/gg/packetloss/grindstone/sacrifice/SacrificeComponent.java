@@ -30,10 +30,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.Prayers;
 import gg.packetloss.grindstone.state.player.NativeSerializerComponent;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.task.DebounceHandle;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.*;
@@ -453,25 +450,18 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }
     }
 
+    private static final List<Prayers> SACRIFICE_PRAYERS = List.of(
+        Prayers.DIGGYDIGGY,
+        Prayers.HEALTH,
+        Prayers.POWER,
+        Prayers.SPEED,
+        Prayers.ANTIFIRE,
+        Prayers.NIGHT_VISION,
+        Prayers.DEADLYDEFENSE
+    );
+
     private Prayers getRandomSacrificePrayer() {
-        switch (ChanceUtil.getRandom(7)) {
-            case 1:
-                return Prayers.DIGGYDIGGY;
-            case 2:
-                return Prayers.HEALTH;
-            case 3:
-                return Prayers.POWER;
-            case 4:
-                return Prayers.SPEED;
-            case 5:
-                return Prayers.ANTIFIRE;
-            case 6:
-                return Prayers.NIGHT_VISION;
-            case 7:
-                return Prayers.DEADLYDEFENSE;
-            default:
-                return Prayers.SMOKE;
-        }
+        return CollectionUtil.getElement(SACRIFICE_PRAYERS);
     }
 
     private void sacrifice(Player player, List<ItemStack> items) {

@@ -293,6 +293,20 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
         }
     }
 
+    private static final List<String> DEATH_MESSAGES = List.of(
+        " was killed by Dave",
+        " got on Dave's bad side",
+        " was slain by an evil spirit",
+        " needs to stay away from the cursed mine",
+        " enjoys death a little too much",
+        " seriously needs to stop mining",
+        " angered an evil spirit",
+        " doesn't get a cookie from COOKIE",
+        " should stay away",
+        " needs to consider retirement",
+        "'s head is now on Dave's mantel"
+    );
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
@@ -308,41 +322,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
             }
 
             parent.removeFromHitList(player);
-            switch (ChanceUtil.getRandom(11)) {
-                case 1:
-                    event.setDeathMessage(player.getName() + " was killed by Dave");
-                    break;
-                case 2:
-                    event.setDeathMessage(player.getName() + " got on Dave's bad side");
-                    break;
-                case 3:
-                    event.setDeathMessage(player.getName() + " was slain by an evil spirit");
-                    break;
-                case 4:
-                    event.setDeathMessage(player.getName() + " needs to stay away from the cursed mine");
-                    break;
-                case 5:
-                    event.setDeathMessage(player.getName() + " enjoys death a little too much");
-                    break;
-                case 6:
-                    event.setDeathMessage(player.getName() + " seriously needs to stop mining");
-                    break;
-                case 7:
-                    event.setDeathMessage(player.getName() + " angered an evil spirit");
-                    break;
-                case 8:
-                    event.setDeathMessage(player.getName() + " doesn't get a cookie from COOKIE");
-                    break;
-                case 9:
-                    event.setDeathMessage(player.getName() + " should stay away");
-                    break;
-                case 10:
-                    event.setDeathMessage(player.getName() + " needs to consider retirement");
-                    break;
-                case 11:
-                    event.setDeathMessage(player.getName() + "'s head is now on Dave's mantel");
-                    break;
-            }
+            event.setDeathMessage(player.getName() + CollectionUtil.getElement(DEATH_MESSAGES));
             parent.addSkull(player);
         }
     }

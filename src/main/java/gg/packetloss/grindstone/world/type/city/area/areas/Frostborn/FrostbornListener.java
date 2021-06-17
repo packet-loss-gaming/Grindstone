@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.VectorUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
@@ -41,6 +42,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
@@ -294,6 +296,12 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
         }
     }
 
+    private static final List<String> DEATH_MESSAGES = List.of(
+        " exploded from frosty joy",
+        " lost their cool",
+        " lost a snowball fight"
+    );
+
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
@@ -304,20 +312,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
 
             // Allow players to keep their experience
             event.setKeepLevel(true);
-
-            String deathMessage;
-            switch (ChanceUtil.getRandom(3)) {
-                case 1:
-                    deathMessage = " exploded from frosty joy";
-                    break;
-                case 2:
-                    deathMessage = " lost their cool";
-                    break;
-                default:
-                    deathMessage = " lost a snowball fight";
-                    break;
-            }
-            event.setDeathMessage(player.getName() + deathMessage);
+            event.setDeathMessage(player.getName() + CollectionUtil.getElement(DEATH_MESSAGES));
         }
     }
 

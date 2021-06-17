@@ -22,14 +22,11 @@ public class SoulSmite extends EntityAttack implements MeleeSpecial {
     }
 
     private SpecialAttack getSubSpec() {
-        switch (ChanceUtil.getRandom(3)) {
-            case 1:
-                return new ChainLightning(owner, usedItem, target);
-            case 2:
-                return new Decimate(owner, usedItem, target);
-            default:
-                return new FearBlaze(owner, usedItem, target);
-        }
+        return ChanceUtil.supplyRandom(
+            () -> new ChainLightning(owner, usedItem, target),
+            () -> new Decimate(owner, usedItem, target),
+            () -> new FearBlaze(owner, usedItem, target)
+        );
     }
 
     @Override

@@ -31,24 +31,20 @@ import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningIt
 public class FearBowImpl extends AbstractItemFeatureImpl implements SpecWeaponImpl {
     @Override
     public SpecialAttack getSpecial(LivingEntity owner, ItemStack usedItem, LivingEntity target) {
-        switch (ChanceUtil.getRandom(6)) {
-            case 1:
+        return ChanceUtil.supplyRandom(
+            () -> {
                 Disarm disarmSpec = new Disarm(owner, usedItem, target);
                 if (disarmSpec.getItemStack() != null) {
                     return disarmSpec;
                 }
-            case 2:
-                return new Curse(owner, usedItem, target);
-            case 3:
-                return new MagicChain(owner, usedItem, target);
-            case 4:
-                return new FearStrike(owner, usedItem, target);
-            case 5:
-                return new SoulReaper(owner, usedItem, target);
-            case 6:
-                return new HellCano(owner, usedItem, target);
-        }
-        return null;
+                return getSpecial(owner, usedItem, target);
+            },
+            () -> new Curse(owner, usedItem, target),
+            () -> new MagicChain(owner, usedItem, target),
+            () -> new FearStrike(owner, usedItem, target),
+            () -> new SoulReaper(owner, usedItem, target),
+            () -> new HellCano(owner, usedItem, target)
+        );
     }
 
     @EventHandler

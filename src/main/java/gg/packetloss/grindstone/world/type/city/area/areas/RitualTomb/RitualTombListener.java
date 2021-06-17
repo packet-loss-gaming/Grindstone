@@ -11,6 +11,7 @@ import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import org.bukkit.Location;
@@ -31,6 +32,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.io.IOException;
+import java.util.List;
 
 public class RitualTombListener extends AreaListener<RitualTomb> {
     public RitualTombListener(RitualTomb parent) {
@@ -128,6 +130,11 @@ public class RitualTombListener extends AreaListener<RitualTomb> {
         parent.tryTeleportToRitualTomb(player);
     }
 
+    private static final List<String> DEATH_MESSAGES = List.of(
+        " was vexed",
+        " died for Hallow"
+    );
+
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
@@ -147,17 +154,7 @@ public class RitualTombListener extends AreaListener<RitualTomb> {
             e.printStackTrace();
         }
 
-        String deathMessage;
-        switch (ChanceUtil.getRandom(2)) {
-            case 1:
-                deathMessage = " was vexed";
-                break;
-            default:
-                deathMessage = " died for Hallow";
-                break;
-        }
-
-        event.setDeathMessage(player.getName() + deathMessage);
+        event.setDeathMessage(player.getName() + CollectionUtil.getElement(DEATH_MESSAGES));
     }
 
     @EventHandler

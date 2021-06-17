@@ -360,20 +360,12 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     drops.add(CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(3)));
                 }
                 if (ChanceUtil.getChance(1000000)) {
-                    switch (ChanceUtil.getRandom(4)) {
-                        case 1:
-                            drops.add(CustomItemCenter.build(CustomItems.FEAR_SWORD));
-                            break;
-                        case 2:
-                            drops.add(CustomItemCenter.build(CustomItems.FEAR_BOW));
-                            break;
-                        case 3:
-                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_SWORD));
-                            break;
-                        case 4:
-                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_BOW));
-                            break;
-                    }
+                    drops.add(ChanceUtil.supplyRandom(
+                        () -> CustomItemCenter.build(CustomItems.FEAR_SWORD),
+                        () -> CustomItemCenter.build(CustomItems.FEAR_BOW),
+                        () -> CustomItemCenter.build(CustomItems.UNLEASHED_SWORD),
+                        () -> CustomItemCenter.build(CustomItems.UNLEASHED_BOW)
+                    ));
                 }
             } else if (customName.equals("Guardian Zombie")) {
                 drops.removeIf(stack -> stack != null && stack.getType() == Material.ROTTEN_FLESH);
@@ -403,20 +395,12 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     drops.add(CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(8)));
                 }
                 if (ChanceUtil.getChance(8000)) {
-                    switch (ChanceUtil.getRandom(4)) {
-                        case 1:
-                            drops.add(CustomItemCenter.build(CustomItems.FEAR_SWORD));
-                            break;
-                        case 2:
-                            drops.add(CustomItemCenter.build(CustomItems.FEAR_BOW));
-                            break;
-                        case 3:
-                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_SWORD));
-                            break;
-                        case 4:
-                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_BOW));
-                            break;
-                    }
+                    drops.add(ChanceUtil.supplyRandom(
+                        () -> CustomItemCenter.build(CustomItems.FEAR_SWORD),
+                        () -> CustomItemCenter.build(CustomItems.FEAR_BOW),
+                        () -> CustomItemCenter.build(CustomItems.UNLEASHED_SWORD),
+                        () -> CustomItemCenter.build(CustomItems.UNLEASHED_BOW)
+                    ));
                 }
                 event.setDroppedExp(event.getDroppedExp() * 5);
             }

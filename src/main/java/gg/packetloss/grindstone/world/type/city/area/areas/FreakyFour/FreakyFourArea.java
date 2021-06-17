@@ -238,18 +238,18 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             world.spawn(charlotte.getLocation(), CaveSpider.class);
         }
 
-        switch (ChanceUtil.getRandom(3)) {
-            case 1:
+        ChanceUtil.doRandom(
+            () -> {
                 createWall(charlotte_RG,
-                        input -> input.getType() == Material.AIR,
-                        input -> input.getType() == Material.COBWEB,
-                        Material.AIR,
-                        Material.COBWEB,
-                        1,
-                        config.charlotteFloorWeb
+                    input -> input.getType() == Material.AIR,
+                    input -> input.getType() == Material.COBWEB,
+                    Material.AIR,
+                    Material.COBWEB,
+                    1,
+                    config.charlotteFloorWeb
                 );
-                break;
-            case 2:
+            },
+            () -> {
                 LivingEntity target = charlotte.getTarget();
                 if (target != null && contains(target)) {
                     List<Location> queList = new ArrayList<>();
@@ -265,8 +265,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                         block.setType(Material.COBWEB);
                     }
                 }
-                break;
-            case 3:
+            },
+            () -> {
                 RegionWalker.walk(charlotte_RG, (x, y, z) -> {
                     if (!ChanceUtil.getChance(config.charlotteWebSpider)) return;
 
@@ -276,8 +276,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                         world.spawn(block.getLocation(), CaveSpider.class);
                     }
                 });
-                break;
-        }
+            }
+        );
     }
 
     public void spawnFrimus() {

@@ -361,36 +361,32 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 int dropVal = parent.getConfig().playerVal * playerCount;
                 List<ItemStack> drops = SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), -1, dropVal);
 
-                switch (ChanceUtil.getRandom(4)) {
-                    case 1:
+                drops.add(ChanceUtil.supplyRandom(
+                    () -> {
                         if (ChanceUtil.getChance(8)) {
-                            drops.add(CustomItemCenter.build(CustomItems.NECROS_HELMET));
-                            break;
+                            return CustomItemCenter.build(CustomItems.NECROS_HELMET);
                         }
-                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_HELMET));
-                        break;
-                    case 2:
+                        return CustomItemCenter.build(CustomItems.NECTRIC_HELMET);
+                    },
+                    () -> {
                         if (ChanceUtil.getChance(8)) {
-                            drops.add(CustomItemCenter.build(CustomItems.NECROS_CHESTPLATE));
-                            break;
+                            return CustomItemCenter.build(CustomItems.NECROS_CHESTPLATE);
                         }
-                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_CHESTPLATE));
-                        break;
-                    case 3:
+                        return CustomItemCenter.build(CustomItems.NECTRIC_CHESTPLATE);
+                    },
+                    () -> {
                         if (ChanceUtil.getChance(8)) {
-                            drops.add(CustomItemCenter.build(CustomItems.NECROS_LEGGINGS));
-                            break;
+                            return CustomItemCenter.build(CustomItems.NECROS_LEGGINGS);
                         }
-                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_LEGGINGS));
-                        break;
-                    case 4:
+                        return CustomItemCenter.build(CustomItems.NECTRIC_LEGGINGS);
+                    },
+                    () -> {
                         if (ChanceUtil.getChance(8)) {
-                            drops.add(CustomItemCenter.build(CustomItems.NECROS_BOOTS));
-                            break;
+                            return CustomItemCenter.build(CustomItems.NECROS_BOOTS);
                         }
-                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_BOOTS));
-                        break;
-                }
+                        return CustomItemCenter.build(CustomItems.NECTRIC_BOOTS);
+                    }
+                ));
 
                 if (ChanceUtil.getChance(100)) {
                     drops.add(CustomItemCenter.build(CustomItems.RED_FEATHER));
