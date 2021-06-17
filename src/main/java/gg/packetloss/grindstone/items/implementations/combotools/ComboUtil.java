@@ -6,20 +6,19 @@
 
 package gg.packetloss.grindstone.items.implementations.combotools;
 
-import gg.packetloss.hackbook.MaterialInfoUtil;
-import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
 
 class ComboUtil {
     public static boolean isBreakableWithAxe(Block block) {
-        return MaterialInfoUtil.getBreakSpeed(Material.NETHERITE_AXE, block) > 1.0F;
+        return Tag.MINEABLE_AXE.isTagged(block.getType());
     }
 
     public static boolean isBreakableWithPickaxe(Block block) {
-        return MaterialInfoUtil.getBreakSpeed(Material.NETHERITE_PICKAXE, block) > 1.0F;
+        return Tag.MINEABLE_PICKAXE.isTagged(block.getType());
     }
 
     public static boolean isBreakableWithShovel(Block block) {
-        return MaterialInfoUtil.getBreakSpeed(Material.NETHERITE_SHOVEL, block) > 1.0F;
+        return Tag.MINEABLE_SHOVEL.isTagged(block.getType());
     }
 }
