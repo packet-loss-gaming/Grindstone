@@ -124,7 +124,6 @@ public class BlockWanderer {
         }
 
         return false;
-
     }
 
     private boolean tryRecoveryA() {
