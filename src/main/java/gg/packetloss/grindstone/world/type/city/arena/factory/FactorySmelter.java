@@ -20,10 +20,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class FactorySmelter extends FactoryMech {
@@ -37,7 +34,9 @@ public class FactorySmelter extends FactoryMech {
     private LavaSupply lavaSupply;
 
     private static final Set<Material> WANTED = Set.of(
-        Material.IRON_ORE, Material.GOLD_ORE
+        Material.IRON_ORE, Material.GOLD_ORE,
+        Material.RAW_IRON, Material.RAW_GOLD,
+        Material.RAW_IRON_BLOCK, Material.RAW_GOLD_BLOCK
     );
 
     public FactorySmelter(World world, ProtectedRegion region, YAMLProcessor processor,
@@ -49,6 +48,29 @@ public class FactorySmelter extends FactoryMech {
     @Override
     public String getName() {
         return "Smelter - I";
+    }
+
+    private static record Conversion(Material newType, int multiplier) { };
+
+    private static final Map<Material, Conversion> CONVERSION_MAPPING = Map.of(
+        Material.IRON_ORE, new Conversion(Material.RAW_IRON, 2),
+        Material.GOLD_ORE, new Conversion(Material.RAW_GOLD, 2),
+        Material.RAW_IRON_BLOCK, new Conversion(Material.RAW_IRON, 9),
+        Material.RAW_GOLD_BLOCK, new Conversion(Material.RAW_GOLD, 9)
+    );
+
+    private void processWantedItem(Collection<Player> audible, ItemStack stack) {
+        Material type = stack.getType();
+        int quantity = stack.getAmount();
+
+        Conversion conversion = CONVERSION_MAPPING.get(type);
+        if (conversion != null) {
+            type = conversion.newType;
+            quantity *= conversion.multiplier;
+        }
+
+        ChatUtil.sendNotice(audible, "Found: " + quantity + " " + type + ".");
+        items.merge(stack.getType(), quantity, Integer::sum);
     }
 
     @Override
@@ -73,12 +95,7 @@ public class FactorySmelter extends FactoryMech {
 
             // Add the item to the list
             if (WANTED.contains(workingStack.getType())) {
-                int total = workingStack.getAmount();
-                ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
-                if (items.containsKey(workingStack.getType())) {
-                    total += items.get(workingStack.getType());
-                }
-                items.put(workingStack.getType(), total);
+                processWantedItem(playerList, workingStack);
             }
             e.remove();
         }
@@ -87,8 +104,8 @@ public class FactorySmelter extends FactoryMech {
             save(); // Update save for new Iron & Gold values
         }
 
-        int maxIron = items.getOrDefault(Material.IRON_ORE, 0);
-        int maxGold = items.getOrDefault(Material.GOLD_ORE, 0);
+        int maxIron = items.getOrDefault(Material.RAW_IRON, 0);
+        int maxGold = items.getOrDefault(Material.RAW_GOLD, 0);
 
         if (maxGold + maxIron < 1) return new ArrayList<>();
 
@@ -99,14 +116,14 @@ public class FactorySmelter extends FactoryMech {
         int goldRemainder = maxGold - (availableLava * 8);
 
         if (ironRemainder < 1) {
-            items.remove(Material.IRON_ORE);
+            items.remove(Material.RAW_IRON);
         } else {
-            items.put(Material.IRON_ORE, ironRemainder);
+            items.put(Material.RAW_IRON, ironRemainder);
         }
         if (goldRemainder < 1) {
-            items.remove(Material.GOLD_ORE);
+            items.remove(Material.RAW_GOLD);
         } else {
-            items.put(Material.GOLD_ORE, goldRemainder);
+            items.put(Material.RAW_GOLD, goldRemainder);
         }
         save(); // Update save for new Iron & Gold values
 
@@ -115,8 +132,8 @@ public class FactorySmelter extends FactoryMech {
             if (maxGold > 0) maxGold = maxGold - goldRemainder;
         }
 
-        maxIron *= 8;
-        maxGold *= 8;
+        maxIron *= 4;
+        maxGold *= 4;
 
         if (ModifierComponent.getModifierCenter().isActive(ModifierType.TRIPLE_FACTORY_PRODUCTION)) {
             maxIron *= 3;

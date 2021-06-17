@@ -194,7 +194,11 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
 
     private static int getMaxStackDrain(Material type) {
         switch (type) { // grouped by drain category, ordered by mine depth
+            case RAW_IRON_BLOCK:
             case IRON_BLOCK:
+            case RAW_COPPER_BLOCK:
+            case COPPER_BLOCK:
+            case RAW_GOLD_BLOCK:
             case GOLD_BLOCK:
             case REDSTONE_BLOCK:
             case LAPIS_BLOCK:
@@ -203,6 +207,7 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
                 return 2;
 
             case IRON_ORE:
+            case COPPER_ORE:
             case GOLD_ORE:
             case REDSTONE_ORE:
             case LAPIS_ORE:
@@ -210,11 +215,17 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
             case EMERALD_ORE:
                 return 4;
 
+            case RAW_IRON:
             case IRON_INGOT:
+            case COPPER_INGOT:
+            case RAW_GOLD:
             case GOLD_INGOT:
             case DIAMOND:
             case EMERALD:
                 return 8;
+
+            case RAW_COPPER:
+                return 24;
 
             case REDSTONE:
             case LAPIS_LAZULI:
