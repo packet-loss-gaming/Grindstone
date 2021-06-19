@@ -194,6 +194,10 @@ public class EntityUtil {
         Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_ATTACK_KNOCKBACK)).setBaseValue(knockback);
     }
 
+    public static double getFollowRange(LivingEntity entity) {
+        return Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE)).getValue();
+    }
+
     public static void setFollowRange(LivingEntity entity, double followRange) {
         Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE)).setBaseValue(followRange);
     }
