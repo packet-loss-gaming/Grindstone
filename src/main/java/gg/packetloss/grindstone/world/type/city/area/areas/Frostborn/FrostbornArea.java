@@ -37,8 +37,6 @@ import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
 import gg.packetloss.grindstone.world.type.city.area.PersistentArena;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -502,12 +500,8 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         boss.setHealth(1750);
         boss.setRemoveWhenFarAway(false);
 
-        try {
-            AttributeBook.setAttribute(boss, AttributeBook.Attribute.MOVEMENT_SPEED, 0.6);
-            AttributeBook.setAttribute(boss, AttributeBook.Attribute.FOLLOW_RANGE, 150);
-        } catch (UnsupportedFeatureException ex) {
-            ex.printStackTrace();
-        }
+        EntityUtil.setMovementSpeed(boss, .6);
+        EntityUtil.setFollowRange(boss, 150);
     }
 
     public void sendPlayersToGate() {

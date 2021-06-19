@@ -16,8 +16,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.bosses.DebugCow;
 import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
+import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -96,11 +95,7 @@ public class DebugComponent extends BukkitComponent {
             pig.setSaddle(true);
             pig.setRemoveWhenFarAway(true);
 
-            try {
-                AttributeBook.setAttribute(pig, AttributeBook.Attribute.MOVEMENT_SPEED, speed);
-            } catch (UnsupportedFeatureException e) {
-                e.printStackTrace();
-            }
+            EntityUtil.setMovementSpeed(pig, speed);
         }
     }
 

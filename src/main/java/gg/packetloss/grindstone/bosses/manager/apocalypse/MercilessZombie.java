@@ -22,8 +22,6 @@ import gg.packetloss.grindstone.util.NumericPipeline;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import gg.packetloss.openboss.bukkit.entity.BukkitEntity;
 import gg.packetloss.openboss.bukkit.util.BukkitAttackDamage;
 import gg.packetloss.openboss.bukkit.util.BukkitUtil;
@@ -204,13 +202,9 @@ public class MercilessZombie {
                     ((LivingEntity) anEntity).setMaxHealth(MIN_HEALTH);
                     ((LivingEntity) anEntity).setHealth(MIN_HEALTH);
 
-                    // Modify speed
-                    try {
-                        AttributeBook.setAttribute((LivingEntity) anEntity, AttributeBook.Attribute.MOVEMENT_SPEED, 0.3);
-                        AttributeBook.setAttribute((LivingEntity) anEntity, AttributeBook.Attribute.FOLLOW_RANGE, 75);
-                    } catch (UnsupportedFeatureException ex) {
-                        ex.printStackTrace();
-                    }
+                    // Modify speed and follow range
+                    EntityUtil.setMovementSpeed((LivingEntity) anEntity, 0.3);
+                    EntityUtil.setFollowRange((LivingEntity) anEntity, 75);
 
                     // Gear them up
                     EntityEquipment equipment = ((LivingEntity) anEntity).getEquipment();

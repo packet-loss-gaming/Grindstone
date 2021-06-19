@@ -31,8 +31,6 @@ import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -303,13 +301,9 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         bossEnt.setRemoveWhenFarAway(false);
 
         // Handle attributes
-        try {
-            AttributeBook.setAttribute(bossEnt, AttributeBook.Attribute.FOLLOW_RANGE, 50);
-            if (boss == FreakyFourBoss.SNIPEE) {
-                AttributeBook.setAttribute(bossEnt, AttributeBook.Attribute.MOVEMENT_SPEED, 0.15);
-            }
-        } catch (UnsupportedFeatureException ex) {
-            ex.printStackTrace();
+        EntityUtil.setFollowRange(bossEnt, 50);
+        if (boss == FreakyFourBoss.SNIPEE) {
+            EntityUtil.setMovementSpeed(bossEnt, .15);
         }
 
         // Handle name
