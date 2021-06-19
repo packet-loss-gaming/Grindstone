@@ -61,6 +61,7 @@ import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.flag.BooleanFlagState;
+import gg.packetloss.grindstone.util.item.ItemModifierUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.signwall.SignWall;
@@ -73,9 +74,8 @@ import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagPainter;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.city.minigame.Win;
 import gg.packetloss.grindstone.world.type.city.minigame.WinType;
-import gg.packetloss.hackbook.ModifierBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.*;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
@@ -91,6 +91,7 @@ import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -277,25 +278,21 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             gear.add(new ItemStack(Material.SHEARS));
         }
         if (combatClass.hasAxe()) {
-            try {
-                gear.add(ModifierBook.cloneWithSpecifiedModifiers(
-                        new ItemStack(Material.IRON_AXE),
-                        Lists.newArrayList(
-                                ModifierBook.ITEM_ATTACK_DAMAGE.get(
-                                        1,
-                                        ModifierBook.ModifierOperation.ADDITIVE,
-                                        ModifierBook.Slot.MAIN_HAND
-                                ),
-                                ModifierBook.ITEM_ATTACK_SPEED.get(
-                                        .9,
-                                        ModifierBook.ModifierOperation.ADDITIVE,
-                                        ModifierBook.Slot.MAIN_HAND
-                                )
+            gear.add(ItemModifierUtil.cloneWithSpecifiedModifiers(
+                    new ItemStack(Material.IRON_AXE),
+                    Lists.newArrayList(
+                        ItemModifierUtil.ITEM_ATTACK_DAMAGE.get(
+                            1,
+                            AttributeModifier.Operation.ADD_NUMBER,
+                            EquipmentSlot.HAND
+                        ),
+                        ItemModifierUtil.ITEM_ATTACK_SPEED.get(
+                            .9,
+                            AttributeModifier.Operation.ADD_NUMBER,
+                            EquipmentSlot.HAND
                         )
-                ));
-            } catch (UnsupportedFeatureException ex) {
-                ex.printStackTrace();
-            }
+                    )
+            ));
         }
         gear.add(new ItemStack(Material.COOKED_BEEF, 64));
         gear.add(new ItemStack(Material.COMPASS));

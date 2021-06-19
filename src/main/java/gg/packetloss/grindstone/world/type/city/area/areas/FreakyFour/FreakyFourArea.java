@@ -32,8 +32,6 @@ import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -325,16 +323,11 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         bossEnt.setRemoveWhenFarAway(false);
 
         // Handle attributes
-        try {
-            AttributeBook.setAttribute(bossEnt, AttributeBook.Attribute.FOLLOW_RANGE, 50);
-            if (boss == FreakyFourBoss.SNIPEE) {
-                AttributeBook.setAttribute(bossEnt, AttributeBook.Attribute.MOVEMENT_SPEED, 0.15);
-            } else if (boss == FreakyFourBoss.DA_BOMB) {
-                AttributeBook.setAttribute(bossEnt, AttributeBook.Attribute.MOVEMENT_SPEED, 0.6);
-
-            }
-        } catch (UnsupportedFeatureException ex) {
-            ex.printStackTrace();
+        EntityUtil.setFollowRange(bossEnt, 50);
+        if (boss == FreakyFourBoss.SNIPEE) {
+            EntityUtil.setMovementSpeed(bossEnt, .15);
+        } else if (boss == FreakyFourBoss.DA_BOMB) {
+            EntityUtil.setMovementSpeed(bossEnt, .6);
         }
 
         // Handle name
@@ -397,11 +390,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     private void spawnCharlotteMinion(Location location) {
         CaveSpider spider = world.spawn(location, CaveSpider.class);
 
-        try {
-            AttributeBook.setAttribute(spider, AttributeBook.Attribute.FOLLOW_RANGE, 50);
-        } catch (UnsupportedFeatureException ex) {
-            ex.printStackTrace();
-        }
+        EntityUtil.setFollowRange(spider, 50);
 
         Monster charlotte = bossEntities.get(FreakyFourBoss.CHARLOTTE);
         if (charlotte != null) {

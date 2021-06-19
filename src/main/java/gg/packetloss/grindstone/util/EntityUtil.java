@@ -12,9 +12,11 @@ import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import static gg.packetloss.grindstone.events.EntityHealthInContextEvent.HealthKind.CURRENT;
@@ -178,6 +180,22 @@ public class EntityUtil {
 
     public static void spawnProtectedItem(ItemStack stack, Player player) {
         spawnProtectedItem(stack, player, player.getLocation());
+    }
+
+    public static void setMovementSpeed(LivingEntity entity, double speed) {
+        Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)).setBaseValue(speed);
+    }
+
+    public static void setKnockbackResistance(LivingEntity entity, double resistance) {
+        Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE)).setBaseValue(resistance);
+    }
+
+    public static void setAttackKnockback(LivingEntity entity, double knockback) {
+        Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_ATTACK_KNOCKBACK)).setBaseValue(knockback);
+    }
+
+    public static void setFollowRange(LivingEntity entity, double followRange) {
+        Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE)).setBaseValue(followRange);
     }
 
     public static Player getThrower(Item item) {

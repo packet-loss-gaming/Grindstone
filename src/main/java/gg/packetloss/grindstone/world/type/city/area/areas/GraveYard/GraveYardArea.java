@@ -36,8 +36,6 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Chunk;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -530,11 +528,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             z.setTarget(player);
             z.setHealth(10);
 
-            try {
-                AttributeBook.setAttribute(z, AttributeBook.Attribute.ATTACK_KNOCKBACK, 10);
-            } catch (UnsupportedFeatureException e) {
-                e.printStackTrace();
-            }
+            EntityUtil.setAttackKnockback(z, 10);
         }
     }
 

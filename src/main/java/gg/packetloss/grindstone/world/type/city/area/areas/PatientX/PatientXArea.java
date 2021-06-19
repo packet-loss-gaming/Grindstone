@@ -29,8 +29,6 @@ import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -640,12 +638,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         // Handle name
         boss.setCustomName("Patient X");
 
-        try {
-            AttributeBook.setAttribute(boss, AttributeBook.Attribute.MOVEMENT_SPEED, .5);
-            AttributeBook.setAttribute(boss, AttributeBook.Attribute.FOLLOW_RANGE, 150);
-        } catch (UnsupportedFeatureException ex) {
-            ex.printStackTrace();
-        }
+        EntityUtil.setMovementSpeed(boss, .5);
+        EntityUtil.setFollowRange(boss, 150);
     }
 
     public void spawnBoss() {

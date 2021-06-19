@@ -41,9 +41,7 @@ import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.util.timer.TimerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.entity.HBGiant;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -260,12 +258,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         boss.setHealth(currentHealth);
         boss.setRemoveWhenFarAway(false);
 
-        try {
-            AttributeBook.setAttribute(boss, AttributeBook.Attribute.KNOCKBACK_RESISTANCE, 1);
-            AttributeBook.setAttribute(boss, AttributeBook.Attribute.FOLLOW_RANGE, 40);
-        } catch (UnsupportedFeatureException ex) {
-            log.warning("Boss NMS attributes not properly set.");
-        }
+        EntityUtil.setKnockbackResistance(boss, 1);
+        EntityUtil.setFollowRange(boss, 40);
     }
 
     public void spawnBoss() {

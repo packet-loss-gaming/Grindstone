@@ -35,8 +35,6 @@ import gg.packetloss.grindstone.util.listener.InventorySlotBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -713,12 +711,8 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
         ghostEntity.setCanPickupItems(false);
 
         // Modify the ghost to seek further, and chase faster than a normal zombie
-        try {
-            AttributeBook.setAttribute(ghostEntity, AttributeBook.Attribute.MOVEMENT_SPEED, 0.35);
-            AttributeBook.setAttribute(ghostEntity, AttributeBook.Attribute.FOLLOW_RANGE, 100);
-        } catch (UnsupportedFeatureException ex) {
-            ex.printStackTrace();
-        }
+        EntityUtil.setMovementSpeed(ghostEntity, 0.35);
+        EntityUtil.setFollowRange(ghostEntity, 100);
 
         // Make a sound and warn the player
         target.playSound(ghostEntity.getLocation(), Sound.ENTITY_GHAST_SCREAM, 1, 1);
