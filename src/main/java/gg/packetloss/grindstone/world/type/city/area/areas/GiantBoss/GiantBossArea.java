@@ -35,13 +35,14 @@ import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.BossBuggedRespawnListener;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
+import gg.packetloss.grindstone.util.mobai.SimpleAttackNearestPlayer;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.util.timer.TimerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import gg.packetloss.hackbook.entity.HBGiant;
+import gg.packetloss.grindstone.world.type.city.area.areas.GiantBoss.mobai.ShnugglesSmash;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -225,7 +226,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         boolean found = false;
         boolean second = false;
         for (Giant e : getContained(Giant.class)) {
-            if (e.isValid() && HBGiant.is(e)) {
+            if (e.isValid()) {
                 if (!found) {
                     boss = e;
                     found = true;
@@ -253,7 +254,12 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     }
 
     private void spawnBossEntity(double currentHealth, double maxHealth) {
-        boss = HBGiant.spawn(getBossSpawnLocation());
+        boss = getWorld().spawn(getBossSpawnLocation(), Giant.class);
+
+        Bukkit.getMobGoals().addGoal(boss, 1, new SimpleAttackNearestPlayer(boss));
+        Bukkit.getMobGoals().addGoal(boss, 2, new ShnugglesSmash(boss));
+        Bukkit.getMobGoals().addGoal(boss, 3, new ShnugglesSmash(boss));
+
         boss.setMaxHealth(maxHealth);
         boss.setHealth(currentHealth);
         boss.setRemoveWhenFarAway(false);
