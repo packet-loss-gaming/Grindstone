@@ -50,6 +50,7 @@ repositories {
 dependencies {
     compileOnly group: 'com.garbagemule', name: 'mobarena', version: '0.104.3-SNAPSHOT'
     compileOnly group: 'gg.packetloss', name: 'pitfall', version: '2.1.2'
+    compileOnly group: 'gg.packetloss', name: 'mc-mail-box', version: '1.16.5.1'
 
     implementation group: 'gg.packetloss', name: 'open-boss', version: '1.2'
     implementation group: 'gg.packetloss', name: 'hackbook', version: '1.16.4.1'
