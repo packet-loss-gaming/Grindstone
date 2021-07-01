@@ -27,6 +27,7 @@ import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.CollectionUtil;
+import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.chat.ChatConstants;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
@@ -141,7 +142,8 @@ public class HighScoresComponent extends BukkitComponent {
     private void addGobletWinner(OfflinePlayer player) {
         gobletState.addWinner(player.getUniqueId());
 
-        String winMessage = ChatColor.YELLOW + player.getName() + " has won the " + getGobletName() + "!";
+        String friendlyGobletName = StringUtil.toTitleCase(getGobletName());
+        String winMessage = ChatColor.YELLOW + player.getName() + " has won the " + friendlyGobletName + "!";
         Bukkit.broadcastMessage(winMessage);
         chatBridge.broadcast(ChatColor.stripColor(winMessage));
     }
