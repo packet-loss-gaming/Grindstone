@@ -9,9 +9,11 @@ package gg.packetloss.grindstone.economic.wallet;
 import com.sk89q.commandbook.command.argument.OfflineSinglePlayerTarget;
 import com.sk89q.worldedit.command.util.CommandPermissions;
 import com.sk89q.worldedit.command.util.CommandPermissionsConditionGenerator;
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ErrorUtil;
 import gg.packetloss.grindstone.util.task.promise.TaskResult;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.enginehub.piston.annotation.Command;
 import org.enginehub.piston.annotation.CommandContainer;
@@ -57,7 +59,13 @@ public class WalletCommands {
             }
         ).thenAcceptAsynchronously(
             (newBalance) -> {
-                ChatUtil.sendNotice(player, "Paid ", target.get().getName(), " ", component.format(amountBigDec), ".");
+                OfflinePlayer targetOfflinePlayer = target.get();
+                Text amountMsg = component.format(amountBigDec);
+                ChatUtil.sendNotice(player, "Paid ", targetOfflinePlayer.getName(), " ", amountMsg, ".");
+                if (targetOfflinePlayer.isOnline()) {
+                    Player receiver = targetOfflinePlayer.getPlayer();
+                    ChatUtil.sendNotice(receiver, "Received ", amountMsg, " from ", player.getName(), ".");
+                }
             },
             (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
         );
