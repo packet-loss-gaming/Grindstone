@@ -221,6 +221,10 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     private Region getCurrentIcePadRegion() {
+        if (!isBossSpawnedFast()) {
+            return null;
+        }
+
         int iceY = ice.getMaximumPoint().getBlockY();
 
         Location bossLoc = boss.getLocation();
