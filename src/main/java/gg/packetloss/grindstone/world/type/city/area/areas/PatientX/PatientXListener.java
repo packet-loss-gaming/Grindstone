@@ -199,11 +199,18 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         }
     }
 
-    private static Set<EntityDamageByEntityEvent.DamageCause> blockedDamage = new HashSet<>();
+    private static Set<EntityDamageEvent.DamageCause> EXPLOSIVE_DAMAGE_CAUSES = new HashSet<>();
 
     static {
-        blockedDamage.add(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION);
-        blockedDamage.add(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION);
+        EXPLOSIVE_DAMAGE_CAUSES.add(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION);
+        EXPLOSIVE_DAMAGE_CAUSES.add(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION);
+    }
+
+    private static Set<EntityDamageByEntityEvent.DamageCause> BOSS_IGNORED_DAMAGE_CAUSES = new HashSet<>();
+
+    static {
+        BOSS_IGNORED_DAMAGE_CAUSES.add(EntityDamageEvent.DamageCause.FALL);
+        BOSS_IGNORED_DAMAGE_CAUSES.addAll(EXPLOSIVE_DAMAGE_CAUSES);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -227,19 +234,14 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             } else if (!(attacker instanceof LivingEntity)) return;
         }
 
-        if (defender instanceof Player && blockedDamage.contains(event.getCause())) {
+        if (defender instanceof Player && EXPLOSIVE_DAMAGE_CAUSES.contains(event.getCause())) {
             // Explosive damage formula: (1 × 1 + 1) × 8 × power + 1
             // Use 49, snowball power is 3
             double ratio = event.getDamage() / 49;
-            for (DamageModifier modifier : DamageModifier.values()) {
-                if (event.isApplicable(modifier)) {
-                    event.setDamage(modifier, 0);
-                }
-            }
-            event.setDamage(DamageModifier.BASE, ratio * parent.difficulty);
+            event.setDamage(ratio * parent.difficulty);
         }
 
-        if (defender.equals(parent.boss) && blockedDamage.contains(event.getCause())) {
+        if (defender.equals(parent.boss) && BOSS_IGNORED_DAMAGE_CAUSES.contains(event.getCause())) {
             event.setCancelled(true);
             return;
         }

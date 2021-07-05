@@ -17,12 +17,13 @@ import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 
 public class RegionWalker {
-    private static void testWalkInBounds(int minX, int minY, int minZ, int maxX, int maxY, int maxZ,
+    private static void testWalkInBounds(Region region, int minX, int minY, int minZ, int maxX, int maxY, int maxZ,
                                          TriPredicate<Integer, Integer, Integer> op) {
         for (int y = minY; y <= maxY; ++y) {
             for (int x = minX; x <= maxX; ++x) {
                 for (int z = minZ; z <= maxZ; ++z) {
-                    if (op.test(x, y, z)) {
+                    // Check region containment for non-cuboid shapes
+                    if (region.contains(BlockVector3.at(x, y, z)) && op.test(x, y, z)) {
                         return;
                     }
                 }
@@ -56,7 +57,7 @@ public class RegionWalker {
         int maxY = max.getBlockY();
         int maxZ = max.getBlockZ();
 
-        testWalkInBounds(minX, minY, minZ, maxX, maxY, maxZ, op);
+        testWalkInBounds(region, minX, minY, minZ, maxX, maxY, maxZ, op);
     }
 
     public static void walkChunks(ProtectedRegion region, BiConsumer<Integer, Integer> op) {
@@ -125,6 +126,6 @@ public class RegionWalker {
         int maxY = max.getBlockY();
         int maxZ = Math.min(max.getBlockZ(), chunkMaxZ);
 
-        testWalkInBounds(minX, minY, minZ, maxX, maxY, maxZ, op);
+        testWalkInBounds(region, minX, minY, minZ, maxX, maxY, maxZ, op);
     }
 }

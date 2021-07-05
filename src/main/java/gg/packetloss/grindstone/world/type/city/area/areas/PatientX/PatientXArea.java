@@ -7,6 +7,10 @@
 package gg.packetloss.grindstone.world.type.city.area.areas.PatientX;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector2;
+import com.sk89q.worldedit.regions.CylinderRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -22,6 +26,7 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.listener.BossBuggedRespawnListener;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
+import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -72,6 +77,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     protected long lastDeath = 0;
     protected long lastTelep = 0;
     protected double difficulty;
+    protected boolean forceIceChangeExplosion = false;
 
     protected List<Location> destinations = new ArrayList<>();
 
@@ -102,6 +108,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
         server.getScheduler().runTaskTimer(inst, (Runnable) this::runAttack, 0, 20 * 20);
         server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
+        server.getScheduler().runTaskTimer(inst, this::updateBossIcePad, 0, 1);
 
         destinations.add(new Location(world, -180, 54, 109.5));
         destinations.add(new Location(world, -173, 54, 120));
@@ -132,7 +139,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             equalize();
             teleportRandom();
             freezeEntities();
-            freezeBlocks(ChanceUtil.getChance((int) Math.ceil(config.iceChangeChance - difficulty)));
+            freezeBlocks();
             spawnCreatures();
         }
     }
@@ -159,6 +166,64 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             double curDiff = Math.max(difficulty, config.minDifficulty) - config.minDifficulty;
             rageBar.setProgress(curDiff / maxDiff);
         }
+    }
+
+    private Region getIcePadRegion(Location bossLoc, int iceY) {
+        return new CylinderRegion(
+            BlockVector3.at(
+                bossLoc.getX(),
+                iceY,
+                bossLoc.getZ()
+            ),
+            Vector2.at(2, 2),
+            iceY,
+            iceY
+        );
+    }
+
+    private Region getCurrentIcePadRegion() {
+        int iceY = ice.getMaximumPoint().getBlockY();
+
+        Location bossLoc = boss.getLocation();
+        if (bossLoc.getY() > iceY + 1) {
+            return null;
+        }
+
+        return getIcePadRegion(bossLoc, iceY);
+    }
+
+    private void updateBossIcePad() {
+        if (!isBossSpawnedFast()) {
+            return;
+        }
+
+        Region rg = getCurrentIcePadRegion();
+        // The boss isn't touching the water/ice line
+        if (rg == null) {
+            return;
+        }
+
+        // The next ice cleanup will be explosive
+        forceIceChangeExplosion = true;
+
+        // Freeze the region so Patient X has somewhere to stand
+        RegionWalker.walk(rg, (x, y, z) -> {
+            if (canFreezeOrThawBlock(x, y, z)) {
+                freezeBlock(x, y, z);
+            }
+        });
+
+        Location bossLoc = boss.getLocation();
+        int icePadY = rg.getMaximumPoint().getY();
+
+        // The boss is above the water/ice line
+        if (bossLoc.getY() >= icePadY + 1) {
+            return;
+        }
+
+        // Move Patient X to be standing on the region
+        bossLoc.setY(icePadY + 1);
+        boss.teleport(bossLoc);
     }
 
     private void equalize() {
@@ -351,8 +416,42 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         modifyDifficulty(-total);
     }
 
+    protected void freezeBlocks() {
+        int chanceOfExplosion = (int) Math.ceil(config.iceChangeChance - difficulty);
+        freezeBlocks(forceIceChangeExplosion || ChanceUtil.getChance(chanceOfExplosion));
+        forceIceChangeExplosion = false;
+    }
+
     protected void freezeBlocks(boolean throwExplosives) {
         freezeBlocks(config.iceChance, throwExplosives);
+    }
+
+    private boolean canFreezeOrThawBlock(int x, int y, int z) {
+        Block block = world.getBlockAt(x, y, z);
+        return block.getRelative(BlockFace.UP).getType() == Material.AIR && EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN));
+    }
+
+    private void thawBlock(int x, int y, int z, boolean throwExplosives) {
+        Block block = world.getBlockAt(x, y, z);
+        block.setType(Material.WATER);
+
+        if (!ChanceUtil.getChance(config.snowBallChance) || !throwExplosives) {
+            return;
+        }
+
+        Location target = block.getRelative(BlockFace.UP).getLocation();
+        for (int i = ChanceUtil.getRandom(3); i > 0; i--) {
+            Snowball melvin = world.spawn(target, Snowball.class);
+            melvin.setVelocity(new Vector(0, ChanceUtil.getRangedRandom(.25, 1), 0));
+            melvin.setShooter(boss);
+        }
+    }
+
+    private void freezeBlock(int x, int y, int z) {
+        Block block = world.getBlockAt(x, y, z);
+        if (block.getType() != Material.PACKED_ICE) {
+            block.setType(Material.PACKED_ICE);
+        }
     }
 
     protected void freezeBlocks(int percentage, boolean throwExplosives) {
@@ -362,26 +461,25 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         int maxZ = ice.getMaximumPoint().getBlockZ();
         int y = ice.getMaximumPoint().getBlockY();
 
+        Region icePadRegion = getCurrentIcePadRegion();
+
         for (int x = minX; x < maxX; x++) {
             for (int z = minZ; z < maxZ; z++) {
                 Block block = world.getBlockAt(x, y, z);
-                if (block.getRelative(BlockFace.UP).getType() == Material.AIR
-                        && EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN))) {
+                if (canFreezeOrThawBlock(x, y, z)) {
                     if (percentage >= 100) {
                         block.setType(Material.ICE);
                         continue;
                     }
                     if (block.getType() == Material.PACKED_ICE || block.getType() == Material.ICE) {
-                        block.setType(Material.WATER);
-                        if (!ChanceUtil.getChance(config.snowBallChance) || !throwExplosives) continue;
-                        Location target = block.getRelative(BlockFace.UP).getLocation();
-                        for (int i = ChanceUtil.getRandom(3); i > 0; i--) {
-                            Snowball melvin = world.spawn(target, Snowball.class);
-                            melvin.setVelocity(new Vector(0, ChanceUtil.getRangedRandom(.25, 1), 0));
-                            melvin.setShooter(boss);
+                        // If there's a current ice pad, don't touch it
+                        if (icePadRegion != null && icePadRegion.contains(BlockVector3.at(x, y, z))) {
+                            continue;
                         }
+
+                        thawBlock(x, y, z, throwExplosives);
                     } else if (ChanceUtil.getChance(percentage, 100)) {
-                        block.setType(Material.PACKED_ICE);
+                        freezeBlock(x, y, z);
                     }
                 }
             }
