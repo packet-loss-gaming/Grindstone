@@ -27,6 +27,7 @@ import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.listener.BossBuggedRespawnListener;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
 import gg.packetloss.hackbook.AttributeBook;
 import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
@@ -80,6 +81,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     protected boolean forceIceChangeExplosion = false;
 
     protected List<Location> destinations = new ArrayList<>();
+    protected List<Block> irradiatedBlocks = new ArrayList<>();
 
     protected BossBar healthBar = Bukkit.createBossBar("Patient X", BarColor.WHITE, BarStyle.SEGMENTED_6);
     protected BossBar rageBar = Bukkit.createBossBar("Rage", BarColor.RED, BarStyle.SEGMENTED_6);
@@ -106,6 +108,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 (e) -> spawnBossEntity(e.getHealth())
         ));
 
+        rescanLight();
+
         server.getScheduler().runTaskTimer(inst, (Runnable) this::runAttack, 0, 20 * 20);
         server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
         server.getScheduler().runTaskTimer(inst, this::updateBossIcePad, 0, 1);
@@ -128,6 +132,12 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     @Override
+    public void reload() {
+        super.reload();
+        rescanLight();
+    }
+
+    @Override
     public void run() {
         updateBossBar();
 
@@ -141,6 +151,35 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             freezeEntities();
             freezeBlocks();
             spawnCreatures();
+        }
+    }
+
+    private boolean isIrradiatedBlock(Block block) {
+        if (block.getType().isAir() && block.getLightLevel() >= config.radiationLightLevel) {
+            return true;
+        }
+
+        if (EnvironmentUtil.isWater(block)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private void rescanLight() {
+        irradiatedBlocks.clear();
+
+        RegionWalker.walk(region, (x, y, z) -> {
+            Block block = world.getBlockAt(x, y, z);
+            if (isIrradiatedBlock(block)) {
+                irradiatedBlocks.add(block);
+            }
+        });
+    }
+
+    private void irradiateBlock(Runnable playEffect) {
+        for (int i = 0; i < 10; ++i) {
+            playEffect.run();
         }
     }
 
@@ -361,25 +400,66 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 break;
             case 8:
                 server.getScheduler().runTaskLater(inst, () -> {
-                    for (int i = config.radiationTimes; i > 0; i--) {
-                        server.getScheduler().runTaskLater(inst, () -> {
-                            if (boss != null) {
-                                for (Player player : getContainedParticipants()) {
-                                    for (int e = 0; e < 3; ++e) {
-                                        Location t = LocationUtil.findRandomLoc(player.getLocation(), 5, true);
-                                        for (int k = 0; k < 10; ++k) {
-                                            world.playEffect(t, Effect.MOBSPAWNER_FLAMES, 0);
-                                        }
-                                    }
-                                    if (player.getLocation().getBlock().getLightLevel() >= config.radiationLightLevel) {
-                                        player.damage(difficulty * config.radiationMultiplier);
-                                    }
+                    TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+                    taskBuilder.setInterval(10);
+                    taskBuilder.setNumberOfRuns(config.radiationTimes);
+
+                    taskBuilder.setAction((times) -> {
+                        if (boss == null) {
+                            return true;
+                        }
+
+                        // Show a random sample of blocks to everyone
+                        for (int i = 0; i < 15; ++i) {
+                            Block block = CollectionUtil.getElement(irradiatedBlocks);
+                            irradiateBlock(
+                                () -> world.playEffect(block.getLocation(), Effect.MOBSPAWNER_FLAMES, 0)
+                            );
+                        }
+
+                        // Show player specific blocks
+                        for (Player spectator : getAudiblePlayers()) {
+                            SimpleRayTrace trace = new SimpleRayTrace(
+                                spectator.getLocation(),
+                                spectator.getLocation().getDirection(),
+                                10
+                            );
+                            int shownBlocks = 0;
+
+                            while (trace.hasNext() && shownBlocks < 3) {
+                                Location tracePoint = trace.next();
+
+                                // Look for irradiated blocks near the trace
+                                List<Block> possibleBlocks = irradiatedBlocks.stream().filter(
+                                    (b) -> LocationUtil.isWithin2DDistance(b.getLocation(), tracePoint, 3)
+                                ).collect(Collectors.toList());
+                                if (possibleBlocks.isEmpty()) {
+                                    continue;
                                 }
+
+                                Block block = CollectionUtil.getElement(possibleBlocks);
+                                irradiateBlock(
+                                    () -> spectator.playEffect(block.getLocation(), Effect.MOBSPAWNER_FLAMES, 0)
+                                );
+
+                                ++shownBlocks;
                             }
-                        }, i * 10);
-                    }
+                        }
+
+                        // Actually handle damage
+                        for (Player player : getContainedParticipants()) {
+                            if (isIrradiatedBlock(player.getLocation().getBlock())) {
+                                player.damage(difficulty * config.radiationMultiplier);
+                            }
+                        }
+
+                        return true;
+                    });
+
+                    taskBuilder.build();
                 }, 3 * 20);
-                attackDur = System.currentTimeMillis() + (config.radiationTimes * 500);
+                attackDur = System.currentTimeMillis() + (config.radiationTimes * 500L);
                 ChatUtil.sendWarning(audible, "Ahhh not the radiation treatment!");
                 break;
             case 9:
