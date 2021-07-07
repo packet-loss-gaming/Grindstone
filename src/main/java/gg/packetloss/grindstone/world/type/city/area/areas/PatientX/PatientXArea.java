@@ -427,11 +427,11 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                             SimpleRayTrace trace = new SimpleRayTrace(
                                 spectator.getLocation(),
                                 spectator.getLocation().getDirection(),
-                                10
+                                20
                             );
-                            int shownBlocks = 0;
+                            List<Block> shownBlocks = new ArrayList<>();
 
-                            while (trace.hasNext() && shownBlocks < 3) {
+                            while (trace.hasNext() && shownBlocks.size() < 3) {
                                 Location tracePoint = trace.next();
 
                                 // Look for irradiated blocks near the trace
@@ -443,11 +443,20 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                                 }
 
                                 Block block = CollectionUtil.getElement(possibleBlocks);
+                                if (shownBlocks.contains(block)) {
+                                    continue;
+                                }
+
+                                if (ChanceUtil.getChance(3)) {
+                                    shownBlocks.add(block);
+                                    continue;
+                                }
+
                                 irradiateBlock(
                                     () -> spectator.playEffect(block.getLocation(), Effect.MOBSPAWNER_FLAMES, 0)
                                 );
 
-                                ++shownBlocks;
+                                shownBlocks.add(block);
                             }
                         }
 
