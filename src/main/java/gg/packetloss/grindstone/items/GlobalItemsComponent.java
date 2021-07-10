@@ -174,6 +174,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SHORT_SWORD, handle(new UnleashedSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.RED_SWORD, handle(new RedSwordImpl()));
+            wepSys.add(WeaponType.MELEE, CustomItems.PHANTOM_SABRE, handle(new PhantomSabreImpl()));
         }, 1);
     }
 

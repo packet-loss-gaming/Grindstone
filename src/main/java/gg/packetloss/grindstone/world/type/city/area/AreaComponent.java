@@ -111,6 +111,12 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
         return getContained(Player.class);
     }
 
+    public List<Player> getAudiblePlayersIn(ProtectedRegion region) {
+        return getAudiblePlayers().stream()
+            .filter((p) -> contains(region, p))
+            .collect(Collectors.toList());
+    }
+
     public <T extends Entity> Collection<T> getContained(Class<T> clazz) {
         return getContained(0, clazz);
     }

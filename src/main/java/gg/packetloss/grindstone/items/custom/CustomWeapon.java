@@ -64,6 +64,8 @@ public class CustomWeapon extends CustomEquipment {
                 return 6;
             case DIAMOND_SWORD:
                 return 7;
+            case NETHERITE_SWORD:
+                return 8;
             default:
                 throw new UnsupportedOperationException();
         }

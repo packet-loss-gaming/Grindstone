@@ -97,6 +97,7 @@ public class CustomItemCenter {
         ancientRoyalHelmet.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
         ancientRoyalHelmet.addEnchant(Enchantment.OXYGEN, 3);
         ancientRoyalHelmet.addEnchant(Enchantment.WATER_WORKER, 1);
+        ancientRoyalHelmet.addSource(ItemSource.FREAKY_FOUR);
         ancientRoyalHelmet.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientRoyalHelmet.addSource(ItemSource.GRAVE_YARD);
         ancientRoyalHelmet.addSource(ItemSource.MARKET);
@@ -110,6 +111,7 @@ public class CustomItemCenter {
         ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
         ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientRoyalChestplate.addSource(ItemSource.FREAKY_FOUR);
         ancientRoyalChestplate.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientRoyalChestplate.addSource(ItemSource.GRAVE_YARD);
         ancientRoyalChestplate.addSource(ItemSource.MARKET);
@@ -123,6 +125,7 @@ public class CustomItemCenter {
         ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
         ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientRoyalLeggings.addSource(ItemSource.FREAKY_FOUR);
         ancientRoyalLeggings.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientRoyalLeggings.addSource(ItemSource.GRAVE_YARD);
         ancientRoyalLeggings.addSource(ItemSource.MARKET);
@@ -137,6 +140,7 @@ public class CustomItemCenter {
         ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
         ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
         ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_FALL, 4);
+        ancientRoyalBoots.addSource(ItemSource.FREAKY_FOUR);
         ancientRoyalBoots.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientRoyalBoots.addSource(ItemSource.GRAVE_YARD);
         ancientRoyalBoots.addSource(ItemSource.MARKET);
@@ -152,6 +156,7 @@ public class CustomItemCenter {
         ancientHelmet.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
         ancientHelmet.addEnchant(Enchantment.OXYGEN, 3);
         ancientHelmet.addEnchant(Enchantment.WATER_WORKER, 1);
+        ancientHelmet.addSource(ItemSource.FREAKY_FOUR);
         ancientHelmet.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientHelmet.addSource(ItemSource.GRAVE_YARD);
         ancientHelmet.addSource(ItemSource.MARKET);
@@ -164,6 +169,7 @@ public class CustomItemCenter {
         ancientChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         ancientChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
         ancientChestplate.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientChestplate.addSource(ItemSource.FREAKY_FOUR);
         ancientChestplate.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientChestplate.addSource(ItemSource.GRAVE_YARD);
         ancientChestplate.addSource(ItemSource.MARKET);
@@ -176,6 +182,7 @@ public class CustomItemCenter {
         ancientLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
         ancientLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
         ancientLeggings.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientLeggings.addSource(ItemSource.FREAKY_FOUR);
         ancientLeggings.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientLeggings.addSource(ItemSource.GRAVE_YARD);
         ancientLeggings.addSource(ItemSource.MARKET);
@@ -189,6 +196,7 @@ public class CustomItemCenter {
         ancientBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
         ancientBoots.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
         ancientBoots.addEnchant(Enchantment.PROTECTION_FALL, 4);
+        ancientBoots.addSource(ItemSource.FREAKY_FOUR);
         ancientBoots.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientBoots.addSource(ItemSource.GRAVE_YARD);
         ancientBoots.addSource(ItemSource.MARKET);
@@ -580,17 +588,25 @@ public class CustomItemCenter {
 
         CustomItem phantomDiamond = new CustomItem(PHANTOM_DIAMOND, Material.DIAMOND);
         phantomDiamond.addSource(ItemSource.RITUAL_TOMB);
+        phantomDiamond.addSource(ItemSource.FREAKY_FOUR);
         phantomDiamond.addUse("When sacrificed gives 15,000 Skrin, or 17,500 Skrin " +
             "if sacrificed in the Grave Yard rewards room.");
         addItem(phantomDiamond);
 
+        CustomItem phantomSabre = new CustomWeapon(PHANTOM_SABRE, Material.NETHERITE_SWORD, 3, 4);
+        phantomSabre.addSource(ItemSource.FREAKY_FOUR);
+        phantomSabre.addUse("Gives its owner unbound fortune.");
+        addItem(phantomSabre);
+
         CustomItem phantomClock = new CustomItem(PHANTOM_CLOCK, Material.CLOCK);
         phantomClock.addSource(ItemSource.GRAVE_YARD);
+        phantomClock.addSource(ItemSource.FREAKY_FOUR);
         phantomClock.addUse("Teleports the player strait to the rewards room of the Grave Yard.");
         addItem(phantomClock);
 
         CustomItem phantomHymn = new CustomItem(PHANTOM_HYMN, Material.BOOK);
         phantomHymn.addSource(ItemSource.GOLD_RUSH);
+        phantomHymn.addSource(ItemSource.FREAKY_FOUR);
         phantomHymn.addSource(ItemSource.MARKET);
         phantomHymn.addLore(ChatColor.RED + "A hymn of dark origins...");
         phantomHymn.addUse("Teleports the player through directly to the end of the Grave Yard maze.");
@@ -601,12 +617,14 @@ public class CustomItemCenter {
         CustomPotion phantomPotion = new CustomPotion(PHANTOM_POTION, Color.RED);
         phantomPotion.addEffect(PotionEffectType.INVISIBILITY, 20 * 30, 0);
         phantomPotion.addSource(ItemSource.GRAVE_YARD);
+        phantomPotion.addSource(ItemSource.FREAKY_FOUR);
         phantomPotion.addSource(ItemSource.MARKET);
         phantomPotion.addUse("Returns you to your lost items if a teleport can reach the location.");
         addItem(phantomPotion);
 
         CustomItem phantomEssence = new CustomItem(PHANTOM_ESSENCE, Material.GHAST_TEAR);
         phantomEssence.addSource(ItemSource.GRAVE_YARD);
+        phantomEssence.addSource(ItemSource.FREAKY_FOUR);
         phantomEssence.addUse("Currency for bargaining with spirits.");
         addItem(phantomEssence);
 
@@ -708,7 +726,8 @@ public class CustomItemCenter {
         addItem(chickenHymn);
 
         CustomItem godFish = new CustomItem(GOD_FISH, Material.COD);
-        godFish.addSource(ItemSource.ARROW_FISHING);
+        godFish.addSource(ItemSource.FREAKY_FOUR);
+        godFish.addSource(ItemSource.SACRIFICIAL_PIT);
         godFish.addSource(ItemSource.MARKET);
         godFish.addUse("On consumption applies 30 seconds of the Hulk prayer.");
         addItem(godFish);
