@@ -18,15 +18,13 @@ import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.FearBlaze;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.SoulSmite;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.SoulReaper;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EntityUtil;
-import gg.packetloss.grindstone.util.VectorUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
@@ -44,7 +42,9 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
+import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -200,6 +200,9 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         healable.add(DamageCause.WITHER);
     }
 
+    private Map<FreakyFourBoss, Location> bossLastDamageLoc = new EnumMap<>(FreakyFourBoss.class);
+    private Map<FreakyFourBoss, Integer> bossNumTimesDamaged = new EnumMap<>(FreakyFourBoss.class);
+
     @EventHandler(ignoreCancelled = true)
     public void onEntityDamage(EntityDamageEvent event) {
         Entity entity = event.getEntity();
@@ -217,6 +220,24 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 }
             }
         }
+
+        if (entity instanceof Monster && damager instanceof Player player) {
+            FreakyFourBoss boss = parent.getBossAtLocation(entity.getLocation());
+            Location lastDamageLoc = bossLastDamageLoc.get(boss);
+            if (lastDamageLoc != null && LocationUtil.isWithin2DDistance(entity.getLocation(), lastDamageLoc, 3)) {
+                int totalTimesDamagedAtLoc = bossNumTimesDamaged.merge(boss, 1, Integer::sum);
+                if (totalTimesDamagedAtLoc >= 3) {
+                    server.getScheduler().runTaskLater(inst, () -> {
+                        entity.teleport(player);
+                        throwBack(entity);
+                    }, 1);
+                }
+            } else {
+                bossLastDamageLoc.put(boss, entity.getLocation());
+                bossNumTimesDamaged.put(boss, 0);
+            }
+        }
+
         if (entity instanceof Creeper || entity instanceof Skeleton) {
             boolean backTeleport = projectile == null && ChanceUtil.getChance(parent.getConfig().backTeleport);
             if (healable.contains(event.getCause())) {
@@ -237,8 +258,19 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                     }, 1);
                 }
             }
+
+            // Prevent melee damage to Snipee.
+            //
+            // When not running a special attack (as these show up without a projectile even if originally
+            // caused by a projectile) don't check.
+            if (SpecialAttackFactory.getCurrentSpecialAttack().isEmpty()) {
+                if (damager instanceof Player && entity instanceof Skeleton && projectile == null) {
+                    ChatUtil.sendNotice(damager, ChatColor.DARK_RED, "Melee can't harm me... Noob!");
+                    event.setCancelled(true);
+                }
+            }
         } else if (entity instanceof Blaze) {
-            if (damager instanceof Player && event.getCause().equals(DamageCause.PROJECTILE)) {
+            if (damager instanceof Player && projectile != null) {
                 ChatUtil.sendNotice(damager, ChatColor.DARK_RED, "Projectiles can't harm me... Mwahahaha!");
                 event.setCancelled(true);
             }
