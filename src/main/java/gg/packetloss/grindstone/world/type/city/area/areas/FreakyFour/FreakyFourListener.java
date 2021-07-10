@@ -10,12 +10,18 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
+import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.entity.HallowCreeperEvent;
 import gg.packetloss.grindstone.events.guild.NinjaSmokeBombEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
+import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.FearBlaze;
+import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.SoulSmite;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
+import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.SoulReaper;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -77,6 +83,27 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         Player player = event.getPlayer();
         if (parent.contains(player)) {
             event.setCancelled(true);
+        }
+    }
+
+
+    private static final Set<Class<?>> SPECIAL_ATTACK_DENY_LIST = Set.of(
+        Disarm.class,
+        FearBlaze.class,
+        SoulSmite.class,
+        SoulReaper.class
+    );
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSpecialAttack(SpecialAttackSelectEvent event) {
+        SpecialAttack attack = event.getSpec();
+        if (!parent.contains(attack.getLocation())) {
+            return;
+        }
+
+        Class<?> specClass = attack.getClass();
+        if (SPECIAL_ATTACK_DENY_LIST.contains(specClass)) {
+            event.tryAgain();
         }
     }
 

@@ -547,7 +547,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     private ItemStack pickRandomItem() {
-        if (ChanceUtil.getChance(7)) {
+        if (ChanceUtil.getChance(3)) {
             return new ItemStack(Material.EXPERIENCE_BOTTLE, ChanceUtil.getRangedRandom(16, 48));
         }
 
@@ -557,14 +557,14 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             () -> CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE, ChanceUtil.getRandom(3)),
             () -> CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(64)),
             () -> {
-                if (ChanceUtil.getChance(1000)) {
+                if (ChanceUtil.getChance(250)) {
                     return CustomItemCenter.build(CustomItems.PHANTOM_SABRE);
                 } else {
                     return CustomItemCenter.build(CustomItems.GOD_FISH);
                 }
             },
             () -> {
-                if (ChanceUtil.getChance(500)) {
+                if (ChanceUtil.getChance(75)) {
                     return CustomItemCenter.build(CustomItems.PHANTOM_LINK);
                 } else {
                     return ChanceUtil.supplyRandom(
@@ -574,7 +574,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                 }
             },
             () -> {
-                if (ChanceUtil.getChance(500)) {
+                if (ChanceUtil.getChance(75)) {
                     if (ChanceUtil.getChance(2)) {
                         return CustomItemCenter.build(CustomItems.PHANTOM_CLOCK);
                     } else {
@@ -585,28 +585,28 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                 }
             },
             () -> {
-                if (ChanceUtil.getChance(500)) {
+                if (ChanceUtil.getChance(75)) {
                     return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_HELMET);
                 } else {
                     return CustomItemCenter.build(CustomItems.ANCIENT_HELMET);
                 }
             },
             () -> {
-                if (ChanceUtil.getChance(500)) {
+                if (ChanceUtil.getChance(75)) {
                     return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_CHESTPLATE);
                 } else {
                     return CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE);
                 }
             },
             () -> {
-                if (ChanceUtil.getChance(500)) {
+                if (ChanceUtil.getChance(75)) {
                     return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_LEGGINGS);
                 } else {
                     return CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS);
                 }
             },
             () -> {
-                if (ChanceUtil.getChance(500)) {
+                if (ChanceUtil.getChance(75)) {
                     return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_BOOTS);
                 } else {
                     return CustomItemCenter.build(CustomItems.ANCIENT_BOOTS);
