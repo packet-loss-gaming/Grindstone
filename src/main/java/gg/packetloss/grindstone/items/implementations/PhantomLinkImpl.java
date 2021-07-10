@@ -87,7 +87,15 @@ public class PhantomLinkImpl extends AbstractItemFeatureImpl {
         Location startLoc = player.getLocation();
         TaskBuilder.Countdown builder = TaskBuilder.countdown();
         builder.setAction((times) -> {
-            return player.getLocation().distanceSquared(startLoc) > Math.pow(3, 2);
+            if (player.getWorld() != startLoc.getWorld()) {
+                return true;
+            }
+
+            if (player.getLocation().distanceSquared(startLoc) > Math.pow(3, 2)) {
+                return true;
+            }
+
+            return false;
         });
         builder.setFinishAction(() -> chunk.removePluginChunkTicket(CommandBook.inst()));
         builder.build();
