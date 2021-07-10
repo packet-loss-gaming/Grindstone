@@ -545,4 +545,34 @@ public class ItemUtil {
 
         return stack;
     }
+
+    public static List<Map.Entry<String, String>> loadLoreKeyValues(String string) {
+        List<Map.Entry<String, String>> result = new ArrayList<>();
+
+        String[] commaSplit = string.split(", ");
+        for (String commaSplitEl : commaSplit) {
+            String[] keyValueSplit = commaSplitEl.split(": ");
+            result.add(new AbstractMap.SimpleEntry<>(keyValueSplit[0], keyValueSplit[1]));
+        }
+
+        return result;
+    }
+
+    public static String saveLoreKeyValues(List<Map.Entry<String, String>> entries) {
+        StringBuilder builder = new StringBuilder();
+
+        boolean first = true;
+        for (Map.Entry<String, String> entry : entries) {
+            if (!first) {
+                builder.append(", ");
+            }
+            first = false;
+
+            builder.append(entry.getKey());
+            builder.append(": ");
+            builder.append(entry.getValue());
+        }
+
+        return builder.toString();
+    }
 }

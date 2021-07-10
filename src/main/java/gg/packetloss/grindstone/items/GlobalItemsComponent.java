@@ -143,8 +143,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     }
 
     private <T extends Listener> T handle(T component) {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(component);
+        CommandBook.registerEvents(component);
         return component;
     }
 
@@ -228,6 +227,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         handle(new MagicBucketImpl());
         handle(new NecrosArmorImpl());
         handle(new NectricArmorImpl());
+        handle(new PhantomLinkImpl());
         handle(new PhantomPotionImpl());
         handle(new PixieDustImpl());
         handle(new PotionOfRestitutionImpl());

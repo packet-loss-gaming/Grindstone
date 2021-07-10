@@ -604,6 +604,11 @@ public class CustomItemCenter {
         phantomClock.addUse("Teleports the player strait to the rewards room of the Grave Yard.");
         addItem(phantomClock);
 
+        CustomItem phantomLink = new CustomItem(PHANTOM_LINK, Material.PHANTOM_MEMBRANE);
+        phantomLink.addSource(ItemSource.FREAKY_FOUR);
+        phantomLink.addUse("Allows remote access to a container once punched.");
+        addItem(phantomLink);
+
         CustomItem phantomHymn = new CustomItem(PHANTOM_HYMN, Material.BOOK);
         phantomHymn.addSource(ItemSource.GOLD_RUSH);
         phantomHymn.addSource(ItemSource.FREAKY_FOUR);

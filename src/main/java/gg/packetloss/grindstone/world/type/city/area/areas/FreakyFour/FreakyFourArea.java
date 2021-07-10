@@ -565,6 +565,16 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             },
             () -> {
                 if (ChanceUtil.getChance(500)) {
+                    return CustomItemCenter.build(CustomItems.PHANTOM_LINK);
+                } else {
+                    return ChanceUtil.supplyRandom(
+                        () -> CustomItemCenter.build(CustomItems.ROGUE_OATH, ChanceUtil.getRandom(5)),
+                        () -> CustomItemCenter.build(CustomItems.NINJA_OATH, ChanceUtil.getRandom(5))
+                    );
+                }
+            },
+            () -> {
+                if (ChanceUtil.getChance(500)) {
                     if (ChanceUtil.getChance(2)) {
                         return CustomItemCenter.build(CustomItems.PHANTOM_CLOCK);
                     } else {
