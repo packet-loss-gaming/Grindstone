@@ -33,6 +33,10 @@ public class EnvironmentUtil {
         List<Material> newOreBlocks = new ArrayList<>();
 
         for (Material material : Material.values()) {
+            if (material.isLegacy()) {
+                continue;
+            }
+
             if (test.test(material)) {
                 newOreBlocks.add(material);
             }
@@ -156,7 +160,7 @@ public class EnvironmentUtil {
             return new ItemStack(Material.QUARTZ);
         }
 
-        throw new UnsupportedOperationException("Unknown ore");
+        throw new UnsupportedOperationException("Unknown ore: " + block.name());
     }
 
     public static ItemStack getOreDrop(Material block, ItemStack tool) {
