@@ -54,8 +54,8 @@ public class FactorySmelter extends FactoryMech {
     private static record Conversion(Material newType, int multiplier) { };
 
     private static final Map<Material, Conversion> CONVERSION_MAPPING = Map.of(
-        Material.IRON_ORE, new Conversion(Material.RAW_IRON, 2),
-        Material.GOLD_ORE, new Conversion(Material.RAW_GOLD, 2),
+        Material.IRON_ORE, new Conversion(Material.RAW_IRON, 1),
+        Material.GOLD_ORE, new Conversion(Material.RAW_GOLD, 1),
         Material.RAW_IRON_BLOCK, new Conversion(Material.RAW_IRON, 9),
         Material.RAW_GOLD_BLOCK, new Conversion(Material.RAW_GOLD, 9)
     );
