@@ -29,8 +29,12 @@ public class ShnugglesSmash implements Goal<Giant> {
     );
 
     private static final double DIST = Math.pow(5, 2);
+    private static final int TICKS_TO_MOVE = 20 * 3;
+    private static final int TICKS_TO_ATTACK = 20 * 3;
 
     private final Giant owner;
+    private int ticksSinceMovementUpdate = TICKS_TO_MOVE;
+    private int ticksSinceAttack = TICKS_TO_ATTACK;
 
     public ShnugglesSmash(Giant owner) {
         this.owner = owner;
@@ -41,9 +45,21 @@ public class ShnugglesSmash implements Goal<Giant> {
         return owner.getTarget() != null;
     }
 
-    @Override
-    public void tick() {
-        LivingEntity target = Objects.requireNonNull(owner.getTarget());
+    private void tickMovement(LivingEntity target) {
+        if (++ticksSinceMovementUpdate < TICKS_TO_MOVE) {
+            return;
+        }
+        ticksSinceMovementUpdate = 0;
+
+        owner.getPathfinder().moveTo(target);
+    }
+
+    private void tickCombat(LivingEntity target) {
+        if (++ticksSinceAttack < TICKS_TO_ATTACK) {
+            return;
+        }
+        ticksSinceAttack = 0;
+
         Location ownerLoc = owner.getLocation();
         if (LocationUtil.distanceSquared2D(ownerLoc, target.getLocation()) < DIST) {
             for (Player toHurt : ownerLoc.getNearbyEntitiesByType(Player.class, DIST)) {
@@ -53,9 +69,14 @@ public class ShnugglesSmash implements Goal<Giant> {
 
                 toHurt.damage(ChanceUtil.getRangedRandom(5, 40), owner);
             }
-        } else {
-            owner.getPathfinder().moveTo(target);
         }
+    }
+
+    @Override
+    public void tick() {
+        LivingEntity target = Objects.requireNonNull(owner.getTarget());
+        tickCombat(target);
+        tickMovement(target);
     }
 
     @Override

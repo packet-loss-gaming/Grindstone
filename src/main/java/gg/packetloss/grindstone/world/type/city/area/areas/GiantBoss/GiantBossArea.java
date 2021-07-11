@@ -223,23 +223,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     public boolean isBossSpawned() {
         if (!isArenaLoaded()) return true;
-        boolean found = false;
-        boolean second = false;
         for (Giant e : getContained(Giant.class)) {
-            if (e.isValid()) {
-                if (!found) {
-                    boss = e;
-                    found = true;
-                } else if (e.getHealth() < boss.getHealth()) {
-                    boss = e;
-                    second = true;
-                } else {
-                    e.remove();
-                }
+            if (e.isValid() && e != boss) {
+                e.remove();
             }
-        }
-        if (second) {
-            getContained(Giant.class).stream().filter(e -> e.isValid() && !e.equals(boss)).forEach(Entity::remove);
         }
 
         return isBossSpawnedFast();
@@ -258,12 +245,12 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
         Bukkit.getMobGoals().addGoal(boss, 1, new SimpleAttackNearestPlayer(boss));
         Bukkit.getMobGoals().addGoal(boss, 2, new ShnugglesSmash(boss));
-        Bukkit.getMobGoals().addGoal(boss, 3, new ShnugglesSmash(boss));
 
         boss.setMaxHealth(maxHealth);
         boss.setHealth(currentHealth);
         boss.setRemoveWhenFarAway(false);
 
+        EntityUtil.setMovementSpeed(boss, .2);
         EntityUtil.setKnockbackResistance(boss, 1);
         EntityUtil.setFollowRange(boss, 40);
     }
