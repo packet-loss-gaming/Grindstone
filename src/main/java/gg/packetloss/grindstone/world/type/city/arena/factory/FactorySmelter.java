@@ -75,7 +75,7 @@ public class FactorySmelter extends FactoryMech {
         }
 
         ChatUtil.sendNotice(audible, "Found: " + quantity + " " + type + ".");
-        items.merge(stack.getType(), quantity, Integer::sum);
+        items.merge(type, quantity, Integer::sum);
     }
 
     @Override
