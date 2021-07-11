@@ -83,7 +83,7 @@ public class CustomWeapon extends CustomEquipment {
 
         if (hasSpeedMod()) {
             stack = ItemModifierUtil.cloneWithSpecifiedModifiers(
-                new ItemStack(Material.IRON_AXE),
+                stack,
                 Lists.newArrayList(
                     ItemModifierUtil.ITEM_ATTACK_DAMAGE.get(
                         getDefaultDamage(),
