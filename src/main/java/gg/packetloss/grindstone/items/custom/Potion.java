@@ -10,10 +10,10 @@ import org.bukkit.potion.PotionEffectType;
 
 public class Potion {
     private PotionEffectType type;
-    private int time;
+    private long time;
     private int level;
 
-    public Potion(PotionEffectType type, int time, int level) {
+    public Potion(PotionEffectType type, long time, int level) {
         this.type = type;
         this.time = time;
         this.level = level;
@@ -23,7 +23,7 @@ public class Potion {
         return type;
     }
 
-    public int getTime() {
+    public long getTime() {
         return time;
     }
 

@@ -37,7 +37,7 @@ public class CustomPotion extends CustomItem {
         effects.add(effect);
     }
 
-    public void addEffect(PotionEffectType type, int time, int level) {
+    public void addEffect(PotionEffectType type, long time, int level) {
         addEffect(new Potion(type, time, level));
     }
 
@@ -61,7 +61,14 @@ public class CustomPotion extends CustomItem {
         meta.setBasePotionData(new PotionData(PotionType.UNCRAFTABLE));
         meta.setColor(color);
         for (Potion potion : effects) {
-            meta.addCustomEffect(new PotionEffect(potion.getType(), potion.getTime(), potion.getLevel()), false);
+            meta.addCustomEffect(
+                new PotionEffect(
+                    potion.getType(),
+                    (int) potion.getTime(),
+                    potion.getLevel()
+                ),
+                false
+            );
         }
         base.setItemMeta(meta);
         return base;

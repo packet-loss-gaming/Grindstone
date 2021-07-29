@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 public class CustomItemCenter {
-    public static final int REVISION = 0;
+    public static final int REVISION = 1;
 
     private static CustomItemModelState modelState = new CustomItemModelState();
     private static SingleFileFilesystemStateHelper<CustomItemModelState> modelStateHelper;

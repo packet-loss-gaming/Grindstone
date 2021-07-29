@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.items.custom;
 
 import gg.packetloss.grindstone.items.implementations.MagicBucketImpl;
+import gg.packetloss.grindstone.util.TimeUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -480,33 +481,32 @@ public class CustomItemCenterRegistration {
 
         // Combat Potions
         CustomPotion divineCombatPotion = new CustomPotion(DIVINE_COMBAT_POTION, Color.BLACK);
-        divineCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 3);
-        divineCombatPotion.addEffect(PotionEffectType.REGENERATION, 20 * 600, 3);
-        divineCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 3);
-        divineCombatPotion.addEffect(PotionEffectType.WATER_BREATHING, 20 * 600, 3);
-        divineCombatPotion.addEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 3);
+        divineCombatPotion.addEffect(PotionEffectType.REGENERATION, TimeUtil.convertSecondsToTicks(30), 1);
+        divineCombatPotion.addEffect(PotionEffectType.ABSORPTION, TimeUtil.convertMinutesToTicks(5), 2);
+        divineCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, TimeUtil.convertMinutesToTicks(5), 1);
+        divineCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, TimeUtil.convertMinutesToTicks(5), 1);
+        divineCombatPotion.addEffect(PotionEffectType.SPEED, TimeUtil.convertMinutesToTicks(5), 1);
         divineCombatPotion.addSource(ItemSource.SACRIFICIAL_PIT);
         divineCombatPotion.addSource(ItemSource.GRAVE_YARD);
         divineCombatPotion.addSource(ItemSource.MARKET);
         itemConsumer.accept(divineCombatPotion);
 
         CustomPotion holyCombatPotion = new CustomPotion(HOLY_COMBAT_POTION, Color.BLACK);
-        holyCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 45, 3);
-        holyCombatPotion.addEffect(PotionEffectType.REGENERATION, 20 * 45, 3);
-        holyCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 45, 3);
-        holyCombatPotion.addEffect(PotionEffectType.WATER_BREATHING, 20 * 45, 3);
-        holyCombatPotion.addEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 45, 3);
+        holyCombatPotion.addEffect(PotionEffectType.REGENERATION, TimeUtil.convertSecondsToTicks(30), 1);
+        holyCombatPotion.addEffect(PotionEffectType.ABSORPTION, TimeUtil.convertMinutesToTicks(1), 2);
+        holyCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, TimeUtil.convertMinutesToTicks(1), 1);
+        holyCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, TimeUtil.convertMinutesToTicks(1), 1);
+        holyCombatPotion.addEffect(PotionEffectType.SPEED, TimeUtil.convertMinutesToTicks(1), 1);
         holyCombatPotion.addSource(ItemSource.SACRIFICIAL_PIT);
         holyCombatPotion.addSource(ItemSource.GRAVE_YARD);
         holyCombatPotion.addSource(ItemSource.MARKET);
         itemConsumer.accept(holyCombatPotion);
 
         CustomPotion extremeCombatPotion = new CustomPotion(EXTREME_COMBAT_POTION, Color.BLACK);
-        extremeCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 600, 2);
-        extremeCombatPotion.addEffect(PotionEffectType.REGENERATION, 20 * 600, 2);
-        extremeCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 600, 2);
-        extremeCombatPotion.addEffect(PotionEffectType.WATER_BREATHING, 20 * 600, 2);
-        extremeCombatPotion.addEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 600, 2);
+        extremeCombatPotion.addEffect(PotionEffectType.ABSORPTION, TimeUtil.convertMinutesToTicks(5), 1);
+        extremeCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, TimeUtil.convertMinutesToTicks(5), 0);
+        extremeCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, TimeUtil.convertMinutesToTicks(5), 0);
+        extremeCombatPotion.addEffect(PotionEffectType.SPEED, TimeUtil.convertMinutesToTicks(5), 0);
         extremeCombatPotion.addSource(ItemSource.SACRIFICIAL_PIT);
         extremeCombatPotion.addSource(ItemSource.GRAVE_YARD);
         extremeCombatPotion.addSource(ItemSource.MARKET);
