@@ -349,10 +349,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         // Equalize Players
         for (Player player : getContainedParticipants()) {
             try {
-                if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
-                    player.damage(32, boss);
-                }
-
                 if (player.getVehicle() != null) {
                     player.getVehicle().eject();
                     ChatUtil.sendWarning(player, "The boss throws you off!");

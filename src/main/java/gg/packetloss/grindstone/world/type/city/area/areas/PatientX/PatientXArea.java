@@ -272,12 +272,6 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     private void equalize() {
         for (Player player : getContainedParticipants()) {
             try {
-                if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
-                    ChatUtil.sendWarning(player, "Your defensive potion enrages me!");
-                    modifyDifficulty(1);
-                    player.damage(difficulty * config.baseBossHit, boss);
-                }
-
                 Entity vehicle = player.getVehicle();
                 if (vehicle != null && !(vehicle instanceof Bat)) {
                     vehicle.eject();

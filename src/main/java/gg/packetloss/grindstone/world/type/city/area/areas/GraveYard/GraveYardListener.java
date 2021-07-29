@@ -177,7 +177,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     private void degradeGoodPotions(Player player) {
         List<PotionEffectType> affectedTypes = Arrays.asList(
                 PotionEffectType.INCREASE_DAMAGE, PotionEffectType.REGENERATION, PotionEffectType.DAMAGE_RESISTANCE,
-                PotionEffectType.WATER_BREATHING, PotionEffectType.FIRE_RESISTANCE
+                PotionEffectType.WATER_BREATHING, PotionEffectType.FIRE_RESISTANCE, PotionEffectType.ABSORPTION,
+                PotionEffectType.HEALTH_BOOST
         );
 
         for (PotionEffect effect : player.getActivePotionEffects()) {
@@ -262,18 +263,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         } else if (parent.isTorchArea(player.getLocation())) {
             event.setCancelled(true);
         }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPotionSplash(PotionSplashEvent event) {
-        event.getAffectedEntities().stream().filter(entity -> entity instanceof Player && ChanceUtil.getChance(14)).forEach(entity -> {
-            if (ChanceUtil.getChance(14)) {
-                entity.removePotionEffect(PotionEffectType.REGENERATION);
-            }
-            if (ChanceUtil.getChance(14)) {
-                entity.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-            }
-        });
     }
 
     private int getPhantomValueOfItem(ItemStack item, Location pointOfSacrifice) {
