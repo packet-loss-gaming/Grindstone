@@ -547,8 +547,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     private ItemStack pickRandomItem() {
-        if (ChanceUtil.getChance(3)) {
-            return new ItemStack(Material.EXPERIENCE_BOTTLE, ChanceUtil.getRangedRandom(16, 48));
+        if (!ChanceUtil.getChance(4)) {
+            return new ItemStack(Material.EXPERIENCE_BOTTLE, ChanceUtil.getRandom(64));
         }
 
         return ChanceUtil.supplyRandom(
