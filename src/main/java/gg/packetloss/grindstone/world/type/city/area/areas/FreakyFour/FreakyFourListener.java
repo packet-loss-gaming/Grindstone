@@ -369,7 +369,12 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             for (int x = minX; x < maxX; ++x) {
                 for (int z = minZ; z < maxZ; ++z) {
                     if (ChanceUtil.getChance(12)) {
-                        ExplosionStateFactory.createFakeExplosion(new Location(parent.getWorld(), x, FreakyFourArea.GROUND_LEVEL, z));
+                        ExplosionStateFactory.createFakeExplosion(new Location(
+                            parent.getWorld(),
+                            x,
+                            FreakyFourArea.GROUND_LEVEL,
+                            z
+                        ));
                     }
                 }
             }
