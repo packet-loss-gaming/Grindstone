@@ -45,7 +45,6 @@ import org.bukkit.util.Vector;
 
 import java.io.IOException;
 import java.util.EnumMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -221,14 +220,6 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         }
     }
 
-    private static Set<DamageCause> healable = new HashSet<>();
-
-    static {
-        healable.add(DamageCause.BLOCK_EXPLOSION);
-        healable.add(DamageCause.ENTITY_EXPLOSION);
-        healable.add(DamageCause.WITHER);
-    }
-
     private Map<FreakyFourBoss, Location> bossLastDamageLoc = new EnumMap<>(FreakyFourBoss.class);
     private Map<FreakyFourBoss, Integer> bossNumTimesDamaged = new EnumMap<>(FreakyFourBoss.class);
 
@@ -268,17 +259,13 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         }
 
         if (entity instanceof Creeper) {
-            // Heal Da Bomb or teleport him randomly somewhere in the room
-            if (healable.contains(event.getCause())) {
-                event.setCancelled(true);
-            } else {
-                BlockVector3 damagerLoc = WorldEditBridge.toBlockVec3(damager.getLocation());
-                final double minDist = Math.pow(parent.getConfig().daBombTeleMinDist, 2);
-                entity.teleport(parent.getLocationInBossRoom(
-                    FreakyFourBoss.DA_BOMB,
-                    (vector) -> LocationUtil.distanceSquared2D(vector, damagerLoc) > minDist
-                ));
-            }
+            // Teleport Da Bomb randomly somewhere in the room
+            BlockVector3 damagerLoc = WorldEditBridge.toBlockVec3(damager.getLocation());
+            final double minDist = Math.pow(parent.getConfig().daBombTeleMinDist, 2);
+            entity.teleport(parent.getLocationInBossRoom(
+                FreakyFourBoss.DA_BOMB,
+                (vector) -> LocationUtil.distanceSquared2D(vector, damagerLoc) > minDist
+            ));
         } else if (entity instanceof Skeleton) {
             // Prevent melee damage to Snipee.
             //
