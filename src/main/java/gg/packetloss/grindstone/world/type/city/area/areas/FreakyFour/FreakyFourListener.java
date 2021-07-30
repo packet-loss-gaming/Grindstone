@@ -272,7 +272,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             // When not running a special attack (as these show up without a projectile even if originally
             // caused by a projectile) don't check.
             if (SpecialAttackFactory.getCurrentSpecialAttack().isEmpty()) {
-                if (damager instanceof Player && entity instanceof Skeleton && projectile == null) {
+                if (damager instanceof Player && projectile == null) {
                     ChatUtil.sendNotice(damager, ChatColor.DARK_RED, "Melee can't harm me... Noob!");
                     event.setCancelled(true);
                 }
