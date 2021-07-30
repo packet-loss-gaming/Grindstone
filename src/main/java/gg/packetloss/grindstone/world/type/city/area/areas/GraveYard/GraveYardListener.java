@@ -186,9 +186,11 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 continue;
             }
 
+            /* Remove the effect, we'll readd it if it's still relevant below. */
+            player.removePotionEffect(effect.getType());
+
             int newDuration = (int) (effect.getDuration() * .9);
             if (newDuration == 0) {
-                player.removePotionEffect(effect.getType());
                 continue;
             }
 
@@ -199,7 +201,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     effect.isAmbient(),
                     effect.hasParticles()
             );
-            player.addPotionEffect(newEffect, true);
+            player.addPotionEffect(newEffect);
         }
     }
 

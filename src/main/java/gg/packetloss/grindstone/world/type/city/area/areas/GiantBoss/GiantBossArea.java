@@ -431,7 +431,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
         for (Zombie baby : containedBabies) {
             for (PotionEffectType effectType : effectTypes) {
-                baby.addPotionEffect(new PotionEffect(effectType, 20 * config.babyPotTime, potLevel), true);
+                baby.removePotionEffect(effectType);
+                baby.addPotionEffect(new PotionEffect(effectType, 20 * config.babyPotTime, potLevel));
             }
         }
     }

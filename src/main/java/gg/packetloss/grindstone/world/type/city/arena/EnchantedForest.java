@@ -211,7 +211,8 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     }
                 },
                 () -> {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * 60, 2), true);
+                    player.removePotionEffect(PotionEffectType.POISON);
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * 60, 2));
                     ChatUtil.sendWarning(player, "You cut your hand on the poisonous bark.");
                 },
                 () -> {

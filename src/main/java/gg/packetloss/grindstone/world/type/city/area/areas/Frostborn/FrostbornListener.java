@@ -143,8 +143,9 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             ++parent.rageModifier;
 
             // Slow the boss on damage
+            ((Snowman) entity).removePotionEffect(PotionEffectType.SLOW);
             PotionEffect potionEffect = new PotionEffect(PotionEffectType.SLOW, 20 * 3, 3, true, false);
-            ((Snowman) entity).addPotionEffect(potionEffect, true);
+            ((Snowman) entity).addPotionEffect(potionEffect);
 
             // If punched return fire with a special attack
             if (event instanceof EntityDamageByEntityEvent) {
