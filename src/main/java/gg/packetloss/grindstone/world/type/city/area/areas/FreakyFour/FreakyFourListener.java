@@ -366,24 +366,18 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             int maxX = max.getBlockX();
             int maxZ = max.getBlockZ();
 
-            int dmgFact = (int) (Math.max(3, (((Creeper) entity).getHealth() / ((Creeper) entity).getMaxHealth())
-                    * parent.getConfig().daBombTNTStrength));
-
             for (int x = minX; x < maxX; ++x) {
                 for (int z = minZ; z < maxZ; ++z) {
-                    if (ChanceUtil.getChance(parent.getConfig().daBombTNT)) {
-                        ExplosionStateFactory.createExplosion(
-                                new Location(parent.getWorld(), x, FreakyFourArea.groundLevel, z),
-                                dmgFact,
-                                false,
-                                false
-                        );
+                    if (ChanceUtil.getChance(12)) {
+                        ExplosionStateFactory.createFakeExplosion(new Location(parent.getWorld(), x, FreakyFourArea.GROUND_LEVEL, z));
                     }
                 }
             }
 
-            ((Creeper) entity).setHealth(((Creeper) entity).getMaxHealth());
-            throwBack(entity);
+            for (Player player : parent.getContainedParticipantsIn(daBombRegion)) {
+                player.setHealth(0);
+            }
+
             event.setCancelled(true);
         }
     }

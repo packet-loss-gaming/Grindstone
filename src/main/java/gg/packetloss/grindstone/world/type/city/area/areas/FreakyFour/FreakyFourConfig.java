@@ -26,10 +26,6 @@ public class FreakyFourConfig extends ConfigurationBase {
     public double daBombHP = 180;
     @Setting("da-bomb.teleport-min-dist")
     public int daBombTeleMinDist = 10;
-    @Setting("da-bomb.tnt-chance")
-    public int daBombTNT = 10;
-    @Setting("da-bomb.tnt-strength")
-    public int daBombTNTStrength = 8;
     @Setting("snipee.hp")
     public double snipeeHP = 180;
     @Setting("snipee.percent-damage")

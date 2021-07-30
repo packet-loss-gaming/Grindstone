@@ -62,7 +62,7 @@ import java.util.function.Predicate;
         plugins = {"WorldGuard"})
 public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
 
-    protected static final int groundLevel = 79;
+    protected static final int GROUND_LEVEL = 79;
 
     @InjectComponent
     protected AdminComponent admin;
@@ -89,7 +89,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         spectator.registerSpectatorKind(PlayerStateKind.FREAKY_FOUR_SPECTATOR);
 
         world = server.getWorlds().get(0);
-        entrance = new Location(world, 401.5, 79, -304, 270, 0);
+        entrance = new Location(world, 401.5, GROUND_LEVEL, -304, 270, 0);
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
         String base = "oblitus-district-freaky-four";
         region = manager.getRegion(base);
@@ -111,7 +111,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         spectator.registerSpectatedRegion(PlayerStateKind.FREAKY_FOUR_SPECTATOR, region);
         spectator.registerSpectatorSkull(
                 PlayerStateKind.FREAKY_FOUR_SPECTATOR,
-                new Location(world, 400, 79, -307),
+                new Location(world, 400, GROUND_LEVEL, -307),
                 () -> getFirstFullBossRoom().isPresent()
         );
     }
@@ -191,16 +191,16 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     public Location getEntrance(FreakyFourBoss boss) {
         switch (boss) {
             case CHARLOTTE -> {
-                return new Location(world, 398.5, 79, -304, 90, 0);
+                return new Location(world, 398.5, GROUND_LEVEL, -304, 90, 0);
             }
             case FRIMUS -> {
-                return new Location(world, 374.5, 79, -304, 90, 0);
+                return new Location(world, 374.5, GROUND_LEVEL, -304, 90, 0);
             }
             case DA_BOMB -> {
-                return new Location(world, 350.5, 79, -304, 90, 0);
+                return new Location(world, 350.5, GROUND_LEVEL, -304, 90, 0);
             }
             case SNIPEE -> {
-                return new Location(world, 326.5, 79, -304, 90, 0);
+                return new Location(world, 326.5, GROUND_LEVEL, -304, 90, 0);
             }
             default -> throw new IllegalStateException();
         }
@@ -212,7 +212,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     protected Location getBossSpawnLoc(FreakyFourBoss boss) {
-        return RegionUtil.getCenterAt(world, groundLevel, bossRegions.get(boss));
+        return RegionUtil.getCenterAt(world, GROUND_LEVEL, bossRegions.get(boss));
     }
 
     private void createWall(ProtectedRegion region,
@@ -380,7 +380,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     protected Location getLocationInBossRoom(FreakyFourBoss boss, Predicate<BlockVector3> extraCheck) {
         return LocationUtil.pickLocation(
             world,
-            79,
+            GROUND_LEVEL,
             new NonSolidRegionChecker(bossRegions.get(boss), world) {
                 @Override
                 public Boolean evaluate(BlockVector3 vector) {
@@ -537,8 +537,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
 
     private Block[] getLootChestBlocks() {
         return new Block[] {
-            world.getBlockAt(308, 79, -305),
-            world.getBlockAt(308, 79, -304)
+            world.getBlockAt(308, GROUND_LEVEL, -305),
+            world.getBlockAt(308, GROUND_LEVEL, -304)
         };
     }
 
