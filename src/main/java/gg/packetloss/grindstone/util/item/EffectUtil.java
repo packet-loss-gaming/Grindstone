@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.util.item;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
+import gg.packetloss.grindstone.events.custom.item.ArmorBurstEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
@@ -34,6 +35,12 @@ public class EffectUtil {
         public static void powerBurst(LivingEntity entity, double attackDamage) {
 
             if (entity instanceof Player) {
+                ArmorBurstEvent event = new ArmorBurstEvent((Player) entity);
+                CommandBook.callEvent(event);
+                if (event.isCancelled()) {
+                    return;
+                }
+
                 ChatUtil.sendNotice(entity, "Your armour releases a burst of energy.");
                 ChatUtil.sendNotice(entity, "You are healed by an ancient force.");
             }
@@ -69,8 +76,13 @@ public class EffectUtil {
     public static class Necros {
 
         public static void deathStrike(LivingEntity entity, double attackDamage) {
-
             if (entity instanceof Player) {
+                ArmorBurstEvent event = new ArmorBurstEvent((Player) entity);
+                CommandBook.callEvent(event);
+                if (event.isCancelled()) {
+                    return;
+                }
+
                 ChatUtil.sendNotice(entity, "You feel a necrotic power sweep over your soul.");
             }
 

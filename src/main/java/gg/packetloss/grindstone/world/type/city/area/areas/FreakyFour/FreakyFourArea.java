@@ -26,6 +26,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.checker.Expression;
+import gg.packetloss.grindstone.util.checker.NonSolidRegionChecker;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
@@ -44,11 +45,15 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 @ComponentInformation(friendlyName = "Freaky Four", desc = "The craziest bosses ever")
 @Depend(components = {
@@ -77,6 +82,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     protected EnumMap<FreakyFourBoss, BossBar> bossBars = new EnumMap<>(FreakyFourBoss.class);
 
     protected Location entrance;
+    protected long lastSpiderBite = 0;
 
     @Override
     public void setUp() {
@@ -113,6 +119,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     @Override
     public void run() {
         if (!isEmpty()) {
+            removeFireResistance();
             if (checkActiveBoss(FreakyFourBoss.CHARLOTTE)) {
                 runCharlotte();
             }
@@ -123,6 +130,12 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                 runLootTimeout();
             }
             updateBossBars();
+        }
+    }
+
+    private void removeFireResistance() {
+        for (Player player : getContainedParticipants()) {
+            player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
         }
     }
 
@@ -198,8 +211,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         SkullPlacer.placePlayerSkullOnWall(v, BlockFace.WEST, player);
     }
 
-    protected Location getCentralLoc(ProtectedRegion region) {
-        return RegionUtil.getCenterAt(world, groundLevel, region);
+    protected Location getBossSpawnLoc(FreakyFourBoss boss) {
+        return RegionUtil.getCenterAt(world, groundLevel, bossRegions.get(boss));
     }
 
     private void createWall(ProtectedRegion region,
@@ -294,7 +307,16 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     public void spawn(FreakyFourBoss boss) {
-        Monster bossEnt = getWorld().spawn(getCentralLoc(bossRegions.get(boss)), boss.getEntityClass());
+        Monster bossEnt = getWorld().spawn(
+            getBossSpawnLoc(boss),
+            boss.getEntityClass(),
+            (e) -> e.getEquipment().clear()
+        );
+
+        // Handle equipment
+        if (boss == FreakyFourBoss.SNIPEE) {
+            bossEnt.getEquipment().setItem(EquipmentSlot.HAND, new ItemStack(Material.BOW));
+        }
 
         // Handle vitals
         double configuredHealth = getConfiguredMaxHealth(boss);
@@ -307,6 +329,9 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             AttributeBook.setAttribute(bossEnt, AttributeBook.Attribute.FOLLOW_RANGE, 50);
             if (boss == FreakyFourBoss.SNIPEE) {
                 AttributeBook.setAttribute(bossEnt, AttributeBook.Attribute.MOVEMENT_SPEED, 0.15);
+            } else if (boss == FreakyFourBoss.DA_BOMB) {
+                AttributeBook.setAttribute(bossEnt, AttributeBook.Attribute.MOVEMENT_SPEED, 0.6);
+
             }
         } catch (UnsupportedFeatureException ex) {
             ex.printStackTrace();
@@ -352,50 +377,71 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         }
     }
 
-    public void runCharlotte() {
+    protected Location getLocationInBossRoom(FreakyFourBoss boss, Predicate<BlockVector3> extraCheck) {
+        return LocationUtil.pickLocation(
+            world,
+            79,
+            new NonSolidRegionChecker(bossRegions.get(boss), world) {
+                @Override
+                public Boolean evaluate(BlockVector3 vector) {
+                    if (!super.evaluate(vector)) {
+                        return false;
+                    }
+
+                    return extraCheck.test(vector);
+                }
+            }
+        );
+    }
+
+    private void spawnCharlotteMinion(Location location) {
+        CaveSpider spider = world.spawn(location, CaveSpider.class);
+
+        try {
+            AttributeBook.setAttribute(spider, AttributeBook.Attribute.FOLLOW_RANGE, 50);
+        } catch (UnsupportedFeatureException ex) {
+            ex.printStackTrace();
+        }
+
         Monster charlotte = bossEntities.get(FreakyFourBoss.CHARLOTTE);
+        if (charlotte != null) {
+            spider.setTarget(charlotte.getTarget());
+        }
+    }
+
+    public void runCharlotte() {
         ProtectedRegion charlotteRegion = bossRegions.get(FreakyFourBoss.CHARLOTTE);
 
         for (int i = ChanceUtil.getRandom(10); i > 0; --i) {
-            world.spawn(charlotte.getLocation(), CaveSpider.class);
+            spawnCharlotteMinion(getLocationInBossRoom(FreakyFourBoss.CHARLOTTE, (vec) -> true));
         }
 
         ChanceUtil.doRandom(
             () -> {
-                createWall(charlotteRegion,
-                    input -> input.getType() == Material.AIR,
-                    input -> input.getType() == Material.COBWEB,
-                    Material.AIR,
-                    Material.COBWEB,
-                    1,
-                    config.charlotteFloorWeb
-                );
-            },
-            () -> {
-                LivingEntity target = charlotte.getTarget();
-                if (target != null && contains(target)) {
-                    List<Location> queList = new ArrayList<>();
-                    for (Location loc : Arrays.asList(target.getLocation(), target.getEyeLocation())) {
-                        for (BlockFace face : EnvironmentUtil.getNearbyBlockFaces()) {
-                            if (face == BlockFace.SELF) continue;
-                            queList.add(loc.getBlock().getRelative(face).getLocation());
+                for (CaveSpider caveSpider : getContained(charlotteRegion, CaveSpider.class)) {
+                    Block block = caveSpider.getLocation().getBlock();
+                    while (block.getType() != Material.AIR) {
+                        if (block.getType() != Material.COBWEB) {
+                            break;
                         }
+
+                        block = block.getRelative(BlockFace.UP);
                     }
-                    for (Location loc : queList) {
-                        Block block = world.getBlockAt(loc);
-                        if (block.getType().isSolid()) continue;
+                    if (block.getType() == Material.AIR) {
                         block.setType(Material.COBWEB);
                     }
                 }
             },
             () -> {
                 RegionWalker.walk(charlotteRegion, (x, y, z) -> {
-                    if (!ChanceUtil.getChance(config.charlotteWebSpider)) return;
+                    if (!ChanceUtil.getChance(config.charlotteWebBreak)) return;
 
                     Block block = world.getBlockAt(x, y, z);
                     if (block.getType() == Material.COBWEB) {
                         block.setType(Material.AIR);
-                        world.spawn(block.getLocation(), CaveSpider.class);
+                        if (ChanceUtil.getChance(config.charlotteWebSpider)) {
+                            spawnCharlotteMinion(block.getLocation());
+                        }
                     }
                 });
             }

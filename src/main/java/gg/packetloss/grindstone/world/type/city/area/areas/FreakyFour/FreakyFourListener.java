@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.world.type.city.area.areas.FreakyFour;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import gg.packetloss.grindstone.events.custom.item.ArmorBurstEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
 import gg.packetloss.grindstone.events.entity.HallowCreeperEvent;
@@ -25,16 +26,17 @@ import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.SoulReaper;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import org.apache.commons.lang.Validate;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -46,6 +48,7 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -67,6 +70,28 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         }
 
         return parent.bossRegions.get(boss);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        if (!parent.contains(parent.bossRegions.get(FreakyFourBoss.CHARLOTTE), player)) {
+            return;
+        }
+
+        if (event.getBlock().getType() != Material.COBWEB) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockBreak(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (!parent.contains(parent.bossRegions.get(FreakyFourBoss.CHARLOTTE), player)) {
+            return;
+        }
+
+        event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -104,6 +129,10 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         Class<?> specClass = attack.getClass();
         if (SPECIAL_ATTACK_DENY_LIST.contains(specClass)) {
             event.tryAgain();
+        }
+
+        if (isAffectedBySpiderBite(event.getPlayer())) {
+            event.setCancelled(true);
         }
     }
 
@@ -238,27 +267,19 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             }
         }
 
-        if (entity instanceof Creeper || entity instanceof Skeleton) {
-            boolean backTeleport = projectile == null && ChanceUtil.getChance(parent.getConfig().backTeleport);
+        if (entity instanceof Creeper) {
+            // Heal Da Bomb or teleport him randomly somewhere in the room
             if (healable.contains(event.getCause())) {
-                EntityUtil.heal(entity, event.getDamage());
                 event.setCancelled(true);
-            } else if ((backTeleport || projectile != null) && damager != null) {
-                double distSQ = 2;
-                double maxDist = 1;
-                if (entity instanceof Skeleton) {
-                    distSQ = entity.getLocation().distanceSquared(damager.getLocation());
-                    maxDist = parent.getConfig().snipeeTeleportDist;
-                }
-                if (backTeleport || distSQ > Math.pow(maxDist, 2)) {
-                    final Entity finalDamager = damager;
-                    server.getScheduler().runTaskLater(inst, () -> {
-                        entity.teleport(finalDamager);
-                        throwBack(entity);
-                    }, 1);
-                }
+            } else {
+                BlockVector3 damagerLoc = WorldEditBridge.toBlockVec3(damager.getLocation());
+                final double minDist = Math.pow(parent.getConfig().daBombTeleMinDist, 2);
+                entity.teleport(parent.getLocationInBossRoom(
+                    FreakyFourBoss.DA_BOMB,
+                    (vector) -> LocationUtil.distanceSquared2D(vector, damagerLoc) > minDist
+                ));
             }
-
+        } else if (entity instanceof Skeleton) {
             // Prevent melee damage to Snipee.
             //
             // When not running a special attack (as these show up without a projectile even if originally
@@ -280,24 +301,47 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                         entity,
                         Math.max(
                                 1,
-                                ChanceUtil.getRandom(((LivingEntity) entity).getHealth()) - 5
+                                ChanceUtil.getRandom(((LivingEntity) entity).getMaxHealth()) - 5
                         )
                 );
-            } else if (damager instanceof Creature) {
-                if (projectile != null) {
-                    if (entity.hasPermission("aurora.tome.divinity") && ChanceUtil.getChance(5)) {
-                        ChatUtil.sendNotice((Player) entity, "A divine force deflects the arrow.");
-                    } else {
-                        EntityUtil.forceDamage(entity, ((Player) entity).getMaxHealth() * parent.getConfig().snipeeDamage);
-                    }
-                    event.setCancelled(true);
-                } else if (damager instanceof CaveSpider) {
-                    EntityUtil.heal(parent.bossEntities.get(FreakyFourBoss.CHARLOTTE), event.getDamage());
+            } else if (projectile != null) {
+                if (entity.hasPermission("aurora.tome.divinity") && ChanceUtil.getChance(5)) {
+                    ChatUtil.sendNotice((Player) entity, "A divine force deflects the projectile.");
+                } else {
+                    EntityUtil.forceDamage(entity, ((Player) entity).getMaxHealth() * parent.getConfig().snipeeDamage);
                 }
+                event.setCancelled(true);
+            } else if (damager instanceof CaveSpider) {
+                EntityUtil.heal(
+                    parent.bossEntities.get(FreakyFourBoss.CHARLOTTE),
+                    event.getDamage() * parent.getConfig().charlotteHealingScale
+                );
+            } else if (damager instanceof Spider) {
+                parent.lastSpiderBite = System.currentTimeMillis();
+                ChatUtil.sendWarning(entity, "You've been bit by Charlotte!");
+                ChatUtil.sendWarning(entity, "Your equipment becomes less effective.");
             }
         }
 
-        parent.updateBossBarProgress(parent.getBossAtLocation(entity.getLocation()));
+        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
+            parent.updateBossBarProgress(parent.getBossAtLocation(entity.getLocation()));
+        });
+    }
+
+    private boolean isAffectedBySpiderBite(Player player) {
+        if (!parent.contains(parent.bossRegions.get(FreakyFourBoss.CHARLOTTE), player)) {
+            return false;
+        }
+
+        return System.currentTimeMillis() - parent.lastSpiderBite < TimeUnit.SECONDS.toMillis(15);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onArmorBurstEvent(ArmorBurstEvent event) {
+        Player player = event.getPlayer();
+        if (isAffectedBySpiderBite(player)) {
+            event.setCancelled(true);
+        }
     }
 
     private void throwBack(Entity entity) {
@@ -338,6 +382,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                 }
             }
 
+            ((Creeper) entity).setHealth(((Creeper) entity).getMaxHealth());
             throwBack(entity);
             event.setCancelled(true);
         }
@@ -370,6 +415,21 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         if (parent.contains(player)) {
+            switch (parent.getBossAtLocation(player.getLocation())) {
+                case CHARLOTTE -> {
+                    event.setDeathMessage(player.getName() + " died trying to escape a sticky situation");
+                }
+                case FRIMUS -> {
+                    event.setDeathMessage(player.getName() + " went to the wrong barbeque");
+                }
+                case DA_BOMB -> {
+                    event.setDeathMessage(player.getName() + " is now many little bitty pieces");
+                }
+                case SNIPEE -> {
+                    event.setDeathMessage(player.getName() + " got snipeed");
+                }
+            }
+
             try {
                 parent.playerState.pushState(PlayerStateKind.FREAKY_FOUR, player);
                 event.getDrops().clear();
