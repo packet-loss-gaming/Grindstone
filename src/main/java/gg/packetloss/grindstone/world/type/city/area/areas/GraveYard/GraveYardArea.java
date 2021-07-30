@@ -509,24 +509,23 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
     }
 
+    private Location getHallZombieSpawnPosition() {
+        return new Location(
+            world,
+            -223 + ChanceUtil.getRangedRandom(-2, 2),
+            56,
+            -755
+        );
+    }
+
     private void spawnHallZombies(Player player) {
         if (!ChanceUtil.getChance(5) && getContained(torchArea, Zombie.class).size() >= 10) {
             return;
         }
 
         // Redirect local spawns to be the end of the hall way
-        Location spawnPoint = new Location(world, -223, 56, -755);
-
         for (int i = ChanceUtil.getRangedRandom(2, 5); i > 0; --i) {
-            Zombie z = spawnAndArm(
-                spawnPoint.clone().add(
-                    ChanceUtil.getRangedRandom(-2, 2),
-                    0,
-                    0
-                ),
-                Zombie.class,
-                true
-            );
+            Zombie z = spawnAndArm(getHallZombieSpawnPosition(), Zombie.class, true);
 
             z.setTarget(player);
             z.setHealth(10);
@@ -1025,7 +1024,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
             location.getWorld().dropItem(location, stack);
         }
-
     }
 
     public Location makeGrave(String playerName, ItemStack[] itemStacks) {
