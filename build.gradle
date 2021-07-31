@@ -54,7 +54,7 @@ dependencies {
 
     implementation group: 'gg.packetloss', name: 'open-boss', version: '1.2'
     implementation group: 'gg.packetloss', name: 'hackbook', version: '1.17.0.0'
-    implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.16.4.1'
+    implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.17.1.0'
 
     compileOnly group: 'io.papermc.paper', name: 'Paper-API', version: '1.17-R0.1-SNAPSHOT'
 
