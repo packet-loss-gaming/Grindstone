@@ -28,10 +28,10 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ErrorUtil;
-import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.task.promise.FailableTaskFuture;
+import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.util.task.promise.TaskResult;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
@@ -40,7 +40,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -122,52 +121,42 @@ public class MarketComponent extends BukkitComponent {
 
     public static final String NOT_AVAILIBLE = "No item by that name is currently available!";
 
-    public List<ItemTransaction> getTransactions(String itemName, String playerName) {
-        return transactionDatabase.getTransactions(itemName, playerName);
+    public TaskFuture<List<ItemTransaction>> getTransactions(String itemName, UUID playerID) {
+        return TaskFuture.asyncTask(() -> {
+            return transactionDatabase.getTransactions(itemName, playerID);
+        });
     }
 
-    public CompletableFuture<Void> scaleMarket(double factor) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-
-        PluginTaskExecutor.submitAsync(() -> {
-            // FIXME: This is a terrible way of doing this.
+    public TaskFuture<Void> scaleMarket(double factor) {
+        return TaskFuture.asyncTask(() -> {
             List<MarketItemInfo> items = itemDatabase.getItemList();
             for (MarketItemInfo item : items) {
                 itemDatabase.addItem(item.getName(), item.getPrice() * factor, !item.isBuyable(), !item.isSellable());
             }
             itemDatabase.save();
 
-            future.complete(null);
+            return null;
         });
-
-        return future;
     }
 
-    public CompletableFuture<MarketItemInfo> addItem(String itemName, double price, boolean disableBuy, boolean disableSell) {
-        CompletableFuture<MarketItemInfo> future = new CompletableFuture<>();
-
-        PluginTaskExecutor.submitAsync(() -> {
+    public TaskFuture<MarketItemInfo> addItem(String itemName, double price, boolean disableBuy, boolean disableSell) {
+        return TaskFuture.asyncTask(() -> {
             MarketItemInfo oldItem = itemDatabase.getItem(itemName);
+
             itemDatabase.addItem(itemName, price, disableBuy, disableSell);
             itemDatabase.save();
 
-            future.complete(oldItem);
+            return oldItem;
         });
-
-        return future;
     }
 
-    public CompletableFuture<Void> removeItem(String itemName) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-
-        PluginTaskExecutor.submitAsync(() -> {
+    public TaskFuture<Void> removeItem(String itemName) {
+        return TaskFuture.asyncTask(() -> {
             itemDatabase.removeItem(itemName);
             itemDatabase.save();
 
-            future.complete(null);
+            return null;
         });
-
-        return future;
     }
 
     // FIXME: This needs pulled out
@@ -209,16 +198,11 @@ public class MarketComponent extends BukkitComponent {
         return getLookupInstance(computeItemNames(stacks));
     }
 
-    public static CompletableFuture<MarketItemLookupInstance> getLookupInstanceFromStacks(Collection<ItemStack> stacks) {
-        CompletableFuture<MarketItemLookupInstance> future = new CompletableFuture<>();
-
+    public static TaskFuture<MarketItemLookupInstance> getLookupInstanceFromStacks(Collection<ItemStack> stacks) {
         Set<String> names = computeItemNames(stacks);
-
-        PluginTaskExecutor.submitAsync(() -> {
-            future.complete(getLookupInstance(names));
+        return TaskFuture.asyncTask(() -> {
+            return getLookupInstance(names);
         });
-
-        return future;
     }
 
     private BigDecimal calculateTotalPriceAndVerifyStock(List<MarketTransactionLine> transactionLines) throws CommandException {
@@ -289,11 +273,23 @@ public class MarketComponent extends BukkitComponent {
         return wallet.addToBalance(player, payment);
     }
 
+    private List<MarketItem> getItemListFor(String filter, boolean canSeeDisabled) {
+        return itemDatabase.getItemList(filter, canSeeDisabled)
+            .stream()
+            .map(MarketItem::new)
+            .collect(Collectors.toList());
+    }
+
     public List<MarketItem> getItemListFor(CommandSender sender, String filter) {
-        return itemDatabase.getItemList(filter, sender.hasPermission("aurora.admin.adminstore.disabled"))
-                .stream()
-                .map(MarketItem::new)
-                .collect(Collectors.toList());
+        boolean canSeeDisabled = sender.hasPermission("aurora.admin.adminstore.disabled");
+        return getItemListFor(filter, canSeeDisabled);
+    }
+
+    public TaskFuture<List<MarketItem>> asyncGetItemListFor(CommandSender sender, String filter) {
+        boolean canSeeDisabled = sender.hasPermission("aurora.admin.adminstore.disabled");
+        return TaskFuture.asyncTask(() -> {
+            return getItemListFor(filter, canSeeDisabled);
+        });
     }
 
     public void checkPlayer(CommandSender sender) throws CommandException {

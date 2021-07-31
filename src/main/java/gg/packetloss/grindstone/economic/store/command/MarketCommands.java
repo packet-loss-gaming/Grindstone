@@ -210,35 +210,36 @@ public class MarketCommands {
                      @Arg(name = "itemFilter", desc = "item filter", def = "", variable = true) List<String> itemFilterArgs) {
         String itemFilter = Joiner.on(' ').join(itemFilterArgs);
 
-        List<MarketItem> itemCollection = component.getItemListFor(sender, itemFilter);
-        Collections.sort(itemCollection);
-
-        new TextComponentChatPaginator<MarketItem>(ChatColor.GOLD, "Item List") {
-            @Override
-            public Optional<String> getPagerCommand(int page) {
-                return Optional.of("/market list -p " + page + " " + Optional.ofNullable(itemFilter).orElse(""));
-            }
-
-            @Override
-            public Text format(MarketItem info) {
-                ChatColor color = info.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
-                Text buy = Text.of(ChatColor.GRAY, "unavailable");
-                if (info.isBuyable() || !info.isEnabled()) {
-                    buy = formatPriceForList(info.getPrice());
+        component.asyncGetItemListFor(sender, itemFilter).thenApplyAsynchronously((itemCollection) -> {
+            Collections.sort(itemCollection);
+            return itemCollection;
+        }).thenAcceptAsynchronously((itemCollection) -> {
+            new TextComponentChatPaginator<MarketItem>(ChatColor.GOLD, "Item List") {
+                @Override
+                public Optional<String> getPagerCommand(int page) {
+                    return Optional.of("/market list -p " + page + " " + Optional.ofNullable(itemFilter).orElse(""));
                 }
 
-                Text sell = Text.of(ChatColor.GRAY, "unavailable");
-                if (info.isSellable() || !info.isEnabled()) {
-                    sell = formatPriceForList(info.getSellPrice());
-                }
+                @Override
+                public Text format(MarketItem info) {
+                    ChatColor color = info.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED;
+                    Text buy = Text.of(ChatColor.GRAY, "unavailable");
+                    if (info.isBuyable() || !info.isEnabled()) {
+                        buy = formatPriceForList(info.getPrice());
+                    }
 
-                Text itemName = Text.of(
+                    Text sell = Text.of(ChatColor.GRAY, "unavailable");
+                    if (info.isSellable() || !info.isEnabled()) {
+                        sell = formatPriceForList(info.getSellPrice());
+                    }
+
+                    Text itemName = Text.of(
                         color, info.getDisplayName(),
                         TextAction.Click.runCommand("/market lookup " + info.getLookupName()),
                         TextAction.Hover.showText(Text.of("Show details for " + info.getTitleCasedName()))
-                );
+                    );
 
-                return Text.of(
+                    return Text.of(
                         itemName,
                         ChatColor.GRAY, " x", ChatUtil.WHOLE_NUMBER_FORMATTER.format(info.getStock()),
                         ChatColor.YELLOW, " (",
@@ -246,9 +247,10 @@ public class MarketCommands {
                         ChatColor.YELLOW, ", ",
                         ChatColor.DARK_GREEN, "S: ", sell,
                         ChatColor.YELLOW, ")"
-                );
-            }
-        }.display(sender, itemCollection, page);
+                    );
+                }
+            }.display(sender, itemCollection, page);
+        });
     }
 
     private void printDetails(

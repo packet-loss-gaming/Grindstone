@@ -10,6 +10,7 @@ import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface MarketTransactionDatabase {
     /**
@@ -30,5 +31,5 @@ public interface MarketTransactionDatabase {
     void logSaleTransaction(Player player, MarketTransactionLine transactionLine);
 
     List<ItemTransaction> getTransactions();
-    List<ItemTransaction> getTransactions(String itemName, String playerName);
+    List<ItemTransaction> getTransactions(String itemName, UUID playerID);
 }

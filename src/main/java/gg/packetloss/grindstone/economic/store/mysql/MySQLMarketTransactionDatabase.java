@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.economic.store.mysql;
 import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.data.MySQLPreparedStatement;
 import gg.packetloss.grindstone.economic.store.ItemTransaction;
+import gg.packetloss.grindstone.economic.store.MarketItemInfo;
 import gg.packetloss.grindstone.economic.store.MarketTransactionDatabase;
 import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
 import org.bukkit.entity.Player;
@@ -17,14 +18,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
+
+import static gg.packetloss.grindstone.economic.store.mysql.MarketDatabaseHelper.MARKET_INFO_COLUMNS;
+import static gg.packetloss.grindstone.economic.store.mysql.MarketDatabaseHelper.getMarketItem;
 
 public class MySQLMarketTransactionDatabase implements MarketTransactionDatabase {
 
-    private Queue<MySQLPreparedStatement> queue = new LinkedList<>();
+    private final Queue<MySQLPreparedStatement> queue = new LinkedList<>();
 
     @Override
     public boolean load() {
@@ -66,7 +67,6 @@ public class MySQLMarketTransactionDatabase implements MarketTransactionDatabase
     }
 
     private void logTransactionCommon(Player player, MarketTransactionLine transactionLine, boolean purchase) {
-        String itemName = transactionLine.getItem().getName();
         int amount = transactionLine.getAmount();
 
         try {
@@ -100,29 +100,50 @@ public class MySQLMarketTransactionDatabase implements MarketTransactionDatabase
         return getTransactions(null, null);
     }
 
+    private String getTransactionFilteringSQL(String columns, String itemName, UUID playerID) {
+        String sql = "SELECT " + columns + " FROM `market-transactions`"
+            + "INNER JOIN `lb-players` ON `market-transactions`.`player` = `lb-players`.`playerid`"
+            + "INNER JOIN `market-items` ON `market-items`.`id` = `market-transactions`.`item`";
+        if (itemName != null) {
+            sql += "WHERE `market-items`.`name` = \'" + itemName + "\'";
+        }
+        if (playerID != null) {
+            if (itemName != null) sql += "AND";
+            else sql += "WHERE";
+            sql += "`lb-players`.`uuid` = \'" + playerID + "\'";
+        }
+        return sql;
+    }
+
+    private Map<Integer, MarketItemInfo> getAffectedItems(Connection connection, String itemName, UUID playerID) throws SQLException {
+        Map<Integer, MarketItemInfo> itemMap = new HashMap<>();
+
+        String sql = getTransactionFilteringSQL("DISTINCT `market-items`.`id`, " + MARKET_INFO_COLUMNS, itemName, playerID);
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (ResultSet results = statement.executeQuery()) {
+                while (results.next()) {
+                    itemMap.put(results.getInt(1), getMarketItem(results, 2));
+                }
+            }
+        }
+
+        return itemMap;
+    }
+
     @Override
-    public List<ItemTransaction> getTransactions(String itemName, String playerName) {
+    public List<ItemTransaction> getTransactions(String itemName, UUID playerID) {
         List<ItemTransaction> transactions = new ArrayList<>();
         try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT `lb-players`.`playername`, `market-items`.`name`, `market-transactions`.`amount` "
-                    + "FROM `market-transactions`"
-                    + "INNER JOIN `lb-players` ON `market-transactions`.`player` = `lb-players`.`playerid`"
-                    + "INNER JOIN `market-items` ON `market-items`.`id` = `market-transactions`.`item`";
-            if (!itemName.isEmpty()) {
-                sql += "WHERE `market-items`.`name` = \'" + itemName + "\'";
-            }
-            if (!playerName.isEmpty()) {
-                if (itemName.isEmpty()) sql += "AND";
-                else sql += "WHERE";
-                sql += "`lb-players`.`playername` = \'" + playerName + "\'";
-            }
+            Map<Integer, MarketItemInfo> lookupMap = getAffectedItems(connection, itemName, playerID);
+
+            String sql = getTransactionFilteringSQL("`lb-players`.`playername`, `market-items`.`id`, `market-transactions`.`amount`", itemName, playerID);
             sql += "ORDER BY `market-transactions`.`date` DESC";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
                         transactions.add(new ItemTransaction(
                                 results.getString(1),
-                                results.getString(2),
+                                lookupMap.get(results.getInt(2)),
                                 results.getInt(3)
                         ));
                     }

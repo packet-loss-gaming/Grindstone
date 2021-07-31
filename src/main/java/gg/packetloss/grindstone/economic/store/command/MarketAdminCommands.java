@@ -7,16 +7,18 @@
 package gg.packetloss.grindstone.economic.store.command;
 
 import com.google.common.base.Joiner;
-import com.sk89q.commandbook.util.PaginatedResult;
+import com.sk89q.commandbook.command.argument.OfflineSinglePlayerTarget;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.command.util.CommandPermissions;
 import com.sk89q.worldedit.command.util.CommandPermissionsConditionGenerator;
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.economic.store.ItemTransaction;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItem;
 import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.PluginTaskExecutor;
+import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.enginehub.piston.annotation.Command;
@@ -27,6 +29,7 @@ import org.enginehub.piston.annotation.param.Switch;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static gg.packetloss.grindstone.util.item.ItemNameCalculator.matchItem;
 
@@ -43,33 +46,50 @@ public class MarketAdminCommands {
     @Command(name = "log", desc = "Item database logs")
     @CommandPermissions("aurora.admin.adminstore.log")
     public void logCmd(CommandSender sender,
-                       @ArgFlag(name = 'i', desc = "item", def = "") String item,
-                       @ArgFlag(name = 'u', desc = "user", def = "") String player,
-                       @ArgFlag(name = 'p', desc = "page", def = "1") int page) throws CommandException {
-        if (!item.isEmpty()) {
-            Optional<String> optItemName = matchItem(item);
-            if (optItemName.isPresent()) {
-                item = optItemName.get();
-            } else {
-                throw new CommandException("No item by that name was found.");
-            }
-        }
+                       @ArgFlag(name = 'i', desc = "item", def = "") MarketItem item,
+                       @ArgFlag(name = 'u', desc = "user", def = "") OfflineSinglePlayerTarget player,
+                       @ArgFlag(name = 'p', desc = "page", def = "1") int page) {
+        String itemName = item == null ? null : item.getName();
+        UUID playerID = player == null ? null : player.get().getUniqueId();
 
-        List<ItemTransaction> transactions = component.getTransactions(item, player);
-        new PaginatedResult<ItemTransaction>(ChatColor.GOLD + "Market Transactions") {
-            @Override
-            public String format(ItemTransaction trans) {
-                String message = ChatColor.YELLOW + trans.getPlayer() + ' ';
-                if (trans.getAmount() > 0) {
-                    message += ChatColor.RED + "bought";
-                } else {
-                    message += ChatColor.DARK_GREEN + "sold";
+        component.getTransactions(itemName, playerID).thenAcceptAsynchronously((transactions) -> {
+            new TextComponentChatPaginator<ItemTransaction>(ChatColor.GOLD, "Item List") {
+                @Override
+                public Optional<String> getPagerCommand(int page) {
+                    StringBuilder command = new StringBuilder();
+                    command.append("/market admin log -p ").append(page);
+                    if (itemName != null) {
+                        command.append(" -i ").append(itemName);
+                    }
+                    if (playerID != null) {
+                        command.append(" -u ").append(playerID);
+                    }
+                    return Optional.of(command.toString());
                 }
-                message += " " + ChatColor.YELLOW + Math.abs(trans.getAmount())
-                    + ChatColor.BLUE + " " + trans.getItem().toUpperCase();
-                return message;
-            }
-        }.display(sender, transactions, page);
+
+                private Text getTransactionTypeText(ItemTransaction trans) {
+                    if (trans.getAmount() > 0) {
+                        return Text.of(ChatColor.RED, "bought");
+                    } else {
+                        return Text.of(ChatColor.DARK_GREEN, "sold");
+                    }
+                }
+
+                @Override
+                public Text format(ItemTransaction trans) {
+                    return Text.of(
+                        ChatColor.YELLOW,
+                        trans.getPlayer(),
+                        ' ',
+                        getTransactionTypeText(trans),
+                        ' ',
+                        Math.abs(trans.getAmount()),
+                        ' ',
+                        Text.of(ChatColor.BLUE, trans.getItem().getDisplayName())
+                    );
+                }
+            }.display(sender, transactions, page);
+        });
     }
 
     @Command(name = "scale", desc = "Scale the item database")
@@ -79,9 +99,18 @@ public class MarketAdminCommands {
             throw new CommandException("Cannot scale by 0 or a negative factor.");
         }
 
-        component.scaleMarket(factor).thenAccept((ignored) -> {
+        component.scaleMarket(factor).thenAcceptAsynchronously((ignored) -> {
             ChatUtil.sendNotice(sender, "Market Scaled by: " + factor + ".");
         });
+    }
+
+    private String getItemChecked(String item) throws CommandException {
+        Optional<String> optItemName = matchItem(item);
+        if (optItemName.isPresent()) {
+            return optItemName.get();
+        } else {
+            throw new CommandException("No item by that name was found.");
+        }
     }
 
     @Command(name = "add", desc = "Add an item to the database")
@@ -95,14 +124,10 @@ public class MarketAdminCommands {
             throw new CommandException("Item price must be at least 0.01");
         }
 
-        Optional<String> optItemName = matchItem(Joiner.on(' ').join(itemNameParts));
-        if (optItemName.isEmpty()) {
-            throw new CommandException("No item by that name was found.");
-        }
-        String itemName = optItemName.get();
+        String itemName = getItemChecked(Joiner.on(' ').join(itemNameParts));
 
         // Database operations
-        component.addItem(itemName, price, disableBuy, disableSell).thenAccept((oldItem) -> {
+        component.addItem(itemName, price, disableBuy, disableSell).thenAcceptAsynchronously((oldItem) -> {
             String noticeString = oldItem == null ? " added with a price of " : " is now ";
             ChatUtil.sendNotice(sender, ChatColor.BLUE, itemName.toUpperCase(), ChatColor.YELLOW, noticeString, wallet.format(price), "!");
             if (disableBuy) {
@@ -118,7 +143,7 @@ public class MarketAdminCommands {
     @CommandPermissions("aurora.admin.adminstore.remove")
     public void removeCmd(CommandSender sender, @Arg(desc = "item filter") MarketItem item) {
         // Database operations
-        component.removeItem(item.getName()).thenAccept((ignored) -> {
+        component.removeItem(item.getName()).thenAcceptAsynchronously((ignored) -> {
             ChatUtil.sendNotice(sender, ChatColor.BLUE + item.getDisplayName() + ChatColor.YELLOW + " has been removed from the database!");
         });
     }

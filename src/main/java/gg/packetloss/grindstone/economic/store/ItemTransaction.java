@@ -7,12 +7,11 @@
 package gg.packetloss.grindstone.economic.store;
 
 public class ItemTransaction {
-
     private final String player;
-    private final String item;
+    private final MarketItemInfo item;
     private final int amount;
 
-    public ItemTransaction(String player, String item, int amount) {
+    public ItemTransaction(String player, MarketItemInfo item, int amount) {
         this.player = player;
         this.item = item;
         this.amount = amount;
@@ -22,8 +21,8 @@ public class ItemTransaction {
         return player;
     }
 
-    public String getItem() {
-        return item;
+    public MarketItem getItem() {
+        return new MarketItem(item);
     }
 
     public int getAmount() {
