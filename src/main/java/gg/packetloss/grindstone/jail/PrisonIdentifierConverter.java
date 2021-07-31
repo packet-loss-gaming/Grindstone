@@ -6,9 +6,9 @@
 
 package gg.packetloss.grindstone.jail;
 
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.worldedit.util.formatting.text.Component;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
-import org.enginehub.piston.CommandManager;
 import org.enginehub.piston.converter.ArgumentConverter;
 import org.enginehub.piston.converter.ConversionResult;
 import org.enginehub.piston.converter.FailedConversion;
@@ -26,8 +26,8 @@ public class PrisonIdentifierConverter implements ArgumentConverter<PrisonIdenti
         this.component = component;
     }
 
-    public static void register(CommandManager commandManager, JailComponent component) {
-        commandManager.registerConverter(Key.of(PrisonIdentifier.class), new PrisonIdentifierConverter(component));
+    public static void register(ComponentCommandRegistrar.Registrar registrar, JailComponent component) {
+        registrar.registerConverter(Key.of(PrisonIdentifier.class), new PrisonIdentifierConverter(component));
     }
 
     @Override

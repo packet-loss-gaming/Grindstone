@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.economic.lottery;
 
 import com.google.gson.reflect.TypeToken;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -86,10 +85,9 @@ public class LotteryComponent extends BukkitComponent implements Listener {
             e.printStackTrace();
         }
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            registrar.registerAsSubCommand("lottery", "Lottery", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, LotteryCommandsRegistration.builder(), new LotteryCommands(this, wallet));
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.registerAsSubCommand("lottery", "Lottery", (lotteryRegistrar) -> {
+                lotteryRegistrar.register(LotteryCommandsRegistration.builder(), new LotteryCommands(this, wallet));
             });
         });
 

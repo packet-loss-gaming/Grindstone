@@ -6,9 +6,9 @@
 
 package gg.packetloss.grindstone.guild.setting;
 
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.worldedit.util.formatting.text.Component;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
-import org.enginehub.piston.CommandManager;
 import org.enginehub.piston.converter.ArgumentConverter;
 import org.enginehub.piston.converter.ConversionResult;
 import org.enginehub.piston.converter.FailedConversion;
@@ -19,8 +19,8 @@ import org.enginehub.piston.inject.Key;
 import java.util.List;
 
 public class GuildSettingConverter implements ArgumentConverter<GuildSettingUpdate> {
-    public static void register(CommandManager commandManager) {
-        commandManager.registerConverter(Key.of(GuildSettingUpdate.class), new GuildSettingConverter());
+    public static void register(ComponentCommandRegistrar.Registrar registrar) {
+        registrar.registerConverter(Key.of(GuildSettingUpdate.class), new GuildSettingConverter());
     }
 
     @Override

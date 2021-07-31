@@ -108,11 +108,11 @@ public class MySQLMarketTransactionDatabase implements MarketTransactionDatabase
                     + "FROM `market-transactions`"
                     + "INNER JOIN `lb-players` ON `market-transactions`.`player` = `lb-players`.`playerid`"
                     + "INNER JOIN `market-items` ON `market-items`.`id` = `market-transactions`.`item`";
-            if (itemName != null) {
+            if (!itemName.isEmpty()) {
                 sql += "WHERE `market-items`.`name` = \'" + itemName + "\'";
             }
-            if (playerName != null) {
-                if (itemName != null) sql += "AND";
+            if (!playerName.isEmpty()) {
+                if (itemName.isEmpty()) sql += "AND";
                 else sql += "WHERE";
                 sql += "`lb-players`.`playername` = \'" + playerName + "\'";
             }

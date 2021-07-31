@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.economic.wallet;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -40,10 +39,13 @@ public class WalletComponent extends BukkitComponent implements WalletProvider {
         );
 
         // Register commands
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            registrar.registerAsSubCommand("wallet", "Wallet commands", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, WalletCommandsRegistration.builder(), new WalletCommands(this));
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.registerAsSubCommand("wallet", "Wallet commands", (walletRegistrar) -> {
+                walletRegistrar.register(WalletCommandsRegistration.builder(), new WalletCommands(this));
+
+                walletRegistrar.registerAsSubCommand("admin", "Wallet Admin Commmands", (walletAdminRegistrar) -> {
+                    walletAdminRegistrar.register(WalletAdminCommandsRegistration.builder(), new WalletAdminCommands(this));
+                });
             });
         });
     }

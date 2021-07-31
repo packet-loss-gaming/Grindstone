@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.admin;
 
 import com.destroystokyo.paper.Title;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.god.GodComponent;
 import com.sk89q.commandbook.component.info.InfoComponent;
 import com.sk89q.commandbook.util.InputUtil;
@@ -79,9 +78,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
         inst.registerEvents(this);
         setupPermissions();
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            registration.register(commandManager, AdminTeleportCommandsRegistration.builder(), new AdminTeleportCommands());
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.register(AdminTeleportCommandsRegistration.builder(), new AdminTeleportCommands());
         });
     }
 

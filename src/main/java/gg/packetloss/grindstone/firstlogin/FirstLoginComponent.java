@@ -80,9 +80,9 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         //noinspection AccessStaticViaInstance
         inst.registerEvents(this);
 
-        CommandBook.getComponentRegistrar().registerTopLevelCommands((commandManager, registration) -> {
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
             //  WarpPointConverter.register(commandManager, this);
-            registration.register(commandManager, FirstLoginCommandsRegistration.builder(), new FirstLoginCommands(this));
+            registrar.register(FirstLoginCommandsRegistration.builder(), new FirstLoginCommands(this));
         });
     }
 

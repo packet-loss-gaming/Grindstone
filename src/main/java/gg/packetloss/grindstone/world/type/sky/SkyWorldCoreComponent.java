@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.world.type.sky;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -58,10 +57,9 @@ public class SkyWorldCoreComponent extends BukkitComponent implements Listener {
         CommandBook.registerEvents(new NuisanceSpawnBlockingListener(this::isSkyWorld));
 
         // Register commands
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            registrar.registerAsSubCommand("sky", "Sky world commands", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, SkyCommandsRegistration.builder(), new SkyCommands(this));
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.registerAsSubCommand("sky", "Sky world commands", (skyRegistrar) -> {
+                skyRegistrar.register(SkyCommandsRegistration.builder(), new SkyCommands(this));
             });
         });
     }

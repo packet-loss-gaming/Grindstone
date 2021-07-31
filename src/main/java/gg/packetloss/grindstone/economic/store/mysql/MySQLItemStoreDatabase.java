@@ -183,12 +183,12 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     @Override
-    public void addItem(String playerName, String itemName, double price, boolean disableBuy, boolean disableSell) {
+    public void addItem(String itemName, double price, boolean disableBuy, boolean disableSell) {
         queue.add(new ItemRowStatement(itemName, price, !disableBuy, !disableSell));
     }
 
     @Override
-    public void removeItem(String playerName, String itemName) {
+    public void removeItem(String itemName) {
         queue.add(new ItemDeleteStatement(itemName));
     }
 

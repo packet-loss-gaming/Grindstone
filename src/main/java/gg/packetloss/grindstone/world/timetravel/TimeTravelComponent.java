@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.world.timetravel;
 
 import com.google.gson.reflect.TypeToken;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
@@ -43,11 +42,10 @@ public class TimeTravelComponent extends BukkitComponent {
 
         CommandBook.registerEvents(new TimeTravelListener(this));
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            TimeContextConverter.register(commandManager);
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            TimeContextConverter.register(registrar);
 
-            registration.register(commandManager, TimeTravelCommandsRegistration.builder(), new TimeTravelCommands(this));
+            registrar.register(TimeTravelCommandsRegistration.builder(), new TimeTravelCommands(this));
         });
     }
 

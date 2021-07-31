@@ -33,9 +33,9 @@ public interface ItemStoreDatabase {
     /**
      * Add/Set an item
      */
-    void addItem(String playerName, String itemName, double price, boolean disableBuy, boolean disableSell);
+    void addItem(String itemName, double price, boolean disableBuy, boolean disableSell);
 
-    void removeItem(String playerName, String itemName);
+    void removeItem(String itemName);
 
     /**
      * Change the stock of an item

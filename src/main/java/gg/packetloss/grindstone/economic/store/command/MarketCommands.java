@@ -44,9 +44,9 @@ import static gg.packetloss.grindstone.economic.store.MarketComponent.*;
 
 @CommandContainer
 public class MarketCommands {
-    private MarketComponent component;
-    private InventoryGUIComponent invGUI;
-    private WalletComponent wallet;
+    private final MarketComponent component;
+    private final InventoryGUIComponent invGUI;
+    private final WalletComponent wallet;
 
     public MarketCommands(MarketComponent component, InventoryGUIComponent invGUI, WalletComponent wallet) {
         this.component = component;

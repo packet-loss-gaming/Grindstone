@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.sacrifice;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -96,10 +95,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         populateRegistry();
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            registrar.registerAsSubCommand("sacrifice", "Sacrifice Commands", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, SacrificeCommandsRegistration.builder(), new SacrificeCommands(this));
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.registerAsSubCommand("sacrifice", "Sacrifice Commands", (sacrificeRegistrar) -> {
+                sacrificeRegistrar.register(SacrificeCommandsRegistration.builder(), new SacrificeCommands(this));
             });
         });
 

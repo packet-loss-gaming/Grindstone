@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.warps;
 
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.util.formatting.text.Component;
@@ -14,7 +15,6 @@ import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.enginehub.piston.CommandManager;
 import org.enginehub.piston.converter.ArgumentConverter;
 import org.enginehub.piston.converter.ConversionResult;
 import org.enginehub.piston.converter.FailedConversion;
@@ -33,8 +33,8 @@ public class WarpPointConverter implements ArgumentConverter<WarpPoint> {
         this.component = component;
     }
 
-    public static void register(CommandManager commandManager, WarpsComponent component) {
-        commandManager.registerConverter(Key.of(WarpPoint.class), new WarpPointConverter(component));
+    public static void register(ComponentCommandRegistrar.Registrar registrar, WarpsComponent component) {
+        registrar.registerConverter(Key.of(WarpPoint.class), new WarpPointConverter(component));
     }
 
     @Override

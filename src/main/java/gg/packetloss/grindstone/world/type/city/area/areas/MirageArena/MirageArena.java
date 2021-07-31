@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.world.type.city.area.areas.MirageArena;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.EditSession;
@@ -96,12 +95,11 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
         registerScope();
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            MirageArenaSchematicConverter.register(commandManager, this);
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            MirageArenaSchematicConverter.register(registrar, this);
 
-            registrar.registerAsSubCommand("mirage", "Mirage Arena Control Commands", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, MirageArenaCommandsRegistration.builder(), new MirageArenaCommands(this));
+            registrar.registerAsSubCommand("mirage", "Mirage Arena Control Commands", (mirageRegistrar) -> {
+                mirageRegistrar.register(MirageArenaCommandsRegistration.builder(), new MirageArenaCommands(this));
             });
         });
     }

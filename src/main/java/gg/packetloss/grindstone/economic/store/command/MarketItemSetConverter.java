@@ -6,13 +6,13 @@
 
 package gg.packetloss.grindstone.economic.store.command;
 
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.worldedit.util.formatting.text.Component;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItem;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
-import org.enginehub.piston.CommandManager;
 import org.enginehub.piston.converter.ArgumentConverter;
 import org.enginehub.piston.converter.ConversionResult;
 import org.enginehub.piston.converter.FailedConversion;
@@ -35,8 +35,8 @@ public class MarketItemSetConverter implements ArgumentConverter<MarketItemSet> 
         this.marketItemConverter = new BasicMarketItemConverter(component);
     }
 
-    public static void register(CommandManager commandManager, MarketComponent component) {
-        commandManager.registerConverter(Key.of(MarketItemSet.class), new MarketItemSetConverter(component));
+    public static void register(ComponentCommandRegistrar.Registrar registrar, MarketComponent component) {
+        registrar.registerConverter(Key.of(MarketItemSet.class), new MarketItemSetConverter(component));
     }
 
     @Override

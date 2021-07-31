@@ -34,8 +34,8 @@ public class ShutdownComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-        CommandBook.getComponentRegistrar().registerTopLevelCommands((commandManager, registration) -> {
-            registration.register(commandManager, ShutdownCommandsRegistration.builder(), new ShutdownCommands(this));
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.register(ShutdownCommandsRegistration.builder(), new ShutdownCommands(this));
         });
     }
 

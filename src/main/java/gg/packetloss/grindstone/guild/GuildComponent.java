@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.guild;
 
 import com.destroystokyo.paper.Title;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.info.InfoComponent;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -99,12 +98,11 @@ public class GuildComponent extends BukkitComponent implements Listener {
                 11
         );
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            GuildSettingConverter.register(commandManager);
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            GuildSettingConverter.register(registrar);
 
-            registrar.registerAsSubCommand("guild", "Guild commands", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, GuildCommandsRegistration.builder(), new GuildCommands(this));
+            registrar.registerAsSubCommand("guild", "Guild commands", (guildRegistrar) -> {
+                guildRegistrar.register(GuildCommandsRegistration.builder(), new GuildCommands(this));
             });
         });
 
