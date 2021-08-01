@@ -13,6 +13,7 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Monster;
@@ -45,6 +46,10 @@ public class SimpleAttackNearestPlayer implements Goal<Monster> {
         double closestDist = Double.MAX_VALUE;
 
         for (Player potentialTarget : loc.getNearbyEntitiesByType(Player.class, EntityUtil.getFollowRange(owner))) {
+            if (potentialTarget.getGameMode() != GameMode.SURVIVAL) {
+                continue;
+            }
+
             double distToTarget = LocationUtil.distanceSquared2D(loc, potentialTarget.getLocation());
             if (distToTarget < closestDist && owner.hasLineOfSight(potentialTarget)) {
                 closest = potentialTarget;
