@@ -78,8 +78,8 @@ public class CustomWeapon extends CustomEquipment {
     }
 
     @Override
-    public ItemStack build() {
-        ItemStack stack = super.build();
+    protected ItemStack build(CustomItems identity) {
+        ItemStack stack = super.build(identity);
 
         if (hasSpeedMod()) {
             stack = ItemModifierUtil.cloneWithSpecifiedModifiers(

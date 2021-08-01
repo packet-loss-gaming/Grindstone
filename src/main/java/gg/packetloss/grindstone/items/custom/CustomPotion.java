@@ -55,8 +55,8 @@ public class CustomPotion extends CustomItem {
     }
 
     @Override
-    public ItemStack build() {
-        ItemStack base = super.build();
+    protected ItemStack build(CustomItems identity) {
+        ItemStack base = super.build(identity);
         PotionMeta meta = (PotionMeta) base.getItemMeta();
         meta.setBasePotionData(new PotionData(PotionType.UNCRAFTABLE));
         meta.setColor(color);

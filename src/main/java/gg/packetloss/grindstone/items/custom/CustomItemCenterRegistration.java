@@ -14,6 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static gg.packetloss.grindstone.items.custom.CustomItems.*;
@@ -583,6 +584,13 @@ public class CustomItemCenterRegistration {
         phantomPotion.addSource(ItemSource.MARKET);
         phantomPotion.addUse("Returns you to your lost items if a teleport can reach the location.");
         itemConsumer.accept(phantomPotion);
+
+        CustomGiftItem newbiePhantomPotion = new CustomExpiringGift(
+            NEWBIE_PHANTOM_POTION,
+            phantomPotion,
+            TimeUnit.MINUTES.toMillis(15)
+        );
+        itemConsumer.accept(newbiePhantomPotion);
 
         CustomItem phantomEssence = new CustomItem(PHANTOM_ESSENCE, Material.GHAST_TEAR);
         phantomEssence.addSource(ItemSource.GRAVE_YARD);

@@ -26,8 +26,8 @@ public class CustomEquipment extends CustomItem {
     }
 
     @Override
-    public ItemStack build() {
-        ItemStack stack = super.build();
+    protected ItemStack build(CustomItems identity) {
+        ItemStack stack = super.build(identity);
         ItemMeta meta = stack.getItemMeta();
 
         // If has pre-populated enchantments, force them

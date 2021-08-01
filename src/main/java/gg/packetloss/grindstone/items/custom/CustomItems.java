@@ -101,6 +101,7 @@ public enum CustomItems {
     PHANTOM_CLOCK(ChatColor.DARK_RED, "Phantom Clock"),
     PHANTOM_HYMN(ChatColor.DARK_RED, "Phantom Hymn"),
     PHANTOM_POTION(ChatColor.DARK_RED, "Phantom Potion"),
+    NEWBIE_PHANTOM_POTION(ChatColor.DARK_RED, "Newbie Phantom Potion", true),
     PHANTOM_ESSENCE(ChatColor.DARK_RED, "Phantom Essence"),
 
     // Linear Tools
@@ -181,19 +182,26 @@ public enum CustomItems {
     private final ChatColor color;
     private final String name;
     private final String namespaceName;
+    private final boolean expires;
 
     CustomItems(ItemFamily family, String kind) {
-        this.family = family;
-        this.color = family.getColor();
-        this.name = family.getProperName() + " " + kind;
-        this.namespaceName = computeNamespaceName(this.name);
+        this(family, family.getColor(), family.getProperName() + " " + kind, false);
     }
 
     CustomItems(ChatColor color, String name) {
-        this.family = null;
+        this(null, color, name, false);
+    }
+
+    CustomItems(ChatColor color, String name, boolean expires) {
+        this(null, color, name, expires);
+    }
+
+    CustomItems(ItemFamily family, ChatColor color, String name, boolean expires) {
+        this.family = family;
         this.color = color;
         this.name = name;
         this.namespaceName = computeNamespaceName(this.name);
+        this.expires = expires;
     }
 
     public ItemFamily getFamily() {
@@ -218,6 +226,10 @@ public enum CustomItems {
 
     public String getNamespaceName() {
         return namespaceName;
+    }
+
+    public boolean hasExpiration() {
+        return expires;
     }
 
     public int getModelId() {

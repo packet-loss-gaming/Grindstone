@@ -24,9 +24,13 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class ItemUtil {
+    public static final String EXPIRY_DATE_START = ChatColor.RED + "Expires: ";
+    public static final SimpleDateFormat ITEM_DATE_FORMAT = new SimpleDateFormat("M/d/y h:ma");
 
     private static final Set<Material> LEATHER_ARMOR_TYPES = Set.of(
             Material.LEATHER_BOOTS, Material.LEATHER_LEGGINGS,
@@ -92,6 +96,7 @@ public class ItemUtil {
         return count;
     }
 
+    @Deprecated
     public static boolean findItemOfName(ItemStack[] itemStacks, String name) {
 
         for (ItemStack itemStack : itemStacks) {
@@ -302,12 +307,39 @@ public class ItemUtil {
         return isTool(stack.getType());
     }
 
+    private static boolean isNotExpired(ItemStack stack, CustomItems type) {
+        if (!type.hasExpiration()) {
+            return true;
+        }
+
+        ItemMeta meta = stack.getItemMeta();
+        List<String> lore = meta.getLore();
+        if (lore == null) {
+            return true;
+        }
+
+        for (String loreElement : lore) {
+            if (loreElement.startsWith(EXPIRY_DATE_START)) {
+                String datePart = loreElement.substring(EXPIRY_DATE_START.length());
+                try {
+                    Date expiryDate = ITEM_DATE_FORMAT.parse(datePart);
+                    Date currentDate = new Date();
+                    return expiryDate.after(currentDate);
+                } catch (ParseException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+        return true;
+    }
+
     public static boolean hasItem(Player player, CustomItems type) {
         return player.isValid() && findItemOfName(player.getInventory().getContents(), type.toString());
     }
 
     public static boolean isItem(ItemStack stack, CustomItems type) {
-        return matchesFilter(stack, type.toString(), false);
+        return matchesFilter(stack, type.toString(), false) && isNotExpired(stack, type);
     }
 
     public static boolean isInItemFamily(ItemStack stack, ItemFamily family) {
@@ -414,13 +446,13 @@ public class ItemUtil {
         return isAuthenticCustomItem(name);
     }
 
+    @Deprecated
     public static boolean matchesFilter(ItemStack stack, String filter) {
-
         return matchesFilter(stack, filter, true);
     }
 
+    @Deprecated
     public static boolean matchesFilter(ItemStack stack, String filter, boolean loose) {
-
         return isNamed(stack) && (loose ? stack.getItemMeta().getDisplayName().startsWith(filter) : stack.getItemMeta().getDisplayName().equals(filter));
     }
 

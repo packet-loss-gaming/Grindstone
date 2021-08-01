@@ -14,10 +14,12 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.buff.Buff;
 import gg.packetloss.grindstone.buff.BuffComponent;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
+import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
 import gg.packetloss.grindstone.events.PortalRecordEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseOverflowEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
@@ -41,16 +43,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerPortalEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -224,7 +221,38 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         }
     }
 
-    private HelpTextParser WELCOME_MESSAGES_PARSER = new HelpTextParser(ChatColor.YELLOW);
+    private final Set<UUID> freePhantomPotion = new HashSet<>();
+
+    @EventHandler
+    public void onGraveCreate(PlayerDeathDropRedirectEvent event) {
+        Player player = event.getPlayer();
+
+        if (isNewerPlayer(player)) {
+            freePhantomPotion.add(player.getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        Player player = event.getPlayer();
+
+        if (freePhantomPotion.remove(player.getUniqueId())) {
+            Inventory playerInv = player.getInventory();
+
+            playerInv.addItem(new ItemStack(Material.WOODEN_PICKAXE));
+            playerInv.addItem(CustomItemCenter.build(CustomItems.NEWBIE_PHANTOM_POTION));
+
+            ChatUtil.sendStaggered(player, List.of(
+                "Oh no! You died without a gem of life!",
+                "Your stuff has been sent to The Graveyard.",
+                "Since you're new around here, I've given you a phantom potion.",
+                "Drink the Phantom Potion to return to your grave.",
+                "Then simply break the cracked stone or dirt blocks."
+            ).stream().map((text) -> Text.of(ChatColor.YELLOW, "[Friendly Spirit] ", text)).collect(Collectors.toList()));
+        }
+    }
+
+    private static final HelpTextParser WELCOME_MESSAGES_PARSER = new HelpTextParser(ChatColor.YELLOW);
 
     private void sendStaggered(CommandSender sender, Collection<String> lines) {
         ChatUtil.sendStaggered(sender, lines.stream()
