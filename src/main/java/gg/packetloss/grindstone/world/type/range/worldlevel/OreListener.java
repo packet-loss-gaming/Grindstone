@@ -81,14 +81,13 @@ public class OreListener implements Listener {
         taskBuilder.setDelay(20);
 
         World world = destination.getWorld();
-        float vol = ((float) 1 / times);
         taskBuilder.setAction((timesL) -> {
             if (nextDropTime != 0 && System.currentTimeMillis() < nextDropTime) {
                 return false;
             }
 
             EntityUtil.spawnProtectedItem(drop.clone(), player, destination);
-            world.playSound(destination, Sound.ENTITY_BLAZE_AMBIENT, Math.min(1, (((float) timesL / times) * .6F) + vol), 0);
+            world.playSound(destination, Sound.ENTITY_BLAZE_AMBIENT, ((float) timesL / times) * .4F, 0);
             return true;
         });
         taskBuilder.setFinishAction(() -> {
