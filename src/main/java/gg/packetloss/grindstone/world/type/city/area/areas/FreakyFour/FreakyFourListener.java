@@ -260,12 +260,14 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
 
         if (entity instanceof Creeper) {
             // Teleport Da Bomb randomly somewhere in the room
-            BlockVector3 damagerLoc = WorldEditBridge.toBlockVec3(damager.getLocation());
-            final double minDist = Math.pow(parent.getConfig().daBombTeleMinDist, 2);
-            entity.teleport(parent.getLocationInBossRoom(
-                FreakyFourBoss.DA_BOMB,
-                (vector) -> LocationUtil.distanceSquared2D(vector, damagerLoc) > minDist
-            ));
+            if (damager instanceof Player) {
+                BlockVector3 damagerLoc = WorldEditBridge.toBlockVec3(damager.getLocation());
+                final double minDist = Math.pow(parent.getConfig().daBombTeleMinDist, 2);
+                entity.teleport(parent.getLocationInBossRoom(
+                    FreakyFourBoss.DA_BOMB,
+                    (vector) -> LocationUtil.distanceSquared2D(vector, damagerLoc) > minDist
+                ));
+            }
         } else if (entity instanceof Skeleton) {
             // Prevent melee damage to Snipee.
             //
