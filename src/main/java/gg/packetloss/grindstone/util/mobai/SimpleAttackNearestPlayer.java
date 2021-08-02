@@ -18,9 +18,12 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
+
+import static org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 
 public class SimpleAttackNearestPlayer implements Goal<Monster> {
     private static final GoalKey<Monster> KEY = GoalKey.of(
@@ -60,9 +63,23 @@ public class SimpleAttackNearestPlayer implements Goal<Monster> {
         return closest;
     }
 
+    private void setTarget(Player target) {
+        var targetEvent = new EntityTargetLivingEntityEvent(owner, target, TargetReason.CLOSEST_ENTITY);
+        CommandBook.callEvent(targetEvent);
+        if (targetEvent.isCancelled()) {
+            return;
+        }
+
+        owner.setTarget(targetEvent.getTarget());
+    }
+
+    private void setTargetToNearest() {
+        setTarget(getNearestPlayer());
+    }
+
     @Override
     public void start() {
-        owner.setTarget(getNearestPlayer());
+        setTargetToNearest();
     }
 
     @Override
@@ -71,7 +88,7 @@ public class SimpleAttackNearestPlayer implements Goal<Monster> {
             return;
         }
 
-        owner.setTarget(getNearestPlayer());
+        setTargetToNearest();
     }
 
     @Override
