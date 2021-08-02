@@ -82,12 +82,12 @@ class LevelAdjustmentListener implements Listener {
             return;
         }
 
+        Player player = event.getPlayer();
         Block block = event.getBlock();
         Location blockLoc = block.getLocation();
-        if (parent.shouldSpawnChallengeBlock(blockLoc, block.getType())) {
+        if (parent.shouldSpawnChallengeBlock(player, blockLoc, block.getType())) {
             parent.spawnChallengeBlock(blockLoc);
 
-            Player player = event.getPlayer();
             markPlayerRecentlyAwarded(player);
         }
     }
@@ -120,6 +120,10 @@ class LevelAdjustmentListener implements Listener {
         Player player = event.getEntity();
         World world = player.getWorld();
         if (!parent.isRangeWorld(world)) {
+            return;
+        }
+
+        if (!parent.isWorldLevelEnabledFor(player)) {
             return;
         }
 

@@ -19,6 +19,7 @@ import gg.packetloss.grindstone.PacketInterceptionComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.collection.FiniteCache;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
@@ -77,7 +78,15 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         }
     }
 
+    public boolean isWorldLevelEnabledFor(Player player) {
+        return !ItemUtil.hasPeacefulWarriorArmor(player);
+    }
+
     public int getWorldLevel(Player player) {
+        if (!isWorldLevelEnabledFor(player)) {
+            return 1;
+        }
+
         return playerWorldLevel.getOrDefault(player.getUniqueId(), 1);
     }
 
@@ -117,7 +126,11 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         return managedWorld.is(ManagedWorldIsQuery.ANY_RANGE, world);
     }
 
-    protected boolean shouldSpawnChallengeBlock(Location location, Material blockType) {
+    protected boolean shouldSpawnChallengeBlock(Player player, Location location, Material blockType) {
+        if (!isWorldLevelEnabledFor(player)) {
+            return false;
+        }
+
         if (recentChunks.contains(WorldEditBridge.toBlockVec2(location.getChunk()))) {
             return false;
         }
