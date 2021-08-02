@@ -514,26 +514,30 @@ public class CustomItemCenterRegistration {
         // Peaceful Warrior
         CustomEquipment peacefulWarriorHelmet = new CustomEquipment(PEACEFUL_WARRIOR_HELMET, Material.IRON_HELMET);
         peacefulWarriorHelmet.addSource(ItemSource.APOCALYPSE);
+        peacefulWarriorHelmet.addSource(ItemSource.SACRIFICIAL_PIT);
         peacefulWarriorHelmet.addSource(ItemSource.MARKET);
-        peacefulWarriorHelmet.addUse("Set Effect: Apocalyptic Camouflage");
+        peacefulWarriorHelmet.addUse("Set Effect: Way of The Peaceful Warrior");
         itemConsumer.accept(peacefulWarriorHelmet);
 
         CustomEquipment peacefulWarriorChestplate = new CustomEquipment(PEACEFUL_WARRIOR_CHESTPLATE, Material.IRON_CHESTPLATE);
         peacefulWarriorChestplate.addSource(ItemSource.APOCALYPSE);
+        peacefulWarriorChestplate.addSource(ItemSource.SACRIFICIAL_PIT);
         peacefulWarriorChestplate.addSource(ItemSource.MARKET);
-        peacefulWarriorChestplate.addUse("Set Effect: Apocalyptic Camouflage");
+        peacefulWarriorChestplate.addUse("Set Effect: Way of The Peaceful Warrior");
         itemConsumer.accept(peacefulWarriorChestplate);
 
         CustomEquipment peacefulWarriorLeggings = new CustomEquipment(PEACEFUL_WARRIOR_LEGGINGS, Material.IRON_LEGGINGS);
         peacefulWarriorLeggings.addSource(ItemSource.APOCALYPSE);
+        peacefulWarriorLeggings.addSource(ItemSource.SACRIFICIAL_PIT);
         peacefulWarriorLeggings.addSource(ItemSource.MARKET);
-        peacefulWarriorLeggings.addUse("Set Effect: Apocalyptic Camouflage");
+        peacefulWarriorLeggings.addUse("Set Effect: Way of The Peaceful Warrior");
         itemConsumer.accept(peacefulWarriorLeggings);
 
         CustomEquipment peacefulWarriorBoots = new CustomEquipment(PEACEFUL_WARRIOR_BOOTS, Material.IRON_BOOTS);
         peacefulWarriorBoots.addSource(ItemSource.APOCALYPSE);
+        peacefulWarriorBoots.addSource(ItemSource.SACRIFICIAL_PIT);
         peacefulWarriorBoots.addSource(ItemSource.MARKET);
-        peacefulWarriorBoots.addUse("Set Effect: Apocalyptic Camouflage");
+        peacefulWarriorBoots.addUse("Set Effect: Way of The Peaceful Warrior");
         itemConsumer.accept(peacefulWarriorBoots);
 
         // Phantom Items
