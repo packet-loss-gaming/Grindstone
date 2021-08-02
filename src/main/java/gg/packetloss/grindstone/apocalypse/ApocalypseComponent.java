@@ -178,7 +178,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (!(target instanceof Player) || !targeter.isValid() || !(targeter instanceof Zombie)) return;
 
         Player player = (Player) target;
-        if (checkEntity(targeter) && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(8)) {
+        if (checkEntity(targeter) && ItemUtil.hasAncientArmor(player) && ChanceUtil.getChance(8)) {
             targeter.setFireTicks(ChanceUtil.getRandom(20 * 60));
         }
     }
@@ -258,7 +258,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 Player player = (Player) target;
 
                 if (checkEntity(attacker)) {
-                    if (ItemUtil.hasAncientArmour(player)) {
+                    if (ItemUtil.hasAncientArmor(player)) {
                         double diff = player.getMaxHealth() - player.getHealth();
                         if (ChanceUtil.getChance((int) Math.max(3, Math.round(player.getMaxHealth() - diff)))) {
                             EffectUtil.Ancient.powerBurst(player, event.getDamage());
@@ -398,10 +398,10 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
             if (ChanceUtil.getChance(5000)) {
                 event.getDrops().add(ChanceUtil.supplyRandom(
-                    () -> CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_HELMET),
-                    () -> CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_CHESTPLATE),
-                    () -> CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_LEGGINGS),
-                    () -> CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_BOOTS)
+                    () -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_HELMET),
+                    () -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_CHESTPLATE),
+                    () -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_LEGGINGS),
+                    () -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_BOOTS)
                 ));
             }
         }

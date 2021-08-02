@@ -163,31 +163,6 @@ public class CustomItemCenterRegistration {
         ancientBoots.addUse("Repaired when worn while attacking creatures or players");
         itemConsumer.accept(ancientBoots);
 
-        // Apocalyptic Camouflage
-        CustomEquipment apocalypticCamouflageHelmet = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_HELMET, Material.LEATHER_HELMET);
-        apocalypticCamouflageHelmet.addSource(ItemSource.APOCALYPSE);
-        apocalypticCamouflageHelmet.addSource(ItemSource.MARKET);
-        apocalypticCamouflageHelmet.addUse("Set Effect: Apocalyptic Camouflage");
-        itemConsumer.accept(apocalypticCamouflageHelmet);
-
-        CustomEquipment apocalypticCamouflageChestplate = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_CHESTPLATE, Material.LEATHER_CHESTPLATE);
-        apocalypticCamouflageChestplate.addSource(ItemSource.APOCALYPSE);
-        apocalypticCamouflageChestplate.addSource(ItemSource.MARKET);
-        apocalypticCamouflageChestplate.addUse("Set Effect: Apocalyptic Camouflage");
-        itemConsumer.accept(apocalypticCamouflageChestplate);
-
-        CustomEquipment apocalypticCamouflageLeggings = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_LEGGINGS, Material.LEATHER_LEGGINGS);
-        apocalypticCamouflageLeggings.addSource(ItemSource.APOCALYPSE);
-        apocalypticCamouflageLeggings.addSource(ItemSource.MARKET);
-        apocalypticCamouflageLeggings.addUse("Set Effect: Apocalyptic Camouflage");
-        itemConsumer.accept(apocalypticCamouflageLeggings);
-
-        CustomEquipment apocalypticCamouflageBoots = new CustomEquipment(APOCALYPTIC_CAMOUFLAGE_BOOTS, Material.LEATHER_BOOTS);
-        apocalypticCamouflageBoots.addSource(ItemSource.APOCALYPSE);
-        apocalypticCamouflageBoots.addSource(ItemSource.MARKET);
-        apocalypticCamouflageBoots.addUse("Set Effect: Apocalyptic Camouflage");
-        itemConsumer.accept(apocalypticCamouflageBoots);
-
         // Nectric Armor
         CustomEquipment nectricHelmet = new CustomEquipment(NECTRIC_HELMET, Material.DIAMOND_HELMET);
         nectricHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
@@ -535,6 +510,31 @@ public class CustomItemCenterRegistration {
         imbuedCrystal.addUse("Compacts gold bars into blocks.");
         imbuedCrystal.addUse("Used to repair Unleashed Weapons.");
         itemConsumer.accept(imbuedCrystal);
+
+        // Peaceful Warrior
+        CustomEquipment peacefulWarriorHelmet = new CustomEquipment(PEACEFUL_WARRIOR_HELMET, Material.IRON_HELMET);
+        peacefulWarriorHelmet.addSource(ItemSource.APOCALYPSE);
+        peacefulWarriorHelmet.addSource(ItemSource.MARKET);
+        peacefulWarriorHelmet.addUse("Set Effect: Apocalyptic Camouflage");
+        itemConsumer.accept(peacefulWarriorHelmet);
+
+        CustomEquipment peacefulWarriorChestplate = new CustomEquipment(PEACEFUL_WARRIOR_CHESTPLATE, Material.IRON_CHESTPLATE);
+        peacefulWarriorChestplate.addSource(ItemSource.APOCALYPSE);
+        peacefulWarriorChestplate.addSource(ItemSource.MARKET);
+        peacefulWarriorChestplate.addUse("Set Effect: Apocalyptic Camouflage");
+        itemConsumer.accept(peacefulWarriorChestplate);
+
+        CustomEquipment peacefulWarriorLeggings = new CustomEquipment(PEACEFUL_WARRIOR_LEGGINGS, Material.IRON_LEGGINGS);
+        peacefulWarriorLeggings.addSource(ItemSource.APOCALYPSE);
+        peacefulWarriorLeggings.addSource(ItemSource.MARKET);
+        peacefulWarriorLeggings.addUse("Set Effect: Apocalyptic Camouflage");
+        itemConsumer.accept(peacefulWarriorLeggings);
+
+        CustomEquipment peacefulWarriorBoots = new CustomEquipment(PEACEFUL_WARRIOR_BOOTS, Material.IRON_BOOTS);
+        peacefulWarriorBoots.addSource(ItemSource.APOCALYPSE);
+        peacefulWarriorBoots.addSource(ItemSource.MARKET);
+        peacefulWarriorBoots.addUse("Set Effect: Apocalyptic Camouflage");
+        itemConsumer.accept(peacefulWarriorBoots);
 
         // Phantom Items
         CustomItem phantomGold = new CustomItem(PHANTOM_GOLD, Material.GOLD_INGOT);

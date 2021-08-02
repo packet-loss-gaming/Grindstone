@@ -210,7 +210,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             return false;
         }
 
-        if (!ItemUtil.hasAncientArmour(entity)) {
+        if (!ItemUtil.hasAncientArmor(entity)) {
             return false;
         }
 

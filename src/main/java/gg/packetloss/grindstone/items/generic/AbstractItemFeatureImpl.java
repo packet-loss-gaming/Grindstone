@@ -16,6 +16,7 @@ import gg.packetloss.grindstone.items.flight.FlightItemsComponent;
 import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -41,6 +42,7 @@ public abstract class AbstractItemFeatureImpl implements Listener {
     protected static PrayerComponent prayers;
     protected static GuildComponent guilds;
     protected static FlightItemsComponent flightItems;
+    protected static ManagedWorldComponent managedWorld;
 
     public static void applyResource(AdminComponent admin) {
         AbstractItemFeatureImpl.admin = admin;
@@ -56,6 +58,9 @@ public abstract class AbstractItemFeatureImpl implements Listener {
     }
     public static void applyResource(FlightItemsComponent flightItems) {
         AbstractItemFeatureImpl.flightItems = flightItems;
+    }
+    public static void applyResource(ManagedWorldComponent managedWorld) {
+        AbstractItemFeatureImpl.managedWorld = managedWorld;
     }
 
     public CustomItemSession getSession(Player player) {

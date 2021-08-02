@@ -726,7 +726,7 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
 
         boolean isEvil = ChanceUtil.getChance(2);
         if (isEvil) {
-            if (ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(2)) {
+            if (ItemUtil.hasAncientArmor(player) && ChanceUtil.getChance(2)) {
                 ChatUtil.sendNotice(player, ChatColor.AQUA, "Your armour blocks an incoming ghost attack.");
                 return;
             }

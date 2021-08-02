@@ -213,6 +213,11 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             return randomizedSkulls.getRandomSkull().orElse(new ItemStack(Material.PLAYER_HEAD));
         }, RARE_5);
 
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_HELMET), RARE_5);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_CHESTPLATE), RARE_5);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_LEGGINGS), RARE_5);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_BOOTS), RARE_5);
+
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION), RARE_6);
 
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.NINJA_OATH), RARE_7);

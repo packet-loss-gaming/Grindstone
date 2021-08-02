@@ -37,6 +37,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -59,7 +60,7 @@ import java.util.Set;
 @ComponentInformation(friendlyName = "Global Items Component", desc = "Global Custom Item effects")
 @Depend(components = {
         SessionComponent.class, AdminComponent.class, PacketInterceptionComponent.class, PrayerComponent.class,
-        FlightItemsComponent.class
+        FlightItemsComponent.class, ManagedWorldComponent.class
 })
 public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
@@ -78,6 +79,8 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     protected static GuildComponent guilds;
     @InjectComponent
     protected static FlightItemsComponent flightItems;
+    @InjectComponent
+    protected static ManagedWorldComponent managedWorld;
 
     private static final ItemCondenser MONEY_CONDENSER = new ItemCondenser();
 
@@ -159,6 +162,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         AbstractItemFeatureImpl.applyResource(prayers);
         AbstractItemFeatureImpl.applyResource(guilds);
         AbstractItemFeatureImpl.applyResource(flightItems);
+        AbstractItemFeatureImpl.applyResource(managedWorld);
     }
 
     private void registerSpecWeapons() {
@@ -223,7 +227,6 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     private void registerGeneral() {
         handle(new AncientArmorImpl());
         handle(new AncientCrownImpl(MONEY_CONDENSER));
-        handle(new ApocalypticCamouflageArmorImpl());
         handle(new BatBowImpl());
         handle(new ChickenBowImpl());
         handle(new ExecutionerAxeImpl());
@@ -233,6 +236,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         handle(new MagicBucketImpl());
         handle(new NecrosArmorImpl());
         handle(new NectricArmorImpl());
+        handle(new PeacefulWarriorArmor());
         handle(new PhantomLinkImpl());
         handle(new PhantomPotionImpl());
         handle(new PixieDustImpl());

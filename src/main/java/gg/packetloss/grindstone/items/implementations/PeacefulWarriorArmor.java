@@ -13,13 +13,29 @@ import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 
-public class ApocalypticCamouflageArmorImpl extends AbstractItemFeatureImpl {
+public class PeacefulWarriorArmor extends AbstractItemFeatureImpl {
+    private boolean isBuildableWorld(World world) {
+        return managedWorld.is(ManagedWorldIsQuery.ANY_BUIDABLE, world);
+    }
+
+    private boolean isHiddenFromEntity(Entity entity) {
+        if (ApocalypseHelper.checkEntity(entity)) {
+            return true;
+        }
+
+        return isBuildableWorld(entity.getWorld());
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onEntityTargetEvent(EntityTargetLivingEntityEvent event) {
         LivingEntity target = event.getTarget();
@@ -27,7 +43,7 @@ public class ApocalypticCamouflageArmorImpl extends AbstractItemFeatureImpl {
             return;
         }
 
-        if (ApocalypseHelper.checkEntity(event.getEntity()) && ItemUtil.hasApocalypticCamouflage(target)) {
+        if (isHiddenFromEntity(event.getEntity()) && ItemUtil.hasPeacefulWarriorArmor(target)) {
             event.setCancelled(true);
         }
     }
@@ -46,16 +62,21 @@ public class ApocalypticCamouflageArmorImpl extends AbstractItemFeatureImpl {
         LivingEntity attacker = result.getAttacker();
         LivingEntity defender = result.getDefender();
 
-        if (ItemUtil.hasApocalypticCamouflage(attacker) && ApocalypseHelper.checkEntity(defender)) {
+        if (ItemUtil.hasPeacefulWarriorArmor(attacker) && isHiddenFromEntity(defender)) {
             EntityUtil.forceDamage(attacker, 12);
-        } else if (ItemUtil.hasApocalypticCamouflage(defender) && ApocalypseHelper.checkEntity(attacker)) {
+        } else if (ItemUtil.hasPeacefulWarriorArmor(defender) && isHiddenFromEntity(attacker)) {
             event.setCancelled(true);
+
+            // Clear the target if this is a monster
+            if (attacker instanceof Monster monster) {
+                monster.setTarget(null);
+            }
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onApocalypseEvent(ApocalypsePersonalSpawnEvent event) {
-        if (ItemUtil.hasApocalypticCamouflage(event.getPlayer())) {
+        if (ItemUtil.hasPeacefulWarriorArmor(event.getPlayer())) {
             event.setCancelled(true);
         }
     }

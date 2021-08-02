@@ -546,7 +546,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                                 continue;
                             }
 
-                            if (ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(3)) {
+                            if (ItemUtil.hasAncientArmor(player) && ChanceUtil.getChance(3)) {
                                 ChatUtil.sendNotice(player, "Your armor shields you from the fire!");
                                 continue;
                             }

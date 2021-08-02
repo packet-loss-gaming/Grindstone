@@ -394,16 +394,16 @@ public class ItemUtil {
         return numWorn;
     }
 
-    private static boolean hasArmour(LivingEntity entity, String namePrefix) {
-        return getNumOfPiecesWorn(entity, namePrefix) == 4;
+    private static boolean hasArmor(LivingEntity entity, ItemFamily itemFamily) {
+        return getNumOfPiecesWorn(entity, itemFamily.getPrefix()) == 4;
     }
 
-    public static boolean hasAncientArmour(LivingEntity entity) {
-        return hasArmour(entity, ChatColor.GOLD + "Ancient");
+    public static boolean hasAncientArmor(LivingEntity entity) {
+        return hasArmor(entity, ItemFamily.ANCIENT);
     }
 
-    public static boolean hasAncientRoyalArmour(LivingEntity entity) {
-        int numWorn = getNumOfPiecesWorn(entity, ChatColor.GOLD + "Ancient Royal");
+    public static boolean hasAncientRoyalArmor(LivingEntity entity) {
+        int numWorn = getNumOfPiecesWorn(entity, ItemFamily.ANCIENT_ROYAL.getPrefix());
 
         // Check to see if there's an ancient crown in the mix
         if (numWorn == 3) {
@@ -416,15 +416,15 @@ public class ItemUtil {
     }
 
     public static boolean hasNecrosArmour(LivingEntity entity) {
-        return hasArmour(entity, ChatColor.DARK_RED + "Necros");
+        return hasArmor(entity, ItemFamily.NECROS);
     }
 
     public static boolean hasNectricArmour(LivingEntity entity) {
-        return hasArmour(entity, ChatColor.DARK_RED + "Nectric");
+        return hasArmor(entity, ItemFamily.NETRIC);
     }
 
-    public static boolean hasApocalypticCamouflage(LivingEntity entity) {
-        return hasArmour(entity, ChatColor.DARK_GREEN + "Apocalyptic Camouflage");
+    public static boolean hasPeacefulWarriorArmor(LivingEntity entity) {
+        return hasArmor(entity, ItemFamily.PEACEFUL_WARRIOR);
     }
 
     public static boolean isNamed(ItemStack stack) {

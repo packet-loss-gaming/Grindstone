@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.items.migration.migrations.CustomItemModelMigration;
 import gg.packetloss.grindstone.items.migration.migrations.OPCombatPotionNerfMigration;
+import gg.packetloss.grindstone.items.migration.migrations.ToPeacefulWarriorArmor;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import org.bukkit.Chunk;
@@ -57,6 +58,7 @@ public class AutomaticItemMigrationComponent extends BukkitComponent implements 
     static {
         manager.add(new CustomItemModelMigration());
         manager.add(new OPCombatPotionNerfMigration());
+        manager.add(new ToPeacefulWarriorArmor());
     }
 
     private AutomaticMigrationState state = new AutomaticMigrationState();

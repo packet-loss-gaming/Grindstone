@@ -14,33 +14,27 @@ public enum CustomItems {
     PWNG_BOW(ItemFamily.PWNG, "Bow"),
 
     // Ancient Armor
-    ANCIENT_CROWN(ChatColor.GOLD, "Ancient Crown"),
-    ANCIENT_ROYAL_HELMET(ChatColor.GOLD, "Ancient Royal Helmet"),
-    ANCIENT_ROYAL_CHESTPLATE(ChatColor.GOLD, "Ancient Royal Chestplate"),
-    ANCIENT_ROYAL_LEGGINGS(ChatColor.GOLD, "Ancient Royal Leggings"),
-    ANCIENT_ROYAL_BOOTS(ChatColor.GOLD, "Ancient Royal Boots"),
-    ANCIENT_HELMET(ChatColor.GOLD, "Ancient Helmet"),
-    ANCIENT_CHESTPLATE(ChatColor.GOLD, "Ancient Chestplate"),
-    ANCIENT_LEGGINGS(ChatColor.GOLD, "Ancient Leggings"),
-    ANCIENT_BOOTS(ChatColor.GOLD, "Ancient Boots"),
-
-    // Apocalyptic Camouflage Armor
-    APOCALYPTIC_CAMOUFLAGE_HELMET(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Helmet"),
-    APOCALYPTIC_CAMOUFLAGE_CHESTPLATE(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Chestplate"),
-    APOCALYPTIC_CAMOUFLAGE_LEGGINGS(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Leggings"),
-    APOCALYPTIC_CAMOUFLAGE_BOOTS(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Boots"),
+    ANCIENT_CROWN(ItemFamily.ANCIENT, "Crown"),
+    ANCIENT_ROYAL_HELMET(ItemFamily.ANCIENT_ROYAL, "Helmet"),
+    ANCIENT_ROYAL_CHESTPLATE(ItemFamily.ANCIENT_ROYAL, "Chestplate"),
+    ANCIENT_ROYAL_LEGGINGS(ItemFamily.ANCIENT_ROYAL, "Leggings"),
+    ANCIENT_ROYAL_BOOTS(ItemFamily.ANCIENT_ROYAL, "Boots"),
+    ANCIENT_HELMET(ItemFamily.ANCIENT, "Helmet"),
+    ANCIENT_CHESTPLATE(ItemFamily.ANCIENT, "Chestplate"),
+    ANCIENT_LEGGINGS(ItemFamily.ANCIENT, "Leggings"),
+    ANCIENT_BOOTS(ItemFamily.ANCIENT, "Boots"),
 
     // Nectric Armor
-    NECTRIC_HELMET(ChatColor.DARK_RED, "Nectric Helmet"),
-    NECTRIC_CHESTPLATE(ChatColor.DARK_RED, "Nectric Chestplate"),
-    NECTRIC_LEGGINGS(ChatColor.DARK_RED, "Nectric Leggings"),
-    NECTRIC_BOOTS(ChatColor.DARK_RED, "Nectric Boots"),
+    NECTRIC_HELMET(ItemFamily.NETRIC, "Helmet"),
+    NECTRIC_CHESTPLATE(ItemFamily.NETRIC, "Chestplate"),
+    NECTRIC_LEGGINGS(ItemFamily.NETRIC, "Leggings"),
+    NECTRIC_BOOTS(ItemFamily.NETRIC, "Boots"),
 
     // Necros Armor
-    NECROS_HELMET(ChatColor.DARK_RED, "Necros Helmet"),
-    NECROS_CHESTPLATE(ChatColor.DARK_RED, "Necros Chestplate"),
-    NECROS_LEGGINGS(ChatColor.DARK_RED, "Necros Leggings"),
-    NECROS_BOOTS(ChatColor.DARK_RED, "Necros Boots"),
+    NECROS_HELMET(ItemFamily.NECROS, "Helmet"),
+    NECROS_CHESTPLATE(ItemFamily.NECROS, "Chestplate"),
+    NECROS_LEGGINGS(ItemFamily.NECROS, "Leggings"),
+    NECROS_BOOTS(ItemFamily.NECROS, "Boots"),
 
     // Master Weapons
     MASTER_SWORD(ItemFamily.MASTER, "Sword"),
@@ -92,6 +86,12 @@ public enum CustomItems {
     GEM_OF_LIFE(ChatColor.DARK_AQUA, "Gem of Life"),
     GEM_OF_DARKNESS(ChatColor.DARK_RED, "Gem of Darkness"),
     IMBUED_CRYSTAL(ChatColor.AQUA, "Imbued Crystal"),
+
+    // Peaceful Warrior Armor
+    PEACEFUL_WARRIOR_HELMET(ItemFamily.PEACEFUL_WARRIOR, "Helmet"),
+    PEACEFUL_WARRIOR_CHESTPLATE(ItemFamily.PEACEFUL_WARRIOR, "Chestplate"),
+    PEACEFUL_WARRIOR_LEGGINGS(ItemFamily.PEACEFUL_WARRIOR, "Leggings"),
+    PEACEFUL_WARRIOR_BOOTS(ItemFamily.PEACEFUL_WARRIOR, "Boots"),
 
     // Phantom Items
     PHANTOM_GOLD(ChatColor.GOLD, "Phantom Gold"),

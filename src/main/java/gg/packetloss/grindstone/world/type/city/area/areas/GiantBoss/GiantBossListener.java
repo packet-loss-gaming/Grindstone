@@ -331,7 +331,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             }
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
-            if (ItemUtil.hasAncientArmour(player)) {
+            if (ItemUtil.hasAncientArmor(player)) {
                 if (attacker != null) {
                     if (attacker instanceof Zombie) {
                         Zombie zombie = (Zombie) attacker;
