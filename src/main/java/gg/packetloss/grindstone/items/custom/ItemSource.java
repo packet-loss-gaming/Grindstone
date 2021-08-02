@@ -20,6 +20,8 @@ public enum ItemSource {
             GIANT_BOSS,
             PATIENT_X
     ),
+    SACRIFICIAL_EXCHANGE("Sacrificial Exchange"),
+    RANGED_WORLD_MINING("Ranged World Mining"),
     MARKET("Market"),
     NINJA_GUILD("Ninja Guild"),
     GOLD_RUSH("Gold Rush"),

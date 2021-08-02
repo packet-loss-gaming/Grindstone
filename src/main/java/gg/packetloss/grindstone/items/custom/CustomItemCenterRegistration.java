@@ -717,6 +717,7 @@ public class CustomItemCenterRegistration {
         barbarianBones.addSource(ItemSource.GIANT_BOSS);
         barbarianBones.addSource(ItemSource.GRAVE_YARD);
         barbarianBones.addUse("Improves the drops of the Giant Boss if in a suitable quantity.");
+        barbarianBones.addUse("Sacrifice to store world levels.");
         itemConsumer.accept(barbarianBones);
 
         CustomPotion potionOfRestitution = new CustomPotion(POTION_OF_RESTITUTION, Color.GREEN);
@@ -811,6 +812,12 @@ public class CustomItemCenterRegistration {
         executionerAxe.addSource(ItemSource.MARKET);
         executionerAxe.addUse("Deals damage based on the number of zombies around.");
         itemConsumer.accept(executionerAxe);
+
+        CustomItem demonicAshes = new CustomItem(DEMONIC_ASHES, Material.BLAZE_POWDER);
+        demonicAshes.addSource(ItemSource.SACRIFICIAL_EXCHANGE);
+        demonicAshes.addSource(ItemSource.RANGED_WORLD_MINING);
+        demonicAshes.addUse("Consumable to increase world level.");
+        itemConsumer.accept(demonicAshes);
 
         CustomItem madMilk = new CustomItem(MAD_MILK, Material.MILK_BUCKET);
         madMilk.addSource(ItemSource.MARKET);

@@ -16,7 +16,10 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.PacketInterceptionComponent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.collection.FiniteCache;
 import gg.packetloss.grindstone.util.item.ItemUtil;
@@ -24,7 +27,6 @@ import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import org.bukkit.*;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
@@ -67,6 +69,29 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         }
 
         packetInterceptor.addListener(new HeartPacketFilter(this));
+
+        CommandBook.server().getScheduler().runTaskTimer(
+            CommandBook.inst(),
+            this::degradeWorldLevel,
+            0,
+            20 * 5
+        );
+    }
+
+    public void degradeWorldLevel() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!isPeaceful(player)) {
+                continue;
+            }
+
+            int currLevel = getWorldLevel(player);
+            if (currLevel > 1) {
+                int newLevel = currLevel - 1;
+
+                setWorldLevel(player, newLevel);
+                showTitleForLevel(player, newLevel);
+            }
+        }
     }
 
     @Override
@@ -78,15 +103,11 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         }
     }
 
-    public boolean isWorldLevelEnabledFor(Player player) {
-        return !ItemUtil.hasPeacefulWarriorArmor(player);
+    public boolean isPeaceful(Player player) {
+        return ItemUtil.hasPeacefulWarriorArmor(player);
     }
 
     public int getWorldLevel(Player player) {
-        if (!isWorldLevelEnabledFor(player)) {
-            return 1;
-        }
-
         return playerWorldLevel.getOrDefault(player.getUniqueId(), 1);
     }
 
@@ -126,8 +147,8 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         return managedWorld.is(ManagedWorldIsQuery.ANY_RANGE, world);
     }
 
-    protected boolean shouldSpawnChallengeBlock(Player player, Location location, Material blockType) {
-        if (!isWorldLevelEnabledFor(player)) {
+    protected boolean shouldSpawnDemonicAshes(Player player, Location location, Material blockType) {
+        if (isPeaceful(player)) {
             return false;
         }
 
@@ -147,17 +168,10 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         return ChanceUtil.getChance(yChunk * 25);
     }
 
-    protected void spawnChallengeBlock(Location location) {
+    protected void spawnDemonicAshes(Player player, Location location) {
         recentChunks.add(WorldEditBridge.toBlockVec2(location.getChunk()));
 
-        Bukkit.getServer().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-            Block block = location.getBlock();
-            if (!block.getType().isAir()) {
-                return;
-            }
-
-            block.setType(Material.DRAGON_EGG);
-        }, 1);
+        EntityUtil.spawnProtectedItem(CustomItemCenter.build(CustomItems.DEMONIC_ASHES), player);
     }
 
     protected double scale(int fromLevel, int toLevel) {

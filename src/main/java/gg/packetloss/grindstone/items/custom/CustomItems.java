@@ -160,6 +160,7 @@ public enum CustomItems {
 
     // Miscellaneous
     EXECUTIONER_AXE(ChatColor.GOLD, "Executioner's Axe"),
+    DEMONIC_ASHES(ChatColor.DARK_RED, "Demonic Ashes"),
     MAD_MILK(ChatColor.DARK_AQUA, "Mad Milk"),
     GOD_FISH(ChatColor.BLUE, "God Fish"),
     OVERSEER_BOW(ChatColor.RED, "Overseer's Bow"),
