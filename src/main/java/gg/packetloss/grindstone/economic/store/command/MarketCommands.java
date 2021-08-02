@@ -25,6 +25,7 @@ import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.item.inventory.InventoryConstants;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -132,12 +133,8 @@ public class MarketCommands {
                     }
 
                     // Add anything that couldn't be sold back to the inventory, or drop it on the ground
-                    Inventory playerInv = player.getInventory();
                     items.forEach((item) -> {
-                        ItemStack remainder = playerInv.addItem(item).get(0);
-                        if (remainder != null) {
-                            player.getWorld().dropItem(player.getLocation(), remainder);
-                        }
+                        GeneralPlayerUtil.giveItemToPlayer(player, item);
                     });
 
                     if (transactionBuilder.isEmpty()) {

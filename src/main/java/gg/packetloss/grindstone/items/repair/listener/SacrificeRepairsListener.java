@@ -12,10 +12,10 @@ import gg.packetloss.grindstone.events.custom.item.RepairItemEvent;
 import gg.packetloss.grindstone.items.repair.profile.RepairProfile;
 import gg.packetloss.grindstone.items.repair.profile.SacrificeItemRepairProfile;
 import gg.packetloss.grindstone.items.repair.profile.SacrificeRepairProfile;
-import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.ItemPointTranslator;
 import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -31,13 +31,6 @@ public class SacrificeRepairsListener implements Listener {
         this.repairProfiles = repairProfiles;
     }
 
-    private void returnItemToPlayer(Player player, ItemStack item) {
-        ItemStack remainder = player.getInventory().addItem(item).get(0);
-        if (remainder != null) {
-            EntityUtil.spawnProtectedItem(remainder, player);
-        }
-    }
-
     private void handleSacrificeRepair(Player player, ItemStack item, SacrificeRepairProfile repairProfile) {
         RepairItemEvent repairEvent = new RepairItemEvent(player, item, repairProfile.getRepairPercentage());
         CommandBook.callEvent(repairEvent);
@@ -48,7 +41,7 @@ public class SacrificeRepairsListener implements Listener {
         int maxRepair = (int) (maxDurability * (1 - repairPercentage));
         item.setDurability((short) Math.min(item.getDurability(), maxRepair));
 
-        returnItemToPlayer(player, item);
+        GeneralPlayerUtil.giveItemToPlayer(player, item);
         player.updateInventory();
     }
 
@@ -78,7 +71,7 @@ public class SacrificeRepairsListener implements Listener {
         }
 
         item.setDurability(remainingDurability);
-        returnItemToPlayer(player, item);
+        GeneralPlayerUtil.giveItemToPlayer(player, item);
 
         // Set the new inventory value.
         int remainingValue = converter.assignValue(adapter, repairItemCount);

@@ -21,6 +21,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.*;
@@ -182,16 +183,32 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     boolean hasAxe = true;
                     switch (pInv.getItemInHand().getType()) {
                         case DIAMOND_AXE:
-                            pInv.addItem(new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.STICK, 2));
+                            GeneralPlayerUtil.giveItemToPlayer(
+                                player,
+                                new ItemStack(Material.DIAMOND, 2),
+                                new ItemStack(Material.STICK, 2)
+                            );
                             break;
                         case GOLDEN_AXE:
-                            pInv.addItem(new ItemStack(Material.GOLD_INGOT, 2), new ItemStack(Material.STICK, 2));
+                            GeneralPlayerUtil.giveItemToPlayer(
+                                player,
+                                new ItemStack(Material.GOLD_INGOT, 2),
+                                new ItemStack(Material.STICK, 2)
+                            );
                             break;
                         case IRON_AXE:
-                            pInv.addItem(new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.STICK, 2));
+                            GeneralPlayerUtil.giveItemToPlayer(
+                                player,
+                                new ItemStack(Material.IRON_INGOT, 2),
+                                new ItemStack(Material.STICK, 2)
+                            );
                             break;
                         case WOODEN_AXE:
-                            pInv.addItem(new ItemStack(Material.OAK_WOOD, 2), new ItemStack(Material.STICK, 2));
+                            GeneralPlayerUtil.giveItemToPlayer(
+                                player,
+                                new ItemStack(Material.OAK_WOOD, 2),
+                                new ItemStack(Material.STICK, 2)
+                            );
                             break;
                         default:
                             hasAxe = false;

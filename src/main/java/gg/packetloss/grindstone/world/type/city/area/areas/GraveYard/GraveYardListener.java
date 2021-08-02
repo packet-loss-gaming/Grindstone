@@ -36,6 +36,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import org.apache.commons.lang.Validate;
@@ -302,7 +303,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             Player player = event.getPlayer();
 
             for (int i = 0; i < item.getAmount(); ++i) {
-                player.getInventory().addItem(CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE, 20));
+                GeneralPlayerUtil.giveItemToPlayer(player, CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE, 20));
             }
 
             event.setItemStack(null);

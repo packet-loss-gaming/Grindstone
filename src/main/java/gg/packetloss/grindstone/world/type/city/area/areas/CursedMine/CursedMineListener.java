@@ -26,6 +26,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -123,22 +124,19 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
             Material type = block.getType();
 
             getMiningResult(player, type, (item) -> {
-                item = player.getInventory().addItem(item).get(0);
-                if (item != null) {
-                    parent.getWorld().dropItem(player.getLocation(), item);
-                }
+                GeneralPlayerUtil.giveItemToPlayer(player, item);
             });
 
             event.setExpToDrop((70 - player.getLocation().getBlockY()) / 2);
 
             if (ChanceUtil.getChance(3000)) {
                 ChatUtil.sendNotice(player, "You feel as though a spirit is trying to tell you something...");
-                player.getInventory().addItem(BookUtil.Lore.Areas.theGreatMine());
+                GeneralPlayerUtil.giveItemToPlayer(player, BookUtil.Lore.Areas.theGreatMine());
             }
 
             if (ChanceUtil.getChance(10000)) {
                 ChatUtil.sendNotice(player, "You find a dusty old book...");
-                player.getInventory().addItem(CustomItemCenter.build(CustomItems.TOME_OF_CURSED_SMELTING));
+                GeneralPlayerUtil.giveItemToPlayer(player, CustomItemCenter.build(CustomItems.TOME_OF_CURSED_SMELTING));
             }
 
             parent.eatFood(player);

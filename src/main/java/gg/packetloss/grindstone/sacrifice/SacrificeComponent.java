@@ -30,6 +30,7 @@ import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.Prayers;
 import gg.packetloss.grindstone.state.player.NativeSerializerComponent;
 import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.DebounceHandle;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.*;
@@ -468,15 +469,13 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     private void sacrifice(Player player, List<ItemStack> items) {
-        PlayerInventory pInventory = player.getInventory();
-
         double totalValue = 0;
 
         MarketItemLookupInstance lookupInst = MarketComponent.getLookupInstanceFromStacksImmediately(items);
         for (ItemStack itemStack : items) {
             double value = registry.getValue(lookupInst, itemStack);
             if (value <= 0) {
-                pInventory.addItem(itemStack);
+                GeneralPlayerUtil.giveItemToPlayer(player, itemStack);
                 continue;
             }
 
@@ -501,6 +500,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
         session.addItems(getCalculatedLoot(new SacrificeInformation(player, totalValue)));
 
+        PlayerInventory pInventory = player.getInventory();
         session.pollItems((itemStack -> {
             ItemStack remainder = pInventory.addItem(itemStack).get(0);
             if (remainder != null) {

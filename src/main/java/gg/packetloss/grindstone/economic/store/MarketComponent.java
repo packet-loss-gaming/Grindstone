@@ -30,6 +30,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ErrorUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.promise.FailableTaskFuture;
 import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.util.task.promise.TaskResult;
@@ -248,11 +249,7 @@ public class MarketComponent extends BukkitComponent {
                     for (MarketTransactionLine transactionLine : transactionLines) {
                         ItemStack[] itemStacks = getItem(transactionLine);
                         for (ItemStack itemStack : itemStacks) {
-                            if (player.getInventory().firstEmpty() == -1) {
-                                player.getWorld().dropItem(player.getLocation(), itemStack);
-                                continue;
-                            }
-                            player.getInventory().addItem(itemStack);
+                            GeneralPlayerUtil.giveItemToPlayer(player, itemStack);
                         }
                     }
                     return TaskResult.of(totalPrice);
