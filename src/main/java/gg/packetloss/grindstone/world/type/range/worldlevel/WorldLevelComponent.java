@@ -171,11 +171,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
 
     public void setWorldLevel(Player player, int worldLevel) {
         UUID playerID = player.getUniqueId();
-        if (worldLevel <= 1) {
-            playerWorldLevel.remove(playerID);
-        } else {
-            playerWorldLevel.put(playerID, worldLevel);
-        }
+        playerWorldLevel.put(playerID, worldLevel);
     }
 
     protected void showTitleForLevel(Player player, int newLevel) {
