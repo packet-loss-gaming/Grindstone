@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.util.item;
 
-import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.EquipmentSlot;
@@ -86,7 +85,7 @@ public class ItemModifierUtil {
     }
 
     public static ItemStack cloneWithSpecifiedModifiers(ItemStack baseStack, List<Modifier> modifiers) {
-        ItemStack stack = new ItemStack(Material.IRON_AXE);
+        ItemStack stack = new ItemStack(baseStack);
         ItemMeta meta = stack.getItemMeta();
         for (Modifier modifier : modifiers) {
             meta.addAttributeModifier(
