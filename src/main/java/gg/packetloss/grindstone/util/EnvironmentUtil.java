@@ -18,7 +18,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.Dye;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -139,7 +138,7 @@ public class EnvironmentUtil {
             return new ItemStack(Material.RAW_COPPER, ChanceUtil.getRangedRandom(2, 3));
         }
         if (Tag.LAPIS_ORES.isTagged(block)) {
-            return new Dye(DyeColor.BLUE).toItemStack(ChanceUtil.getRangedRandom(4, 9));
+            return new ItemStack(Material.LAPIS_LAZULI, ChanceUtil.getRangedRandom(4, 9));
         }
         if (Tag.REDSTONE_ORES.isTagged(block)) {
             return new ItemStack(Material.REDSTONE, ChanceUtil.getRangedRandom(4, 5));
