@@ -33,7 +33,7 @@ public class PeacefulWarriorArmor extends AbstractItemFeatureImpl {
             return true;
         }
 
-        return isBuildableWorld(entity.getWorld());
+        return entity instanceof Monster && isBuildableWorld(entity.getWorld());
     }
 
     @EventHandler(ignoreCancelled = true)
