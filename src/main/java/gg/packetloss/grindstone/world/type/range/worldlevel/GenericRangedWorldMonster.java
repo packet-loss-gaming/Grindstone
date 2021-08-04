@@ -27,7 +27,7 @@ import gg.packetloss.openboss.instruction.SimpleInstructionDispatch;
 import gg.packetloss.openboss.instruction.UnbindInstruction;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -42,7 +42,7 @@ public class GenericRangedWorldMonster {
             this.worldLevelComponent = worldLevelComponent;
         }
 
-        public void bind(Monster entity) {
+        public void bind(Mob entity) {
             bind(new BukkitBoss<>(entity, new GenericDetail()));
         }
 
@@ -54,7 +54,7 @@ public class GenericRangedWorldMonster {
 
         @Override
         public LocalControllable<GenericDetail> tryRebind(LocalEntity entity) {
-            var boss = new BukkitBoss<>((Monster) BukkitUtil.getBukkitEntity(entity), new GenericDetail());
+            var boss = new BukkitBoss<>((Mob) BukkitUtil.getBukkitEntity(entity), new GenericDetail());
             silentBind(boss);
             return boss;
         }
@@ -69,7 +69,7 @@ public class GenericRangedWorldMonster {
         this.genericEntity = new GenericMonsterHandler(worldLevelComponent);
 
         setupDropTable();
-        setupGenericRangedWorldMonster();
+        setupGenericRangedWorldMob();
     }
 
     private void setupDropTable() {
@@ -118,7 +118,7 @@ public class GenericRangedWorldMonster {
         );
     }
 
-    private void setupGenericRangedWorldMonster() {
+    private void setupGenericRangedWorldMob() {
         genericEntity.unbindInstructions.add(new UnbindInstruction<GenericDetail>() {
             @Override
             public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
@@ -130,7 +130,7 @@ public class GenericRangedWorldMonster {
         });
     }
 
-    public void bind(Monster entity) {
+    public void bind(Mob entity) {
         genericEntity.bind(entity);
     }
 }

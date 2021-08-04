@@ -68,7 +68,7 @@ class MobListener implements Listener {
             entity.setMaxHealth(parent.scaleHealth(max, 1, 100));
             entity.setHealth(parent.scaleHealth(max, 1, 100));
 
-            genericMonster.bind((Monster) entity);
+            genericMonster.bind((Mob) entity);
         });
     }
 
