@@ -33,7 +33,6 @@ import gg.packetloss.grindstone.world.type.range.worldlevel.db.PlayerWorldLevelD
 import gg.packetloss.grindstone.world.type.range.worldlevel.db.mysql.MySQLPlayerWorldLevelDatabase;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -242,6 +241,6 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
     }
 
     protected boolean hasScaledHealth(Entity entity) {
-        return entity instanceof Monster && entity.getCustomName() == null && isRangeWorld(entity.getWorld());
+        return EntityUtil.isHostileMob(entity) && entity.getCustomName() == null && isRangeWorld(entity.getWorld());
     }
 }

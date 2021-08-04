@@ -12,7 +12,6 @@ import gg.packetloss.grindstone.events.custom.item.ArmorBurstEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -58,7 +57,7 @@ public class EffectUtil {
                     if (e instanceof Player) {
                         ChatUtil.sendNotice(e, "You are healed by an ancient force.");
                     }
-                } else if (!(entity instanceof Player) || EnvironmentUtil.isHostileEntity(e)) {
+                } else if (!(entity instanceof Player) || EntityUtil.isHostileMob(e)) {
                     if (e instanceof Player) {
                         server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
                     }
@@ -94,7 +93,7 @@ public class EffectUtil {
                     if (e instanceof Player) {
                         ChatUtil.sendNotice(e, "You feel a necrotic power sweep over your soul.");
                     }
-                } else if (!(entity instanceof Player) || EnvironmentUtil.isHostileEntity(e)) {
+                } else if (!(entity instanceof Player) || EntityUtil.isHostileMob(e)) {
                     ((LivingEntity) e).damage(attackDamage * 1.9);
                 }
             });

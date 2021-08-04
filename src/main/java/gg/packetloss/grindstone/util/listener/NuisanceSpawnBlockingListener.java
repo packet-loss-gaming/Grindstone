@@ -8,9 +8,9 @@ package gg.packetloss.grindstone.util.listener;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.entity.EntitySpawnBlockedEvent;
+import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -34,7 +34,7 @@ public class NuisanceSpawnBlockingListener implements Listener {
             return;
         }
 
-        if (!(entity instanceof Monster)) {
+        if (!EntityUtil.isHostileMob(entity)) {
             return;
         }
 

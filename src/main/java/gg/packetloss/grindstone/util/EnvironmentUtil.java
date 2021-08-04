@@ -14,8 +14,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Monster;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.inventory.ItemStack;
 
@@ -488,11 +486,6 @@ public class EnvironmentUtil {
     public static void generateRadialEffect(Location[] locations, Effect effect) {
 
         for (Location loc : locations) generateRadialEffect(loc, effect);
-    }
-
-    public static boolean isHostileEntity(Entity e) {
-
-        return e instanceof Monster;
     }
 
     private static final BlockFace[] NEARBY_BLOCK_FACES = new BlockFace[]{

@@ -17,7 +17,7 @@ import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -33,7 +33,7 @@ public class PeacefulWarriorArmor extends AbstractItemFeatureImpl {
             return true;
         }
 
-        return entity instanceof Monster && isBuildableWorld(entity.getWorld());
+        return isBuildableWorld(entity.getWorld()) && EntityUtil.isHostileMob(entity);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -68,7 +68,7 @@ public class PeacefulWarriorArmor extends AbstractItemFeatureImpl {
             event.setCancelled(true);
 
             // Clear the target if this is a monster
-            if (attacker instanceof Monster monster) {
+            if (attacker instanceof Mob monster) {
                 monster.setTarget(null);
             }
         }
