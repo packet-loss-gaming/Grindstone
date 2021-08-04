@@ -101,10 +101,19 @@ public class LavaSupply {
                 for (int z = minZ; z <= maxZ; ++z) {
                     if (added < amount) {
                         Block block = world.getBlockAt(x, y, z);
-                        if (block.getType() == Material.AIR) {
-                            block.setType(Material.LAVA, false);
-                            ++added;
+                        if (block.getType() != Material.AIR) {
+                            continue;
                         }
+
+                        // Hack to work around an issue where this adds lava into the
+                        // supply line causing items to not flow into the spot where they
+                        // to be for input detection.
+                        if (EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN))) {
+                            continue;
+                        }
+
+                        block.setType(Material.LAVA, false);
+                        ++added;
                     }
                 }
             }
