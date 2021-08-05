@@ -397,7 +397,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                     return extraCheck.test(vector);
                 }
             }
-        );
+        ).add(0.5, 0, 0.5);
     }
 
     private void spawnCharlotteMinion(Location location) {
