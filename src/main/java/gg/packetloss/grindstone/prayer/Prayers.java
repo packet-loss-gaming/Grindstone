@@ -89,7 +89,7 @@ public enum Prayers {
             PrayerEffects.INFINITE_FOOD,
             new PotionPrayerEffect(PotionEffectType.INVISIBILITY, 0),
             new PotionPrayerEffect(PotionEffectType.REGENERATION, 1),
-            new PotionPrayerEffect(PotionEffectType.INCREASE_DAMAGE, 2),
+            new PotionPrayerEffect(PotionEffectType.INCREASE_DAMAGE, 1),
             new PotionPrayerEffect(PotionEffectType.DAMAGE_RESISTANCE, 1),
             new PotionPrayerEffect(PotionEffectType.WATER_BREATHING, 0),
             new PotionPrayerEffect(PotionEffectType.FIRE_RESISTANCE, 0),
@@ -117,8 +117,8 @@ public enum Prayers {
         true,
         ImmutableList.of(
             PrayerEffects.INFINITE_FOOD,
-            new PotionPrayerEffect(PotionEffectType.INCREASE_DAMAGE, 2),
-            new PotionPrayerEffect(PotionEffectType.DAMAGE_RESISTANCE, 1)
+            new PotionPrayerEffect(PotionEffectType.INCREASE_DAMAGE, 1),
+            new PotionPrayerEffect(PotionEffectType.DAMAGE_RESISTANCE, 0)
         )
     ),
     HEALTH_BOOST(15, true, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.HEALTH_BOOST, 4))),

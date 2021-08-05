@@ -179,7 +179,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         registry.registerItem(() -> new ItemStack(Material.DIAMOND_BOOTS), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.DIAMOND_PICKAXE), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.DIAMOND_AXE), NORMAL);
-        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_FISH), NORMAL);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.OVERSEER_BOW), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.EXPERIENCE_BOTTLE, ChanceUtil.getRangedRandom(40, 64)), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.BLAZE_ROD, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
@@ -200,6 +199,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_AXE), RARE_2);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_PICKAXE), RARE_2);
 
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_FISH), RARE_3);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.LEGENDARY_GOD_AXE), RARE_3);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.LEGENDARY_GOD_PICKAXE), RARE_3);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.EXTREME_COMBAT_POTION), RARE_3);
