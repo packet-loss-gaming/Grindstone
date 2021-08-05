@@ -41,8 +41,8 @@ public class ChatUtil {
         sender.sendMessage(Text.of(type.getColor(), Arrays.asList(args)).build());
     }
 
-    public static void message(Iterable<CommandSender> senders, MessageType type, Object... args) {
-        var built = Text.of(type.getColor(), args).build();
+    public static <T extends CommandSender> void message(Iterable<T> senders, MessageType type, Object... args) {
+        var built = Text.of(type.getColor(), Arrays.asList(args)).build();
         for (CommandSender sender : senders) {
             sender.sendMessage(built);
         }
@@ -52,7 +52,7 @@ public class ChatUtil {
         message(sender, MessageType.NOTICE, args);
     }
 
-    public static void sendNotice(Iterable<CommandSender> senders, Object... args) {
+    public static <T extends CommandSender> void sendNotice(Iterable<T> senders, Object... args) {
         message(senders, MessageType.NOTICE, args);
     }
 
@@ -60,7 +60,7 @@ public class ChatUtil {
         message(sender, MessageType.WARNING, args);
     }
 
-    public static void sendWarning(Iterable<CommandSender> senders, Object... args) {
+    public static <T extends CommandSender> void sendWarning(Iterable<T> senders, Object... args) {
         message(senders, MessageType.WARNING, args);
     }
 
@@ -68,7 +68,7 @@ public class ChatUtil {
         message(sender, MessageType.ERROR, args);
     }
 
-    public static void sendError(Iterable<CommandSender> senders, Object... args) {
+    public static <T extends CommandSender> void sendError(Iterable<T> senders, Object... args) {
         message(senders, MessageType.ERROR, args);
     }
 
