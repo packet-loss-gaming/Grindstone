@@ -319,9 +319,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
 
         server.getScheduler().scheduleSyncDelayedTask(inst, () -> {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 30, 2));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 45, 2));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 45, 2));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 30, 1));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 45, 1));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 45, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 60, 1));
         }, 1);
     }
