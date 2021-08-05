@@ -128,6 +128,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                 runLootTimeout();
             }
             updateBossBars();
+            ensureBossesStillInRooms();
         }
     }
 
@@ -173,6 +174,18 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     protected void updateBossBars() {
         for (FreakyFourBoss boss : FreakyFourBoss.values()) {
             updateBossBar(boss);
+        }
+    }
+
+    private void ensureBossesStillInRooms() {
+        for (FreakyFourBoss boss : FreakyFourBoss.values()) {
+            if (isBossAlive(boss)) {
+                Monster bossEnt = bossEntities.get(boss);
+                ProtectedRegion bossRegion = bossRegions.get(boss);
+                if (!contains(bossRegion, bossEnt)) {
+                    bossEnt.teleport(getBossSpawnLoc(boss));
+                }
+            }
         }
     }
 
