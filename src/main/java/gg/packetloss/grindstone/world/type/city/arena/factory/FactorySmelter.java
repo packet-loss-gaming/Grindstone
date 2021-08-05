@@ -9,11 +9,13 @@ package gg.packetloss.grindstone.world.type.city.arena.factory;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -23,6 +25,8 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.util.ChatUtil.WHOLE_NUMBER_FORMATTER;
 
 public class FactorySmelter extends FactoryMech {
 
@@ -60,6 +64,37 @@ public class FactorySmelter extends FactoryMech {
         Material.RAW_GOLD_BLOCK, new Conversion(Material.RAW_GOLD, 9)
     );
 
+    private int getInputModifier(Player thrower) {
+        if (thrower != null && thrower.hasPermission("aurora.tome.cursedsmelting")) {
+            return ChanceUtil.getRandom(3);
+        }
+        return 1;
+    }
+
+    private void sendProductionMessage(Collection<Player> playerList, String step, int quantity, Material type, int modifier) {
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(step);
+        arguments.add(": ");
+        arguments.add(Text.of(ChatColor.WHITE, WHOLE_NUMBER_FORMATTER.format(quantity)));
+        if (modifier != 1) {
+            arguments.add(" -> ");
+            arguments.add(Text.of(ChatColor.WHITE, WHOLE_NUMBER_FORMATTER.format(quantity * modifier)));
+        }
+        arguments.add(" ");
+        arguments.add(Text.of(ChatColor.BLUE, type));
+        if (modifier != 1) {
+            arguments.add(" (x");
+            arguments.add(Text.of(ChatColor.WHITE, WHOLE_NUMBER_FORMATTER.format(modifier)));
+            arguments.add(")");
+        }
+        arguments.add(".");
+        ChatUtil.sendNotice(playerList, arguments.toArray());
+    }
+
+    private void sendItemDiscoveryMessage(Collection<Player> playerList, int quantity, Material type, int modifier) {
+        sendProductionMessage(playerList, "Found", quantity, type, modifier);
+    }
+
     private void processWantedItem(Player thrower, Collection<Player> audible, ItemStack stack) {
         Material type = stack.getType();
         int quantity = stack.getAmount();
@@ -70,12 +105,23 @@ public class FactorySmelter extends FactoryMech {
             quantity *= conversion.multiplier;
         }
 
-        if (thrower != null && thrower.hasPermission("aurora.tome.cursedsmelting")) {
-            quantity *= ChanceUtil.getRandom(3);
-        }
+        int modifier = getInputModifier(thrower);
+        sendItemDiscoveryMessage(audible, quantity, type, modifier);
 
-        ChatUtil.sendNotice(audible, "Found: " + quantity + " " + type + ".");
-        items.merge(type, quantity, Integer::sum);
+        items.merge(type, quantity * modifier, Integer::sum);
+    }
+
+    private int getSmeltingModifier() {
+        int modifier = 4;
+
+        if (ModifierComponent.getModifierCenter().isActive(ModifierType.TRIPLE_FACTORY_PRODUCTION)) {
+            modifier *= 3;
+        }
+        return modifier;
+    }
+
+    private void sendSmeltingNotice(Collection<Player> playerList, int quantity, Material type, int modifier) {
+        sendProductionMessage(playerList, "Smelting", quantity, type, modifier);
     }
 
     @Override
@@ -115,7 +161,7 @@ public class FactorySmelter extends FactoryMech {
 
         if (maxGold + maxIron < 1) return new ArrayList<>();
 
-        int requestedLava = Math.max(1, Math.max(maxIron, maxGold) / 8);
+        int requestedLava = (int) Math.max(1, Math.ceil(Math.max(maxIron, maxGold) / 8F));
         int availableLava = lavaSupply.removeLava(requestedLava);
 
         int ironRemainder = maxIron - (availableLava * 8);
@@ -138,21 +184,19 @@ public class FactorySmelter extends FactoryMech {
             if (maxGold > 0) maxGold = maxGold - goldRemainder;
         }
 
-        maxIron *= 4;
-        maxGold *= 4;
-
-        if (ModifierComponent.getModifierCenter().isActive(ModifierType.TRIPLE_FACTORY_PRODUCTION)) {
-            maxIron *= 3;
-            maxGold *= 3;
-        }
+        int smeltingModifier = getSmeltingModifier();
 
         // Tell the player what we are making
         if (maxIron > 0) {
-            ChatUtil.sendNotice(playerList, "Smelting: "  + maxIron + " iron ingots.");
+            sendSmeltingNotice(playerList, maxIron, Material.IRON_INGOT, smeltingModifier);
         }
         if (maxGold > 0) {
-            ChatUtil.sendNotice(playerList, "Smelting: " + maxGold + " gold ingots.");
+            sendSmeltingNotice(playerList, maxGold, Material.GOLD_INGOT, smeltingModifier);
         }
+
+        maxIron *= smeltingModifier;
+        maxGold *= smeltingModifier;
+
         // Return the product for the que
         List<ItemStack> product = new ArrayList<>();
         for (int i = maxIron; i > 0; --i) product.add(new ItemStack(Material.IRON_INGOT));

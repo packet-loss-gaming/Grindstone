@@ -151,11 +151,19 @@ public class FactoryFloor extends AbstractFactoryArea implements GenericArena, L
 
         if (que.isEmpty()) return;
         boolean hexa = ModifierComponent.getModifierCenter().isActive(ModifierType.HEXA_FACTORY_SPEED);
-        int max = getContained(Player.class).size() * (hexa ? 54 : 9);
+        int max = getContained(Player.class).size() * (hexa ? 6 : 1) * 9;
         for (int i = Math.min(que.size(), ChanceUtil.getRangedRandom(max / 3, max)); i > 0; --i) {
             CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                produce(que.poll());
+                ItemStack result = que.poll();
                 queueDirty = true;
+
+                // This check shouldn't be necessary, but all this code should go away anyways, and this
+                // isn't trivial to figure out (for some reason).
+                if (result == null) {
+                    return;
+                }
+
+                produce(result);
             }, i * 10 + ChanceUtil.getRandom(10));
         }
     }
