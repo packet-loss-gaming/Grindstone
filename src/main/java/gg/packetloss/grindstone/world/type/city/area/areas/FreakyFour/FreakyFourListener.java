@@ -389,7 +389,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
                     if (boss == FreakyFourBoss.SNIPEE) {
                         Player killer = e.getKiller();
                         if (killer != null) {
-                            parent.generateLootChest();
+                            parent.generateLootChestFor(killer);
                         }
                     }
                 }

@@ -18,6 +18,7 @@ import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
@@ -582,7 +583,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
         }
     }
 
-    protected void generateLootChest() {
+    protected void generateLootChestFor(Player player) {
         setLootChestPresent(true);
 
         for (Block block : getLootChestBlocks()) {
@@ -592,6 +593,8 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                 inventory.setItem(i, pickRandomItem());
             }
         }
+
+        highScores.update(player, ScoreTypes.FREAKY_FOUR_KILLS, 1);
     }
 
     private ItemStack pickRandomItem() {
