@@ -24,7 +24,7 @@ public class BossKillCounterScoreType extends KillCounterScoreType {
 
     @Override
     public Optional<String> getGobletName() {
-        return Optional.of(bossKind.name().toLowerCase() + "_kills");
+        return Optional.of(bossKind.name() + "_KILLS");
     }
 
     @Override

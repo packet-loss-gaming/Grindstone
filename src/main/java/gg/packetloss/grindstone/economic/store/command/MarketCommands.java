@@ -214,7 +214,7 @@ public class MarketCommands {
             new TextComponentChatPaginator<MarketItem>(ChatColor.GOLD, "Item List") {
                 @Override
                 public Optional<String> getPagerCommand(int page) {
-                    return Optional.of("/market list -p " + page + " " + Optional.ofNullable(itemFilter).orElse(""));
+                    return Optional.of("/market list -p " + page + " " + itemFilter);
                 }
 
                 @Override
