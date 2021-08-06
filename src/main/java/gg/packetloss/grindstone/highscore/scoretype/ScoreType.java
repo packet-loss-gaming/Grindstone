@@ -17,11 +17,17 @@ public interface ScoreType {
 
     public boolean isGobletEquivalent(ScoreType scoreType);
 
-    public boolean isIncremental();
+    public UpdateMethod getUpdateMethod();
 
     public Order getOrder();
 
     public String format(long score);
+
+    public enum UpdateMethod {
+        OVERRIDE_IF_BETTER,
+        OVERRIDE_ALWAYS,
+        INCREMENTAL
+    }
 
     public enum Order {
         ASC, DESC

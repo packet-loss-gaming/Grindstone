@@ -73,14 +73,34 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
         }
     }
 
+    private void overrideAlways(Connection con, UUID playerId, ScoreType scoreType, long value) throws SQLException {
+        String SQL = "INSERT INTO `high-scores` (`player-id`, `score-type-id`, `value`) " +
+            "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?) " +
+            "ON DUPLICATE KEY UPDATE value = values(value)";
+
+        try (PreparedStatement statement = con.prepareStatement(SQL)) {
+            statement.setString(1, playerId.toString());
+            statement.setInt(2, scoreType.getId());
+            statement.setLong(3, value);
+
+            statement.execute();
+        }
+    }
+
     @Override
     public void batchProcess(List<HighScoreUpdate> scoresToUpdate) {
         try (Connection con = MySQLHandle.getConnection()) {
             for (HighScoreUpdate update : scoresToUpdate) {
-                if (update.getScoreType().isIncremental()) {
-                    incrementalUpdate(con, update.getPlayerId(), update.getScoreType(), update.getValue());
-                } else {
-                    overrideIfBetter(con, update.getPlayerId(), update.getScoreType(), update.getValue());
+                switch (update.getScoreType().getUpdateMethod()) {
+                    case INCREMENTAL -> {
+                        incrementalUpdate(con, update.getPlayerId(), update.getScoreType(), update.getValue());
+                    }
+                    case OVERRIDE_IF_BETTER -> {
+                        overrideIfBetter(con, update.getPlayerId(), update.getScoreType(), update.getValue());
+                    }
+                    case OVERRIDE_ALWAYS -> {
+                        overrideAlways(con, update.getPlayerId(), update.getScoreType(), update.getValue());
+                    }
                 }
             }
         } catch (SQLException e) {

@@ -38,7 +38,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -204,7 +203,7 @@ public class HighScoresComponent extends BukkitComponent {
         return scoreType.isGobletEquivalent(gobletScoreType);
     }
 
-    public void update(Player player, ScoreType scoreType, long value) {
+    public void update(OfflinePlayer player, ScoreType scoreType, long value) {
         // Disqualify any high score gains in admin mode
         if (adminComponent.isAdmin(player)) {
             return;

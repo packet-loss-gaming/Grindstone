@@ -118,8 +118,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * @param player - The player to check
      * @return - true if the player is in Admin Mode
      */
-    public boolean isAdmin(Player player) {
-        return permission.playerInGroup(player, "Admin");
+    public boolean isAdmin(OfflinePlayer player) {
+        return permission.playerInGroup(null, player, "Admin");
     }
 
     /**

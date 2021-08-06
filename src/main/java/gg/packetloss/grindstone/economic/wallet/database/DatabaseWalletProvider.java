@@ -6,7 +6,9 @@
 
 package gg.packetloss.grindstone.economic.wallet.database;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.economic.wallet.WalletProvider;
+import gg.packetloss.grindstone.events.PlayerWalletUpdate;
 import gg.packetloss.grindstone.util.task.promise.FailableTaskFuture;
 import gg.packetloss.grindstone.util.task.promise.TaskResult;
 import org.apache.commons.lang.Validate;
@@ -47,12 +49,21 @@ public class DatabaseWalletProvider implements WalletProvider {
         });
     }
 
+    private void fireWalletUpdateEvent(OfflinePlayer player) {
+        getBalance(player).thenAccept(
+            (newBalance) -> CommandBook.callEvent(new PlayerWalletUpdate(player, newBalance)),
+            (ignored) -> { }
+        );
+    }
+
     @Override
     public FailableTaskFuture<BigDecimal, Void> addToBalance(OfflinePlayer player, BigDecimal amount) {
         Validate.isTrue(amount.compareTo(BigDecimal.ZERO) > 0);
         return FailableTaskFuture.asyncTask(() -> {
             try {
-                return TaskResult.of(database.addToBalance(player.getUniqueId(), amount));
+                BigDecimal result = database.addToBalance(player.getUniqueId(), amount);
+                fireWalletUpdateEvent(player);
+                return TaskResult.of(result);
             } catch (Throwable t) {
                 t.printStackTrace();
                 return TaskResult.failed();
@@ -65,7 +76,11 @@ public class DatabaseWalletProvider implements WalletProvider {
         Validate.isTrue(amount.compareTo(BigDecimal.ZERO) > 0);
         return FailableTaskFuture.asyncTask(() -> {
             try {
-                return TaskResult.of(database.removeFromBalance(player.getUniqueId(), amount));
+                boolean successful = database.removeFromBalance(player.getUniqueId(), amount);
+                if (successful) {
+                    fireWalletUpdateEvent(player);
+                }
+                return TaskResult.of(successful);
             } catch (Throwable t) {
                 t.printStackTrace();
                 return TaskResult.failed();
@@ -80,6 +95,7 @@ public class DatabaseWalletProvider implements WalletProvider {
         return FailableTaskFuture.asyncTask(() -> {
             try {
                 database.setBalance(player.getUniqueId(), amount);
+                fireWalletUpdateEvent(player);
                 return TaskResult.success();
             } catch (Throwable t) {
                 t.printStackTrace();

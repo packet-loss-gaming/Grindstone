@@ -9,15 +9,21 @@ package gg.packetloss.grindstone.economic.wallet;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.economic.wallet.database.DatabaseWalletProvider;
 import gg.packetloss.grindstone.economic.wallet.database.mysql.MySQLWalletDatabase;
+import gg.packetloss.grindstone.events.PlayerWalletUpdate;
+import gg.packetloss.grindstone.highscore.HighScoresComponent;
+import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
 import gg.packetloss.grindstone.util.task.promise.FailableTaskFuture;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.ServicePriority;
 
 import java.math.BigDecimal;
@@ -25,8 +31,11 @@ import java.math.BigDecimal;
 import static gg.packetloss.grindstone.util.ChatUtil.TWO_DECIMAL_FORMATTER;
 
 @ComponentInformation(friendlyName = "Wallet", desc = "Asynchronous currency system")
-@Depend(plugins = {"Vault"}, components = {DataBaseComponent.class})
-public class WalletComponent extends BukkitComponent implements WalletProvider {
+@Depend(plugins = {"Vault"}, components = {DataBaseComponent.class, HighScoresComponent.class})
+public class WalletComponent extends BukkitComponent implements WalletProvider, Listener {
+    @InjectComponent
+    private HighScoresComponent highScores;
+
     private WalletProvider provider;
 
     @Override
@@ -48,6 +57,8 @@ public class WalletComponent extends BukkitComponent implements WalletProvider {
                 });
             });
         });
+
+        CommandBook.registerEvents(this);
     }
 
     @Deprecated
@@ -114,5 +125,10 @@ public class WalletComponent extends BukkitComponent implements WalletProvider {
             " ",
             amount.equals(BigDecimal.ONE) ? currencyName() : currencyNamePlural()
         );
+    }
+
+    @EventHandler
+    public void onWalletUpdate(PlayerWalletUpdate event) {
+        highScores.update(event.getPlayer(), ScoreTypes.SKRIN, event.getNewBalance().toBigInteger().longValue());
     }
 }

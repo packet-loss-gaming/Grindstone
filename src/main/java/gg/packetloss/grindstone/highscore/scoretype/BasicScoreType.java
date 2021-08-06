@@ -15,13 +15,13 @@ public class BasicScoreType implements ScoreType {
 
     private final int id;
     private final boolean gobletEnabled;
-    private final boolean incremental;
+    private final UpdateMethod updateMethod;
     private final Order order;
 
-    protected BasicScoreType(int id, boolean gobletEnabled, boolean incremental, Order order) {
+    protected BasicScoreType(int id, boolean gobletEnabled, UpdateMethod updateMethod, Order order) {
         this.id = id;
         this.gobletEnabled = gobletEnabled;
-        this.incremental = incremental;
+        this.updateMethod = updateMethod;
         this.order = order;
     }
 
@@ -54,8 +54,8 @@ public class BasicScoreType implements ScoreType {
     }
 
     @Override
-    public boolean isIncremental() {
-        return incremental;
+    public UpdateMethod getUpdateMethod() {
+        return updateMethod;
     }
 
     @Override

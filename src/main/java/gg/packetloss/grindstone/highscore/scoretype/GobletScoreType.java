@@ -46,8 +46,8 @@ public class GobletScoreType implements ScoreType {
     }
 
     @Override
-    public boolean isIncremental() {
-        return baseScoreType.isIncremental();
+    public UpdateMethod getUpdateMethod() {
+        return baseScoreType.getUpdateMethod();
     }
 
     @Override
