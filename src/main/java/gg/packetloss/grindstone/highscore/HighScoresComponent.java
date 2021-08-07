@@ -94,19 +94,26 @@ public class HighScoresComponent extends BukkitComponent {
             registrar.register(HighScoreCommandsRegistration.builder(), new HighScoreCommands(this));
         });
 
-        server.getScheduler().runTaskTimerAsynchronously(inst, () -> {
-            highScoreLock.lock();
+        server.getScheduler().runTaskTimerAsynchronously(inst, this::processUpdateQueue, 25, 20);
+    }
 
-            List<HighScoreUpdate> scoresToUpdate;
-            try {
-                scoresToUpdate = highScoreUpdates;
-                highScoreUpdates = new ArrayList<>();
-            } finally {
-                highScoreLock.unlock();
-            }
+    @Override
+    public void disable() {
+        processUpdateQueue();
+    }
 
-            database.batchProcess(scoresToUpdate);
-        }, 25, 20);
+    private void processUpdateQueue() {
+        highScoreLock.lock();
+
+        List<HighScoreUpdate> scoresToUpdate;
+        try {
+            scoresToUpdate = highScoreUpdates;
+            highScoreUpdates = new ArrayList<>();
+        } finally {
+            highScoreLock.unlock();
+        }
+
+        database.batchProcess(scoresToUpdate);
     }
 
     private ScoreType getNewGobletScoreType() {
