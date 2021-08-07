@@ -107,8 +107,12 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
     @Override
     public void updateActive(UUID playerID, InternalGuildState guildState) {
         try (Connection connection = MySQLHandle.getConnection()) {
+            connection.setAutoCommit(false);
+
             deactivateGuilds(connection, playerID);
             updateGuild(connection, playerID, guildState);
+
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
         }

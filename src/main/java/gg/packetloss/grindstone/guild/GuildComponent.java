@@ -147,13 +147,10 @@ public class GuildComponent extends BukkitComponent implements Listener {
     }
 
     private InternalGuildState constructDefaultGuildState(GuildType type) {
-        switch (type) {
-            case ROGUE:
-                return new RogueState(0);
-            case NINJA:
-                return new NinjaState(0);
-        }
-        throw new UnsupportedOperationException();
+        return switch (type) {
+            case ROGUE -> new RogueState(0);
+            case NINJA -> new NinjaState(0);
+        };
     }
 
     private String getGuildName(InternalGuildState state) {
