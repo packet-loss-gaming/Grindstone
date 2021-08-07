@@ -9,7 +9,6 @@ package gg.packetloss.grindstone.util;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
@@ -165,21 +164,26 @@ public class EntityUtil {
         return false;
     }
 
-    public static void protectDrop(Item item, Player player) {
-        item.setOwner(player.getUniqueId());
+    public static void protectDrop(Item item, UUID playerID) {
+        item.setOwner(playerID);
 
         // Prevent environmental shenanigans
         item.setInvulnerable(true);
         item.setCanMobPickup(false);
     }
 
-    public static void spawnProtectedItem(ItemStack stack, Player player, Location destination) {
+    public static Item spawnProtectedItem(ItemStack stack, UUID playerID, Location destination) {
         Item item = destination.getWorld().dropItem(destination, stack);
-        EntityUtil.protectDrop(item, player);
+        protectDrop(item, playerID);
+        return item;
     }
 
-    public static void spawnProtectedItem(ItemStack stack, Player player) {
-        spawnProtectedItem(stack, player, player.getLocation());
+    public static Item spawnProtectedItem(ItemStack stack, Player player, Location destination) {
+        return spawnProtectedItem(stack, player.getUniqueId(), destination);
+    }
+
+    public static Item spawnProtectedItem(ItemStack stack, Player player) {
+        return spawnProtectedItem(stack, player, player.getLocation());
     }
 
     public static void setMovementSpeed(LivingEntity entity, double speed) {
@@ -200,14 +204,5 @@ public class EntityUtil {
 
     public static void setFollowRange(LivingEntity entity, double followRange) {
         Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE)).setBaseValue(followRange);
-    }
-
-    public static Player getThrower(Item item) {
-        UUID throwerID = item.getThrower();
-        if (throwerID == null) {
-            return null;
-        }
-
-        return Bukkit.getPlayer(throwerID);
     }
 }

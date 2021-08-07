@@ -41,7 +41,9 @@ import org.enginehub.piston.annotation.param.Switch;
 import java.math.BigDecimal;
 import java.util.*;
 
-import static gg.packetloss.grindstone.economic.store.MarketComponent.*;
+import static gg.packetloss.grindstone.economic.store.MarketComponent.NOT_AVAILIBLE;
+import static gg.packetloss.grindstone.economic.store.MarketComponent.getLookupInstanceFromStacksImmediately;
+import static gg.packetloss.grindstone.util.item.ItemNameDeserializer.getBaseStack;
 
 @CommandContainer
 public class MarketCommands {
@@ -231,7 +233,7 @@ public class MarketCommands {
                     }
 
                     Text itemName = Text.of(
-                        color, info.getDisplayName(),
+                        color, info.getDisplayNameNoColor(),
                         TextAction.Click.runCommand("/market lookup " + info.getLookupName()),
                         TextAction.Hover.showText(Text.of("Show details for " + info.getTitleCasedName()))
                     );
@@ -252,17 +254,11 @@ public class MarketCommands {
 
     private void printDetails(
             CommandSender sender, MarketItem item, ItemStack stack, boolean showExtra) {
-        Text itemNameText;
-        try {
-            itemNameText = Text.of(
-                    item.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED,
-                    item.getDisplayName(),
-                    TextAction.Hover.showItem(getBaseStack(item.getName()))
-            );
-        } catch (CommandException ex) {
-            ChatUtil.sendError(sender, ex.getMessage());
-            return;
-        }
+        Text itemNameText = Text.of(
+                item.isEnabled() ? ChatColor.BLUE : ChatColor.DARK_RED,
+                item.getDisplayNameNoColor(),
+                TextAction.Hover.showItem(getBaseStack(item.getName()))
+        );
 
         sender.sendMessage(Text.of(ChatColor.GOLD, "Price Information for: ", itemNameText).build());
 
@@ -345,7 +341,7 @@ public class MarketCommands {
                         ChatColor.BLUE,
                         TextAction.Click.runCommand("/market sellgui"),
                         TextAction.Hover.showText(Text.of(
-                                "Sell " + item.getDisplayName() + " using a GUI"
+                                "Sell " + item.getDisplayNameNoColor() + " using a GUI"
                         )),
                         "PICK"
                 ));
@@ -354,7 +350,7 @@ public class MarketCommands {
                         ChatColor.BLUE,
                         TextAction.Click.runCommand("/market sellgui " + item.getName()),
                         TextAction.Hover.showText(Text.of(
-                                "Sell all " + item.getDisplayName() + " using a GUI"
+                                "Sell all " + item.getDisplayNameNoColor() + " using a GUI"
                         )),
                         "ALL"
                 ));

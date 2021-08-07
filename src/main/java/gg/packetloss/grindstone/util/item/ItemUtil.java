@@ -28,6 +28,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static gg.packetloss.grindstone.util.MaterialUtil.generatePostfixMaterialSet;
+
 public class ItemUtil {
     public static final String EXPIRY_DATE_START = ChatColor.RED + "Expires: ";
     public static final SimpleDateFormat ITEM_DATE_FORMAT = new SimpleDateFormat("M/d/y h:ma");
@@ -225,19 +227,7 @@ public class ItemUtil {
         return count;
     }
 
-    private static final Set<Material> SWORDS;
-
-    static {
-        List<Material> newSwords = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_SWORD")) {
-                newSwords.add(material);
-            }
-        }
-
-        SWORDS = Set.copyOf(newSwords);
-    }
+    private static final Set<Material> SWORDS = generatePostfixMaterialSet("_SWORD");
 
     public static boolean isSword(Material item) {
         return SWORDS.contains(item);
@@ -255,19 +245,13 @@ public class ItemUtil {
         return isBow(stack.getType());
     }
 
-    private static final Set<Material> AXES;
+    private static final Set<Material> INGOTS = generatePostfixMaterialSet("_INGOT");
 
-    static {
-        List<Material> newAxes = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_AXE")) {
-                newAxes.add(material);
-            }
-        }
-
-        AXES = Set.copyOf(newAxes);
+    public static boolean isIngot(Material type) {
+        return INGOTS.contains(type);
     }
+
+    private static final Set<Material> AXES = generatePostfixMaterialSet("_AXE");
 
     public static boolean isAxe(Material type) {
         return AXES.contains(type);
@@ -277,19 +261,7 @@ public class ItemUtil {
         return isAxe(itemStack.getType());
     }
 
-    private static final Set<Material> PICKAXES;
-
-    static {
-        List<Material> newPickaxes = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_PICKAXE")) {
-                newPickaxes.add(material);
-            }
-        }
-
-        PICKAXES = Set.copyOf(newPickaxes);
-    }
+    private static final Set<Material> PICKAXES = generatePostfixMaterialSet("_PICKAXE");
 
     public static boolean isPickaxe(Material type) {
         return PICKAXES.contains(type);

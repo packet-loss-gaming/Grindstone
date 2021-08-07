@@ -85,7 +85,7 @@ public class MarketAdminCommands {
                         ' ',
                         Math.abs(trans.getAmount()),
                         ' ',
-                        Text.of(ChatColor.BLUE, trans.getItem().getDisplayName())
+                        trans.getItem().getDisplayName()
                     );
                 }
             }.display(sender, transactions, page);
@@ -144,7 +144,7 @@ public class MarketAdminCommands {
     public void removeCmd(CommandSender sender, @Arg(desc = "item filter") MarketItem item) {
         // Database operations
         component.removeItem(item.getName()).thenAcceptAsynchronously((ignored) -> {
-            ChatUtil.sendNotice(sender, ChatColor.BLUE + item.getDisplayName() + ChatColor.YELLOW + " has been removed from the database!");
+            ChatUtil.sendNotice(sender, item.getDisplayName(), " has been removed from the database!");
         });
     }
 

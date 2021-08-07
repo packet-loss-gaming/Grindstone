@@ -21,32 +21,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
+
+import static gg.packetloss.grindstone.util.MaterialUtil.generatePostfixMaterialSet;
 
 public class EnvironmentUtil {
     private static final long START_NIGHT = 12 * 1000;
-
-    private static Set<Material> generateMaterialSet(Predicate<Material> test) {
-        List<Material> newOreBlocks = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.isLegacy()) {
-                continue;
-            }
-
-            if (test.test(material)) {
-                newOreBlocks.add(material);
-            }
-        }
-
-        Set<Material> results = Set.copyOf(newOreBlocks);
-        Validate.isTrue(!results.isEmpty());
-        return results;
-    }
-
-    private static Set<Material> generatePostfixMaterialSet(String postfix) {
-        return generateMaterialSet((material) -> material.name().endsWith(postfix));
-    }
 
     public static long getNightStartTime() {
         return START_NIGHT;

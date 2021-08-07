@@ -24,8 +24,6 @@ import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.economy.MarketPurchaseEvent;
 import gg.packetloss.grindstone.events.economy.MarketSellEvent;
 import gg.packetloss.grindstone.invgui.InventoryGUIComponent;
-import gg.packetloss.grindstone.items.custom.CustomItemCenter;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ErrorUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
@@ -34,7 +32,10 @@ import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.promise.FailableTaskFuture;
 import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.util.task.promise.TaskResult;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemNames;
+import static gg.packetloss.grindstone.util.item.ItemNameDeserializer.getBaseStack;
 
 @ComponentInformation(friendlyName = "Market", desc = "Buy and sell goods.")
 @Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, DataBaseComponent.class, WalletComponent.class})
@@ -158,23 +160,6 @@ public class MarketComponent extends BukkitComponent {
 
             return null;
         });
-    }
-
-    // FIXME: This needs pulled out
-    public static ItemStack getBaseStack(String name) throws CommandException {
-        try {
-            if (name.startsWith("grindstone:")) {
-                name = name.replaceFirst("grindstone:", "");
-                CustomItems item = CustomItems.valueOf(name.toUpperCase());
-                return CustomItemCenter.build(item);
-            }
-
-
-            return new ItemStack(Objects.requireNonNull(Material.matchMaterial(name)), 1);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            throw new CommandException("Please report this error, " + name + " could not be found.");
-        }
     }
 
     private ItemStack[] getItem(MarketTransactionLine transactionLine) throws CommandException {

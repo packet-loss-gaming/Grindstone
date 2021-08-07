@@ -25,7 +25,7 @@ public class BoundDropSpawner implements DropProvider {
             Location destination  = dropDestination.get();
             Item item = destination.getWorld().dropItem(destination, drop.getDrop());
 
-            drop.getPlayer().ifPresent(player -> EntityUtil.protectDrop(item, player));
+            drop.getPlayer().ifPresent(player -> EntityUtil.protectDrop(item, player.getUniqueId()));
         });
     }
 }

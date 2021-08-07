@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.world.type.city.arena.factory;
+package gg.packetloss.grindstone.world.type.city.area.areas.Factory.component;
 
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -25,11 +25,14 @@ public class LavaSupply {
     private final ProtectedRegion lava;
 
     private int numDamaged = 0;
+    private int lavaCount = 0;
 
     public LavaSupply(World world, ProtectedRegion[] lavaChannels, ProtectedRegion lava) {
         this.world = world;
         this.lavaChannels = lavaChannels;
         this.lava = lava;
+
+        this.lavaCount = countLava();
     }
 
     public void checkDamage() {
@@ -83,6 +86,36 @@ public class LavaSupply {
         return true;
     }
 
+    // Returns amount of lava available for removal
+    private int countLava() {
+        BlockVector3 min = lava.getMinimumPoint();
+        BlockVector3 max = lava.getMaximumPoint();
+
+        int minX = min.getBlockX();
+        int minZ = min.getBlockZ();
+        int minY = min.getBlockY();
+        int maxX = max.getBlockX();
+        int maxZ = max.getBlockZ();
+        int maxY = max.getBlockY();
+
+        int found = 0;
+        for (int y = maxY; y >= minY; --y) {
+            for (int x = minX; x <= maxX; ++x) {
+                for (int z = minZ; z <= maxZ; ++z) {
+                    Block block = world.getBlockAt(x, y, z);
+                    if (EnvironmentUtil.isLava(block)) {
+                        ++found;
+                    }
+                }
+            }
+        }
+        return found;
+    }
+
+    public int getLavaCount() {
+        return lavaCount;
+    }
+
     // Returns remainder
     public int addLava(int amount) {
         BlockVector3 min = lava.getMinimumPoint();
@@ -118,6 +151,9 @@ public class LavaSupply {
                 }
             }
         }
+
+        lavaCount += added;
+
         return amount - added;
     }
 
@@ -133,20 +169,23 @@ public class LavaSupply {
         int maxZ = max.getBlockZ();
         int maxY = max.getBlockY();
 
-        int found = 0;
+        int removed = 0;
         for (int y = maxY; y >= minY; --y) {
             for (int x = minX; x <= maxX; ++x) {
                 for (int z = minZ; z <= maxZ; ++z) {
-                    if (found < amount) {
+                    if (removed < amount) {
                         Block block = world.getBlockAt(x, y, z);
                         if (EnvironmentUtil.isLava(block)) {
                             block.setType(Material.AIR, false);
-                            ++found;
+                            ++removed;
                         }
                     }
                 }
             }
         }
-        return found;
+
+        lavaCount -= removed;
+
+        return removed;
     }
 }
