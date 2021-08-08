@@ -141,6 +141,11 @@ public class EntityUtil {
             return true;
         }
 
+        // Hoglin are not considered monsters
+        if (entity instanceof Hoglin) {
+            return true;
+        }
+
         return false;
     }
 
