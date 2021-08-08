@@ -32,7 +32,7 @@ public class GuildCalculateCombatExpEvent extends PlayerEvent {
     }
 
     public double getCalculatedExp() {
-        return Math.min(expCap, this.damageMultiplier * Math.min(this.damageCap, this.damageDealt));
+        return Math.max(0.01, Math.min(expCap, this.damageMultiplier * Math.min(this.damageCap, this.damageDealt)));
     }
 
     public GuildType getGuild() {

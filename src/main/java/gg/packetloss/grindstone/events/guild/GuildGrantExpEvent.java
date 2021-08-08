@@ -35,7 +35,8 @@ public class GuildGrantExpEvent extends PlayerEvent implements Cancellable {
     }
 
     public void setGrantedExp(double grantedExp) {
-        Validate.isTrue(grantedExp > 0);
+        Validate.isTrue(!Double.isNaN(grantedExp));
+        Validate.isTrue(grantedExp >= 0);
         this.grantedExp = grantedExp;
     }
 
