@@ -309,6 +309,10 @@ public class EnvironmentUtil {
             return true;
         }
 
+        if (EnvironmentUtil.isInteractiveBlock(clicked.getRelative(clickedFace.getOppositeFace()))) {
+            return true;
+        }
+
         return false;
     }
 
