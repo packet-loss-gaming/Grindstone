@@ -6,12 +6,12 @@
 
 package gg.packetloss.grindstone.guild.db.mysql;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.db.PlayerGuildDatabase;
-import gg.packetloss.grindstone.guild.state.InternalGuildState;
-import gg.packetloss.grindstone.guild.state.NinjaState;
-import gg.packetloss.grindstone.guild.state.RogueState;
+import gg.packetloss.grindstone.guild.state.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,10 +21,40 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
+    private final Gson GUILD_SETTINGS_GSON = new Gson();
+
+    private <T> Optional<T> tryLoadSettings(String settingsString, Class<T> settingsClass) {
+        try {
+            return Optional.of(GUILD_SETTINGS_GSON.fromJson(settingsString, settingsClass));
+        } catch (JsonSyntaxException ex) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<InternalGuildState> buildGuildState(GuildType guildType, long experience, String settingsString) {
+        switch (guildType) {
+            case NINJA -> {
+                NinjaStateSettings settings = tryLoadSettings(
+                    settingsString,
+                    NinjaStateSettings.class
+                ).orElseGet(NinjaStateSettings::new);
+                return Optional.of(new NinjaState(experience, settings));
+            }
+            case ROGUE -> {
+                RogueStateSettings settings = tryLoadSettings(
+                    settingsString,
+                    RogueStateSettings.class
+                ).orElseGet(RogueStateSettings::new);
+                return Optional.of(new RogueState(experience, settings));
+            }
+        }
+        throw new UnsupportedOperationException();
+    }
+
     @Override
     public Optional<InternalGuildState> loadGuild(UUID playerID) {
         try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT `guild-type`, `experience` FROM `player-guilds` WHERE `player-id` = " +
+            String sql = "SELECT `guild-type`, `experience`, `settings` FROM `player-guilds` WHERE `player-id` = " +
                     "(SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1) AND `active` = true";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, playerID.toString());
@@ -33,13 +63,9 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
                     if (results.next()) {
                         GuildType guildType = GuildType.values()[results.getInt(1)];
                         long experience = results.getLong(2);
+                        String settingsString = results.getString(3);
 
-                        switch (guildType) {
-                            case NINJA:
-                                return Optional.of(new NinjaState(experience));
-                            case ROGUE:
-                                return Optional.of(new RogueState(experience));
-                        }
+                        return buildGuildState(guildType, experience, settingsString);
                     }
                 }
             }
@@ -53,7 +79,7 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
     @Override
     public Optional<InternalGuildState> loadGuild(UUID playerID, GuildType type) {
         try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT `experience` FROM `player-guilds` WHERE `player-id` = " +
+            String sql = "SELECT `experience`, `settings` FROM `player-guilds` WHERE `player-id` = " +
                     "(SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1) AND `guild-type` = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, playerID.toString());
@@ -62,13 +88,9 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
                 try (ResultSet results = statement.executeQuery()) {
                     if (results.next()) {
                         long experience = results.getLong(1);
+                        String settingsString = results.getString(2);
 
-                        switch (type) {
-                            case NINJA:
-                                return Optional.of(new NinjaState(experience));
-                            case ROGUE:
-                                return Optional.of(new RogueState(experience));
-                        }
+                        return buildGuildState(type, experience, settingsString);
                     }
                 }
             }
@@ -91,14 +113,15 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
     }
 
     private void updateGuild(Connection connection, UUID playerID, InternalGuildState guildState) throws SQLException {
-        String SQL = "INSERT INTO `player-guilds` (`player-id`, `guild-type`, `experience`, `active`) " +
-                "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?, true) " +
-                "ON DUPLICATE KEY UPDATE experience = values(experience), active = true";
+        String SQL = "INSERT INTO `player-guilds` (`player-id`, `guild-type`, `experience`, `settings`, `active`) " +
+                "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?, ?, true) " +
+                "ON DUPLICATE KEY UPDATE experience = values(experience), settings = values(settings), active = true";
 
         try (PreparedStatement statement = connection.prepareStatement(SQL)) {
             statement.setString(1, playerID.toString());
             statement.setInt(2, guildState.getType().ordinal());
             statement.setLong(3, (long) guildState.getExperience());
+            statement.setString(4, GUILD_SETTINGS_GSON.toJson(guildState.getSettings()));
 
             statement.execute();
         }

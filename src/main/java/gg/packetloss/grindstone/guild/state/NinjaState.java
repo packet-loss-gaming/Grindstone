@@ -17,16 +17,17 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class NinjaState extends InternalGuildState {
-    private List<NinjaArrow> recentArrows = new ArrayList<>();
+    private final List<NinjaArrow> recentArrows = new ArrayList<>();
 
     private long nextGrapple = 0;
     private long nextSmokeBomb = 0;
     private long nextArrowBomb = 0;
 
-    private NinjaStateSettings settings = new NinjaStateSettings();
+    private final NinjaStateSettings settings;
 
-    public NinjaState(long experience) {
+    public NinjaState(long experience, NinjaStateSettings settings) {
         super(experience);
+        this.settings = settings;
     }
 
     public List<Arrow> getRecentArrows() {

@@ -19,10 +19,11 @@ public class RogueState extends InternalGuildState {
     private int hits = 0;
     private boolean impact = false;
 
-    private RogueStateSettings settings = new RogueStateSettings();
+    private final RogueStateSettings settings;
 
-    public RogueState(long experience) {
+    public RogueState(long experience, RogueStateSettings settings) {
         super(experience);
+        this.settings = settings;
     }
 
     public boolean canBlip() {

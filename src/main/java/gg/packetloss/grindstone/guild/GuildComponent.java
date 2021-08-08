@@ -30,10 +30,7 @@ import gg.packetloss.grindstone.guild.listener.RogueListener;
 import gg.packetloss.grindstone.guild.passive.PotionMetabolizer;
 import gg.packetloss.grindstone.guild.powers.GuildPower;
 import gg.packetloss.grindstone.guild.setting.GuildSettingConverter;
-import gg.packetloss.grindstone.guild.state.GuildState;
-import gg.packetloss.grindstone.guild.state.InternalGuildState;
-import gg.packetloss.grindstone.guild.state.NinjaState;
-import gg.packetloss.grindstone.guild.state.RogueState;
+import gg.packetloss.grindstone.guild.state.*;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
@@ -148,8 +145,8 @@ public class GuildComponent extends BukkitComponent implements Listener {
 
     private InternalGuildState constructDefaultGuildState(GuildType type) {
         return switch (type) {
-            case ROGUE -> new RogueState(0);
-            case NINJA -> new NinjaState(0);
+            case ROGUE -> new RogueState(0, new RogueStateSettings());
+            case NINJA -> new NinjaState(0, new NinjaStateSettings());
         };
     }
 
