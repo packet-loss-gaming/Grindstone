@@ -184,7 +184,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
                 ChatColor.DARK_RED,
                 newLevel
             ).build()
-        ).build());
+        ).fadeIn(10).stay(20).fadeOut(10).build());
     }
 
     protected void showTitleForLevelIfInteresting(Player player) {

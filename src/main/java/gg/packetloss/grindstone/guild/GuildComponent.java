@@ -277,7 +277,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
                         " Level ",
                         newLevel
                 ).build()
-        ).build());
+        ).fadeIn(10).stay(20).fadeOut(10).build());
     }
 
     private void announceNewLevel(Player player, String guildName, int newLevel) {
