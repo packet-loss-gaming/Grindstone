@@ -251,6 +251,8 @@ public class RogueListener implements Listener {
                 event.setDamage(event.getDamage() * .4);
 
                 if (state.hasPower(RoguePower.LIKE_A_METEOR) && player.isSneaking()) {
+                    final boolean breakBlocks = state.getSettings().shouldAllowEnvironmentalDamage();
+
                     final double circleDist = 2 * Math.PI;
                     final double explosionPointDist = circleDist / 8;
 
@@ -261,11 +263,11 @@ public class RogueListener implements Listener {
                         double z = radius * Math.sin(i);
 
                         ExplosionStateFactory.createPvPExplosion(
-                                player,
-                                player.getLocation().add(x, 0, z),
-                                3,
-                                true,
-                                true
+                            player,
+                            player.getLocation().add(x, 0, z),
+                            3,
+                            /*setFire=*/breakBlocks,
+                            /*breakBlocks=*/breakBlocks
                         );
                     }
                 }
@@ -461,25 +463,32 @@ public class RogueListener implements Listener {
                     EntityUtil.forceDamage(shooter, (LivingEntity) entity, 1);
                 }
             } else {
-                if (shooter instanceof Player) {
+                if (shooter instanceof Player shootingPlayer) {
+                    Optional<RogueState> optState = getState(shootingPlayer);
+                    if (optState.isEmpty()) {
+                        return;
+                    }
+
                     double distanceSq = p.getLocation().distanceSquared(shooter.getLocation());
                     if (p.hasMetadata("rocket-jump") && distanceSq < Math.pow(3, 2)) {
-                        p.getWorld().createExplosion(p.getLocation(), 0, false, false);
+                        ExplosionStateFactory.createFakeExplosion(p.getLocation());
                     } else {
+                        RogueState state = optState.get();
+
                         ExplosionStateFactory.createPvPExplosion(
-                                (Player) shooter,
-                                p.getLocation(),
-                                1.75F,
-                                false,
-                                true
+                            shootingPlayer,
+                            p.getLocation(),
+                            1.75F,
+                            false,
+                            state.getSettings().shouldAllowEnvironmentalDamage()
                         );
                     }
                 } else {
                     ExplosionStateFactory.createExplosion(
-                            p.getLocation(),
-                            1.75F,
-                            false,
-                            true
+                        p.getLocation(),
+                        1.75F,
+                        false,
+                        true
                     );
                 }
             }
