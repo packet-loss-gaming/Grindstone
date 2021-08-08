@@ -17,9 +17,12 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Container;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -31,8 +34,10 @@ import java.util.List;
 import java.util.Map;
 
 public class PhantomLinkImpl extends AbstractItemFeatureImpl {
+    private boolean isTestingPermissions = false;
+
     private void saveBlockLocation(Player player, ItemStack itemStack, Block clickedBlock) {
-        if (!(clickedBlock.getState() instanceof Container container)) {
+        if (!(clickedBlock.getState() instanceof Container)) {
             ChatUtil.sendError(player, "This link only works with containers.");
             return;
         }
@@ -76,6 +81,23 @@ public class PhantomLinkImpl extends AbstractItemFeatureImpl {
             return;
         }
 
+        // Check if the player has permission. (This is kind of a "rough way" to do this, but it avoids a hard
+        // dependency on LWC).
+        try {
+            // Mark that we're testing permissions so we don't infinitely recurse.
+            isTestingPermissions = true;
+
+            PlayerInteractEvent interactEvent = new PlayerInteractEvent(
+                player, Action.RIGHT_CLICK_BLOCK, itemStack, location.getBlock(), BlockFace.UP
+            );
+            CommandBook.callEvent(interactEvent);
+            if (interactEvent.useInteractedBlock() == Event.Result.DENY) {
+                return;
+            }
+        } finally {
+            isTestingPermissions = false;
+        }
+
         // Add a chunk ticket in case this inventory is far away
         Chunk chunk = container.getChunk();
         chunk.addPluginChunkTicket(CommandBook.inst());
@@ -103,16 +125,21 @@ public class PhantomLinkImpl extends AbstractItemFeatureImpl {
 
     @Override
     public boolean onItemRightClick(PlayerInteractEvent event) {
+        if (isTestingPermissions) {
+            return false;
+        }
+
         Player player = event.getPlayer();
 
         if (ItemUtil.isHoldingItem(player, CustomItems.PHANTOM_LINK)) {
             remoteOpen(player, player.getItemInHand());
+            return true;
         }
 
         return false;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.LEFT_CLICK_BLOCK) {
             return;
