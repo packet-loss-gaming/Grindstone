@@ -276,7 +276,7 @@ public class NinjaListener implements Listener {
                 return PvPComponent.allowsPvP(player, (Player) e);
             }
 
-            return true;
+            return EntityUtil.isHostileMob(e);
         }).sorted(new EntityDistanceComparator(player.getLocation())).collect(Collectors.toList());
     }
 
