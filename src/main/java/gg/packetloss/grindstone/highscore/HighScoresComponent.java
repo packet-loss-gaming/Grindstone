@@ -20,6 +20,7 @@ import gg.packetloss.grindstone.highscore.scoretype.GobletScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
 import gg.packetloss.grindstone.util.CollectionUtil;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
@@ -187,29 +188,27 @@ public class HighScoresComponent extends BukkitComponent {
         );
     }
 
-    private void queueUpdate(HighScoreUpdate update) {
-        highScoreLock.lock();
-        try {
-            highScoreUpdates.add(update);
-        } finally {
-            highScoreLock.unlock();
-        }
-    }
-
     private boolean isCurrentGoblet(ScoreType scoreType) {
         return scoreType.isGobletEquivalent(gobletScoreType);
     }
 
     public void update(OfflinePlayer player, ScoreType scoreType, long value) {
-        // Disqualify any high score gains in admin mode
-        if (adminComponent.isAdmin(player)) {
-            return;
-        }
+        PluginTaskExecutor.submitAsync(() -> {
+            // Disqualify any high score gains in admin mode
+            if (adminComponent.isAdmin(player)) {
+                return;
+            }
 
-        queueUpdate(new HighScoreUpdate(player.getUniqueId(), scoreType, value));
-        if (isCurrentGoblet(scoreType)) {
-            queueUpdate(new HighScoreUpdate(player.getUniqueId(), gobletScoreType, value));
-        }
+            highScoreLock.lock();
+            try {
+                highScoreUpdates.add(new HighScoreUpdate(player.getUniqueId(), scoreType, value));
+                if (isCurrentGoblet(scoreType)) {
+                    highScoreUpdates.add(new HighScoreUpdate(player.getUniqueId(), gobletScoreType, value));
+                }
+            } finally {
+                highScoreLock.unlock();
+            }
+        });
     }
 
     private boolean deleteAllScores(ScoreType scoreType) {

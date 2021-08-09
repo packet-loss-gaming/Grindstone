@@ -18,10 +18,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MySQLHighScoresDatabase implements HighScoreDatabase {
     @Override
@@ -32,12 +30,12 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
         try (Connection con = MySQLHandle.getConnection()) {
             String SQL = "DELETE FROM `high-scores` WHERE `score-type-id` = ?";
 
-          try (PreparedStatement statement = con.prepareStatement(SQL)) {
-              statement.setInt(1, scoreType.getId());
-              statement.execute();
+            try (PreparedStatement statement = con.prepareStatement(SQL)) {
+                statement.setInt(1, scoreType.getId());
+                statement.execute();
 
-              return true;
-          }
+                return true;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -45,61 +43,64 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
         return false;
     }
 
-    private void incrementalUpdate(Connection con, UUID playerId, ScoreType scoreType, long amt) throws SQLException {
+    private Map<ScoreType, List<HighScoreUpdate>> groupUpdates(List<HighScoreUpdate> scoresToUpdate) {
+        return scoresToUpdate.stream().collect(Collectors.groupingBy(HighScoreUpdate::getScoreType));
+    }
+
+    private void batchUpdate(Connection con, String SQL, List<HighScoreUpdate> updates) throws SQLException {
+        try (PreparedStatement statement = con.prepareStatement(SQL)) {
+            for (HighScoreUpdate update : updates) {
+                statement.setString(1, update.getPlayerId().toString());
+                statement.setInt(2, update.getScoreType().getId());
+                statement.setLong(3, update.getValue());
+
+                statement.addBatch();
+            }
+
+            statement.executeBatch();
+        }
+    }
+
+    private void incrementalUpdate(Connection con, List<HighScoreUpdate> updates) throws SQLException {
         String SQL = "INSERT INTO `high-scores` (`player-id`, `score-type-id`, `value`) " +
                 "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?) " +
                 "ON DUPLICATE KEY UPDATE value = values(value) + value";
-
-        try (PreparedStatement statement = con.prepareStatement(SQL)) {
-            statement.setString(1, playerId.toString());
-            statement.setInt(2, scoreType.getId());
-            statement.setLong(3, amt);
-
-            statement.execute();
-        }
+        batchUpdate(con, SQL, updates);
     }
 
-    private void overrideIfBetter(Connection con, UUID playerId, ScoreType scoreType, long value) throws SQLException {
+    private void overrideIfBetter(Connection con, ScoreType.Order order,
+                                  List<HighScoreUpdate> updates) throws SQLException {
         String SQL = "INSERT INTO `high-scores` (`player-id`, `score-type-id`, `value`) " +
                 "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?) " +
-                "ON DUPLICATE KEY UPDATE value = " + (scoreType.getOrder() == ScoreType.Order.DESC ? "greatest(" : "least(") + "value, values(value))";
-
-        try (PreparedStatement statement = con.prepareStatement(SQL)) {
-            statement.setString(1, playerId.toString());
-            statement.setInt(2, scoreType.getId());
-            statement.setLong(3, value);
-
-            statement.execute();
-        }
+                "ON DUPLICATE KEY UPDATE value = " + (order == ScoreType.Order.DESC ? "greatest(" : "least(") + "value, values(value))";
+        batchUpdate(con, SQL, updates);
     }
 
-    private void overrideAlways(Connection con, UUID playerId, ScoreType scoreType, long value) throws SQLException {
+    private void overrideAlways(Connection con, List<HighScoreUpdate> updates) throws SQLException {
         String SQL = "INSERT INTO `high-scores` (`player-id`, `score-type-id`, `value`) " +
             "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?) " +
             "ON DUPLICATE KEY UPDATE value = values(value)";
-
-        try (PreparedStatement statement = con.prepareStatement(SQL)) {
-            statement.setString(1, playerId.toString());
-            statement.setInt(2, scoreType.getId());
-            statement.setLong(3, value);
-
-            statement.execute();
-        }
+        batchUpdate(con, SQL, updates);
     }
 
     @Override
     public void batchProcess(List<HighScoreUpdate> scoresToUpdate) {
+        Map<ScoreType, List<HighScoreUpdate>> groupedUpdates = groupUpdates(scoresToUpdate);
+
         try (Connection con = MySQLHandle.getConnection()) {
-            for (HighScoreUpdate update : scoresToUpdate) {
-                switch (update.getScoreType().getUpdateMethod()) {
+            for (Map.Entry<ScoreType, List<HighScoreUpdate>> updateSet : groupedUpdates.entrySet()) {
+                ScoreType scoreType = updateSet.getKey();
+                List<HighScoreUpdate> updatesForScoreType = updateSet.getValue();
+
+                switch (scoreType.getUpdateMethod()) {
                     case INCREMENTAL -> {
-                        incrementalUpdate(con, update.getPlayerId(), update.getScoreType(), update.getValue());
+                        incrementalUpdate(con, updatesForScoreType);
                     }
                     case OVERRIDE_IF_BETTER -> {
-                        overrideIfBetter(con, update.getPlayerId(), update.getScoreType(), update.getValue());
+                        overrideIfBetter(con, scoreType.getOrder(), updatesForScoreType);
                     }
                     case OVERRIDE_ALWAYS -> {
-                        overrideAlways(con, update.getPlayerId(), update.getScoreType(), update.getValue());
+                        overrideAlways(con, updatesForScoreType);
                     }
                 }
             }
