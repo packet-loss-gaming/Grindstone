@@ -35,7 +35,7 @@ public class SacrificeInformation {
     private double calculateTotalValueModifier() {
          double randomizedBaseScale = ChanceUtil.getRangedRandom(.8, 1.2);
          double lootBasedScale = ((int) (baseValue / 250000)) * .1;
-         return Math.max(.1, randomizedBaseScale - lootBasedScale);
+         return Math.max(.35, randomizedBaseScale - lootBasedScale);
     }
 
     /**
