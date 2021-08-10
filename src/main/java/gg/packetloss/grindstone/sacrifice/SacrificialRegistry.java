@@ -47,9 +47,10 @@ class SacrificialRegistry {
     }
 
     private boolean getChance(SacrificeInformation sacrificeInformation, double rarityL) {
-        int baseChance = (int) (sacrificeInformation.hasSacrificeTome() ? rarityL * 100 : rarityL * 200);
+        int baseChance = (int) (sacrificeInformation.hasSacrificeTome() ? rarityL : rarityL * 2);
+        int modifierChance = sacrificeInformation.getModifierRoll();
 
-        return ChanceUtil.getChance(Math.max(1, baseChance - sacrificeInformation.getModifier()));
+        return ChanceUtil.getChance(Math.max(1, baseChance - modifierChance));
     }
 
     private ItemStack getValuableItem(SacrificeInformation sacrificeInformation) {
@@ -99,7 +100,7 @@ class SacrificialRegistry {
     public SacrificeResult getCalculatedLoot(SacrificeInformation sacrificeInformation) {
         List<ItemStack> loot = new ArrayList<>();
 
-        int baseChance = (sacrificeInformation.hasSacrificeTome() ? 100 : 125) - sacrificeInformation.getModifier();
+        int baseChance = (sacrificeInformation.hasSacrificeTome() ? 100 : 125) - sacrificeInformation.getModifierRoll();
 
         int remainingItems = sacrificeInformation.getMaxItems();
         double remainingValue = sacrificeInformation.getValue();

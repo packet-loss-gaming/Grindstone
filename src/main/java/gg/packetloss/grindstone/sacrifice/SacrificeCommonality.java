@@ -9,15 +9,15 @@ package gg.packetloss.grindstone.sacrifice;
 enum SacrificeCommonality {
     JUNK(0),
     NORMAL(0),
-    RARE_1(.8),
-    RARE_2(1.2),
-    RARE_3(2),
-    RARE_4(2.75),
-    RARE_5(3),
-    RARE_6(5),
-    RARE_7(15),
-    RARE_8(120),
-    UBER_RARE(10000);
+    RARE_1(500),
+    RARE_2(1000),
+    RARE_3(2000),
+    RARE_4(5000),
+    RARE_5(12000),
+    RARE_6(16000),
+    RARE_7(50000),
+    RARE_8(750000),
+    UBER_RARE(1000000);
 
     private final double additionalChance;
 

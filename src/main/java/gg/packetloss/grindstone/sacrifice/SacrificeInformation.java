@@ -6,14 +6,15 @@
 
 package gg.packetloss.grindstone.sacrifice;
 
+import gg.packetloss.grindstone.util.ChanceUtil;
 import org.bukkit.command.CommandSender;
 
 public class SacrificeInformation {
     private final boolean hasSacrificeTome;
     private final boolean hasCleanlyTome;
     private final int maxItems;
-    private final double value;
-    private final int modifier;
+    private final double baseValue;
+    private final double totalValueModifier;
 
     /**
      * This class is used to define a sacrifice based on a numerical value and quantity.
@@ -26,8 +27,15 @@ public class SacrificeInformation {
         this.hasSacrificeTome = sender.hasPermission("aurora.tome.sacrifice");
         this.hasCleanlyTome = sender.hasPermission("aurora.tome.cleanly");
         this.maxItems = maxItems;
-        this.value = value * .9;
-        this.modifier = (int) (Math.sqrt(value) * 1.5);
+        this.baseValue = value;
+
+        this.totalValueModifier = calculateTotalValueModifier();
+    }
+
+    private double calculateTotalValueModifier() {
+         double randomizedBaseScale = ChanceUtil.getRangedRandom(.8, 1.2);
+         double lootBasedScale = Math.min(.9, ((int) (baseValue / 250000)) * .1);
+         return randomizedBaseScale - lootBasedScale;
     }
 
     /**
@@ -53,10 +61,10 @@ public class SacrificeInformation {
     }
 
     public double getValue() {
-        return value;
+        return baseValue * totalValueModifier;
     }
 
-    public int getModifier() {
-        return modifier;
+    public int getModifierRoll() {
+        return ChanceUtil.getRandomNTimes((int) baseValue, 2) - 1;
     }
 }

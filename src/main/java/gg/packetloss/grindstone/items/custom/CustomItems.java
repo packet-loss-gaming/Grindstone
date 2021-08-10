@@ -163,6 +163,7 @@ public enum CustomItems {
     DEMONIC_ASHES(ChatColor.DARK_RED, "Demonic Ashes"),
     MAD_MILK(ChatColor.DARK_AQUA, "Mad Milk"),
     GOD_FISH(ChatColor.BLUE, "God Fish"),
+    GOLDEN_STICK(ChatColor.GOLD, "Golden Stick"),
     OVERSEER_BOW(ChatColor.RED, "Overseer's Bow"),
     BARBARIAN_BONE(ChatColor.DARK_RED, "Barbarian Bone"),
     POTION_OF_RESTITUTION(ChatColor.DARK_RED, "Potion of Restitution"),

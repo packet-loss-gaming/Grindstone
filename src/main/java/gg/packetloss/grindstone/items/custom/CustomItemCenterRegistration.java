@@ -706,6 +706,11 @@ public class CustomItemCenterRegistration {
         godFish.addUse("On consumption applies 30 seconds of the Hulk prayer.");
         itemConsumer.accept(godFish);
 
+        CustomItem goldenStick = new CustomItem(GOLDEN_STICK, Material.STICK);
+        goldenStick.addSource(ItemSource.SACRIFICIAL_PIT);
+        goldenStick.addUse("An item of great value.");
+        itemConsumer.accept(goldenStick);
+
         CustomItem overSeerBow = new CustomItem(OVERSEER_BOW, Material.BOW);
         overSeerBow.addEnchant(Enchantment.ARROW_DAMAGE, 2);
         overSeerBow.addEnchant(Enchantment.ARROW_FIRE, 1);
