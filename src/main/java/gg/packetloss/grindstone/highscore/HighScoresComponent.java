@@ -28,10 +28,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
+import org.bukkit.entity.Player;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
@@ -192,23 +194,41 @@ public class HighScoresComponent extends BukkitComponent {
         return scoreType.isGobletEquivalent(gobletScoreType);
     }
 
+    private void update(UUID playerID, ScoreType scoreType, long value) {
+        highScoreLock.lock();
+        try {
+            highScoreUpdates.add(new HighScoreUpdate(playerID, scoreType, value));
+            if (isCurrentGoblet(scoreType)) {
+                highScoreUpdates.add(new HighScoreUpdate(playerID, gobletScoreType, value));
+            }
+        } finally {
+            highScoreLock.unlock();
+        }
+    }
+
     public void update(OfflinePlayer player, ScoreType scoreType, long value) {
-        PluginTaskExecutor.submitAsync(() -> {
-            // Disqualify any high score gains in admin mode
-            if (adminComponent.isAdmin(player)) {
+        // FIXME: Ideally this wouldn't be necessary, need to make sure the PluginTaskExecutor
+        // isn't shutdown before the high scores, or any dependent component.
+        try {
+            PluginTaskExecutor.submitAsync(() -> {
+                // Disqualify any high score gains in admin mode
+                if (adminComponent.isAdmin(player)) {
+                    return;
+                }
+
+                update(player.getUniqueId(), scoreType, value);
+            });
+        } catch (RejectedExecutionException ex) {
+            if (!(player instanceof Player onlinePlayer)) {
                 return;
             }
 
-            highScoreLock.lock();
-            try {
-                highScoreUpdates.add(new HighScoreUpdate(player.getUniqueId(), scoreType, value));
-                if (isCurrentGoblet(scoreType)) {
-                    highScoreUpdates.add(new HighScoreUpdate(player.getUniqueId(), gobletScoreType, value));
-                }
-            } finally {
-                highScoreLock.unlock();
+            if (adminComponent.isAdmin(onlinePlayer)) {
+                return;
             }
-        });
+
+            update(onlinePlayer.getUniqueId(), scoreType, value);
+        }
     }
 
     private boolean deleteAllScores(ScoreType scoreType) {
