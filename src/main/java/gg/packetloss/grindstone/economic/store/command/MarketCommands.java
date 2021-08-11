@@ -24,7 +24,7 @@ import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.item.inventory.InventoryConstants;
+import gg.packetloss.grindstone.util.item.inventory.*;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -32,6 +32,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.enginehub.piston.annotation.Command;
 import org.enginehub.piston.annotation.CommandContainer;
 import org.enginehub.piston.annotation.param.Arg;
@@ -67,7 +68,7 @@ public class MarketCommands {
         MarketTransactionBuilder transactionBuilder = new MarketTransactionBuilder();
 
         // Place a reasonable cap on the amount of items that can be purchased.
-        amount = Math.min((InventoryConstants.PLAYER_INV_STORAGE_LENGTH * 64) / items.size(), Math.max(1, amount));
+        amount = Math.min((InventoryConstants.PLAYER_INV_ROWS_TOTAL_LENGTH * 64) / items.size(), Math.max(1, amount));
 
         for (MarketItem item : items) {
             if (!item.isBuyable()) {
@@ -86,6 +87,26 @@ public class MarketCommands {
                 ChatUtil.sendError(player, error);
             }
         );
+    }
+
+    private static boolean isStorageSelectionSellMode(String itemFilter) {
+        if (itemFilter.charAt(0) != '#') {
+            return false;
+        }
+
+        return switch (itemFilter.substring(1).toLowerCase()) {
+            case "all", "storage", "hotbar" -> true;
+            default -> false;
+        };
+    }
+
+    private static AbstractInventoryIterator getItemsForSellFilter(PlayerInventory pInv, String itemFilter) {
+        return switch (itemFilter.substring(1).toLowerCase()) {
+            case "all" -> new PlayerInventoryIterator(pInv);
+            case "storage" -> new PlayerStorageInventoryIterator(pInv);
+            case "hotbar" -> new PlayerHotbarInventoryIterator(pInv);
+            default -> throw new IllegalStateException();
+        };
     }
 
     @Command(name = "sell", desc = "Sell items")
@@ -156,28 +177,37 @@ public class MarketCommands {
         });
 
         if (itemFilter != null) {
-            Inventory playerInv = player.getInventory();
+            PlayerInventory playerInv = player.getInventory();
 
-            ItemStack[] contents = playerInv.getStorageContents();
-            for (int i = 0; i < contents.length; ++i) {
-                ItemStack item = contents[i];
-                Optional<String> itemName = ItemNameCalculator.computeItemName(item);
-                if (itemName.isEmpty()) {
+            boolean isStorageSelectionMode = isStorageSelectionSellMode(itemFilter);
+
+            AbstractInventoryIterator itemsIt = isStorageSelectionMode ? getItemsForSellFilter(playerInv, itemFilter)
+                                                                       : new PlayerInventoryIterator(playerInv);
+            while (itemsIt.hasNext()) {
+                ItemStack item = itemsIt.next();
+                if (item == null) {
                     continue;
                 }
 
-                String unqualifiedName = ItemNameCalculator.getUnqualifiedName(itemName.get());
-                if (unqualifiedName.contains(itemFilter.toLowerCase())) {
-                    contents[i] = null;
-                    ItemStack remainder = sellInv.addItem(item).get(0);
-                    if (remainder != null) {
-                        contents[i] = remainder;
-                        break;
+                if (!isStorageSelectionMode) {
+                    Optional<String> itemName = ItemNameCalculator.computeItemName(item);
+                    if (itemName.isEmpty()) {
+                        continue;
+                    }
+
+                    String unqualifiedName = ItemNameCalculator.getUnqualifiedName(itemName.get());
+                    if (!unqualifiedName.contains(itemFilter.toLowerCase())) {
+                        continue;
                     }
                 }
-            }
 
-            playerInv.setStorageContents(contents);
+                itemsIt.clear();
+                ItemStack remainder = sellInv.addItem(item).get(0);
+                if (remainder != null) {
+                    itemsIt.set(remainder);
+                    break;
+                }
+            }
         }
     }
     private Text formatPriceForList(double price) {
