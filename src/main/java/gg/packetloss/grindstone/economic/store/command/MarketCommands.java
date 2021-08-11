@@ -110,7 +110,7 @@ public class MarketCommands {
     }
 
     @Command(name = "sell", desc = "Sell items")
-    public void sell(Player player, @Arg(desc = "item filter", def = "") String itemFilter) throws CommandException {
+    public void sell(Player player, @Arg(desc = "item filter", def = "", variable = true) List<String> itemFilterArgs) throws CommandException {
         component.checkPlayer(player);
 
         Inventory sellInv = invGUI.openClosableChest(player, "Sell Items", (inv) -> {
@@ -176,9 +176,10 @@ public class MarketCommands {
             });
         });
 
-        if (itemFilter != null) {
+        if (itemFilterArgs != null) {
             PlayerInventory playerInv = player.getInventory();
 
+            String itemFilter = Joiner.on('_').join(itemFilterArgs);
             boolean isStorageSelectionMode = isStorageSelectionSellMode(itemFilter);
 
             AbstractInventoryIterator itemsIt = isStorageSelectionMode ? getItemsForSellFilter(playerInv, itemFilter)
