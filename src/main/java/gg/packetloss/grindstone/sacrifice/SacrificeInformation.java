@@ -64,6 +64,13 @@ public class SacrificeInformation {
         return baseValue * totalValueModifier;
     }
 
+    public int getCommonalityModifier() {
+        if (hasSacrificeTome()) {
+            return 2;
+        }
+        return 3;
+    }
+
     public int getModifierRoll() {
         return ChanceUtil.getRandomNTimes((int) baseValue, 2) - 1;
     }

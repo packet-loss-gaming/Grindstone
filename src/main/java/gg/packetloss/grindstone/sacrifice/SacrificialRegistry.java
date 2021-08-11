@@ -46,11 +46,11 @@ class SacrificialRegistry {
         valuable.add(new ChancedEntry(dropSupplier, commonality));
     }
 
-    private boolean getChance(SacrificeInformation sacrificeInformation, double rarityL) {
-        int baseChance = (int) (sacrificeInformation.hasSacrificeTome() ? rarityL : rarityL * 2);
-        int modifierChance = sacrificeInformation.getModifierRoll();
+    private boolean getChance(SacrificeInformation sacrificeInformation, SacrificeCommonality commonality) {
+        int baseChance = commonality.getRoll(sacrificeInformation.getCommonalityModifier());
+        int chanceModifier = sacrificeInformation.getModifierRoll();
 
-        return ChanceUtil.getChance(Math.max(1, baseChance - modifierChance));
+        return ChanceUtil.getChance(Math.max(1, baseChance - chanceModifier));
     }
 
     private ItemStack getValuableItem(SacrificeInformation sacrificeInformation) {
@@ -64,7 +64,7 @@ class SacrificialRegistry {
                 return supplier.dropSupplier.get();
             }
 
-            if (getChance(sacrificeInformation, supplier.commonality.getAdditionalChance())) {
+            if (getChance(sacrificeInformation, supplier.commonality)) {
                 return supplier.dropSupplier.get();
             }
         } while (true);

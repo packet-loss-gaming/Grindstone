@@ -6,6 +6,8 @@
 
 package gg.packetloss.grindstone.sacrifice;
 
+import gg.packetloss.grindstone.util.ChanceUtil;
+
 enum SacrificeCommonality {
     JUNK(0),
     NORMAL(0),
@@ -19,13 +21,18 @@ enum SacrificeCommonality {
     RARE_8(750000),
     UBER_RARE(1000000);
 
-    private final double additionalChance;
+    private final int additionalChance;
 
-    private SacrificeCommonality(double additionalChance) {
+    private SacrificeCommonality(int additionalChance) {
         this.additionalChance = additionalChance;
     }
 
-    public double getAdditionalChance() {
+    public int getAdditionalChance() {
         return additionalChance;
+    }
+
+    public int getRoll(int commonalityModifier) {
+        int adjustedRarityLevel = additionalChance * commonalityModifier;
+        return ChanceUtil.getRangedRandom(adjustedRarityLevel / 10, adjustedRarityLevel);
     }
 }
