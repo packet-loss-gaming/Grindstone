@@ -154,6 +154,9 @@ class LevelAdjustmentListener implements Listener {
             return;
         }
 
-        parent.setWorldLevel(player, parent.getWorldLevel(player) / 2);
+        int worldLevel = parent.getWorldLevel(player);
+        if (worldLevel > 1) {
+            parent.setWorldLevel(player, worldLevel / 2);
+        }
     }
 }

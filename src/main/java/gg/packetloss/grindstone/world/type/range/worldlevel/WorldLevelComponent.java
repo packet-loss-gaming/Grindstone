@@ -31,6 +31,7 @@ import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.type.range.worldlevel.db.PlayerWorldLevelDatabase;
 import gg.packetloss.grindstone.world.type.range.worldlevel.db.mysql.MySQLPlayerWorldLevelDatabase;
+import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -169,8 +170,9 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
     }
 
     public void setWorldLevel(Player player, int worldLevel) {
+        Validate.isTrue(worldLevel >= 1);
         UUID playerID = player.getUniqueId();
-        playerWorldLevel.put(playerID, Math.max(1, worldLevel));
+        playerWorldLevel.put(playerID, worldLevel);
     }
 
     protected void showTitleForLevel(Player player, int newLevel) {
