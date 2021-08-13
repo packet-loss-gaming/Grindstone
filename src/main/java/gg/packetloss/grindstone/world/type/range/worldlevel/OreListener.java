@@ -69,7 +69,7 @@ public class OreListener implements Listener {
     }
 
     private int getOreMod(int level) {
-        return (int) Math.max(1, (level * 3));
+        return (int) Math.max(1, (level * parent.getConfig().oresPerLevel));
     }
 
     private void addPool(Player player, Location destination, int times, ItemStack drop) {

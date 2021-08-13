@@ -70,11 +70,13 @@ public class GenericRangedWorldMonster {
     }
 
     private double getModifierByType(EntityType type) {
+        WorldLevelConfig config = worldLevelComponent.getConfig();
         return switch (type) {
-            case WITHER, CREEPER -> 2.5;
-            case SILVERFISH -> 1;
-            case ENDERMITE -> .1;
-            default -> .5;
+            case CREEPER -> config.mobsDropTableTypeModifiersCreeper;
+            case ENDERMITE -> config.mobsDropTableTypeModifiersEndermite;
+            case SILVERFISH -> config.mobsDropTableTypeModifiersSilverfish;
+            case WITHER -> config.mobsDropTableTypeModifiersWither;
+            default -> config.mobsDropTableTypeModifiersDefault;
         };
     }
 
@@ -95,7 +97,15 @@ public class GenericRangedWorldMonster {
                 PerformanceKillInfo killInfo = info.getKillInfo();
                 float percentDamageDone = killInfo.getPercentDamageDone(player).orElseThrow();
 
-                int dropCountModifier = Math.max(1, (int) Math.min(20, typeModifier * level / 4 * percentDamageDone));
+                WorldLevelConfig config = worldLevelComponent.getConfig();
+
+                int dropCountModifier = Math.max(
+                    1,
+                    (int) Math.min(
+                        config.mobsDropTableItemCountMax,
+                        typeModifier * config.mobsDropTableItemCountPerLevel * percentDamageDone
+                    )
+                );
                 double dropValueModifier = typeModifier * level * percentDamageDone;
 
                 // Handle unique drops
@@ -118,7 +128,7 @@ public class GenericRangedWorldMonster {
                 SacrificeInformation sacrificeInfo = new SacrificeInformation(
                     CommandBook.server().getConsoleSender(),
                     dropCountModifier,
-                    dropValueModifier * 128
+                    dropValueModifier * config.mobsDropTableSacrificeValue
                 );
                 for (ItemStack itemStack : SacrificeComponent.getCalculatedLoot(sacrificeInfo)) {
                     consumer.accept(itemStack);

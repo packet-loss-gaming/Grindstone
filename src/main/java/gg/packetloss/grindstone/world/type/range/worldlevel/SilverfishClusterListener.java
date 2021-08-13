@@ -66,15 +66,20 @@ class SilverfishClusterListener implements Listener {
 
         Player player = event.getPlayer();
         int level = parent.getWorldLevel(player);
-        if (level < 5) {
+        WorldLevelConfig config = parent.getConfig();
+        if (level < config.mobsSilverfishLevelEnabledAt) {
             return;
         }
 
-        if (!ChanceUtil.getChance(Math.max(12, 250 - level))) {
+        int chanceOfSpawning = Math.max(
+            config.mobsSilverfishMaxChance,
+            config.mobsSilverfishBaseChance - level
+        );
+        if (!ChanceUtil.getChance(chanceOfSpawning)) {
             return;
         }
 
-        if (ChanceUtil.getChance(3)) {
+        if (ChanceUtil.getChance(config.mobsSilverfishInitialSilverfishChance)) {
             world.spawn(block.getLocation().add(.5, 0, .5), Silverfish.class);
         }
 

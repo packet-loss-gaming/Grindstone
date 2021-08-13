@@ -156,7 +156,13 @@ class LevelAdjustmentListener implements Listener {
 
         int worldLevel = parent.getWorldLevel(player);
         if (worldLevel > 1) {
-            parent.setWorldLevel(player, worldLevel / 2);
+            parent.setWorldLevel(
+                player,
+                (int) Math.max(
+                    1,
+                    worldLevel * parent.getConfig().adjustmentDeathPenalty
+                )
+            );
         }
     }
 }

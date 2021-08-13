@@ -61,6 +61,8 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
     private PlayerPlacedOresState state = new PlayerPlacedOresState();
     private SingleFileFilesystemStateHelper<PlayerPlacedOresState> stateHelper;
 
+    private WorldLevelConfig config;
+
     protected int sourceDamageLevel = 0;
 
     @Override
@@ -81,6 +83,8 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
             e.printStackTrace();
         }
 
+        config = configure(new WorldLevelConfig());
+
         packetInterceptor.addListener(new HeartPacketFilter(this));
 
         CommandBook.server().getScheduler().runTaskTimer(
@@ -89,6 +93,15 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
             0,
             20 * 5
         );
+    }
+
+    @Override
+    public void reload() {
+        configure(config);
+    }
+
+    protected WorldLevelConfig getConfig() {
+        return config;
     }
 
     public void degradeWorldLevel() {
@@ -221,7 +234,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         }
 
         int yChunk = location.getBlockY() >> 4;
-        return ChanceUtil.getChance(yChunk * 25);
+        return ChanceUtil.getChance(yChunk * config.demonicAshesPerYChunk);
     }
 
     protected void spawnDemonicAshes(Player player, Location location) {
