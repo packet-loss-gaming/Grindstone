@@ -6,7 +6,12 @@
 
 package gg.packetloss.grindstone.util.collection;
 
-public class FiniteCache<T> {
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
+import java.util.Iterator;
+
+public class FiniteCache<T> implements Iterable<T> {
     private final T[] items;
     private final int size;
 
@@ -50,5 +55,11 @@ public class FiniteCache<T> {
 
         // Update the lead item (the most recently used thing)
         items[0] = item;
+    }
+
+    @NotNull
+    @Override
+    public Iterator<T> iterator() {
+        return Arrays.asList(items).iterator();
     }
 }
