@@ -43,6 +43,7 @@ import gg.packetloss.grindstone.util.checker.NonSolidRegionChecker;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import gg.packetloss.grindstone.world.type.city.area.areas.DropParty.DropPartyTask;
 import org.apache.commons.lang.Validate;
@@ -137,7 +138,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
         if (!parent.contains(from) && parent.contains(to) && !event.getCause().equals(PlayerTeleportEvent.TeleportCause.UNKNOWN)) {
             Player player = event.getPlayer();
-            if (player.getGameMode() != GameMode.SURVIVAL) return;
+            if (GeneralPlayerUtil.hasInvulnerableGamemode(player)) return;
 
             ChatUtil.sendError(player, "This teleport isn't strong enough to reach Patient X.");
             event.setCancelled(true);

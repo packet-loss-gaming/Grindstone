@@ -88,8 +88,12 @@ public class GeneralPlayerUtil {
         return isDamageableGamemode(player.getGameMode());
     }
 
-    public static boolean isInvulnerable(Player player) {
+    public static boolean hasInvulnerableGamemode(Player player) {
         return !hasDamageableGamemode(player);
+    }
+
+    public static boolean isInBuildMode(Player player) {
+        return player.getGameMode() == GameMode.CREATIVE;
     }
 
     public static void findSafeSpot(Player player) {

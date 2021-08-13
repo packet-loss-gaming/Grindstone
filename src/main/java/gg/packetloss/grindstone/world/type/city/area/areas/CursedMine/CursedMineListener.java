@@ -114,7 +114,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
         final Player player = event.getPlayer();
         final Block block = event.getBlock();
 
-        if (player.getGameMode() != GameMode.SURVIVAL || !parent.contains(block)) {
+        if (GeneralPlayerUtil.isInBuildMode(player) || !parent.contains(block)) {
             return;
         }
 
@@ -164,7 +164,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
 
-        if (player.getGameMode() == GameMode.SURVIVAL && parent.contains(event.getBlock())) {
+        if (!GeneralPlayerUtil.isInBuildMode(player) && parent.contains(event.getBlock())) {
             event.setCancelled(true);
             ChatUtil.sendNotice(player, ChatColor.DARK_RED, "You don't have permission for this area.");
         }

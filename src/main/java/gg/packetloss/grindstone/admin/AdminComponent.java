@@ -184,7 +184,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         boolean wasFlying = player.isFlying();
 
-        if (!player.getGameMode().equals(GameMode.SURVIVAL)) player.setGameMode(GameMode.SURVIVAL);
+        if (player.getGameMode() != GameMode.SURVIVAL) player.setGameMode(GameMode.SURVIVAL);
         GeneralPlayerUtil.takeFlightSafely(player);
 
         if (wasFlying) {

@@ -20,8 +20,8 @@ import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.VectorUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -118,7 +118,7 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
 
         if (parent.contains(to, 1) && !event.getCause().equals(TeleportCause.UNKNOWN)) {
             Player player = event.getPlayer();
-            if (player.getGameMode() != GameMode.SURVIVAL) return;
+            if (GeneralPlayerUtil.hasInvulnerableGamemode(player)) return;
 
             event.setTo(parent.gateOuter);
         }

@@ -99,7 +99,7 @@ public class EntityUtil {
         }
 
         // Check damageable
-        if (entity instanceof Player && GeneralPlayerUtil.isInvulnerable((Player) entity)) {
+        if (entity instanceof Player && GeneralPlayerUtil.hasInvulnerableGamemode((Player) entity)) {
             return;
         }
 
