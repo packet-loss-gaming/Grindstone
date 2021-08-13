@@ -71,10 +71,10 @@ public class GenericRangedWorldMonster {
 
     private double getModifierByType(EntityType type) {
         return switch (type) {
-            case WITHER, CREEPER -> 5;
-            case SILVERFISH -> 2;
+            case WITHER, CREEPER -> 2.5;
+            case SILVERFISH -> 1;
             case ENDERMITE -> .1;
-            default -> 1;
+            default -> .5;
         };
     }
 
@@ -95,11 +95,7 @@ public class GenericRangedWorldMonster {
                 PerformanceKillInfo killInfo = info.getKillInfo();
                 float percentDamageDone = killInfo.getPercentDamageDone(player).orElseThrow();
 
-                int dropCountModifier = (int) Math.min(20, typeModifier * level - 1 * percentDamageDone);
-                if (dropCountModifier == 0) {
-                    return;
-                }
-
+                int dropCountModifier = Math.max(1, (int) Math.min(20, typeModifier * level / 4 * percentDamageDone));
                 double dropValueModifier = typeModifier * level * percentDamageDone;
 
                 // Handle unique drops
