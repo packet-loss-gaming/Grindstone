@@ -65,7 +65,12 @@ class SilverfishClusterListener implements Listener {
         }
 
         Player player = event.getPlayer();
-        if (parent.getWorldLevel(player) < 5) {
+        int level = parent.getWorldLevel(player);
+        if (level < 5) {
+            return;
+        }
+
+        if (!ChanceUtil.getChance(Math.max(12, 250 - level))) {
             return;
         }
 
