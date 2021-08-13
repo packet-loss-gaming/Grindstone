@@ -25,10 +25,7 @@ import gg.packetloss.openboss.entity.LocalEntity;
 import gg.packetloss.openboss.instruction.InstructionResult;
 import gg.packetloss.openboss.instruction.SimpleInstructionDispatch;
 import gg.packetloss.openboss.instruction.UnbindInstruction;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mob;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 
 import static gg.packetloss.grindstone.util.EnvironmentUtil.isFrozenBiome;
@@ -72,6 +69,15 @@ public class GenericRangedWorldMonster {
         setupGenericRangedWorldMob();
     }
 
+    private double getModifierByType(EntityType type) {
+        return switch (type) {
+            case WITHER, CREEPER -> 5;
+            case SILVERFISH -> 2;
+            case ENDERMITE -> .1;
+            default -> 1;
+        };
+    }
+
     private void setupDropTable() {
         dropTable.registerSlicedDrop(
             (info) -> 1,
@@ -83,14 +89,21 @@ public class GenericRangedWorldMonster {
                     return;
                 }
 
+                EntityType killedEntityType =  info.getKillInfo().getKilled().getType();
+                double typeModifier = getModifierByType(killedEntityType);
+
                 PerformanceKillInfo killInfo = info.getKillInfo();
                 float percentDamageDone = killInfo.getPercentDamageDone(player).orElseThrow();
 
-                boolean isFrozenBiome = isFrozenBiome(player.getLocation().getBlock().getBiome());
-                int dropCountModifier = (int) (Math.min(20, level - 1) * percentDamageDone);
-                double dropValueModifier = Math.max(1, level * 1.25) * percentDamageDone;
+                int dropCountModifier = (int) Math.min(20, typeModifier * level - 1 * percentDamageDone);
+                if (dropCountModifier == 0) {
+                    return;
+                }
+
+                double dropValueModifier = typeModifier * level * percentDamageDone;
 
                 // Handle unique drops
+                boolean isFrozenBiome = isFrozenBiome(player.getLocation().getBlock().getBiome());
                 for (int i = 0; i < dropCountModifier; ++i) {
                     if (ChanceUtil.getChance(2000 / dropValueModifier)) {
                         consumer.accept(CustomItemCenter.build(CustomItems.POTION_OF_RESTITUTION));
