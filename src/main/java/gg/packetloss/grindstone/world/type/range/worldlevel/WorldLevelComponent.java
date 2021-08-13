@@ -69,6 +69,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
 
         CommandBook.registerEvents(new LevelAdjustmentListener(this));
         CommandBook.registerEvents(new MobListener(this));
+        CommandBook.registerEvents(new SilverfishClusterListener(this));
 
         try {
             stateHelper = new SingleFileFilesystemStateHelper<>("ranged-player-placed-ores.json", new TypeToken<>() { });
