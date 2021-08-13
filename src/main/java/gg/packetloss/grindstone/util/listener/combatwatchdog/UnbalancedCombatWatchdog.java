@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.util.listener.combatwatchdog;
 
+import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
@@ -97,6 +98,10 @@ public class UnbalancedCombatWatchdog implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event) {
+        if (SpecialAttackFactory.getCurrentSpecialAttack().isPresent()) {
+            return;
+        }
+
         World world = event.getEntity().getWorld();
         if (!appliesTo.test(world)) {
             return;
