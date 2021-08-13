@@ -31,7 +31,6 @@ import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
@@ -47,7 +46,6 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private SessionComponent sessions;
 
-    private HashSet<Player> hallowCreepersActive = new HashSet<>();
     private LocalConfiguration config;
 
     @Override
@@ -73,6 +71,10 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
         public int chance = 7;
     }
 
+    private boolean nearbyAreaHasTooManyCreepers(Location location) {
+        return location.getNearbyEntitiesByType(Creeper.class, 50).stream().count() > 10;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityTarget(EntityTargetEvent event) {
         Entity entity = event.getEntity();
@@ -95,7 +97,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                 int creeperChance = isFriday && isThirteenth ? 1 : config.hallowCreeperChance;
                 // Hallow Feature
                 if (creeperChance != -1 && ChanceUtil.getChance(creeperChance)
-                        && !hallowCreepersActive.contains(player)) {
+                        && !nearbyAreaHasTooManyCreepers(player.getLocation())) {
                     HallowCreeperEvent hallowEvent = new HallowCreeperEvent(player, (Creeper) entity);
                     server.getPluginManager().callEvent(hallowEvent);
                     if (hallowEvent.isCancelled()) return;
@@ -104,9 +106,6 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                     for (int i = ((ChanceUtil.getRandom(12) * ChanceUtil.getRandom(12)) + 6); i > 0; --i) {
                         entity.getWorld().spawn(loc, Creeper.class);
                     }
-
-                    hallowCreepersActive.add(player);
-                    server.getScheduler().scheduleSyncDelayedTask(inst, () -> hallowCreepersActive.remove(player), 20 * 30);
 
                     color = ChatColor.DARK_RED;
                     message = "Haaaallooowwwww ssssent ussss.";
